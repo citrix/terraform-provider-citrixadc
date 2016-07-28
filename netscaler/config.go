@@ -21,7 +21,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"sort"
 	"strconv"
 	"strings"
 )
@@ -29,15 +28,17 @@ import (
 type NetscalerService struct {
 	Name        string `json:"name"`
 	Ip          string `json:"ip"`
-	ServiceType string `json:"serviceType"`
+	ServiceType string `json:"servicetype"`
 	Port        int    `json:"port"`
 }
 
 type NetscalerLB struct {
-	Name        string `json:"name"`
-	Ipv46       string `json:"ipv46"`
-	ServiceType string `json:"serviceType"`
-	Port        int    `json:"port"`
+	Name            string `json:"name"`
+	Ipv46           string `json:"ipv46"`
+	ServiceType     string `json:"servicetype"`
+	Port            int    `json:"port"`
+	PersistenceType string `json:"persistencetype,omitempty"`
+	LbMethod        string `json:"lbmethod,omitempty"`
 }
 
 type NetscalerLBServiceBinding struct {
@@ -65,42 +66,9 @@ type NetscalerCsPolicyBinding struct {
 
 type NetscalerCsVserver struct {
 	Name        string `json:"name"`
-	ServiceType string `json:"serviceType"`
+	ServiceType string `json:"servicetype"`
 	Ipv46       string `json:"ipv46"`
 	Port        int    `json:"port"`
-}
-
-func generateLbName(namespace string, host string) string {
-	lbName := "lb_" + strings.Replace(host, ".", "_", -1)
-	return lbName
-}
-
-func generateCsVserverName(namespace string, ingressName string) string {
-	csv := "cs_" + namespace + "_" + ingressName
-	return csv
-}
-
-func generatePolicyName(namespace string, host string, path string) string {
-	path_ := path
-	if path == "" {
-		path_ = "nilpath"
-	}
-	path_ = strings.Replace(path_, "/", "_", -1)
-	host = strings.Replace(host, ".", "_", -1)
-
-	policyName := host + "-" + path_ + "_policy"
-	return policyName
-}
-
-func generateActionName(namespace string, host string, path string) string {
-	path_ := path
-	if path == "" {
-		path_ = "nilpath"
-	}
-	path_ = strings.Replace(path_, "/", "_", -1)
-	host = strings.Replace(host, ".", "_", -1)
-	actionName := host + "-" + path_ + "_action"
-	return actionName
 }
 
 func (c *nitroClient) DeleteService(sname string) {
@@ -154,500 +122,44 @@ func (c *nitroClient) AddAndBindService(lbName string, sname string, IpPort stri
 	}
 }
 
-func (c *nitroClient) ConfigureContentVServer(namespace string, csvserverName string, domainName string, path string, serviceIp string,
-	serviceName string, servicePort int, priority int, svcname_refcount map[string]int) string {
-	lbName := generateLbName(namespace, domainName)
-	policyName := generatePolicyName(namespace, domainName, path)
-	actionName := generateActionName(namespace, domainName, path)
+func (c *nitroClient) CreateLBVserver(lbStruct *NetscalerLB) (string, error) {
 
-	//create a Netscaler Service that represents the Kubernetes service
-	resourceType := "service"
-	if c.FindResource(resourceType, serviceName) == false {
-		nsService := &struct {
-			Service NetscalerService `json:"service"`
-		}{Service: NetscalerService{Name: serviceName, Ip: serviceIp, ServiceType: "HTTP", Port: servicePort}}
-		resourceJson, err := json.Marshal(nsService)
-		if err != nil {
-			log.Fatal(fmt.Sprintf("Failed to marshal service %s err=", serviceName, err))
-			return ""
+	resourceType := "lbvserver"
+	if c.FindResource(resourceType, lbStruct.Name) == false {
+		if lbStruct.ServiceType == "" {
+			lbStruct.ServiceType = "HTTP"
 		}
-		log.Println(string(resourceJson))
-
-		body, err := c.createResource(resourceType, resourceJson)
-		if err != nil {
-			log.Fatal(fmt.Sprintf("Failed to create service %s err=%s", serviceName, err))
-			return ""
+		if lbStruct.Ipv46 == "" || lbStruct.Ipv46 == "0.0.0.0" {
+			errstr := fmt.Sprintf("VIP cannot be empty or 0.0.0.0 for lb %s", lbStruct.Name)
+			log.Fatal(errstr)
+			return "", errors.New(errstr)
 		}
-		_ = body
-	}
+		if lbStruct.Port == 0 && lbStruct.ServiceType == "HTTP" {
+			lbStruct.Port = 80
+		}
+		if lbStruct.Port == 0 {
+			errstr := fmt.Sprintf("Port cannot be 0 for lb %s", lbStruct.Name)
+			log.Fatal(errstr)
+			return "", errors.New(errstr)
+		}
 
-	_, present := svcname_refcount[serviceName]
-	if present {
-		svcname_refcount[serviceName]++
-	} else {
-		svcname_refcount[serviceName] = 1
-	}
-
-	//create a Netscaler "lbvserver" to front the service
-	resourceType = "lbvserver"
-	if c.FindResource(resourceType, lbName) == false {
 		nsLB := &struct {
 			Lbvserver NetscalerLB `json:"lbvserver"`
-		}{Lbvserver: NetscalerLB{Name: lbName, Ipv46: "0.0.0.0", ServiceType: "HTTP", Port: 0}}
+		}{Lbvserver: *lbStruct}
 		resourceJson, err := json.Marshal(nsLB)
 
+		log.Println("Resourcejson is " + string(resourceJson))
+
 		body, err := c.createResource(resourceType, resourceJson)
 		if err != nil {
-			log.Fatal(fmt.Sprintf("Failed to create lb %s, err=%s", lbName, err))
+			log.Fatal(fmt.Sprintf("Failed to create lb %s, err=%s", lbStruct.Name, err))
 			//TODO roll back
-			return ""
+			return "", err
 		}
 		_ = body
 	}
 
-	//bind the lb to the service
-	resourceType = "lbvserver"
-	boundResourceType := "service"
-	if c.FindBoundResource(resourceType, lbName, boundResourceType, "servicename", serviceName) == false {
-		nsLbSvcBinding := &struct {
-			Lbvserver_service_binding NetscalerLBServiceBinding `json:"lbvserver_service_binding"`
-		}{Lbvserver_service_binding: NetscalerLBServiceBinding{Name: lbName, ServiceName: serviceName}}
-		resourceJson, err := json.Marshal(nsLbSvcBinding)
-
-		resourceType = "lbvserver_service_binding"
-
-		body, err := c.createResource(resourceType, resourceJson)
-		if err != nil {
-			log.Fatal(fmt.Sprintf("Failed to bind lb %s to service %s, err=%s", lbName, serviceName, err))
-			//TODO roll back
-			return ""
-		}
-		_ = body
-	}
-
-	//create a content switch action to switch to the lb
-	resourceType = "csaction"
-	if c.FindResource(resourceType, actionName) == false {
-		nsCsAction := &struct {
-			Csaction NetscalerCsAction `json:"csaction"`
-		}{Csaction: NetscalerCsAction{Name: actionName, TargetLBVserver: lbName}}
-		resourceJson, err := json.Marshal(nsCsAction)
-
-		body, err := c.createResource(resourceType, resourceJson)
-		if err != nil {
-			log.Fatal(fmt.Sprintf("Failed to create Content Switching Action %s to LB %s err=%s", actionName, lbName, err))
-			//TODO roll back
-			return ""
-		}
-		_ = body
-	}
-
-	//create a content switch policy to use the action
-	var rule string
-	resourceType = "cspolicy"
-	if c.FindResource(resourceType, policyName) == false {
-		if path != "" {
-			rule = fmt.Sprintf("HTTP.REQ.HOSTNAME.EQ(\"%s\") && HTTP.REQ.URL.PATH.EQ(\"%s\")", domainName, path)
-		} else {
-			rule = fmt.Sprintf("HTTP.REQ.HOSTNAME.EQ(\"%s\")", domainName)
-		}
-		nsCsPolicy := &struct {
-			Cspolicy NetscalerCsPolicy `json:"cspolicy"`
-		}{Cspolicy: NetscalerCsPolicy{PolicyName: policyName, Rule: rule, Action: actionName}}
-		resourceJson, err := json.Marshal(nsCsPolicy)
-
-		body, err := c.createResource(resourceType, resourceJson)
-		if err != nil {
-			log.Fatal(fmt.Sprintf("Failed to create Content Switching Policy %s, err=%s", policyName, err))
-			//TODO roll back
-			return ""
-		}
-		_ = body
-	}
-
-	//bind the content switch policy to the content switching vserver
-	resourceType = "csvserver"
-	boundResourceType = "cspolicy"
-	if c.FindBoundResource(resourceType, csvserverName, boundResourceType, "policyname", policyName) == false {
-		nsCsPolicyBinding := &struct {
-			Csvserver_cspolicy_binding NetscalerCsPolicyBinding `json:"csvserver_cspolicy_binding"`
-		}{Csvserver_cspolicy_binding: NetscalerCsPolicyBinding{Name: csvserverName, PolicyName: policyName, Priority: priority, Bindpoint: "REQUEST"}}
-		resourceJson, err := json.Marshal(nsCsPolicyBinding)
-
-		resourceType = "csvserver_cspolicy_binding"
-
-		body, err := c.createResource(resourceType, resourceJson)
-		if err != nil {
-			log.Fatal(fmt.Sprintf("Failed to bind Content Switching Policy %s to Content Switching VServer %s, err=%s", policyName, csvserverName, err))
-			return ""
-		}
-		_ = body
-	}
-
-	return lbName
-}
-
-func (c *nitroClient) CreateContentVServer(csvserverName string, vserverIp string, vserverPort int, protocol string) error {
-	resourceType := "csvserver"
-	if c.FindResource(resourceType, csvserverName) == false {
-		contentServer := &struct {
-			Csvserver NetscalerCsVserver `json:"csvserver"`
-		}{Csvserver: NetscalerCsVserver{Name: csvserverName, Ipv46: vserverIp, ServiceType: protocol, Port: vserverPort}}
-		resourceJson, err := json.Marshal(contentServer)
-
-		body, err := c.createResource(resourceType, resourceJson)
-		_ = body
-		if err != nil {
-			log.Fatal(fmt.Sprintf("Failed to create Content Switching Vserver %s, err=%s", csvserverName, err))
-			return errors.New("Failed to create Content Switching Vserver " + csvserverName)
-		}
-	}
-	return nil
-}
-
-func (c *nitroClient) DeleteContentVServer(csvserverName string, svcname_refcount map[string]int, lbName_map map[string]int) {
-	policyNames, _ := c.ListBoundPolicies(csvserverName)
-
-	for _, policyName := range policyNames {
-		//unbind the content switch policy from the content switching vserver
-		resourceType := "csvserver_cspolicy_binding"
-
-		_, err := c.unbindResource(resourceType, csvserverName, "policyName", policyName)
-		if err != nil {
-			log.Fatal(fmt.Sprintf("Failed to unbind Content Switching Policy %s fromo Content Switching VServer %s, err=%s", policyName, csvserverName, err))
-			continue
-		}
-
-		//find the action name from the policy
-		actionName := c.ListPolicyAction(policyName)
-
-		//delete the content switch policy that uses the action
-		resourceType = "cspolicy"
-
-		_, err = c.deleteResource(resourceType, policyName)
-		if err != nil {
-			log.Printf("Failed to delete Content Switching Policy %s, err=%s", policyName, err)
-			continue
-		}
-		//find the lb name associated with the action
-		lbName, err := c.ListLbVserverForAction(actionName)
-
-		if err != nil {
-			log.Printf("Failed to obtain lb name for cs action %s", actionName)
-			continue
-		}
-		//delete content switch action that switches to the lb
-		resourceType = "csaction"
-
-		_, err = c.deleteResource(resourceType, actionName)
-		if err != nil {
-			log.Fatal(fmt.Sprintf("Failed to delete Content Switching Action %s for LB %s err=%s", actionName, lbName, err))
-			return
-		}
-
-		//find the service names that the LB is bound to
-		serviceNames, err := c.ListBoundServicesForLB(lbName)
-		if err != nil {
-			log.Printf("Failed to retrieve services bound to LB " + lbName)
-			continue
-		}
-		for _, sname := range serviceNames {
-
-			//unbind the service from the LB
-			resourceType = "lbvserver_service_binding"
-
-			_, err = c.unbindResource(resourceType, lbName, "servicename", sname)
-			if err != nil {
-				log.Fatal(fmt.Sprintf("Failed to unbind svc %s from lb %s, err=%s", sname, lbName, err))
-				continue
-			}
-		}
-
-		//delete  "lbvserver" that fronts the service
-		resourceType = "lbvserver"
-
-		_, err = c.deleteResource(resourceType, lbName)
-		if err != nil {
-			log.Println(fmt.Sprintf("Failed to delete lb %s, err=%s", lbName, err))
-			continue
-		}
-
-		if lbName_map != nil {
-			delete(lbName_map, lbName)
-		}
-
-		//Delete the Netscaler Services
-		for _, sname := range serviceNames {
-
-			resourceType = "service"
-
-			_, present := svcname_refcount[sname]
-			if present {
-				svcname_refcount[sname]--
-			}
-
-			if svcname_refcount[sname] == 0 {
-				delete(svcname_refcount, sname)
-				_, err = c.deleteResource(resourceType, sname)
-				if err != nil {
-					log.Println(fmt.Sprintf("Failed to delete service %s err=%s", sname, err))
-					continue
-				}
-			}
-		}
-	}
-	c.deleteResource("csvserver", csvserverName)
-
-}
-
-func (c *nitroClient) UnconfigureContentVServer(namespace string, csvserverName string, domainName string, path string, serviceName string) {
-	lbName := generateLbName(namespace, domainName)
-	actionName := generateActionName(namespace, domainName, path)
-	policyName := generatePolicyName(namespace, domainName, path)
-
-	//unbind the content switch policy from the content switching vserver
-	resourceType := "csvserver_cspolicy_binding"
-
-	body, err := c.unbindResource(resourceType, csvserverName, "policyName", policyName)
-	if err != nil {
-		log.Fatal(fmt.Sprintf("Failed to unbind Content Switching Policy %s fromo Content Switching VServer %s, err=%s", policyName, csvserverName, err))
-		return
-	}
-
-	//delete the content switch policy that uses the action
-	resourceType = "cspolicy"
-
-	body, err = c.deleteResource(resourceType, policyName)
-	if err != nil {
-		log.Fatal(fmt.Sprintf("Failed to delete Content Switching Policy %s, err=%s", policyName, err))
-		return
-	}
-
-	//delete content switch action that switches to the lb
-	resourceType = "csaction"
-
-	body, err = c.deleteResource(resourceType, actionName)
-	if err != nil {
-		log.Fatal(fmt.Sprintf("Failed to delete Content Switching Action %s for LB %s err=%s", actionName, lbName, err))
-		return
-	}
-
-	//unbind the service from the LB
-	resourceType = "lbvserver_service_binding"
-
-	body, err = c.unbindResource(resourceType, lbName, "servicename", serviceName)
-	if err != nil {
-		log.Fatal(fmt.Sprintf("Failed to unbind svc %s from lb %s, err=%s", serviceName, lbName, err))
-		return
-	}
-
-	//delete  "lbvserver" that fronts the service
-	resourceType = "lbvserver"
-
-	body, err = c.deleteResource(resourceType, lbName)
-	if err != nil {
-		log.Println(fmt.Sprintf("Failed to delete lb %s, err=%s", lbName, err))
-	}
-
-	//Delete the Netscaler Service
-	resourceType = "service"
-
-	body, err = c.deleteResource(resourceType, serviceName)
-	if err != nil {
-		log.Println(fmt.Sprintf("Failed to delete %s err=%s", serviceName, err))
-	}
-	_ = body
-
-}
-
-func (c *nitroClient) FindContentVserver(csvserverName string) bool {
-	_, err := c.listResource("csvserver", csvserverName)
-	if err != nil {
-		log.Printf("No csvserver %s", csvserverName)
-		return false
-	}
-	return true
-}
-
-func (c *nitroClient) ListContentVservers() []string {
-	result := []string{}
-
-	body, err := c.listResource("csvserver", "")
-	if err != nil {
-		log.Printf("No csvservers found")
-		return result
-	}
-	var data map[string]interface{}
-	if err := json.Unmarshal(body, &data); err != nil {
-		log.Println("Failed to unmarshal Netscaler Response!")
-		return []string{}
-	}
-	if data["csvserver"] == nil {
-		log.Printf("No csvservers found")
-		return result
-	}
-
-	csvs := data["csvserver"].([]interface{})
-	for _, c := range csvs {
-		csvserver := c.(map[string]interface{})
-		csname := csvserver["name"].(string)
-
-		result = append(result, csname)
-	}
-	return result
-
-}
-
-func (c *nitroClient) ListBoundPolicies(csvserverName string) ([]string, []int) {
-	result, err := c.listBoundResources(csvserverName, "csvserver", "cspolicy", "", "")
-	ret1 := []string{}
-	ret2 := []int{}
-	if err != nil {
-		log.Println("No bindings for CS Vserver %s", csvserverName)
-		return ret1, ret2
-	}
-	var data map[string]interface{}
-	if err := json.Unmarshal(result, &data); err != nil {
-		log.Println("Failed to unmarshal Netscaler Response!")
-		return ret1, ret2
-	}
-
-	if data["csvserver_cspolicy_binding"] == nil {
-		return ret1, ret2
-	}
-
-	bindings := data["csvserver_cspolicy_binding"].([]interface{})
-	for _, b := range bindings {
-		binding := b.(map[string]interface{})
-		pname := binding["policyname"].(string)
-		prio, err := strconv.Atoi(binding["priority"].(string))
-		if err != nil {
-			continue
-		}
-		ret1 = append(ret1, pname)
-		ret2 = append(ret2, prio)
-	}
-	sort.Ints(ret2)
-	return ret1, ret2
-}
-
-func (c *nitroClient) ListBoundPolicy(csvserverName string, policyName string) map[string]int {
-	result, err := c.listBoundResources(csvserverName, "csvserver", "cspolicy", "policyname", policyName)
-	if err != nil {
-		log.Println("No bindings for CS Vserver %s policy %", csvserverName, policyName)
-		return map[string]int{}
-	}
-	var data map[string]interface{}
-	if err := json.Unmarshal(result, &data); err != nil {
-		log.Println("Failed to unmarshal Netscaler Response!")
-		return map[string]int{}
-	}
-
-	ret := make(map[string]int)
-	if data["csvserver_cspolicy_binding"] == nil {
-		return ret
-	}
-	bindings := data["csvserver_cspolicy_binding"].([]interface{})
-	for _, b := range bindings {
-		binding := b.(map[string]interface{})
-		pname := binding["policyname"].(string)
-		prio := binding["priority"].(string)
-		ret[pname], _ = strconv.Atoi(prio)
-	}
-	return ret
-}
-
-func (c *nitroClient) ListPolicyAction(policyName string) string {
-	result, err := c.listResource("cspolicy", policyName)
-	if err != nil {
-		log.Println("No policy %s", policyName)
-		return ""
-	}
-	var data map[string]interface{}
-	if err := json.Unmarshal(result, &data); err != nil {
-		log.Println("Failed to unmarshal Netscaler Response!")
-		return ""
-	}
-
-	policy := data["cspolicy"].([]interface{})[0]
-	return policy.(map[string]interface{})["action"].(string)
-}
-
-func (c *nitroClient) ListLbVserverForAction(actionName string) (string, error) {
-	result, err := c.listResource("csaction", actionName)
-	if err != nil {
-		log.Println("No action %s", actionName)
-		return "", errors.New("No action " + actionName)
-	}
-	var data map[string]interface{}
-	if err := json.Unmarshal(result, &data); err != nil {
-		log.Println("Failed to unmarshal Netscaler Response!")
-		return "", errors.New("Failed to unmarshal Netscaler response")
-	}
-
-	action := data["csaction"].([]interface{})[0]
-	return action.(map[string]interface{})["targetlbvserver"].(string), nil
-}
-
-func (c *nitroClient) DeleteCsPolicies(csvserverName string, policyNames []string) {
-
-	for _, policyName := range policyNames {
-		//unbind the content switch policy from the content switching vserver
-		resourceType := "csvserver_cspolicy_binding"
-		_, err := c.unbindResource(resourceType, csvserverName, "policyName", policyName)
-		if err != nil {
-			log.Fatal(fmt.Sprintf("Failed to unbind Content Switching Policy %s fromo Content Switching VServer %s, err=%s", policyName, csvserverName, err))
-			return
-		}
-
-		resourceType = "cspolicy"
-		//if there was an action in the policy, find that action
-		action := c.ListPolicyAction(policyName)
-
-		//delete the content switch policy that uses the action
-		resourceType = "cspolicy"
-
-		_, err = c.deleteResource(resourceType, policyName)
-		if err != nil {
-			log.Fatal(fmt.Sprintf("Failed to delete Content Switching Policy %s, err=%s", policyName, err))
-			return
-		}
-
-		_, err = c.deleteResource("csaction", action)
-
-		if err != nil {
-			log.Fatal(fmt.Sprintf("Failed to delete Content Switching Policy Action%s, err=%s", action, err))
-			return
-		}
-
-	}
-}
-
-func (c *nitroClient) ListBoundServicesForLB(lbName string) ([]string, error) {
-	result, err := c.listBoundResources(lbName, "lbvserver", "service", "", "")
-	ret := []string{}
-	if err != nil {
-		log.Println("No bindings for LB Vserver %s", lbName)
-		return ret, nil
-	}
-	var data map[string]interface{}
-	if err := json.Unmarshal(result, &data); err != nil {
-		log.Println("Failed to unmarshal Netscaler Response!")
-		return ret, errors.New("Failed to unmarshal Netscaler response")
-	}
-
-	if data["lbvserver_service_binding"] == nil {
-		return ret, nil
-	}
-
-	bindings := data["lbvserver_service_binding"].([]interface{})
-	for _, b := range bindings {
-		binding := b.(map[string]interface{})
-		sname := binding["servicename"].(string)
-
-		ret = append(ret, sname)
-	}
-	return ret, nil
+	return lbStruct.Name, nil
 }
 
 func (c *nitroClient) FindResource(resourceType string, resourceName string) bool {

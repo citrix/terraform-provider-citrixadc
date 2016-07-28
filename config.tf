@@ -15,9 +15,14 @@
 provider "netscaler" {
   username     = "nsroot"
   password    = "nsroot"
-  endpoint = "http://10.20.22.11/"
+  endpoint = "http://10.71.136.250/"
 }
 
 resource "netscaler_lb" "my-lb-vserver" {
-  name = "sample-lb"
+  name = "sample_lb"
+  vip = "10.71.136.150"
+  port = 443
+  service_type = "SSL"
+  lb_method = "ROUNDROBIN"
+  persistence_type = "COOKIEINSERT"
 }

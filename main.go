@@ -16,9 +16,13 @@ limitations under the License.
 package main
 
 import (
+	netscaler "github.com/chiradeep/terraform-provider-netscaler/netscaler"
+	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/plugin"
 	"github.com/hashicorp/terraform/terraform"
+
+	"log"
 )
 
 type NetScalerNitroClient struct {
@@ -28,7 +32,12 @@ type NetScalerNitroClient struct {
 }
 
 type LBVserver struct {
-	Name string
+	Name            string
+	ServiceType     string
+	VIP             string
+	Port            int
+	PersistenceType string
+	LbMethod        string
 }
 
 func (lb *LBVserver) Id() string {
@@ -36,6 +45,19 @@ func (lb *LBVserver) Id() string {
 }
 
 func (c *NetScalerNitroClient) CreateLBVserver(lb *LBVserver) error {
+	nitroClient := netscaler.NewNitroClient(c.Endpoint, c.Username, c.Password)
+	var lbStruct = new(netscaler.NetscalerLB)
+	lbStruct.Name = lb.Name
+	lbStruct.ServiceType = lb.ServiceType
+	lbStruct.Ipv46 = lb.VIP
+	lbStruct.Port = lb.Port
+	lbStruct.PersistenceType = lb.PersistenceType
+	lbStruct.LbMethod = lb.LbMethod
+	_, err := nitroClient.CreateLBVserver(lbStruct)
+	if err != nil {
+		log.Fatal("Failed to create loadbalancer %s", lb.Name)
+		return err
+	}
 	return nil
 }
 
@@ -74,12 +96,6 @@ func providerSchema() map[string]*schema.Schema {
 	}
 }
 
-// List of supported resources and their configuration fields.
-// Here we define da linked list of all the resources that we want to
-// support in our provider. As an example, if you were to write an AWS provider
-// which supported resources like ec2 instances, elastic balancers and things of that sort
-// then this would be the place to declare them.
-// More info here https://github.com/hashicorp/terraform/blob/v0.6.6/helper/schema/resource.go#L17-L81
 func providerResources() map[string]*schema.Resource {
 	return map[string]*schema.Resource{
 		"netscaler_lb": &schema.Resource{
@@ -88,10 +104,30 @@ func providerResources() map[string]*schema.Resource {
 			Read:          readFunc,
 			Update:        updateFunc,
 			Delete:        deleteFunc,
-			Schema: map[string]*schema.Schema{ // List of supported configuration fields for your resource
+			Schema: map[string]*schema.Schema{
 				"name": &schema.Schema{
 					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"vip": &schema.Schema{
+					Type:     schema.TypeString,
 					Required: true,
+				},
+				"service_type": &schema.Schema{
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"port": &schema.Schema{
+					Type:     schema.TypeInt,
+					Required: true,
+				},
+				"persistence_type": &schema.Schema{
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"lb_method": &schema.Schema{
+					Type:     schema.TypeString,
+					Optional: true,
 				},
 			},
 		},
@@ -109,9 +145,29 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 }
 
 func createFunc(d *schema.ResourceData, meta interface{}) error {
+	/*
+		Name            string
+		ServiceType     string
+		VIP             string
+		Port            int
+		PersistenceType string
+		LbMethod        string
+	*/
 	client := meta.(*NetScalerNitroClient)
+	var lbName string
+	if v, ok := d.GetOk("name"); ok {
+		lbName = v.(string)
+	} else {
+		lbName = resource.PrefixedUniqueId("tf-lb-")
+		d.Set("name", lbName)
+	}
 	lb := LBVserver{
-		Name: d.Get("name").(string),
+		Name:            lbName,
+		VIP:             d.Get("vip").(string),
+		Port:            d.Get("port").(int),
+		ServiceType:     d.Get("service_type").(string),
+		PersistenceType: d.Get("persistence_type").(string),
+		LbMethod:        d.Get("lb_method").(string),
 	}
 
 	err := client.CreateLBVserver(&lb)
