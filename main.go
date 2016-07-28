@@ -41,7 +41,7 @@ type LBVserver struct {
 }
 
 func (lb *LBVserver) Id() string {
-	return "id-" + lb.Name + "!"
+	return lb.Name
 }
 
 func (c *NetScalerNitroClient) CreateLBVserver(lb *LBVserver) error {
@@ -56,6 +56,16 @@ func (c *NetScalerNitroClient) CreateLBVserver(lb *LBVserver) error {
 	_, err := nitroClient.CreateLBVserver(lbStruct)
 	if err != nil {
 		log.Fatal("Failed to create loadbalancer %s", lb.Name)
+		return err
+	}
+	return nil
+}
+
+func (c *NetScalerNitroClient) DeleteLBVserver(lbName string) error {
+	nitroClient := netscaler.NewNitroClient(c.Endpoint, c.Username, c.Password)
+	err := nitroClient.DeleteLBVserver(lbName)
+	if err != nil {
+		log.Fatal("Failed to delete loadbalancer %s", lbName)
 		return err
 	}
 	return nil
@@ -145,14 +155,6 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 }
 
 func createFunc(d *schema.ResourceData, meta interface{}) error {
-	/*
-		Name            string
-		ServiceType     string
-		VIP             string
-		Port            int
-		PersistenceType string
-		LbMethod        string
-	*/
 	client := meta.(*NetScalerNitroClient)
 	var lbName string
 	if v, ok := d.GetOk("name"); ok {
@@ -189,5 +191,14 @@ func updateFunc(d *schema.ResourceData, meta interface{}) error {
 }
 
 func deleteFunc(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*NetScalerNitroClient)
+	lbName := d.Id()
+	err := client.DeleteLBVserver(lbName)
+	if err != nil {
+		return err
+	}
+
+	d.SetId("")
+
 	return nil
 }

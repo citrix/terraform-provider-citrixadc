@@ -162,6 +162,23 @@ func (c *nitroClient) CreateLBVserver(lbStruct *NetscalerLB) (string, error) {
 	return lbStruct.Name, nil
 }
 
+func (c *nitroClient) DeleteLBVserver(lbName string) error {
+	resourceType := "lbvserver"
+
+	_, err := c.listResource(resourceType, lbName)
+	if err == nil { // resource exists
+		log.Printf("Found resource of type %s: %s", resourceType, lbName)
+		_, err = c.deleteResource(resourceType, lbName)
+		if err != nil {
+			log.Println(fmt.Sprintf("Failed to delete lb %s, err=%s", lbName, err))
+			return err
+		}
+	} else {
+		log.Printf("Lb %s already deleted ", lbName)
+	}
+	return nil
+}
+
 func (c *nitroClient) FindResource(resourceType string, resourceName string) bool {
 	_, err := c.listResource(resourceType, resourceName)
 	if err != nil {

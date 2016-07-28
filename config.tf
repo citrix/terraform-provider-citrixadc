@@ -26,3 +26,10 @@ resource "netscaler_lb" "my-lb-vserver" {
   lb_method = "ROUNDROBIN"
   persistence_type = "COOKIEINSERT"
 }
+
+resource "netscaler_lb" "my-lb-vserver2" {
+  name = "sample_lb2"
+  vip = "10.71.136.151"
+  port = 443
+}
+
