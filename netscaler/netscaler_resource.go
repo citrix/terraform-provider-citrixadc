@@ -40,14 +40,14 @@ func NewNitroClient(url string, username string, password string) *nitroClient {
 	return c
 }
 
-func (c *nitroClient) createHttpRequest(method string, url string, buff *bytes.Buffer, contentType string) (*http.Request, error) {
+func (c *nitroClient) createHttpRequest(method string, url string, buff *bytes.Buffer) (*http.Request, error) {
 	req, err := http.NewRequest(method, url, buff)
 	if err != nil {
 		log.Fatal(err)
 		return nil, err
 	}
-	req.Header.Set("Accept", contentType)
-	req.Header.Set("Content-Type", contentType)
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("X-NITRO-USER", c.username)
 	req.Header.Set("X-NITRO-PASS", c.password)
 	return req, nil
@@ -62,10 +62,8 @@ func (c *nitroClient) createResource(resourceType string, resourceJson []byte) (
 	if strings.HasSuffix(resourceType, "_binding") {
 		method = "POST" //FIXME: docs say it should be PUT
 	}
-	//var contentType = fmt.Sprintf("application/vnd.com.citrix.netscaler.%s+json", resourceType)
-	var contentType = "application/json"
 
-	req, err := c.createHttpRequest(method, url, bytes.NewBuffer(resourceJson), contentType)
+	req, err := c.createHttpRequest(method, url, bytes.NewBuffer(resourceJson))
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -106,10 +104,7 @@ func (c *nitroClient) deleteResource(resourceType string, resourceName string) (
 	log.Println("Deleting resource of type ", resourceType)
 	url := c.url + resourceType + "/" + resourceName
 
-	//var contentType = fmt.Sprintf("application/vnd.com.citrix.netscaler.%s+json", resourceType)
-	var contentType = "application/json"
-
-	req, err := c.createHttpRequest("DELETE", url, bytes.NewBuffer([]byte{}), contentType)
+	req, err := c.createHttpRequest("DELETE", url, bytes.NewBuffer([]byte{}))
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -146,11 +141,9 @@ func (c *nitroClient) deleteResource(resourceType string, resourceName string) (
 func (c *nitroClient) unbindResource(resourceType string, resourceName string, boundResourceType string, boundResource string) ([]byte, error) {
 	log.Println("Unbinding resource of type ", resourceType)
 
-	//var contentType = fmt.Sprintf("application/vnd.com.citrix.netscaler.%s+json", resourceType)
-	var contentType = "application/json"
 	url := c.url + "/" + resourceName + "?args=" + boundResourceType + ":" + boundResource
 
-	req, err := c.createHttpRequest("DELETE", url, bytes.NewBuffer([]byte{}), contentType)
+	req, err := c.createHttpRequest("DELETE", url, bytes.NewBuffer([]byte{}))
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -193,10 +186,7 @@ func (c *nitroClient) listBoundResources(resourceName string, resourceType strin
 		url = c.url + fmt.Sprintf("%s_%s_binding/%s?filter=%s:%s", resourceType, boundResourceType, resourceName, boundResourceFilterName, boundResourceFilterValue)
 	}
 
-	var contentType = "application/json"
-	//var contentType = fmt.Sprintf("application/vnd.com.citrix.netscaler.%s_%s_binding+json", resourceType, boundResourceType)
-
-	req, err := c.createHttpRequest("GET", url, bytes.NewBuffer([]byte{}), contentType)
+	req, err := c.createHttpRequest("GET", url, bytes.NewBuffer([]byte{}))
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -237,10 +227,7 @@ func (c *nitroClient) listResource(resourceType string, resourceName string) ([]
 		url = c.url + fmt.Sprintf("%s/%s", resourceType, resourceName)
 	}
 
-	//var contentType = fmt.Sprintf("application/vnd.com.citrix.netscaler.%s+json", resourceType)
-	var contentType = "application/json"
-
-	req, err := c.createHttpRequest("GET", url, bytes.NewBuffer([]byte{}), contentType)
+	req, err := c.createHttpRequest("GET", url, bytes.NewBuffer([]byte{}))
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
