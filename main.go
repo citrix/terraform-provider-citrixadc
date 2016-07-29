@@ -24,11 +24,11 @@ type NetScalerNitroClient struct {
 	Username string
 	Password string
 	Endpoint string
+	client   *netscaler.NitroClient
 }
 
 func (c *NetScalerNitroClient) ResourceExists(resourceType string, resourceName string) bool {
-	nitroClient := netscaler.NewNitroClient(c.Endpoint, c.Username, c.Password)
-	found := nitroClient.ResourceExists(resourceType, resourceName)
+	found := c.client.ResourceExists(resourceType, resourceName)
 	return found
 }
 

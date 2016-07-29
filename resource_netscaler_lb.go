@@ -23,46 +23,6 @@ import (
 	"log"
 )
 
-type LBVserver struct {
-	Name            string
-	ServiceType     string
-	VIP             string
-	Port            int
-	PersistenceType string
-	LbMethod        string
-}
-
-func (lb *LBVserver) Id() string {
-	return lb.Name
-}
-
-func (c *NetScalerNitroClient) CreateLBVserver(lb *LBVserver) error {
-	nitroClient := netscaler.NewNitroClient(c.Endpoint, c.Username, c.Password)
-	var lbStruct = new(netscaler.NetscalerLB)
-	lbStruct.Name = lb.Name
-	lbStruct.ServiceType = lb.ServiceType
-	lbStruct.Ipv46 = lb.VIP
-	lbStruct.Port = lb.Port
-	lbStruct.PersistenceType = lb.PersistenceType
-	lbStruct.LbMethod = lb.LbMethod
-	_, err := nitroClient.CreateLBVserver(lbStruct)
-	if err != nil {
-		log.Fatal("Failed to create loadbalancer %s", lb.Name)
-		return err
-	}
-	return nil
-}
-
-func (c *NetScalerNitroClient) DeleteLBVserver(lbName string) error {
-	nitroClient := netscaler.NewNitroClient(c.Endpoint, c.Username, c.Password)
-	err := nitroClient.DeleteLBVserver(lbName)
-	if err != nil {
-		log.Fatal("Failed to delete loadbalancer %s", lbName)
-		return err
-	}
-	return nil
-}
-
 func resourceNetScalerLB() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
@@ -100,7 +60,7 @@ func resourceNetScalerLB() *schema.Resource {
 }
 
 func createLbFunc(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*NetScalerNitroClient)
+	client := meta.(*NetScalerNitroClient).client
 	var lbName string
 	if v, ok := d.GetOk("name"); ok {
 		lbName = v.(string)
@@ -108,35 +68,56 @@ func createLbFunc(d *schema.ResourceData, meta interface{}) error {
 		lbName = resource.PrefixedUniqueId("tf-lb-")
 		d.Set("name", lbName)
 	}
-	lb := LBVserver{
+	lb := netscaler.NetscalerLB{
 		Name:            lbName,
-		VIP:             d.Get("vip").(string),
+		Ipv46:           d.Get("vip").(string),
 		Port:            d.Get("port").(int),
 		ServiceType:     d.Get("service_type").(string),
 		PersistenceType: d.Get("persistence_type").(string),
 		LbMethod:        d.Get("lb_method").(string),
 	}
 
-	err := client.CreateLBVserver(&lb)
+	_, err := client.CreateLBVserver(&lb)
 	if err != nil {
 		return err
 	}
 
-	d.SetId(lb.Id())
+	d.SetId(lbName)
 
 	return nil
 }
 
 func readLbFunc(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*NetScalerNitroClient)
+	client := meta.(*NetScalerNitroClient).client
 	lbName := d.Id()
 	log.Printf("Reading loadbalancer state %s", lbName)
-	found := client.ResourceExists("lbvserver", lbName)
-	if !found {
+	data, err := client.FindResource("lbvserver", lbName)
+	if err != nil {
 		log.Printf("Clearing loadbalancer state %s", lbName)
 		d.SetId("")
+		return nil
 	}
+	/* { "name": "sample_lb2", "insertvserveripport": "OFF", "ipv46": "10.71.136.151", "ippattern": "0.0.0.0", "ipmask": "*", "listenpolicy": "NONE",
+	   "ipmapping": "0.0.0.0", "port": 443, "range": "1", "servicetype": "HTTP", "type": "ADDRESS", "curstate": "DOWN", "effectivestate": "DOWN", "status": 1,
+	   "lbrrreason": 0, "cachetype": "SERVER", "authentication": "OFF", "authn401": "OFF", "dynamicweight": "0", "priority": "0", "clttimeout": "180",
+	   "somethod": "NONE", "sopersistence": "DISABLED", "sopersistencetimeout": "2", "healththreshold": "0", "lbmethod": "LEASTCONNECTION", "backuplbmethod": "ROUNDROBIN",
+	   "dataoffset": "0", "health": "0", "datalength": "0", "ruletype": "0", "m": "IP", "persistencetype": "NONE", "timeout": 2, "persistmask": "255.255.255.255",
+	   "v6persistmasklen": "128", "persistencebackup": "NONE", "cacheable": "NO", "pq": "OFF", "sc": "OFF", "rtspnat": "OFF", "sessionless": "DISABLED", "map": "OFF",
+	   "connfailover": "DISABLED", "redirectportrewrite": "DISABLED", "downstateflush": "ENABLED", "disableprimaryondown": "DISABLED", "gt2gb": "DISABLED", "consolidatedlconn":
+	   "GLOBAL", "consolidatedlconngbl": "YES", "thresholdvalue": 0, "invoke": false, "version": 0, "totalservices": "2", "activeservices": "0",
+	   "statechangetimesec": "Fri Jul 29 19:14:02 2016", "statechangetimeseconds": "1469819642", "statechangetimemsec": "382", "tickssincelaststatechange": "728421",
+	   "hits": "0", "pipolicyhits": "0", "push": "DISABLED", "pushlabel": "none", "pushmulticlients": "NO", "policysubtype": "0", "l2conn": "OFF", "appflowlog": "ENABLED",
+	   "isgslb": false, "icmpvsrresponse": "PASSIVE", "rhistate": "PASSIVE", "newservicerequestunit": "PER_SECOND", "vsvrbindsvcip": "10.71.136.151", "vsvrbindsvcport": 0,
+	   "skippersistency": "None", "td": "0", "minautoscalemembers": "0", "maxautoscalemembers": "0", "macmoderetainvlan": "DISABLED", "dns64": "DISABLED", "bypassaaaa": "NO",
+	   "processlocal": "DISABLED", "vsvrdynconnsothreshold": "0" }
+	*/
+	d.Set("name", data["name"])
+	d.Set("persistence_type", data["persistencetype"])
+	d.Set("lb_method", data["lbmethod"])
+	d.Set("service_type", data["servicetype"])
+
 	return nil
+
 }
 
 func updateLbFunc(d *schema.ResourceData, meta interface{}) error {
@@ -144,7 +125,7 @@ func updateLbFunc(d *schema.ResourceData, meta interface{}) error {
 }
 
 func deleteLbFunc(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*NetScalerNitroClient)
+	client := meta.(*NetScalerNitroClient).client
 	lbName := d.Id()
 	err := client.DeleteLBVserver(lbName)
 	if err != nil {

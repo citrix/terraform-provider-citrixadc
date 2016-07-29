@@ -16,6 +16,7 @@ limitations under the License.
 package main
 
 import (
+	netscaler "github.com/chiradeep/terraform-provider-netscaler/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
 )
@@ -56,11 +57,13 @@ func providerResources() map[string]*schema.Resource {
 }
 
 func providerConfigure(d *schema.ResourceData) (interface{}, error) {
-	client := NetScalerNitroClient{
+	c := NetScalerNitroClient{
 		Username: d.Get("username").(string),
 		Password: d.Get("password").(string),
 		Endpoint: d.Get("endpoint").(string),
 	}
+	client := netscaler.NewNitroClient(c.Endpoint, c.Username, c.Password)
+	c.client = client
 
-	return &client, nil
+	return &c, nil
 }

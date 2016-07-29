@@ -26,21 +26,21 @@ import (
 	"strings"
 )
 
-type nitroClient struct {
+type NitroClient struct {
 	url      string
 	username string
 	password string
 }
 
-func NewNitroClient(url string, username string, password string) *nitroClient {
-	c := new(nitroClient)
+func NewNitroClient(url string, username string, password string) *NitroClient {
+	c := new(NitroClient)
 	c.url = strings.Trim(url, " /") + "/nitro/v1/config/"
 	c.username = username
 	c.password = password
 	return c
 }
 
-func (c *nitroClient) createHttpRequest(method string, url string, buff *bytes.Buffer) (*http.Request, error) {
+func (c *NitroClient) createHttpRequest(method string, url string, buff *bytes.Buffer) (*http.Request, error) {
 	req, err := http.NewRequest(method, url, buff)
 	if err != nil {
 		log.Fatal(err)
@@ -53,7 +53,7 @@ func (c *nitroClient) createHttpRequest(method string, url string, buff *bytes.B
 	return req, nil
 }
 
-func (c *nitroClient) createResource(resourceType string, resourceJson []byte) ([]byte, error) {
+func (c *NitroClient) createResource(resourceType string, resourceJson []byte) ([]byte, error) {
 	log.Println("Creating resource of type ", resourceType)
 
 	url := c.url + resourceType
@@ -100,7 +100,7 @@ func (c *nitroClient) createResource(resourceType string, resourceJson []byte) (
 	}
 }
 
-func (c *nitroClient) deleteResource(resourceType string, resourceName string) ([]byte, error) {
+func (c *NitroClient) deleteResource(resourceType string, resourceName string) ([]byte, error) {
 	log.Println("Deleting resource of type ", resourceType)
 	url := c.url + resourceType + "/" + resourceName
 
@@ -138,7 +138,7 @@ func (c *nitroClient) deleteResource(resourceType string, resourceName string) (
 	}
 }
 
-func (c *nitroClient) unbindResource(resourceType string, resourceName string, boundResourceType string, boundResource string) ([]byte, error) {
+func (c *NitroClient) unbindResource(resourceType string, resourceName string, boundResourceType string, boundResource string) ([]byte, error) {
 	log.Println("Unbinding resource of type ", resourceType)
 
 	url := c.url + "/" + resourceName + "?args=" + boundResourceType + ":" + boundResource
@@ -177,7 +177,7 @@ func (c *nitroClient) unbindResource(resourceType string, resourceName string, b
 	}
 }
 
-func (c *nitroClient) listBoundResources(resourceName string, resourceType string, boundResourceType string, boundResourceFilterName string, boundResourceFilterValue string) ([]byte, error) {
+func (c *NitroClient) listBoundResources(resourceName string, resourceType string, boundResourceType string, boundResourceFilterName string, boundResourceFilterValue string) ([]byte, error) {
 	log.Println("listing resource of type ", resourceType)
 	var url string
 	if boundResourceFilterName == "" {
@@ -219,7 +219,7 @@ func (c *nitroClient) listBoundResources(resourceName string, resourceType strin
 	}
 }
 
-func (c *nitroClient) listResource(resourceType string, resourceName string) ([]byte, error) {
+func (c *NitroClient) listResource(resourceType string, resourceName string) ([]byte, error) {
 	log.Println("listing resource of type ", resourceType)
 	url := c.url + resourceType
 
