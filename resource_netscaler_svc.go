@@ -105,9 +105,10 @@ func createSvcFunc(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("name"); ok {
 		svcName = v.(string)
 	} else {
-		svcName = resource.PrefixedUniqueId("tf-svc-")
+		svcName = resource.PrefixedUniqueId("tf-svc-" + lbName + "-")
 		d.Set("name", svcName)
 	}
+	log.Printf("****Creating service %s", svcName)
 	svc := Service{
 		Name:        svcName,
 		Ip:          d.Get("ip").(string),
@@ -128,7 +129,7 @@ func createSvcFunc(d *schema.ResourceData, meta interface{}) error {
 func readSvcFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient)
 	svcName := d.Id()
-	log.Printf("Reading service state %s", svcName)
+	log.Printf("****Reading service state %s", svcName)
 	found := client.FindResource("service", svcName)
 	if !found {
 		log.Printf("Clearing service state %s", svcName)
@@ -138,6 +139,9 @@ func readSvcFunc(d *schema.ResourceData, meta interface{}) error {
 }
 
 func updateSvcFunc(d *schema.ResourceData, meta interface{}) error {
+	svcName := d.Id()
+	log.Printf("****Updating service state %s", svcName)
+	d.Set("name", svcName) //FIXME: why?
 	return nil
 }
 
