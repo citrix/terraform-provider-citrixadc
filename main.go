@@ -26,9 +26,9 @@ type NetScalerNitroClient struct {
 	Endpoint string
 }
 
-func (c *NetScalerNitroClient) FindResource(resourceType string, resourceName string) bool {
+func (c *NetScalerNitroClient) ResourceExists(resourceType string, resourceName string) bool {
 	nitroClient := netscaler.NewNitroClient(c.Endpoint, c.Username, c.Password)
-	found := nitroClient.FindResource(resourceType, resourceName)
+	found := nitroClient.ResourceExists(resourceType, resourceName)
 	return found
 }
 

@@ -131,7 +131,7 @@ func readLbFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient)
 	lbName := d.Id()
 	log.Printf("Reading loadbalancer state %s", lbName)
-	found := client.FindResource("lbvserver", lbName)
+	found := client.ResourceExists("lbvserver", lbName)
 	if !found {
 		log.Printf("Clearing loadbalancer state %s", lbName)
 		d.SetId("")

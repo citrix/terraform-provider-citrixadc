@@ -96,7 +96,7 @@ func resourceNetScalerSvc() *schema.Resource {
 func createSvcFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient)
 	lbName := d.Get("lb").(string)
-	lbFound := client.FindResource("lbvserver", lbName)
+	lbFound := client.ResourceExists("lbvserver", lbName)
 	if !lbFound {
 		log.Printf("No lb with name %s found", lbName)
 		return errors.New(fmt.Sprintf("No lb with name %s found", lbName))
@@ -130,7 +130,7 @@ func readSvcFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient)
 	svcName := d.Id()
 	log.Printf("****Reading service state %s", svcName)
-	found := client.FindResource("service", svcName)
+	found := client.ResourceExists("service", svcName)
 	if !found {
 		log.Printf("Clearing service state %s", svcName)
 		d.SetId("")

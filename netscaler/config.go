@@ -82,7 +82,7 @@ func (c *nitroClient) DeleteService(sname string) error {
 func (c *nitroClient) CreateService(serviceStruct *NetscalerService) (string, error) {
 	resourceType := "service"
 	sname := serviceStruct.Name
-	if !c.FindResource("service", sname) {
+	if !c.ResourceExists("service", sname) {
 		if serviceStruct.ServiceType == "" {
 			serviceStruct.ServiceType = "HTTP"
 		}
@@ -119,7 +119,7 @@ func (c *nitroClient) AddAndBindService(lbName string, svcStruct *NetscalerServi
 	//bind the lb to the service
 	resourceType := "lbvserver"
 	boundResourceType := "service"
-	if !c.FindBoundResource(resourceType, lbName, boundResourceType, "servicename", sname) {
+	if !c.ResourceBindingExists(resourceType, lbName, boundResourceType, "servicename", sname) {
 		nsLbSvcBinding := &struct {
 			Lbvserver_service_binding NetscalerLBServiceBinding `json:"lbvserver_service_binding"`
 		}{Lbvserver_service_binding: NetscalerLBServiceBinding{Name: lbName, ServiceName: sname}}
@@ -143,7 +143,7 @@ func (c *nitroClient) AddAndBindService(lbName string, svcStruct *NetscalerServi
 func (c *nitroClient) CreateLBVserver(lbStruct *NetscalerLB) (string, error) {
 
 	resourceType := "lbvserver"
-	if c.FindResource(resourceType, lbStruct.Name) == false {
+	if c.ResourceExists(resourceType, lbStruct.Name) == false {
 		if lbStruct.ServiceType == "" {
 			lbStruct.ServiceType = "HTTP"
 		}
@@ -213,17 +213,17 @@ func (c *nitroClient) DeleteLBVserver(lbName string) error {
 	return nil
 }
 
-func (c *nitroClient) FindResource(resourceType string, resourceName string) bool {
+func (c *nitroClient) ResourceExists(resourceType string, resourceName string) bool {
 	_, err := c.listResource(resourceType, resourceName)
 	if err != nil {
 		log.Printf("No %s %s found", resourceType, resourceName)
 		return false
 	}
-	log.Printf("%s %s is alredy present", resourceType, resourceName)
+	log.Printf("%s %s is already present", resourceType, resourceName)
 	return true
 }
 
-func (c *nitroClient) FindBoundResource(resourceType string, resourceName string, boundResourceType string, boundResourceFilterName string, boundResourceFilterValue string) bool {
+func (c *nitroClient) ResourceBindingExists(resourceType string, resourceName string, boundResourceType string, boundResourceFilterName string, boundResourceFilterValue string) bool {
 	result, err := c.listBoundResources(resourceName, resourceType, boundResourceType, boundResourceFilterName, boundResourceFilterValue)
 	if err != nil {
 		log.Printf("No %s %s to %s %s binding found", resourceType, resourceName, boundResourceType, boundResourceFilterValue)
@@ -239,6 +239,6 @@ func (c *nitroClient) FindBoundResource(resourceType string, resourceName string
 		return false
 	}
 
-	log.Printf("%s %s is alredy bound to %s %s", resourceType, resourceName, boundResourceType, boundResourceFilterValue)
+	log.Printf("%s %s is already bound to %s %s", resourceType, resourceName, boundResourceType, boundResourceFilterValue)
 	return true
 }
