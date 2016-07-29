@@ -71,12 +71,37 @@ type NetscalerCsVserver struct {
 	Port        int    `json:"port"`
 }
 
-func (c *nitroClient) DeleteService(sname string) {
+func (c *nitroClient) DeleteService(sname string) error {
 	resourceType := "service"
 	_, err := c.deleteResource(resourceType, sname)
 	if err != nil {
 		log.Println(fmt.Sprintf("Failed to delete service %s err=%s", sname, err))
+		return err
 	}
+	return nil
+}
+
+func (c *nitroClient) CreateService(serviceStruct *NetscalerService) (string, error) {
+	resourceType := "service"
+	sname := serviceStruct.Name
+	nsService := &struct {
+		Service NetscalerService `json:"service"`
+	}{Service: *serviceStruct}
+	resourceJson, err := json.Marshal(nsService)
+	if err != nil {
+		log.Fatal(fmt.Sprintf("Failed to marshal service %s err=", sname, err))
+		return sname, err
+	}
+	log.Println(string(resourceJson))
+
+	body, err := c.createResource(resourceType, resourceJson)
+	if err != nil {
+		log.Fatal(fmt.Sprintf("Failed to create service %s err=%s", sname, err))
+		return sname, err
+	}
+	_ = body
+	return sname, nil
+
 }
 
 func (c *nitroClient) AddAndBindService(lbName string, sname string, IpPort string) {
@@ -160,6 +185,22 @@ func (c *nitroClient) CreateLBVserver(lbStruct *NetscalerLB) (string, error) {
 	}
 
 	return lbStruct.Name, nil
+}
+
+func (c *nitroClient) DeleteResource(resourceType string, resourceName string) error {
+
+	_, err := c.listResource(resourceType, resourceName)
+	if err == nil { // resource exists
+		log.Printf("Found resource of type %s: %s", resourceType, resourceName)
+		_, err = c.deleteResource(resourceType, resourceName)
+		if err != nil {
+			log.Println(fmt.Sprintf("Failed to delete resourceType %: %s, err=%s", resourceType, resourceName, err))
+			return err
+		}
+	} else {
+		log.Printf("Resource %s already deleted ", resourceName)
+	}
+	return nil
 }
 
 func (c *nitroClient) DeleteLBVserver(lbName string) error {
