@@ -33,3 +33,14 @@ resource "netscaler_lb" "my-lb-vserver2" {
   port = 443
 }
 
+resource "netscaler_svc" "backend_1" {
+  lb = "${netscaler_lb.my-lb-vserver2.name}"
+  ip = "10.33.44.55"
+  port = 80
+}
+
+resource "netscaler_svc" "backend_2" {
+  lb = "${netscaler_lb.my-lb-vserver2.name}"
+  ip = "10.33.44.56"
+  port = 443
+}

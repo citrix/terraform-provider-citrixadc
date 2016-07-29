@@ -16,10 +16,12 @@ limitations under the License.
 package main
 
 import (
+	"errors"
 	netscaler "github.com/chiradeep/terraform-provider-netscaler/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 
+	"fmt"
 	"log"
 )
 
@@ -34,14 +36,14 @@ func (svc *Service) Id() string {
 	return svc.Name
 }
 
-func (c *NetScalerNitroClient) CreateService(svc *Service) error {
+func (c *NetScalerNitroClient) CreateService(lbName string, svc *Service) error {
 	nitroClient := netscaler.NewNitroClient(c.Endpoint, c.Username, c.Password)
 	var svcStruct = new(netscaler.NetscalerService)
 	svcStruct.Name = svc.Name
 	svcStruct.ServiceType = svc.ServiceType
 	svcStruct.Ip = svc.Ip
 	svcStruct.Port = svc.Port
-	_, err := nitroClient.CreateService(svcStruct)
+	err := nitroClient.AddAndBindService(lbName, svcStruct)
 	if err != nil {
 		log.Fatal("Failed to create service %s", svc.Name)
 		return err
@@ -71,7 +73,7 @@ func resourceNetScalerSvc() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"vip": &schema.Schema{
+			"ip": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -83,13 +85,9 @@ func resourceNetScalerSvc() *schema.Resource {
 				Type:     schema.TypeInt,
 				Required: true,
 			},
-			"persistence_type": &schema.Schema{
+			"lb": &schema.Schema{
 				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"svc_method": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 			},
 		},
 	}
@@ -97,6 +95,12 @@ func resourceNetScalerSvc() *schema.Resource {
 
 func createSvcFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient)
+	lbName := d.Get("lb").(string)
+	lbFound := client.FindResource("lbvserver", lbName)
+	if !lbFound {
+		log.Printf("No lb with name %s found", lbName)
+		return errors.New(fmt.Sprintf("No lb with name %s found", lbName))
+	}
 	var svcName string
 	if v, ok := d.GetOk("name"); ok {
 		svcName = v.(string)
@@ -111,7 +115,7 @@ func createSvcFunc(d *schema.ResourceData, meta interface{}) error {
 		ServiceType: d.Get("service_type").(string),
 	}
 
-	err := client.CreateService(&svc)
+	err := client.CreateService(lbName, &svc)
 	if err != nil {
 		return err
 	}
@@ -125,7 +129,7 @@ func readSvcFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient)
 	svcName := d.Id()
 	log.Printf("Reading service state %s", svcName)
-	found := client.FindResource("svcvserver", svcName)
+	found := client.FindResource("service", svcName)
 	if !found {
 		log.Printf("Clearing service state %s", svcName)
 		d.SetId("")

@@ -21,8 +21,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"strconv"
-	"strings"
 )
 
 type NetscalerService struct {
@@ -84,52 +82,44 @@ func (c *nitroClient) DeleteService(sname string) error {
 func (c *nitroClient) CreateService(serviceStruct *NetscalerService) (string, error) {
 	resourceType := "service"
 	sname := serviceStruct.Name
-	nsService := &struct {
-		Service NetscalerService `json:"service"`
-	}{Service: *serviceStruct}
-	resourceJson, err := json.Marshal(nsService)
-	if err != nil {
-		log.Fatal(fmt.Sprintf("Failed to marshal service %s err=", sname, err))
-		return sname, err
-	}
-	log.Println(string(resourceJson))
+	if !c.FindResource("service", sname) {
+		if serviceStruct.ServiceType == "" {
+			serviceStruct.ServiceType = "HTTP"
+		}
+		nsService := &struct {
+			Service NetscalerService `json:"service"`
+		}{Service: *serviceStruct}
+		resourceJson, err := json.Marshal(nsService)
+		if err != nil {
+			log.Fatal(fmt.Sprintf("Failed to marshal service %s err=", sname, err))
+			return sname, err
+		}
+		log.Println(string(resourceJson))
 
-	body, err := c.createResource(resourceType, resourceJson)
-	if err != nil {
-		log.Fatal(fmt.Sprintf("Failed to create service %s err=%s", sname, err))
-		return sname, err
+		body, err := c.createResource(resourceType, resourceJson)
+		if err != nil {
+			log.Fatal(fmt.Sprintf("Failed to create service %s err=%s", sname, err))
+			return sname, err
+		}
+		log.Printf("Created service with name %s", sname)
+		_ = body
+	} else {
+		log.Printf("Found service with name %s, not recreating", sname)
 	}
-	_ = body
 	return sname, nil
 
 }
 
-func (c *nitroClient) AddAndBindService(lbName string, sname string, IpPort string) {
-	//create a Netscaler Service that represents the Kubernetes service
-	resourceType := "service"
-	ep_ip_port := strings.Split(IpPort, ":")
-	servicePort, _ := strconv.Atoi(ep_ip_port[1])
-	nsService := &struct {
-		Service NetscalerService `json:"service"`
-	}{Service: NetscalerService{Name: sname, Ip: ep_ip_port[0], ServiceType: "HTTP", Port: servicePort}}
-	resourceJson, err := json.Marshal(nsService)
+func (c *nitroClient) AddAndBindService(lbName string, svcStruct *NetscalerService) error {
+	_, err := c.CreateService(svcStruct)
 	if err != nil {
-		log.Fatal(fmt.Sprintf("Failed to marshal service %s err=", sname, err))
-		return
+		return err
 	}
-	log.Println(string(resourceJson))
-
-	body, err := c.createResource(resourceType, resourceJson)
-	if err != nil {
-		log.Fatal(fmt.Sprintf("Failed to create service %s err=%s", sname, err))
-		return
-	}
-	_ = body
-
+	sname := svcStruct.Name
 	//bind the lb to the service
-	resourceType = "lbvserver"
+	resourceType := "lbvserver"
 	boundResourceType := "service"
-	if c.FindBoundResource(resourceType, lbName, boundResourceType, "servicename", sname) == false {
+	if !c.FindBoundResource(resourceType, lbName, boundResourceType, "servicename", sname) {
 		nsLbSvcBinding := &struct {
 			Lbvserver_service_binding NetscalerLBServiceBinding `json:"lbvserver_service_binding"`
 		}{Lbvserver_service_binding: NetscalerLBServiceBinding{Name: lbName, ServiceName: sname}}
@@ -140,11 +130,14 @@ func (c *nitroClient) AddAndBindService(lbName string, sname string, IpPort stri
 		body, err := c.createResource(resourceType, resourceJson)
 		if err != nil {
 			log.Fatal(fmt.Sprintf("Failed to bind lb %s to service %s, err=%s", lbName, sname, err))
-			//TODO roll back
-			return
+			_ = c.DeleteService(sname) //TODO: the problem might be that it is bound to a different lb
+			return err
 		}
 		_ = body
+	} else {
+		log.Printf("lb %s already bound to service %s", lbName, sname)
 	}
+	return nil
 }
 
 func (c *nitroClient) CreateLBVserver(lbStruct *NetscalerLB) (string, error) {
