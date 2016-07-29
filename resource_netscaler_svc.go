@@ -86,6 +86,7 @@ func createSvcFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(svcName)
+	_ = readSvcFunc(d, meta)
 
 	return nil
 }
@@ -94,11 +95,26 @@ func readSvcFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	svcName := d.Id()
 	log.Printf("****Reading service state %s", svcName)
-	found := client.ResourceExists("service", svcName)
-	if !found {
-		log.Printf("Clearing service state %s", svcName)
+	data, err := client.FindResource("service", svcName)
+	if err != nil {
+		log.Printf("Clearing service %s", svcName)
 		d.SetId("")
+		return nil
 	}
+	/*{"name": "tf-svc-sample_lb2-qmdh42onpnf6fdqaipo5fwrsay", "numofconnections": 0, "servername": "10.33.44.54", "policyname": "10.33.44.54", "servicetype": "HTTP",
+	  "serviceconftype2": "Configured", "port": 80, "gslb": "NONE", "cachetype": "SERVER", "maxclient": "0", "maxreq": "0", "cacheable": "NO", "cip": "DISABLED",
+	   "usip": "NO", "pathmonitor": "NO", "pathmonitorindv": "NO", "useproxyport": "YES", "sc": "OFF", "dup_weight": "0", "dup_state": "ENABLED", "sp": "ON",
+	   "rtspsessionidremap": "OFF", "failedprobes": "1", "clttimeout": 180, "totalprobes": "180", "svrtimeout": 360, "totalfailedprobes": "360", "publicip": "0.0.0.0",
+	   "publicport": 80, "customserverid": "None", "cka": "NO", "tcpb": "NO", "processlocal": "DISABLED", "cmp": "NO", "maxbandwidth": "0", "accessdown": "NO",
+	   "svrstate": "DOWN", "delay": 0, "ipaddress": "10.33.44.54", "monthreshold": "0", "monstate": "ENABLED", "monitor_state": "Unknown", "monstatcode": 0,
+	   "lastresponse": "Probing ownership is with some other node in cluster.", "responsetime": "0", "riseapbrstatsmsgcode": 0, "riseapbrstatsmsgcode2": 1, "monstatparam1": 0,
+	   "monstatparam2": 0, "monstatparam3": 0, "downstateflush": "ENABLED", "statechangetimesec": "Fri Jul 29 22:32:58 2016",
+	   "statechangetimemsec": "67", "tickssincelaststatechange": "13580", "stateupdatereason": "0",
+	   "clmonview": "0", "graceful": "NO", "monitortotalprobes": "0", "monitortotalfailedprobes": "0", "monitorcurrentfailedprobes": "0", "healthmonitor": "YES",
+	   "appflowlog": "ENABLED", "serviceipstr": "10.33.44.54", "td": "0", "passive": false }
+	*/
+	d.Set("name", data["name"])
+	d.Set("service_type", data["servicetype"])
 	return nil
 }
 
