@@ -25,42 +25,6 @@ import (
 	"log"
 )
 
-type Service struct {
-	Name        string
-	ServiceType string
-	Ip          string
-	Port        int
-}
-
-func (svc *Service) Id() string {
-	return svc.Name
-}
-
-func (c *NetScalerNitroClient) CreateService(lbName string, svc *Service) error {
-	nitroClient := netscaler.NewNitroClient(c.Endpoint, c.Username, c.Password)
-	var svcStruct = new(netscaler.NetscalerService)
-	svcStruct.Name = svc.Name
-	svcStruct.ServiceType = svc.ServiceType
-	svcStruct.Ip = svc.Ip
-	svcStruct.Port = svc.Port
-	err := nitroClient.AddAndBindService(lbName, svcStruct)
-	if err != nil {
-		log.Fatal("Failed to create service %s", svc.Name)
-		return err
-	}
-	return nil
-}
-
-func (c *NetScalerNitroClient) DeleteService(svcName string) error {
-	nitroClient := netscaler.NewNitroClient(c.Endpoint, c.Username, c.Password)
-	err := nitroClient.DeleteService(svcName)
-	if err != nil {
-		log.Fatal("Failed to delete service %s", svcName)
-		return err
-	}
-	return nil
-}
-
 func resourceNetScalerSvc() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
@@ -94,7 +58,7 @@ func resourceNetScalerSvc() *schema.Resource {
 }
 
 func createSvcFunc(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*NetScalerNitroClient)
+	client := meta.(*NetScalerNitroClient).client
 	lbName := d.Get("lb").(string)
 	lbFound := client.ResourceExists("lbvserver", lbName)
 	if !lbFound {
@@ -109,25 +73,25 @@ func createSvcFunc(d *schema.ResourceData, meta interface{}) error {
 		d.Set("name", svcName)
 	}
 	log.Printf("****Creating service %s", svcName)
-	svc := Service{
+	svc := netscaler.NetscalerService{
 		Name:        svcName,
 		Ip:          d.Get("ip").(string),
 		Port:        d.Get("port").(int),
 		ServiceType: d.Get("service_type").(string),
 	}
 
-	err := client.CreateService(lbName, &svc)
+	err := client.AddAndBindService(lbName, &svc)
 	if err != nil {
 		return err
 	}
 
-	d.SetId(svc.Id())
+	d.SetId(svcName)
 
 	return nil
 }
 
 func readSvcFunc(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*NetScalerNitroClient)
+	client := meta.(*NetScalerNitroClient).client
 	svcName := d.Id()
 	log.Printf("****Reading service state %s", svcName)
 	found := client.ResourceExists("service", svcName)
@@ -146,7 +110,7 @@ func updateSvcFunc(d *schema.ResourceData, meta interface{}) error {
 }
 
 func deleteSvcFunc(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*NetScalerNitroClient)
+	client := meta.(*NetScalerNitroClient).client
 	svcName := d.Id()
 	err := client.DeleteService(svcName)
 	if err != nil {
