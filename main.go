@@ -27,11 +27,6 @@ type NetScalerNitroClient struct {
 	client   *netscaler.NitroClient
 }
 
-func (c *NetScalerNitroClient) ResourceExists(resourceType string, resourceName string) bool {
-	found := c.client.ResourceExists(resourceType, resourceName)
-	return found
-}
-
 func main() {
 	opts := plugin.ServeOpts{
 		ProviderFunc: Provider,
