@@ -83,7 +83,11 @@ func createLbFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(lbName)
-
+	err = readLbFunc(d, meta)
+	if err != nil {
+		log.Printf("?? we just created this loadbalancer but we can't read it ?? %s", lbName)
+		return nil
+	}
 	return nil
 }
 
