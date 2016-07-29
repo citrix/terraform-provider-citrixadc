@@ -71,6 +71,12 @@ func (c *NetScalerNitroClient) DeleteLBVserver(lbName string) error {
 	return nil
 }
 
+func (c *NetScalerNitroClient) FindResource(resourceType string, resourceName string) bool {
+	nitroClient := netscaler.NewNitroClient(c.Endpoint, c.Username, c.Password)
+	found := nitroClient.FindResource(resourceType, resourceName)
+	return found
+}
+
 func main() {
 	opts := plugin.ServeOpts{
 		ProviderFunc: Provider,
@@ -183,6 +189,14 @@ func createFunc(d *schema.ResourceData, meta interface{}) error {
 }
 
 func readFunc(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*NetScalerNitroClient)
+	lbName := d.Id()
+	log.Printf("Reading loadbalancer state %s", lbName)
+	found := client.FindResource("lbvserver", lbName)
+	if !found {
+		log.Printf("Clearing loadbalancer state %s", lbName)
+		d.SetId("")
+	}
 	return nil
 }
 
