@@ -34,6 +34,7 @@ func resourceNetScalerLB() *schema.Resource {
 			"name": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"vip": &schema.Schema{
 				Type:     schema.TypeString,
@@ -42,6 +43,7 @@ func resourceNetScalerLB() *schema.Resource {
 			"service_type": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"port": &schema.Schema{
 				Type:     schema.TypeInt,
@@ -50,10 +52,12 @@ func resourceNetScalerLB() *schema.Resource {
 			"persistence_type": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"lb_method": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 		},
 	}

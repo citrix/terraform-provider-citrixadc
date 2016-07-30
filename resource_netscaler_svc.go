@@ -36,6 +36,7 @@ func resourceNetScalerSvc() *schema.Resource {
 			"name": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"ip": &schema.Schema{
 				Type:     schema.TypeString,
@@ -44,6 +45,7 @@ func resourceNetScalerSvc() *schema.Resource {
 			"service_type": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"port": &schema.Schema{
 				Type:     schema.TypeInt,
