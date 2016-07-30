@@ -187,7 +187,7 @@ func (c *NitroClient) DeleteResource(resourceType string, resourceName string) e
 		log.Printf("Found resource of type %s: %s", resourceType, resourceName)
 		_, err = c.deleteResource(resourceType, resourceName)
 		if err != nil {
-			log.Println(fmt.Sprintf("Failed to delete resourceType %: %s, err=%s", resourceType, resourceName, err))
+			log.Println(fmt.Sprintf("Failed to delete resourceType %s: %s, err=%s", resourceType, resourceName, err))
 			return err
 		}
 	} else {
