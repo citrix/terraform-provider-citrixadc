@@ -17,7 +17,7 @@ package main
 
 import (
 	"errors"
-	netscaler "github.com/chiradeep/terraform-provider-netscaler/netscaler"
+	netscaler "github.com/citrix/terraform-provider-netscaler/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 
