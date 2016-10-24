@@ -60,7 +60,7 @@ func (c *NitroClient) createResource(resourceType string, resourceJson []byte) (
 
 	method := "POST"
 	if strings.HasSuffix(resourceType, "_binding") {
-		method = "POST" //FIXME: docs say it should be PUT
+		method = "POST"
 	}
 
 	req, err := c.createHttpRequest(method, url, bytes.NewBuffer(resourceJson))
