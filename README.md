@@ -117,7 +117,14 @@ its configuration files, tfstate files, etc.
 2. `go get -u github.com/hashicorp/terraform`
 3. Check out this code: `git clone http://<>`
 4. Build this code using `make`
-5. Copy the resulting binary `terraform-provider-netscaler` to the same directory as the `terraform` install (use `which terraform`)
+5. Copy the resulting binary `terraform-provider-netscaler` to an appropriate location. [Configure](https://www.terraform.io/docs/plugins/basics.html) `.terraformrc` to use the `netscaler` provider. An example `.terraformrc`:
+
+```
+providers {
+    netscaler = "<path-to-custom-providers>/terraform-provider-netscaler"
+}
+```
+
 6. Run `terraform` as usual 
 
 
