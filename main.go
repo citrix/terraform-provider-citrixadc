@@ -16,16 +16,8 @@ limitations under the License.
 package main
 
 import (
-	netscaler "github.com/citrix/terraform-provider-netscaler/netscaler"
 	"github.com/hashicorp/terraform/plugin"
 )
-
-type NetScalerNitroClient struct {
-	Username string
-	Password string
-	Endpoint string
-	client   *netscaler.NitroClient
-}
 
 func main() {
 	opts := plugin.ServeOpts{

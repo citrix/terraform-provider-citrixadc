@@ -21,6 +21,13 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+type NetScalerNitroClient struct {
+	Username string
+	Password string
+	Endpoint string
+	client   *netscaler.NitroClient
+}
+
 func Provider() terraform.ResourceProvider {
 	return &schema.Provider{
 		Schema:        providerSchema(),
