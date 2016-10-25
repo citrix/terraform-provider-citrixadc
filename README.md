@@ -1,10 +1,10 @@
 # terraform-provider-netscaler
 
-[Terraform](http://www.terraform.io) Custom Provider for [Citrix NetScaler](https://www.citrix.com/products/netscaler-adc/)
+[Terraform](https://www.terraform.io) Custom Provider for [Citrix NetScaler](https://www.citrix.com/products/netscaler-adc/)
 
 ## Description
 
-This project is a terraform custom provider for Citrix NetScaler. It uses the [Nitro API] (http://docs.citrix.com/en-us/netscaler/11/nitro-api.html) to create/configure simple LB configurations (`lb vserver` which is bound to a list of `service`)
+This project is a terraform custom provider for Citrix NetScaler. It uses the [Nitro API] (https://docs.citrix.com/en-us/netscaler/11/nitro-api.html) to create/configure simple LB configurations (`lb vserver` which is bound to a list of `service`)
 
 ## Requirement
 
@@ -49,7 +49,7 @@ resource "netscaler_lb" "foo" {
 ```
 
 ##### Argument Reference
-See <http://docs.citrix.com/en-us/netscaler/11-1/load-balancing/load-balancing-setup.html> for possible values for these arguments.
+See <https://docs.citrix.com/en-us/netscaler/11-1/load-balancing/load-balancing-setup.html> for possible values for these arguments.
 
 The following arguments are supported.
 
@@ -70,7 +70,7 @@ resource "netscaler_svc" "backend_1" {
 }
 ```
 ##### Argument Reference
-See <http://docs.citrix.com/en-us/netscaler/11-1/load-balancing/load-balancing-setup.html> for possible values for these arguments.
+See <https://docs.citrix.com/en-us/netscaler/11-1/load-balancing/load-balancing-setup.html> for possible values for these arguments.
 
 Each `netscaler_svc` models a NetScaler `service` object. The NetScaler docs have more values for service type etc.
 
@@ -115,7 +115,7 @@ its configuration files, tfstate files, etc.
 
 1. Install `terraform` from <https://www.terraform.io/downloads.html>
 2. `go get -u github.com/hashicorp/terraform`
-3. Check out this code: `git clone http://<>`
+3. Check out this code: `git clone https://<>`
 4. Build this code using `make`
 5. Copy the resulting binary `terraform-provider-netscaler` to an appropriate location. [Configure](https://www.terraform.io/docs/plugins/basics.html) `.terraformrc` to use the `netscaler` provider. An example `.terraformrc`:
 
