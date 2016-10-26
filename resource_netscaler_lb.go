@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 
+	"fmt"
 	"log"
 )
 
@@ -129,7 +130,30 @@ func readLbFunc(d *schema.ResourceData, meta interface{}) error {
 }
 
 func updateLbFunc(d *schema.ResourceData, meta interface{}) error {
-	return nil
+	log.Printf("[DEBUG] In update func")
+	client := meta.(*NetScalerNitroClient).client
+	name := d.Get("name").(string)
+	lb := netscaler.NetscalerLB{
+		Name: d.Get("name").(string),
+	}
+	if d.HasChange("vip") {
+		log.Printf("[DEBUG] VIP has changed for lb vserver %s, starting update", name)
+		lb.Ipv46 = d.Get("vip").(string)
+	}
+	if d.HasChange("persistence_type") {
+		log.Printf("[DEBUG] persistence_type has changed for lb vserver %s, starting update", name)
+		lb.PersistenceType = d.Get("persistence_type").(string)
+	}
+	if d.HasChange("lb_method") {
+		log.Printf("[DEBUG] lb_method has changed for lb vserver %s, starting update", name)
+		lb.LbMethod = d.Get("lb_method").(string)
+	}
+
+	_, err := client.UpdateLBVserver(&lb)
+	if err != nil {
+		return fmt.Errorf("Error updating lb vserver %s", name)
+	}
+	return readLbFunc(d, meta)
 }
 
 func deleteLbFunc(d *schema.ResourceData, meta interface{}) error {

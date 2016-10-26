@@ -32,9 +32,9 @@ type NetscalerService struct {
 
 type NetscalerLB struct {
 	Name            string `json:"name"`
-	Ipv46           string `json:"ipv46"`
-	ServiceType     string `json:"servicetype"`
-	Port            int    `json:"port"`
+	Ipv46           string `json:"ipv46,omitempty"`
+	ServiceType     string `json:"servicetype,omitempty"`
+	Port            int    `json:"port,omitempty"`
 	PersistenceType string `json:"persistencetype,omitempty"`
 	LbMethod        string `json:"lbmethod,omitempty"`
 }
@@ -171,6 +171,30 @@ func (c *NitroClient) CreateLBVserver(lbStruct *NetscalerLB) (string, error) {
 		body, err := c.createResource(resourceType, resourceJson)
 		if err != nil {
 			log.Fatal(fmt.Sprintf("Failed to create lb %s, err=%s", lbStruct.Name, err))
+			//TODO roll back
+			return "", err
+		}
+		_ = body
+	}
+
+	return lbStruct.Name, nil
+}
+
+func (c *NitroClient) UpdateLBVserver(lbStruct *NetscalerLB) (string, error) {
+
+	resourceType := "lbvserver"
+	if c.ResourceExists(resourceType, lbStruct.Name) == true {
+
+		nsLB := &struct {
+			Lbvserver NetscalerLB `json:"lbvserver"`
+		}{Lbvserver: *lbStruct}
+		resourceJson, err := json.Marshal(nsLB)
+
+		log.Println("Resourcejson is " + string(resourceJson))
+
+		body, err := c.updateResource(resourceType, lbStruct.Name, resourceJson)
+		if err != nil {
+			log.Fatal(fmt.Sprintf("Failed to update lb %s, err=%s", lbStruct.Name, err))
 			//TODO roll back
 			return "", err
 		}
