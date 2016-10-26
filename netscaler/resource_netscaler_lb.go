@@ -13,10 +13,9 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package main
+package netscaler
 
 import (
-	netscaler "github.com/citrix/terraform-provider-netscaler/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 
@@ -73,7 +72,7 @@ func createLbFunc(d *schema.ResourceData, meta interface{}) error {
 		lbName = resource.PrefixedUniqueId("tf-lb-")
 		d.Set("name", lbName)
 	}
-	lb := netscaler.NetscalerLB{
+	lb := NetscalerLB{
 		Name:            lbName,
 		Ipv46:           d.Get("vip").(string),
 		Port:            d.Get("port").(int),
@@ -133,7 +132,7 @@ func updateLbFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] In update func")
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name").(string)
-	lb := netscaler.NetscalerLB{
+	lb := NetscalerLB{
 		Name: d.Get("name").(string),
 	}
 	if d.HasChange("vip") {

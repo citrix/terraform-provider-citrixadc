@@ -13,11 +13,10 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package main
+package netscaler
 
 import (
 	"errors"
-	netscaler "github.com/citrix/terraform-provider-netscaler/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 
@@ -75,7 +74,7 @@ func createSvcFunc(d *schema.ResourceData, meta interface{}) error {
 		d.Set("name", svcName)
 	}
 	log.Printf("****Creating service %s", svcName)
-	svc := netscaler.NetscalerService{
+	svc := NetscalerService{
 		Name:        svcName,
 		Ip:          d.Get("ip").(string),
 		Port:        d.Get("port").(int),

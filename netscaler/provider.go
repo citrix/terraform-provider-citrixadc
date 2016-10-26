@@ -13,10 +13,9 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package main
+package netscaler
 
 import (
-	netscaler "github.com/citrix/terraform-provider-netscaler/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
 )
@@ -25,7 +24,7 @@ type NetScalerNitroClient struct {
 	Username string
 	Password string
 	Endpoint string
-	client   *netscaler.NitroClient
+	client   *NitroClient
 }
 
 func Provider() terraform.ResourceProvider {
@@ -72,7 +71,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		Password: d.Get("password").(string),
 		Endpoint: d.Get("endpoint").(string),
 	}
-	client := netscaler.NewNitroClient(c.Endpoint, c.Username, c.Password)
+	client := NewNitroClient(c.Endpoint, c.Username, c.Password)
 	c.client = client
 
 	return &c, nil
