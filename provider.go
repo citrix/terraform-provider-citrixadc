@@ -42,16 +42,19 @@ func providerSchema() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "Username to login to the NetScaler",
+			DefaultFunc: schema.EnvDefaultFunc("NS_LOGIN", "nsroot"),
 		},
 		"password": &schema.Schema{
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "Password to login to the NetScaler",
+			DefaultFunc: schema.EnvDefaultFunc("NS_PASSWORD", "nsroot"),
 		},
 		"endpoint": &schema.Schema{
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "The URL to the API",
+			DefaultFunc: schema.EnvDefaultFunc("NS_URL", nil),
 		},
 	}
 }
