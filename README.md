@@ -29,9 +29,11 @@ provider "netscaler" {
 
 The following arguments are supported.
 
-* `username` - (Required) This is the user name to access to NetScaler.
-* `password` - (Required) This is the password to access to NetScaler.
-* `endpoint` - (Required) Nitro API endpoint in the form `http://<NS_IP>/`"
+* `username` - This is the user name to access to NetScaler. Defaults to `nsroot` unless environment variable `NS_LOGIN` has been set
+* `password` - This is the password to access to NetScaler. Defaults to `nsroot` unless environment variable `NS_PASSWORD` has been set
+* `endpoint` - (Required) Nitro API endpoint in the form `http://<NS_IP>/`. Can be specified in environment variable `NS_UR`L
+
+The username, password and endpoint can be provided in environment variables `NS_LOGIN`, `NS_PASSWORD` and `NS_URL`. 
 
 ### Resource Configuration
 
