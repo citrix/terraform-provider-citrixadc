@@ -16,6 +16,8 @@ limitations under the License.
 package netscaler
 
 import (
+	"github.com/chiradeep/go-nitro/config/lb"
+	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 
@@ -72,16 +74,16 @@ func createLbFunc(d *schema.ResourceData, meta interface{}) error {
 		lbName = resource.PrefixedUniqueId("tf-lb-")
 		d.Set("name", lbName)
 	}
-	lb := NetscalerLB{
+	lb := lb.Lbvserver{
 		Name:            lbName,
 		Ipv46:           d.Get("vip").(string),
 		Port:            d.Get("port").(int),
-		ServiceType:     d.Get("service_type").(string),
-		PersistenceType: d.Get("persistence_type").(string),
-		LbMethod:        d.Get("lb_method").(string),
+		Servicetype:     d.Get("service_type").(string),
+		Persistencetype: d.Get("persistence_type").(string),
+		Lbmethod:        d.Get("lb_method").(string),
 	}
 
-	_, err := client.CreateLBVserver(&lb)
+	_, err := client.AddResource(netscaler.Lbvserver.Name(), lbName, &lb)
 	if err != nil {
 		return err
 	}
@@ -99,7 +101,7 @@ func readLbFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	lbName := d.Id()
 	log.Printf("Reading loadbalancer state %s", lbName)
-	data, err := client.FindResource("lbvserver", lbName)
+	data, err := client.FindResource(netscaler.Lbvserver.Name(), lbName)
 	if err != nil {
 		log.Printf("Clearing loadbalancer state %s", lbName)
 		d.SetId("")
@@ -132,7 +134,8 @@ func updateLbFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] In update func")
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name").(string)
-	lb := NetscalerLB{
+
+	lb := lb.Lbvserver{
 		Name: d.Get("name").(string),
 	}
 	if d.HasChange("vip") {
@@ -141,14 +144,14 @@ func updateLbFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("persistence_type") {
 		log.Printf("[DEBUG] persistence_type has changed for lb vserver %s, starting update", name)
-		lb.PersistenceType = d.Get("persistence_type").(string)
+		lb.Persistencetype = d.Get("persistence_type").(string)
 	}
 	if d.HasChange("lb_method") {
 		log.Printf("[DEBUG] lb_method has changed for lb vserver %s, starting update", name)
-		lb.LbMethod = d.Get("lb_method").(string)
+		lb.Lbmethod = d.Get("lb_method").(string)
 	}
 
-	_, err := client.UpdateLBVserver(&lb)
+	_, err := client.UpdateResource(netscaler.Lbvserver.Name(), name, &lb)
 	if err != nil {
 		return fmt.Errorf("Error updating lb vserver %s", name)
 	}
@@ -158,7 +161,7 @@ func updateLbFunc(d *schema.ResourceData, meta interface{}) error {
 func deleteLbFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	lbName := d.Id()
-	err := client.DeleteLBVserver(lbName)
+	err := client.DeleteResource(netscaler.Lbvserver.Name(), lbName)
 	if err != nil {
 		return err
 	}

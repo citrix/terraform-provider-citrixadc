@@ -17,6 +17,9 @@ package netscaler
 
 import (
 	"errors"
+	"github.com/chiradeep/go-nitro/config/basic"
+	"github.com/chiradeep/go-nitro/config/lb"
+	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 
@@ -74,14 +77,24 @@ func createSvcFunc(d *schema.ResourceData, meta interface{}) error {
 		d.Set("name", svcName)
 	}
 	log.Printf("****Creating service %s", svcName)
-	svc := NetscalerService{
+	svc := basic.Service{
 		Name:        svcName,
 		Ip:          d.Get("ip").(string),
 		Port:        d.Get("port").(int),
-		ServiceType: d.Get("service_type").(string),
+		Servicetype: d.Get("service_type").(string),
 	}
 
-	err := client.AddAndBindService(lbName, &svc)
+	_, err := client.AddResource(netscaler.Service.Name(), svcName, &svc)
+	if err != nil {
+		return err
+	}
+
+	binding := lb.Lbvserverservicebinding{
+		Name:        lbName,
+		Servicename: svcName,
+	}
+
+	err = client.BindResource(netscaler.Lbvserver.Name(), lbName, netscaler.Service.Name(), svcName, &binding)
 	if err != nil {
 		return err
 	}
@@ -129,7 +142,7 @@ func updateSvcFunc(d *schema.ResourceData, meta interface{}) error {
 func deleteSvcFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	svcName := d.Id()
-	err := client.DeleteService(svcName)
+	err := client.DeleteResource(netscaler.Service.Name(), svcName)
 	if err != nil {
 		return err
 	}
