@@ -20,31 +20,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strings"
 )
-
-//BindResource binds the 'bindingResourceName' to the 'bindToResourceName'.
-func (c *NitroClient) BindResource(bindToResourceType string, bindToResourceName string, bindingResourceType string, bindingResourceName string, bindingStruct interface{}) error {
-	if c.ResourceExists(bindToResourceType, bindToResourceName) == false {
-		return fmt.Errorf("BindTo Resource %s of type %s does not exist", bindToResourceType, bindToResourceName)
-	}
-
-	if c.ResourceExists(bindingResourceType, bindingResourceName) == false {
-		return fmt.Errorf("Binding Resource %s of type %s does not exist", bindingResourceType, bindingResourceName)
-	}
-	bindingName := bindToResourceType + "_" + bindingResourceType + "_binding"
-	nsBinding := make(map[string]interface{})
-	nsBinding[bindingName] = bindingStruct
-
-	resourceJSON, err := json.Marshal(nsBinding)
-
-	body, err := c.createResource(bindingName, resourceJSON)
-	if err != nil {
-		log.Fatal("Failed to bind resource %s to resource %s, err=%s", bindToResourceName, bindingResourceName, err)
-		return err
-	}
-	_ = body
-	return nil
-}
 
 //AddResource adds a resource of supplied type and name
 func (c *NitroClient) AddResource(resourceType string, name string, resourceStruct interface{}) (string, error) {
@@ -104,6 +81,30 @@ func (c *NitroClient) DeleteResource(resourceType string, resourceName string) e
 	} else {
 		log.Printf("Resource %s already deleted ", resourceName)
 	}
+	return nil
+}
+
+//BindResource binds the 'bindingResourceName' to the 'bindToResourceName'.
+func (c *NitroClient) BindResource(bindToResourceType string, bindToResourceName string, bindingResourceType string, bindingResourceName string, bindingStruct interface{}) error {
+	if c.ResourceExists(bindToResourceType, bindToResourceName) == false {
+		return fmt.Errorf("BindTo Resource %s of type %s does not exist", bindToResourceType, bindToResourceName)
+	}
+
+	if c.ResourceExists(bindingResourceType, bindingResourceName) == false {
+		return fmt.Errorf("Binding Resource %s of type %s does not exist", bindingResourceType, bindingResourceName)
+	}
+	bindingName := bindToResourceType + "_" + bindingResourceType + "_binding"
+	nsBinding := make(map[string]interface{})
+	nsBinding[bindingName] = bindingStruct
+
+	resourceJSON, err := json.Marshal(nsBinding)
+
+	body, err := c.createResource(bindingName, resourceJSON)
+	if err != nil {
+		log.Fatal("Failed to bind resource %s to resource %s, err=%s", bindToResourceName, bindingResourceName, err)
+		return err
+	}
+	_ = body
 	return nil
 }
 
@@ -179,4 +180,86 @@ func (c *NitroClient) ResourceBindingExists(resourceType string, resourceName st
 
 	log.Printf("%s of type  %s is bound to %s type and name %s", resourceType, resourceName, boundResourceType, boundResourceFilterValue)
 	return true
+}
+
+//EnableFeatures enables the provided list of features. Depending on the licensing of the NetScaler, not all supplied features may actually
+//enabled
+func (c *NitroClient) EnableFeatures(featureNames []string) error {
+	/* construct this:
+	{
+	        "nsfeature":
+		{
+		    "feature": [ "LB", ]
+		}
+	}
+	*/
+	featureStruct := make(map[string]map[string][]string)
+	featureStruct["nsfeature"] = make(map[string][]string)
+	featureStruct["nsfeature"]["feature"] = featureNames
+
+	featureJSON, err := json.Marshal(featureStruct)
+	if err != nil {
+		log.Println("Failed to marshal features to JSON")
+		return fmt.Errorf("Failed to marshal features to JSON")
+	}
+
+	_, err = c.enableFeatures(featureJSON)
+	if err != nil {
+		return fmt.Errorf("Failed to enable feature ", err)
+	}
+	return nil
+}
+
+//ListEnabledFeatures returns a string array of the list of features enabled on the NetScaler appliance
+func (c *NitroClient) ListEnabledFeatures() ([]string, error) {
+
+	bytes, err := c.listEnabledFeatures()
+	if err != nil {
+		return []string{}, fmt.Errorf("Failed to enable feature ", err)
+	}
+	var data map[string]interface{}
+	if err = json.Unmarshal(bytes, &data); err != nil {
+		log.Println("Failed to unmarshal Netscaler Response!")
+		return []string{}, fmt.Errorf("Failed to unmarshal Netscaler Response to list Features")
+	}
+	if data["nsfeature"] == nil {
+		log.Printf("No features found")
+		return []string{}, fmt.Errorf("No features found")
+	}
+	features := data["nsfeature"].(map[string]interface{})
+	// since the returned JSON map mixes boolean and array values, the unmarshal fails to figure out there
+	// is an array. So we have to convert it to a string and then parse it.
+	// this doesn't work: return features["feature"].([]string), nil
+	// convert to string: [LB CS SSL] (note: no commas)
+
+	result := fmt.Sprintf("%v", features["feature"])
+	result = strings.TrimPrefix(result, "[")
+	result = strings.TrimSuffix(result, "]")
+	flist := strings.Split(result, " ")
+	log.Println("result: ", result, "flist: ", flist)
+	return flist, nil
+}
+
+//SaveConfig persists the config on the NetScaler to the NetScaler's persistent storage. This could take a few seconds
+func (c *NitroClient) SaveConfig() error {
+	/* construct this:
+	{
+	        "nsconfig": {}
+	}
+	*/
+	saveStruct := make(map[string]interface{})
+	saveStruct["nsconfig"] = make(map[string]interface{})
+
+	saveJSON, err := json.Marshal(saveStruct)
+	if err != nil {
+		log.Println("Failed to marshal save config to JSON")
+		return fmt.Errorf("Failed to marshal save config to JSON")
+	}
+	log.Println("saveJSON is " + string(saveJSON))
+
+	err = c.saveConfig(saveJSON)
+	if err != nil {
+		return fmt.Errorf("Failed to save config ", err)
+	}
+	return nil
 }

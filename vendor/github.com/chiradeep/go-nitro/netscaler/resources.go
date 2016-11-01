@@ -17,14 +17,14 @@ limitations under the License.
 package netscaler
 
 type Enum interface {
-	Name() string
+	Type() string
 	Ordinal() int
 	ValueOf() *[]string
 }
 
 type Resource uint
 
-func (rsrc Resource) Name() string {
+func (rsrc Resource) Type() string {
 	return resources[rsrc]
 }
 func (rsrc Resource) Ordinal() int {
