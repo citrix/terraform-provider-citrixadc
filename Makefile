@@ -12,16 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-default: build plan
-
-deps:
-	go install github.com/hashicorp/terraform
+default: build 
 
 build:
-	go build -o terraform-provider-netscaler .
+	godep go build -o terraform-provider-netscaler .
 
 test:
-	go test -v .
+	godep go test -v .
 
 plan:
 	@terraform plan
+
+clean:
+	rm terraform-provider-netscaler

@@ -100,6 +100,53 @@ func (c *NitroClient) createResource(resourceType string, resourceJson []byte) (
 	}
 }
 
+func (c *NitroClient) updateResource(resourceType string, resourceName string, resourceJson []byte) ([]byte, error) {
+	log.Println("Updating resource of type ", resourceType)
+
+	url := c.url + resourceType + "/" + resourceName
+
+	method := "PUT"
+	if strings.HasSuffix(resourceType, "_binding") {
+		method = "POST"
+	}
+
+	req, err := c.createHttpRequest(method, url, bytes.NewBuffer(resourceJson))
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if resp != nil {
+		defer resp.Body.Close()
+	}
+	if err != nil {
+		log.Fatal(err)
+		return []byte{}, err
+	} else {
+		log.Println("response Status:", resp.Status)
+
+		switch resp.Status {
+		case "201 Created", "200 OK", "409 Conflict":
+			body, _ := ioutil.ReadAll(resp.Body)
+			return body, nil
+
+		case "207 Multi Status":
+			//TODO
+			body, _ := ioutil.ReadAll(resp.Body)
+			return body, err
+		case "400 Bad Request", "401 Unauthorized", "403 Forbidden",
+			"404 Not Found", "405 Method Not Allowed", "406 Not Acceptable",
+			"503 Service Unavailable", "599 Netscaler specific error":
+			//TODO
+			body, _ := ioutil.ReadAll(resp.Body)
+			log.Println("error = " + string(body))
+			return body, errors.New("failed: " + resp.Status + " (" + string(body) + ")")
+		default:
+			body, err := ioutil.ReadAll(resp.Body)
+			return body, err
+
+		}
+	}
+}
+
 func (c *NitroClient) deleteResource(resourceType string, resourceName string) ([]byte, error) {
 	log.Println("Deleting resource of type ", resourceType)
 	url := c.url + resourceType + "/" + resourceName
