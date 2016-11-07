@@ -46,8 +46,7 @@ func resourceNetScalerSvc() *schema.Resource {
 			},
 			"service_type": &schema.Schema{
 				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Required: true,
 			},
 			"port": &schema.Schema{
 				Type:     schema.TypeInt,
@@ -84,7 +83,7 @@ func createSvcFunc(d *schema.ResourceData, meta interface{}) error {
 		Servicetype: d.Get("service_type").(string),
 	}
 
-	_, err := client.AddResource(netscaler.Service.Name(), svcName, &svc)
+	_, err := client.AddResource(netscaler.Service.Type(), svcName, &svc)
 	if err != nil {
 		return err
 	}
@@ -94,7 +93,7 @@ func createSvcFunc(d *schema.ResourceData, meta interface{}) error {
 		Servicename: svcName,
 	}
 
-	err = client.BindResource(netscaler.Lbvserver.Name(), lbName, netscaler.Service.Name(), svcName, &binding)
+	err = client.BindResource(netscaler.Lbvserver.Type(), lbName, netscaler.Service.Type(), svcName, &binding)
 	if err != nil {
 		return err
 	}
@@ -142,7 +141,7 @@ func updateSvcFunc(d *schema.ResourceData, meta interface{}) error {
 func deleteSvcFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	svcName := d.Id()
-	err := client.DeleteResource(netscaler.Service.Name(), svcName)
+	err := client.DeleteResource(netscaler.Service.Type(), svcName)
 	if err != nil {
 		return err
 	}

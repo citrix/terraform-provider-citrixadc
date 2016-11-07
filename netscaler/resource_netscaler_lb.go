@@ -44,8 +44,7 @@ func resourceNetScalerLB() *schema.Resource {
 			},
 			"service_type": &schema.Schema{
 				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Required: true,
 			},
 			"port": &schema.Schema{
 				Type:     schema.TypeInt,
@@ -83,7 +82,7 @@ func createLbFunc(d *schema.ResourceData, meta interface{}) error {
 		Lbmethod:        d.Get("lb_method").(string),
 	}
 
-	_, err := client.AddResource(netscaler.Lbvserver.Name(), lbName, &lb)
+	_, err := client.AddResource(netscaler.Lbvserver.Type(), lbName, &lb)
 	if err != nil {
 		return err
 	}
@@ -101,7 +100,7 @@ func readLbFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	lbName := d.Id()
 	log.Printf("Reading loadbalancer state %s", lbName)
-	data, err := client.FindResource(netscaler.Lbvserver.Name(), lbName)
+	data, err := client.FindResource(netscaler.Lbvserver.Type(), lbName)
 	if err != nil {
 		log.Printf("Clearing loadbalancer state %s", lbName)
 		d.SetId("")
@@ -151,7 +150,7 @@ func updateLbFunc(d *schema.ResourceData, meta interface{}) error {
 		lb.Lbmethod = d.Get("lb_method").(string)
 	}
 
-	_, err := client.UpdateResource(netscaler.Lbvserver.Name(), name, &lb)
+	_, err := client.UpdateResource(netscaler.Lbvserver.Type(), name, &lb)
 	if err != nil {
 		return fmt.Errorf("Error updating lb vserver %s", name)
 	}
@@ -161,7 +160,7 @@ func updateLbFunc(d *schema.ResourceData, meta interface{}) error {
 func deleteLbFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	lbName := d.Id()
-	err := client.DeleteResource(netscaler.Lbvserver.Name(), lbName)
+	err := client.DeleteResource(netscaler.Lbvserver.Type(), lbName)
 	if err != nil {
 		return err
 	}
