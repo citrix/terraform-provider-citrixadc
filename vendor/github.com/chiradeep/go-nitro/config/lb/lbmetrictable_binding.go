@@ -1,5 +1,5 @@
 package lb
 
 type Lbmetrictablebinding struct {
-  Metrictable string `json:"metrictable,omitempty"`
+	Metrictable string `json:"metrictable,omitempty"`
 }

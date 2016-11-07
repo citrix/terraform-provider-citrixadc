@@ -161,6 +161,32 @@ func (c *NitroClient) FindResource(resourceType string, resourceName string) (ma
 	return resource.(map[string]interface{}), nil
 }
 
+//FindAllResources finds all config objects of the supplied resource type and returns them in an array
+func (c *NitroClient) FindAllResources(resourceType string) ([]map[string]interface{}, error) {
+	var data map[string]interface{}
+	result, err := c.listResource(resourceType, "")
+	if err != nil {
+		log.Printf("No %s objects found", resourceType)
+		return make([]map[string]interface{}, 0, 0), nil
+	}
+	if err = json.Unmarshal(result, &data); err != nil {
+		log.Println("Failed to unmarshal Netscaler Response!")
+		return nil, fmt.Errorf("Failed to unmarshal Netscaler Response: of type %s", resourceType)
+	}
+	if data[resourceType] == nil {
+		log.Printf("No %s found", resourceType)
+		return make([]map[string]interface{}, 0, 0), nil
+	}
+	resources := data[resourceType].([]interface{})
+
+	ret := make([]map[string]interface{}, len(resources), len(resources))
+	for i, v := range resources {
+		ret[i] = v.(map[string]interface{})
+	}
+
+	return ret, nil
+}
+
 //ResourceBindingExists returns true if the supplied binding exists
 func (c *NitroClient) ResourceBindingExists(resourceType string, resourceName string, boundResourceType string, boundResourceFilterName string, boundResourceFilterValue string) bool {
 	result, err := c.listBoundResources(resourceName, resourceType, boundResourceType, boundResourceFilterName, boundResourceFilterValue)
@@ -180,6 +206,53 @@ func (c *NitroClient) ResourceBindingExists(resourceType string, resourceName st
 
 	log.Printf("%s of type  %s is bound to %s type and name %s", resourceType, resourceName, boundResourceType, boundResourceFilterValue)
 	return true
+}
+
+//FindBoundResource finds a bound resource if it exists
+func (c *NitroClient) FindBoundResource(resourceType string, resourceName string, boundResourceType string, boundResourceFilterName string, boundResourceFilterValue string) (map[string]interface{}, error) {
+	result, err := c.listBoundResources(resourceName, resourceType, boundResourceType, boundResourceFilterName, boundResourceFilterValue)
+	if err != nil {
+		log.Printf("No %s %s to %s %s binding found", resourceType, resourceName, boundResourceType, boundResourceFilterValue)
+		return nil, fmt.Errorf("No %s %s to %s %s binding found, err=%s", resourceType, resourceName, boundResourceType, boundResourceFilterValue, err)
+	}
+
+	var data map[string]interface{}
+	if err := json.Unmarshal(result, &data); err != nil {
+		log.Println("Failed to unmarshal Netscaler Response!")
+		return nil, fmt.Errorf("Failed to unmarshal Netscaler Response!, err=%s", err)
+	}
+	bindingType := fmt.Sprintf("%s_%s_binding", resourceType, boundResourceType)
+	if data[bindingType] == nil {
+		return nil, fmt.Errorf("No %s %s to %s %s binding found", resourceType, resourceName, boundResourceType, boundResourceFilterValue)
+	}
+	resource := data[bindingType].([]interface{})[0] //only one resource obviously
+	return resource.(map[string]interface{}), nil
+
+}
+
+//FindAllBoundResources returns an array of bound config objects of the type specified that are bound to the resource specified
+func (c *NitroClient) FindAllBoundResources(resourceType string, resourceName string, boundResourceType string) ([]map[string]interface{}, error) {
+	result, err := c.listBoundResources(resourceName, resourceType, boundResourceType, "", "")
+	if err != nil {
+		log.Printf("No %s %s to %s  binding found", resourceType, resourceName, boundResourceType)
+		return nil, fmt.Errorf("No %s %s to %s binding found, err=%s", resourceType, resourceName, boundResourceType, err)
+	}
+
+	var data map[string]interface{}
+	if err := json.Unmarshal(result, &data); err != nil {
+		log.Println("Failed to unmarshal Netscaler Response!")
+		return nil, fmt.Errorf("FindAllBoundResources: Failed to unmarshal Netscaler Response!, err=%s", err)
+	}
+	bindingType := fmt.Sprintf("%s_%s_binding", resourceType, boundResourceType)
+	if data[bindingType] == nil {
+		return nil, fmt.Errorf("No %s %s to %s  binding found", resourceType, resourceName, boundResourceType)
+	}
+	resources := data[bindingType].([]interface{})
+	ret := make([]map[string]interface{}, len(resources), len(resources))
+	for i, v := range resources {
+		ret[i] = v.(map[string]interface{})
+	}
+	return ret, nil
 }
 
 //EnableFeatures enables the provided list of features. Depending on the licensing of the NetScaler, not all supplied features may actually
@@ -260,6 +333,32 @@ func (c *NitroClient) SaveConfig() error {
 	err = c.saveConfig(saveJSON)
 	if err != nil {
 		return fmt.Errorf("Failed to save config ", err)
+	}
+	return nil
+}
+
+//ClearConfig deletes the config on the NetScaler
+func (c *NitroClient) ClearConfig() error {
+	/* construct this:
+	{
+	    "nsconfig": {"level": "basic"}
+	}
+	*/
+	clearStruct := make(map[string]map[string]string)
+	clearStruct["nsconfig"] = make(map[string]string)
+
+	clearStruct["nsconfig"]["level"] = "basic"
+
+	clearJSON, err := json.Marshal(clearStruct)
+	if err != nil {
+		log.Println("Failed to marshal clear config to JSON")
+		return fmt.Errorf("Failed to marshal clear config to JSON")
+	}
+	log.Println("clearJSON is " + string(clearJSON))
+
+	err = c.clearConfig(clearJSON)
+	if err != nil {
+		return fmt.Errorf("Failed to clear config ", err)
 	}
 	return nil
 }

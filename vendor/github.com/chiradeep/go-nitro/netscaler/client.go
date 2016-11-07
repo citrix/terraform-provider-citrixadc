@@ -18,6 +18,7 @@ package netscaler
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 	"strings"
 )
@@ -28,6 +29,7 @@ type NitroClient struct {
 	url      string
 	username string
 	password string
+	client   *http.Client
 }
 
 //NewNitroClient returns a usable NitroClient. Does not check validity of supplied parameters
@@ -36,6 +38,7 @@ func NewNitroClient(url string, username string, password string) *NitroClient {
 	c.url = strings.Trim(url, " /") + "/nitro/v1/config/"
 	c.username = username
 	c.password = password
+	c.client = &http.Client{}
 	return c
 }
 

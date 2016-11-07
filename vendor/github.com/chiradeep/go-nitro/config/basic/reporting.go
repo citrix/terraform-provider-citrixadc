@@ -1,5 +1,5 @@
 package basic
 
 type Reporting struct {
-  State string `json:"state,omitempty"`
+	State string `json:"state,omitempty"`
 }
