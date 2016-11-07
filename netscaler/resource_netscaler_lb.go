@@ -106,20 +106,7 @@ func readLbFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
-	/* { "name": "sample_lb2", "insertvserveripport": "OFF", "ipv46": "10.71.136.151", "ippattern": "0.0.0.0", "ipmask": "*", "listenpolicy": "NONE",
-	   "ipmapping": "0.0.0.0", "port": 443, "range": "1", "servicetype": "HTTP", "type": "ADDRESS", "curstate": "DOWN", "effectivestate": "DOWN", "status": 1,
-	   "lbrrreason": 0, "cachetype": "SERVER", "authentication": "OFF", "authn401": "OFF", "dynamicweight": "0", "priority": "0", "clttimeout": "180",
-	   "somethod": "NONE", "sopersistence": "DISABLED", "sopersistencetimeout": "2", "healththreshold": "0", "lbmethod": "LEASTCONNECTION", "backuplbmethod": "ROUNDROBIN",
-	   "dataoffset": "0", "health": "0", "datalength": "0", "ruletype": "0", "m": "IP", "persistencetype": "NONE", "timeout": 2, "persistmask": "255.255.255.255",
-	   "v6persistmasklen": "128", "persistencebackup": "NONE", "cacheable": "NO", "pq": "OFF", "sc": "OFF", "rtspnat": "OFF", "sessionless": "DISABLED", "map": "OFF",
-	   "connfailover": "DISABLED", "redirectportrewrite": "DISABLED", "downstateflush": "ENABLED", "disableprimaryondown": "DISABLED", "gt2gb": "DISABLED", "consolidatedlconn":
-	   "GLOBAL", "consolidatedlconngbl": "YES", "thresholdvalue": 0, "invoke": false, "version": 0, "totalservices": "2", "activeservices": "0",
-	   "statechangetimesec": "Fri Jul 29 19:14:02 2016", "statechangetimeseconds": "1469819642", "statechangetimemsec": "382", "tickssincelaststatechange": "728421",
-	   "hits": "0", "pipolicyhits": "0", "push": "DISABLED", "pushlabel": "none", "pushmulticlients": "NO", "policysubtype": "0", "l2conn": "OFF", "appflowlog": "ENABLED",
-	   "isgslb": false, "icmpvsrresponse": "PASSIVE", "rhistate": "PASSIVE", "newservicerequestunit": "PER_SECOND", "vsvrbindsvcip": "10.71.136.151", "vsvrbindsvcport": 0,
-	   "skippersistency": "None", "td": "0", "minautoscalemembers": "0", "maxautoscalemembers": "0", "macmoderetainvlan": "DISABLED", "dns64": "DISABLED", "bypassaaaa": "NO",
-	   "processlocal": "DISABLED", "vsvrdynconnsothreshold": "0" }
-	*/
+	/* see: the go-nitro jsonconfig to find the actual keys into 'data' */
 	d.Set("name", data["name"])
 	d.Set("persistence_type", data["persistencetype"])
 	d.Set("lb_method", data["lbmethod"])
