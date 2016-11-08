@@ -55,4 +55,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("execution failed: %s", err)
 	}
+	writer, err = os.Create(filepath.Join("netscaler", "provider.go"))
+	err = t.ExecuteTemplate(writer, "provider.tmpl", cfg)
+	if err != nil {
+		log.Fatalf("execution failed: %s", err)
+	}
 }
