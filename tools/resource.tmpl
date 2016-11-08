@@ -70,9 +70,9 @@ func read{{.TfTitle}}Func(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	d.Set("name", data["name"])
-	d.Set("persistence_type", data["persistencetype"])
-	d.Set("lb_method", data["lbmethod"])
-	d.Set("service_type", data["servicetype"])
+        {{ range $key, $value := .Fields -}}
+        d.Set("{{$key}}", data["{{$key}}"])
+        {{end}}
 
 	return nil
 
