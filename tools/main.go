@@ -5,6 +5,7 @@ import (
 	"github.com/chiradeep/go-nitro/config/lb"
 	"log"
 	"os"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"text/template"
@@ -44,9 +45,13 @@ func main() {
 	funcMap := template.FuncMap{
 		"title": strings.Title,
 		"lower": strings.ToLower,
+		"neq": func(x, y interface{}) bool {
+			return x != y
+		},
 	}
-	t := template.Must(template.New("").Funcs(funcMap).ParseFiles("resource.tmpl"))
-	err := t.ExecuteTemplate(os.Stdout, "resource.tmpl", cfg)
+	writer, err := os.Create(filepath.Join("netscaler", "resource_lb.go"))
+	t := template.Must(template.New("").Funcs(funcMap).ParseFiles("resource.tmpl", "provider.tmpl"))
+	err = t.ExecuteTemplate(writer, "resource.tmpl", cfg)
 	if err != nil {
 		log.Fatalf("execution failed: %s", err)
 	}

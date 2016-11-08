@@ -41,7 +41,9 @@ func create{{.TfTitle}}Func(d *schema.ResourceData, meta interface{}) error {
         {{.TfName}} := {{.Package}}.{{.StructName}}{
                 Name:            {{.TfId}},
                 {{ range $key, $value := .Fields -}}
+                {{if neq $key "name" -}}
                 {{$key|title}}:           d.Get("{{$key}}").({{$value|lower}}),
+                {{end -}}
                 {{end}}
 	}
 
