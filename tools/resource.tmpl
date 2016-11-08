@@ -88,10 +88,12 @@ func update{{.TfTitle}}Func(d *schema.ResourceData, meta interface{}) error {
         {{.TfName}} := {{.Package}}.{{.StructName}}{
 		Name: d.Get("name").(string),
 	}
-	if d.HasChange("vip") {
-            log.Printf("[DEBUG] VIP has changed for {{.TfName}} %s, starting update", {{.TfId}})
-            {{.TfName}}.Ipv46 = d.Get("vip").(string)
+        {{range $key, $value := .Fields -}}
+        if d.HasChange("{{$key}}") {
+                log.Printf("[DEBUG] {{$key|title}} has changed for {{$.TfName}} %s, starting update", {{$.TfId}})
+                {{$.TfName}}.{{$key|title}} = d.Get("{{$key}}").(string)
 	}
+        {{end}}
 
         _, err := client.UpdateResource(netscaler.{{.StructName}}.Type(), {{.TfId}}, &{{.TfName}})
 	if err != nil {
