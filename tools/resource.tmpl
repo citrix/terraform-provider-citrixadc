@@ -19,33 +19,12 @@ func resourceNetScaler{{.TfTitle}}() *schema.Resource {
                 Update:        update{{.TfTitle}}Func,
                 Delete:        delete{{.TfTitle}}Func,
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+                       {{ range $key, $value := .Fields -}}
+                               "{{$key}}": &schema.Schema{
+                               Type:     schema.Type{{$value}},
+			       Optional: true,
 			},
-			"vip": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"service_type": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"port": &schema.Schema{
-				Type:     schema.TypeInt,
-				Required: true,
-			},
-			"persistence_type": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"lb_method": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
+                        {{end}}
 		},
 	}
 }
@@ -61,11 +40,9 @@ func create{{.TfTitle}}Func(d *schema.ResourceData, meta interface{}) error {
 	}
         {{.TfName}} := {{.Package}}.{{.StructName}}{
                 Name:            {{.TfId}},
-		Ipv46:           d.Get("vip").(string),
-		Port:            d.Get("port").(int),
-		Servicetype:     d.Get("service_type").(string),
-		Persistencetype: d.Get("persistence_type").(string),
-		Lbmethod:        d.Get("lb_method").(string),
+                {{ range $key, $value := .Fields -}}
+                {{$key|title}}:           d.Get("{{$key}}").({{$value|lower}}),
+                {{end}}
 	}
 
         _, err := client.AddResource(netscaler.{{.StructName}}.Type(), {{.TfId}}, &{{.TfName}})
