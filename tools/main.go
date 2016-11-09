@@ -1,8 +1,9 @@
 package main
 
 import (
-	//	"fmt"
-	"github.com/chiradeep/go-nitro/config/lb"
+	"flag"
+	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -15,14 +16,35 @@ type Config struct {
 	Package    string
 	TfTitle    string
 	TfName     string
-	TfId       string
+	TfID       string
 	StructName string
 	Fields     map[string]string
 }
 
-func getFieldNames() map[string]string {
+var (
+	i = flag.String("i", "", "The input JSON Schema file.")
+)
+
+func parseSchema(inputFile string) *Schema {
+	b, err := ioutil.ReadFile(inputFile)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Failed to read the input file with error ", err)
+		return nil
+	}
+	schema, err := Parse(string(b))
+
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Failed to parse the input JSON schema with error ", err)
+		return nil
+	}
+	//fmt.Printf("Parse schema: %v\n", schema.Properties["appflowlog"].Readonly)
+	return &schema.Schema
+
+}
+
+func getFieldNames(obj interface{}) map[string]string {
 	result := make(map[string]string)
-	t := reflect.TypeOf(&lb.Lbvserver{}).Elem()
+	t := reflect.TypeOf(obj).Elem()
 	for index := 0; index < t.NumField(); index++ {
 		field := t.Field(index)
 
@@ -35,13 +57,43 @@ func getFieldNames() map[string]string {
 	return result
 }
 
+func getFieldNamesFromSchema(schema Schema) map[string]string {
+	result := make(map[string]string)
+	for key, value := range schema.Properties {
+		fieldName := strings.ToLower(key)
+		typ := getPrimitiveTypeName(value.Type)
+		readonly := value.Readonly
+		if typ != "" && !readonly {
+			result[fieldName] = strings.Title(typ)
+		}
+	}
+	return result
+}
+
+func getConfigFromSchema(pkg string, schema Schema) *Config {
+	cfg := Config{Package: pkg,
+		TfName:     schema.ID,
+		TfTitle:    strings.Title(schema.ID),
+		TfID:       schema.ID + "Name",
+		StructName: strings.Title(schema.ID),
+		Fields:     getFieldNamesFromSchema(schema),
+	}
+	return &cfg
+}
+func getConfig(pkg string, tfName string, structName string, configObj interface{}) *Config {
+	cfg := Config{Package: pkg,
+		TfName:     tfName,
+		TfTitle:    structName,
+		TfID:       tfName + "Name",
+		StructName: structName,
+		Fields:     getFieldNames(configObj),
+	}
+	return &cfg
+}
+
 func main() {
-	cfg := Config{Package: "lb",
-		TfName:     "lbvserver",
-		TfTitle:    "Lbvserver",
-		TfId:       "lbvserverName",
-		StructName: "Lbvserver",
-		Fields:     getFieldNames()}
+	flag.Parse()
+
 	funcMap := template.FuncMap{
 		"title": strings.Title,
 		"lower": strings.ToLower,
@@ -49,14 +101,18 @@ func main() {
 			return x != y
 		},
 	}
-	writer, err := os.Create(filepath.Join("netscaler", "resource_lb.go"))
 	t := template.Must(template.New("").Funcs(funcMap).ParseFiles("resource.tmpl", "provider.tmpl"))
-	err = t.ExecuteTemplate(writer, "resource.tmpl", cfg)
+
+	schema := parseSchema(*i)
+	pkg := filepath.Base(filepath.Dir(*i))
+	cfg := getConfigFromSchema(pkg, *schema)
+	writer, err := os.Create(filepath.Join("netscaler", "resource_"+"lbvserver"+".go"))
+	err = t.ExecuteTemplate(writer, "resource.tmpl", *cfg)
 	if err != nil {
 		log.Fatalf("execution failed: %s", err)
 	}
 	writer, err = os.Create(filepath.Join("netscaler", "provider.go"))
-	err = t.ExecuteTemplate(writer, "provider.tmpl", cfg)
+	err = t.ExecuteTemplate(writer, "provider.tmpl", *cfg)
 	if err != nil {
 		log.Fatalf("execution failed: %s", err)
 	}
