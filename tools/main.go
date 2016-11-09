@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -23,12 +24,14 @@ type Config struct {
 	BindingPkg  string
 	BindingType string
 	BoundType   string
+	KeyFields   map[string]interface{} //important fields and their values for documentation and testing
 }
 
 var (
 	i = flag.String("i", "", "The input JSON Schema file.")
 	b = flag.String("b", "", "The JSON schema file for the binding if any")
 	n = flag.String("n", "", "The name for the HCL field that specifies the binding")
+	k = flag.String("k", "", "JSON string mapping key fields to values for testing and documentation")
 )
 
 func parseSchema(inputFile string) *Schema {
@@ -76,17 +79,29 @@ func getFieldNamesFromSchema(schema Schema) map[string]string {
 	return result
 }
 
-func getConfigFromSchema(pkg string, schema Schema) *Config {
+func getConfigFromSchema(pkg string, schema Schema, keyFieldsJSON string) *Config {
+	fields := getFieldNamesFromSchema(schema)
 	cfg := Config{Package: pkg,
 		TfName:      schema.ID,
 		TfTitle:     strings.Title(schema.ID),
 		TfID:        schema.ID + "Name",
 		StructName:  strings.Title(schema.ID),
-		Fields:      getFieldNamesFromSchema(schema),
+		Fields:      fields,
 		BindingName: "",
+	}
+	keyFieldValues := make(map[string]interface{})
+	cfg.KeyFields = keyFieldValues
+	if keyFieldsJSON != "" {
+		err := json.Unmarshal([]byte(keyFieldsJSON), &keyFieldValues)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "Failed to parse keyfield JSON ", err)
+			return &cfg
+		}
+		cfg.KeyFields = keyFieldValues
 	}
 	return &cfg
 }
+
 func getConfig(pkg string, tfName string, structName string, configObj interface{}) *Config {
 	cfg := Config{Package: pkg,
 		TfName:      tfName,
@@ -108,13 +123,28 @@ func main() {
 		"neq": func(x, y interface{}) bool {
 			return x != y
 		},
+		"isInt": func(x interface{}) bool {
+			switch x.(type) {
+			case int:
+				return true
+			case float64:
+				return true
+			default:
+				return false
+			}
+			return false
+		},
 	}
-	t := template.Must(template.New("").Funcs(funcMap).ParseFiles("resource.tmpl", "provider.tmpl"))
+	t := template.Must(template.New("").Funcs(funcMap).ParseFiles("resource.tmpl", "provider.tmpl", "resource_test.tmpl"))
 
 	schema := parseSchema(*i)
 	pkg := filepath.Base(filepath.Dir(*i))
-	cfg := getConfigFromSchema(pkg, *schema)
-	if *n != "" && *b != "" {
+	keyFields := ""
+	if *k != "" { //if key fields are provided
+		keyFields = *k
+	}
+	cfg := getConfigFromSchema(pkg, *schema, keyFields)
+	if *n != "" && *b != "" { //if binding is required
 		bindingSchema := parseSchema(*b)
 		cfg.BindingName = *n
 		cfg.BindingPkg = filepath.Base(filepath.Dir(*b))
@@ -129,6 +159,12 @@ func main() {
 	}
 	writer, err = os.Create(filepath.Join("netscaler", "provider.go"))
 	err = t.ExecuteTemplate(writer, "provider.tmpl", *cfg)
+	if err != nil {
+		log.Fatalf("execution failed: %s", err)
+	}
+
+	writer, err = os.Create(filepath.Join("netscaler", "resource_"+schema.ID+"_test.go"))
+	err = t.ExecuteTemplate(writer, "resource_test.tmpl", *cfg)
 	if err != nil {
 		log.Fatalf("execution failed: %s", err)
 	}
