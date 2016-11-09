@@ -29,15 +29,15 @@ resource "netscaler_lbvserver" "my-lb-vserver2" {
 }
 
 resource "netscaler_service" "backend_1" {
-  lbvserver = "${netscaler_lb.my-lb-vserver2.name}"
-  servername = "10.33.43.55"
+  lbvserver = "${netscaler_lbvserver.my-lb-vserver2.name}"
+  ip = "10.33.43.55"
   servicetype = "HTTP"
   port = 80
 }
 
 resource "netscaler_service" "backend_2" {
-  lbvserver = "${netscaler_lb.my-lb-vserver2.name}"
-  servername = "10.33.44.54"
+  lbvserver = "${netscaler_lbvserver.my-lb-vserver2.name}"
+  ip = "10.33.44.54"
   servicetype = "HTTP"
   port = 80
 }

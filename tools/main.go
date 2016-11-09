@@ -14,17 +14,18 @@ import (
 )
 
 type Config struct {
-	Package     string
-	TfTitle     string
-	TfName      string
-	TfID        string
-	StructName  string
-	Fields      map[string]string
-	BindingName string
-	BindingPkg  string
-	BindingType string
-	BoundType   string
-	KeyFields   map[string]interface{} //important fields and their values for documentation and testing
+	Package        string
+	TfTitle        string
+	TfName         string
+	TfID           string
+	StructName     string
+	Fields         map[string]string
+	BindingName    string
+	BindingPkg     string
+	BindingType    string
+	BoundType      string
+	KeyFields      map[string]interface{} //important fields and their values for documentation and testing
+	KeyFieldsBound map[string]interface{} //important fields and their values for documentation and testing for bound type if any
 }
 
 var (
@@ -32,6 +33,7 @@ var (
 	b = flag.String("b", "", "The JSON schema file for the binding if any")
 	n = flag.String("n", "", "The name for the HCL field that specifies the binding")
 	k = flag.String("k", "", "JSON string mapping key fields to values for testing and documentation")
+	K = flag.String("K", "", "If this resource is always bound to another, this parameter provides a JSON string mapping key fields to values for the Bound type")
 )
 
 func parseSchema(inputFile string) *Schema {
@@ -79,7 +81,7 @@ func getFieldNamesFromSchema(schema Schema) map[string]string {
 	return result
 }
 
-func getConfigFromSchema(pkg string, schema Schema, keyFieldsJSON string) *Config {
+func getConfigFromSchema(pkg string, schema Schema, keyFieldsJSON string, boundKeyFieldsJSON string) *Config {
 	fields := getFieldNamesFromSchema(schema)
 	cfg := Config{Package: pkg,
 		TfName:      schema.ID,
@@ -90,6 +92,7 @@ func getConfigFromSchema(pkg string, schema Schema, keyFieldsJSON string) *Confi
 		BindingName: "",
 	}
 	keyFieldValues := make(map[string]interface{})
+	boundKeyFieldValues := make(map[string]interface{})
 	cfg.KeyFields = keyFieldValues
 	if keyFieldsJSON != "" {
 		err := json.Unmarshal([]byte(keyFieldsJSON), &keyFieldValues)
@@ -98,6 +101,14 @@ func getConfigFromSchema(pkg string, schema Schema, keyFieldsJSON string) *Confi
 			return &cfg
 		}
 		cfg.KeyFields = keyFieldValues
+	}
+	if boundKeyFieldsJSON != "" {
+		err := json.Unmarshal([]byte(boundKeyFieldsJSON), &boundKeyFieldValues)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "Failed to parse bound keyfield JSON ", err)
+			return &cfg
+		}
+		cfg.KeyFieldsBound = boundKeyFieldValues
 	}
 	return &cfg
 }
@@ -134,16 +145,23 @@ func main() {
 			}
 			return false
 		},
+		"isPresent": func(x map[string]interface{}) bool {
+			return len(x) > 0
+		},
 	}
 	t := template.Must(template.New("").Funcs(funcMap).ParseFiles("resource.tmpl", "provider.tmpl", "resource_test.tmpl"))
 
 	schema := parseSchema(*i)
 	pkg := filepath.Base(filepath.Dir(*i))
 	keyFields := ""
+	boundKeyFields := ""
 	if *k != "" { //if key fields are provided
 		keyFields = *k
 	}
-	cfg := getConfigFromSchema(pkg, *schema, keyFields)
+	if *K != "" { //if bound key fields are provided
+		boundKeyFields = *K
+	}
+	cfg := getConfigFromSchema(pkg, *schema, keyFields, boundKeyFields)
 	if *n != "" && *b != "" { //if binding is required
 		bindingSchema := parseSchema(*b)
 		cfg.BindingName = *n

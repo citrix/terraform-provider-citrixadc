@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-PROVIDER_ONLY_PKGS=$(shell go list ./... | grep -v "/vendor/")
+PROVIDER_ONLY_PKGS=$(shell go list ./... | grep -v "/vendor/" | grep -v "tools")
 
 default: build 
 
