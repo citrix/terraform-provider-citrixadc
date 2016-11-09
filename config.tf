@@ -14,30 +14,30 @@
 
 resource "netscaler_lb" "my-lb-vserver" {
   name = "sample_lb"
-  vip = "10.71.136.150"
+  ipv46 = "10.71.136.150"
   port = 443
-  service_type = "SSL"
-  lb_method = "ROUNDROBIN"
-  persistence_type = "COOKIEINSERT"
+  servicetype = "SSL"
+  lbmethod = "ROUNDROBIN"
+  persistencetype = "COOKIEINSERT"
 }
 
 resource "netscaler_lb" "my-lb-vserver2" {
   name = "sample_lb2"
-  vip = "10.71.136.151"
-  service_type = "SSL"
+  ipv46 = "10.71.136.151"
+  servicetype = "SSL"
   port = 443
 }
 
 resource "netscaler_svc" "backend_1" {
-  lb = "${netscaler_lb.my-lb-vserver2.name}"
-  ip = "10.33.44.55"
-  service_type = "HTTP"
+  lbvserver = "${netscaler_lb.my-lb-vserver2.name}"
+  servername = "10.33.43.55"
+  servicetype = "HTTP"
   port = 80
 }
 
 resource "netscaler_svc" "backend_2" {
-  lb = "${netscaler_lb.my-lb-vserver2.name}"
-  ip = "10.33.44.54"
-  service_type = "HTTP"
+  lbvserver = "${netscaler_lb.my-lb-vserver2.name}"
+  servername = "10.33.44.54"
+  servicetype = "HTTP"
   port = 80
 }
