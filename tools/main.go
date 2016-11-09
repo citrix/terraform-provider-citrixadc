@@ -13,16 +13,22 @@ import (
 )
 
 type Config struct {
-	Package    string
-	TfTitle    string
-	TfName     string
-	TfID       string
-	StructName string
-	Fields     map[string]string
+	Package     string
+	TfTitle     string
+	TfName      string
+	TfID        string
+	StructName  string
+	Fields      map[string]string
+	BindingName string
+	BindingPkg  string
+	BindingType string
+	BoundType   string
 }
 
 var (
 	i = flag.String("i", "", "The input JSON Schema file.")
+	b = flag.String("b", "", "The JSON schema file for the binding if any")
+	n = flag.String("n", "", "The name for the HCL field that specifies the binding")
 )
 
 func parseSchema(inputFile string) *Schema {
@@ -72,21 +78,23 @@ func getFieldNamesFromSchema(schema Schema) map[string]string {
 
 func getConfigFromSchema(pkg string, schema Schema) *Config {
 	cfg := Config{Package: pkg,
-		TfName:     schema.ID,
-		TfTitle:    strings.Title(schema.ID),
-		TfID:       schema.ID + "Name",
-		StructName: strings.Title(schema.ID),
-		Fields:     getFieldNamesFromSchema(schema),
+		TfName:      schema.ID,
+		TfTitle:     strings.Title(schema.ID),
+		TfID:        schema.ID + "Name",
+		StructName:  strings.Title(schema.ID),
+		Fields:      getFieldNamesFromSchema(schema),
+		BindingName: "",
 	}
 	return &cfg
 }
 func getConfig(pkg string, tfName string, structName string, configObj interface{}) *Config {
 	cfg := Config{Package: pkg,
-		TfName:     tfName,
-		TfTitle:    structName,
-		TfID:       tfName + "Name",
-		StructName: structName,
-		Fields:     getFieldNames(configObj),
+		TfName:      tfName,
+		TfTitle:     structName,
+		TfID:        tfName + "Name",
+		StructName:  structName,
+		Fields:      getFieldNames(configObj),
+		BindingName: "",
 	}
 	return &cfg
 }
@@ -106,6 +114,14 @@ func main() {
 	schema := parseSchema(*i)
 	pkg := filepath.Base(filepath.Dir(*i))
 	cfg := getConfigFromSchema(pkg, *schema)
+	if *n != "" && *b != "" {
+		bindingSchema := parseSchema(*b)
+		cfg.BindingName = *n
+		cfg.BindingPkg = filepath.Base(filepath.Dir(*b))
+		cfg.BindingType = strings.Title(strings.Join(strings.Split(bindingSchema.ID, "_"), ""))
+		cfg.BoundType = strings.Title(strings.Split(bindingSchema.ID, "_")[0])
+	}
+
 	writer, err := os.Create(filepath.Join("netscaler", "resource_"+schema.ID+".go"))
 	err = t.ExecuteTemplate(writer, "resource.tmpl", *cfg)
 	if err != nil {

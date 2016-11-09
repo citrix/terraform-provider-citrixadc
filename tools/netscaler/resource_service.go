@@ -2,6 +2,8 @@ package netscaler
 
 import (
         "github.com/chiradeep/go-nitro/config/basic"
+        "github.com/chiradeep/go-nitro/config/lb"
+        
 	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -255,6 +257,10 @@ func resourceNetScalerService() *schema.Resource {
                                Computed: true,
 			},
                         
+                        "lbvserver": &schema.Schema{
+				Type:     schema.TypeString,
+				Required: true,
+			},
 		},
 	}
 }
@@ -325,6 +331,17 @@ func createServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
         d.SetId(serviceName)
+        lbvserver := d.Get("lbvserver").(string)
+
+        binding := lb.Lbvserverservicebinding{
+                Name:        lbvserver,
+                Servicename: serviceName,
+	}
+
+        err = client.BindResource(netscaler.Lbvserver.Type(), lbvserver, netscaler.Service.Type(), serviceName, &binding)
+	if err != nil {
+		return err
+	}
         err = readServiceFunc(d, meta)
 	if err != nil {
                 log.Printf("?? we just created this service but we can't read it ?? %s", serviceName)

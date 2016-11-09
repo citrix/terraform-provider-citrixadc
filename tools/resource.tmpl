@@ -2,6 +2,9 @@ package netscaler
 
 import (
         "github.com/chiradeep/go-nitro/config/{{.Package}}"
+        {{if neq .BindingPkg "" -}}
+        "github.com/chiradeep/go-nitro/config/{{.BindingPkg}}"
+        {{end}}
 	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -26,6 +29,10 @@ func resourceNetScaler{{.TfTitle}}() *schema.Resource {
                                Computed: true,
 			},
                         {{end}}
+                        "{{.BindingName}}": &schema.Schema{
+				Type:     schema.TypeString,
+				Required: true,
+			},
 		},
 	}
 }
@@ -54,6 +61,17 @@ func create{{.TfTitle}}Func(d *schema.ResourceData, meta interface{}) error {
 	}
 
         d.SetId({{.TfID}})
+        {{.BindingName}} := d.Get("{{.BindingName}}").(string)
+
+        binding := {{.BindingPkg}}.{{.BindingType}}{
+                Name:        {{.BindingName}},
+                Servicename: {{.TfID}},
+	}
+
+        err = client.BindResource(netscaler.{{.BoundType}}.Type(), {{.BindingName}}, netscaler.{{.StructName}}.Type(), {{.TfID}}, &binding)
+	if err != nil {
+		return err
+	}
         err = read{{.TfTitle}}Func(d, meta)
 	if err != nil {
                 log.Printf("?? we just created this {{.TfName}} but we can't read it ?? %s", {{.TfID}})
