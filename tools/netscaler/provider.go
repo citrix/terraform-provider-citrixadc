@@ -61,8 +61,7 @@ func providerSchema() map[string]*schema.Schema {
 
 func providerResources() map[string]*schema.Resource {
 	return map[string]*schema.Resource{
-		"netscaler_lb": resourceNetScalerLbvserver(),
-		//"netscaler_svc": resourceNetScalerSvc(),
+                "netscaler_lb": resourceNetScalerService(),
 	}
 }
 

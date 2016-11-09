@@ -60,7 +60,7 @@ func getFieldNames(obj interface{}) map[string]string {
 func getFieldNamesFromSchema(schema Schema) map[string]string {
 	result := make(map[string]string)
 	for key, value := range schema.Properties {
-		fieldName := strings.ToLower(key)
+		fieldName := strings.Join(strings.Split(strings.ToLower(key), "_"), "")
 		typ := getPrimitiveTypeName(value.Type)
 		readonly := value.Readonly
 		if typ != "" && !readonly {
@@ -106,7 +106,7 @@ func main() {
 	schema := parseSchema(*i)
 	pkg := filepath.Base(filepath.Dir(*i))
 	cfg := getConfigFromSchema(pkg, *schema)
-	writer, err := os.Create(filepath.Join("netscaler", "resource_"+"lbvserver"+".go"))
+	writer, err := os.Create(filepath.Join("netscaler", "resource_"+schema.ID+".go"))
 	err = t.ExecuteTemplate(writer, "resource.tmpl", *cfg)
 	if err != nil {
 		log.Fatalf("execution failed: %s", err)
