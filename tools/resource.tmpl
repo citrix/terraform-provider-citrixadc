@@ -68,7 +68,7 @@ func create{{.TfTitle}}Func(d *schema.ResourceData, meta interface{}) error {
 
         binding := {{.BindingPkg}}.{{.BindingType}}{
                 Name:        {{.BindingName}},
-                Servicename: {{.TfID}},
+                {{.TfTitle}}name: {{.TfID}},
 	}
 
         err = client.BindResource(netscaler.{{.BoundType}}.Type(), {{.BindingName}}, netscaler.{{.StructName}}.Type(), {{.TfID}}, &binding)
