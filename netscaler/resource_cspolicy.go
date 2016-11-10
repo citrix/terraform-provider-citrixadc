@@ -77,7 +77,10 @@ func createCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	csvserver := d.Get("csvserver").(string)
 	targetlbvserver, lbok := d.GetOk("targetlbvserver")
 	priority, pok := d.GetOk("priority")
-	_, aok := d.GetOk("action")
+	action, aok := d.GetOk("action")
+	_, dok := d.GetOk("domain")
+	_, uok := d.GetOk("url")
+	_, rok := d.GetOk("rule")
 
 	if lbok && !pok {
 		return fmt.Errorf("Priority needs to be specified if target lb vserver is specified")
@@ -88,6 +91,24 @@ func createCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	if !lbok && !aok {
 		return fmt.Errorf("Action or targetlbvserver needs to be specified")
 	}
+	if aok {
+		actionExists := client.ResourceExists(netscaler.Csaction.Type(), action.(string))
+		if !actionExists {
+			return fmt.Errorf("Specified Action %s does not exist", action.(string))
+		}
+		if !rok {
+			return fmt.Errorf("Action  %s specified without rule", action.(string))
+		}
+		if dok || uok {
+			return fmt.Errorf("Cannot specify url or domain when action  %s is specified", action.(string))
+		}
+	}
+	if uok && dok {
+		return fmt.Errorf("Cannot specify both url and domain ")
+	}
+	if rok && (uok || dok) {
+		return fmt.Errorf("Cannot specify both rule and domain or url ")
+	}
 
 	var cspolicyName string
 	if v, ok := d.GetOk("policyname"); ok {
@@ -97,11 +118,10 @@ func createCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 		d.Set("name", cspolicyName)
 	}
 	cspolicy := cs.Cspolicy{
+		Policyname: d.Get("policyname").(string),
 		Action:     d.Get("action").(string),
 		Domain:     d.Get("domain").(string),
 		Logaction:  d.Get("logaction").(string),
-		Newname:    d.Get("newname").(string),
-		Policyname: d.Get("policyname").(string),
 		Rule:       d.Get("rule").(string),
 		Url:        d.Get("url").(string),
 	}
