@@ -29,9 +29,12 @@ type responseHandlerFunc func(resp *http.Response) ([]byte, error)
 
 func createResponseHandler(resp *http.Response) ([]byte, error) {
 	switch resp.Status {
-	case "201 Created", "200 OK", "409 Conflict":
+	case "201 Created", "200 OK":
 		body, _ := ioutil.ReadAll(resp.Body)
 		return body, nil
+	case "409 Conflict":
+		body, _ := ioutil.ReadAll(resp.Body)
+		return body, errors.New("failed: " + resp.Status + " (" + string(body) + ")")
 
 	case "207 Multi Status":
 		//This happens in case of Bulk operations, which we do not support yet
