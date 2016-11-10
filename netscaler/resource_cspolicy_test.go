@@ -32,16 +32,16 @@ func TestAccCspolicy_basic(t *testing.T) {
 			resource.TestStep{
 				Config: testAccCspolicy_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCspolicyExist("netscaler_cspolicy.foo", nil),
+					testAccCheckCspolicyExist("netscaler_cspolicy.foo_cspolicy", nil),
 
 					resource.TestCheckResourceAttr(
-						"netscaler_cspolicy.foo", "csvserver", "foo_cs"),
+						"netscaler_cspolicy.foo_cspolicy", "csvserver", "tst_policy_cs"),
 					resource.TestCheckResourceAttr(
-						"netscaler_cspolicy.foo", "targetlbvserver", "foo_lb"),
+						"netscaler_cspolicy.foo_cspolicy", "targetlbvserver", "tst_policy_lb"),
 					resource.TestCheckResourceAttr(
-						"netscaler_cspolicy.foo", "policyname", "test_policy"),
+						"netscaler_cspolicy.foo_cspolicy", "policyname", "test_policy"),
 					resource.TestCheckResourceAttr(
-						"netscaler_cspolicy.foo", "rule", "CLIENT.IP.SRC.SUBNET(24).EQ(10.217.84.0)"),
+						"netscaler_cspolicy.foo_cspolicy", "rule", "CLIENT.IP.SRC.SUBNET(24).EQ(10.217.84.0)"),
 				),
 			},
 		},
@@ -106,28 +106,28 @@ func testAccCheckCspolicyDestroy(s *terraform.State) error {
 
 const testAccCspolicy_basic = `
 
-resource "netscaler_csvserver" "foo" {
+resource "netscaler_csvserver" "foo_cspolicy" {
   
   ipv46 = "10.202.11.11"
-  name = "foo_cs"
+  name = "tst_policy_cs"
   port = 443
   servicetype = "SSL"
 }
 
-resource "netscaler_lbvserver" "foo" {
+resource "netscaler_lbvserver" "foo_cspolicy" {
   
-  name = "foo_lb"
+  name = "tst_policy_lb"
   servicetype = "HTTP"
 }
 
-resource "netscaler_cspolicy" "foo" {
-  csvserver = "foo_cs"
-  targetlbvserver = "foo_lb"
+resource "netscaler_cspolicy" "foo_cspolicy" {
+  csvserver = "tst_policy_cs"
+  targetlbvserver = "tst_policy_lb"
   policyname = "test_policy"
   rule = "CLIENT.IP.SRC.SUBNET(24).EQ(10.217.84.0)"
   priority = 10
 
-  depends_on = ["netscaler_csvserver.foo", "netscaler_lbvserver.foo"]
+  depends_on = ["netscaler_csvserver.foo_cspolicy", "netscaler_lbvserver.foo_cspolicy"]
 
 }
 `
