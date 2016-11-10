@@ -37,8 +37,7 @@ func (c *NitroClient) AddResource(resourceType string, name string, resourceStru
 
 		body, err := c.createResource(resourceType, resourceJSON)
 		if err != nil {
-			log.Fatal("Failed to create resource of type %s, name=%s, err=%s", resourceType, name, err)
-			return "", err
+			return "", fmt.Errorf("Failed to create resource of type %s, name=%s, err=%s", resourceType, name, err)
 		}
 		_ = body
 	}
@@ -58,8 +57,7 @@ func (c *NitroClient) UpdateResource(resourceType string, name string, resourceS
 
 		body, err := c.updateResource(resourceType, name, resourceJSON)
 		if err != nil {
-			log.Fatal(fmt.Sprintf("Failed to update resource of type %s, name=%s err=%s", resourceType, name, err))
-			return "", err
+			return "", fmt.Errorf("Failed to update resource of type %s, name=%s err=%s", resourceType, name, err)
 		}
 		_ = body
 	}
@@ -101,8 +99,7 @@ func (c *NitroClient) BindResource(bindToResourceType string, bindToResourceName
 
 	body, err := c.createResource(bindingName, resourceJSON)
 	if err != nil {
-		log.Fatal("Failed to bind resource %s to resource %s, err=%s", bindToResourceName, bindingResourceName, err)
-		return err
+		return fmt.Errorf("Failed to bind resource %s to resource %s, err=%s", bindToResourceName, bindingResourceName, err)
 	}
 	_ = body
 	return nil

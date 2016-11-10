@@ -94,7 +94,6 @@ func readResponseHandler(resp *http.Response) ([]byte, error) {
 func (c *NitroClient) createHTTPRequest(method string, url string, buff *bytes.Buffer) (*http.Request, error) {
 	req, err := http.NewRequest(method, url, buff)
 	if err != nil {
-		log.Fatal(err)
 		return nil, err
 	}
 	req.Header.Set("Accept", "application/json")
@@ -112,7 +111,6 @@ func (c *NitroClient) doHTTPRequest(method string, url string, bytes *bytes.Buff
 		defer resp.Body.Close()
 	}
 	if err != nil {
-		log.Fatal(err)
 		return []byte{}, err
 	}
 	log.Println("response Status:", resp.Status)
