@@ -1,0 +1,4 @@
+*.tfstate*
+tags
+terraform-provider-netscaler
+tools/tools
