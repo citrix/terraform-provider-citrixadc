@@ -145,10 +145,10 @@ func readCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 func updateCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] In update func")
 	client := meta.(*NetScalerNitroClient).client
-	cspolicyName := d.Get("name").(string)
+	cspolicyName := d.Get("policyname").(string)
 
 	cspolicy := cs.Cspolicy{
-		Policyname: d.Get("name").(string),
+		Policyname: d.Get("policyname").(string),
 	}
 	if d.HasChange("action") {
 		log.Printf("[DEBUG] Action has changed for cspolicy %s, starting update", cspolicyName)
@@ -165,10 +165,6 @@ func updateCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("newname") {
 		log.Printf("[DEBUG] Newname has changed for cspolicy %s, starting update", cspolicyName)
 		cspolicy.Newname = d.Get("newname").(string)
-	}
-	if d.HasChange("policyname") {
-		log.Printf("[DEBUG] Policyname has changed for cspolicy %s, starting update", cspolicyName)
-		cspolicy.Policyname = d.Get("policyname").(string)
 	}
 	if d.HasChange("rule") {
 		log.Printf("[DEBUG] Rule has changed for cspolicy %s, starting update", cspolicyName)
