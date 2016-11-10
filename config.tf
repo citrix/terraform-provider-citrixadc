@@ -30,7 +30,7 @@ resource "netscaler_lbvserver" "my-lb-vserver2" {
 
 resource "netscaler_service" "backend_1" {
   lbvserver = "${netscaler_lbvserver.my-lb-vserver2.name}"
-  ip = "10.33.43.55"
+  ip = "10.123.43.55"
   servicetype = "HTTP"
   port = 80
 }
@@ -40,4 +40,13 @@ resource "netscaler_service" "backend_2" {
   ip = "10.33.44.54"
   servicetype = "HTTP"
   port = 80
+  clttimeout = 360
+}
+
+resource "netscaler_csvserver" "foo-cs" {
+  name = "sample_cs"
+  ipv46 = "10.71.138.151"
+  servicetype = "SSL"
+  port = 443
+
 }
