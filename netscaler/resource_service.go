@@ -505,7 +505,7 @@ func updateServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("ip") {
 		log.Printf("[DEBUG] Ip has changed for service %s, starting update", serviceName)
-		service.Ip = d.Get("ip").(string)
+		service.Ipaddress = d.Get("ip").(string)
 	}
 	if d.HasChange("ipaddress") {
 		log.Printf("[DEBUG] Ipaddress has changed for service %s, starting update", serviceName)
