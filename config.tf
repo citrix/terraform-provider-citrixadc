@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-resource "netscaler_lbvserver" "my-lb-vserver" {
+resource "netscaler_lbvserver" "sample_lb" {
   name = "sample_lb"
   ipv46 = "10.71.136.150"
   port = 443
@@ -21,7 +21,7 @@ resource "netscaler_lbvserver" "my-lb-vserver" {
   persistencetype = "COOKIEINSERT"
 }
 
-resource "netscaler_lbvserver" "my-lb-vserver2" {
+resource "netscaler_lbvserver" "sample_lb2" {
   name = "sample_lb2"
   ipv46 = "10.71.136.151"
   servicetype = "SSL"
@@ -29,14 +29,14 @@ resource "netscaler_lbvserver" "my-lb-vserver2" {
 }
 
 resource "netscaler_service" "backend_1" {
-  lbvserver = "${netscaler_lbvserver.my-lb-vserver2.name}"
+  lbvserver = "${netscaler_lbvserver.sample_lb2.name}"
   ip = "10.123.43.55"
   servicetype = "HTTP"
   port = 80
 }
 
 resource "netscaler_service" "backend_2" {
-  lbvserver = "${netscaler_lbvserver.my-lb-vserver2.name}"
+  lbvserver = "${netscaler_lbvserver.sample_lb2.name}"
   ip = "10.33.44.54"
   servicetype = "HTTP"
   port = 80
@@ -49,4 +49,12 @@ resource "netscaler_csvserver" "foo-cs" {
   servicetype = "SSL"
   port = 443
 
+}
+
+resource "netscaler_cspolicy" "foo-cspolicy" {
+  policyname = "sample_cspolicy"
+  rule = "CLIENT.IP.SRC.SUBNET(24).EQ(10.227.84.0)"
+  csvserver = "${netscaler_csvserver.foo-cs.name}"
+  targetlbvserver = "${netscaler_lbvserver.sample_lb2.name}"
+  priority = 10
 }
