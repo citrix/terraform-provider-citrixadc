@@ -37,16 +37,16 @@ The username, password and endpoint can be provided in environment variables `NS
 
 ### Resource Configuration
 
-#### `netscaler_lb`
+#### `netscaler_lbvserver`
 
 ```
-resource "netscaler_lb" "foo" {
+resource "netscaler_lbvserver" "foo" {
   name = "sample_lb"
-  vip = "10.71.136.150"
+  ipv46 = "10.71.136.150"
   port = 443
-  service_type = "SSL"
-  lb_method = "ROUNDROBIN"
-  persistence_type = "COOKIEINSERT"
+  servicetype = "SSL"
+  lbmethod = "ROUNDROBIN"
+  persistencetype = "COOKIEINSERT"
 }
 ```
 
@@ -56,17 +56,17 @@ See <https://docs.citrix.com/en-us/netscaler/11-1/load-balancing/load-balancing-
 The following arguments are supported.
 
 * `name` - (Optional) name of the lb vserver in NetScaler
-* `vip` - (Required) The VIP for the lb vserver
+* `ipv46` - (Required) The VIP for the lb vserver
 * `port` - (Required) Port e.g., 80.
-* `service_type` - (Optional) Usually `HTTP` or `SSL`. NetScaler will default to `HTTP`
-* `lb_method` - (Optional) Usually `LEASTCONNECTION` or `ROUNDROBIN`, `LEASTRESPONSETIME`. See NetScaler docs for more options
-* `persistence_type` - (Optional) Usually `COOKIEINSERT`. See NetScaler docs for more options
+* `servicetype` - (Optional) Usually `HTTP` or `SSL`. NetScaler will default to `HTTP`
+* `lbmethod` - (Optional) Usually `LEASTCONNECTION` or `ROUNDROBIN`, `LEASTRESPONSETIME`. See NetScaler docs for more options
+* `persistencetype` - (Optional) Usually `COOKIEINSERT`. See NetScaler docs for more options
 
-#### `netscaler_svc`
+#### `netscaler_service`
 
 ```
-resource "netscaler_svc" "backend_1" {
-  lb = "${netscaler_lb.foo.name}"
+resource "netscaler_service" "backend_1" {
+  lb = "${netscaler_lbvserver.foo.name}"
   ip = "10.33.44.55"
   port = 80
 }
@@ -74,12 +74,12 @@ resource "netscaler_svc" "backend_1" {
 ##### Argument Reference
 See <https://docs.citrix.com/en-us/netscaler/11-1/load-balancing/load-balancing-setup.html> for possible values for these arguments.
 
-Each `netscaler_svc` models a NetScaler `service` object. The NetScaler docs have more values for service type etc.
+Each `netscaler_service` models a NetScaler `service` object. The NetScaler docs have more values for service type etc.
 
-* `lb` - (Required) The name of the `lb vserver` to bind to. Usually you refer to a previously declared `lb vserver` in the same config, i.e., `${netscaler_lb.foolb.name}`
+* `lbvserver` - (Required) The name of the `lb vserver` to bind to. Usually you refer to a previously declared `lb vserver` in the same config, i.e., `${netscaler_lbvserver.foolb.name}`
 * `ip` - (Required) IP address. 
 * `port` - (Required) Port
-* `service_type` - (Optional) This has to be compatible with the `service_type` declared in the `netscaler_lb`. Defaults to `HTTP`
+* `servicetype` - (Optional) This has to be compatible with the `servicetype` declared in the `netscaler_lbvserver`. Defaults to `HTTP`
 
 
 ##### For example
@@ -87,21 +87,21 @@ Each `netscaler_svc` models a NetScaler `service` object. The NetScaler docs hav
 Example 1:
 
 ```
-resource "netscaler_lb" foolb" {
+resource "netscaler_lbvserver" foolb" {
   name = "sample_lb"
-  vip = "10.71.136.151"
+  ipv46 = "10.71.136.151"
   port = 443
-  service_type = "SSL"
+  servicetype = "SSL"
 }
 
-resource "netscaler_svc" "backend_1" {
-  lb = "${netscaler_lb.foolb.name}"
+resource "netscaler_service" "backend_1" {
+  lb = "${netscaler_lbvserver.foolb.name}"
   ip = "10.33.44.55"
   port = 80
 }
 
-resource "netscaler_svc" "backend_2" {
-  lb = "${netscaler_lb.foolb.name}"
+resource "netscaler_service" "backend_2" {
+  lb = "${netscaler_lbvserver.foolb.name}"
   ip = "10.33.44.54"
   port = 80
 }
