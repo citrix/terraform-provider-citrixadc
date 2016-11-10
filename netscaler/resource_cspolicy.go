@@ -131,8 +131,6 @@ func createCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	d.SetId(cspolicyName)
-
 	binding := cs.Csvservercspolicybinding{
 		Name:            csvserver,
 		Policyname:      cspolicyName,
@@ -149,9 +147,14 @@ func createCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err = client.BindResource(netscaler.Csvserver.Type(), csvserver, netscaler.Cspolicy.Type(), cspolicyName, &binding)
 	if err != nil {
-		log.Printf("Failed to bind cspolicy to Csvserver")
-		return err
+		d.SetId("")
+		err2 := client.DeleteResource(netscaler.Cspolicy.Type(), cspolicyName)
+		if err2 != nil {
+			return fmt.Errorf("Failed to undo add cspolicy after bind cspolicy %s to Csvserver failed", cspolicyName, err2)
+		}
+		return fmt.Errorf("Failed to bind cspolicy %s to Csvserver", cspolicyName, err)
 	}
+	d.SetId(cspolicyName)
 	err = readCspolicyFunc(d, meta)
 	if err != nil {
 		log.Printf("?? we just created this cspolicy but we can't read it ?? %s", cspolicyName)
@@ -192,6 +195,7 @@ func updateCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	hasChange := false
 	lbvserverChanged := false
+	priorityChanged := false
 
 	if d.HasChange("action") {
 		log.Printf("[DEBUG] Action has changed for cspolicy %s, starting update", cspolicyName)
@@ -223,13 +227,17 @@ func updateCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 		cspolicy.Url = d.Get("url").(string)
 		hasChange = true
 	}
+	if d.HasChange("priority") {
+		log.Printf("[DEBUG] Priority has changed for cspolicy %s, starting update", cspolicyName)
+		priorityChanged = true
+	}
 
 	if d.HasChange("targetlbvserver") {
 		log.Printf("[DEBUG] targetlbvserver has changed for cspolicy %s, starting update", cspolicyName)
 		lbvserverChanged = true
 	}
 
-	if lbvserverChanged {
+	if lbvserverChanged || priorityChanged {
 		//Binding has to be updated
 		//First we unbind from cs vserver
 		err := client.UnbindResource(netscaler.Csvserver.Type(), csvserver, netscaler.Cspolicy.Type(), cspolicyName, "policyname")
@@ -247,7 +255,7 @@ func updateCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] cspolicy has been updated  cspolicy %s ", cspolicyName)
 	}
 
-	if lbvserverChanged {
+	if lbvserverChanged || priorityChanged {
 		//Binding has to be updated
 		//rebind
 		targetlbvserver, lbok := d.GetOk("targetlbvserver")
