@@ -569,6 +569,7 @@ func createLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 			Vservername: lbvserverName,
 			Certkeyname: sslcertkey.(string),
 		}
+		log.Printf("[INFO] netscaler-provider:  Binding ssl cert %s to lbvserver %s", sslcertkey, lbvserverName)
 		err = client.BindResource(netscaler.Sslvserver.Type(), lbvserverName, netscaler.Sslcertkey.Type(), sslcertkey.(string), &binding)
 		if err != nil {
 			log.Printf("[ERROR] netscaler-provider:  Failed to bind ssl cert %s to lbvserver %s", sslcertkey, lbvserverName)

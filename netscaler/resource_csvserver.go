@@ -2,6 +2,7 @@ package netscaler
 
 import (
 	"github.com/chiradeep/go-nitro/config/cs"
+	"github.com/chiradeep/go-nitro/config/ssl"
 
 	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -279,6 +280,10 @@ func resourceNetScalerCsvserver() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"sslcertkey": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -292,6 +297,13 @@ func createCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		csvserverName = resource.PrefixedUniqueId("tf-csvserver-")
 		d.Set("name", csvserverName)
+	}
+	sslcertkey, sok := d.GetOk("sslcertkey")
+	if sok {
+		exists := client.ResourceExists(netscaler.Sslcertkey.Type(), sslcertkey.(string))
+		if !exists {
+			return fmt.Errorf("[ERROR] netscaler-provider: Specified ssl cert key does not exist on netscaler!")
+		}
 	}
 	csvserver := cs.Csvserver{
 		Name:                    csvserverName,
@@ -350,7 +362,25 @@ func createCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(netscaler.Csvserver.Type(), csvserverName, &csvserver)
 	if err != nil {
+		log.Printf("[ERROR] netscaler-provider: could not add resource %s of type %s", netscaler.Csvserver.Type(), csvserverName)
 		return err
+	}
+	if sok { //ssl cert is specified
+		binding := ssl.Sslvserversslcertkeybinding{
+			Vservername: csvserverName,
+			Certkeyname: sslcertkey.(string),
+		}
+		log.Printf("[INFO] netscaler-provider:  Binding ssl cert %s to csvserver %s", sslcertkey, csvserverName)
+		err = client.BindResource(netscaler.Sslvserver.Type(), csvserverName, netscaler.Sslcertkey.Type(), sslcertkey.(string), &binding)
+		if err != nil {
+			log.Printf("[ERROR] netscaler-provider:  Failed to bind ssl cert %s to csvserver %s", sslcertkey, csvserverName)
+			err2 := client.DeleteResource(netscaler.Csvserver.Type(), csvserverName)
+			if err2 != nil {
+				log.Printf("[ERROR] netscaler-provider:  Failed to delete csvserver %s after bind to ssl cert failed", csvserverName)
+				return fmt.Errorf("[ERROR] netscaler-provider:  Failed to delete csvserver %s after bind to ssl cert failed", csvserverName)
+			}
+			return fmt.Errorf("[ERROR] netscaler-provider:  Failed to bind ssl cert %s to csvserver %s", sslcertkey, csvserverName)
+		}
 	}
 
 	d.SetId(csvserverName)
