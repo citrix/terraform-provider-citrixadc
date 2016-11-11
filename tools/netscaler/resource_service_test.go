@@ -27,18 +27,18 @@ func TestAccService_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-                CheckDestroy: testAccCheckServiceDestroy,
+		CheckDestroy: testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-                                Config: testAccService_basic,
+				Config: testAccService_basic,
 				Check: resource.ComposeTestCheckFunc(
-                                        testAccCheckServiceExist("netscaler_service.foo", nil),
-                                        resource.TestCheckResourceAttr(
-                                                 "netscaler_service.foo", "lbvserver", "foo_lb"),resource.TestCheckResourceAttr(
-                                                 "netscaler_service.foo", "name", "foo_svc"),resource.TestCheckResourceAttr(
-                                                 "netscaler_service.foo", "port", "80"),resource.TestCheckResourceAttr(
-                                                 "netscaler_service.foo", "servername", "10.202.22.12"),resource.TestCheckResourceAttr(
-                                                 "netscaler_service.foo", "servicetype", "HTTP"),
+					testAccCheckServiceExist("netscaler_service.foo", nil),
+					resource.TestCheckResourceAttr(
+						"netscaler_service.foo", "lbvserver", "foo_lb"), resource.TestCheckResourceAttr(
+						"netscaler_service.foo", "name", "foo_svc"), resource.TestCheckResourceAttr(
+						"netscaler_service.foo", "port", "80"), resource.TestCheckResourceAttr(
+						"netscaler_service.foo", "servername", "10.202.22.12"), resource.TestCheckResourceAttr(
+						"netscaler_service.foo", "servicetype", "HTTP"),
 				),
 			},
 		},
@@ -65,7 +65,7 @@ func testAccCheckServiceExist(n string, id *string) resource.TestCheckFunc {
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-                data, err := nsClient.FindResource(netscaler.Service.Type(), rs.Primary.ID)
+		data, err := nsClient.FindResource(netscaler.Service.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -83,7 +83,7 @@ func testAccCheckServiceDestroy(s *terraform.State) error {
 	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
 
 	for _, rs := range s.RootModule().Resources {
-                if rs.Type != "netscaler_service" {
+		if rs.Type != "netscaler_service" {
 			continue
 		}
 
@@ -91,7 +91,7 @@ func testAccCheckServiceDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-                _, err := nsClient.FindResource(netscaler.Service.Type(), rs.Primary.ID)
+		_, err := nsClient.FindResource(netscaler.Service.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("LB vserver %s still exists", rs.Primary.ID)
 		}

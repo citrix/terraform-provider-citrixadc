@@ -27,19 +27,19 @@ func TestAccCspolicy_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-                CheckDestroy: testAccCheckCspolicyDestroy,
+		CheckDestroy: testAccCheckCspolicyDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-                                Config: testAccCspolicy_basic,
+				Config: testAccCspolicy_basic,
 				Check: resource.ComposeTestCheckFunc(
-                                        testAccCheckCspolicyExist("netscaler_cspolicy.foo", nil),
-                                        
+					testAccCheckCspolicyExist("netscaler_cspolicy.foo", nil),
+
 					resource.TestCheckResourceAttr(
-                                                 "netscaler_cspolicy.foo", "lbvserver", "test-lb-vserver"),
+						"netscaler_cspolicy.foo", "lbvserver", "test-lb-vserver"),
 					resource.TestCheckResourceAttr(
-                                                 "netscaler_cspolicy.foo", "policyname", "test_policy"),
+						"netscaler_cspolicy.foo", "policyname", "test_policy"),
 					resource.TestCheckResourceAttr(
-                                                 "netscaler_cspolicy.foo", "rule", "CLIENT.IP.SRC.SUBNET(24).EQ(10.217.84.0)"),
+						"netscaler_cspolicy.foo", "rule", "CLIENT.IP.SRC.SUBNET(24).EQ(10.217.84.0)"),
 				),
 			},
 		},
@@ -66,7 +66,7 @@ func testAccCheckCspolicyExist(n string, id *string) resource.TestCheckFunc {
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-                data, err := nsClient.FindResource(netscaler.Cspolicy.Type(), rs.Primary.ID)
+		data, err := nsClient.FindResource(netscaler.Cspolicy.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -84,7 +84,7 @@ func testAccCheckCspolicyDestroy(s *terraform.State) error {
 	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
 
 	for _, rs := range s.RootModule().Resources {
-                if rs.Type != "netscaler_cspolicy" {
+		if rs.Type != "netscaler_cspolicy" {
 			continue
 		}
 
@@ -92,7 +92,7 @@ func testAccCheckCspolicyDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-                _, err := nsClient.FindResource(netscaler.Cspolicy.Type(), rs.Primary.ID)
+		_, err := nsClient.FindResource(netscaler.Cspolicy.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("LB vserver %s still exists", rs.Primary.ID)
 		}

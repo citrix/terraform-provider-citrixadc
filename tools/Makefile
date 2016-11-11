@@ -24,3 +24,6 @@ generate-test-build:
 
 clean:
 	rm generate_schema
+
+fmt:
+	go fmt ${GENERATED_PKGS}

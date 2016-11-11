@@ -23,32 +23,28 @@ import (
 	"testing"
 )
 
-func TestAccCsvserver_basic(t *testing.T) {
+func TestAccLbmonitor_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckCsvserverDestroy,
+		CheckDestroy: testAccCheckLbmonitorDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccCsvserver_basic,
+				Config: testAccLbmonitor_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCsvserverExist("netscaler_csvserver.foo", nil),
+					testAccCheckLbmonitorExist("netscaler_lbmonitor.foo", nil),
 
 					resource.TestCheckResourceAttr(
-						"netscaler_csvserver.foo", "ipv46", "10.202.11.11"),
+						"netscaler_lbmonitor.foo", "monitorname", "sample_lb_monitor"),
 					resource.TestCheckResourceAttr(
-						"netscaler_csvserver.foo", "name", "terraform-cs"),
-					resource.TestCheckResourceAttr(
-						"netscaler_csvserver.foo", "port", "443"),
-					resource.TestCheckResourceAttr(
-						"netscaler_csvserver.foo", "servicetype", "SSL"),
+						"netscaler_lbmonitor.foo", "type", "HTTP"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckCsvserverExist(n string, id *string) resource.TestCheckFunc {
+func testAccCheckLbmonitorExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -68,7 +64,7 @@ func testAccCheckCsvserverExist(n string, id *string) resource.TestCheckFunc {
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(netscaler.Csvserver.Type(), rs.Primary.ID)
+		data, err := nsClient.FindResource(netscaler.Lbmonitor.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -82,11 +78,11 @@ func testAccCheckCsvserverExist(n string, id *string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckCsvserverDestroy(s *terraform.State) error {
+func testAccCheckLbmonitorDestroy(s *terraform.State) error {
 	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "netscaler_csvserver" {
+		if rs.Type != "netscaler_lbmonitor" {
 			continue
 		}
 
@@ -94,7 +90,7 @@ func testAccCheckCsvserverDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(netscaler.Csvserver.Type(), rs.Primary.ID)
+		_, err := nsClient.FindResource(netscaler.Lbmonitor.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("LB vserver %s still exists", rs.Primary.ID)
 		}
@@ -104,15 +100,13 @@ func testAccCheckCsvserverDestroy(s *terraform.State) error {
 	return nil
 }
 
-const testAccCsvserver_basic = `
+const testAccLbmonitor_basic = `
 
 
-resource "netscaler_csvserver" "foo" {
+resource "netscaler_lbmonitor" "foo" {
   
-  ipv46 = "10.202.11.11"
-  name = "terraform-cs"
-  port = 443
-  servicetype = "SSL"
+  monitorname = "sample_lb_monitor"
+  type = "HTTP"
 
 }
 `
