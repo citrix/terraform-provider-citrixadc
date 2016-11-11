@@ -84,7 +84,7 @@ func resourceNetScalerSslcertkey() *schema.Resource {
 }
 
 func createSslcertkeyFunc(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[DEBUG] netscaler-provider:  In updateSslcertkeyFunc")
+	log.Printf("[DEBUG] netscaler-provider:  In createSslcertkeyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var sslcertkeyName string
 	if v, ok := d.GetOk("certkey"); ok {

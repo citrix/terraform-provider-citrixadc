@@ -2,6 +2,7 @@ package netscaler
 
 import (
 	"github.com/chiradeep/go-nitro/config/lb"
+	"github.com/chiradeep/go-nitro/config/ssl"
 
 	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -444,6 +445,10 @@ func resourceNetScalerLbvserver() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"sslcertkey": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -458,6 +463,14 @@ func createLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		lbvserverName = resource.PrefixedUniqueId("tf-lbvserver-")
 		d.Set("name", lbvserverName)
 	}
+	sslcertkey, sok := d.GetOk("sslcertkey")
+	if sok {
+		exists := client.ResourceExists(netscaler.Sslcertkey.Type(), sslcertkey.(string))
+		if !exists {
+			return fmt.Errorf("[ERROR] netscaler-provider: Specified ssl cert key does not exist on netscaler!")
+		}
+	}
+
 	lbvserver := lb.Lbvserver{
 		Name:                               lbvserverName,
 		Appflowlog:                         d.Get("appflowlog").(string),
@@ -548,7 +561,24 @@ func createLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(netscaler.Lbvserver.Type(), lbvserverName, &lbvserver)
 	if err != nil {
+		log.Printf("[ERROR] netscaler-provider: could not add resource %s of type %s", netscaler.Lbvserver.Type(), lbvserverName)
 		return err
+	}
+	if sok { //ssl cert is specified
+		binding := ssl.Sslvserversslcertkeybinding{
+			Vservername: lbvserverName,
+			Certkeyname: sslcertkey.(string),
+		}
+		err = client.BindResource(netscaler.Sslvserver.Type(), lbvserverName, netscaler.Sslcertkey.Type(), sslcertkey.(string), &binding)
+		if err != nil {
+			log.Printf("[ERROR] netscaler-provider:  Failed to bind ssl cert %s to lbvserver %s", sslcertkey, lbvserverName)
+			err2 := client.DeleteResource(netscaler.Lbvserver.Type(), lbvserverName)
+			if err2 != nil {
+				log.Printf("[ERROR] netscaler-provider:  Failed to delete lbvserver %s after bind to ssl cert failed", lbvserverName)
+				return fmt.Errorf("[ERROR] netscaler-provider:  Failed to delete lbvserver %s after bind to ssl cert failed", lbvserverName)
+			}
+			return fmt.Errorf("[ERROR] netscaler-provider:  Failed to bind ssl cert %s to lbvserver %s", sslcertkey, lbvserverName)
+		}
 	}
 
 	d.SetId(lbvserverName)
