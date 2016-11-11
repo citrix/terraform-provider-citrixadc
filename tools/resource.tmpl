@@ -42,16 +42,15 @@ func resourceNetScaler{{.TfTitle}}() *schema.Resource {
 func create{{.TfTitle}}Func(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
         var {{.TfID}} string
-	if v, ok := d.GetOk("name"); ok {
+        if v, ok := d.GetOk("{{.NsID}}"); ok {
              {{.TfID}} = v.(string)
 	} else {
              {{.TfID}}= resource.PrefixedUniqueId("tf-{{.TfName}}-")
-             d.Set("name", {{.TfID}})
+             d.Set("{{.NsID}}", {{.TfID}})
 	}
         {{.TfName}} := {{.Package}}.{{.StructName}}{
-                Name:            {{.TfID}},
                 {{ range $key, $value := .Fields -}}
-                {{if neq $key "name" -}}
+                {{if neq $key "{{.NsID}}" -}}
                 {{$key|title}}:           d.Get("{{$key}}").({{$value|lower}}),
                 {{end -}}
                 {{end}}
@@ -94,7 +93,7 @@ func read{{.TfTitle}}Func(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
-	d.Set("name", data["name"])
+        d.Set("{{.NsID}}", data["{{.NsID}}"])
         {{ range $key, $value := .Fields -}}
         d.Set("{{$key}}", data["{{$key}}"])
         {{end}}
@@ -106,22 +105,26 @@ func read{{.TfTitle}}Func(d *schema.ResourceData, meta interface{}) error {
 func update{{.TfTitle}}Func(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] In update func")
 	client := meta.(*NetScalerNitroClient).client
-        {{.TfID}} := d.Get("name").(string)
+        {{.TfID}} := d.Get("{{.NsID}}").(string)
 
         {{.TfName}} := {{.Package}}.{{.StructName}}{
-		Name: d.Get("name").(string),
+              {{.NsID | title}} : d.Get("{{.NsID}}").(string),
 	}
+        hasChange := false
         {{range $key, $value := .Fields -}}
         if d.HasChange("{{$key}}") {
                 log.Printf("[DEBUG] {{$key|title}} has changed for {{$.TfName}} %s, starting update", {{$.TfID}})
                 {{$.TfName}}.{{$key|title}} = d.Get("{{$key}}").({{$value|lower}})
+                hasChange = true
 	}
         {{end}}
 
-        _, err := client.UpdateResource(netscaler.{{.StructName}}.Type(), {{.TfID}}, &{{.TfName}})
-	if err != nil {
-        return fmt.Errorf("Error updating {{.TfName}} %s", {{.TfID}})
-	}
+        if hasChange {
+                _, err := client.UpdateResource(netscaler.{{.StructName}}.Type(), {{.TfID}}, &{{.TfName}})
+	        if err != nil {
+                        return fmt.Errorf("Error updating {{.TfName}} %s", {{.TfID}})
+	        }
+        }
         return read{{.TfTitle}}Func(d, meta)
 }
 

@@ -18,6 +18,7 @@ type Config struct {
 	TfTitle        string
 	TfName         string
 	TfID           string
+	NsID           string
 	StructName     string
 	Fields         map[string]string
 	BindingName    string
@@ -30,6 +31,7 @@ type Config struct {
 
 var (
 	i = flag.String("i", "", "The input JSON Schema file.")
+	d = flag.String("d", "", "The NS identifier for the object: e.g., name, policyname, etc")
 	b = flag.String("b", "", "The JSON schema file for the binding if any")
 	n = flag.String("n", "", "The name for the HCL field that specifies the binding")
 	k = flag.String("k", "", "JSON string mapping key fields to values for testing and documentation")
@@ -81,12 +83,13 @@ func getFieldNamesFromSchema(schema Schema) map[string]string {
 	return result
 }
 
-func getConfigFromSchema(pkg string, schema Schema, keyFieldsJSON string, boundKeyFieldsJSON string) *Config {
+func getConfigFromSchema(pkg string, schema Schema, keyFieldsJSON string, boundKeyFieldsJSON string, nsID string) *Config {
 	fields := getFieldNamesFromSchema(schema)
 	cfg := Config{Package: pkg,
 		TfName:      schema.ID,
 		TfTitle:     strings.Title(schema.ID),
 		TfID:        schema.ID + "Name",
+		NsID:        nsID,
 		StructName:  strings.Title(schema.ID),
 		Fields:      fields,
 		BindingName: "",
@@ -151,17 +154,24 @@ func main() {
 	}
 	t := template.Must(template.New("").Funcs(funcMap).ParseFiles("resource.tmpl", "provider.tmpl", "resource_test.tmpl"))
 
+	if *i == "" {
+		log.Fatal("No input schema file provided")
+	}
 	schema := parseSchema(*i)
 	pkg := filepath.Base(filepath.Dir(*i))
 	keyFields := ""
 	boundKeyFields := ""
+	nsID := "name"
 	if *k != "" { //if key fields are provided
 		keyFields = *k
 	}
 	if *K != "" { //if bound key fields are provided
 		boundKeyFields = *K
 	}
-	cfg := getConfigFromSchema(pkg, *schema, keyFields, boundKeyFields)
+	if *d != "" {
+		nsID = *d
+	}
+	cfg := getConfigFromSchema(pkg, *schema, keyFields, boundKeyFields, nsID)
 	if *n != "" && *b != "" { //if binding is required
 		bindingSchema := parseSchema(*b)
 		cfg.BindingName = *n
