@@ -718,6 +718,7 @@ func updateLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 
 	lbmonitor := lb.Lbmonitor{
 		Monitorname: d.Get("monitorname").(string),
+		Type:        d.Get("type").(string),
 	}
 	hasChange := false
 	if d.HasChange("action") {
