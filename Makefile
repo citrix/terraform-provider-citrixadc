@@ -24,7 +24,7 @@ build:
 	godep go build -o terraform-provider-netscaler .
 
 test:
-	TF_ACC=1 godep go test -v $(PROVIDER_ONLY_PKGS)
+	TF_ACC=1 TF_LOG=INFO godep go test -v $(PROVIDER_ONLY_PKGS)
 
 plan:
 	@terraform plan
