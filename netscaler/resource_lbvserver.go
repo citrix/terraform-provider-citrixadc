@@ -702,350 +702,476 @@ func updateLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	lbvserver := lb.Lbvserver{
 		Name: d.Get("name").(string),
 	}
+	hasChange := false
+	sslcertkeyChanged := false
 	if d.HasChange("appflowlog") {
 		log.Printf("[DEBUG] netscaler-provider:  Appflowlog has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Appflowlog = d.Get("appflowlog").(string)
+		hasChange = true
 	}
 	if d.HasChange("authentication") {
 		log.Printf("[DEBUG] netscaler-provider:  Authentication has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Authentication = d.Get("authentication").(string)
+		hasChange = true
 	}
 	if d.HasChange("authenticationhost") {
 		log.Printf("[DEBUG] netscaler-provider:  Authenticationhost has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Authenticationhost = d.Get("authenticationhost").(string)
+		hasChange = true
 	}
 	if d.HasChange("authn401") {
 		log.Printf("[DEBUG] netscaler-provider:  Authn401 has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Authn401 = d.Get("authn401").(string)
+		hasChange = true
 	}
 	if d.HasChange("authnprofile") {
 		log.Printf("[DEBUG] netscaler-provider:  Authnprofile has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Authnprofile = d.Get("authnprofile").(string)
+		hasChange = true
 	}
 	if d.HasChange("authnvsname") {
 		log.Printf("[DEBUG] netscaler-provider:  Authnvsname has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Authnvsname = d.Get("authnvsname").(string)
+		hasChange = true
 	}
 	if d.HasChange("backuppersistencetimeout") {
 		log.Printf("[DEBUG] netscaler-provider:  Backuppersistencetimeout has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Backuppersistencetimeout = d.Get("backuppersistencetimeout").(int)
+		hasChange = true
 	}
 	if d.HasChange("backupvserver") {
 		log.Printf("[DEBUG] netscaler-provider:  Backupvserver has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Backupvserver = d.Get("backupvserver").(string)
+		hasChange = true
 	}
 	if d.HasChange("bypassaaaa") {
 		log.Printf("[DEBUG] netscaler-provider:  Bypassaaaa has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Bypassaaaa = d.Get("bypassaaaa").(string)
+		hasChange = true
 	}
 	if d.HasChange("cacheable") {
 		log.Printf("[DEBUG] netscaler-provider:  Cacheable has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Cacheable = d.Get("cacheable").(string)
+		hasChange = true
 	}
 	if d.HasChange("clttimeout") {
 		log.Printf("[DEBUG] netscaler-provider:  Clttimeout has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Clttimeout = d.Get("clttimeout").(int)
+		hasChange = true
 	}
 	if d.HasChange("comment") {
 		log.Printf("[DEBUG] netscaler-provider:  Comment has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Comment = d.Get("comment").(string)
+		hasChange = true
 	}
 	if d.HasChange("connfailover") {
 		log.Printf("[DEBUG] netscaler-provider:  Connfailover has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Connfailover = d.Get("connfailover").(string)
+		hasChange = true
 	}
 	if d.HasChange("cookiename") {
 		log.Printf("[DEBUG] netscaler-provider:  Cookiename has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Cookiename = d.Get("cookiename").(string)
+		hasChange = true
 	}
 	if d.HasChange("datalength") {
 		log.Printf("[DEBUG] netscaler-provider:  Datalength has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Datalength = d.Get("datalength").(int)
+		hasChange = true
 	}
 	if d.HasChange("dataoffset") {
 		log.Printf("[DEBUG] netscaler-provider:  Dataoffset has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Dataoffset = d.Get("dataoffset").(int)
+		hasChange = true
 	}
 	if d.HasChange("dbprofilename") {
 		log.Printf("[DEBUG] netscaler-provider:  Dbprofilename has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Dbprofilename = d.Get("dbprofilename").(string)
+		hasChange = true
 	}
 	if d.HasChange("dbslb") {
 		log.Printf("[DEBUG] netscaler-provider:  Dbslb has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Dbslb = d.Get("dbslb").(string)
+		hasChange = true
 	}
 	if d.HasChange("disableprimaryondown") {
 		log.Printf("[DEBUG] netscaler-provider:  Disableprimaryondown has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Disableprimaryondown = d.Get("disableprimaryondown").(string)
+		hasChange = true
 	}
 	if d.HasChange("dns64") {
 		log.Printf("[DEBUG] netscaler-provider:  Dns64 has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Dns64 = d.Get("dns64").(string)
+		hasChange = true
 	}
 	if d.HasChange("downstateflush") {
 		log.Printf("[DEBUG] netscaler-provider:  Downstateflush has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Downstateflush = d.Get("downstateflush").(string)
+		hasChange = true
 	}
 	if d.HasChange("hashlength") {
 		log.Printf("[DEBUG] netscaler-provider:  Hashlength has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Hashlength = d.Get("hashlength").(int)
+		hasChange = true
 	}
 	if d.HasChange("healththreshold") {
 		log.Printf("[DEBUG] netscaler-provider:  Healththreshold has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Healththreshold = d.Get("healththreshold").(int)
+		hasChange = true
 	}
 	if d.HasChange("httpprofilename") {
 		log.Printf("[DEBUG] netscaler-provider:  Httpprofilename has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Httpprofilename = d.Get("httpprofilename").(string)
+		hasChange = true
 	}
 	if d.HasChange("icmpvsrresponse") {
 		log.Printf("[DEBUG] netscaler-provider:  Icmpvsrresponse has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Icmpvsrresponse = d.Get("icmpvsrresponse").(string)
+		hasChange = true
 	}
 	if d.HasChange("insertvserveripport") {
 		log.Printf("[DEBUG] netscaler-provider:  Insertvserveripport has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Insertvserveripport = d.Get("insertvserveripport").(string)
+		hasChange = true
 	}
 	if d.HasChange("ipmask") {
 		log.Printf("[DEBUG] netscaler-provider:  Ipmask has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Ipmask = d.Get("ipmask").(string)
+		hasChange = true
 	}
 	if d.HasChange("ippattern") {
 		log.Printf("[DEBUG] netscaler-provider:  Ippattern has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Ippattern = d.Get("ippattern").(string)
+		hasChange = true
 	}
 	if d.HasChange("ipv46") {
 		log.Printf("[DEBUG] netscaler-provider:  Ipv46 has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Ipv46 = d.Get("ipv46").(string)
+		hasChange = true
 	}
 	if d.HasChange("l2conn") {
 		log.Printf("[DEBUG] netscaler-provider:  L2conn has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.L2conn = d.Get("l2conn").(string)
+		hasChange = true
 	}
 	if d.HasChange("lbmethod") {
 		log.Printf("[DEBUG] netscaler-provider:  Lbmethod has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Lbmethod = d.Get("lbmethod").(string)
+		hasChange = true
 	}
 	if d.HasChange("listenpolicy") {
 		log.Printf("[DEBUG] netscaler-provider:  Listenpolicy has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Listenpolicy = d.Get("listenpolicy").(string)
+		hasChange = true
 	}
 	if d.HasChange("listenpriority") {
 		log.Printf("[DEBUG] netscaler-provider:  Listenpriority has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Listenpriority = d.Get("listenpriority").(int)
+		hasChange = true
 	}
 	if d.HasChange("m") {
 		log.Printf("[DEBUG] netscaler-provider:  M has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.M = d.Get("m").(string)
+		hasChange = true
 	}
 	if d.HasChange("macmoderetainvlan") {
 		log.Printf("[DEBUG] netscaler-provider:  Macmoderetainvlan has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Macmoderetainvlan = d.Get("macmoderetainvlan").(string)
+		hasChange = true
 	}
 	if d.HasChange("maxautoscalemembers") {
 		log.Printf("[DEBUG] netscaler-provider:  Maxautoscalemembers has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Maxautoscalemembers = d.Get("maxautoscalemembers").(int)
+		hasChange = true
 	}
 	if d.HasChange("minautoscalemembers") {
 		log.Printf("[DEBUG] netscaler-provider:  Minautoscalemembers has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Minautoscalemembers = d.Get("minautoscalemembers").(int)
+		hasChange = true
 	}
 	if d.HasChange("mssqlserverversion") {
 		log.Printf("[DEBUG] netscaler-provider:  Mssqlserverversion has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Mssqlserverversion = d.Get("mssqlserverversion").(string)
+		hasChange = true
 	}
 	if d.HasChange("mysqlcharacterset") {
 		log.Printf("[DEBUG] netscaler-provider:  Mysqlcharacterset has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Mysqlcharacterset = d.Get("mysqlcharacterset").(int)
+		hasChange = true
 	}
 	if d.HasChange("mysqlprotocolversion") {
 		log.Printf("[DEBUG] netscaler-provider:  Mysqlprotocolversion has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Mysqlprotocolversion = d.Get("mysqlprotocolversion").(int)
+		hasChange = true
 	}
 	if d.HasChange("mysqlservercapabilities") {
 		log.Printf("[DEBUG] netscaler-provider:  Mysqlservercapabilities has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Mysqlservercapabilities = d.Get("mysqlservercapabilities").(int)
+		hasChange = true
 	}
 	if d.HasChange("mysqlserverversion") {
 		log.Printf("[DEBUG] netscaler-provider:  Mysqlserverversion has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Mysqlserverversion = d.Get("mysqlserverversion").(string)
+		hasChange = true
 	}
 	if d.HasChange("name") {
 		log.Printf("[DEBUG] netscaler-provider:  Name has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Name = d.Get("name").(string)
+		hasChange = true
 	}
 	if d.HasChange("netmask") {
 		log.Printf("[DEBUG] netscaler-provider:  Netmask has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Netmask = d.Get("netmask").(string)
+		hasChange = true
 	}
 	if d.HasChange("netprofile") {
 		log.Printf("[DEBUG] netscaler-provider:  Netprofile has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Netprofile = d.Get("netprofile").(string)
+		hasChange = true
 	}
 	if d.HasChange("newname") {
 		log.Printf("[DEBUG] netscaler-provider:  Newname has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Newname = d.Get("newname").(string)
+		hasChange = true
 	}
 	if d.HasChange("newservicerequest") {
 		log.Printf("[DEBUG] netscaler-provider:  Newservicerequest has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Newservicerequest = d.Get("newservicerequest").(int)
+		hasChange = true
 	}
 	if d.HasChange("newservicerequestincrementinterval") {
 		log.Printf("[DEBUG] netscaler-provider:  Newservicerequestincrementinterval has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Newservicerequestincrementinterval = d.Get("newservicerequestincrementinterval").(int)
+		hasChange = true
 	}
 	if d.HasChange("newservicerequestunit") {
 		log.Printf("[DEBUG] netscaler-provider:  Newservicerequestunit has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Newservicerequestunit = d.Get("newservicerequestunit").(string)
+		hasChange = true
 	}
 	if d.HasChange("persistencebackup") {
 		log.Printf("[DEBUG] netscaler-provider:  Persistencebackup has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Persistencebackup = d.Get("persistencebackup").(string)
+		hasChange = true
 	}
 	if d.HasChange("persistencetype") {
 		log.Printf("[DEBUG] netscaler-provider:  Persistencetype has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Persistencetype = d.Get("persistencetype").(string)
+		hasChange = true
 	}
 	if d.HasChange("persistmask") {
 		log.Printf("[DEBUG] netscaler-provider:  Persistmask has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Persistmask = d.Get("persistmask").(string)
+		hasChange = true
 	}
 	if d.HasChange("port") {
 		log.Printf("[DEBUG] netscaler-provider:  Port has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Port = d.Get("port").(int)
+		hasChange = true
 	}
 	if d.HasChange("pq") {
 		log.Printf("[DEBUG] netscaler-provider:  Pq has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Pq = d.Get("pq").(string)
+		hasChange = true
 	}
 	if d.HasChange("push") {
 		log.Printf("[DEBUG] netscaler-provider:  Push has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Push = d.Get("push").(string)
+		hasChange = true
 	}
 	if d.HasChange("pushlabel") {
 		log.Printf("[DEBUG] netscaler-provider:  Pushlabel has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Pushlabel = d.Get("pushlabel").(string)
+		hasChange = true
 	}
 	if d.HasChange("pushmulticlients") {
 		log.Printf("[DEBUG] netscaler-provider:  Pushmulticlients has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Pushmulticlients = d.Get("pushmulticlients").(string)
+		hasChange = true
 	}
 	if d.HasChange("pushvserver") {
 		log.Printf("[DEBUG] netscaler-provider:  Pushvserver has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Pushvserver = d.Get("pushvserver").(string)
+		hasChange = true
 	}
 	if d.HasChange("range") {
 		log.Printf("[DEBUG] netscaler-provider:  Range has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Range = d.Get("range").(int)
+		hasChange = true
 	}
 	if d.HasChange("recursionavailable") {
 		log.Printf("[DEBUG] netscaler-provider:  Recursionavailable has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Recursionavailable = d.Get("recursionavailable").(string)
+		hasChange = true
 	}
 	if d.HasChange("redirectportrewrite") {
 		log.Printf("[DEBUG] netscaler-provider:  Redirectportrewrite has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Redirectportrewrite = d.Get("redirectportrewrite").(string)
+		hasChange = true
 	}
 	if d.HasChange("redirurl") {
 		log.Printf("[DEBUG] netscaler-provider:  Redirurl has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Redirurl = d.Get("redirurl").(string)
+		hasChange = true
 	}
 	if d.HasChange("redirurlflags") {
 		log.Printf("[DEBUG] netscaler-provider:  Redirurlflags has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Redirurlflags = d.Get("redirurlflags").(bool)
+		hasChange = true
 	}
 	if d.HasChange("resrule") {
 		log.Printf("[DEBUG] netscaler-provider:  Resrule has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Resrule = d.Get("resrule").(string)
+		hasChange = true
 	}
 	if d.HasChange("rtspnat") {
 		log.Printf("[DEBUG] netscaler-provider:  Rtspnat has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Rtspnat = d.Get("rtspnat").(string)
+		hasChange = true
 	}
 	if d.HasChange("rule") {
 		log.Printf("[DEBUG] netscaler-provider:  Rule has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Rule = d.Get("rule").(string)
+		hasChange = true
 	}
 	if d.HasChange("sc") {
 		log.Printf("[DEBUG] netscaler-provider:  Sc has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Sc = d.Get("sc").(string)
+		hasChange = true
 	}
 	if d.HasChange("servicename") {
 		log.Printf("[DEBUG] netscaler-provider:  Servicename has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Servicename = d.Get("servicename").(string)
+		hasChange = true
 	}
 	if d.HasChange("servicetype") {
 		log.Printf("[DEBUG] netscaler-provider:  Servicetype has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Servicetype = d.Get("servicetype").(string)
+		hasChange = true
 	}
 	if d.HasChange("sessionless") {
 		log.Printf("[DEBUG] netscaler-provider:  Sessionless has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Sessionless = d.Get("sessionless").(string)
+		hasChange = true
 	}
 	if d.HasChange("skippersistency") {
 		log.Printf("[DEBUG] netscaler-provider:  Skippersistency has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Skippersistency = d.Get("skippersistency").(string)
+		hasChange = true
 	}
 	if d.HasChange("sobackupaction") {
 		log.Printf("[DEBUG] netscaler-provider:  Sobackupaction has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Sobackupaction = d.Get("sobackupaction").(string)
+		hasChange = true
 	}
 	if d.HasChange("somethod") {
 		log.Printf("[DEBUG] netscaler-provider:  Somethod has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Somethod = d.Get("somethod").(string)
+		hasChange = true
 	}
 	if d.HasChange("sopersistence") {
 		log.Printf("[DEBUG] netscaler-provider:  Sopersistence has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Sopersistence = d.Get("sopersistence").(string)
+		hasChange = true
 	}
 	if d.HasChange("sopersistencetimeout") {
 		log.Printf("[DEBUG] netscaler-provider:  Sopersistencetimeout has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Sopersistencetimeout = d.Get("sopersistencetimeout").(int)
+		hasChange = true
 	}
 	if d.HasChange("sothreshold") {
 		log.Printf("[DEBUG] netscaler-provider:  Sothreshold has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Sothreshold = d.Get("sothreshold").(int)
+		hasChange = true
 	}
 	if d.HasChange("state") {
 		log.Printf("[DEBUG] netscaler-provider:  State has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.State = d.Get("state").(string)
+		hasChange = true
 	}
 	if d.HasChange("tcpprofilename") {
 		log.Printf("[DEBUG] netscaler-provider:  Tcpprofilename has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Tcpprofilename = d.Get("tcpprofilename").(string)
+		hasChange = true
 	}
 	if d.HasChange("td") {
 		log.Printf("[DEBUG] netscaler-provider:  Td has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Td = d.Get("td").(int)
+		hasChange = true
 	}
 	if d.HasChange("timeout") {
 		log.Printf("[DEBUG] netscaler-provider:  Timeout has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Timeout = d.Get("timeout").(int)
+		hasChange = true
 	}
 	if d.HasChange("tosid") {
 		log.Printf("[DEBUG] netscaler-provider:  Tosid has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Tosid = d.Get("tosid").(int)
+		hasChange = true
 	}
 	if d.HasChange("v6netmasklen") {
 		log.Printf("[DEBUG] netscaler-provider:  V6netmasklen has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.V6netmasklen = d.Get("v6netmasklen").(int)
+		hasChange = true
 	}
 	if d.HasChange("v6persistmasklen") {
 		log.Printf("[DEBUG] netscaler-provider:  V6persistmasklen has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.V6persistmasklen = d.Get("v6persistmasklen").(int)
+		hasChange = true
 	}
 	if d.HasChange("vipheader") {
 		log.Printf("[DEBUG] netscaler-provider:  Vipheader has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Vipheader = d.Get("vipheader").(string)
+		hasChange = true
 	}
 	if d.HasChange("weight") {
 		log.Printf("[DEBUG] netscaler-provider:  Weight has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Weight = d.Get("weight").(int)
+		hasChange = true
+	}
+	if d.HasChange("sslcertkey") {
+		log.Printf("[DEBUG] netscaler-provider:  ssl certkey has changed for lbvserver %s, starting update", lbvserverName)
+		sslcertkeyChanged = true
 	}
 
-	_, err := client.UpdateResource(netscaler.Lbvserver.Type(), lbvserverName, &lbvserver)
-	if err != nil {
-		return fmt.Errorf("Error updating lbvserver %s", lbvserverName)
+	sslcertkey := d.Get("sslcertkey")
+	sslcertkeyName := sslcertkey.(string)
+	if sslcertkeyChanged {
+		//Binding has to be updated
+		//First we unbind from lb vserver
+		oldSslcertkey, _ := d.GetChange("sslcertkey")
+		oldSslcertkeyName := oldSslcertkey.(string)
+		if oldSslcertkeyName != "" {
+			err := client.UnbindResource(netscaler.Sslvserver.Type(), lbvserverName, netscaler.Sslcertkey.Type(), oldSslcertkeyName, "certkeyname")
+			if err != nil {
+				return fmt.Errorf("[ERROR] netscaler-provider: Error unbinding sslcertkey from lbvserver %s", oldSslcertkeyName)
+			}
+			log.Printf("[DEBUG] netscaler-provider: sslcertkey has been unbound from lbvserver for sslcertkey %s ", oldSslcertkeyName)
+		}
+	}
+
+	if hasChange {
+		_, err := client.UpdateResource(netscaler.Lbvserver.Type(), lbvserverName, &lbvserver)
+		if err != nil {
+			return fmt.Errorf("[ERROR] netscaler-provider: Error updating lbvserver %s", lbvserverName)
+		}
+		log.Printf("[DEBUG] netscaler-provider: lbvserver has been updated  lbvserver %s ", lbvserverName)
+	}
+
+	if sslcertkeyChanged {
+		//Binding has to be updated
+		//rebind
+		binding := ssl.Sslvserversslcertkeybinding{
+			Vservername: lbvserverName,
+			Certkeyname: sslcertkeyName,
+		}
+		log.Printf("[INFO] netscaler-provider:  Binding ssl cert %s to lbvserver %s", sslcertkeyName, lbvserverName)
+		err := client.BindResource(netscaler.Sslvserver.Type(), lbvserverName, netscaler.Sslcertkey.Type(), sslcertkeyName, &binding)
+		if err != nil {
+			log.Printf("[ERROR] netscaler-provider:  Failed to bind ssl cert %s to lbvserver %s", sslcertkeyName, lbvserverName)
+			return fmt.Errorf("[ERROR] netscaler-provider:  Failed to bind ssl cert %s to lbvserver %s", sslcertkeyName, lbvserverName)
+		}
+		log.Printf("[DEBUG] netscaler-provider: new ssl cert has been bound to lbvserver  sslcertkey %s lbvserver %s", sslcertkeyName, lbvserverName)
 	}
 	return readLbvserverFunc(d, meta)
 }
