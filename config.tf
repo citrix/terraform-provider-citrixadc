@@ -45,7 +45,7 @@ resource "netscaler_service" "backend_2" {
 
 resource "netscaler_csvserver" "foo-cs" {
   name = "sample_cs"
-  ipv46 = "10.71.138.151"
+  ipv46 = "10.71.139.151"
   servicetype = "SSL"
   port = 443
 
@@ -56,5 +56,21 @@ resource "netscaler_cspolicy" "foo-cspolicy" {
   rule = "CLIENT.IP.SRC.SUBNET(24).EQ(10.227.84.0)"
   csvserver = "${netscaler_csvserver.foo-cs.name}"
   targetlbvserver = "${netscaler_lbvserver.sample_lb2.name}"
-  priority = 10
+  priority = 21
+}
+
+resource "netscaler_cspolicy" "foo-cspolicy2" {
+  policyname = "sample_cspolicy2"
+  rule = "CLIENT.IP.SRC.SUBNET(24).EQ(10.127.88.0)"
+  csvserver = "${netscaler_csvserver.foo-cs.name}"
+  targetlbvserver = "${netscaler_lbvserver.sample_lb2.name}"
+  priority = 11
+}
+
+resource "netscaler_sslcertkey" "foo-ssl-cert" {
+  cert = "server.crt"
+  certkey = "sample_ssl_cert"
+  key = "server.key"
+  expirymonitor = "ENABLED"
+  notificationperiod = 83
 }
