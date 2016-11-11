@@ -27,19 +27,19 @@ func TestAccSslcertkey_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-                CheckDestroy: testAccCheckSslcertkeyDestroy,
+		CheckDestroy: testAccCheckSslcertkeyDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-                                Config: testAccSslcertkey_basic,
+				Config: testAccSslcertkey_basic,
 				Check: resource.ComposeTestCheckFunc(
-                                        testAccCheckSslcertkeyExist("netscaler_sslcertkey.foo", nil),
-                                        
+					testAccCheckSslcertkeyExist("netscaler_sslcertkey.foo", nil),
+
 					resource.TestCheckResourceAttr(
-                                                 "netscaler_sslcertkey.foo", "cert", "server.crt"),
+						"netscaler_sslcertkey.foo", "cert", "/var/certs/server.crt"),
 					resource.TestCheckResourceAttr(
-                                                 "netscaler_sslcertkey.foo", "certkey", "sample_ssl_cert"),
+						"netscaler_sslcertkey.foo", "certkey", "sample_ssl_cert"),
 					resource.TestCheckResourceAttr(
-                                                 "netscaler_sslcertkey.foo", "key", "server.key"),
+						"netscaler_sslcertkey.foo", "key", "/var/certs/server.key"),
 				),
 			},
 		},
@@ -66,7 +66,7 @@ func testAccCheckSslcertkeyExist(n string, id *string) resource.TestCheckFunc {
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-                data, err := nsClient.FindResource(netscaler.Sslcertkey.Type(), rs.Primary.ID)
+		data, err := nsClient.FindResource(netscaler.Sslcertkey.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -84,7 +84,7 @@ func testAccCheckSslcertkeyDestroy(s *terraform.State) error {
 	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
 
 	for _, rs := range s.RootModule().Resources {
-                if rs.Type != "netscaler_sslcertkey" {
+		if rs.Type != "netscaler_sslcertkey" {
 			continue
 		}
 
@@ -92,7 +92,7 @@ func testAccCheckSslcertkeyDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-                _, err := nsClient.FindResource(netscaler.Sslcertkey.Type(), rs.Primary.ID)
+		_, err := nsClient.FindResource(netscaler.Sslcertkey.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("LB vserver %s still exists", rs.Primary.ID)
 		}
@@ -106,10 +106,10 @@ const testAccSslcertkey_basic = `
 
 
 resource "netscaler_sslcertkey" "foo" {
-  
-  cert = "server.crt"
   certkey = "sample_ssl_cert"
-  key = "server.key"
-
+  cert = "/var/certs/server.crt"
+  key = "/var/certs/server.key"
+  notificationperiod = 40
+  expirymonitor = "ENABLED"
 }
 `
