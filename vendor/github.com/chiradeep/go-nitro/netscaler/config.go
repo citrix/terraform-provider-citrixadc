@@ -82,6 +82,23 @@ func (c *NitroClient) DeleteResource(resourceType string, resourceName string) e
 	return nil
 }
 
+//DeleteResourceWithArgs deletes a resource of supplied type and name
+func (c *NitroClient) DeleteResourceWithArgs(resourceType string, resourceName string, args []string) error {
+
+	_, err := c.listResource(resourceType, resourceName)
+	if err == nil { // resource exists
+		log.Printf("Found resource of type %s: %s", resourceType, resourceName)
+		_, err = c.deleteResourceWithArgs(resourceType, resourceName, args)
+		if err != nil {
+			log.Println(fmt.Sprintf("Failed to delete resourceType %s: %s, err=%s", resourceType, resourceName, err))
+			return err
+		}
+	} else {
+		log.Printf("Resource %s already deleted ", resourceName)
+	}
+	return nil
+}
+
 //BindResource binds the 'bindingResourceName' to the 'bindToResourceName'.
 func (c *NitroClient) BindResource(bindToResourceType string, bindToResourceName string, bindingResourceType string, bindingResourceName string, bindingStruct interface{}) error {
 	if c.ResourceExists(bindToResourceType, bindToResourceName) == false {

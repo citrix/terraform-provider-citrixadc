@@ -143,6 +143,17 @@ func (c *NitroClient) deleteResource(resourceType string, resourceName string) (
 
 }
 
+func (c *NitroClient) deleteResourceWithArgs(resourceType string, resourceName string, args []string) ([]byte, error) {
+	log.Println("Deleting resource of type ", resourceType)
+	url := c.url + resourceType + "/" + resourceName + "?args="
+	for _, arg := range args {
+		url = url + arg
+	}
+
+	return c.doHTTPRequest("DELETE", url, bytes.NewBuffer([]byte{}), deleteResponseHandler)
+
+}
+
 func (c *NitroClient) unbindResource(resourceType string, resourceName string, boundResourceType string, boundResource string, bindingFilterName string) ([]byte, error) {
 	log.Println("Unbinding resource of type ", resourceType, " name", resourceName)
 	bindingName := resourceType + "_" + boundResourceType + "_binding"
