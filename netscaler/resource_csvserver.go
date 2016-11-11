@@ -470,219 +470,313 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	csvserver := cs.Csvserver{
 		Name: d.Get("name").(string),
 	}
+	hasChange := false
+	sslcertkeyChanged := false
 	if d.HasChange("appflowlog") {
 		log.Printf("[DEBUG] netscaler-provider:  Appflowlog has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Appflowlog = d.Get("appflowlog").(string)
+		hasChange = true
 	}
 	if d.HasChange("authentication") {
 		log.Printf("[DEBUG] netscaler-provider:  Authentication has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Authentication = d.Get("authentication").(string)
+		hasChange = true
 	}
 	if d.HasChange("authenticationhost") {
 		log.Printf("[DEBUG] netscaler-provider:  Authenticationhost has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Authenticationhost = d.Get("authenticationhost").(string)
+		hasChange = true
 	}
 	if d.HasChange("authn401") {
 		log.Printf("[DEBUG] netscaler-provider:  Authn401 has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Authn401 = d.Get("authn401").(string)
+		hasChange = true
 	}
 	if d.HasChange("authnprofile") {
 		log.Printf("[DEBUG] netscaler-provider:  Authnprofile has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Authnprofile = d.Get("authnprofile").(string)
+		hasChange = true
 	}
 	if d.HasChange("authnvsname") {
 		log.Printf("[DEBUG] netscaler-provider:  Authnvsname has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Authnvsname = d.Get("authnvsname").(string)
+		hasChange = true
 	}
 	if d.HasChange("backupvserver") {
 		log.Printf("[DEBUG] netscaler-provider:  Backupvserver has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Backupvserver = d.Get("backupvserver").(string)
+		hasChange = true
 	}
 	if d.HasChange("cacheable") {
 		log.Printf("[DEBUG] netscaler-provider:  Cacheable has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Cacheable = d.Get("cacheable").(string)
+		hasChange = true
 	}
 	if d.HasChange("casesensitive") {
 		log.Printf("[DEBUG] netscaler-provider:  Casesensitive has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Casesensitive = d.Get("casesensitive").(string)
+		hasChange = true
 	}
 	if d.HasChange("clttimeout") {
 		log.Printf("[DEBUG] netscaler-provider:  Clttimeout has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Clttimeout = d.Get("clttimeout").(int)
+		hasChange = true
 	}
 	if d.HasChange("comment") {
 		log.Printf("[DEBUG] netscaler-provider:  Comment has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Comment = d.Get("comment").(string)
+		hasChange = true
 	}
 	if d.HasChange("dbprofilename") {
 		log.Printf("[DEBUG] netscaler-provider:  Dbprofilename has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Dbprofilename = d.Get("dbprofilename").(string)
+		hasChange = true
 	}
 	if d.HasChange("disableprimaryondown") {
 		log.Printf("[DEBUG] netscaler-provider:  Disableprimaryondown has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Disableprimaryondown = d.Get("disableprimaryondown").(string)
+		hasChange = true
 	}
 	if d.HasChange("downstateflush") {
 		log.Printf("[DEBUG] netscaler-provider:  Downstateflush has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Downstateflush = d.Get("downstateflush").(string)
+		hasChange = true
 	}
 	if d.HasChange("httpprofilename") {
 		log.Printf("[DEBUG] netscaler-provider:  Httpprofilename has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Httpprofilename = d.Get("httpprofilename").(string)
+		hasChange = true
 	}
 	if d.HasChange("icmpvsrresponse") {
 		log.Printf("[DEBUG] netscaler-provider:  Icmpvsrresponse has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Icmpvsrresponse = d.Get("icmpvsrresponse").(string)
+		hasChange = true
 	}
 	if d.HasChange("insertvserveripport") {
 		log.Printf("[DEBUG] netscaler-provider:  Insertvserveripport has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Insertvserveripport = d.Get("insertvserveripport").(string)
+		hasChange = true
 	}
 	if d.HasChange("ipmask") {
 		log.Printf("[DEBUG] netscaler-provider:  Ipmask has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Ipmask = d.Get("ipmask").(string)
+		hasChange = true
 	}
 	if d.HasChange("ippattern") {
 		log.Printf("[DEBUG] netscaler-provider:  Ippattern has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Ippattern = d.Get("ippattern").(string)
+		hasChange = true
 	}
 	if d.HasChange("ipv46") {
 		log.Printf("[DEBUG] netscaler-provider:  Ipv46 has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Ipv46 = d.Get("ipv46").(string)
+		hasChange = true
 	}
 	if d.HasChange("l2conn") {
 		log.Printf("[DEBUG] netscaler-provider:  L2conn has changed for csvserver %s, starting update", csvserverName)
 		csvserver.L2conn = d.Get("l2conn").(string)
+		hasChange = true
 	}
 	if d.HasChange("listenpolicy") {
 		log.Printf("[DEBUG] netscaler-provider:  Listenpolicy has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Listenpolicy = d.Get("listenpolicy").(string)
+		hasChange = true
 	}
 	if d.HasChange("listenpriority") {
 		log.Printf("[DEBUG] netscaler-provider:  Listenpriority has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Listenpriority = d.Get("listenpriority").(int)
+		hasChange = true
 	}
 	if d.HasChange("mssqlserverversion") {
 		log.Printf("[DEBUG] netscaler-provider:  Mssqlserverversion has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Mssqlserverversion = d.Get("mssqlserverversion").(string)
+		hasChange = true
 	}
 	if d.HasChange("mysqlcharacterset") {
 		log.Printf("[DEBUG] netscaler-provider:  Mysqlcharacterset has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Mysqlcharacterset = d.Get("mysqlcharacterset").(int)
+		hasChange = true
 	}
 	if d.HasChange("mysqlprotocolversion") {
 		log.Printf("[DEBUG] netscaler-provider:  Mysqlprotocolversion has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Mysqlprotocolversion = d.Get("mysqlprotocolversion").(int)
+		hasChange = true
 	}
 	if d.HasChange("mysqlservercapabilities") {
 		log.Printf("[DEBUG] netscaler-provider:  Mysqlservercapabilities has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Mysqlservercapabilities = d.Get("mysqlservercapabilities").(int)
+		hasChange = true
 	}
 	if d.HasChange("mysqlserverversion") {
 		log.Printf("[DEBUG] netscaler-provider:  Mysqlserverversion has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Mysqlserverversion = d.Get("mysqlserverversion").(string)
+		hasChange = true
 	}
 	if d.HasChange("name") {
 		log.Printf("[DEBUG] netscaler-provider:  Name has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Name = d.Get("name").(string)
+		hasChange = true
 	}
 	if d.HasChange("netprofile") {
 		log.Printf("[DEBUG] netscaler-provider:  Netprofile has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Netprofile = d.Get("netprofile").(string)
+		hasChange = true
 	}
 	if d.HasChange("newname") {
 		log.Printf("[DEBUG] netscaler-provider:  Newname has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Newname = d.Get("newname").(string)
+		hasChange = true
 	}
 	if d.HasChange("port") {
 		log.Printf("[DEBUG] netscaler-provider:  Port has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Port = d.Get("port").(int)
+		hasChange = true
 	}
 	if d.HasChange("precedence") {
 		log.Printf("[DEBUG] netscaler-provider:  Precedence has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Precedence = d.Get("precedence").(string)
+		hasChange = true
 	}
 	if d.HasChange("push") {
 		log.Printf("[DEBUG] netscaler-provider:  Push has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Push = d.Get("push").(string)
+		hasChange = true
 	}
 	if d.HasChange("pushlabel") {
 		log.Printf("[DEBUG] netscaler-provider:  Pushlabel has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Pushlabel = d.Get("pushlabel").(string)
+		hasChange = true
 	}
 	if d.HasChange("pushmulticlients") {
 		log.Printf("[DEBUG] netscaler-provider:  Pushmulticlients has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Pushmulticlients = d.Get("pushmulticlients").(string)
+		hasChange = true
 	}
 	if d.HasChange("pushvserver") {
 		log.Printf("[DEBUG] netscaler-provider:  Pushvserver has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Pushvserver = d.Get("pushvserver").(string)
+		hasChange = true
 	}
 	if d.HasChange("range") {
 		log.Printf("[DEBUG] netscaler-provider:  Range has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Range = d.Get("range").(int)
+		hasChange = true
 	}
 	if d.HasChange("redirectportrewrite") {
 		log.Printf("[DEBUG] netscaler-provider:  Redirectportrewrite has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Redirectportrewrite = d.Get("redirectportrewrite").(string)
+		hasChange = true
 	}
 	if d.HasChange("redirecturl") {
 		log.Printf("[DEBUG] netscaler-provider:  Redirecturl has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Redirecturl = d.Get("redirecturl").(string)
+		hasChange = true
 	}
 	if d.HasChange("rtspnat") {
 		log.Printf("[DEBUG] netscaler-provider:  Rtspnat has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Rtspnat = d.Get("rtspnat").(string)
+		hasChange = true
 	}
 	if d.HasChange("servicetype") {
 		log.Printf("[DEBUG] netscaler-provider:  Servicetype has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Servicetype = d.Get("servicetype").(string)
+		hasChange = true
 	}
 	if d.HasChange("sobackupaction") {
 		log.Printf("[DEBUG] netscaler-provider:  Sobackupaction has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Sobackupaction = d.Get("sobackupaction").(string)
+		hasChange = true
 	}
 	if d.HasChange("somethod") {
 		log.Printf("[DEBUG] netscaler-provider:  Somethod has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Somethod = d.Get("somethod").(string)
+		hasChange = true
 	}
 	if d.HasChange("sopersistence") {
 		log.Printf("[DEBUG] netscaler-provider:  Sopersistence has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Sopersistence = d.Get("sopersistence").(string)
+		hasChange = true
 	}
 	if d.HasChange("sopersistencetimeout") {
 		log.Printf("[DEBUG] netscaler-provider:  Sopersistencetimeout has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Sopersistencetimeout = d.Get("sopersistencetimeout").(int)
+		hasChange = true
 	}
 	if d.HasChange("sothreshold") {
 		log.Printf("[DEBUG] netscaler-provider:  Sothreshold has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Sothreshold = d.Get("sothreshold").(int)
+		hasChange = true
 	}
 	if d.HasChange("state") {
 		log.Printf("[DEBUG] netscaler-provider:  State has changed for csvserver %s, starting update", csvserverName)
 		csvserver.State = d.Get("state").(string)
+		hasChange = true
 	}
 	if d.HasChange("stateupdate") {
 		log.Printf("[DEBUG] netscaler-provider:  Stateupdate has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Stateupdate = d.Get("stateupdate").(string)
+		hasChange = true
 	}
 	if d.HasChange("tcpprofilename") {
 		log.Printf("[DEBUG] netscaler-provider:  Tcpprofilename has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Tcpprofilename = d.Get("tcpprofilename").(string)
+		hasChange = true
 	}
 	if d.HasChange("td") {
 		log.Printf("[DEBUG] netscaler-provider:  Td has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Td = d.Get("td").(int)
+		hasChange = true
 	}
 	if d.HasChange("vipheader") {
 		log.Printf("[DEBUG] netscaler-provider:  Vipheader has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Vipheader = d.Get("vipheader").(string)
+		hasChange = true
+	}
+	if d.HasChange("sslcertkey") {
+		log.Printf("[DEBUG] netscaler-provider:  ssl certkey has changed for csvserver %s, starting update", csvserverName)
+		sslcertkeyChanged = true
 	}
 
-	_, err := client.UpdateResource(netscaler.Csvserver.Type(), csvserverName, &csvserver)
-	if err != nil {
-		return fmt.Errorf("[ERROR] netscaler-provider: Error updating csvserver %s", csvserverName)
+	sslcertkey := d.Get("sslcertkey")
+	sslcertkeyName := sslcertkey.(string)
+	if sslcertkeyChanged {
+		//Binding has to be updated
+		//First we unbind from cs vserver
+		oldSslcertkey, _ := d.GetChange("sslcertkey")
+		oldSslcertkeyName := oldSslcertkey.(string)
+		if oldSslcertkeyName != "" {
+			err := client.UnbindResource(netscaler.Sslvserver.Type(), csvserverName, netscaler.Sslcertkey.Type(), oldSslcertkeyName, "certkeyname")
+			if err != nil {
+				return fmt.Errorf("[ERROR] netscaler-provider: Error unbinding sslcertkey from csvserver %s", oldSslcertkeyName)
+			}
+			log.Printf("[DEBUG] netscaler-provider: sslcertkey has been unbound from csvserver for sslcertkey %s ", oldSslcertkeyName)
+		}
 	}
+
+	if hasChange {
+		_, err := client.UpdateResource(netscaler.Csvserver.Type(), csvserverName, &csvserver)
+		if err != nil {
+			return fmt.Errorf("[ERROR] netscaler-provider: Error updating csvserver %s", csvserverName)
+		}
+		log.Printf("[DEBUG] netscaler-provider: csvserver has been updated  csvserver %s ", csvserverName)
+	}
+
+	if sslcertkeyChanged && sslcertkeyName != "" {
+		//Binding has to be updated
+		//rebind
+		binding := ssl.Sslvserversslcertkeybinding{
+			Vservername: csvserverName,
+			Certkeyname: sslcertkeyName,
+		}
+		log.Printf("[INFO] netscaler-provider:  Binding ssl cert %s to csvserver %s", sslcertkeyName, csvserverName)
+		err := client.BindResource(netscaler.Sslvserver.Type(), csvserverName, netscaler.Sslcertkey.Type(), sslcertkeyName, &binding)
+		if err != nil {
+			log.Printf("[ERROR] netscaler-provider:  Failed to bind ssl cert %s to csvserver %s", sslcertkeyName, csvserverName)
+			return fmt.Errorf("[ERROR] netscaler-provider:  Failed to bind ssl cert %s to csvserver %s", sslcertkeyName, csvserverName)
+		}
+		log.Printf("[DEBUG] netscaler-provider: new ssl cert has been bound to csvserver  sslcertkey %s csvserver %s", sslcertkeyName, csvserverName)
+	}
+
 	return readCsvserverFunc(d, meta)
 }
 

@@ -1158,7 +1158,7 @@ func updateLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] netscaler-provider: lbvserver has been updated  lbvserver %s ", lbvserverName)
 	}
 
-	if sslcertkeyChanged {
+	if sslcertkeyChanged && sslcertkeyName != "" {
 		//Binding has to be updated
 		//rebind
 		binding := ssl.Sslvserversslcertkeybinding{
