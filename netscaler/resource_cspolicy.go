@@ -72,6 +72,7 @@ func resourceNetScalerCspolicy() *schema.Resource {
 }
 
 func createCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[DEBUG] netscaler-provider: In createCspolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 
 	csvserver := d.Get("csvserver").(string)
@@ -83,31 +84,31 @@ func createCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	_, rok := d.GetOk("rule")
 
 	if lbok && !pok {
-		return fmt.Errorf("Priority needs to be specified if target lb vserver is specified")
+		return fmt.Errorf("[ERROR] netscaler-provider: Priority needs to be specified if target lb vserver is specified")
 	}
 	if !lbok && pok {
-		return fmt.Errorf("Priority needs to be specified if target lb vserver is specified")
+		return fmt.Errorf("[ERROR] netscaler-provider: Priority needs to be specified if target lb vserver is specified")
 	}
 	if !lbok && !aok {
-		return fmt.Errorf("Action or targetlbvserver needs to be specified")
+		return fmt.Errorf("[ERROR] netscaler-provider: Action or targetlbvserver needs to be specified")
 	}
 	if aok {
 		actionExists := client.ResourceExists(netscaler.Csaction.Type(), action.(string))
 		if !actionExists {
-			return fmt.Errorf("Specified Action %s does not exist", action.(string))
+			return fmt.Errorf("[ERROR] netscaler-provider: Specified Action %s does not exist", action.(string))
 		}
 		if !rok {
-			return fmt.Errorf("Action  %s specified without rule", action.(string))
+			return fmt.Errorf("[ERROR] netscaler-provider: Action  %s specified without rule", action.(string))
 		}
 		if dok || uok {
-			return fmt.Errorf("Cannot specify url or domain when action  %s is specified", action.(string))
+			return fmt.Errorf("[ERROR] netscaler-provider: Cannot specify url or domain when action  %s is specified", action.(string))
 		}
 	}
 	if uok && dok {
-		return fmt.Errorf("Cannot specify both url and domain ")
+		return fmt.Errorf("[ERROR] netscaler-provider: Cannot specify both url and domain ")
 	}
 	if rok && (uok || dok) {
-		return fmt.Errorf("Cannot specify both rule and domain or url ")
+		return fmt.Errorf("[ERROR] netscaler-provider: Cannot specify both rule and domain or url ")
 	}
 
 	var cspolicyName string
@@ -150,26 +151,27 @@ func createCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		err2 := client.DeleteResource(netscaler.Cspolicy.Type(), cspolicyName)
 		if err2 != nil {
-			return fmt.Errorf("Failed to undo add cspolicy after bind cspolicy %s to Csvserver failed", cspolicyName, err2)
+			return fmt.Errorf("[ERROR] netscaler-provider:  Failed to undo add cspolicy after bind cspolicy %s to Csvserver failed", cspolicyName, err2)
 		}
-		return fmt.Errorf("Failed to bind cspolicy %s to Csvserver", cspolicyName, err)
+		return fmt.Errorf("[ERROR] netscaler-provider:  Failed to bind cspolicy %s to Csvserver", cspolicyName, err)
 	}
 	d.SetId(cspolicyName)
 	err = readCspolicyFunc(d, meta)
 	if err != nil {
-		log.Printf("?? we just created this cspolicy but we can't read it ?? %s", cspolicyName)
+		log.Printf("[ERROR] netscaler-provider:  ?? we just created this cspolicy but we can't read it ?? %s", cspolicyName)
 		return nil
 	}
 	return nil
 }
 
 func readCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[DEBUG] netscaler-provider: In readCspolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	cspolicyName := d.Id()
-	log.Printf("Reading cspolicy state %s", cspolicyName)
+	log.Printf("[DEBUG] netscaler-provider:  Reading cspolicy state %s", cspolicyName)
 	data, err := client.FindResource(netscaler.Cspolicy.Type(), cspolicyName)
 	if err != nil {
-		log.Printf("Clearing cspolicy state %s", cspolicyName)
+		log.Printf("[WARN] netscaler-provider:  Clearing cspolicy state %s", cspolicyName)
 		d.SetId("")
 		return nil
 	}
@@ -185,7 +187,7 @@ func readCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 }
 
 func updateCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[DEBUG] In update func")
+	log.Printf("[DEBUG] netscaler-provider: In updateCspolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	cspolicyName := d.Get("policyname").(string)
 	csvserver := d.Get("csvserver").(string)
@@ -198,42 +200,42 @@ func updateCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	priorityChanged := false
 
 	if d.HasChange("action") {
-		log.Printf("[DEBUG] Action has changed for cspolicy %s, starting update", cspolicyName)
+		log.Printf("[DEBUG] netscaler-provider: Action has changed for cspolicy %s, starting update", cspolicyName)
 		cspolicy.Action = d.Get("action").(string)
 		hasChange = true
 	}
 	if d.HasChange("domain") {
-		log.Printf("[DEBUG] Domain has changed for cspolicy %s, starting update", cspolicyName)
+		log.Printf("[DEBUG] netscaler-provider: Domain has changed for cspolicy %s, starting update", cspolicyName)
 		cspolicy.Domain = d.Get("domain").(string)
 		hasChange = true
 	}
 	if d.HasChange("logaction") {
-		log.Printf("[DEBUG] Logaction has changed for cspolicy %s, starting update", cspolicyName)
+		log.Printf("[DEBUG] netscaler-provider: Logaction has changed for cspolicy %s, starting update", cspolicyName)
 		cspolicy.Logaction = d.Get("logaction").(string)
 		hasChange = true
 	}
 	if d.HasChange("newname") {
-		log.Printf("[DEBUG] Newname has changed for cspolicy %s, starting update", cspolicyName)
+		log.Printf("[DEBUG] netscaler-provider: Newname has changed for cspolicy %s, starting update", cspolicyName)
 		cspolicy.Newname = d.Get("newname").(string)
 		hasChange = true
 	}
 	if d.HasChange("rule") {
-		log.Printf("[DEBUG] Rule has changed for cspolicy %s, starting update", cspolicyName)
+		log.Printf("[DEBUG] netscaler-provider: Rule has changed for cspolicy %s, starting update", cspolicyName)
 		cspolicy.Rule = d.Get("rule").(string)
 		hasChange = true
 	}
 	if d.HasChange("url") {
-		log.Printf("[DEBUG] Url has changed for cspolicy %s, starting update", cspolicyName)
+		log.Printf("[DEBUG] netscaler-provider: Url has changed for cspolicy %s, starting update", cspolicyName)
 		cspolicy.Url = d.Get("url").(string)
 		hasChange = true
 	}
 	if d.HasChange("priority") {
-		log.Printf("[DEBUG] Priority has changed for cspolicy %s, starting update", cspolicyName)
+		log.Printf("[DEBUG] netscaler-provider: Priority has changed for cspolicy %s, starting update", cspolicyName)
 		priorityChanged = true
 	}
 
 	if d.HasChange("targetlbvserver") {
-		log.Printf("[DEBUG] targetlbvserver has changed for cspolicy %s, starting update", cspolicyName)
+		log.Printf("[DEBUG] netscaler-provider: targetlbvserver has changed for cspolicy %s, starting update", cspolicyName)
 		lbvserverChanged = true
 	}
 
@@ -242,17 +244,17 @@ func updateCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 		//First we unbind from cs vserver
 		err := client.UnbindResource(netscaler.Csvserver.Type(), csvserver, netscaler.Cspolicy.Type(), cspolicyName, "policyname")
 		if err != nil {
-			return fmt.Errorf("Error unbinding cspolicy from csvserver %s", cspolicyName)
+			return fmt.Errorf("[ERROR] netscaler-provider: Error unbinding cspolicy from csvserver %s", cspolicyName)
 		}
-		log.Printf("[DEBUG] cspolicy has been unbound from csvserver for cspolicy %s ", cspolicyName)
+		log.Printf("[DEBUG] netscaler-provider: cspolicy has been unbound from csvserver for cspolicy %s ", cspolicyName)
 	}
 
 	if hasChange {
 		_, err := client.UpdateResource(netscaler.Cspolicy.Type(), cspolicyName, &cspolicy)
 		if err != nil {
-			return fmt.Errorf("Error updating cspolicy %s", cspolicyName)
+			return fmt.Errorf("[ERROR] netscaler-provider: Error updating cspolicy %s", cspolicyName)
 		}
-		log.Printf("[DEBUG] cspolicy has been updated  cspolicy %s ", cspolicyName)
+		log.Printf("[DEBUG] netscaler-provider: cspolicy has been updated  cspolicy %s ", cspolicyName)
 	}
 
 	if lbvserverChanged || priorityChanged {
@@ -262,7 +264,7 @@ func updateCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 		priority, pok := d.GetOk("priority")
 
 		if !pok && lbok {
-			return fmt.Errorf("Need to specify priority if lbvserver is specified")
+			return fmt.Errorf("[ERROR] netscaler-provider: Need to specify priority if lbvserver is specified")
 		}
 
 		binding := cs.Csvservercspolicybinding{
@@ -273,16 +275,16 @@ func updateCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 		}
 		err := client.BindResource(netscaler.Csvserver.Type(), csvserver, netscaler.Cspolicy.Type(), cspolicyName, &binding)
 		if err != nil {
-			log.Printf("Failed to bind new cspolicy to Csvserver")
-			return err
+			return fmt.Errorf("[ERROR] netscaler-provider: Failed to bind new cspolicy to Csvserver")
 		}
-		log.Printf("[DEBUG] cspolicy has been bound to csvserver  cspolicy %s csvserver %s", cspolicyName, csvserver)
+		log.Printf("[DEBUG] netscaler-provider: cspolicy has been bound to csvserver  cspolicy %s csvserver %s", cspolicyName, csvserver)
 	}
 
 	return readCspolicyFunc(d, meta)
 }
 
 func deleteCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[DEBUG] netscaler-provider: In deleteCspolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	cspolicyName := d.Id()
 	csvserver := d.Get("csvserver").(string)
@@ -290,11 +292,11 @@ func deleteCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	//First we unbind from cs vserver if necessary
 	err := client.UnbindResource(netscaler.Csvserver.Type(), csvserver, netscaler.Cspolicy.Type(), cspolicyName, "policyname")
 	if err != nil {
-		return fmt.Errorf("Error unbinding cspolicy from csvserver %s", cspolicyName)
+		return fmt.Errorf("[ERROR] netscaler-provider: Error unbinding cspolicy from csvserver %s", cspolicyName)
 	}
 	err = client.DeleteResource(netscaler.Cspolicy.Type(), cspolicyName)
 	if err != nil {
-		return fmt.Errorf("Error  deleting cspolicy %s", cspolicyName)
+		return fmt.Errorf("[ERROR] netscaler-provider: Error  deleting cspolicy %s", cspolicyName)
 	}
 
 	d.SetId("")

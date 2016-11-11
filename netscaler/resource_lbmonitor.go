@@ -484,6 +484,7 @@ func resourceNetScalerLbmonitor() *schema.Resource {
 }
 
 func createLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[DEBUG] netscaler-provider:  In createLbmonitorFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var lbmonitorName string
 	if v, ok := d.GetOk("monitorname"); ok {
@@ -596,19 +597,20 @@ func createLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err = readLbmonitorFunc(d, meta)
 	if err != nil {
-		log.Printf("?? we just created this lbmonitor but we can't read it ?? %s", lbmonitorName)
+		log.Printf("[ERROR] netscaler-provider: ?? we just created this lbmonitor but we can't read it ?? %s", lbmonitorName)
 		return nil
 	}
 	return nil
 }
 
 func readLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[DEBUG] netscaler-provider:  In readLbmonitorFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lbmonitorName := d.Id()
-	log.Printf("Reading lbmonitor state %s", lbmonitorName)
+	log.Printf("[DEBUG] netscaler-provider: Reading lbmonitor state %s", lbmonitorName)
 	data, err := client.FindResource(netscaler.Lbmonitor.Type(), lbmonitorName)
 	if err != nil {
-		log.Printf("Clearing lbmonitor state %s", lbmonitorName)
+		log.Printf("[WARN] netscaler-provider: Clearing lbmonitor state %s", lbmonitorName)
 		d.SetId("")
 		return nil
 	}
@@ -710,7 +712,7 @@ func readLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 }
 
 func updateLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[DEBUG] In update func")
+	log.Printf("[DEBUG] netscaler-provider:  In updateLbmonitorFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lbmonitorName := d.Get("monitorname").(string)
 
@@ -719,462 +721,462 @@ func updateLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	hasChange := false
 	if d.HasChange("action") {
-		log.Printf("[DEBUG] Action has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Action has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Action = d.Get("action").(string)
 		hasChange = true
 	}
 	if d.HasChange("alertretries") {
-		log.Printf("[DEBUG] Alertretries has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Alertretries has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Alertretries = d.Get("alertretries").(int)
 		hasChange = true
 	}
 	if d.HasChange("application") {
-		log.Printf("[DEBUG] Application has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Application has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Application = d.Get("application").(string)
 		hasChange = true
 	}
 	if d.HasChange("attribute") {
-		log.Printf("[DEBUG] Attribute has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Attribute has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Attribute = d.Get("attribute").(string)
 		hasChange = true
 	}
 	if d.HasChange("basedn") {
-		log.Printf("[DEBUG] Basedn has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Basedn has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Basedn = d.Get("basedn").(string)
 		hasChange = true
 	}
 	if d.HasChange("binddn") {
-		log.Printf("[DEBUG] Binddn has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Binddn has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Binddn = d.Get("binddn").(string)
 		hasChange = true
 	}
 	if d.HasChange("customheaders") {
-		log.Printf("[DEBUG] Customheaders has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Customheaders has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Customheaders = d.Get("customheaders").(string)
 		hasChange = true
 	}
 	if d.HasChange("database") {
-		log.Printf("[DEBUG] Database has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Database has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Database = d.Get("database").(string)
 		hasChange = true
 	}
 	if d.HasChange("destip") {
-		log.Printf("[DEBUG] Destip has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Destip has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Destip = d.Get("destip").(string)
 		hasChange = true
 	}
 	if d.HasChange("destport") {
-		log.Printf("[DEBUG] Destport has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Destport has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Destport = d.Get("destport").(int)
 		hasChange = true
 	}
 	if d.HasChange("deviation") {
-		log.Printf("[DEBUG] Deviation has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Deviation has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Deviation = d.Get("deviation").(int)
 		hasChange = true
 	}
 	if d.HasChange("dispatcherip") {
-		log.Printf("[DEBUG] Dispatcherip has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Dispatcherip has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Dispatcherip = d.Get("dispatcherip").(string)
 		hasChange = true
 	}
 	if d.HasChange("dispatcherport") {
-		log.Printf("[DEBUG] Dispatcherport has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Dispatcherport has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Dispatcherport = d.Get("dispatcherport").(int)
 		hasChange = true
 	}
 	if d.HasChange("domain") {
-		log.Printf("[DEBUG] Domain has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Domain has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Domain = d.Get("domain").(string)
 		hasChange = true
 	}
 	if d.HasChange("downtime") {
-		log.Printf("[DEBUG] Downtime has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Downtime has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Downtime = d.Get("downtime").(int)
 		hasChange = true
 	}
 	if d.HasChange("evalrule") {
-		log.Printf("[DEBUG] Evalrule has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Evalrule has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Evalrule = d.Get("evalrule").(string)
 		hasChange = true
 	}
 	if d.HasChange("failureretries") {
-		log.Printf("[DEBUG] Failureretries has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Failureretries has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Failureretries = d.Get("failureretries").(int)
 		hasChange = true
 	}
 	if d.HasChange("filename") {
-		log.Printf("[DEBUG] Filename has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Filename has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Filename = d.Get("filename").(string)
 		hasChange = true
 	}
 	if d.HasChange("filter") {
-		log.Printf("[DEBUG] Filter has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Filter has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Filter = d.Get("filter").(string)
 		hasChange = true
 	}
 	if d.HasChange("firmwarerevision") {
-		log.Printf("[DEBUG] Firmwarerevision has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Firmwarerevision has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Firmwarerevision = d.Get("firmwarerevision").(int)
 		hasChange = true
 	}
 	if d.HasChange("group") {
-		log.Printf("[DEBUG] Group has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Group has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Group = d.Get("group").(string)
 		hasChange = true
 	}
 	if d.HasChange("hostipaddress") {
-		log.Printf("[DEBUG] Hostipaddress has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Hostipaddress has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Hostipaddress = d.Get("hostipaddress").(string)
 		hasChange = true
 	}
 	if d.HasChange("hostname") {
-		log.Printf("[DEBUG] Hostname has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Hostname has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Hostname = d.Get("hostname").(string)
 		hasChange = true
 	}
 	if d.HasChange("httprequest") {
-		log.Printf("[DEBUG] Httprequest has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Httprequest has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Httprequest = d.Get("httprequest").(string)
 		hasChange = true
 	}
 	if d.HasChange("inbandsecurityid") {
-		log.Printf("[DEBUG] Inbandsecurityid has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Inbandsecurityid has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Inbandsecurityid = d.Get("inbandsecurityid").(string)
 		hasChange = true
 	}
 	if d.HasChange("interval") {
-		log.Printf("[DEBUG] Interval has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Interval has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Interval = d.Get("interval").(int)
 		hasChange = true
 	}
 	if d.HasChange("iptunnel") {
-		log.Printf("[DEBUG] Iptunnel has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Iptunnel has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Iptunnel = d.Get("iptunnel").(string)
 		hasChange = true
 	}
 	if d.HasChange("kcdaccount") {
-		log.Printf("[DEBUG] Kcdaccount has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Kcdaccount has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Kcdaccount = d.Get("kcdaccount").(string)
 		hasChange = true
 	}
 	if d.HasChange("lasversion") {
-		log.Printf("[DEBUG] Lasversion has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Lasversion has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Lasversion = d.Get("lasversion").(string)
 		hasChange = true
 	}
 	if d.HasChange("logonpointname") {
-		log.Printf("[DEBUG] Logonpointname has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Logonpointname has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Logonpointname = d.Get("logonpointname").(string)
 		hasChange = true
 	}
 	if d.HasChange("lrtm") {
-		log.Printf("[DEBUG] Lrtm has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Lrtm has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Lrtm = d.Get("lrtm").(string)
 		hasChange = true
 	}
 	if d.HasChange("maxforwards") {
-		log.Printf("[DEBUG] Maxforwards has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Maxforwards has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Maxforwards = d.Get("maxforwards").(int)
 		hasChange = true
 	}
 	if d.HasChange("metric") {
-		log.Printf("[DEBUG] Metric has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Metric has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Metric = d.Get("metric").(string)
 		hasChange = true
 	}
 	if d.HasChange("metrictable") {
-		log.Printf("[DEBUG] Metrictable has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Metrictable has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Metrictable = d.Get("metrictable").(string)
 		hasChange = true
 	}
 	if d.HasChange("metricthreshold") {
-		log.Printf("[DEBUG] Metricthreshold has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Metricthreshold has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Metricthreshold = d.Get("metricthreshold").(int)
 		hasChange = true
 	}
 	if d.HasChange("metricweight") {
-		log.Printf("[DEBUG] Metricweight has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Metricweight has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Metricweight = d.Get("metricweight").(int)
 		hasChange = true
 	}
 	if d.HasChange("monitorname") {
-		log.Printf("[DEBUG] Monitorname has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Monitorname has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Monitorname = d.Get("monitorname").(string)
 		hasChange = true
 	}
 	if d.HasChange("mssqlprotocolversion") {
-		log.Printf("[DEBUG] Mssqlprotocolversion has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Mssqlprotocolversion has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Mssqlprotocolversion = d.Get("mssqlprotocolversion").(string)
 		hasChange = true
 	}
 	if d.HasChange("netprofile") {
-		log.Printf("[DEBUG] Netprofile has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Netprofile has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Netprofile = d.Get("netprofile").(string)
 		hasChange = true
 	}
 	if d.HasChange("originhost") {
-		log.Printf("[DEBUG] Originhost has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Originhost has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Originhost = d.Get("originhost").(string)
 		hasChange = true
 	}
 	if d.HasChange("originrealm") {
-		log.Printf("[DEBUG] Originrealm has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Originrealm has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Originrealm = d.Get("originrealm").(string)
 		hasChange = true
 	}
 	if d.HasChange("password") {
-		log.Printf("[DEBUG] Password has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Password has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Password = d.Get("password").(string)
 		hasChange = true
 	}
 	if d.HasChange("productname") {
-		log.Printf("[DEBUG] Productname has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Productname has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Productname = d.Get("productname").(string)
 		hasChange = true
 	}
 	if d.HasChange("query") {
-		log.Printf("[DEBUG] Query has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Query has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Query = d.Get("query").(string)
 		hasChange = true
 	}
 	if d.HasChange("querytype") {
-		log.Printf("[DEBUG] Querytype has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Querytype has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Querytype = d.Get("querytype").(string)
 		hasChange = true
 	}
 	if d.HasChange("radaccountsession") {
-		log.Printf("[DEBUG] Radaccountsession has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Radaccountsession has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Radaccountsession = d.Get("radaccountsession").(string)
 		hasChange = true
 	}
 	if d.HasChange("radaccounttype") {
-		log.Printf("[DEBUG] Radaccounttype has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Radaccounttype has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Radaccounttype = d.Get("radaccounttype").(int)
 		hasChange = true
 	}
 	if d.HasChange("radapn") {
-		log.Printf("[DEBUG] Radapn has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Radapn has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Radapn = d.Get("radapn").(string)
 		hasChange = true
 	}
 	if d.HasChange("radframedip") {
-		log.Printf("[DEBUG] Radframedip has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Radframedip has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Radframedip = d.Get("radframedip").(string)
 		hasChange = true
 	}
 	if d.HasChange("radkey") {
-		log.Printf("[DEBUG] Radkey has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Radkey has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Radkey = d.Get("radkey").(string)
 		hasChange = true
 	}
 	if d.HasChange("radmsisdn") {
-		log.Printf("[DEBUG] Radmsisdn has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Radmsisdn has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Radmsisdn = d.Get("radmsisdn").(string)
 		hasChange = true
 	}
 	if d.HasChange("radnasid") {
-		log.Printf("[DEBUG] Radnasid has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Radnasid has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Radnasid = d.Get("radnasid").(string)
 		hasChange = true
 	}
 	if d.HasChange("radnasip") {
-		log.Printf("[DEBUG] Radnasip has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Radnasip has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Radnasip = d.Get("radnasip").(string)
 		hasChange = true
 	}
 	if d.HasChange("recv") {
-		log.Printf("[DEBUG] Recv has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Recv has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Recv = d.Get("recv").(string)
 		hasChange = true
 	}
 	if d.HasChange("resptimeout") {
-		log.Printf("[DEBUG] Resptimeout has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Resptimeout has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Resptimeout = d.Get("resptimeout").(int)
 		hasChange = true
 	}
 	if d.HasChange("resptimeoutthresh") {
-		log.Printf("[DEBUG] Resptimeoutthresh has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Resptimeoutthresh has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Resptimeoutthresh = d.Get("resptimeoutthresh").(int)
 		hasChange = true
 	}
 	if d.HasChange("retries") {
-		log.Printf("[DEBUG] Retries has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Retries has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Retries = d.Get("retries").(int)
 		hasChange = true
 	}
 	if d.HasChange("reverse") {
-		log.Printf("[DEBUG] Reverse has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Reverse has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Reverse = d.Get("reverse").(string)
 		hasChange = true
 	}
 	if d.HasChange("rtsprequest") {
-		log.Printf("[DEBUG] Rtsprequest has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Rtsprequest has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Rtsprequest = d.Get("rtsprequest").(string)
 		hasChange = true
 	}
 	if d.HasChange("scriptargs") {
-		log.Printf("[DEBUG] Scriptargs has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Scriptargs has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Scriptargs = d.Get("scriptargs").(string)
 		hasChange = true
 	}
 	if d.HasChange("scriptname") {
-		log.Printf("[DEBUG] Scriptname has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Scriptname has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Scriptname = d.Get("scriptname").(string)
 		hasChange = true
 	}
 	if d.HasChange("secondarypassword") {
-		log.Printf("[DEBUG] Secondarypassword has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Secondarypassword has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Secondarypassword = d.Get("secondarypassword").(string)
 		hasChange = true
 	}
 	if d.HasChange("secure") {
-		log.Printf("[DEBUG] Secure has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Secure has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Secure = d.Get("secure").(string)
 		hasChange = true
 	}
 	if d.HasChange("send") {
-		log.Printf("[DEBUG] Send has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Send has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Send = d.Get("send").(string)
 		hasChange = true
 	}
 	if d.HasChange("servicegroupname") {
-		log.Printf("[DEBUG] Servicegroupname has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Servicegroupname has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Servicegroupname = d.Get("servicegroupname").(string)
 		hasChange = true
 	}
 	if d.HasChange("servicename") {
-		log.Printf("[DEBUG] Servicename has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Servicename has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Servicename = d.Get("servicename").(string)
 		hasChange = true
 	}
 	if d.HasChange("sipmethod") {
-		log.Printf("[DEBUG] Sipmethod has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Sipmethod has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Sipmethod = d.Get("sipmethod").(string)
 		hasChange = true
 	}
 	if d.HasChange("sipreguri") {
-		log.Printf("[DEBUG] Sipreguri has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Sipreguri has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Sipreguri = d.Get("sipreguri").(string)
 		hasChange = true
 	}
 	if d.HasChange("sipuri") {
-		log.Printf("[DEBUG] Sipuri has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Sipuri has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Sipuri = d.Get("sipuri").(string)
 		hasChange = true
 	}
 	if d.HasChange("sitepath") {
-		log.Printf("[DEBUG] Sitepath has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Sitepath has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Sitepath = d.Get("sitepath").(string)
 		hasChange = true
 	}
 	if d.HasChange("snmpcommunity") {
-		log.Printf("[DEBUG] Snmpcommunity has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Snmpcommunity has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Snmpcommunity = d.Get("snmpcommunity").(string)
 		hasChange = true
 	}
 	if d.HasChange("snmpoid") {
-		log.Printf("[DEBUG] Snmpoid has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Snmpoid has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Snmpoid = d.Get("snmpoid").(string)
 		hasChange = true
 	}
 	if d.HasChange("snmpthreshold") {
-		log.Printf("[DEBUG] Snmpthreshold has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Snmpthreshold has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Snmpthreshold = d.Get("snmpthreshold").(string)
 		hasChange = true
 	}
 	if d.HasChange("snmpversion") {
-		log.Printf("[DEBUG] Snmpversion has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Snmpversion has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Snmpversion = d.Get("snmpversion").(string)
 		hasChange = true
 	}
 	if d.HasChange("sqlquery") {
-		log.Printf("[DEBUG] Sqlquery has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Sqlquery has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Sqlquery = d.Get("sqlquery").(string)
 		hasChange = true
 	}
 	if d.HasChange("state") {
-		log.Printf("[DEBUG] State has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  State has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.State = d.Get("state").(string)
 		hasChange = true
 	}
 	if d.HasChange("storedb") {
-		log.Printf("[DEBUG] Storedb has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Storedb has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Storedb = d.Get("storedb").(string)
 		hasChange = true
 	}
 	if d.HasChange("storefrontacctservice") {
-		log.Printf("[DEBUG] Storefrontacctservice has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Storefrontacctservice has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Storefrontacctservice = d.Get("storefrontacctservice").(string)
 		hasChange = true
 	}
 	if d.HasChange("storename") {
-		log.Printf("[DEBUG] Storename has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Storename has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Storename = d.Get("storename").(string)
 		hasChange = true
 	}
 	if d.HasChange("successretries") {
-		log.Printf("[DEBUG] Successretries has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Successretries has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Successretries = d.Get("successretries").(int)
 		hasChange = true
 	}
 	if d.HasChange("tos") {
-		log.Printf("[DEBUG] Tos has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Tos has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Tos = d.Get("tos").(string)
 		hasChange = true
 	}
 	if d.HasChange("tosid") {
-		log.Printf("[DEBUG] Tosid has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Tosid has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Tosid = d.Get("tosid").(int)
 		hasChange = true
 	}
 	if d.HasChange("transparent") {
-		log.Printf("[DEBUG] Transparent has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Transparent has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Transparent = d.Get("transparent").(string)
 		hasChange = true
 	}
 	if d.HasChange("type") {
-		log.Printf("[DEBUG] Type has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Type has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Type = d.Get("type").(string)
 		hasChange = true
 	}
 	if d.HasChange("units1") {
-		log.Printf("[DEBUG] Units1 has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Units1 has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Units1 = d.Get("units1").(string)
 		hasChange = true
 	}
 	if d.HasChange("units2") {
-		log.Printf("[DEBUG] Units2 has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Units2 has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Units2 = d.Get("units2").(string)
 		hasChange = true
 	}
 	if d.HasChange("units3") {
-		log.Printf("[DEBUG] Units3 has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Units3 has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Units3 = d.Get("units3").(string)
 		hasChange = true
 	}
 	if d.HasChange("units4") {
-		log.Printf("[DEBUG] Units4 has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Units4 has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Units4 = d.Get("units4").(string)
 		hasChange = true
 	}
 	if d.HasChange("username") {
-		log.Printf("[DEBUG] Username has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Username has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Username = d.Get("username").(string)
 		hasChange = true
 	}
 	if d.HasChange("validatecred") {
-		log.Printf("[DEBUG] Validatecred has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Validatecred has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Validatecred = d.Get("validatecred").(string)
 		hasChange = true
 	}
 	if d.HasChange("vendorid") {
-		log.Printf("[DEBUG] Vendorid has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Vendorid has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Vendorid = d.Get("vendorid").(int)
 		hasChange = true
 	}
 	if d.HasChange("vendorspecificvendorid") {
-		log.Printf("[DEBUG] Vendorspecificvendorid has changed for lbmonitor %s, starting update", lbmonitorName)
+		log.Printf("[DEBUG] netscaler-provider:  Vendorspecificvendorid has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Vendorspecificvendorid = d.Get("vendorspecificvendorid").(int)
 		hasChange = true
 	}
@@ -1182,13 +1184,14 @@ func updateLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(netscaler.Lbmonitor.Type(), lbmonitorName, &lbmonitor)
 		if err != nil {
-			return fmt.Errorf("Error updating lbmonitor %s", lbmonitorName)
+			return fmt.Errorf("[ERROR] netscaler-provider: Error updating lbmonitor %s", lbmonitorName)
 		}
 	}
 	return readLbmonitorFunc(d, meta)
 }
 
 func deleteLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[DEBUG] netscaler-provider:  In deleteLbmonitorFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lbmonitorName := d.Id()
 	args := make([]string, 1, 1)

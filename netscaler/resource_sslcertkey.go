@@ -84,6 +84,7 @@ func resourceNetScalerSslcertkey() *schema.Resource {
 }
 
 func createSslcertkeyFunc(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[DEBUG] netscaler-provider:  In updateSslcertkeyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var sslcertkeyName string
 	if v, ok := d.GetOk("certkey"); ok {
@@ -116,19 +117,20 @@ func createSslcertkeyFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err = readSslcertkeyFunc(d, meta)
 	if err != nil {
-		log.Printf("?? we just created this sslcertkey but we can't read it ?? %s", sslcertkeyName)
+		log.Printf("[ERROR] netscaler-provider: ?? we just created this sslcertkey but we can't read it ?? %s", sslcertkeyName)
 		return nil
 	}
 	return nil
 }
 
 func readSslcertkeyFunc(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[DEBUG] netscaler-provider:  In readSslcertkeyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	sslcertkeyName := d.Id()
-	log.Printf("Reading sslcertkey state %s", sslcertkeyName)
+	log.Printf("[DEBUG] netscaler-provider: Reading sslcertkey state %s", sslcertkeyName)
 	data, err := client.FindResource(netscaler.Sslcertkey.Type(), sslcertkeyName)
 	if err != nil {
-		log.Printf("Clearing sslcertkey state %s", sslcertkeyName)
+		log.Printf("[WARN] netscaler-provider: Clearing sslcertkey state %s", sslcertkeyName)
 		d.SetId("")
 		return nil
 	}
@@ -151,7 +153,7 @@ func readSslcertkeyFunc(d *schema.ResourceData, meta interface{}) error {
 }
 
 func updateSslcertkeyFunc(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[DEBUG] In update func")
+	log.Printf("[DEBUG] netscaler-provider:  In updateSslcertkeyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	sslcertkeyName := d.Get("certkey").(string)
 
@@ -160,12 +162,12 @@ func updateSslcertkeyFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	hasChange := false
 	if d.HasChange("expirymonitor") {
-		log.Printf("[DEBUG] Expirymonitor has changed for sslcertkey %s, starting update", sslcertkeyName)
+		log.Printf("[DEBUG] netscaler-provider:  Expirymonitor has changed for sslcertkey %s, starting update", sslcertkeyName)
 		sslcertkey.Expirymonitor = d.Get("expirymonitor").(string)
 		hasChange = true
 	}
 	if d.HasChange("notificationperiod") {
-		log.Printf("[DEBUG] Notificationperiod has changed for sslcertkey %s, starting update", sslcertkeyName)
+		log.Printf("[DEBUG] netscaler-provider:  Notificationperiod has changed for sslcertkey %s, starting update", sslcertkeyName)
 		sslcertkey.Notificationperiod = d.Get("notificationperiod").(int)
 		hasChange = true
 	}
@@ -181,6 +183,7 @@ func updateSslcertkeyFunc(d *schema.ResourceData, meta interface{}) error {
 }
 
 func deleteSslcertkeyFunc(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[DEBUG] netscaler-provider:  In deleteSslcertkeyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	sslcertkeyName := d.Id()
 	err := client.DeleteResource(netscaler.Sslcertkey.Type(), sslcertkeyName)

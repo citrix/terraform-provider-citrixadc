@@ -265,6 +265,7 @@ func resourceNetScalerService() *schema.Resource {
 }
 
 func createServiceFunc(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[DEBUG] netscaler-provider:  In createServiceFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var serviceName string
 	if v, ok := d.GetOk("name"); ok {
@@ -349,13 +350,14 @@ func createServiceFunc(d *schema.ResourceData, meta interface{}) error {
 }
 
 func readServiceFunc(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[DEBUG] netscaler-provider:  In readServiceFunc")
 	client := meta.(*NetScalerNitroClient).client
 	serviceName := d.Id()
-	log.Printf("Reading service state %s", serviceName)
+	log.Printf("[DEBUG] netscaler-provider: Reading service state %s", serviceName)
 	data, err := client.FindResource(netscaler.Service.Type(), serviceName)
 	log.Printf("Reading service state %v", data)
 	if err != nil {
-		log.Printf("Clearing service state %s", serviceName)
+		log.Printf("[WARN] netscaler-provider: Clearing service state %s", serviceName)
 		d.SetId("")
 		return nil
 	}
@@ -416,7 +418,7 @@ func readServiceFunc(d *schema.ResourceData, meta interface{}) error {
 }
 
 func updateServiceFunc(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[DEBUG] In update func")
+	log.Printf("[DEBUG] netscaler-provider:  In updateServiceFunc")
 	client := meta.(*NetScalerNitroClient).client
 	serviceName := d.Get("name").(string)
 
@@ -424,202 +426,203 @@ func updateServiceFunc(d *schema.ResourceData, meta interface{}) error {
 		Name: d.Get("name").(string),
 	}
 	if d.HasChange("accessdown") {
-		log.Printf("[DEBUG] Accessdown has changed for service %s, starting update", serviceName)
+		log.Printf("[DEBUG] netscaler-provider:  Accessdown has changed for service %s, starting update", serviceName)
 		service.Accessdown = d.Get("accessdown").(string)
 	}
 	if d.HasChange("all") {
-		log.Printf("[DEBUG] All has changed for service %s, starting update", serviceName)
+		log.Printf("[DEBUG] netscaler-provider:  All has changed for service %s, starting update", serviceName)
 		service.All = d.Get("all").(bool)
 	}
 	if d.HasChange("appflowlog") {
-		log.Printf("[DEBUG] Appflowlog has changed for service %s, starting update", serviceName)
+		log.Printf("[DEBUG] netscaler-provider:  Appflowlog has changed for service %s, starting update", serviceName)
 		service.Appflowlog = d.Get("appflowlog").(string)
 	}
 	if d.HasChange("cacheable") {
-		log.Printf("[DEBUG] Cacheable has changed for service %s, starting update", serviceName)
+		log.Printf("[DEBUG] netscaler-provider:  Cacheable has changed for service %s, starting update", serviceName)
 		service.Cacheable = d.Get("cacheable").(string)
 	}
 	if d.HasChange("cachetype") {
-		log.Printf("[DEBUG] Cachetype has changed for service %s, starting update", serviceName)
+		log.Printf("[DEBUG] netscaler-provider:  Cachetype has changed for service %s, starting update", serviceName)
 		service.Cachetype = d.Get("cachetype").(string)
 	}
 	if d.HasChange("cip") {
-		log.Printf("[DEBUG] Cip has changed for service %s, starting update", serviceName)
+		log.Printf("[DEBUG] netscaler-provider:  Cip has changed for service %s, starting update", serviceName)
 		service.Cip = d.Get("cip").(string)
 	}
 	if d.HasChange("cipheader") {
-		log.Printf("[DEBUG] Cipheader has changed for service %s, starting update", serviceName)
+		log.Printf("[DEBUG] netscaler-provider:  Cipheader has changed for service %s, starting update", serviceName)
 		service.Cipheader = d.Get("cipheader").(string)
 	}
 	if d.HasChange("cka") {
-		log.Printf("[DEBUG] Cka has changed for service %s, starting update", serviceName)
+		log.Printf("[DEBUG] netscaler-provider:  Cka has changed for service %s, starting update", serviceName)
 		service.Cka = d.Get("cka").(string)
 	}
 	if d.HasChange("cleartextport") {
-		log.Printf("[DEBUG] Cleartextport has changed for service %s, starting update", serviceName)
+		log.Printf("[DEBUG] netscaler-provider:  Cleartextport has changed for service %s, starting update", serviceName)
 		service.Cleartextport = d.Get("cleartextport").(int)
 	}
 	if d.HasChange("clttimeout") {
-		log.Printf("[DEBUG] Clttimeout has changed for service %s, starting update", serviceName)
+		log.Printf("[DEBUG] netscaler-provider:  Clttimeout has changed for service %s, starting update", serviceName)
 		service.Clttimeout = d.Get("clttimeout").(int)
 	}
 	if d.HasChange("cmp") {
-		log.Printf("[DEBUG] Cmp has changed for service %s, starting update", serviceName)
+		log.Printf("[DEBUG] netscaler-provider:  Cmp has changed for service %s, starting update", serviceName)
 		service.Cmp = d.Get("cmp").(string)
 	}
 	if d.HasChange("comment") {
-		log.Printf("[DEBUG] Comment has changed for service %s, starting update", serviceName)
+		log.Printf("[DEBUG] netscaler-provider:  Comment has changed for service %s, starting update", serviceName)
 		service.Comment = d.Get("comment").(string)
 	}
 	if d.HasChange("customserverid") {
-		log.Printf("[DEBUG] Customserverid has changed for service %s, starting update", serviceName)
+		log.Printf("[DEBUG] netscaler-provider:  Customserverid has changed for service %s, starting update", serviceName)
 		service.Customserverid = d.Get("customserverid").(string)
 	}
 	if d.HasChange("delay") {
-		log.Printf("[DEBUG] Delay has changed for service %s, starting update", serviceName)
+		log.Printf("[DEBUG] netscaler-provider:  Delay has changed for service %s, starting update", serviceName)
 		service.Delay = d.Get("delay").(int)
 	}
 	if d.HasChange("downstateflush") {
-		log.Printf("[DEBUG] Downstateflush has changed for service %s, starting update", serviceName)
+		log.Printf("[DEBUG] netscaler-provider:  Downstateflush has changed for service %s, starting update", serviceName)
 		service.Downstateflush = d.Get("downstateflush").(string)
 	}
 	if d.HasChange("graceful") {
-		log.Printf("[DEBUG] Graceful has changed for service %s, starting update", serviceName)
+		log.Printf("[DEBUG] netscaler-provider:  Graceful has changed for service %s, starting update", serviceName)
 		service.Graceful = d.Get("graceful").(string)
 	}
 	if d.HasChange("hashid") {
-		log.Printf("[DEBUG] Hashid has changed for service %s, starting update", serviceName)
+		log.Printf("[DEBUG] netscaler-provider:  Hashid has changed for service %s, starting update", serviceName)
 		service.Hashid = d.Get("hashid").(int)
 	}
 	if d.HasChange("healthmonitor") {
-		log.Printf("[DEBUG] Healthmonitor has changed for service %s, starting update", serviceName)
+		log.Printf("[DEBUG] netscaler-provider:  Healthmonitor has changed for service %s, starting update", serviceName)
 		service.Healthmonitor = d.Get("healthmonitor").(string)
 	}
 	if d.HasChange("httpprofilename") {
-		log.Printf("[DEBUG] Httpprofilename has changed for service %s, starting update", serviceName)
+		log.Printf("[DEBUG] netscaler-provider:  Httpprofilename has changed for service %s, starting update", serviceName)
 		service.Httpprofilename = d.Get("httpprofilename").(string)
 	}
 	if d.HasChange("internal") {
-		log.Printf("[DEBUG] Internal has changed for service %s, starting update", serviceName)
+		log.Printf("[DEBUG] netscaler-provider:  Internal has changed for service %s, starting update", serviceName)
 		service.Internal = d.Get("internal").(bool)
 	}
 	if d.HasChange("ip") {
-		log.Printf("[DEBUG] Ip has changed for service %s, starting update", serviceName)
+		log.Printf("[DEBUG] netscaler-provider:  Ip has changed for service %s, starting update", serviceName)
 		service.Ipaddress = d.Get("ip").(string)
 	}
 	if d.HasChange("ipaddress") {
-		log.Printf("[DEBUG] Ipaddress has changed for service %s, starting update", serviceName)
+		log.Printf("[DEBUG] netscaler-provider:  Ipaddress has changed for service %s, starting update", serviceName)
 		service.Ipaddress = d.Get("ipaddress").(string)
 	}
 	if d.HasChange("maxbandwidth") {
-		log.Printf("[DEBUG] Maxbandwidth has changed for service %s, starting update", serviceName)
+		log.Printf("[DEBUG] netscaler-provider:  Maxbandwidth has changed for service %s, starting update", serviceName)
 		service.Maxbandwidth = d.Get("maxbandwidth").(int)
 	}
 	if d.HasChange("maxclient") {
-		log.Printf("[DEBUG] Maxclient has changed for service %s, starting update", serviceName)
+		log.Printf("[DEBUG] netscaler-provider:  Maxclient has changed for service %s, starting update", serviceName)
 		service.Maxclient = d.Get("maxclient").(int)
 	}
 	if d.HasChange("maxreq") {
-		log.Printf("[DEBUG] Maxreq has changed for service %s, starting update", serviceName)
+		log.Printf("[DEBUG] netscaler-provider:  Maxreq has changed for service %s, starting update", serviceName)
 		service.Maxreq = d.Get("maxreq").(int)
 	}
 	if d.HasChange("monitornamesvc") {
-		log.Printf("[DEBUG] Monitornamesvc has changed for service %s, starting update", serviceName)
+		log.Printf("[DEBUG] netscaler-provider:  Monitornamesvc has changed for service %s, starting update", serviceName)
 		service.Monitornamesvc = d.Get("monitornamesvc").(string)
 	}
 	if d.HasChange("monthreshold") {
-		log.Printf("[DEBUG] Monthreshold has changed for service %s, starting update", serviceName)
+		log.Printf("[DEBUG] netscaler-provider:  Monthreshold has changed for service %s, starting update", serviceName)
 		service.Monthreshold = d.Get("monthreshold").(int)
 	}
 	if d.HasChange("name") {
-		log.Printf("[DEBUG] Name has changed for service %s, starting update", serviceName)
+		log.Printf("[DEBUG] netscaler-provider:  Name has changed for service %s, starting update", serviceName)
 		service.Name = d.Get("name").(string)
 	}
 	if d.HasChange("netprofile") {
-		log.Printf("[DEBUG] Netprofile has changed for service %s, starting update", serviceName)
+		log.Printf("[DEBUG] netscaler-provider:  Netprofile has changed for service %s, starting update", serviceName)
 		service.Netprofile = d.Get("netprofile").(string)
 	}
 	if d.HasChange("newname") {
-		log.Printf("[DEBUG] Newname has changed for service %s, starting update", serviceName)
+		log.Printf("[DEBUG] netscaler-provider:  Newname has changed for service %s, starting update", serviceName)
 		service.Newname = d.Get("newname").(string)
 	}
 	if d.HasChange("pathmonitor") {
-		log.Printf("[DEBUG] Pathmonitor has changed for service %s, starting update", serviceName)
+		log.Printf("[DEBUG] netscaler-provider:  Pathmonitor has changed for service %s, starting update", serviceName)
 		service.Pathmonitor = d.Get("pathmonitor").(string)
 	}
 	if d.HasChange("pathmonitorindv") {
-		log.Printf("[DEBUG] Pathmonitorindv has changed for service %s, starting update", serviceName)
+		log.Printf("[DEBUG] netscaler-provider:  Pathmonitorindv has changed for service %s, starting update", serviceName)
 		service.Pathmonitorindv = d.Get("pathmonitorindv").(string)
 	}
 	if d.HasChange("port") {
-		log.Printf("[DEBUG] Port has changed for service %s, starting update", serviceName)
+		log.Printf("[DEBUG] netscaler-provider:  Port has changed for service %s, starting update", serviceName)
 		service.Port = d.Get("port").(int)
 	}
 	if d.HasChange("rtspsessionidremap") {
-		log.Printf("[DEBUG] Rtspsessionidremap has changed for service %s, starting update", serviceName)
+		log.Printf("[DEBUG] netscaler-provider:  Rtspsessionidremap has changed for service %s, starting update", serviceName)
 		service.Rtspsessionidremap = d.Get("rtspsessionidremap").(string)
 	}
 	if d.HasChange("sc") {
-		log.Printf("[DEBUG] Sc has changed for service %s, starting update", serviceName)
+		log.Printf("[DEBUG] netscaler-provider:  Sc has changed for service %s, starting update", serviceName)
 		service.Sc = d.Get("sc").(string)
 	}
 	if d.HasChange("serverid") {
-		log.Printf("[DEBUG] Serverid has changed for service %s, starting update", serviceName)
+		log.Printf("[DEBUG] netscaler-provider:  Serverid has changed for service %s, starting update", serviceName)
 		service.Serverid = d.Get("serverid").(int)
 	}
 	if d.HasChange("servername") {
-		log.Printf("[DEBUG] Servername has changed for service %s, starting update", serviceName)
+		log.Printf("[DEBUG] netscaler-provider:  Servername has changed for service %s, starting update", serviceName)
 		service.Servername = d.Get("servername").(string)
 	}
 	if d.HasChange("servicetype") {
-		log.Printf("[DEBUG] Servicetype has changed for service %s, starting update", serviceName)
+		log.Printf("[DEBUG] netscaler-provider:  Servicetype has changed for service %s, starting update", serviceName)
 		service.Servicetype = d.Get("servicetype").(string)
 	}
 	if d.HasChange("sp") {
-		log.Printf("[DEBUG] Sp has changed for service %s, starting update", serviceName)
+		log.Printf("[DEBUG] netscaler-provider:  Sp has changed for service %s, starting update", serviceName)
 		service.Sp = d.Get("sp").(string)
 	}
 	if d.HasChange("state") {
-		log.Printf("[DEBUG] State has changed for service %s, starting update", serviceName)
+		log.Printf("[DEBUG] netscaler-provider:  State has changed for service %s, starting update", serviceName)
 		service.State = d.Get("state").(string)
 	}
 	if d.HasChange("svrtimeout") {
-		log.Printf("[DEBUG] Svrtimeout has changed for service %s, starting update", serviceName)
+		log.Printf("[DEBUG] netscaler-provider:  Svrtimeout has changed for service %s, starting update", serviceName)
 		service.Svrtimeout = d.Get("svrtimeout").(int)
 	}
 	if d.HasChange("tcpb") {
-		log.Printf("[DEBUG] Tcpb has changed for service %s, starting update", serviceName)
+		log.Printf("[DEBUG] netscaler-provider:  Tcpb has changed for service %s, starting update", serviceName)
 		service.Tcpb = d.Get("tcpb").(string)
 	}
 	if d.HasChange("tcpprofilename") {
-		log.Printf("[DEBUG] Tcpprofilename has changed for service %s, starting update", serviceName)
+		log.Printf("[DEBUG] netscaler-provider:  Tcpprofilename has changed for service %s, starting update", serviceName)
 		service.Tcpprofilename = d.Get("tcpprofilename").(string)
 	}
 	if d.HasChange("td") {
-		log.Printf("[DEBUG] Td has changed for service %s, starting update", serviceName)
+		log.Printf("[DEBUG] netscaler-provider:  Td has changed for service %s, starting update", serviceName)
 		service.Td = d.Get("td").(int)
 	}
 	if d.HasChange("useproxyport") {
-		log.Printf("[DEBUG] Useproxyport has changed for service %s, starting update", serviceName)
+		log.Printf("[DEBUG] netscaler-provider:  Useproxyport has changed for service %s, starting update", serviceName)
 		service.Useproxyport = d.Get("useproxyport").(string)
 	}
 	if d.HasChange("usip") {
-		log.Printf("[DEBUG] Usip has changed for service %s, starting update", serviceName)
+		log.Printf("[DEBUG] netscaler-provider:  Usip has changed for service %s, starting update", serviceName)
 		service.Usip = d.Get("usip").(string)
 	}
 	if d.HasChange("weight") {
-		log.Printf("[DEBUG] Weight has changed for service %s, starting update", serviceName)
+		log.Printf("[DEBUG] netscaler-provider:  Weight has changed for service %s, starting update", serviceName)
 		service.Weight = d.Get("weight").(int)
 	}
 
 	_, err := client.UpdateResource(netscaler.Service.Type(), serviceName, &service)
 	if err != nil {
-		return fmt.Errorf("Error updating service %s", serviceName)
+		return fmt.Errorf("[ERROR] netscaler-provider: Error updating service %s", serviceName)
 	}
 	return readServiceFunc(d, meta)
 }
 
 func deleteServiceFunc(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[DEBUG] netscaler-provider:  In deleteServiceFunc")
 	client := meta.(*NetScalerNitroClient).client
 	serviceName := d.Id()
 	err := client.DeleteResource(netscaler.Service.Type(), serviceName)
