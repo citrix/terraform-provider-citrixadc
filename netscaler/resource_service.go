@@ -260,6 +260,11 @@ func resourceNetScalerService() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+
+			"lbmonitor": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -273,6 +278,21 @@ func createServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		serviceName = resource.PrefixedUniqueId("tf-service-")
 		d.Set("name", serviceName)
+	}
+	lbmonitor, mok := d.GetOk("lbmonitor")
+	if mok {
+		exists := client.ResourceExists(netscaler.Lbmonitor.Type(), lbmonitor.(string))
+		if !exists {
+			return fmt.Errorf("[ERROR] netscaler-provider: Specified lb monitor does not exist on netscaler!")
+		}
+	}
+
+	lbvserver, lok := d.GetOk("lbvserver")
+	if lok {
+		exists := client.ResourceExists(netscaler.Lbvserver.Type(), lbvserver.(string))
+		if !exists {
+			return fmt.Errorf("[ERROR] netscaler-provider: Specified lb vserver does not exist on netscaler!")
+		}
 	}
 	service := basic.Service{
 		Name:               serviceName,
@@ -326,24 +346,50 @@ func createServiceFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(netscaler.Service.Type(), serviceName, &service)
 	if err != nil {
+		log.Printf("[ERROR] netscaler-provider: could not add resource %s of type %s", netscaler.Service.Type(), serviceName)
 		return err
+	}
+	if lok { //lbvserver is specified
+		lbvserverName := d.Get("lbvserver").(string)
+		binding := lb.Lbvserverservicebinding{
+			Name:        lbvserverName,
+			Servicename: serviceName,
+		}
+		log.Printf("[INFO] netscaler-provider:  Binding service %s to lbvserver %s", serviceName, lbvserverName)
+		err = client.BindResource(netscaler.Lbvserver.Type(), lbvserverName, netscaler.Service.Type(), serviceName, &binding)
+		if err != nil {
+			log.Printf("[ERROR] netscaler-provider:  Failed to bind service %s to lbvserver %s", serviceName, lbvserverName)
+			err2 := client.DeleteResource(netscaler.Service.Type(), serviceName)
+			if err2 != nil {
+				log.Printf("[ERROR] netscaler-provider:  Failed to delete service %s after bind to lb vserver failed", serviceName)
+				return fmt.Errorf("[ERROR] netscaler-provider:  Failed to delete service %s after bind to lbvserver failed", serviceName)
+			}
+			return fmt.Errorf("[ERROR] netscaler-provider:  Failed to bind  service %s to lbvserver %s", serviceName, lbvserverName)
+		}
+	}
+	if mok { //lbmonitor is specified
+		lbmonitorName := d.Get("lbmonitor").(string)
+		binding := lb.Lbmonitorservicebinding{
+			Monitorname: lbmonitorName,
+			Servicename: serviceName,
+		}
+		log.Printf("[INFO] netscaler-provider:  Binding service %s to lbmonitor %s", serviceName, lbmonitorName)
+		err = client.BindResource(netscaler.Lbmonitor.Type(), lbmonitorName, netscaler.Service.Type(), serviceName, &binding)
+		if err != nil {
+			log.Printf("[ERROR] netscaler-provider:  Failed to bind service %s to lbmonitor %s", serviceName, lbmonitorName)
+			err2 := client.DeleteResource(netscaler.Service.Type(), serviceName)
+			if err2 != nil {
+				log.Printf("[ERROR] netscaler-provider:  Failed to delete service %s after bind to lbmonitor failed", serviceName)
+				return fmt.Errorf("[ERROR] netscaler-provider:  Failed to delete service %s after bind to lbmonitor failed", serviceName)
+			}
+			return fmt.Errorf("[ERROR] netscaler-provider:  Failed to bind  service %s to lbmonitor %s", serviceName, lbmonitorName)
+		}
 	}
 
 	d.SetId(serviceName)
-	lbvserver := d.Get("lbvserver").(string)
-
-	binding := lb.Lbvserverservicebinding{
-		Name:        lbvserver,
-		Servicename: serviceName,
-	}
-
-	err = client.BindResource(netscaler.Lbvserver.Type(), lbvserver, netscaler.Service.Type(), serviceName, &binding)
-	if err != nil {
-		return err
-	}
 	err = readServiceFunc(d, meta)
 	if err != nil {
-		log.Printf("?? we just created this service but we can't read it ?? %s", serviceName)
+		log.Printf("[ERROR] netscaler-provider: ?? we just created this service but we can't read it ?? %s", serviceName)
 		return nil
 	}
 	return nil
