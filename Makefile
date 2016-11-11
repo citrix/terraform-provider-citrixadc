@@ -16,6 +16,10 @@ PROVIDER_ONLY_PKGS=$(shell go list ./... | grep -v "/vendor/" | grep -v "tools")
 
 default: build 
 
+update:
+	go get ./...
+	godep update ./...
+
 build:
 	godep go build -o terraform-provider-netscaler .
 
