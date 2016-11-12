@@ -19,6 +19,7 @@ resource "netscaler_lbvserver" "sample_lb" {
   servicetype = "SSL"
   lbmethod = "ROUNDROBIN"
   persistencetype = "COOKIEINSERT"
+  sslcertkey = "${netscaler_sslcertkey.foo-ssl-cert-2.certkey}"
 }
 
 resource "netscaler_lbvserver" "sample_lb2" {
@@ -33,6 +34,7 @@ resource "netscaler_service" "backend_1" {
   ip = "10.123.43.55"
   servicetype = "HTTP"
   port = 80
+  lbmonitor = "${netscaler_lbmonitor.foo-monitor-2.monitorname}"
 }
 
 resource "netscaler_service" "backend_2" {
@@ -41,6 +43,7 @@ resource "netscaler_service" "backend_2" {
   servicetype = "HTTP"
   port = 80
   clttimeout = 360
+  lbmonitor = "${netscaler_lbmonitor.foo-monitor.monitorname}"
 }
 
 resource "netscaler_csvserver" "foo-cs" {
@@ -48,7 +51,6 @@ resource "netscaler_csvserver" "foo-cs" {
   ipv46 = "10.71.139.151"
   servicetype = "SSL"
   port = 443
-
 }
 
 resource "netscaler_cspolicy" "foo-cspolicy" {
@@ -68,9 +70,33 @@ resource "netscaler_cspolicy" "foo-cspolicy2" {
 }
 
 resource "netscaler_sslcertkey" "foo-ssl-cert" {
-  cert = "server.crt"
   certkey = "sample_ssl_cert"
-  key = "server.key"
+  cert = "/var/certs/server.crt"
+  key = "/var/certs/server.key"
   expirymonitor = "ENABLED"
   notificationperiod = 83
+}
+
+resource "netscaler_sslcertkey" "foo-ssl-cert-2" {
+  certkey = "sample_ssl_cert2"
+  cert = "/var/certs/server2.crt"
+  key = "/var/certs/server2.key"
+  expirymonitor = "ENABLED"
+  notificationperiod = 33
+}
+
+resource "netscaler_lbmonitor" "foo-monitor" {
+  monitorname = "sample_lb_monitor"
+  type = "HTTP"
+  interval = 350
+  resptimeout = 250
+}
+
+resource "netscaler_lbmonitor" "foo-monitor-2" {
+  monitorname = "sample_lb_monitor2"
+  type = "HTTP"
+  interval = 260
+  units3 = "MSEC"
+  resptimeout = 150
+  units4 = "MSEC"
 }
