@@ -1,43 +1,48 @@
-## SSL LB with custom HTTP monitor attached to the backend services
-This terraform configuration shows an SSL LB vserver with HTTP backends. Each backend has a customized HTTP monitor that informs the vserver of problems with the backend.
+## Content switching SSL LB with custom HTTP monitor attached to the backend services
+This terraform configuration shows an SSL content switch vserver switching to two sets of backends based on the URL pattern.
 
 ## Topology
 <pre>
-                           +
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                 +---------v---------+      +----------+
-                 |   AuctionLB       +------+SSL certkey
-                 |   Lb vserver      |      +----------+
-                 |   10.22.24.22:443 |
-                 +------+------------+
-                        |
-         +--------------v---+------------------------+
-         |                  |                        |
-         |                  |                        |
-         |                  |                        |
-+--------v--------+   +-----v-----------+  +---------v------+
-|Service          +   |Service          |  |Service         |
-|172.23.33.33:8080    |172.23.44.33:8080|  |172.23.44.34:8080
-+---------^-------+   +----^------------+  +-------^--------+
-          |                |                       |
-          |                |                       |
-          +--------------^-------------------------+
-                 +--------------------+
-                 |LB Monitor (HTTP)   |
-                 |                    |
-                 +--------------------+
+                                        +
+                                        |
+                                        |
+                                        |
+                                        |
+                                        |
+                                        |
+                              +---------v---------+      +----------+
+                              |   Production LB   +------+SSL certkey
+                              |   cs vserver      |      +----------+
+                              |   10.22.24.22:443 |
+                              +-------+-----------+
+                                      |
+                                      |
+                        +-------------v-----------+
+                        |                         |
+  +-------------+       |                         |        +--------------+
+  |cs policy    +-------+                         |        | cs policy    |
+  |url: /cart/* |       |                         +--------+ url: /catalog/*
+  +-------------+       |                         |        +--------------+
+                 +------+-------+         +-------+------+
+             +---+ lb vserver   |         | lb vserver   |
+             |   | cart         |         | catalog      +-----+
+             |   +--------------+         +--------------+     |
+        +----+---------------------+              +------------+-----------+
+        |            |             |              |                        |
++-------+--+   +-----+-----+ +-----+----+     +---+---------+  +-----------+---+
+|service   |   |service    | |service   |     | service     |  | service       |
+|          |   |           | |          |     |             |  |               |
++------+---+   +----+------+ +-----+----+     +------+------+  +---------+-----+
+       |            |              |                 |                   |
+       +--------------------+------+                 +-----------------+-+
+         +-------------+    |                       +--------------+   |
+         |lb monitor   |    |                       | lb monitor   +---+
+         |cart monitor +----+                       | catalog monitor
+         +-------------+                            +--------------+
+
 
 </pre>
 
-## Customization
-The Netscaler address, password and login can be customized in provider.tf
-LB configuration (persistence type, etc) can be customized in resource.tf
-The location of the SSL cert key on the Netscaler appliance can be customized in the terraform.tfvars
 
 ## Experiment
 Change the number of backend services by adding / deleting entries in the backend_services list in terraform.tfvars.
