@@ -11,6 +11,8 @@ resource "netscaler_lbvserver" "generic_lb" {
   name = "${lookup(var.lb_config, "lbname")}"
   ipv46 = "${lookup(var.lb_config, "vip")}"
   port = "${lookup(var.lb_config, "port")}"
+  lbmethod = "ROUNDROBIN"
+  persistencetype = "COOKIEINSERT"
   servicetype = "${lookup(var.lb_config, "servicetype")}"
   sslcertkey = "${netscaler_sslcertkey.generic-cert.certkey}"
 }
