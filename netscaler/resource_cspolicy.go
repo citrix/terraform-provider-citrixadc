@@ -83,11 +83,11 @@ func createCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	_, uok := d.GetOk("url")
 	_, rok := d.GetOk("rule")
 
-	if lbok && !pok {
-		return fmt.Errorf("[ERROR] netscaler-provider: Priority needs to be specified if target lb vserver is specified")
+	if lbok && rok && !pok {
+		return fmt.Errorf("[ERROR] netscaler-provider: Priority needs to be specified if target lb vserver and rule is specified")
 	}
 	if !lbok && pok {
-		return fmt.Errorf("[ERROR] netscaler-provider: Priority needs to be specified if target lb vserver is specified")
+		return fmt.Errorf("[ERROR] netscaler-provider: Priority needs to be specified if target lb vserver is not specified")
 	}
 	if !lbok && !aok {
 		return fmt.Errorf("[ERROR] netscaler-provider: Action or targetlbvserver needs to be specified")
@@ -109,6 +109,9 @@ func createCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if rok && (uok || dok) {
 		return fmt.Errorf("[ERROR] netscaler-provider: Cannot specify both rule and domain or url ")
+	}
+	if (uok || dok) && pok {
+		return fmt.Errorf("[ERROR] netscaler-provider: Cannot specify both priority and domain or url ")
 	}
 
 	var cspolicyName string
