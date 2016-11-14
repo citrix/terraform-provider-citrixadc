@@ -12,13 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+PROVIDER_ONLY_PKGS=$(shell go list ./... | grep -v "/vendor/" | grep -v "tools")
+
 default: build 
+
+update:
+	go get ./...
+	godep update ./...
 
 build:
 	godep go build -o terraform-provider-netscaler .
 
 test:
-	godep go test -v .
+	TF_ACC=1 TF_LOG=INFO godep go test -v $(PROVIDER_ONLY_PKGS)
 
 plan:
 	@terraform plan

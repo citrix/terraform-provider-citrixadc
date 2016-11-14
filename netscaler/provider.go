@@ -16,6 +16,7 @@ limitations under the License.
 package netscaler
 
 import (
+	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
 )
@@ -24,7 +25,7 @@ type NetScalerNitroClient struct {
 	Username string
 	Password string
 	Endpoint string
-	client   *NitroClient
+	client   *netscaler.NitroClient
 }
 
 func Provider() terraform.ResourceProvider {
@@ -60,8 +61,13 @@ func providerSchema() map[string]*schema.Schema {
 
 func providerResources() map[string]*schema.Resource {
 	return map[string]*schema.Resource{
-		"netscaler_lb":  resourceNetScalerLB(),
-		"netscaler_svc": resourceNetScalerSvc(),
+		//"netscaler_lb":  resourceNetScalerLB(),
+		"netscaler_lbvserver":  resourceNetScalerLbvserver(),
+		"netscaler_service":    resourceNetScalerService(),
+		"netscaler_csvserver":  resourceNetScalerCsvserver(),
+		"netscaler_cspolicy":   resourceNetScalerCspolicy(),
+		"netscaler_sslcertkey": resourceNetScalerSslcertkey(),
+		"netscaler_lbmonitor":  resourceNetScalerLbmonitor(),
 	}
 }
 
@@ -71,7 +77,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		Password: d.Get("password").(string),
 		Endpoint: d.Get("endpoint").(string),
 	}
-	client := NewNitroClient(c.Endpoint, c.Username, c.Password)
+	client := netscaler.NewNitroClient(c.Endpoint, c.Username, c.Password)
 	c.client = client
 
 	return &c, nil

@@ -12,35 +12,91 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-provider "netscaler" {
-  username     = "nsroot"
-  password    = "nsroot"
-  endpoint = "http://10.71.136.250/"
-}
-
-resource "netscaler_lb" "my-lb-vserver" {
+resource "netscaler_lbvserver" "sample_lb" {
   name = "sample_lb"
-  vip = "10.71.136.150"
+  ipv46 = "10.71.136.150"
   port = 443
-  service_type = "SSL"
-  lb_method = "ROUNDROBIN"
-  persistence_type = "COOKIEINSERT"
+  servicetype = "SSL"
+  lbmethod = "ROUNDROBIN"
+  persistencetype = "COOKIEINSERT"
+  sslcertkey = "${netscaler_sslcertkey.foo-ssl-cert-2.certkey}"
 }
 
-resource "netscaler_lb" "my-lb-vserver2" {
+resource "netscaler_lbvserver" "sample_lb2" {
   name = "sample_lb2"
-  vip = "10.71.136.151"
+  ipv46 = "10.71.136.151"
+  servicetype = "SSL"
   port = 443
 }
 
-resource "netscaler_svc" "backend_1" {
-  lb = "${netscaler_lb.my-lb-vserver2.name}"
-  ip = "10.33.44.55"
+resource "netscaler_service" "backend_1" {
+  lbvserver = "${netscaler_lbvserver.sample_lb2.name}"
+  ip = "10.123.43.55"
+  servicetype = "HTTP"
   port = 80
+  lbmonitor = "${netscaler_lbmonitor.foo-monitor-2.monitorname}"
 }
 
-resource "netscaler_svc" "backend_2" {
-  lb = "${netscaler_lb.my-lb-vserver2.name}"
+resource "netscaler_service" "backend_2" {
+  lbvserver = "${netscaler_lbvserver.sample_lb2.name}"
   ip = "10.33.44.54"
+  servicetype = "HTTP"
   port = 80
+  clttimeout = 360
+  lbmonitor = "${netscaler_lbmonitor.foo-monitor.monitorname}"
+}
+
+resource "netscaler_csvserver" "foo-cs" {
+  name = "sample_cs"
+  ipv46 = "10.71.139.151"
+  servicetype = "SSL"
+  port = 443
+}
+
+resource "netscaler_cspolicy" "foo-cspolicy" {
+  policyname = "sample_cspolicy"
+  rule = "CLIENT.IP.SRC.SUBNET(24).EQ(10.227.84.0)"
+  csvserver = "${netscaler_csvserver.foo-cs.name}"
+  targetlbvserver = "${netscaler_lbvserver.sample_lb2.name}"
+  priority = 21
+}
+
+resource "netscaler_cspolicy" "foo-cspolicy2" {
+  policyname = "sample_cspolicy2"
+  rule = "CLIENT.IP.SRC.SUBNET(24).EQ(10.127.88.0)"
+  csvserver = "${netscaler_csvserver.foo-cs.name}"
+  targetlbvserver = "${netscaler_lbvserver.sample_lb2.name}"
+  priority = 11
+}
+
+resource "netscaler_sslcertkey" "foo-ssl-cert" {
+  certkey = "sample_ssl_cert"
+  cert = "/var/certs/server.crt"
+  key = "/var/certs/server.key"
+  expirymonitor = "ENABLED"
+  notificationperiod = 83
+}
+
+resource "netscaler_sslcertkey" "foo-ssl-cert-2" {
+  certkey = "sample_ssl_cert2"
+  cert = "/var/certs/server2.crt"
+  key = "/var/certs/server2.key"
+  expirymonitor = "ENABLED"
+  notificationperiod = 33
+}
+
+resource "netscaler_lbmonitor" "foo-monitor" {
+  monitorname = "sample_lb_monitor"
+  type = "HTTP"
+  interval = 350
+  resptimeout = 250
+}
+
+resource "netscaler_lbmonitor" "foo-monitor-2" {
+  monitorname = "sample_lb_monitor2"
+  type = "HTTP"
+  interval = 260
+  units3 = "MSEC"
+  resptimeout = 150
+  units4 = "MSEC"
 }

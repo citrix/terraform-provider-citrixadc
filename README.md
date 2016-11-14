@@ -4,7 +4,7 @@
 
 ## Description
 
-This project is a terraform custom provider for Citrix NetScaler. It uses the [Nitro API] (https://docs.citrix.com/en-us/netscaler/11/nitro-api.html) to create/configure simple LB configurations (`lb vserver` which is bound to a list of `service`)
+This project is a terraform custom provider for Citrix NetScaler. It uses the [Nitro API] (https://docs.citrix.com/en-us/netscaler/11/nitro-api.html) to create/configure LB configurations. 
 
 ## Requirement
 
@@ -31,83 +31,104 @@ The following arguments are supported.
 
 * `username` - This is the user name to access to NetScaler. Defaults to `nsroot` unless environment variable `NS_LOGIN` has been set
 * `password` - This is the password to access to NetScaler. Defaults to `nsroot` unless environment variable `NS_PASSWORD` has been set
-* `endpoint` - (Required) Nitro API endpoint in the form `http://<NS_IP>/`. Can be specified in environment variable `NS_UR`L
+* `endpoint` - (Required) Nitro API endpoint in the form `http://<NS_IP>/`. Can be specified in environment variable `NS_URL`
 
 The username, password and endpoint can be provided in environment variables `NS_LOGIN`, `NS_PASSWORD` and `NS_URL`. 
 
 ### Resource Configuration
 
-#### `netscaler_lb`
+#### `netscaler_lbvserver`
 
 ```
-resource "netscaler_lb" "foo" {
+resource "netscaler_lbvserver" "foo" {
   name = "sample_lb"
-  vip = "10.71.136.150"
+  ipv46 = "10.71.136.150"
   port = 443
-  service_type = "SSL"
-  lb_method = "ROUNDROBIN"
-  persistence_type = "COOKIEINSERT"
+  servicetype = "SSL"
+  lbmethod = "ROUNDROBIN"
+  persistencetype = "COOKIEINSERT"
+  sslcertkey = "${netscaler_sslcertkey.foo.certkey}"
 }
 ```
 
 ##### Argument Reference
-See <https://docs.citrix.com/en-us/netscaler/11-1/load-balancing/load-balancing-setup.html> for possible values for these arguments.
+See <https://docs.citrix.com/en-us/netscaler/11-1/nitro-api/nitro-rest/api-reference/configuration/load-balancing/lbvserver.html> for possible values for these arguments and for an exhaustive list of arguments. Additionally, you can specify the SSL `certkey` to be bound to this `lbvserver` using the `sslcertkey` parameter
 
-The following arguments are supported.
-
-* `name` - (Optional) name of the lb vserver in NetScaler
-* `vip` - (Required) The VIP for the lb vserver
-* `port` - (Required) Port e.g., 80.
-* `service_type` - (Optional) Usually `HTTP` or `SSL`. NetScaler will default to `HTTP`
-* `lb_method` - (Optional) Usually `LEASTCONNECTION` or `ROUNDROBIN`, `LEASTRESPONSETIME`. See NetScaler docs for more options
-* `persistence_type` - (Optional) Usually `COOKIEINSERT`. See NetScaler docs for more options
-
-#### `netscaler_svc`
+#### `netscaler_service`
 
 ```
-resource "netscaler_svc" "backend_1" {
-  lb = "${netscaler_lb.foo.name}"
+resource "netscaler_service" "backend_1" {
   ip = "10.33.44.55"
   port = 80
+  servicetype = "HTTP"
+  lbvserver = "${netscaler_lbvserver.foo.name}"
+  lbmonitor = "${netscaler_lbmonitor.foo.name}"
 }
 ```
+
 ##### Argument Reference
-See <https://docs.citrix.com/en-us/netscaler/11-1/load-balancing/load-balancing-setup.html> for possible values for these arguments.
-
-Each `netscaler_svc` models a NetScaler `service` object. The NetScaler docs have more values for service type etc.
-
-* `lb` - (Required) The name of the `lb vserver` to bind to. Usually you refer to a previously declared `lb vserver` in the same config, i.e., `${netscaler_lb.foolb.name}`
-* `ip` - (Required) IP address. 
-* `port` - (Required) Port
-* `service_type` - (Optional) This has to be compatible with the `service_type` declared in the `netscaler_lb`. Defaults to `HTTP`
+See <https://docs.citrix.com/en-us/netscaler/11-1/nitro-api/nitro-rest/api-reference/configuration/basic/service.html> for possible values for these arguments and for an exhaustive list of arguments. Additionally, you can specify the LB vserver  to be bound to this service ` using the `lbvserver` parameter, and the `lbmonitor` parameter specifies the LB monitor to be bound.
 
 
-##### For example
-
-Example 1:
+#### `netscaler_csvserver`
 
 ```
-resource "netscaler_lb" foolb" {
-  name = "sample_lb"
-  vip = "10.71.136.151"
+resource "netscaler_csvserver" "foo" {
+  name = "sample_cs"
+  ipv46 = "10.71.139.151"
+  servicetype = "SSL"
   port = 443
-  service_type = "SSL"
-}
-
-resource "netscaler_svc" "backend_1" {
-  lb = "${netscaler_lb.foolb.name}"
-  ip = "10.33.44.55"
-  port = 80
-}
-
-resource "netscaler_svc" "backend_2" {
-  lb = "${netscaler_lb.foolb.name}"
-  ip = "10.33.44.54"
-  port = 80
 }
 ```
 
+##### Argument Reference
+See <https://docs.citrix.com/en-us/netscaler/11-1/nitro-api/nitro-rest/api-reference/configuration/content-switching/csvserver.html> for possible values for these arguments and for an exhaustive list of arguments. Additionally, you can specify the SSL cert to be bound using the `sslcertkey` parameter
 
+
+#### `netscaler_sslcertkey`
+
+```
+resource "netscaler_sslcertkey" "foo" {
+  certkey = "sample_ssl_cert"
+  cert = "/var/certs/server.crt"
+  key = "/var/certs/server.key"
+  expirymonitor = "ENABLED"
+  notificationperiod = 90
+}
+```
+
+##### Argument Reference
+See <https://docs.citrix.com/en-us/netscaler/11-1/nitro-api/nitro-rest/api-reference/configuration/ssl/sslcertkey.html> for possible values for these arguments and for an exhaustive list of arguments. 
+
+
+#### `netscaler_cspolicy`
+
+```
+resource "netscaler_cspolicy" "foo" {
+  policyname = "sample_cspolicy"
+  url = "/cart/*"
+  csvserver = "${netscaler_csvserver.foo.name}"
+  targetlbvserver = "${netscaler_lbvserver.foo.name}"
+}
+```
+
+##### Argument Reference
+See <https://docs.citrix.com/en-us/netscaler/11-1/nitro-api/nitro-rest/api-reference/configuration/content-switching/cspolicy.html> for possible values for these arguments and for an exhaustive list of arguments. 
+
+
+#### `netscaler_lbmonitor`
+
+```
+resource "netscaler_lbmonitor" "foo" {
+  monitorname = "sample_lb_monitor"
+  type = "HTTP"
+  interval = 350
+  resptimeout = 250
+}
+```
+
+##### Argument Reference
+See <https://docs.citrix.com/en-us/netscaler/11-1/nitro-api/nitro-rest/api-reference/configuration/load-balancing/lbmonitor.html> for possible values for these arguments and for an exhaustive list of arguments. 
 
 ## Running
 ### Assumption
@@ -118,7 +139,7 @@ its configuration files, tfstate files, etc.
 1. Install `terraform` from <https://www.terraform.io/downloads.html>
 2. `go get -u github.com/hashicorp/terraform`
 3. Check out this code: `git clone https://<>`
-4. Build this code using `make`
+4. Build this code using `make build`
 5. Copy the resulting binary `terraform-provider-netscaler` to an appropriate location. [Configure](https://www.terraform.io/docs/plugins/basics.html) `.terraformrc` to use the `netscaler` provider. An example `.terraformrc`:
 
 ```
@@ -130,7 +151,6 @@ providers {
 6. Run `terraform` as usual 
 
 
+## Samples
+See the `examples` directory for various LB topologies that can be driven from this terraform provider.
 
-## Author
-
-[chiradeep](https://github.com/chiradeep)
