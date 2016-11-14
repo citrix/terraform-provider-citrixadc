@@ -8,7 +8,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"reflect"
 	"strings"
 	"text/template"
 )
@@ -55,21 +54,6 @@ func parseSchema(inputFile string) *Schema {
 
 }
 
-func getFieldNames(obj interface{}) map[string]string {
-	result := make(map[string]string)
-	t := reflect.TypeOf(obj).Elem()
-	for index := 0; index < t.NumField(); index++ {
-		field := t.Field(index)
-
-		name := strings.ToLower(field.Name)
-		typ := strings.Title(field.Type.Name())
-		if typ != "" {
-			result[name] = typ
-		}
-	}
-	return result
-}
-
 func getFieldNamesFromSchema(schema Schema) map[string]string {
 	result := make(map[string]string)
 	for key, value := range schema.Properties {
@@ -112,18 +96,6 @@ func getConfigFromSchema(pkg string, schema Schema, keyFieldsJSON string, boundK
 			return &cfg
 		}
 		cfg.KeyFieldsBound = boundKeyFieldValues
-	}
-	return &cfg
-}
-
-func getConfig(pkg string, tfName string, structName string, configObj interface{}) *Config {
-	cfg := Config{Package: pkg,
-		TfName:      tfName,
-		TfTitle:     structName,
-		TfID:        tfName + "Name",
-		StructName:  structName,
-		Fields:      getFieldNames(configObj),
-		BindingName: "",
 	}
 	return &cfg
 }
