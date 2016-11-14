@@ -27,4 +27,28 @@ Usually, a config object has a relation or dependency ("binding") on one or more
 ```
 
 The code is generated in the `netscaler` subdirectory. Use `make fmt` to format it and `make generate-test-build` to make sure it compiles.
-Copy the resulting netscaler/resource_<cfg>.go and netscaler/resource_<cfg>_test.go over to the resource directory and continue making modifications there.
+Copy the resulting netscaler/resource\_<cfg>.go and netscaler/resource\_<cfg>\_test.go over to the resource directory and continue making modifications there.
+
+
+## Using the generated code
+The generated code adds the config `schema` to the `terraform-netscaler-provider` by using the `readwrite` fields in the JSON schema. The mandatory fields for the NITRO API however are not determinable from the JSON schema and therefore the `Required` field is usually not set to `true`. If the developer knows this (e.g., from the documentation), then this can be changed.
+
+The `create` function is semi-complete: if there are more than one bindings or dependency (e.g, `cspolicy` is bound to `csvserver` and depends on `lbvserver`), then additional code and validation may have to be written. Make sure that the `SetId` call to TF is made only after all dependencies are successful.
+
+The `read` function is usually self-contained and complete.
+
+The `update` function is usually the trickiest since not all fields are updateable. Also, if the binding fields are updated in TF then the old binding has to be removed and the new binding has to be created. The pattern is
+ * determine if any fields have changed in the user-supplied TF config
+ * if the binding fields have changed, remove the bindings using the NITRO API
+ * update the config object if non-binding fields have changed
+ * if binding fields have changed, update with new bindings
+
+Make sure to return errors early.
+
+The `delete` function is usually complete, although sometimes the delete function expects additional parameters (other than the object id). See `resource_lbmonitor.go` for an example.
+
+The test code usually needs to be tweaked, for example if there is more than one dependency for the object, all dependencies have to be created first (see the bottom of the file for the test config).
+
+
+## TODO
+Generate update tests. Since the semantics vary the most between objects for update, this is a source of functional bugs
