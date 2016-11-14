@@ -157,26 +157,71 @@ func updateSslcertkeyFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	sslcertkeyName := d.Get("certkey").(string)
 
-	sslcertkey := ssl.Sslcertkey{
+	sslcertkeyUpdate := ssl.Sslcertkey{
 		Certkey: d.Get("certkey").(string),
 	}
+	sslcertkeyChange := ssl.Sslcertkey{
+		Certkey: d.Get("certkey").(string),
+	}
+	hasUpdate := false //depending on which field changed, we have to use Update or Change API
 	hasChange := false
 	if d.HasChange("expirymonitor") {
 		log.Printf("[DEBUG] netscaler-provider:  Expirymonitor has changed for sslcertkey %s, starting update", sslcertkeyName)
-		sslcertkey.Expirymonitor = d.Get("expirymonitor").(string)
-		hasChange = true
+		sslcertkeyUpdate.Expirymonitor = d.Get("expirymonitor").(string)
+		hasUpdate = true
 	}
 	if d.HasChange("notificationperiod") {
 		log.Printf("[DEBUG] netscaler-provider:  Notificationperiod has changed for sslcertkey %s, starting update", sslcertkeyName)
-		sslcertkey.Notificationperiod = d.Get("notificationperiod").(int)
+		sslcertkeyUpdate.Notificationperiod = d.Get("notificationperiod").(int)
+		hasUpdate = true
+	}
+	if d.HasChange("cert") {
+		log.Printf("[DEBUG] netscaler-provider:  cert has changed for sslcertkey %s, starting update", sslcertkeyName)
+		sslcertkeyChange.Cert = d.Get("cert").(string)
 		hasChange = true
 	}
-	sslcertkey.Expirymonitor = d.Get("expirymonitor").(string) //always expected by NITRO API
+	if d.HasChange("key") {
+		log.Printf("[DEBUG] netscaler-provider:  key has changed for sslcertkey %s, starting update", sslcertkeyName)
+		sslcertkeyChange.Key = d.Get("key").(string)
+		hasChange = true
+	}
+	if d.HasChange("password") {
+		log.Printf("[DEBUG] netscaler-provider:  password has changed for sslcertkey %s, starting update", sslcertkeyName)
+		sslcertkeyChange.Password = d.Get("password").(bool)
+		hasChange = true
+	}
+	if d.HasChange("fipskey") {
+		log.Printf("[DEBUG] netscaler-provider:  fipskey has changed for sslcertkey %s, starting update", sslcertkeyName)
+		sslcertkeyChange.Fipskey = d.Get("fipskey").(string)
+		hasChange = true
+	}
+	if d.HasChange("inform") {
+		log.Printf("[DEBUG] netscaler-provider:  inform has changed for sslcertkey %s, starting update", sslcertkeyName)
+		sslcertkeyChange.Inform = d.Get("inform").(string)
+		hasChange = true
+	}
+	if d.HasChange("passplain") {
+		log.Printf("[DEBUG] netscaler-provider:  passplain has changed for sslcertkey %s, starting update", sslcertkeyName)
+		sslcertkeyChange.Passplain = d.Get("passplain").(string)
+		hasChange = true
+	}
+	if d.HasChange("nodomaincheck") {
+		log.Printf("[DEBUG] netscaler-provider:  nodomaincheck has changed for sslcertkey %s, starting update", sslcertkeyName)
+		sslcertkeyChange.Nodomaincheck = d.Get("nodomaincheck").(bool)
+		hasChange = true
+	}
 
-	if hasChange {
-		_, err := client.UpdateResource(netscaler.Sslcertkey.Type(), sslcertkeyName, &sslcertkey)
+	if hasUpdate {
+		sslcertkeyUpdate.Expirymonitor = d.Get("expirymonitor").(string) //always expected by NITRO API
+		_, err := client.UpdateResource(netscaler.Sslcertkey.Type(), sslcertkeyName, &sslcertkeyUpdate)
 		if err != nil {
 			return fmt.Errorf("Error updating sslcertkey %s", sslcertkeyName)
+		}
+	}
+	if hasChange {
+		_, err := client.ChangeResource(netscaler.Sslcertkey.Type(), sslcertkeyName, &sslcertkeyChange)
+		if err != nil {
+			return fmt.Errorf("Error changing sslcertkey %s", sslcertkeyName)
 		}
 	}
 	return readSslcertkeyFunc(d, meta)

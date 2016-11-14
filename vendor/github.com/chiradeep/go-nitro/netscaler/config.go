@@ -65,6 +65,26 @@ func (c *NitroClient) UpdateResource(resourceType string, name string, resourceS
 	return name, nil
 }
 
+//ChangeResource updates a resource of supplied type and name (used for SSL objects)
+func (c *NitroClient) ChangeResource(resourceType string, name string, resourceStruct interface{}) (string, error) {
+
+	if c.ResourceExists(resourceType, name) == true {
+		nsResource := make(map[string]interface{})
+		nsResource[resourceType] = resourceStruct
+		resourceJSON, err := json.Marshal(nsResource)
+
+		log.Println("[DEBUG] go-nitro: ChangeResource: Resourcejson is " + string(resourceJSON))
+
+		body, err := c.changeResource(resourceType, name, resourceJSON)
+		if err != nil {
+			return "", fmt.Errorf("[ERROR] go-nitro: Failed to change resource of type %s, name=%s err=%s", resourceType, name, err)
+		}
+		_ = body
+	}
+
+	return name, nil
+}
+
 //DeleteResource deletes a resource of supplied type and name
 func (c *NitroClient) DeleteResource(resourceType string, resourceName string) error {
 
