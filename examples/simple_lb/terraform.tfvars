@@ -1,4 +1,4 @@
-lb_config = {
+vip_config = {
   lbname = "ProductionLB"
   vip = "10.22.22.22"
   servicetype = "HTTP"

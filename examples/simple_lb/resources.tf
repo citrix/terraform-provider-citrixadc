@@ -1,9 +1,9 @@
 
 resource "netscaler_lbvserver" "generic_lb" {
-  name = "${lookup(var.lb_config, "lbname")}"
-  ipv46 = "${lookup(var.lb_config, "vip")}"
-  port = "${lookup(var.lb_config, "port")}"
-  servicetype = "${lookup(var.lb_config, "servicetype")}"
+  name = "${lookup(var.vip_config, "lbname")}"
+  ipv46 = "${lookup(var.vip_config, "vip")}"
+  port = "${lookup(var.vip_config, "port")}"
+  servicetype = "${lookup(var.vip_config, "servicetype")}"
 }
 
 resource "netscaler_service" "backend" {
