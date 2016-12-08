@@ -130,7 +130,7 @@ resource "netscaler_lbmonitor" "foo" {
 ##### Argument Reference
 See <https://docs.citrix.com/en-us/netscaler/11-1/nitro-api/nitro-rest/api-reference/configuration/load-balancing/lbmonitor.html> for possible values for these arguments and for an exhaustive list of arguments. 
 
-## Running
+## Building
 ### Assumption
 * You have (some) experience with Terraform, the different provisioners and providers that come out of the box,
 its configuration files, tfstate files, etc.
@@ -138,9 +138,12 @@ its configuration files, tfstate files, etc.
 
 1. Install `terraform` from <https://www.terraform.io/downloads.html>
 2. `go get -u github.com/hashicorp/terraform`
-3. Check out this code: `git clone https://<>`
-4. Build this code using `make build`
-5. Copy the resulting binary `terraform-provider-netscaler` to an appropriate location. [Configure](https://www.terraform.io/docs/plugins/basics.html) `.terraformrc` to use the `netscaler` provider. An example `.terraformrc`:
+3. Install `godep` (<https://github.com/tools/godep>)
+4. Check out this code: `git clone https://<>`
+5. Build this code using `make build`
+
+## Running
+1. Copy the binary (either from the build or from the releases page) `terraform-provider-netscaler` to an appropriate location. [Configure](https://www.terraform.io/docs/plugins/basics.html) `.terraformrc` to use the `netscaler` provider. An example `.terraformrc`:
 
 ```
 providers {
@@ -148,7 +151,7 @@ providers {
 }
 ```
 
-6. Run `terraform` as usual 
+2. Run `terraform` as usual 
 
 
 ## Samples
