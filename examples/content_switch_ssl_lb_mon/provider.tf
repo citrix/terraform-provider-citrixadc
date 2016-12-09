@@ -1,3 +1,3 @@
 provider "netscaler" {
-    endpoint = "http://localhost:32774/"
+    endpoint = "http://localhost:32782/"
 }

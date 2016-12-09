@@ -43,23 +43,21 @@ resource "netscaler_lbvserver" "lb_catalog" {
 }
 
 
-resource "netscaler_service" "backend_cart" {
+resource "netscaler_servicegroup" "backend_cart" {
+  servicegroupname = "${lookup(var.backend_service_config_cart, "name")}"
   lbvserver = "${netscaler_lbvserver.lb_cart.name}"
   lbmonitor = "${netscaler_lbmonitor.cart_monitor.monitorname}"
-  count = "${length(var.backend_services_cart)}"
-  ip = "${element(var.backend_services_cart, count.index)}"
   servicetype = "${lookup(var.backend_service_config_cart, "servicetype")}"
-  port = "${lookup(var.backend_service_config_cart, "port")}"
   clttimeout = "${lookup(var.backend_service_config_cart, "client_timeout")}"
+  servicegroupmembers = "${var.backend_services_cart}"
 }
 
-resource "netscaler_service" "backend_catalog" {
+resource "netscaler_servicegroup" "backend_catalog" {
+  servicegroupname = "${lookup(var.backend_service_config_catalog, "name")}"
   lbvserver = "${netscaler_lbvserver.lb_catalog.name}"
   lbmonitor = "${netscaler_lbmonitor.catalog_monitor.monitorname}"
-  count = "${length(var.backend_services_catalog)}"
-  ip = "${element(var.backend_services_catalog, count.index)}"
+  servicegroupmembers = "${var.backend_services_catalog}"
   servicetype = "${lookup(var.backend_service_config_catalog, "servicetype")}"
-  port = "${lookup(var.backend_service_config_catalog, "port")}"
   clttimeout = "${lookup(var.backend_service_config_catalog, "client_timeout")}"
 }
 
