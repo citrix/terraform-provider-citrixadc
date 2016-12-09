@@ -1,16 +1,16 @@
 
-resource "netscaler_lbvserver" "generic_lb" {
-  name = "${lookup(var.vip_config, "lbname")}"
+resource "netscaler_lbvserver" "production_lb" {
+  name = "productionLB"
   ipv46 = "${lookup(var.vip_config, "vip")}"
-  port = "${lookup(var.vip_config, "port")}"
-  servicetype = "${lookup(var.vip_config, "servicetype")}"
+  port = "80"
+  servicetype = "HTTP"
 }
 
-resource "netscaler_service" "backend" {
-  lbvserver = "${netscaler_lbvserver.generic_lb.name}"
-  count = "${length(var.backend_services)}"
-  ip = "${element(var.backend_services, count.index)}"
-  servicetype = "${lookup(var.backend_service_config, "servicetype")}"
-  port = "${lookup(var.backend_service_config, "port")}"
+resource "netscaler_servicegroup" "backend" {
+  servicegroupname = "productionBackend"
+  lbvserver = "${netscaler_lbvserver.production_lb.name}"
+  servicetype = "HTTP"
+  clttimeout = "${lookup(var.backend_service_config, "clttimeout")}"
+  servicegroupmembers = "${var.backend_services}"
 }
 

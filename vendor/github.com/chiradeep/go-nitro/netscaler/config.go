@@ -26,21 +26,18 @@ import (
 //AddResource adds a resource of supplied type and name
 func (c *NitroClient) AddResource(resourceType string, name string, resourceStruct interface{}) (string, error) {
 
-	if c.ResourceExists(resourceType, name) == false {
+	nsResource := make(map[string]interface{})
+	nsResource[resourceType] = resourceStruct
 
-		nsResource := make(map[string]interface{})
-		nsResource[resourceType] = resourceStruct
+	resourceJSON, err := json.Marshal(nsResource)
 
-		resourceJSON, err := json.Marshal(nsResource)
+	log.Println("[DEBUG] go-nitro: Resourcejson is " + string(resourceJSON))
 
-		log.Println("[DEBUG] go-nitro: Resourcejson is " + string(resourceJSON))
-
-		body, err := c.createResource(resourceType, resourceJSON)
-		if err != nil {
-			return "", fmt.Errorf("[ERROR] go-nitro: Failed to create resource of type %s, name=%s, err=%s", resourceType, name, err)
-		}
-		_ = body
+	body, err := c.createResource(resourceType, resourceJSON)
+	if err != nil {
+		return "", fmt.Errorf("[ERROR] go-nitro: Failed to create resource of type %s, name=%s, err=%s", resourceType, name, err)
 	}
+	_ = body
 
 	return name, nil
 }

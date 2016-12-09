@@ -10,7 +10,7 @@ variable "backend_service_config" {
 
 
 variable "backend_services" {
-    description = "The list of backend services (ip addresses)"
+    description = "The list of backend services (ip address:port list)"
     type = "list"
 }
 

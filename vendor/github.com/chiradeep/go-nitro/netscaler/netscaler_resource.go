@@ -124,7 +124,7 @@ func (c *NitroClient) doHTTPRequest(method string, url string, bytes *bytes.Buff
 func (c *NitroClient) createResource(resourceType string, resourceJSON []byte) ([]byte, error) {
 	log.Println("[DEBUG] go-nitro: Creating resource of type ", resourceType)
 
-	url := c.url + resourceType
+	url := c.url + resourceType + "?idempotent=yes"
 
 	return c.doHTTPRequest("POST", url, bytes.NewBuffer(resourceJSON), createResponseHandler)
 

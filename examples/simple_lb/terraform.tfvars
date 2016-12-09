@@ -1,18 +1,14 @@
 vip_config = {
-  lbname = "ProductionLB"
   vip = "10.22.22.22"
-  servicetype = "HTTP"
-  port = 80
 }
 
 backend_service_config = {
-  servicetype = "HTTP"
-  port = 8080
+   clttimeout = 40
 }
 
 backend_services = [
-  "172.33.33.33",
-  "172.33.44.33",
-  "172.33.44.34",
-  "172.33.44.35",
+  "172.33.33.33:8080",
+  "172.33.44.33:80",
+  "172.33.44.35:80",
+  "172.33.44.34:80",
 ]
