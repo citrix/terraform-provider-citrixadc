@@ -100,3 +100,11 @@ resource "netscaler_lbmonitor" "foo-monitor-2" {
   resptimeout = 150
   units4 = "MSEC"
 }
+
+resource "netscaler_servicegroup" "backend_group" {
+  servicegroupname = "backend_group_1"
+  lbvserver = "${netscaler_lbvserver.sample_lb2.name}"
+  servicetype = "HTTP"
+  lbmonitor = "${netscaler_lbmonitor.foo-monitor.monitorname}"
+  servicegroupmembers = ["172.20.0.20:200:25","172.20.0.101:80:10", "172.20.0.9:8080:20", "172.20.0.10:80:40"]
+}

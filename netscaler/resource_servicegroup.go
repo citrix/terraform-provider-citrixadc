@@ -9,6 +9,8 @@ import (
 
 	"fmt"
 	"log"
+	"strconv"
+	"strings"
 )
 
 func resourceNetScalerServicegroup() *schema.Resource {
@@ -253,6 +255,12 @@ func resourceNetScalerServicegroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"servicegroupmembers": &schema.Schema{
+				Optional: true,
+				Type:     schema.TypeSet,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
+			},
 		},
 	}
 }
@@ -283,6 +291,13 @@ func createServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("[ERROR] netscaler-provider: Specified lb vserver does not exist on netscaler!")
 		}
 	}
+
+	var groupmembers []string
+	v, gok := d.GetOk("servicegroupmembers")
+	if gok {
+		groupmembers = expandStringList(v.(*schema.Set).List())
+	}
+
 	servicegroup := basic.Servicegroup{
 		Appflowlog:         d.Get("appflowlog").(string),
 		Autoscale:          d.Get("autoscale").(string),
@@ -345,7 +360,7 @@ func createServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 		err = client.BindResource(netscaler.Lbvserver.Type(), lbvserverName, netscaler.Servicegroup.Type(), servicegroupName, &binding)
 		if err != nil {
 			log.Printf("[ERROR] netscaler-provider:  Failed to bind servicegroup %s to lbvserver %s", servicegroupName, lbvserverName)
-			err2 := client.DeleteResource(netscaler.Service.Type(), servicegroupName)
+			err2 := client.DeleteResource(netscaler.Servicegroup.Type(), servicegroupName)
 			if err2 != nil {
 				log.Printf("[ERROR] netscaler-provider:  Failed to delete servicegroup %s after bind to lb vserver failed", servicegroupName)
 				return fmt.Errorf("[ERROR] netscaler-provider:  Failed to delete servicegroup %s after bind to lbvserver failed", servicegroupName)
@@ -357,14 +372,14 @@ func createServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 	if mok { //lbmonitor is specified
 		lbmonitorName := d.Get("lbmonitor").(string)
 		binding := lb.Lbmonitorservicebinding{
-			Monitorname: lbmonitorName,
-			Servicename: servicegroupName,
+			Monitorname:      lbmonitorName,
+			Servicegroupname: servicegroupName,
 		}
 		log.Printf("[INFO] netscaler-provider:  Binding servicegroup %s to lbmonitor %s", servicegroupName, lbmonitorName)
 		err = client.BindResource(netscaler.Lbmonitor.Type(), lbmonitorName, netscaler.Servicegroup.Type(), servicegroupName, &binding)
 		if err != nil {
 			log.Printf("[ERROR] netscaler-provider:  Failed to bind servicegroup %s to lbmonitor %s", servicegroupName, lbmonitorName)
-			err2 := client.DeleteResource(netscaler.Service.Type(), servicegroupName)
+			err2 := client.DeleteResource(netscaler.Servicegroup.Type(), servicegroupName)
 			if err2 != nil {
 				log.Printf("[ERROR] netscaler-provider:  Failed to delete servicegroup %s after bind to lbmonitor failed", servicegroupName)
 				return fmt.Errorf("[ERROR] netscaler-provider:  Failed to delete servicegroup %s after bind to lbmonitor failed", servicegroupName)
@@ -373,12 +388,84 @@ func createServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	if gok { //servicegroupmembers is specified
+		createServicegroupMemberBindings(client, servicegroupName, groupmembers)
+	}
+
 	d.SetId(servicegroupName)
 
 	err = readServicegroupFunc(d, meta)
 	if err != nil {
 		log.Printf("[ERROR] netscaler-provider: ?? we just created this servicegroup but we can't read it ?? %s", servicegroupName)
 		return nil
+	}
+	return nil
+}
+
+func createServicegroupMemberBindings(client *netscaler.NitroClient, servicegroupName string, groupmembers []string) error {
+	for _, member := range groupmembers {
+		//format is ip:port:weight
+		parts := strings.Split(member, ":")
+		var ip string
+		var port, weight int
+		ip = parts[0]
+		if len(parts) < 2 {
+			log.Printf("[WARN] netscaler-provider:  servicgroupmembers has invalid member: port not specified:%s", member)
+			//TODO: take it from memberport
+			continue
+		}
+		port, err := strconv.Atoi(parts[1])
+		if err != nil {
+			log.Printf("[WARN] netscaler-provider:  servicgroupmembers has invalid port: not an integer: %s", parts[1])
+			continue
+		}
+		weight = -1
+		if len(parts) > 2 {
+			weight, err = strconv.Atoi(parts[2])
+			if err != nil {
+				log.Printf("[WARN] netscaler-provider:  servicgroupmembers has invalid weight: not an integer:%s", parts[2])
+			}
+		}
+		binding := basic.Servicegroupservicegroupmemberbinding{
+			Servicegroupname: servicegroupName,
+			Ip:               ip,
+			Port:             port,
+		}
+		if weight > -1 {
+			binding.Weight = weight
+		}
+		log.Printf("[INFO] netscaler-provider:  Binding servicegroup %s to ip %s", servicegroupName, ip)
+		_, err = client.AddResource(netscaler.Servicegroup_servicegroupmember_binding.Type(), servicegroupName, &binding)
+		if err != nil {
+			log.Printf("[ERROR] netscaler-provider:  Failed to bind servicegroup %s to ip %s", servicegroupName, ip)
+			continue //TODO: should be break here?
+		}
+
+	}
+	return nil
+}
+
+func removeServicegroupMemberBindings(client *netscaler.NitroClient, servicegroupName string, groupmembers []string) error {
+	for _, member := range groupmembers {
+		//format is ip:port:weight
+		parts := strings.Split(member, ":")
+		var ip, port string
+		ip = parts[0]
+		if len(parts) < 2 {
+			log.Printf("[WARN] netscaler-provider:  servicgroupmembers has invalid member: port not specified:%s", member)
+			//TODO: take it from memberport
+			continue
+		}
+		port = parts[1]
+		log.Printf("[INFO] netscaler-provider:  UnBinding servicegroup %s from ip %s", servicegroupName, ip)
+		args := make([]string, 1, 1)
+		args[0] = fmt.Sprintf("ip:%s,port:%s", ip, port)
+		err := client.DeleteResourceWithArgs(netscaler.Servicegroup_servicegroupmember_binding.Type(), servicegroupName, args)
+		if err != nil {
+			log.Printf("[ERROR] netscaler-provider:  Failed to unbind servicegroup %s from ip %s", servicegroupName, ip)
+			continue //TODO: should be break here?
+		}
+
 	}
 	return nil
 }
@@ -457,6 +544,7 @@ func updateServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 	hasChange := false
 	lbvserverChanged := false
 	lbmonitorChanged := false
+	servicegroupmembersChanged := false
 
 	if d.HasChange("appflowlog") {
 		log.Printf("[DEBUG]  netscaler-provider: Appflowlog has changed for servicegroup %s, starting update", servicegroupName)
@@ -691,6 +779,11 @@ func updateServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] netscaler-provider:  lb monitor has changed for servicegroup %s, starting update", servicegroupName)
 		lbmonitorChanged = true
 	}
+	if d.HasChange("servicegroupmembers") {
+		log.Printf("[DEBUG] netscaler-provider:  servicegroup membership has changed for servicegroup %s, starting update", servicegroupName)
+		lbmonitorChanged = true
+		servicegroupmembersChanged = true
+	}
 
 	lbvserverName := d.Get("lbvserver").(string)
 	if lbvserverChanged {
@@ -715,7 +808,7 @@ func updateServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 		oldLbmonitor, _ := d.GetChange("lbmonitor")
 		oldLbmonitorName := oldLbmonitor.(string)
 		if oldLbmonitorName != "" {
-			err := client.UnbindResource(netscaler.Lbmonitor.Type(), oldLbmonitorName, netscaler.Service.Type(), servicegroupName, "servicename")
+			err := client.UnbindResource(netscaler.Lbmonitor.Type(), oldLbmonitorName, netscaler.Servicegroup.Type(), servicegroupName, "servicegroupname")
 			if err != nil {
 				return fmt.Errorf("[ERROR] netscaler-provider: Error unbinding lbmonitor from servicegroup %s", oldLbmonitorName)
 			}
@@ -738,7 +831,7 @@ func updateServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 			Servicegroupname: servicegroupName,
 		}
 		log.Printf("[INFO] netscaler-provider:  Binding vserver %s to servicegroup %s", lbvserverName, servicegroupName)
-		err := client.BindResource(netscaler.Lbvserver.Type(), lbvserverName, netscaler.Service.Type(), servicegroupName, &binding)
+		err := client.BindResource(netscaler.Lbvserver.Type(), lbvserverName, netscaler.Servicegroup.Type(), servicegroupName, &binding)
 		if err != nil {
 			log.Printf("[ERROR] netscaler-provider:  Failed to bind  lbvserver %s to servicegroup %s", lbvserverName, servicegroupName)
 			return fmt.Errorf("[ERROR] netscaler-provider:  Failed to bind lb vserver %s to servicegroup %s", lbvserverName, servicegroupName)
@@ -754,13 +847,31 @@ func updateServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 			Servicegroupname: servicegroupName,
 		}
 		log.Printf("[INFO] netscaler-provider:  Binding monitor %s to servicegroup %s", lbmonitorName, servicegroupName)
-		err := client.BindResource(netscaler.Lbmonitor.Type(), lbmonitorName, netscaler.Service.Type(), servicegroupName, &binding)
+		err := client.BindResource(netscaler.Lbmonitor.Type(), lbmonitorName, netscaler.Servicegroup.Type(), servicegroupName, &binding)
 		if err != nil {
 			log.Printf("[ERROR] netscaler-provider:  Failed to bind  lbmonitor %s to servicegroup %s", lbmonitorName, servicegroupName)
 			return fmt.Errorf("[ERROR] netscaler-provider:  Failed to bind lb monitor %s to servicegroup %s", lbmonitorName, servicegroupName)
 		}
 		log.Printf("[DEBUG] netscaler-provider: new lbmonitor has been bound to servicegroup  lbmonitor %s servicegroup %s", lbmonitorName, servicegroupName)
 	}
+
+	if servicegroupmembersChanged {
+		o, n := d.GetChange("servicegroupmembers")
+		os := o.(*schema.Set)
+		ns := n.(*schema.Set)
+
+		remove := expandStringList(os.Difference(ns).List())
+		add := expandStringList(ns.Difference(os).List())
+
+		if len(remove) > 0 {
+			removeServicegroupMemberBindings(client, servicegroupName, remove)
+		}
+		if len(add) > 0 {
+			createServicegroupMemberBindings(client, servicegroupName, add)
+		}
+
+	}
+
 	return readServicegroupFunc(d, meta)
 }
 
@@ -776,4 +887,14 @@ func deleteServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 	d.SetId("")
 
 	return nil
+}
+
+// Takes the result of flatmap.Expand for an array of strings
+// and returns a []string
+func expandStringList(configured []interface{}) []string {
+	vs := make([]string, 0, len(configured))
+	for _, v := range configured {
+		vs = append(vs, v.(string))
+	}
+	return vs
 }
