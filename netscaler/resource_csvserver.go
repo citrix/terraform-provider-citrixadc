@@ -458,6 +458,21 @@ func readCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("td", data["td"])
 	d.Set("vipheader", data["vipheader"])
 
+	bindings, err := client.FindAllBoundResources(netscaler.Sslvserver.Type(), csvserverName, netscaler.Sslcertkey.Type())
+	if err != nil {
+		log.Printf("[WARN] netscaler-provider: csvserver binding to ssl error %s", csvserverName)
+		return nil
+	}
+	var boundCert string
+	for _, binding := range bindings {
+		cert, ok := binding["certkeyname"]
+		if ok {
+			boundCert = cert.(string)
+			break
+		}
+	}
+	d.Set("sslcertkey", boundCert)
+
 	return nil
 
 }
