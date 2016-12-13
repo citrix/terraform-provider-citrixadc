@@ -690,6 +690,21 @@ func readLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("vipheader", data["vipheader"])
 	d.Set("weight", data["weight"])
 
+	bindings, err := client.FindAllBoundResources(netscaler.Sslvserver.Type(), lbvserverName, netscaler.Sslcertkey.Type())
+	if err != nil {
+		log.Printf("[WARN] netscaler-provider: lbvserver binding to ssl error %s", lbvserverName)
+		return nil
+	}
+	var boundCert string
+	for _, binding := range bindings {
+		cert, ok := binding["certkeyname"]
+		if ok {
+			boundCert = cert.(string)
+			break
+		}
+	}
+	d.Set("sslcertkey", boundCert)
+
 	return nil
 
 }
