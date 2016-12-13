@@ -481,7 +481,15 @@ func readServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
+	//read bound service group members. Note that there is no type defined called netscaler.Servicegroupmember.Type()
 	boundMembers, err := client.FindAllBoundResources(netscaler.Servicegroup.Type(), servicegroupName, "servicegroupmember")
+	if err != nil {
+		log.Printf("[WARN] netscaler-provider: Clearing servicegroup state %s", servicegroupName)
+		d.SetId("")
+		return nil
+	}
+	//read bound vserver.
+	vserverBindings, err := client.FindResourceArray(netscaler.Servicegroupbindings.Type(), servicegroupName)
 	if err != nil {
 		log.Printf("[WARN] netscaler-provider: Clearing servicegroup state %s", servicegroupName)
 		d.SetId("")
@@ -538,7 +546,6 @@ func readServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 	//boundMembers is of type []map[string]interface{}
 	servicegroupMembers := make([]string, 0, len(boundMembers))
 	for _, member := range boundMembers {
-		log.Printf("[DEBUG]  netscaler-provider: readServicegroup: member=%v", member)
 		ip := member["ip"].(string)
 		port := member["port"].(float64) //TODO: why is this not int?
 		weight := member["weight"].(string)
@@ -547,6 +554,17 @@ func readServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 		servicegroupMembers = append(servicegroupMembers, strmember)
 	}
 	d.Set("servicegroupmembers", servicegroupMembers)
+
+	//vserverBindings is of type []map[string]interface{}
+	var boundVserver string
+	for _, vserver := range vserverBindings {
+		vs, ok := vserver["vservername"]
+		if ok {
+			boundVserver = vs.(string)
+			break
+		}
+	}
+	d.Set("lbvserver", boundVserver)
 
 	return nil
 
