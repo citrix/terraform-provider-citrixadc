@@ -185,6 +185,22 @@ func readCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("rule", data["rule"])
 	d.Set("url", data["url"])
 
+	//read the csvserver binding and update
+	bindings, err := client.FindAllBoundResources(netscaler.Cspolicy.Type(), cspolicyName, netscaler.Csvserver.Type())
+	if err != nil {
+		log.Printf("[WARN] netscaler-provider: cspolicy binding to csvserver error %s", cspolicyName)
+		return nil
+	}
+	var boundCsvserver string
+	for _, binding := range bindings {
+		csv, ok := binding["domain"]
+		if ok {
+			boundCsvserver = csv.(string)
+			break
+		}
+	}
+	d.Set("csvserver", boundCsvserver)
+
 	return nil
 
 }
