@@ -481,6 +481,13 @@ func readServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
+	boundMembers, err := client.FindAllBoundResources(netscaler.Servicegroup.Type(), servicegroupName, "servicegroupmember")
+	if err != nil {
+		log.Printf("[WARN] netscaler-provider: Clearing servicegroup state %s", servicegroupName)
+		d.SetId("")
+		return nil
+	}
+
 	d.Set("servicegroupname", data["servicegroupname"])
 	d.Set("appflowlog", data["appflowlog"])
 	d.Set("autoscale", data["autoscale"])
@@ -527,6 +534,19 @@ func readServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("useproxyport", data["useproxyport"])
 	d.Set("usip", data["usip"])
 	d.Set("weight", data["weight"])
+
+	//boundMembers is of type []map[string]interface{}
+	servicegroupMembers := make([]string, 0, len(boundMembers))
+	for _, member := range boundMembers {
+		log.Printf("[DEBUG]  netscaler-provider: readServicegroup: member=%v", member)
+		ip := member["ip"].(string)
+		port := member["port"].(float64) //TODO: why is this not int?
+		weight := member["weight"].(string)
+		strmember := fmt.Sprintf("%s:%.0f:%s", ip, port, weight)
+		log.Printf("[DEBUG]  netscaler-provider: readServicegroup: member=%s", strmember)
+		servicegroupMembers = append(servicegroupMembers, strmember)
+	}
+	d.Set("servicegroupmembers", servicegroupMembers)
 
 	return nil
 
