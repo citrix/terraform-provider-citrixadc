@@ -407,6 +407,21 @@ func readServiceFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
+	//read bound vserver.
+	vserverBindings, err := client.FindResourceArray(netscaler.Svcbindings.Type(), serviceName)
+	if err != nil {
+		log.Printf("[WARN] netscaler-provider: Clearing service state %s", serviceName)
+		d.SetId("")
+		return nil
+	}
+	//read bound lb monitor.
+	boundMonitors, err := client.FindAllBoundResources(netscaler.Service.Type(), serviceName, netscaler.Lbmonitor.Type())
+	if err != nil {
+		//This is actually OK in most cases
+		log.Printf("[WARN] netscaler-provider: Clearing servicestate %s", serviceName)
+		d.SetId("")
+		return nil
+	}
 	d.Set("name", data["name"])
 	d.Set("accessdown", data["accessdown"])
 	d.Set("all", data["all"])
@@ -458,6 +473,26 @@ func readServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("useproxyport", data["useproxyport"])
 	d.Set("usip", data["usip"])
 	d.Set("weight", data["weight"])
+
+	var boundVserver string
+	for _, vserver := range vserverBindings {
+		vs, ok := vserver["vservername"]
+		if ok {
+			boundVserver = vs.(string)
+			break
+		}
+	}
+	d.Set("lbvserver", boundVserver)
+
+	var boundMonitor string
+	for _, monitor := range boundMonitors {
+		mon, ok := monitor["monitor_name"]
+		if ok {
+			boundMonitor = mon.(string)
+			break
+		}
+	}
+	d.Set("lbmonitor", boundMonitor)
 
 	return nil
 
