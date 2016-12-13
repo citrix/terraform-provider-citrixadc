@@ -495,6 +495,14 @@ func readServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
+	//read bound lb monitor.
+	boundMonitors, err := client.FindAllBoundResources(netscaler.Servicegroup.Type(), servicegroupName, netscaler.Lbmonitor.Type())
+	if err != nil {
+		//This is actually OK in most cases
+		log.Printf("[WARN] netscaler-provider: Clearing servicegroup state %s", servicegroupName)
+		d.SetId("")
+		return nil
+	}
 
 	d.Set("servicegroupname", data["servicegroupname"])
 	d.Set("appflowlog", data["appflowlog"])
@@ -550,7 +558,6 @@ func readServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 		port := member["port"].(float64) //TODO: why is this not int?
 		weight := member["weight"].(string)
 		strmember := fmt.Sprintf("%s:%.0f:%s", ip, port, weight)
-		log.Printf("[DEBUG]  netscaler-provider: readServicegroup: member=%s", strmember)
 		servicegroupMembers = append(servicegroupMembers, strmember)
 	}
 	d.Set("servicegroupmembers", servicegroupMembers)
@@ -565,6 +572,16 @@ func readServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 	d.Set("lbvserver", boundVserver)
+
+	var boundMonitor string
+	for _, monitor := range boundMonitors {
+		mon, ok := monitor["monitor_name"]
+		if ok {
+			boundMonitor = mon.(string)
+			break
+		}
+	}
+	d.Set("lbmonitor", boundMonitor)
 
 	return nil
 

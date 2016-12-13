@@ -171,6 +171,30 @@ func (c *NitroClient) ResourceExists(resourceType string, resourceName string) b
 	return true
 }
 
+//FindResourceArray returns the config of the supplied resource name and type if it exists. Use when the resource to be returned is an array
+func (c *NitroClient) FindResourceArray(resourceType string, resourceName string) ([]map[string]interface{}, error) {
+	var data map[string]interface{}
+	result, err := c.listResource(resourceType, resourceName)
+	if err != nil {
+		log.Printf("[WARN] go-nitro: FindResourceArray: No %s %s found", resourceType, resourceName)
+		return nil, fmt.Errorf("[INFO] go-nitro: FindResourceArray: No resource %s of type %s found", resourceName, resourceType)
+	}
+	if err = json.Unmarshal(result, &data); err != nil {
+		log.Println("[ERROR] go-nitro: FindResourceArray: Failed to unmarshal Netscaler Response!")
+		return nil, fmt.Errorf("[ERROR] go-nitro: FindResourceArray: Failed to unmarshal Netscaler Response:resource %s of type %s", resourceName, resourceType)
+	}
+	if data[resourceType] == nil {
+		log.Printf("[WARN] go-nitro: FindResourceArray No %s type with name %s found", resourceType, resourceName)
+		return nil, fmt.Errorf("[INFO] go-nitro: FindResourceArray: No resource %s of type %s found", resourceName, resourceType)
+	}
+	resources := data[resourceType].([]interface{})
+	ret := make([]map[string]interface{}, len(resources), len(resources))
+	for i, v := range resources {
+		ret[i] = v.(map[string]interface{})
+	}
+	return ret, nil
+}
+
 //FindResource returns the config of the supplied resource name and type if it exists
 func (c *NitroClient) FindResource(resourceType string, resourceName string) (map[string]interface{}, error) {
 	var data map[string]interface{}
@@ -275,10 +299,12 @@ func (c *NitroClient) FindAllBoundResources(resourceType string, resourceName st
 		return nil, fmt.Errorf("[ERROR] go-nitro: FindAllBoundResources: Failed to unmarshal Netscaler Response!, err=%s", err)
 	}
 	bindingType := fmt.Sprintf("%s_%s_binding", resourceType, boundResourceType)
-	if data[bindingType] == nil {
-		return nil, fmt.Errorf("[ERROR] go-nitro: No %s %s to %s  binding found", resourceType, resourceName, boundResourceType)
+	binding, ok := data[bindingType]
+	if !ok || binding == nil {
+		return make([]map[string]interface{}, 0, 0), nil
 	}
-	resources := data[bindingType].([]interface{})
+
+	resources := binding.([]interface{})
 	ret := make([]map[string]interface{}, len(resources), len(resources))
 	for i, v := range resources {
 		ret[i] = v.(map[string]interface{})
