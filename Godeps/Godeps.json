@@ -138,15 +138,15 @@
 		},
 		{
 			"ImportPath": "github.com/chiradeep/go-nitro/config/basic",
-			"Rev": "8b58cc89c393dc73eb8079665e97355d2ccf8b19"
+			"Rev": "3af2acb4f6073c2f22beabe563c8c8095706a99b"
 		},
 		{
 			"ImportPath": "github.com/chiradeep/go-nitro/config/lb",
-			"Rev": "8b58cc89c393dc73eb8079665e97355d2ccf8b19"
+			"Rev": "3af2acb4f6073c2f22beabe563c8c8095706a99b"
 		},
 		{
 			"ImportPath": "github.com/chiradeep/go-nitro/netscaler",
-			"Rev": "8b58cc89c393dc73eb8079665e97355d2ccf8b19"
+			"Rev": "3af2acb4f6073c2f22beabe563c8c8095706a99b"
 		},
 		{
 			"ImportPath": "github.com/davecgh/go-spew/spew",

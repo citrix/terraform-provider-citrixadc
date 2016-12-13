@@ -183,7 +183,8 @@ func (c *NitroClient) FindResourceArray(resourceType string, resourceName string
 		log.Println("[ERROR] go-nitro: FindResourceArray: Failed to unmarshal Netscaler Response!")
 		return nil, fmt.Errorf("[ERROR] go-nitro: FindResourceArray: Failed to unmarshal Netscaler Response:resource %s of type %s", resourceName, resourceType)
 	}
-	if data[resourceType] == nil {
+	rsrcs, ok := data[resourceType]
+	if !ok || rsrcs == nil {
 		log.Printf("[WARN] go-nitro: FindResourceArray No %s type with name %s found", resourceType, resourceName)
 		return nil, fmt.Errorf("[INFO] go-nitro: FindResourceArray: No resource %s of type %s found", resourceName, resourceType)
 	}
@@ -201,15 +202,16 @@ func (c *NitroClient) FindResource(resourceType string, resourceName string) (ma
 	result, err := c.listResource(resourceType, resourceName)
 	if err != nil {
 		log.Printf("[WARN] go-nitro: FindResource: No %s %s found", resourceType, resourceName)
-		return data, fmt.Errorf("[INFO] go-nitro: FindResource: No resource %s of type %s found", resourceName, resourceType)
+		return nil, fmt.Errorf("[INFO] go-nitro: FindResource: No resource %s of type %s found", resourceName, resourceType)
 	}
 	if err = json.Unmarshal(result, &data); err != nil {
 		log.Println("[ERROR] go-nitro: FindResource: Failed to unmarshal Netscaler Response!")
-		return data, fmt.Errorf("[ERROR] go-nitro: FindResource: Failed to unmarshal Netscaler Response:resource %s of type %s", resourceName, resourceType)
+		return nil, fmt.Errorf("[ERROR] go-nitro: FindResource: Failed to unmarshal Netscaler Response:resource %s of type %s", resourceName, resourceType)
 	}
-	if data[resourceType] == nil {
+	rsrc, ok := data[resourceType]
+	if !ok || rsrc == nil {
 		log.Printf("[WARN] go-nitro: FindResource No %s type with name %s found", resourceType, resourceName)
-		return data, fmt.Errorf("[INFO] go-nitro: FindResource: No resource %s of type %s found", resourceName, resourceType)
+		return nil, fmt.Errorf("[INFO] go-nitro: FindResource: No resource %s of type %s found", resourceName, resourceType)
 	}
 	resource := data[resourceType].([]interface{})[0] //only one resource obviously
 
@@ -228,7 +230,8 @@ func (c *NitroClient) FindAllResources(resourceType string) ([]map[string]interf
 		log.Println("[ERROR] go-nitro: FindAllResources: Failed to unmarshal Netscaler Response!")
 		return nil, fmt.Errorf("[ERROR] go-nitro: FindAllResources: Failed to unmarshal Netscaler Response: of type %s", resourceType)
 	}
-	if data[resourceType] == nil {
+	rsrcs, ok := data[resourceType]
+	if !ok || rsrcs == nil {
 		log.Printf("[INFO] go-nitro: FindAllResources: No %s found", resourceType)
 		return make([]map[string]interface{}, 0, 0), nil
 	}
@@ -255,7 +258,9 @@ func (c *NitroClient) ResourceBindingExists(resourceType string, resourceName st
 		log.Println("[ERROR] go-nitro: ResourceBindingExists: Failed to unmarshal Netscaler Response!")
 		return false
 	}
-	if data[fmt.Sprintf("%s_%s_binding", resourceType, boundResourceType)] == nil {
+	binding := fmt.Sprintf("%s_%s_binding", resourceType, boundResourceType)
+	rsrc, ok := data[binding]
+	if !ok || rsrc == nil {
 		return false
 	}
 
@@ -277,9 +282,11 @@ func (c *NitroClient) FindBoundResource(resourceType string, resourceName string
 		return nil, fmt.Errorf("[ERROR] go-nitro: FindBoundResource: Failed to unmarshal Netscaler Response!, err=%s", err)
 	}
 	bindingType := fmt.Sprintf("%s_%s_binding", resourceType, boundResourceType)
-	if data[bindingType] == nil {
+	rsrc, ok := data[bindingType]
+	if !ok || rsrc == nil {
 		return nil, fmt.Errorf("[WARN] go-nitro: FindBoundResource: No %s %s to %s %s binding found", resourceType, resourceName, boundResourceType, boundResourceFilterValue)
 	}
+
 	resource := data[bindingType].([]interface{})[0] //only one resource obviously
 	return resource.(map[string]interface{}), nil
 
@@ -352,10 +359,12 @@ func (c *NitroClient) ListEnabledFeatures() ([]string, error) {
 		log.Println("[ERROR] go-nitro: FindAllBoundResources: Failed to unmarshal Netscaler Response!")
 		return []string{}, fmt.Errorf("[ERROR] go-nitro: Failed to unmarshal Netscaler Response to list Features")
 	}
-	if data["nsfeature"] == nil {
+	feat, ok := data["nsfeature"]
+	if !ok || feat == nil {
 		log.Printf("No features found")
 		return []string{}, fmt.Errorf("[ERROR] go-nitro: No features found")
 	}
+
 	features := data["nsfeature"].(map[string]interface{})
 	// since the returned JSON map mixes boolean and array values, the unmarshal fails to figure out there
 	// is an array. So we have to convert it to a string and then parse it.
