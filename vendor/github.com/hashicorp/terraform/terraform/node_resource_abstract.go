@@ -1,6 +1,8 @@
 package terraform
 
 import (
+	"fmt"
+
 	"github.com/hashicorp/terraform/config"
 	"github.com/hashicorp/terraform/dag"
 )
@@ -28,6 +30,8 @@ type NodeAbstractResource struct {
 
 	Config        *config.Resource // Config is the resource in the config
 	ResourceState *ResourceState   // ResourceState is the ResourceState for this
+
+	Targets []ResourceAddress // Set from GraphNodeTargetable
 }
 
 func (n *NodeAbstractResource) Name() string {
@@ -41,11 +45,43 @@ func (n *NodeAbstractResource) Path() []string {
 
 // GraphNodeReferenceable
 func (n *NodeAbstractResource) ReferenceableName() []string {
-	if n.Config == nil {
+	// We always are referenceable as "type.name" as long as
+	// we have a config or address. Determine what that value is.
+	var id string
+	if n.Config != nil {
+		id = n.Config.Id()
+	} else if n.Addr != nil {
+		addrCopy := n.Addr.Copy()
+		addrCopy.Index = -1
+		id = addrCopy.String()
+	} else {
+		// No way to determine our type.name, just return
 		return nil
 	}
 
-	return []string{n.Config.Id()}
+	var result []string
+
+	// Always include our own ID. This is primarily for backwards
+	// compatibility with states that didn't yet support the more
+	// specific dep string.
+	result = append(result, id)
+
+	// We represent all multi-access
+	result = append(result, fmt.Sprintf("%s.*", id))
+
+	// We represent either a specific number, or all numbers
+	suffix := "N"
+	if n.Addr != nil {
+		idx := n.Addr.Index
+		if idx == -1 {
+			idx = 0
+		}
+
+		suffix = fmt.Sprintf("%d", idx)
+	}
+	result = append(result, fmt.Sprintf("%s.%s", id, suffix))
+
+	return result
 }
 
 // GraphNodeReferencer
@@ -111,6 +147,16 @@ func (n *NodeAbstractResource) ResourceAddr() *ResourceAddress {
 	return n.Addr
 }
 
+// GraphNodeAddressable, TODO: remove, used by target, should unify
+func (n *NodeAbstractResource) ResourceAddress() *ResourceAddress {
+	return n.ResourceAddr()
+}
+
+// GraphNodeTargetable
+func (n *NodeAbstractResource) SetTargets(targets []ResourceAddress) {
+	n.Targets = targets
+}
+
 // GraphNodeAttachResourceState
 func (n *NodeAbstractResource) AttachResourceState(s *ResourceState) {
 	n.ResourceState = s
@@ -119,4 +165,15 @@ func (n *NodeAbstractResource) AttachResourceState(s *ResourceState) {
 // GraphNodeAttachResourceConfig
 func (n *NodeAbstractResource) AttachResourceConfig(c *config.Resource) {
 	n.Config = c
+}
+
+// GraphNodeDotter impl.
+func (n *NodeAbstractResource) DotNode(name string, opts *dag.DotOpts) *dag.DotNode {
+	return &dag.DotNode{
+		Name: name,
+		Attrs: map[string]string{
+			"label": n.Name(),
+			"shape": "box",
+		},
+	}
 }

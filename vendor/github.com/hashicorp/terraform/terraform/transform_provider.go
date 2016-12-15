@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform/config"
 	"github.com/hashicorp/terraform/dag"
-	"github.com/hashicorp/terraform/dot"
 )
 
 // GraphNodeProvider is an interface that nodes that can be a provider
@@ -115,15 +114,19 @@ type MissingProviderTransformer struct {
 	// Providers is the list of providers we support.
 	Providers []string
 
-	// Factory, if set, overrides how the providers are made.
-	Factory func(name string, path []string) GraphNodeProvider
+	// AllowAny will not check that a provider is supported before adding
+	// it to the graph.
+	AllowAny bool
+
+	// Concrete, if set, overrides how the providers are made.
+	Concrete ConcreteProviderNodeFunc
 }
 
 func (t *MissingProviderTransformer) Transform(g *Graph) error {
 	// Initialize factory
-	if t.Factory == nil {
-		t.Factory = func(name string, path []string) GraphNodeProvider {
-			return &graphNodeProvider{ProviderNameValue: name}
+	if t.Concrete == nil {
+		t.Concrete = func(a *NodeAbstractProvider) dag.Vertex {
+			return &graphNodeProvider{ProviderNameValue: a.NameValue}
 		}
 	}
 
@@ -171,14 +174,19 @@ func (t *MissingProviderTransformer) Transform(g *Graph) error {
 				ptype = p[:idx]
 			}
 
-			if _, ok := supported[ptype]; !ok {
-				// If we don't support the provider type, skip it.
-				// Validation later will catch this as an error.
-				continue
+			if !t.AllowAny {
+				if _, ok := supported[ptype]; !ok {
+					// If we don't support the provider type, skip it.
+					// Validation later will catch this as an error.
+					continue
+				}
 			}
 
 			// Add the missing provider node to the graph
-			v := t.Factory(p, path).(dag.Vertex)
+			v := t.Concrete(&NodeAbstractProvider{
+				NameValue: p,
+				PathValue: path,
+			}).(dag.Vertex)
 			if len(path) > 0 {
 				if fn, ok := v.(GraphNodeFlattenable); ok {
 					var err error
@@ -355,14 +363,17 @@ func (n *graphNodeCloseProvider) CloseProviderName() string {
 }
 
 // GraphNodeDotter impl.
-func (n *graphNodeCloseProvider) DotNode(name string, opts *GraphDotOpts) *dot.Node {
+func (n *graphNodeCloseProvider) DotNode(name string, opts *dag.DotOpts) *dag.DotNode {
 	if !opts.Verbose {
 		return nil
 	}
-	return dot.NewNode(name, map[string]string{
-		"label": n.Name(),
-		"shape": "diamond",
-	})
+	return &dag.DotNode{
+		Name: name,
+		Attrs: map[string]string{
+			"label": n.Name(),
+			"shape": "diamond",
+		},
+	}
 }
 
 type graphNodeProvider struct {
@@ -393,11 +404,14 @@ func (n *graphNodeProvider) ProviderConfig() *config.RawConfig {
 }
 
 // GraphNodeDotter impl.
-func (n *graphNodeProvider) DotNode(name string, opts *GraphDotOpts) *dot.Node {
-	return dot.NewNode(name, map[string]string{
-		"label": n.Name(),
-		"shape": "diamond",
-	})
+func (n *graphNodeProvider) DotNode(name string, opts *dag.DotOpts) *dag.DotNode {
+	return &dag.DotNode{
+		Name: name,
+		Attrs: map[string]string{
+			"label": n.Name(),
+			"shape": "diamond",
+		},
+	}
 }
 
 // GraphNodeDotterOrigin impl.

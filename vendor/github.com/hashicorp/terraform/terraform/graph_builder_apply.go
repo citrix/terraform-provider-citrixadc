@@ -30,23 +30,29 @@ type ApplyGraphBuilder struct {
 
 	// DisableReduce, if true, will not reduce the graph. Great for testing.
 	DisableReduce bool
+
+	// Destroy, if true, represents a pure destroy operation
+	Destroy bool
+
+	// Validate will do structural validation of the graph.
+	Validate bool
 }
 
 // See GraphBuilder
 func (b *ApplyGraphBuilder) Build(path []string) (*Graph, error) {
 	return (&BasicGraphBuilder{
 		Steps:    b.Steps(),
-		Validate: true,
+		Validate: b.Validate,
+		Name:     "ApplyGraphBuilder",
 	}).Build(path)
 }
 
 // See GraphBuilder
 func (b *ApplyGraphBuilder) Steps() []GraphTransformer {
 	// Custom factory for creating providers.
-	providerFactory := func(name string, path []string) GraphNodeProvider {
+	concreteProvider := func(a *NodeAbstractProvider) dag.Vertex {
 		return &NodeApplyableProvider{
-			NameValue: name,
-			PathValue: path,
+			NodeAbstractProvider: a,
 		}
 	}
 
@@ -75,29 +81,37 @@ func (b *ApplyGraphBuilder) Steps() []GraphTransformer {
 		// Attach the state
 		&AttachStateTransformer{State: b.State},
 
-		// Destruction ordering
-		&DestroyEdgeTransformer{Module: b.Module, State: b.State},
-		&CBDEdgeTransformer{Module: b.Module, State: b.State},
-
 		// Create all the providers
-		&MissingProviderTransformer{Providers: b.Providers, Factory: providerFactory},
+		&MissingProviderTransformer{Providers: b.Providers, Concrete: concreteProvider},
 		&ProviderTransformer{},
 		&DisableProviderTransformer{},
 		&ParentProviderTransformer{},
 		&AttachProviderConfigTransformer{Module: b.Module},
 
+		// Destruction ordering
+		&DestroyEdgeTransformer{Module: b.Module, State: b.State},
+		GraphTransformIf(
+			func() bool { return !b.Destroy },
+			&CBDEdgeTransformer{Module: b.Module, State: b.State},
+		),
+
 		// Provisioner-related transformations
-		&MissingProvisionerTransformer{Provisioners: b.Provisioners},
-		&ProvisionerTransformer{},
+		GraphTransformIf(
+			func() bool { return !b.Destroy },
+			GraphTransformMulti(
+				&MissingProvisionerTransformer{Provisioners: b.Provisioners},
+				&ProvisionerTransformer{},
+			),
+		),
 
 		// Add root variables
 		&RootVariableTransformer{Module: b.Module},
 
-		// Add module variables
-		&ModuleVariableTransformer{Module: b.Module},
-
 		// Add the outputs
 		&OutputTransformer{Module: b.Module},
+
+		// Add module variables
+		&ModuleVariableTransformer{Module: b.Module},
 
 		// Connect references so ordering is correct
 		&ReferenceTransformer{},

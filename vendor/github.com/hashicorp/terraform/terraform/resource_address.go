@@ -29,6 +29,10 @@ type ResourceAddress struct {
 
 // Copy returns a copy of this ResourceAddress
 func (r *ResourceAddress) Copy() *ResourceAddress {
+	if r == nil {
+		return nil
+	}
+
 	n := &ResourceAddress{
 		Path:         make([]string, 0, len(r.Path)),
 		Index:        r.Index,
@@ -97,6 +101,9 @@ func (r *ResourceAddress) stateId() string {
 		result = fmt.Sprintf("data.%s", result)
 	default:
 		panic(fmt.Errorf("unknown resource mode: %s", r.Mode))
+	}
+	if r.Index >= 0 {
+		result += fmt.Sprintf(".%d", r.Index)
 	}
 
 	return result
