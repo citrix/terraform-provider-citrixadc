@@ -23,6 +23,9 @@ update:
 build:
 	godep go build -o terraform-provider-netscaler .
 
+build-linux:
+	CGO_ENABLED=0 GOOS=linux godep go build -a -installsuffix cgo -ldflags '-w' -o terraform-provider-netscaler
+
 test:
 	TF_ACC=1 TF_LOG=INFO godep go test -v $(PROVIDER_ONLY_PKGS)
 
