@@ -31,7 +31,7 @@ func (c *NitroClient) AddResource(resourceType string, name string, resourceStru
 
 	resourceJSON, err := json.Marshal(nsResource)
 
-	log.Println("[DEBUG] go-nitro: Resourcejson is " + string(resourceJSON))
+	log.Println("[TRACE] go-nitro: Resourcejson is " + string(resourceJSON))
 
 	body, err := c.createResource(resourceType, resourceJSON)
 	if err != nil {

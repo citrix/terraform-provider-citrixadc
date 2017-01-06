@@ -23,6 +23,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 )
 
 type responseHandlerFunc func(resp *http.Response) ([]byte, error)
@@ -124,7 +125,12 @@ func (c *NitroClient) doHTTPRequest(method string, url string, bytes *bytes.Buff
 func (c *NitroClient) createResource(resourceType string, resourceJSON []byte) ([]byte, error) {
 	log.Println("[DEBUG] go-nitro: Creating resource of type ", resourceType)
 
-	url := c.url + resourceType + "?idempotent=yes"
+	url := c.url + resourceType
+
+	if !strings.HasSuffix(resourceType, "_binding") {
+		url = url + "?idempotent=yes"
+	}
+	log.Println("[TRACE] go-nitro: url is ", url)
 
 	return c.doHTTPRequest("POST", url, bytes.NewBuffer(resourceJSON), createResponseHandler)
 
