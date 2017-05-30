@@ -34,3 +34,9 @@ plan:
 
 clean:
 	rm terraform-provider-netscaler
+
+release: clean build
+	tar cvzf terraform-provider-netscaler-darwin-amd64.tar.gz terraform-provider-netscaler
+
+release-linux: clean build-linux
+	tar cvzf terraform-provider-netscaler-darwin-amd64.tar.gz terraform-provider-netscaler
