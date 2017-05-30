@@ -39,4 +39,4 @@ release: clean build
 	tar cvzf terraform-provider-netscaler-darwin-amd64.tar.gz terraform-provider-netscaler
 
 release-linux: clean build-linux
-	tar cvzf terraform-provider-netscaler-darwin-amd64.tar.gz terraform-provider-netscaler
+	tar cvzf terraform-provider-netscaler-linux-amd64.tar.gz terraform-provider-netscaler
