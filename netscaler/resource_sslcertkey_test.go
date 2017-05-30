@@ -54,7 +54,7 @@ func testAccCheckSslcertkeyExist(n string, id *string) resource.TestCheckFunc {
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No lb vserver name is set")
+			return fmt.Errorf("No ssl cert name is set")
 		}
 
 		if id != nil {
@@ -73,7 +73,7 @@ func testAccCheckSslcertkeyExist(n string, id *string) resource.TestCheckFunc {
 		}
 
 		if data == nil {
-			return fmt.Errorf("LB vserver %s not found", n)
+			return fmt.Errorf("SSL cert %s not found", n)
 		}
 
 		return nil
@@ -94,7 +94,7 @@ func testAccCheckSslcertkeyDestroy(s *terraform.State) error {
 
 		_, err := nsClient.FindResource(netscaler.Sslcertkey.Type(), rs.Primary.ID)
 		if err == nil {
-			return fmt.Errorf("LB vserver %s still exists", rs.Primary.ID)
+			return fmt.Errorf("SSL certkey %s still exists", rs.Primary.ID)
 		}
 
 	}
