@@ -264,6 +264,7 @@ func resourceNetScalerService() *schema.Resource {
 			"lbmonitor": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 		},
 	}
@@ -489,6 +490,7 @@ func readServiceFunc(d *schema.ResourceData, meta interface{}) error {
 		mon, ok := monitor["monitor_name"]
 		if ok {
 			boundMonitor = mon.(string)
+			log.Printf("[INFO] netscaler-provider:  Found %s  lbmonitor bound to %s", boundMonitor, serviceName)
 			break
 		}
 	}
