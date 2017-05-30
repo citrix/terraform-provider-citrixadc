@@ -115,9 +115,8 @@ resource "netscaler_servicegroup" "foo" {
   
   servicegroupname = "test_servicegroup"
   servicetype = "HTTP"
-  servicegroupmembers = ["172.20.0.9:80", "172.20.0.10:80", "172.20.0.11:8080"]
+  servicegroupmembers = ["172.20.0.9:80:10", "172.20.0.10:80:10", "172.20.0.11:8080:20"]
   lbvserver = "foo_lb"
   depends_on = ["netscaler_lbvserver.foo"]
-
 }
 `
