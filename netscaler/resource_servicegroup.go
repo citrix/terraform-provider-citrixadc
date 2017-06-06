@@ -246,10 +246,11 @@ func resourceNetScalerServicegroup() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-
-			"lbvserver": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
+			"lbvservers": &schema.Schema{
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
 			},
 			"lbmonitor": &schema.Schema{
 				Type:     schema.TypeString,
@@ -284,11 +285,15 @@ func createServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	lbvserver, lok := d.GetOk("lbvserver")
+	var lbvservers []string
+	l, lok := d.GetOk("lbvservers")
 	if lok {
-		exists := client.ResourceExists(netscaler.Lbvserver.Type(), lbvserver.(string))
-		if !exists {
-			return fmt.Errorf("[ERROR] netscaler-provider: Specified lb vserver does not exist on netscaler!")
+		lbvservers = expandStringList(l.(*schema.Set).List())
+		for _, lbvserver := range lbvservers {
+			exists := client.ResourceExists(netscaler.Lbvserver.Type(), lbvserver)
+			if !exists {
+				return fmt.Errorf("[ERROR] netscaler-provider: Specified lb vserver %s does not exist on netscaler!", lbvserver)
+			}
 		}
 	}
 
@@ -350,22 +355,10 @@ func createServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	if lok { //lbvserver is specified
-		lbvserverName := d.Get("lbvserver").(string)
-		binding := lb.Lbvserverservicegroupbinding{
-			Name:             lbvserverName,
-			Servicegroupname: servicegroupName,
-		}
-		log.Printf("[INFO] netscaler-provider:  Binding servicegroup %s to lbvserver %s", servicegroupName, lbvserverName)
-		err = client.BindResource(netscaler.Lbvserver.Type(), lbvserverName, netscaler.Servicegroup.Type(), servicegroupName, &binding)
+	if lok { //lbvservers is specified
+		err = addLbvserverBindings(client, servicegroupName, lbvservers)
 		if err != nil {
-			log.Printf("[ERROR] netscaler-provider:  Failed to bind servicegroup %s to lbvserver %s", servicegroupName, lbvserverName)
-			err2 := client.DeleteResource(netscaler.Servicegroup.Type(), servicegroupName)
-			if err2 != nil {
-				log.Printf("[ERROR] netscaler-provider:  Failed to delete servicegroup %s after bind to lb vserver failed", servicegroupName)
-				return fmt.Errorf("[ERROR] netscaler-provider:  Failed to delete servicegroup %s after bind to lbvserver failed", servicegroupName)
-			}
-			return fmt.Errorf("[ERROR] netscaler-provider:  Failed to bind  servicegroup %s to lbvserver %s", servicegroupName, lbvserverName)
+			return err
 		}
 	}
 
@@ -470,6 +463,33 @@ func removeServicegroupMemberBindings(client *netscaler.NitroClient, servicegrou
 	return nil
 }
 
+func addLbvserverBindings(client *netscaler.NitroClient, servicegroupName string, lbvservers []string) error {
+	for _, lbvserverName := range lbvservers {
+		binding := lb.Lbvserverservicegroupbinding{
+			Name:             lbvserverName,
+			Servicegroupname: servicegroupName,
+		}
+		log.Printf("[INFO] netscaler-provider:  Binding servicegroup %s to lbvserver %s", servicegroupName, lbvserverName)
+		err := client.BindResource(netscaler.Lbvserver.Type(), lbvserverName, netscaler.Servicegroup.Type(), servicegroupName, &binding)
+		if err != nil {
+			log.Printf("[ERROR] netscaler-provider:  Failed to bind servicegroup %s to lbvserver %s", servicegroupName, lbvserverName)
+			return fmt.Errorf("[ERROR] netscaler-provider:  Failed to bind  servicegroup %s to lbvserver %s", servicegroupName, lbvserverName)
+		}
+	}
+	return nil
+}
+
+func removeLbvserverBindings(client *netscaler.NitroClient, servicegroupName string, lbvservers []string) error {
+	for _, lbvserverName := range lbvservers {
+		err := client.UnbindResource(netscaler.Lbvserver.Type(), lbvserverName, netscaler.Servicegroup.Type(), servicegroupName, "servicegroupname")
+		if err != nil {
+			log.Printf("[ERROR] netscaler-provider: Error unbinding lbvserver %s from servicegroup %s", lbvserverName, servicegroupName)
+			return fmt.Errorf("[ERROR] netscaler-provider: Error unbinding lbvserver %s from servicegroup %s", lbvserverName, servicegroupName)
+		}
+	}
+	return nil
+}
+
 func readServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] netscaler-provider:  In readServicegroupFunc")
 	client := meta.(*NetScalerNitroClient).client
@@ -488,7 +508,7 @@ func readServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
-	//read bound vserver.
+	//read bound vservers.
 	vserverBindings, err := client.FindResourceArray(netscaler.Servicegroupbindings.Type(), servicegroupName)
 	if err != nil {
 		log.Printf("[WARN] netscaler-provider: Clearing servicegroup state %s", servicegroupName)
@@ -564,14 +584,15 @@ func readServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 
 	//vserverBindings is of type []map[string]interface{}
 	var boundVserver string
+	lbvservers := make([]string, 0, len(vserverBindings))
 	for _, vserver := range vserverBindings {
 		vs, ok := vserver["vservername"]
 		if ok {
 			boundVserver = vs.(string)
-			break
+			lbvservers = append(lbvservers, boundVserver)
 		}
 	}
-	d.Set("lbvserver", boundVserver)
+	d.Set("lbvservers", lbvservers)
 
 	var boundMonitor string
 	for _, monitor := range boundMonitors {
@@ -597,7 +618,7 @@ func updateServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	hasChange := false
-	lbvserverChanged := false
+	lbvserversChanged := false
 	lbmonitorChanged := false
 	servicegroupmembersChanged := false
 
@@ -826,9 +847,9 @@ func updateServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 		servicegroup.Weight = d.Get("weight").(int)
 		hasChange = true
 	}
-	if d.HasChange("lbvserver") {
-		log.Printf("[DEBUG] netscaler-provider:  lb vserver has changed for servicegroup %s, starting update", servicegroupName)
-		lbvserverChanged = true
+	if d.HasChange("lbvservers") {
+		log.Printf("[DEBUG] netscaler-provider:  lb vservers has changed for servicegroup %s, starting update", servicegroupName)
+		lbvserversChanged = true
 	}
 	if d.HasChange("lbmonitor") {
 		log.Printf("[DEBUG] netscaler-provider:  lb monitor has changed for servicegroup %s, starting update", servicegroupName)
@@ -840,18 +861,26 @@ func updateServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 		servicegroupmembersChanged = true
 	}
 
-	lbvserverName := d.Get("lbvserver").(string)
-	if lbvserverChanged {
+	if lbvserversChanged {
 		//Binding has to be updated
-		//First we unbind from lb vserver
-		oldLbvserver, _ := d.GetChange("lbvserver")
-		oldLbvserverName := oldLbvserver.(string)
-		if oldLbvserverName != "" {
-			err := client.UnbindResource(netscaler.Lbvserver.Type(), oldLbvserverName, netscaler.Servicegroup.Type(), servicegroupName, "servicegroupname")
+		o, n := d.GetChange("lbvservers")
+		os := o.(*schema.Set)
+		ns := n.(*schema.Set)
+
+		remove := expandStringList(os.Difference(ns).List())
+		add := expandStringList(ns.Difference(os).List())
+
+		if len(remove) > 0 {
+			err := removeLbvserverBindings(client, servicegroupName, remove)
 			if err != nil {
-				return fmt.Errorf("[ERROR] netscaler-provider: Error unbinding lbvserver from servicegroup %s", oldLbvserverName)
+				return err
 			}
-			log.Printf("[DEBUG] netscaler-provider: lbvserver has been unbound from servicegroup for lb vserver %s ", oldLbvserverName)
+		}
+		if len(add) > 0 {
+			err := addLbvserverBindings(client, servicegroupName, add)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -876,22 +905,6 @@ func updateServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return fmt.Errorf("Error updating servicegroup %s", servicegroupName)
 		}
-	}
-
-	if lbvserverChanged && lbvserverName != "" {
-		//Binding has to be updated
-		//rebind
-		binding := lb.Lbvserverservicegroupbinding{
-			Name:             lbvserverName,
-			Servicegroupname: servicegroupName,
-		}
-		log.Printf("[INFO] netscaler-provider:  Binding vserver %s to servicegroup %s", lbvserverName, servicegroupName)
-		err := client.BindResource(netscaler.Lbvserver.Type(), lbvserverName, netscaler.Servicegroup.Type(), servicegroupName, &binding)
-		if err != nil {
-			log.Printf("[ERROR] netscaler-provider:  Failed to bind  lbvserver %s to servicegroup %s", lbvserverName, servicegroupName)
-			return fmt.Errorf("[ERROR] netscaler-provider:  Failed to bind lb vserver %s to servicegroup %s", lbvserverName, servicegroupName)
-		}
-		log.Printf("[DEBUG] netscaler-provider: new lbvserver has been bound to servicegroup  lbvserver %s servicegroup %s", lbvserverName, servicegroupName)
 	}
 
 	if lbmonitorChanged && lbmonitorName != "" {

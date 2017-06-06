@@ -7,12 +7,16 @@ import (
 	"log"
 	"net"
 	"net/rpc"
+	"sync"
 
 	"github.com/hashicorp/yamux"
 )
 
 // RPCServer listens for network connections and then dispenses interface
 // implementations over net/rpc.
+//
+// After setting the fields below, they shouldn't be read again directly
+// from the structure which may be reading/writing them concurrently.
 type RPCServer struct {
 	Plugins map[string]Plugin
 
@@ -26,6 +30,8 @@ type RPCServer struct {
 	// DoneCh should be set to a non-nil channel that will be closed
 	// when the control requests the RPC server to end.
 	DoneCh chan<- struct{}
+
+	lock sync.Mutex
 }
 
 // Accept accepts connections on a listener and serves requests for
@@ -102,14 +108,26 @@ func (s *RPCServer) ServeConn(conn io.ReadWriteCloser) {
 // doneCh to close which is listened to by the main process to cleanly
 // exit.
 func (s *RPCServer) done() {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
 	if s.DoneCh != nil {
 		close(s.DoneCh)
+		s.DoneCh = nil
 	}
 }
 
 // dispenseServer dispenses variousinterface implementations for Terraform.
 type controlServer struct {
 	server *RPCServer
+}
+
+// Ping can be called to verify the connection (and likely the binary)
+// is still alive to a plugin.
+func (c *controlServer) Ping(
+	null bool, response *struct{}) error {
+	*response = struct{}{}
+	return nil
 }
 
 func (c *controlServer) Quit(

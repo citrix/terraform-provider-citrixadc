@@ -45,7 +45,7 @@ resource "netscaler_lbvserver" "lb_catalog" {
 
 resource "netscaler_servicegroup" "backend_cart" {
   servicegroupname = "${lookup(var.backend_service_config_cart, "name")}"
-  lbvserver = "${netscaler_lbvserver.lb_cart.name}"
+  lbvservers = ["${netscaler_lbvserver.lb_cart.name}"]
   lbmonitor = "${netscaler_lbmonitor.cart_monitor.monitorname}"
   servicetype = "${lookup(var.backend_service_config_cart, "servicetype")}"
   clttimeout = "${lookup(var.backend_service_config_cart, "client_timeout")}"
@@ -54,7 +54,7 @@ resource "netscaler_servicegroup" "backend_cart" {
 
 resource "netscaler_servicegroup" "backend_catalog" {
   servicegroupname = "${lookup(var.backend_service_config_catalog, "name")}"
-  lbvserver = "${netscaler_lbvserver.lb_catalog.name}"
+  lbvservers = ["${netscaler_lbvserver.lb_catalog.name}"]
   lbmonitor = "${netscaler_lbmonitor.catalog_monitor.monitorname}"
   servicegroupmembers = "${var.backend_services_catalog}"
   servicetype = "${lookup(var.backend_service_config_catalog, "servicetype")}"

@@ -102,10 +102,18 @@ func testAccCheckServicegroupDestroy(s *terraform.State) error {
 
 const testAccServicegroup_basic = `
 
-resource "netscaler_lbvserver" "foo" {
+resource "netscaler_lbvserver" "foo1" {
   
-  name = "foo_lb"
+  name = "foo_lb_1"
   ipv46 = "10.202.11.11"
+  port = 80
+  servicetype = "HTTP"
+}
+
+resource "netscaler_lbvserver" "foo2" {
+  
+  name = "foo_lb_2"
+  ipv46 = "10.202.11.12"
   port = 80
   servicetype = "HTTP"
 }
@@ -115,9 +123,8 @@ resource "netscaler_servicegroup" "foo" {
   
   servicegroupname = "test_servicegroup"
   servicetype = "HTTP"
-  servicegroupmembers = ["172.20.0.9:80", "172.20.0.10:80", "172.20.0.11:8080"]
-  lbvserver = "foo_lb"
-  depends_on = ["netscaler_lbvserver.foo"]
-
+  servicegroupmembers = ["172.20.0.9:80:10", "172.20.0.10:80:10", "172.20.0.11:8080:20"]
+  lbvservers = ["foo_lb_1", "foo_lb_2"]
+  depends_on = ["netscaler_lbvserver.foo1", "netscaler_lbvserver.foo2"]
 }
 `

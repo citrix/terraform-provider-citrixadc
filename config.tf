@@ -103,7 +103,7 @@ resource "netscaler_lbmonitor" "foo-monitor-2" {
 
 resource "netscaler_servicegroup" "backend_group" {
   servicegroupname = "backend_group_1"
-  lbvserver = "${netscaler_lbvserver.sample_lb2.name}"
+  lbvservers = ["${netscaler_lbvserver.sample_lb.name}"]
   servicetype = "HTTP"
   lbmonitor = "${netscaler_lbmonitor.foo-monitor.monitorname}"
   servicegroupmembers = ["172.20.0.20:200:50","172.20.0.101:80:10",  "172.20.0.10:80:40"]
