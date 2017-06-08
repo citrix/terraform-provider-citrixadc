@@ -13,9 +13,34 @@ This project is a terraform custom provider for Citrix NetScaler. It uses the [N
 
 ## Usage
 
-### Provider Configuration
+### Running
+1. Copy the binary (either from the [build]( or from the [releases](https://github.com/citrix/terraform-provider-netscaler/releases) page) `terraform-provider-netscaler` to an appropriate location. [Configure](https://www.terraform.io/docs/plugins/basics.html) `.terraformrc` to use the `netscaler` provider. An example `.terraformrc`:
 
-#### `netscaler`
+
+```
+providers {
+    netscaler = "<path-to-custom-providers>/terraform-provider-netscaler"
+}
+```
+
+2. Run `terraform` as usual 
+
+```
+terraform plan
+terraform apply
+```
+3. The provider will not commit the config changes to NetScaler's persistent store. To do this, run the shell script `ns_commit.sh`:
+
+```
+export NS_URL=http://<host>:<port>/
+export NS_USER=nsroot
+export NS_PASSWORD=nsroot
+./ns_commit.sh
+```
+
+To ensure that the config is saved on every run, we can use something like `terraform apply && ns_commit.sh`
+
+### Provider Configuration
 
 ```
 provider "netscaler" {
@@ -31,7 +56,7 @@ The following arguments are supported.
 
 * `username` - This is the user name to access to NetScaler. Defaults to `nsroot` unless environment variable `NS_LOGIN` has been set
 * `password` - This is the password to access to NetScaler. Defaults to `nsroot` unless environment variable `NS_PASSWORD` has been set
-* `endpoint` - (Required) Nitro API endpoint in the form `http://<NS_IP>/`. Can be specified in environment variable `NS_URL`
+* `endpoint` - (Required) Nitro API endpoint in the form `http://<NS_IP>/` or `http://<NS_IP>:<PORT>/`. Can be specified in environment variable `NS_URL`
 
 The username, password and endpoint can be provided in environment variables `NS_LOGIN`, `NS_PASSWORD` and `NS_URL`. 
 
@@ -67,8 +92,23 @@ resource "netscaler_service" "backend_1" {
 ```
 
 ##### Argument Reference
-See <https://docs.citrix.com/en-us/netscaler/11-1/nitro-api/nitro-rest/api-reference/configuration/basic/service.html> for possible values for these arguments and for an exhaustive list of arguments. Additionally, you can specify the LB vserver  to be bound to this service ` using the `lbvserver` parameter, and the `lbmonitor` parameter specifies the LB monitor to be bound.
+See <https://docs.citrix.com/en-us/netscaler/11-1/nitro-api/nitro-rest/api-reference/configuration/basic/service.html> for possible values for these arguments and for an exhaustive list of arguments. Additionally, you can specify the LB vserver  to be bound to this service  using the `lbvserver` parameter, and the `lbmonitor` parameter specifies the LB monitor to be bound.
 
+#### `netscaler_servicegroup`
+
+```
+resource "netscaler_servicegroup" "backend_1" {
+  servicegroupname = "backend_group_1"
+  servicetype = "HTTP"
+  lbvservers = ["${netscaler_lbvserver.foo.name}]"
+  lbmonitor = "${netscaler_lbmonitor.foo.name}"
+  servicegroupmembers = ["172.20.0.20:200:50","172.20.0.101:80:10",  "172.20.0.10:80:40"]
+
+}
+```
+
+##### Argument Reference
+See <https://docs.citrix.com/en-us/netscaler/11-1/nitro-api/nitro-rest/api-reference/configuration/basic/servicegroup.html> for possible values for these arguments and for an exhaustive list of arguments. Additionally, you can specify the LB vservers  to be bound to this service using the `lbvservers` parameter. The `lbmonitor` parameter specifies the LB monitor to be bound.
 
 #### `netscaler_csvserver`
 
@@ -142,16 +182,6 @@ its configuration files, tfstate files, etc.
 4. Check out this code: `git clone https://<>`
 5. Build this code using `make build`
 
-## Running
-1. Copy the binary (either from the build or from the releases page) `terraform-provider-netscaler` to an appropriate location. [Configure](https://www.terraform.io/docs/plugins/basics.html) `.terraformrc` to use the `netscaler` provider. An example `.terraformrc`:
-
-```
-providers {
-    netscaler = "<path-to-custom-providers>/terraform-provider-netscaler"
-}
-```
-
-2. Run `terraform` as usual 
 
 
 ## Samples
