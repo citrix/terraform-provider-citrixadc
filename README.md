@@ -14,7 +14,7 @@ This project is a terraform custom provider for Citrix NetScaler. It uses the [N
 ## Usage
 
 ### Running
-1. Copy the binary (either from the [build]( or from the [releases](https://github.com/citrix/terraform-provider-netscaler/releases) page) `terraform-provider-netscaler` to an appropriate location. [Configure](https://www.terraform.io/docs/plugins/basics.html) `.terraformrc` to use the `netscaler` provider. An example `.terraformrc`:
+1. Copy the binary (either from the [build](#building) or from the [releases](https://github.com/citrix/terraform-provider-netscaler/releases) page) `terraform-provider-netscaler` to an appropriate location. [Configure](https://www.terraform.io/docs/plugins/basics.html) `.terraformrc` to use the `netscaler` provider. An example `.terraformrc`:
 
 
 ```
