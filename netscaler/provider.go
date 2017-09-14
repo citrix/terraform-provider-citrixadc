@@ -22,10 +22,11 @@ import (
 )
 
 type NetScalerNitroClient struct {
-	Username string
-	Password string
-	Endpoint string
-	client   *netscaler.NitroClient
+	Username  string
+	Password  string
+	Endpoint  string
+	ProxiedNS string
+	client    *netscaler.NitroClient
 }
 
 func Provider() terraform.ResourceProvider {
@@ -56,6 +57,12 @@ func providerSchema() map[string]*schema.Schema {
 			Description: "The URL to the API",
 			DefaultFunc: schema.EnvDefaultFunc("NS_URL", nil),
 		},
+		"proxiedNS": &schema.Schema{
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The device that is proxied by NMAS",
+			DefaultFunc: schema.EnvDefaultFunc("_MPS_API_PROXY_MANAGED_INSTANCE_IP", nil),
+		},
 	}
 }
 
@@ -74,11 +81,15 @@ func providerResources() map[string]*schema.Resource {
 
 func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	c := NetScalerNitroClient{
-		Username: d.Get("username").(string),
-		Password: d.Get("password").(string),
-		Endpoint: d.Get("endpoint").(string),
+		Username:  d.Get("username").(string),
+		Password:  d.Get("password").(string),
+		Endpoint:  d.Get("endpoint").(string),
+		ProxiedNS: d.Get("proxiedNS").(string),
 	}
 	client := netscaler.NewNitroClient(c.Endpoint, c.Username, c.Password)
+	if c.ProxiedNS != "" {
+		client = netscaler.NewProxyingNitroClient(c.Endpoint, c.Username, c.Password, c.ProxiedNS)
+	}
 	c.client = client
 
 	return &c, nil
