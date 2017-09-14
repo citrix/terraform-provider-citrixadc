@@ -23,24 +23,15 @@ providers {
 }
 ```
 
-2. Run `terraform` as usual 
-
-```
-terraform plan
-terraform apply
-```
-3. The provider will not commit the config changes to NetScaler's persistent store. To do this, run the shell script `ns_commit.sh`:
+2. Set environment variables or configure the provider
 
 ```
 export NS_URL=http://<host>:<port>/
 export NS_USER=nsroot
 export NS_PASSWORD=nsroot
-./ns_commit.sh
+
 ```
-
-To ensure that the config is saved on every run, we can use something like `terraform apply && ns_commit.sh`
-
-### Provider Configuration
+Provider config:
 
 ```
 provider "netscaler" {
@@ -50,15 +41,29 @@ provider "netscaler" {
 }
 ```
 
-##### Argument Reference
+3. Run `terraform` as usual 
+
+```
+terraform plan
+terraform apply
+```
+4. Committing configuration 
+To ensure that the config is saved on every run, we can use something like `terraform apply && ns_commit.sh` where `ns_commit.sh` is:
+
+```
+curl  -s -XPOST -H 'Content-type: application/json' -H "X-NITRO-USER:${NS_USER}" -H "X-NITRO-PASS:${NS_PASSWORD}" ${NS_URL}nitro/v1/config/nsconfig?action=save -d '{"nsconfig": {}}'
+```
+
+
+##### Provider configuration Reference
 
 The following arguments are supported.
 
 * `username` - This is the user name to access to NetScaler. Defaults to `nsroot` unless environment variable `NS_LOGIN` has been set
 * `password` - This is the password to access to NetScaler. Defaults to `nsroot` unless environment variable `NS_PASSWORD` has been set
 * `endpoint` - (Required) Nitro API endpoint in the form `http://<NS_IP>/` or `http://<NS_IP>:<PORT>/`. Can be specified in environment variable `NS_URL`
+* `proxiedNS` - (Optional)When NetScaler MAS (NMAS) is used to proxy the NITRO API to a managed NetScaler, this specifies the IP of the managed NetScaler . Can be specified in environment variable `_MPS_API_PROXY_MANAGED_INSTANCE_IP`
 
-The username, password and endpoint can be provided in environment variables `NS_LOGIN`, `NS_PASSWORD` and `NS_URL`. 
 
 ### Resource Configuration
 
