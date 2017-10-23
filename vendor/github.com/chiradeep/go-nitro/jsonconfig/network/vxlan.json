@@ -1,0 +1,26 @@
+{
+  "type" : "object",
+  "properties" : {
+    "dynamicrouting" : {
+      "type" : "string"
+    },
+    "id" : {
+      "type" : "integer"
+    },
+    "ipv6dynamicrouting" : {
+      "type" : "string"
+    },
+    "port" : {
+      "type" : "integer"
+    },
+    "td" : {
+      "type" : "integer"
+    },
+    "vlan" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "vxlan",
+  "title" : "vxlan"
+}

@@ -1,0 +1,51 @@
+{
+  "type" : "object",
+  "properties" : {
+    "clientapplication" : {
+      "type" : "object"
+    },
+    "destip" : {
+      "type" : "string"
+    },
+    "destport" : {
+      "type" : "string"
+    },
+    "hostname" : {
+      "type" : "string"
+    },
+    "interception" : {
+      "type" : "string",
+      "enum" : [ "PROXY", "TRANSPARENT" ]
+    },
+    "intranetapplication" : {
+      "type" : "string"
+    },
+    "ipaddress" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "iprange" : {
+      "type" : "string"
+    },
+    "netmask" : {
+      "type" : "string"
+    },
+    "protocol" : {
+      "type" : "string",
+      "enum" : [ "TCP", "UDP", "ANY" ]
+    },
+    "spoofiip" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
+    "srcip" : {
+      "type" : "string"
+    },
+    "srcport" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "vpnintranetapplication",
+  "title" : "vpnintranetapplication"
+}

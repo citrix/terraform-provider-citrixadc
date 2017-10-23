@@ -1,0 +1,21 @@
+{
+  "type" : "object",
+  "properties" : {
+    "hits" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "lbvserver" : {
+      "type" : "string"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "targetvserver" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "csvserver_lbvserver_binding",
+  "title" : "csvserver_lbvserver_binding"
+}

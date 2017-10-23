@@ -1,0 +1,20 @@
+{
+  "type" : "object",
+  "properties" : {
+    "gotopriorityexpression" : {
+      "type" : "string"
+    },
+    "groupname" : {
+      "type" : "string"
+    },
+    "intranetip6" : {
+      "type" : "string"
+    },
+    "numaddr" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "aaagroup_intranetip6_binding",
+  "title" : "aaagroup_intranetip6_binding"
+}

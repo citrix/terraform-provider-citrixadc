@@ -1,0 +1,36 @@
+{
+  "type" : "object",
+  "properties" : {
+    "contact" : {
+      "type" : "string"
+    },
+    "customid" : {
+      "type" : "string"
+    },
+    "location" : {
+      "type" : "string"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "sysdesc" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "sysoid" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "sysservices" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "sysuptime" : {
+      "type" : "integer",
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "snmpmib",
+  "title" : "snmpmib"
+}

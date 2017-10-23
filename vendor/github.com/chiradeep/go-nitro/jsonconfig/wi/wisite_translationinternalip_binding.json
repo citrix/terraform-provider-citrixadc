@@ -1,0 +1,27 @@
+{
+  "type" : "object",
+  "properties" : {
+    "accesstype" : {
+      "type" : "string",
+      "enum" : [ "UserDevice", "Gateway", "UserDeviceAndGateway" ]
+    },
+    "sitepath" : {
+      "type" : "string"
+    },
+    "translationexternalip" : {
+      "type" : "string"
+    },
+    "translationexternalport" : {
+      "type" : "integer"
+    },
+    "translationinternalip" : {
+      "type" : "string"
+    },
+    "translationinternalport" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "wisite_translationinternalip_binding",
+  "title" : "wisite_translationinternalip_binding"
+}

@@ -1,0 +1,29 @@
+{
+  "type" : "object",
+  "properties" : {
+    "aclname" : {
+      "type" : "string"
+    },
+    "natip" : {
+      "type" : "string"
+    },
+    "natip2" : {
+      "type" : "string"
+    },
+    "netmask" : {
+      "type" : "string"
+    },
+    "network" : {
+      "type" : "string"
+    },
+    "redirectport" : {
+      "type" : "boolean"
+    },
+    "td" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "rnat",
+  "title" : "rnat"
+}

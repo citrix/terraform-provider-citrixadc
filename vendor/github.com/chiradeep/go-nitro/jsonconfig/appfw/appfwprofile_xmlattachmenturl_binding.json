@@ -1,0 +1,35 @@
+{
+  "type" : "object",
+  "properties" : {
+    "comment" : {
+      "type" : "string"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "state" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "xmlattachmentcontenttype" : {
+      "type" : "string"
+    },
+    "xmlattachmentcontenttypecheck" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
+    "xmlattachmenturl" : {
+      "type" : "string"
+    },
+    "xmlmaxattachmentsize" : {
+      "type" : "integer"
+    },
+    "xmlmaxattachmentsizecheck" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "appfwprofile_xmlattachmenturl_binding",
+  "title" : "appfwprofile_xmlattachmenturl_binding"
+}

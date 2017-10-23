@@ -1,0 +1,29 @@
+{
+  "type" : "object",
+  "properties" : {
+    "as_scan_location_xmlxss" : {
+      "type" : "string",
+      "enum" : [ "ELEMENT", "ATTRIBUTE" ]
+    },
+    "comment" : {
+      "type" : "string"
+    },
+    "isregex_xmlxss" : {
+      "type" : "string",
+      "enum" : [ "REGEX", "NOTREGEX" ]
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "state" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "xmlxss" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "appfwprofile_xmlxss_binding",
+  "title" : "appfwprofile_xmlxss_binding"
+}

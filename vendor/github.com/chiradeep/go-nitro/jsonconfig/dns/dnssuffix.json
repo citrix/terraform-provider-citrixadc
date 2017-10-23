@@ -1,0 +1,11 @@
+{
+  "type" : "object",
+  "properties" : {
+    "Dnssuffix" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "dnssuffix",
+  "title" : "dnssuffix"
+}

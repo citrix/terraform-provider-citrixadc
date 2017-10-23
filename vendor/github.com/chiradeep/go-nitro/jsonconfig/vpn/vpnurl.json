@@ -1,0 +1,24 @@
+{
+  "type" : "object",
+  "properties" : {
+    "actualurl" : {
+      "type" : "string"
+    },
+    "clientlessaccess" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
+    "comment" : {
+      "type" : "string"
+    },
+    "linkname" : {
+      "type" : "string"
+    },
+    "urlname" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "vpnurl",
+  "title" : "vpnurl"
+}

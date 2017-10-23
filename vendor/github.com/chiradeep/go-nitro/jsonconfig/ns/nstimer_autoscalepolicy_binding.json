@@ -1,0 +1,29 @@
+{
+  "type" : "object",
+  "properties" : {
+    "gotopriorityexpression" : {
+      "type" : "string"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "policyname" : {
+      "type" : "string"
+    },
+    "priority" : {
+      "type" : "integer"
+    },
+    "samplesize" : {
+      "type" : "integer"
+    },
+    "threshold" : {
+      "type" : "integer"
+    },
+    "vserver" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "nstimer_autoscalepolicy_binding",
+  "title" : "nstimer_autoscalepolicy_binding"
+}

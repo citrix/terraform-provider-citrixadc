@@ -1,0 +1,37 @@
+{
+  "type" : "object",
+  "properties" : {
+    "description" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "hits" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "isdefault" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "profilename" : {
+      "type" : "string"
+    },
+    "rule" : {
+      "type" : "string"
+    },
+    "undefaction" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "undefhits" : {
+      "type" : "integer",
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "vpnclientlessaccesspolicy",
+  "title" : "vpnclientlessaccesspolicy"
+}

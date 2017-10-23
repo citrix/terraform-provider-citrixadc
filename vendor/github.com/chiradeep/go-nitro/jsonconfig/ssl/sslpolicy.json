@@ -1,0 +1,43 @@
+{
+  "type" : "object",
+  "properties" : {
+    "action" : {
+      "type" : "string"
+    },
+    "comment" : {
+      "type" : "string"
+    },
+    "description" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "hits" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "policytype" : {
+      "type" : "string",
+      "enum" : [ "Classic Policy", "Advanced Policy" ],
+      "readonly" : true
+    },
+    "reqaction" : {
+      "type" : "string"
+    },
+    "rule" : {
+      "type" : "string"
+    },
+    "undefaction" : {
+      "type" : "string"
+    },
+    "undefhits" : {
+      "type" : "integer",
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "sslpolicy",
+  "title" : "sslpolicy"
+}

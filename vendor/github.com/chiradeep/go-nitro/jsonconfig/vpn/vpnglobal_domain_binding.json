@@ -1,0 +1,11 @@
+{
+  "type" : "object",
+  "properties" : {
+    "intranetdomain" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "vpnglobal_domain_binding",
+  "title" : "vpnglobal_domain_binding"
+}

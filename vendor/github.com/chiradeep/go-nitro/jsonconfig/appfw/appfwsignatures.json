@@ -1,0 +1,36 @@
+{
+  "type" : "object",
+  "properties" : {
+    "comment" : {
+      "type" : "string"
+    },
+    "merge" : {
+      "type" : "boolean"
+    },
+    "mergedefault" : {
+      "type" : "boolean"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "overwrite" : {
+      "type" : "boolean"
+    },
+    "response" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "sha1" : {
+      "type" : "string"
+    },
+    "src" : {
+      "type" : "string"
+    },
+    "xslt" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "appfwsignatures",
+  "title" : "appfwsignatures"
+}

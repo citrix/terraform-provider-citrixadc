@@ -1,0 +1,21 @@
+{
+  "type" : "object",
+  "properties" : {
+    "frequency" : {
+      "type" : "integer"
+    },
+    "htmlsearchlen" : {
+      "type" : "integer"
+    },
+    "rate" : {
+      "type" : "integer"
+    },
+    "strict" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "filterhtmlinjectionparameter",
+  "title" : "filterhtmlinjectionparameter"
+}

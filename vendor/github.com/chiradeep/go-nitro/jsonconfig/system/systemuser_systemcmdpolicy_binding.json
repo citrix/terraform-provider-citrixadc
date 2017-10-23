@@ -1,0 +1,17 @@
+{
+  "type" : "object",
+  "properties" : {
+    "policyname" : {
+      "type" : "string"
+    },
+    "priority" : {
+      "type" : "integer"
+    },
+    "username" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "systemuser_systemcmdpolicy_binding",
+  "title" : "systemuser_systemcmdpolicy_binding"
+}

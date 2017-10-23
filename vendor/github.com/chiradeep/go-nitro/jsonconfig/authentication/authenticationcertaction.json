@@ -1,0 +1,24 @@
+{
+  "type" : "object",
+  "properties" : {
+    "defaultauthenticationgroup" : {
+      "type" : "string"
+    },
+    "groupnamefield" : {
+      "type" : "string"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "twofactor" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
+    "usernamefield" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "authenticationcertaction",
+  "title" : "authenticationcertaction"
+}

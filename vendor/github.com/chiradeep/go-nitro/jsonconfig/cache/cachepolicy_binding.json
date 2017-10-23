@@ -1,0 +1,11 @@
+{
+  "type" : "object",
+  "properties" : {
+    "policyname" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "cachepolicy_binding",
+  "title" : "cachepolicy_binding"
+}

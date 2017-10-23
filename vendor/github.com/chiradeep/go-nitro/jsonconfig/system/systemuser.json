@@ -1,0 +1,38 @@
+{
+  "type" : "object",
+  "properties" : {
+    "encrypted" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "externalauth" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "password" : {
+      "type" : "string"
+    },
+    "promptinheritedfrom" : {
+      "type" : "string",
+      "enum" : [ "User", "Group", "Global" ],
+      "readonly" : true
+    },
+    "promptstring" : {
+      "type" : "string"
+    },
+    "timeout" : {
+      "type" : "integer"
+    },
+    "timeoutkind" : {
+      "type" : "string",
+      "enum" : [ "User", "Group", "Global" ],
+      "readonly" : true
+    },
+    "username" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "systemuser",
+  "title" : "systemuser"
+}

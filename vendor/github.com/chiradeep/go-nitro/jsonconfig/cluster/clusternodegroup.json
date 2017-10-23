@@ -1,0 +1,35 @@
+{
+  "type" : "object",
+  "properties" : {
+    "activelist" : {
+      "type" : "object",
+      "readonly" : true
+    },
+    "backuplist" : {
+      "type" : "object",
+      "readonly" : true
+    },
+    "backupnodemask" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "boundedentitiescntfrompe" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "currentnodemask" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "strict" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ]
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "clusternodegroup",
+  "title" : "clusternodegroup"
+}

@@ -1,0 +1,14 @@
+{
+  "type" : "object",
+  "properties" : {
+    "bridgegroup" : {
+      "type" : "integer"
+    },
+    "partitionname" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "nspartition_bridgegroup_binding",
+  "title" : "nspartition_bridgegroup_binding"
+}

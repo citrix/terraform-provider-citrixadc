@@ -1,0 +1,20 @@
+{
+  "type" : "object",
+  "properties" : {
+    "certfile" : {
+      "type" : "string"
+    },
+    "keyvector" : {
+      "type" : "string"
+    },
+    "sourcesecret" : {
+      "type" : "string"
+    },
+    "targetsecret" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "sslfipssimtarget",
+  "title" : "sslfipssimtarget"
+}

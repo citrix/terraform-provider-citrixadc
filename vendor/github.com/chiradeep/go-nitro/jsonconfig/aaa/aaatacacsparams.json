@@ -1,0 +1,35 @@
+{
+  "type" : "object",
+  "properties" : {
+    "accounting" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
+    "auditfailedcmds" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
+    "authorization" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
+    "authtimeout" : {
+      "type" : "integer"
+    },
+    "defaultauthenticationgroup" : {
+      "type" : "string"
+    },
+    "serverip" : {
+      "type" : "string"
+    },
+    "serverport" : {
+      "type" : "integer"
+    },
+    "tacacssecret" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "aaatacacsparams",
+  "title" : "aaatacacsparams"
+}

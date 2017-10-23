@@ -1,0 +1,19 @@
+{
+  "type" : "object",
+  "properties" : {
+    "basethreshold" : {
+      "type" : "integer"
+    },
+    "table0" : {
+      "type" : "object",
+      "readonly" : true
+    },
+    "throttle" : {
+      "type" : "string",
+      "enum" : [ "Aggressive", "Normal", "Relaxed" ]
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "nsspparams",
+  "title" : "nsspparams"
+}

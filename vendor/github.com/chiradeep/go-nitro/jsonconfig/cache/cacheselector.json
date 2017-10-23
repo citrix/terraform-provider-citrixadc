@@ -1,0 +1,18 @@
+{
+  "type" : "object",
+  "properties" : {
+    "flags" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "rule" : {
+      "type" : "object"
+    },
+    "selectorname" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "cacheselector",
+  "title" : "cacheselector"
+}

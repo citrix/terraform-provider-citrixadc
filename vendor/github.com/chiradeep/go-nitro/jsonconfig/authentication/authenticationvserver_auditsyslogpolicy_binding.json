@@ -1,0 +1,23 @@
+{
+  "type" : "object",
+  "properties" : {
+    "groupextraction" : {
+      "type" : "boolean"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "policy" : {
+      "type" : "string"
+    },
+    "priority" : {
+      "type" : "integer"
+    },
+    "secondary" : {
+      "type" : "boolean"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "authenticationvserver_auditsyslogpolicy_binding",
+  "title" : "authenticationvserver_auditsyslogpolicy_binding"
+}

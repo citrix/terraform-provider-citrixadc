@@ -1,0 +1,25 @@
+{
+  "type" : "object",
+  "properties" : {
+    "bindpolicytype" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "builtin" : {
+      "type" : "object",
+      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE" ]
+    },
+    "policy" : {
+      "type" : "string"
+    },
+    "priority" : {
+      "type" : "integer"
+    },
+    "windowsprofile" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "aaaglobal_authenticationnegotiateaction_binding",
+  "title" : "aaaglobal_authenticationnegotiateaction_binding"
+}

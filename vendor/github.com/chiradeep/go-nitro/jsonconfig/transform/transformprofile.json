@@ -1,0 +1,46 @@
+{
+  "type" : "object",
+  "properties" : {
+    "additionalreqheaderslist" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "additionalrespheaderslist" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "comment" : {
+      "type" : "string"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "onlytransformabsurlinbody" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
+    "regexforfindingurlincss" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "regexforfindingurlinjavascript" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "regexforfindingurlinxcomponent" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "regexforfindingurlinxml" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "type" : {
+      "type" : "string",
+      "enum" : [ "URL" ]
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "transformprofile",
+  "title" : "transformprofile"
+}

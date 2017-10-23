@@ -1,0 +1,20 @@
+{
+  "type" : "object",
+  "properties" : {
+    "maxmemlimit" : {
+      "type" : "integer"
+    },
+    "memlimit" : {
+      "type" : "integer"
+    },
+    "memlimitactive" : {
+      "type" : "integer"
+    },
+    "minrequiredmemory" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "extendedmemoryparam",
+  "title" : "extendedmemoryparam"
+}

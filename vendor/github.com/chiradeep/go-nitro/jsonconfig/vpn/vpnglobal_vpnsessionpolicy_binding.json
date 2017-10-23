@@ -1,0 +1,24 @@
+{
+  "type" : "object",
+  "properties" : {
+    "builtin" : {
+      "type" : "object",
+      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE" ]
+    },
+    "groupextraction" : {
+      "type" : "boolean"
+    },
+    "policyname" : {
+      "type" : "string"
+    },
+    "priority" : {
+      "type" : "integer"
+    },
+    "secondary" : {
+      "type" : "boolean"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "vpnglobal_vpnsessionpolicy_binding",
+  "title" : "vpnglobal_vpnsessionpolicy_binding"
+}

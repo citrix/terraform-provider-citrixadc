@@ -1,0 +1,14 @@
+{
+  "type" : "object",
+  "properties" : {
+    "bridgegroup" : {
+      "type" : "integer"
+    },
+    "td" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "nstrafficdomain_bridgegroup_binding",
+  "title" : "nstrafficdomain_bridgegroup_binding"
+}

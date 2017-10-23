@@ -1,0 +1,16 @@
+{
+  "type" : "object",
+  "properties" : {
+    "encapmode" : {
+      "type" : "string",
+      "enum" : [ "L2", "L3", "DISABLE" ],
+      "readonly" : true
+    },
+    "srcip" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "vpathparam",
+  "title" : "vpathparam"
+}

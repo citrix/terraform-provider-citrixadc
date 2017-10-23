@@ -1,0 +1,29 @@
+{
+  "type" : "object",
+  "properties" : {
+    "as_scan_location_xmlsql" : {
+      "type" : "string",
+      "enum" : [ "ELEMENT", "ATTRIBUTE" ]
+    },
+    "comment" : {
+      "type" : "string"
+    },
+    "isregex_xmlsql" : {
+      "type" : "string",
+      "enum" : [ "REGEX", "NOTREGEX" ]
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "state" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "xmlsqlinjection" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "appfwprofile_xmlsqlinjection_binding",
+  "title" : "appfwprofile_xmlsqlinjection_binding"
+}

@@ -1,0 +1,101 @@
+{
+  "type" : "object",
+  "properties" : {
+    "action" : {
+      "type" : "string"
+    },
+    "expression" : {
+      "type" : "string"
+    },
+    "input" : {
+      "type" : "string"
+    },
+    "istruncatedrefresult" : {
+      "type" : "boolean"
+    },
+    "pitactionerrorresult" : {
+      "type" : "string"
+    },
+    "pitactionevaltime" : {
+      "type" : "integer"
+    },
+    "pitboolerrorresult" : {
+      "type" : "string"
+    },
+    "pitboolevaltime" : {
+      "type" : "integer"
+    },
+    "pitboolresult" : {
+      "type" : "boolean"
+    },
+    "pitdoubleerrorresult" : {
+      "type" : "string"
+    },
+    "pitdoubleevaltime" : {
+      "type" : "integer"
+    },
+    "pitdoubleresult" : {
+      "type" : "number"
+    },
+    "pitmodifiedinputdata" : {
+      "type" : "string"
+    },
+    "pitnewoffsetarray" : {
+      "type" : "object"
+    },
+    "pitnumerrorresult" : {
+      "type" : "string"
+    },
+    "pitnumevaltime" : {
+      "type" : "integer"
+    },
+    "pitnumresult" : {
+      "type" : "integer"
+    },
+    "pitoffseterrorresult" : {
+      "type" : "string"
+    },
+    "pitoffsetevaltime" : {
+      "type" : "integer"
+    },
+    "pitoffsetlengtharray" : {
+      "type" : "object"
+    },
+    "pitoffsetresult" : {
+      "type" : "integer"
+    },
+    "pitoffsetresultlen" : {
+      "type" : "integer"
+    },
+    "pitoldoffsetarray" : {
+      "type" : "object"
+    },
+    "pitoperationperformerarray" : {
+      "type" : "object"
+    },
+    "pitreferrorresult" : {
+      "type" : "string"
+    },
+    "pitrefevaltime" : {
+      "type" : "integer"
+    },
+    "pitrefresult" : {
+      "type" : "string"
+    },
+    "pitulongerrorresult" : {
+      "type" : "string"
+    },
+    "pitulongevaltime" : {
+      "type" : "integer"
+    },
+    "pitulongresult" : {
+      "type" : "integer"
+    },
+    "type" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "policyevaluation",
+  "title" : "policyevaluation"
+}

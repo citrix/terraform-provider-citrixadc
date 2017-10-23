@@ -1,0 +1,14 @@
+{
+  "type" : "object",
+  "properties" : {
+    "rule" : {
+      "type" : "object"
+    },
+    "selectorname" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "nslimitselector",
+  "title" : "nslimitselector"
+}

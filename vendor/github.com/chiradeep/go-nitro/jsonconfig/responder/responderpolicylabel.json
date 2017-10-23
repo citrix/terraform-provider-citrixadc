@@ -1,0 +1,43 @@
+{
+  "type" : "object",
+  "properties" : {
+    "gotopriorityexpression" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "hits" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "invoke_labelname" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "labelname" : {
+      "type" : "string"
+    },
+    "labeltype" : {
+      "type" : "string",
+      "enum" : [ "vserver", "policylabel" ],
+      "readonly" : true
+    },
+    "newname" : {
+      "type" : "string"
+    },
+    "numpol" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "policylabeltype" : {
+      "type" : "string",
+      "enum" : [ "HTTP", "OTHERTCP", "SIP_UDP", "MYSQL", "MSSQL" ]
+    },
+    "priority" : {
+      "type" : "integer",
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "responderpolicylabel",
+  "title" : "responderpolicylabel"
+}

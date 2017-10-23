@@ -1,0 +1,17 @@
+{
+  "type" : "object",
+  "properties" : {
+    "certfile" : {
+      "type" : "string"
+    },
+    "sourcesecret" : {
+      "type" : "string"
+    },
+    "targetsecret" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "sslfipssimsource",
+  "title" : "sslfipssimsource"
+}

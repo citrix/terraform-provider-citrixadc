@@ -1,0 +1,43 @@
+{
+  "type" : "object",
+  "properties" : {
+    "consolidatedlconn" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ]
+    },
+    "httponlycookieflag" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "monitorconnectionclose" : {
+      "type" : "string",
+      "enum" : [ "RESET", "FIN" ]
+    },
+    "monitorskipmaxclient" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "preferdirectroute" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ]
+    },
+    "sessionsthreshold" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "startuprrfactor" : {
+      "type" : "integer"
+    },
+    "useportforhashlb" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ]
+    },
+    "vserverspecificmac" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "lbparameter",
+  "title" : "lbparameter"
+}

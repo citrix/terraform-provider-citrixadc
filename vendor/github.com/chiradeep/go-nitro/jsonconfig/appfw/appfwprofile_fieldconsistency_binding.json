@@ -1,0 +1,28 @@
+{
+  "type" : "object",
+  "properties" : {
+    "comment" : {
+      "type" : "string"
+    },
+    "fieldconsistency" : {
+      "type" : "string"
+    },
+    "formactionurl_ffc" : {
+      "type" : "string"
+    },
+    "isregex_ffc" : {
+      "type" : "string",
+      "enum" : [ "REGEX", "NOTREGEX" ]
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "state" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "appfwprofile_fieldconsistency_binding",
+  "title" : "appfwprofile_fieldconsistency_binding"
+}

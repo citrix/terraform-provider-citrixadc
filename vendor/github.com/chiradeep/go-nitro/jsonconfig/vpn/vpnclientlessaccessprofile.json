@@ -1,0 +1,65 @@
+{
+  "type" : "object",
+  "properties" : {
+    "clientconsumedcookies" : {
+      "type" : "string"
+    },
+    "cssrewritepolicylabel" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "description" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "isdefault" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "javascriptrewritepolicylabel" : {
+      "type" : "string"
+    },
+    "profilename" : {
+      "type" : "string"
+    },
+    "regexforfindingcustomurls" : {
+      "type" : "string"
+    },
+    "regexforfindingurlincss" : {
+      "type" : "string"
+    },
+    "regexforfindingurlinjavascript" : {
+      "type" : "string"
+    },
+    "regexforfindingurlinxcomponent" : {
+      "type" : "string"
+    },
+    "regexforfindingurlinxml" : {
+      "type" : "string"
+    },
+    "reqhdrrewritepolicylabel" : {
+      "type" : "string"
+    },
+    "requirepersistentcookie" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
+    "reshdrrewritepolicylabel" : {
+      "type" : "string"
+    },
+    "urlrewritepolicylabel" : {
+      "type" : "string"
+    },
+    "xcomponentrewritepolicylabel" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "xmlrewritepolicylabel" : {
+      "type" : "string",
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "vpnclientlessaccessprofile",
+  "title" : "vpnclientlessaccessprofile"
+}

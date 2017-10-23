@@ -1,0 +1,12 @@
+{
+  "type" : "object",
+  "properties" : {
+    "stateupdate" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "csparameter",
+  "title" : "csparameter"
+}

@@ -1,0 +1,18 @@
+{
+  "type" : "object",
+  "properties" : {
+    "aliasname" : {
+      "type" : "string"
+    },
+    "state" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "td" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "nstrafficdomain",
+  "title" : "nstrafficdomain"
+}

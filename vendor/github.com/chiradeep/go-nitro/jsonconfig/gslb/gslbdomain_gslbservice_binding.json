@@ -1,0 +1,47 @@
+{
+  "type" : "object",
+  "properties" : {
+    "cnameentry" : {
+      "type" : "string"
+    },
+    "cumulativeweight" : {
+      "type" : "integer"
+    },
+    "dynamicconfwt" : {
+      "type" : "integer"
+    },
+    "gslbthreshold" : {
+      "type" : "integer"
+    },
+    "ipaddress" : {
+      "type" : "string"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "port" : {
+      "type" : "integer"
+    },
+    "servicename" : {
+      "type" : "string"
+    },
+    "servicetype" : {
+      "type" : "string"
+    },
+    "state" : {
+      "type" : "string"
+    },
+    "svreffgslbstate" : {
+      "type" : "string"
+    },
+    "vservername" : {
+      "type" : "string"
+    },
+    "weight" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "gslbdomain_gslbservice_binding",
+  "title" : "gslbdomain_gslbservice_binding"
+}

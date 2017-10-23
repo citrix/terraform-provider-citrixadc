@@ -1,0 +1,11 @@
+{
+  "type" : "object",
+  "properties" : {
+    "sitepath" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "wisite_binding",
+  "title" : "wisite_binding"
+}

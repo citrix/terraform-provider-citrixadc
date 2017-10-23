@@ -1,0 +1,54 @@
+{
+  "type" : "object",
+  "properties" : {
+    "adminstate" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ],
+      "readonly" : true
+    },
+    "clid" : {
+      "type" : "integer"
+    },
+    "deadinterval" : {
+      "type" : "integer"
+    },
+    "hellointerval" : {
+      "type" : "integer"
+    },
+    "licensemismatch" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "operationalpropstate" : {
+      "type" : "string",
+      "enum" : [ "UNKNOWN", "ENABLED", "DISABLED", "AUTO DISABLED" ],
+      "readonly" : true
+    },
+    "operationalstate" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ],
+      "readonly" : true
+    },
+    "preemption" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "propstate" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ],
+      "readonly" : true
+    },
+    "rsskeymismatch" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "status" : {
+      "type" : "string",
+      "enum" : [ "DOWN", "UP", "PARTIAL-UP", "UNKNOWN" ],
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "clusterinstance",
+  "title" : "clusterinstance"
+}

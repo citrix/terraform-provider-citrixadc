@@ -1,0 +1,17 @@
+{
+  "type" : "object",
+  "properties" : {
+    "port" : {
+      "type" : "integer"
+    },
+    "serverip" : {
+      "type" : "string"
+    },
+    "servername" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "nslicenseproxyserver",
+  "title" : "nslicenseproxyserver"
+}

@@ -1,0 +1,17 @@
+{
+  "type" : "object",
+  "properties" : {
+    "id" : {
+      "type" : "integer"
+    },
+    "pfifaces" : {
+      "type" : "string"
+    },
+    "routemonitor" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "hanode_partialfailureinterfaces_binding",
+  "title" : "hanode_partialfailureinterfaces_binding"
+}

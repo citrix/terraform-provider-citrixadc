@@ -1,0 +1,16 @@
+{
+  "type" : "object",
+  "properties" : {
+    "certkeyname" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "linkcertkeyname" : {
+      "type" : "string",
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "sslcertlink",
+  "title" : "sslcertlink"
+}

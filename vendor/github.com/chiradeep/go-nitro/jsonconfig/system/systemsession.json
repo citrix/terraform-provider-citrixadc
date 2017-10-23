@@ -1,0 +1,38 @@
+{
+  "type" : "object",
+  "properties" : {
+    "all" : {
+      "type" : "boolean"
+    },
+    "currentconn" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "expirytime" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "lastactivitytime" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "logintime" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "numofconnections" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "sid" : {
+      "type" : "integer"
+    },
+    "username" : {
+      "type" : "string",
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "systemsession",
+  "title" : "systemsession"
+}

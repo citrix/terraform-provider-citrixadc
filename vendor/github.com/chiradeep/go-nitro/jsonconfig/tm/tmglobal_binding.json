@@ -1,0 +1,6 @@
+{
+  "type" : "object",
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "tmglobal_binding",
+  "title" : "tmglobal_binding"
+}

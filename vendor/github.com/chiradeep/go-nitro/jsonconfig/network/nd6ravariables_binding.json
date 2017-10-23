@@ -1,0 +1,11 @@
+{
+  "type" : "object",
+  "properties" : {
+    "vlan" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "nd6ravariables_binding",
+  "title" : "nd6ravariables_binding"
+}

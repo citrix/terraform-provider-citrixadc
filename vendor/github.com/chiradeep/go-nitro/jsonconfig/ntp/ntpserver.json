@@ -1,0 +1,30 @@
+{
+  "type" : "object",
+  "properties" : {
+    "autokey" : {
+      "type" : "boolean"
+    },
+    "key" : {
+      "type" : "integer"
+    },
+    "maxpoll" : {
+      "type" : "integer"
+    },
+    "minpoll" : {
+      "type" : "integer"
+    },
+    "preferredntpserver" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ]
+    },
+    "serverip" : {
+      "type" : "string"
+    },
+    "servername" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "ntpserver",
+  "title" : "ntpserver"
+}

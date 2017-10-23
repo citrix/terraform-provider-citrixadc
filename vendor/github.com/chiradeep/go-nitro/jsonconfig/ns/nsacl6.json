@@ -1,0 +1,109 @@
+{
+  "type" : "object",
+  "properties" : {
+    "Interface" : {
+      "type" : "string"
+    },
+    "acl6action" : {
+      "type" : "string",
+      "enum" : [ "BRIDGE", "DENY", "ALLOW" ]
+    },
+    "acl6name" : {
+      "type" : "string"
+    },
+    "aclaction" : {
+      "type" : "string",
+      "enum" : [ "BRIDGE", "DENY", "ALLOW" ]
+    },
+    "destipop" : {
+      "type" : "string",
+      "enum" : [ "=", "!=", "EQ", "NEQ" ]
+    },
+    "destipv6" : {
+      "type" : "boolean"
+    },
+    "destipv6val" : {
+      "type" : "string"
+    },
+    "destport" : {
+      "type" : "boolean"
+    },
+    "destportop" : {
+      "type" : "string",
+      "enum" : [ "=", "!=", "EQ", "NEQ" ]
+    },
+    "destportval" : {
+      "type" : "string"
+    },
+    "established" : {
+      "type" : "boolean"
+    },
+    "hits" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "icmpcode" : {
+      "type" : "integer"
+    },
+    "icmptype" : {
+      "type" : "integer"
+    },
+    "kernelstate" : {
+      "type" : "string",
+      "enum" : [ "APPLIED", "NOTAPPLIED", "RE-APPLY", "SFAPPLIED", "SFNOTAPPLIED" ],
+      "readonly" : true
+    },
+    "newname" : {
+      "type" : "string"
+    },
+    "priority" : {
+      "type" : "integer"
+    },
+    "protocol" : {
+      "type" : "string",
+      "enum" : [ "ICMPV6", "TCP", "UDP" ]
+    },
+    "protocolnumber" : {
+      "type" : "integer"
+    },
+    "srcipop" : {
+      "type" : "string",
+      "enum" : [ "=", "!=", "EQ", "NEQ" ]
+    },
+    "srcipv6" : {
+      "type" : "boolean"
+    },
+    "srcipv6val" : {
+      "type" : "string"
+    },
+    "srcmac" : {
+      "type" : "string"
+    },
+    "srcport" : {
+      "type" : "boolean"
+    },
+    "srcportop" : {
+      "type" : "string",
+      "enum" : [ "=", "!=", "EQ", "NEQ" ]
+    },
+    "srcportval" : {
+      "type" : "string"
+    },
+    "state" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "td" : {
+      "type" : "integer"
+    },
+    "ttl" : {
+      "type" : "integer"
+    },
+    "vlan" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "nsacl6",
+  "title" : "nsacl6"
+}

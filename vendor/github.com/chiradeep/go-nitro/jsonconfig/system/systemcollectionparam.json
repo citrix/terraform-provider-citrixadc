@@ -1,0 +1,17 @@
+{
+  "type" : "object",
+  "properties" : {
+    "communityname" : {
+      "type" : "string"
+    },
+    "datapath" : {
+      "type" : "string"
+    },
+    "loglevel" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "systemcollectionparam",
+  "title" : "systemcollectionparam"
+}
