@@ -1,0 +1,25 @@
+{
+  "type" : "object",
+  "properties" : {
+    "flags" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "id" : {
+      "type" : "integer"
+    },
+    "ifaces" : {
+      "type" : "string"
+    },
+    "ifnum" : {
+      "type" : "string"
+    },
+    "vlan" : {
+      "type" : "integer",
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "vrid_interface_binding",
+  "title" : "vrid_interface_binding"
+}

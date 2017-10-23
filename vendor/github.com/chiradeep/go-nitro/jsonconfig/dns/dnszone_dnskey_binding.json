@@ -1,0 +1,23 @@
+{
+  "type" : "object",
+  "properties" : {
+    "expires" : {
+      "type" : "integer"
+    },
+    "keyname" : {
+      "type" : "object"
+    },
+    "siginceptiontime" : {
+      "type" : "object"
+    },
+    "signed" : {
+      "type" : "integer"
+    },
+    "zonename" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "dnszone_dnskey_binding",
+  "title" : "dnszone_dnskey_binding"
+}

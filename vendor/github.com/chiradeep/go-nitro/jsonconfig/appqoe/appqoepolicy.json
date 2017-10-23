@@ -1,0 +1,21 @@
+{
+  "type" : "object",
+  "properties" : {
+    "action" : {
+      "type" : "string"
+    },
+    "hits" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "rule" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "appqoepolicy",
+  "title" : "appqoepolicy"
+}

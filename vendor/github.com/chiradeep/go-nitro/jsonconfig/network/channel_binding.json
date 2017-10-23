@@ -1,0 +1,11 @@
+{
+  "type" : "object",
+  "properties" : {
+    "id" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "channel_binding",
+  "title" : "channel_binding"
+}

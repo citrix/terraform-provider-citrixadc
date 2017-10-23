@@ -1,0 +1,47 @@
+{
+  "type" : "object",
+  "properties" : {
+    "cacherecords" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ]
+    },
+    "dns64timeout" : {
+      "type" : "integer"
+    },
+    "dnsrootreferral" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "dnssec" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "maxpipeline" : {
+      "type" : "integer"
+    },
+    "maxttl" : {
+      "type" : "integer"
+    },
+    "minttl" : {
+      "type" : "integer"
+    },
+    "namelookuppriority" : {
+      "type" : "string",
+      "enum" : [ "WINS", "DNS" ]
+    },
+    "recursion" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "resolutionorder" : {
+      "type" : "string",
+      "enum" : [ "OnlyAQuery", "OnlyAAAAQuery", "AThenAAAAQuery", "AAAAThenAQuery" ]
+    },
+    "retries" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "dnsparameter",
+  "title" : "dnsparameter"
+}

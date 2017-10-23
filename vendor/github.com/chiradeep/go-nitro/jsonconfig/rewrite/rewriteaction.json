@@ -1,0 +1,65 @@
+{
+  "type" : "object",
+  "properties" : {
+    "builtin" : {
+      "type" : "object",
+      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE" ],
+      "readonly" : true
+    },
+    "bypasssafetycheck" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ]
+    },
+    "comment" : {
+      "type" : "string"
+    },
+    "description" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "hits" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "isdefault" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "newname" : {
+      "type" : "string"
+    },
+    "pattern" : {
+      "type" : "string"
+    },
+    "referencecount" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "refinesearch" : {
+      "type" : "string"
+    },
+    "search" : {
+      "type" : "string"
+    },
+    "stringbuilderexpr" : {
+      "type" : "string"
+    },
+    "target" : {
+      "type" : "string"
+    },
+    "type" : {
+      "type" : "string",
+      "enum" : [ "noop", "delete", "insert_http_header", "delete_http_header", "corrupt_http_header", "insert_before", "insert_after", "replace", "replace_http_res", "delete_all", "replace_all", "insert_before_all", "insert_after_all", "clientless_vpn_encode", "clientless_vpn_encode_all", "clientless_vpn_decode", "clientless_vpn_decode_all", "insert_sip_header", "delete_sip_header", "corrupt_sip_header", "replace_sip_res" ]
+    },
+    "undefhits" : {
+      "type" : "integer",
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "rewriteaction",
+  "title" : "rewriteaction"
+}

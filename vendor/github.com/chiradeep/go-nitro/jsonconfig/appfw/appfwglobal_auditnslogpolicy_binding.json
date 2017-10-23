@@ -1,0 +1,40 @@
+{
+  "type" : "object",
+  "properties" : {
+    "gotopriorityexpression" : {
+      "type" : "string"
+    },
+    "invoke" : {
+      "type" : "boolean"
+    },
+    "labelname" : {
+      "type" : "string"
+    },
+    "labeltype" : {
+      "type" : "string",
+      "enum" : [ "reqvserver", "policylabel" ]
+    },
+    "policyname" : {
+      "type" : "string"
+    },
+    "policytype" : {
+      "type" : "string",
+      "enum" : [ "Classic Policy", "Advanced Policy" ],
+      "readonly" : true
+    },
+    "priority" : {
+      "type" : "integer"
+    },
+    "state" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "type" : {
+      "type" : "string",
+      "enum" : [ "REQ_OVERRIDE", "REQ_DEFAULT", "NONE" ]
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "appfwglobal_auditnslogpolicy_binding",
+  "title" : "appfwglobal_auditnslogpolicy_binding"
+}

@@ -103,8 +103,13 @@ func (c *NitroClient) createHTTPRequest(method string, url string, buff *bytes.B
 	}
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("X-NITRO-USER", c.username)
-	req.Header.Set("X-NITRO-PASS", c.password)
+	if c.proxiedNs == "" {
+		req.Header.Set("X-NITRO-USER", c.username)
+		req.Header.Set("X-NITRO-PASS", c.password)
+	} else {
+		req.SetBasicAuth(c.username, c.password)
+		req.Header.Set("_MPS_API_PROXY_MANAGED_INSTANCE_IP", c.proxiedNs)
+	}
 	return req, nil
 }
 
@@ -130,6 +135,16 @@ func (c *NitroClient) createResource(resourceType string, resourceJSON []byte) (
 	if !strings.HasSuffix(resourceType, "_binding") {
 		url = url + "?idempotent=yes"
 	}
+	log.Println("[TRACE] go-nitro: url is ", url)
+
+	return c.doHTTPRequest("POST", url, bytes.NewBuffer(resourceJSON), createResponseHandler)
+
+}
+
+func (c *NitroClient) applyResource(resourceType string, resourceJSON []byte) ([]byte, error) {
+	log.Println("[DEBUG] go-nitro: Applying resource of type ", resourceType)
+
+	url := c.url + resourceType + "?action=apply"
 	log.Println("[TRACE] go-nitro: url is ", url)
 
 	return c.doHTTPRequest("POST", url, bytes.NewBuffer(resourceJSON), createResponseHandler)

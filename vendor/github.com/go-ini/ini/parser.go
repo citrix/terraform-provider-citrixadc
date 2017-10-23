@@ -48,16 +48,31 @@ func newParser(r io.Reader) *parser {
 	}
 }
 
-// BOM handles header of BOM-UTF8 format.
+// BOM handles header of UTF-8, UTF-16 LE and UTF-16 BE's BOM format.
 // http://en.wikipedia.org/wiki/Byte_order_mark#Representations_of_byte_order_marks_by_encoding
 func (p *parser) BOM() error {
-	mask, err := p.buf.Peek(3)
+	mask, err := p.buf.Peek(2)
 	if err != nil && err != io.EOF {
 		return err
-	} else if len(mask) < 3 {
+	} else if len(mask) < 2 {
 		return nil
-	} else if mask[0] == 239 && mask[1] == 187 && mask[2] == 191 {
+	}
+
+	switch {
+	case mask[0] == 254 && mask[1] == 255:
+		fallthrough
+	case mask[0] == 255 && mask[1] == 254:
 		p.buf.Read(mask)
+	case mask[0] == 239 && mask[1] == 187:
+		mask, err := p.buf.Peek(3)
+		if err != nil && err != io.EOF {
+			return err
+		} else if len(mask) < 3 {
+			return nil
+		}
+		if mask[2] == 191 {
+			p.buf.Read(mask)
+		}
 	}
 	return nil
 }
@@ -174,11 +189,11 @@ func (p *parser) readContinuationLines(val string) (string, error) {
 // are quotes \" or \'.
 // It returns false if any other parts also contain same kind of quotes.
 func hasSurroundedQuote(in string, quote byte) bool {
-	return len(in) > 2 && in[0] == quote && in[len(in)-1] == quote &&
+	return len(in) >= 2 && in[0] == quote && in[len(in)-1] == quote &&
 		strings.IndexByte(in[1:], quote) == len(in)-2
 }
 
-func (p *parser) readValue(in []byte, ignoreContinuation bool) (string, error) {
+func (p *parser) readValue(in []byte, ignoreContinuation, ignoreInlineComment, unescapeValueDoubleQuotes bool) (string, error) {
 	line := strings.TrimLeftFunc(string(in), unicode.IsSpace)
 	if len(line) == 0 {
 		return "", nil
@@ -189,6 +204,8 @@ func (p *parser) readValue(in []byte, ignoreContinuation bool) (string, error) {
 		valQuote = `"""`
 	} else if line[0] == '`' {
 		valQuote = "`"
+	} else if unescapeValueDoubleQuotes && line[0] == '"' {
+		valQuote = `"`
 	}
 
 	if len(valQuote) > 0 {
@@ -199,24 +216,30 @@ func (p *parser) readValue(in []byte, ignoreContinuation bool) (string, error) {
 			return p.readMultilines(line, line[startIdx:], valQuote)
 		}
 
+		if unescapeValueDoubleQuotes && valQuote == `"` {
+			return strings.Replace(line[startIdx:pos+startIdx], `\"`, `"`, -1), nil
+		}
 		return line[startIdx : pos+startIdx], nil
 	}
 
-	// Won't be able to reach here if value only contains whitespace.
+	// Won't be able to reach here if value only contains whitespace
 	line = strings.TrimSpace(line)
 
-	// Check continuation lines when desired.
+	// Check continuation lines when desired
 	if !ignoreContinuation && line[len(line)-1] == '\\' {
 		return p.readContinuationLines(line[:len(line)-1])
 	}
 
-	i := strings.IndexAny(line, "#;")
-	if i > -1 {
-		p.comment.WriteString(line[i:])
-		line = strings.TrimSpace(line[:i])
+	// Check if ignore inline comment
+	if !ignoreInlineComment {
+		i := strings.IndexAny(line, "#;")
+		if i > -1 {
+			p.comment.WriteString(line[i:])
+			line = strings.TrimSpace(line[:i])
+		}
 	}
 
-	// Trim single quotes
+	// Trim single and double quotes
 	if hasSurroundedQuote(line, '\'') ||
 		hasSurroundedQuote(line, '"') {
 		line = line[1 : len(line)-1]
@@ -235,6 +258,7 @@ func (f *File) parse(reader io.Reader) (err error) {
 	section, _ := f.NewSection(DEFAULT_SECTION)
 
 	var line []byte
+	var inUnparseableSection bool
 	for !p.isEOF {
 		line, err = p.readUntil('\n')
 		if err != nil {
@@ -280,6 +304,21 @@ func (f *File) parse(reader io.Reader) (err error) {
 			// Reset aotu-counter and comments
 			p.comment.Reset()
 			p.count = 1
+
+			inUnparseableSection = false
+			for i := range f.options.UnparseableSections {
+				if f.options.UnparseableSections[i] == name ||
+					(f.options.Insensitive && strings.ToLower(f.options.UnparseableSections[i]) == strings.ToLower(name)) {
+					inUnparseableSection = true
+					continue
+				}
+			}
+			continue
+		}
+
+		if inUnparseableSection {
+			section.isRawSection = true
+			section.rawBody += string(line)
 			continue
 		}
 
@@ -287,11 +326,17 @@ func (f *File) parse(reader io.Reader) (err error) {
 		if err != nil {
 			// Treat as boolean key when desired, and whole line is key name.
 			if IsErrDelimiterNotFound(err) && f.options.AllowBooleanKeys {
-				key, err := section.NewKey(string(line), "true")
+				kname, err := p.readValue(line,
+					f.options.IgnoreContinuation,
+					f.options.IgnoreInlineComment,
+					f.options.UnescapeValueDoubleQuotes)
 				if err != nil {
 					return err
 				}
-				key.isBooleanType = true
+				key, err := section.NewBooleanKey(kname)
+				if err != nil {
+					return err
+				}
 				key.Comment = strings.TrimSpace(p.comment.String())
 				p.comment.Reset()
 				continue
@@ -307,17 +352,19 @@ func (f *File) parse(reader io.Reader) (err error) {
 			p.count++
 		}
 
-		key, err := section.NewKey(kname, "")
+		value, err := p.readValue(line[offset:],
+			f.options.IgnoreContinuation,
+			f.options.IgnoreInlineComment,
+			f.options.UnescapeValueDoubleQuotes)
+		if err != nil {
+			return err
+		}
+
+		key, err := section.NewKey(kname, value)
 		if err != nil {
 			return err
 		}
 		key.isAutoIncrement = isAutoIncr
-
-		value, err := p.readValue(line[offset:], f.options.IgnoreContinuation)
-		if err != nil {
-			return err
-		}
-		key.SetValue(value)
 		key.Comment = strings.TrimSpace(p.comment.String())
 		p.comment.Reset()
 	}

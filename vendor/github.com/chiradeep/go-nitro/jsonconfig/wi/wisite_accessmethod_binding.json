@@ -1,0 +1,21 @@
+{
+  "type" : "object",
+  "properties" : {
+    "accessmethod" : {
+      "type" : "string",
+      "enum" : [ "Direct", "Alternate", "Translated", "GatewayDirect", "GatewayAlternate", "GatewayTranslated" ]
+    },
+    "clientipaddress" : {
+      "type" : "string"
+    },
+    "clientnetmask" : {
+      "type" : "string"
+    },
+    "sitepath" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "wisite_accessmethod_binding",
+  "title" : "wisite_accessmethod_binding"
+}

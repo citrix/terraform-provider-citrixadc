@@ -1,0 +1,31 @@
+{
+  "type" : "object",
+  "properties" : {
+    "dup_state" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "dup_weight" : {
+      "type" : "integer"
+    },
+    "monitorname" : {
+      "type" : "string"
+    },
+    "servicegroupname" : {
+      "type" : "string"
+    },
+    "servicename" : {
+      "type" : "string"
+    },
+    "state" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "weight" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "lbmonitor_service_binding",
+  "title" : "lbmonitor_service_binding"
+}

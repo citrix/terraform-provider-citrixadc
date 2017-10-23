@@ -1,0 +1,18 @@
+{
+  "type" : "object",
+  "properties" : {
+    "acttype" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "sharefile" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "vpnvserver_sharefileserver_binding",
+  "title" : "vpnvserver_sharefileserver_binding"
+}

@@ -1,0 +1,39 @@
+{
+  "type" : "object",
+  "properties" : {
+    "flowtype" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "gotopriorityexpression" : {
+      "type" : "string"
+    },
+    "invoke" : {
+      "type" : "boolean"
+    },
+    "labelname" : {
+      "type" : "string"
+    },
+    "labeltype" : {
+      "type" : "string",
+      "enum" : [ "reqvserver", "resvserver", "policylabel" ]
+    },
+    "numpol" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "policyname" : {
+      "type" : "string"
+    },
+    "priority" : {
+      "type" : "integer"
+    },
+    "type" : {
+      "type" : "string",
+      "enum" : [ "REQ_OVERRIDE", "REQ_DEFAULT", "RES_OVERRIDE", "RES_DEFAULT", "OTHERTCP_REQ_OVERRIDE", "OTHERTCP_REQ_DEFAULT", "OTHERTCP_RES_OVERRIDE", "OTHERTCP_RES_DEFAULT", "SIPUDP_REQ_OVERRIDE", "SIPUDP_REQ_DEFAULT", "SIPUDP_RES_OVERRIDE", "SIPUDP_RES_DEFAULT" ]
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "rewriteglobal_rewritepolicy_binding",
+  "title" : "rewriteglobal_rewritepolicy_binding"
+}

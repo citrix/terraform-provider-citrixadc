@@ -1,0 +1,17 @@
+{
+  "type" : "object",
+  "properties" : {
+    "cipherpriority" : {
+      "type" : "integer"
+    },
+    "ecccurvename" : {
+      "type" : "string"
+    },
+    "name" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "sslprofile_ecccurve_binding",
+  "title" : "sslprofile_ecccurve_binding"
+}

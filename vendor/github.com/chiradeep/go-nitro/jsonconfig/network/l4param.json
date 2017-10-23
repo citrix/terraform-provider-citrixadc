@@ -1,0 +1,16 @@
+{
+  "type" : "object",
+  "properties" : {
+    "l2connmethod" : {
+      "type" : "string",
+      "enum" : [ "Channel", "Vlan", "VlanChannel", "Mac", "MacChannel", "MacVlan", "MacVlanChannel" ]
+    },
+    "l4switch" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "l4param",
+  "title" : "l4param"
+}

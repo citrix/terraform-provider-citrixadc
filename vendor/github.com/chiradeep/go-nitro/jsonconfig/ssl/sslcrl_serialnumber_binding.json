@@ -1,0 +1,18 @@
+{
+  "type" : "object",
+  "properties" : {
+    "crlname" : {
+      "type" : "string"
+    },
+    "date" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "number" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "sslcrl_serialnumber_binding",
+  "title" : "sslcrl_serialnumber_binding"
+}

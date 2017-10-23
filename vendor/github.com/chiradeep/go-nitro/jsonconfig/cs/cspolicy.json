@@ -1,0 +1,63 @@
+{
+  "type" : "object",
+  "properties" : {
+    "action" : {
+      "type" : "string"
+    },
+    "activepolicy" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "bindhits" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "cspolicytype" : {
+      "type" : "string",
+      "enum" : [ "Classic Policy", "Advanced Policy" ],
+      "readonly" : true
+    },
+    "domain" : {
+      "type" : "string"
+    },
+    "hits" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "labelname" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "labeltype" : {
+      "type" : "string",
+      "enum" : [ "reqvserver", "resvserver", "policylabel" ],
+      "readonly" : true
+    },
+    "logaction" : {
+      "type" : "string"
+    },
+    "newname" : {
+      "type" : "string"
+    },
+    "policyname" : {
+      "type" : "string"
+    },
+    "priority" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "rule" : {
+      "type" : "string"
+    },
+    "url" : {
+      "type" : "string"
+    },
+    "vstype" : {
+      "type" : "integer",
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "cspolicy",
+  "title" : "cspolicy"
+}

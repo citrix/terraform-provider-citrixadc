@@ -1,0 +1,34 @@
+{
+  "type" : "object",
+  "properties" : {
+    "dnssecoffload" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "flags" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "keyname" : {
+      "type" : "object"
+    },
+    "nsec" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "proxymode" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ]
+    },
+    "type" : {
+      "type" : "string",
+      "enum" : [ "ALL", "ADNS", "PROXY" ]
+    },
+    "zonename" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "dnszone",
+  "title" : "dnszone"
+}

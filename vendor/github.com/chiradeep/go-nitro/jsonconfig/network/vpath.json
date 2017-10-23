@@ -1,0 +1,18 @@
+{
+  "type" : "object",
+  "properties" : {
+    "destip" : {
+      "type" : "string"
+    },
+    "encapmode" : {
+      "type" : "string",
+      "enum" : [ "L2", "L3", "DISABLE" ]
+    },
+    "name" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "vpath",
+  "title" : "vpath"
+}

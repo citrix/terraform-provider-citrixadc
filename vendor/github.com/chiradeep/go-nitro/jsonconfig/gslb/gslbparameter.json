@@ -1,0 +1,32 @@
+{
+  "type" : "object",
+  "properties" : {
+    "dropldnsreq" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "flags" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "ldnsentrytimeout" : {
+      "type" : "integer"
+    },
+    "ldnsmask" : {
+      "type" : "string"
+    },
+    "ldnsprobeorder" : {
+      "type" : "object",
+      "enum" : [ "PING", "DNS", "TCP" ]
+    },
+    "rtttolerance" : {
+      "type" : "integer"
+    },
+    "v6ldnsmasklen" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "gslbparameter",
+  "title" : "gslbparameter"
+}

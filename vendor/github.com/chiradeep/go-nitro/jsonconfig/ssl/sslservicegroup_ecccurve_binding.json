@@ -1,0 +1,14 @@
+{
+  "type" : "object",
+  "properties" : {
+    "ecccurvename" : {
+      "type" : "string"
+    },
+    "servicegroupname" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "sslservicegroup_ecccurve_binding",
+  "title" : "sslservicegroup_ecccurve_binding"
+}

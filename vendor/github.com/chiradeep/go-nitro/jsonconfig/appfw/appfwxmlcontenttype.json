@@ -1,0 +1,20 @@
+{
+  "type" : "object",
+  "properties" : {
+    "builtin" : {
+      "type" : "object",
+      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE" ],
+      "readonly" : true
+    },
+    "isregex" : {
+      "type" : "string",
+      "enum" : [ "REGEX", "NOTREGEX" ]
+    },
+    "xmlcontenttypevalue" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "appfwxmlcontenttype",
+  "title" : "appfwxmlcontenttype"
+}

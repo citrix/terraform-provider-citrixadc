@@ -1,0 +1,132 @@
+{
+  "type" : "object",
+  "properties" : {
+    "aaa" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "appflow" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "appfw" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "appqoe" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "bgp" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "cf" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "ch" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "cloudbridge" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "cmp" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "cr" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "cs" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "feature" : {
+      "type" : "object",
+      "enum" : [ "WL", "WebLogging", "SP", "SurgeProtection", "LB", "LoadBalancing", "CS", "ContentSwitching", "CR", "CacheRedirection", "SC", "SureConnect", "CMP", "CMPcntl", "CompressionControl", "PQ", "PriorityQueuing", "HDOSP", "HttpDoSProtection", "SSLVPN", "AAA", "GSLB", "GlobalServerLoadBalancing", "SSL", "SSLOffload", "SSLOffloading", "CF", "ContentFiltering", "IC", "IntegratedCaching", "OSPF", "OSPFRouting", "RIP", "RIPRouting", "BGP", "BGPRouting", "REWRITE", "IPv6PT", "IPv6protocoltranslation", "AppFw", "ApplicationFirewall", "RESPONDER", "HTMLInjection", "push", "NSPush", "NetScalerPush", "AppFlow", "CloudBridge", "ISIS", "ISISRouting", "CH", "CallHome", "AppQoE", "Vpath" ]
+    },
+    "gslb" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "hdosp" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "htmlinjection" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "ic" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "ipv6pt" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "isis" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "lb" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "ospf" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "pq" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "push" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "responder" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "rewrite" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "rip" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "sc" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "sp" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "ssl" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "sslvpn" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "vpath" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "wl" : {
+      "type" : "boolean",
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "nsfeature",
+  "title" : "nsfeature"
+}

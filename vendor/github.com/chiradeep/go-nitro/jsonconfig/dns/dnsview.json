@@ -1,0 +1,15 @@
+{
+  "type" : "object",
+  "properties" : {
+    "flags" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "viewname" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "dnsview",
+  "title" : "dnsview"
+}

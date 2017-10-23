@@ -1,0 +1,65 @@
+{
+  "type" : "object",
+  "properties" : {
+    "cookieconsistencyminthreshold" : {
+      "type" : "integer"
+    },
+    "cookieconsistencypercentthreshold" : {
+      "type" : "integer"
+    },
+    "crosssitescriptingminthreshold" : {
+      "type" : "integer"
+    },
+    "crosssitescriptingpercentthreshold" : {
+      "type" : "integer"
+    },
+    "csrftagminthreshold" : {
+      "type" : "integer"
+    },
+    "csrftagpercentthreshold" : {
+      "type" : "integer"
+    },
+    "fieldconsistencyminthreshold" : {
+      "type" : "integer"
+    },
+    "fieldconsistencypercentthreshold" : {
+      "type" : "integer"
+    },
+    "fieldformatminthreshold" : {
+      "type" : "integer"
+    },
+    "fieldformatpercentthreshold" : {
+      "type" : "integer"
+    },
+    "profilename" : {
+      "type" : "string"
+    },
+    "sqlinjectionminthreshold" : {
+      "type" : "integer"
+    },
+    "sqlinjectionpercentthreshold" : {
+      "type" : "integer"
+    },
+    "starturlminthreshold" : {
+      "type" : "integer"
+    },
+    "starturlpercentthreshold" : {
+      "type" : "integer"
+    },
+    "xmlattachmentminthreshold" : {
+      "type" : "integer"
+    },
+    "xmlattachmentpercentthreshold" : {
+      "type" : "integer"
+    },
+    "xmlwsiminthreshold" : {
+      "type" : "integer"
+    },
+    "xmlwsipercentthreshold" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "appfwlearningsettings",
+  "title" : "appfwlearningsettings"
+}

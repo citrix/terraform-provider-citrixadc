@@ -1,0 +1,64 @@
+{
+  "type" : "object",
+  "properties" : {
+    "ceaserouteradv" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ]
+    },
+    "currhoplimit" : {
+      "type" : "integer"
+    },
+    "defaultlifetime" : {
+      "type" : "integer"
+    },
+    "lastrtadvtime" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "linkmtu" : {
+      "type" : "integer"
+    },
+    "managedaddrconfig" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ]
+    },
+    "maxrtadvinterval" : {
+      "type" : "integer"
+    },
+    "minrtadvinterval" : {
+      "type" : "integer"
+    },
+    "nextrtadvdelay" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "onlyunicastrtadvresponse" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ]
+    },
+    "otheraddrconfig" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ]
+    },
+    "reachabletime" : {
+      "type" : "integer"
+    },
+    "retranstime" : {
+      "type" : "integer"
+    },
+    "sendrouteradv" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ]
+    },
+    "srclinklayeraddroption" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ]
+    },
+    "vlan" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "nd6ravariables",
+  "title" : "nd6ravariables"
+}

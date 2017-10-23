@@ -1,0 +1,22 @@
+{
+  "type" : "object",
+  "properties" : {
+    "Snmpoid" : {
+      "type" : "string"
+    },
+    "metric" : {
+      "type" : "string"
+    },
+    "metrictable" : {
+      "type" : "string"
+    },
+    "metrictype" : {
+      "type" : "string",
+      "enum" : [ "INTERNAL", "CONFIGURED" ],
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "lbmetrictable",
+  "title" : "lbmetrictable"
+}

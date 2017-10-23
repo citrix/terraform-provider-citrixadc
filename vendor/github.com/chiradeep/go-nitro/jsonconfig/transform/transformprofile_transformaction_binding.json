@@ -1,0 +1,55 @@
+{
+  "type" : "object",
+  "properties" : {
+    "actioncomment" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "actionname" : {
+      "type" : "string"
+    },
+    "cookiedomainfrom" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "cookiedomaininto" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "priority" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "profilename" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "requrlfrom" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "requrlinto" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "resurlfrom" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "resurlinto" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "state" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ],
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "transformprofile_transformaction_binding",
+  "title" : "transformprofile_transformaction_binding"
+}

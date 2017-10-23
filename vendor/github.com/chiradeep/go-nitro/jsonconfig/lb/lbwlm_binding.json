@@ -1,0 +1,11 @@
+{
+  "type" : "object",
+  "properties" : {
+    "wlmname" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "lbwlm_binding",
+  "title" : "lbwlm_binding"
+}

@@ -42,6 +42,25 @@ func (c *NitroClient) AddResource(resourceType string, name string, resourceStru
 	return name, nil
 }
 
+// ApplyResource applies the configured settings to for the supplied type
+func (c *NitroClient) ApplyResource(resourceType string, resourceStruct interface{}) error {
+
+	nsResource := make(map[string]interface{})
+	nsResource[resourceType] = resourceStruct
+
+	resourceJSON, err := json.Marshal(nsResource)
+
+	log.Println("[TRACE] go-nitro: Resourcejson is " + string(resourceJSON))
+
+	body, err := c.applyResource(resourceType, resourceJSON)
+	if err != nil {
+		return fmt.Errorf("[ERROR] go-nitro: Failed to apply resource of type %s,  err=%s", resourceType, err)
+	}
+	_ = body
+
+	return nil
+}
+
 //UpdateResource updates a resource of supplied type and name
 func (c *NitroClient) UpdateResource(resourceType string, name string, resourceStruct interface{}) (string, error) {
 

@@ -1,0 +1,34 @@
+{
+  "type" : "object",
+  "properties" : {
+    "acttype" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "bindpoint" : {
+      "type" : "string",
+      "enum" : [ "REQUEST", "RESPONSE", "ICA_REQUEST", "OTHERTCP_REQUEST" ]
+    },
+    "gotopriorityexpression" : {
+      "type" : "string"
+    },
+    "groupextraction" : {
+      "type" : "boolean"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "policy" : {
+      "type" : "string"
+    },
+    "priority" : {
+      "type" : "integer"
+    },
+    "secondary" : {
+      "type" : "boolean"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "vpnvserver_authenticationradiuspolicy_binding",
+  "title" : "vpnvserver_authenticationradiuspolicy_binding"
+}

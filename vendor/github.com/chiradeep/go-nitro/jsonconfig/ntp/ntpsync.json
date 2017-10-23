@@ -1,0 +1,13 @@
+{
+  "type" : "object",
+  "properties" : {
+    "state" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ],
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "ntpsync",
+  "title" : "ntpsync"
+}

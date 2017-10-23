@@ -1,0 +1,58 @@
+{
+  "type" : "object",
+  "properties" : {
+    "ceflogging" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
+    "clientiploggingheader" : {
+      "type" : "string"
+    },
+    "cookiepostencryptprefix" : {
+      "type" : "string"
+    },
+    "defaultprofile" : {
+      "type" : "string"
+    },
+    "entitydecoding" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
+    "importsizelimit" : {
+      "type" : "integer"
+    },
+    "learnratelimit" : {
+      "type" : "integer"
+    },
+    "logmalformedreq" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
+    "sessioncookiename" : {
+      "type" : "string"
+    },
+    "sessionlifetime" : {
+      "type" : "integer"
+    },
+    "sessiontimeout" : {
+      "type" : "integer"
+    },
+    "signatureautoupdate" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
+    "signatureurl" : {
+      "type" : "string"
+    },
+    "undefaction" : {
+      "type" : "string"
+    },
+    "useconfigurablesecretkey" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "appfwsettings",
+  "title" : "appfwsettings"
+}

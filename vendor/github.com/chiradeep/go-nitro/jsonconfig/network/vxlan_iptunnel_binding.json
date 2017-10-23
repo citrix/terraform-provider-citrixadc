@@ -1,0 +1,14 @@
+{
+  "type" : "object",
+  "properties" : {
+    "id" : {
+      "type" : "integer"
+    },
+    "tunnel" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "vxlan_iptunnel_binding",
+  "title" : "vxlan_iptunnel_binding"
+}

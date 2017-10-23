@@ -1,0 +1,14 @@
+{
+  "type" : "object",
+  "properties" : {
+    "ipaddress" : {
+      "type" : "string"
+    },
+    "port" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "cacheforwardproxy",
+  "title" : "cacheforwardproxy"
+}

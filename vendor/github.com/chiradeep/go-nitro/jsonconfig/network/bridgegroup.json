@@ -1,0 +1,39 @@
+{
+  "type" : "object",
+  "properties" : {
+    "flags" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "id" : {
+      "type" : "integer"
+    },
+    "ifaces" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "ipv6dynamicrouting" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "portbitmap" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "rnat" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "tagbitmap" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "tagifaces" : {
+      "type" : "string",
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "bridgegroup",
+  "title" : "bridgegroup"
+}

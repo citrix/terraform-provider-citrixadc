@@ -1,0 +1,27 @@
+{
+  "type" : "object",
+  "properties" : {
+    "mappolicyname" : {
+      "type" : "string"
+    },
+    "sd" : {
+      "type" : "string"
+    },
+    "su" : {
+      "type" : "string"
+    },
+    "targetname" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "td" : {
+      "type" : "string"
+    },
+    "tu" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "policymap",
+  "title" : "policymap"
+}

@@ -1,0 +1,20 @@
+{
+  "type" : "object",
+  "properties" : {
+    "acl6name" : {
+      "type" : "string"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "network" : {
+      "type" : "string"
+    },
+    "redirectport" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "rnat6",
+  "title" : "rnat6"
+}

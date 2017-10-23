@@ -1,0 +1,11 @@
+{
+  "type" : "object",
+  "properties" : {
+    "warm" : {
+      "type" : "boolean"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "reboot",
+  "title" : "reboot"
+}

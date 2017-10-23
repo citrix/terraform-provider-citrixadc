@@ -1,0 +1,17 @@
+{
+  "type" : "object",
+  "properties" : {
+    "all" : {
+      "type" : "boolean"
+    },
+    "policy" : {
+      "type" : "string"
+    },
+    "priority" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "rnatglobal_auditsyslogpolicy_binding",
+  "title" : "rnatglobal_auditsyslogpolicy_binding"
+}

@@ -1,0 +1,29 @@
+{
+  "type" : "object",
+  "properties" : {
+    "consistent" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ],
+      "readonly" : true
+    },
+    "core" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "coreconfstring" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "culpritcore" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "culpritcoreconfstring" : {
+      "type" : "string",
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "configstatus",
+  "title" : "configstatus"
+}

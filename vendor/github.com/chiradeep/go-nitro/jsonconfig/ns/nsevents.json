@@ -1,0 +1,47 @@
+{
+  "type" : "object",
+  "properties" : {
+    "data0" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "data1" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "data2" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "data3" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "devid" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "devname" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "eventcode" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "eventno" : {
+      "type" : "integer"
+    },
+    "text" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "time" : {
+      "type" : "integer",
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "nsevents",
+  "title" : "nsevents"
+}

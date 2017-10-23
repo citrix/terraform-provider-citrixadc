@@ -1,0 +1,11 @@
+{
+  "type" : "object",
+  "properties" : {
+    "certkey" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "sslcertkey_binding",
+  "title" : "sslcertkey_binding"
+}

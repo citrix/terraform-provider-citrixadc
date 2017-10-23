@@ -1,0 +1,30 @@
+{
+  "type" : "object",
+  "properties" : {
+    "name" : {
+      "type" : "string"
+    },
+    "parameters" : {
+      "type" : "string"
+    },
+    "profilename" : {
+      "type" : "string"
+    },
+    "quiettime" : {
+      "type" : "integer"
+    },
+    "type" : {
+      "type" : "string",
+      "enum" : [ "SCALE_UP", "SCALE_DOWN" ]
+    },
+    "vmdestroygraceperiod" : {
+      "type" : "integer"
+    },
+    "vserver" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "autoscaleaction",
+  "title" : "autoscaleaction"
+}

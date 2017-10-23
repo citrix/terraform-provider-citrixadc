@@ -1,0 +1,47 @@
+{
+  "type" : "object",
+  "properties" : {
+    "defaultauthorizationaction" : {
+      "type" : "string",
+      "enum" : [ "ALLOW", "DENY" ]
+    },
+    "homepage" : {
+      "type" : "string"
+    },
+    "httponlycookie" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ]
+    },
+    "kcdaccount" : {
+      "type" : "string"
+    },
+    "name" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "persistentcookie" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
+    "persistentcookievalidity" : {
+      "type" : "integer"
+    },
+    "sesstimeout" : {
+      "type" : "integer"
+    },
+    "sso" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
+    "ssocredential" : {
+      "type" : "string",
+      "enum" : [ "PRIMARY", "SECONDARY" ]
+    },
+    "ssodomain" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "tmsessionparameter",
+  "title" : "tmsessionparameter"
+}

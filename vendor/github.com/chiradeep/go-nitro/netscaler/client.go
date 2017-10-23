@@ -26,10 +26,11 @@ import (
 //NitroClient has methods to configure the NetScaler
 //It abstracts the REST operations of the NITRO API
 type NitroClient struct {
-	url      string
-	username string
-	password string
-	client   *http.Client
+	url       string
+	username  string
+	password  string
+	proxiedNs string
+	client    *http.Client
 }
 
 //NewNitroClient returns a usable NitroClient. Does not check validity of supplied parameters
@@ -38,6 +39,16 @@ func NewNitroClient(url string, username string, password string) *NitroClient {
 	c.url = strings.Trim(url, " /") + "/nitro/v1/config/"
 	c.username = username
 	c.password = password
+	c.client = &http.Client{}
+	return c
+}
+
+func NewProxyingNitroClient(url string, username string, password string, proxiedNsIp string) *NitroClient {
+	c := new(NitroClient)
+	c.url = strings.Trim(url, " /") + "/nitro/v1/config/"
+	c.username = username
+	c.password = password
+	c.proxiedNs = proxiedNsIp
 	c.client = &http.Client{}
 	return c
 }
@@ -71,5 +82,10 @@ func NewNitroClientFromEnv(args ...string) (*NitroClient, error) {
 			return nil, fmt.Errorf("Could not determine NetScaler password: NS_PASSWORD not set or passed in as third parameter")
 		}
 	}
-	return NewNitroClient(url, username, password), nil
+	proxiedNs := os.Getenv("_MPS_API_PROXY_MANAGED_INSTANCE_IP")
+	if proxiedNs == "" {
+		return NewNitroClient(url, username, password), nil
+	} else {
+		return NewProxyingNitroClient(url, username, password, proxiedNs), nil
+	}
 }

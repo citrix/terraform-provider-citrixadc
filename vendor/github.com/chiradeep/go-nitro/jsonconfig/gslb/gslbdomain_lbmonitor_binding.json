@@ -1,0 +1,53 @@
+{
+  "type" : "object",
+  "properties" : {
+    "customheaders" : {
+      "type" : "string"
+    },
+    "httprequest" : {
+      "type" : "string"
+    },
+    "iptunnel" : {
+      "type" : "string"
+    },
+    "lastresponse" : {
+      "type" : "string"
+    },
+    "monitorcurrentfailedprobes" : {
+      "type" : "integer"
+    },
+    "monitorname" : {
+      "type" : "string"
+    },
+    "monitortotalfailedprobes" : {
+      "type" : "integer"
+    },
+    "monitortotalprobes" : {
+      "type" : "integer"
+    },
+    "monstatcode" : {
+      "type" : "integer"
+    },
+    "monstate" : {
+      "type" : "string"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "respcode" : {
+      "type" : "string"
+    },
+    "responsetime" : {
+      "type" : "integer"
+    },
+    "servicename" : {
+      "type" : "string"
+    },
+    "vservername" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "gslbdomain_lbmonitor_binding",
+  "title" : "gslbdomain_lbmonitor_binding"
+}

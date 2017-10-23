@@ -1,0 +1,24 @@
+{
+  "type" : "object",
+  "properties" : {
+    "comment" : {
+      "type" : "string"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "response" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "src" : {
+      "type" : "string"
+    },
+    "target" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "appfwarchive",
+  "title" : "appfwarchive"
+}

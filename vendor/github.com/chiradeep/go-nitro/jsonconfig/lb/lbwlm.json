@@ -1,0 +1,33 @@
+{
+  "type" : "object",
+  "properties" : {
+    "ipaddress" : {
+      "type" : "string"
+    },
+    "katimeout" : {
+      "type" : "integer"
+    },
+    "lbuid" : {
+      "type" : "string"
+    },
+    "port" : {
+      "type" : "integer"
+    },
+    "secure" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ],
+      "readonly" : true
+    },
+    "state" : {
+      "type" : "string",
+      "enum" : [ "ACTIVE", "INACTIVE", "UNKNOWN" ],
+      "readonly" : true
+    },
+    "wlmname" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "lbwlm",
+  "title" : "lbwlm"
+}

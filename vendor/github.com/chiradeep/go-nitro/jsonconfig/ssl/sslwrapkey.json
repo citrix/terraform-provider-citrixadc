@@ -1,0 +1,17 @@
+{
+  "type" : "object",
+  "properties" : {
+    "password" : {
+      "type" : "string"
+    },
+    "salt" : {
+      "type" : "string"
+    },
+    "wrapkeyname" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "sslwrapkey",
+  "title" : "sslwrapkey"
+}

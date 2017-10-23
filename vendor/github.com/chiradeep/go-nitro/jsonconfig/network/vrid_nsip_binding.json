@@ -1,0 +1,21 @@
+{
+  "type" : "object",
+  "properties" : {
+    "flags" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "id" : {
+      "type" : "integer"
+    },
+    "ifnum" : {
+      "type" : "string"
+    },
+    "ipaddress" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "vrid_nsip_binding",
+  "title" : "vrid_nsip_binding"
+}

@@ -1,0 +1,35 @@
+{
+  "type" : "object",
+  "properties" : {
+    "ca" : {
+      "type" : "boolean"
+    },
+    "certkeyname" : {
+      "type" : "string"
+    },
+    "cleartextport" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "crlcheck" : {
+      "type" : "string",
+      "enum" : [ "Mandatory", "Optional" ]
+    },
+    "ocspcheck" : {
+      "type" : "string",
+      "enum" : [ "Mandatory", "Optional" ]
+    },
+    "skipcaname" : {
+      "type" : "boolean"
+    },
+    "snicert" : {
+      "type" : "boolean"
+    },
+    "vservername" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "sslvserver_sslcertkey_binding",
+  "title" : "sslvserver_sslcertkey_binding"
+}

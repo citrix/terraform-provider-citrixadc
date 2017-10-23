@@ -1,0 +1,14 @@
+{
+  "type" : "object",
+  "properties" : {
+    "intranetip6" : {
+      "type" : "string"
+    },
+    "numaddr" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "vpnglobal_intranetip6_binding",
+  "title" : "vpnglobal_intranetip6_binding"
+}

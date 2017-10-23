@@ -1,0 +1,26 @@
+{
+  "type" : "object",
+  "properties" : {
+    "cachemaxage" : {
+      "type" : "boolean"
+    },
+    "imgtype" : {
+      "type" : "boolean"
+    },
+    "inlinecssthressize" : {
+      "type" : "boolean"
+    },
+    "inlineimgthressize" : {
+      "type" : "boolean"
+    },
+    "inlinejsthressize" : {
+      "type" : "boolean"
+    },
+    "jpegqualitypercent" : {
+      "type" : "boolean"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "coparameter",
+  "title" : "coparameter"
+}

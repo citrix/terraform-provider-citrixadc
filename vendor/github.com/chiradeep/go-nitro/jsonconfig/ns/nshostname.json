@@ -1,0 +1,14 @@
+{
+  "type" : "object",
+  "properties" : {
+    "hostname" : {
+      "type" : "string"
+    },
+    "ownernode" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "nshostname",
+  "title" : "nshostname"
+}

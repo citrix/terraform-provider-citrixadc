@@ -1,0 +1,44 @@
+{
+  "type" : "object",
+  "properties" : {
+    "customserverid" : {
+      "type" : "string"
+    },
+    "hashid" : {
+      "type" : "integer"
+    },
+    "monitor_name" : {
+      "type" : "string"
+    },
+    "monstate" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "monweight" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "passive" : {
+      "type" : "boolean"
+    },
+    "port" : {
+      "type" : "integer"
+    },
+    "serverid" : {
+      "type" : "integer"
+    },
+    "servicegroupname" : {
+      "type" : "string"
+    },
+    "state" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "weight" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "servicegroup_lbmonitor_binding",
+  "title" : "servicegroup_lbmonitor_binding"
+}

@@ -1,0 +1,15 @@
+{
+  "type" : "object",
+  "properties" : {
+    "staauthid" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "staserver" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "vpnglobal_staserver_binding",
+  "title" : "vpnglobal_staserver_binding"
+}

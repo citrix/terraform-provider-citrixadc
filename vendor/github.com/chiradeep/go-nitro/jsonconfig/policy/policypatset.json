@@ -1,0 +1,19 @@
+{
+  "type" : "object",
+  "properties" : {
+    "description" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "indextype" : {
+      "type" : "string",
+      "enum" : [ "Auto-generated", "User-defined" ]
+    },
+    "name" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "policypatset",
+  "title" : "policypatset"
+}
