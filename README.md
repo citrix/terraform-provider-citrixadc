@@ -1,10 +1,14 @@
 # terraform-provider-netscaler
 
-[Terraform](https://www.terraform.io) Custom Provider for [Citrix NetScaler](https://www.citrix.com/products/netscaler-adc/)
+[Terraform](https://www.terraform.io) Provider for [Citrix
+NetScaler](https://www.citrix.com/products/netscaler-adc/)
 
 ## Description
 
-This project is a terraform custom provider for Citrix NetScaler. It uses the [Nitro API] (https://docs.citrix.com/en-us/netscaler/11/nitro-api.html) to create/configure LB configurations. 
+This project is a terraform custom provider for Citrix NetScaler. It uses the [Nitro API](https://docs.citrix.com/en-us/netscaler/11/nitro-api.html) to create/configure LB configurations. 
+
+**Important note: The provider will not commit the config changes to NetScaler's persistent
+store.**
 
 ## Requirement
 
@@ -14,8 +18,12 @@ This project is a terraform custom provider for Citrix NetScaler. It uses the [N
 ## Usage
 
 ### Running
-1. Copy the binary (either from the [build](#building) or from the [releases](https://github.com/citrix/terraform-provider-netscaler/releases) page) `terraform-provider-netscaler` to an appropriate location. [Configure](https://www.terraform.io/docs/plugins/basics.html) `.terraformrc` to use the `netscaler` provider. An example `.terraformrc`:
+1. Copy the binary (either from the [build](#building) or from the
+   [releases](https://github.com/citrix/terraform-provider-netscaler/releases) page)
+   `terraform-provider-netscaler` to an appropriate location.
 
+   [Configure](https://www.terraform.io/docs/plugins/basics.html) `.terraformrc` to use the
+   `netscaler` provider. An example `.terraformrc`:
 
 ```
 providers {
