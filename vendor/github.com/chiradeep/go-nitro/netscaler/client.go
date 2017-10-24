@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"crypto/tls"
 )
 
 //NitroClient has methods to configure the NetScaler
@@ -31,6 +32,12 @@ type NitroClient struct {
 	password  string
 	proxiedNs string
 	client    *http.Client
+}
+
+func (client *NitroClient) SkipCertificateVerification() {
+	client.client.Transport = &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
 }
 
 //NewNitroClient returns a usable NitroClient. Does not check validity of supplied parameters
