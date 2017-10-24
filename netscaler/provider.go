@@ -38,23 +38,29 @@ func Provider() terraform.ResourceProvider {
 
 func providerSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
-		"username": &schema.Schema{
+		"username": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "Username to login to the NetScaler",
 			DefaultFunc: schema.EnvDefaultFunc("NS_LOGIN", "nsroot"),
 		},
-		"password": &schema.Schema{
+		"password": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "Password to login to the NetScaler",
 			DefaultFunc: schema.EnvDefaultFunc("NS_PASSWORD", "nsroot"),
 		},
-		"endpoint": &schema.Schema{
+		"endpoint": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "The URL to the API",
 			DefaultFunc: schema.EnvDefaultFunc("NS_URL", nil),
+		},
+		"insecure_skip_verify": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Description: "Ignore validity of endpoint TLS certificate if true",
+			Default:     false,
 		},
 	}
 }
@@ -79,6 +85,10 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		Endpoint: d.Get("endpoint").(string),
 	}
 	client := netscaler.NewNitroClient(c.Endpoint, c.Username, c.Password)
+	if d.Get("insecure_skip_verify").(bool) {
+		c.client.SkipCertificateVerification()
+	}
+
 	c.client = client
 
 	return &c, nil

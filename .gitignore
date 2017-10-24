@@ -2,3 +2,5 @@
 tags
 terraform-provider-netscaler
 tools/tools
+.idea
+*.iml
