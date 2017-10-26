@@ -59,7 +59,7 @@ func providerSchema() map[string]*schema.Schema {
 		},		
 		"sslverify": &schema.Schema{
 			Type:        schema.TypeBool,
-			Required:    true,
+			Required:    false,
 			DefaultFunc: schema.EnvDefaultFunc("NS_SSLVERIFY", true),
 			Description: "Enable ssl validation",
 		},
