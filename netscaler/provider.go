@@ -86,7 +86,12 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		Endpoint: d.Get("endpoint").(string),
 		SSLVerify: d.Get("sslverify").(bool),
 	}
-	client := netscaler.NewNitroClient(c.Endpoint, c.Username, c.Password, c.SSLVerify)
+
+	if c.SSLVerify == false {
+		netscaler.DisableSSLVerify()
+	}
+
+	client := netscaler.NewNitroClient(c.Endpoint, c.Username, c.Password)
 	c.client = client
 
 	return &c, nil
