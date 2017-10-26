@@ -16,7 +16,7 @@ limitations under the License.
 package netscaler
 
 import (
-	"github.com/Ticketmaster/go-nitro/netscaler"
+	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
 )
