@@ -25,6 +25,7 @@ type NetScalerNitroClient struct {
 	Username string
 	Password string
 	Endpoint string
+	SSLVerify  bool
 	client   *netscaler.NitroClient
 }
 
@@ -55,6 +56,12 @@ func providerSchema() map[string]*schema.Schema {
 			Required:    true,
 			Description: "The URL to the API",
 			DefaultFunc: schema.EnvDefaultFunc("NS_URL", nil),
+		},		
+		"sslverify": &schema.Schema{
+			Type:        schema.TypeBool,
+			Optional:    true,
+			DefaultFunc: schema.EnvDefaultFunc("NS_SSLVERIFY", true),
+			Description: "Enable ssl validation",
 		},
 	}
 }
@@ -77,7 +84,13 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		Username: d.Get("username").(string),
 		Password: d.Get("password").(string),
 		Endpoint: d.Get("endpoint").(string),
+		SSLVerify: d.Get("sslverify").(bool),
 	}
+
+	if c.SSLVerify == false {
+		netscaler.DisableSSLVerify()
+	}
+
 	client := netscaler.NewNitroClient(c.Endpoint, c.Username, c.Password)
 	c.client = client
 

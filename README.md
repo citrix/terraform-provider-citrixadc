@@ -14,22 +14,19 @@ This project is a terraform custom provider for Citrix NetScaler. It uses the [N
 ## Usage
 
 ### Running
-1. Copy the binary (either from the [build](#building) or from the [releases](https://github.com/citrix/terraform-provider-netscaler/releases) page) `terraform-provider-netscaler` to an appropriate location. [Configure](https://www.terraform.io/docs/plugins/basics.html) `.terraformrc` to use the `netscaler` provider. An example `.terraformrc`:
+1. Copy the binary (either from the [build](#building) or from the 
+[releases](https://github.com/citrix/terraform-provider-netscaler/releases) page) `terraform-provider-netscaler` to the 
+[third-pary plugin](https://www.terraform.io/docs/configuration/providers.html#third-party-plugins) directory.
 
+2. Run `terraform init`.
 
-```
-providers {
-    netscaler = "<path-to-custom-providers>/terraform-provider-netscaler"
-}
-```
-
-2. Run `terraform` as usual 
+3. Run `terraform` as usual 
 
 ```
 terraform plan
 terraform apply
 ```
-3. The provider will not commit the config changes to NetScaler's persistent store. To do this, run the shell script `ns_commit.sh`:
+4. The provider will not commit the config changes to NetScaler's persistent store. To do this, run the shell script `ns_commit.sh`:
 
 ```
 export NS_URL=http://<host>:<port>/
@@ -50,6 +47,17 @@ provider "netscaler" {
 }
 ```
 
+Optionally, you can disable SSL verification if your Netscaler is using a self-signed certificate.
+
+```
+provider "netscaler" {
+    username = "${var.ns_user}"
+    password = "${var.ns_password}"
+    endpoint = "http://10.71.136.250/"
+    sslverify = false
+}
+```
+
 ##### Argument Reference
 
 The following arguments are supported.
@@ -57,6 +65,7 @@ The following arguments are supported.
 * `username` - This is the user name to access to NetScaler. Defaults to `nsroot` unless environment variable `NS_LOGIN` has been set
 * `password` - This is the password to access to NetScaler. Defaults to `nsroot` unless environment variable `NS_PASSWORD` has been set
 * `endpoint` - (Required) Nitro API endpoint in the form `http://<NS_IP>/` or `http://<NS_IP>:<PORT>/`. Can be specified in environment variable `NS_URL`
+* `sslverify` - This controls SSL Verification. Set to `false` to disable SSL verification. Defaults to `true`. Can be specified in environment variable `NS_SSLVerify`. 
 
 The username, password and endpoint can be provided in environment variables `NS_LOGIN`, `NS_PASSWORD` and `NS_URL`. 
 
