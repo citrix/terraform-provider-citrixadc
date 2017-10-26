@@ -23,8 +23,11 @@ update:
 build:
 	godep go build -o terraform-provider-netscaler .
 
+build-windows:
+	GOOS=windows godep go build -a -installsuffix windows  -o terraform-provider-netscaler.exe
+
 build-linux:
-	CGO_ENABLED=0 GOOS=linux godep go build -a -installsuffix cgo -ldflags '-w' -o terraform-provider-netscaler
+	GOOS=linux godep go build -a -installsuffix linux  -o terraform-provider-netscaler
 
 test:
 	TF_ACC=1 TF_LOG=INFO godep go test -v $(PROVIDER_ONLY_PKGS)
@@ -35,8 +38,14 @@ plan:
 clean:
 	rm terraform-provider-netscaler
 
+clean-windows:
+	rm terraform-provider-netscaler.exe
+
 release: clean build
 	tar cvzf terraform-provider-netscaler-darwin-amd64.tar.gz terraform-provider-netscaler
 
 release-linux: clean build-linux
 	tar cvzf terraform-provider-netscaler-linux-amd64.tar.gz terraform-provider-netscaler
+
+release-windows: clean-windows build-windows
+	zip  terraform-provider-netscaler-windows-amd64.zip terraform-provider-netscaler.exe
