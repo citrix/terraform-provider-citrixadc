@@ -65,6 +65,7 @@ The following arguments are supported.
 * `username` - This is the user name to access to NetScaler. Defaults to `nsroot` unless environment variable `NS_LOGIN` has been set
 * `password` - This is the password to access to NetScaler. Defaults to `nsroot` unless environment variable `NS_PASSWORD` has been set
 * `endpoint` - (Required) Nitro API endpoint in the form `http://<NS_IP>/` or `http://<NS_IP>:<PORT>/`. Can be specified in environment variable `NS_URL`
+* `sslverify` - This controls SSL Verification. Set to `false` to disable SSL verification. Defaults to `true`. Can be specified in environment variable `NS_SSLVerify`. 
 
 The username, password and endpoint can be provided in environment variables `NS_LOGIN`, `NS_PASSWORD` and `NS_URL`. 
 
