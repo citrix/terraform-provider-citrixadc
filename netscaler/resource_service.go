@@ -274,8 +274,8 @@ func createServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] netscaler-provider:  In createServiceFunc")
 	client := meta.(*NetScalerNitroClient).client
 
-	meta.(*NetScalerNitroClient).serviceLock.Lock()
-	defer meta.(*NetScalerNitroClient).serviceLock.Unlock()
+	meta.(*NetScalerNitroClient).lock.Lock()
+	defer meta.(*NetScalerNitroClient).lock.Unlock()
 
 	var serviceName string
 	if v, ok := d.GetOk("name"); ok {
@@ -509,8 +509,8 @@ func updateServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] netscaler-provider:  In updateServiceFunc")
 	client := meta.(*NetScalerNitroClient).client
 
-	meta.(*NetScalerNitroClient).serviceLock.Lock()
-	defer meta.(*NetScalerNitroClient).serviceLock.Unlock()
+	meta.(*NetScalerNitroClient).lock.Lock()
+	defer meta.(*NetScalerNitroClient).lock.Unlock()
 
 	serviceName := d.Get("name").(string)
 
@@ -840,8 +840,8 @@ func deleteServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] netscaler-provider:  In deleteServiceFunc")
 	client := meta.(*NetScalerNitroClient).client
 
-	meta.(*NetScalerNitroClient).serviceLock.Lock()
-	defer meta.(*NetScalerNitroClient).serviceLock.Unlock()
+	meta.(*NetScalerNitroClient).lock.Lock()
+	defer meta.(*NetScalerNitroClient).lock.Unlock()
 
 	serviceName := d.Id()
 	err := client.DeleteResource(netscaler.Service.Type(), serviceName)

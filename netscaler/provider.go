@@ -23,11 +23,11 @@ import (
 )
 
 type NetScalerNitroClient struct {
-	Username    string
-	Password    string
-	Endpoint    string
-	client      *netscaler.NitroClient
-	serviceLock sync.Mutex
+	Username string
+	Password string
+	Endpoint string
+	client   *netscaler.NitroClient
+	lock     sync.Mutex
 }
 
 func Provider() terraform.ResourceProvider {
