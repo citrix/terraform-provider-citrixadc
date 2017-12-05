@@ -19,13 +19,15 @@ import (
 	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
+	"sync"
 )
 
 type NetScalerNitroClient struct {
-	Username string
-	Password string
-	Endpoint string
-	client   *netscaler.NitroClient
+	Username    string
+	Password    string
+	Endpoint    string
+	client      *netscaler.NitroClient
+	serviceLock sync.Mutex
 }
 
 func Provider() terraform.ResourceProvider {
@@ -86,7 +88,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	}
 	client := netscaler.NewNitroClient(c.Endpoint, c.Username, c.Password)
 	if d.Get("insecure_skip_verify").(bool) {
-		c.client.SkipCertificateVerification()
+		client.SkipCertificateVerification()
 	}
 
 	c.client = client

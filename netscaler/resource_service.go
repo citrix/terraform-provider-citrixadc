@@ -1,15 +1,14 @@
 package netscaler
 
 import (
+	"fmt"
+	"log"
+
 	"github.com/chiradeep/go-nitro/config/basic"
 	"github.com/chiradeep/go-nitro/config/lb"
-
 	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
-
-	"fmt"
-	"log"
 )
 
 func resourceNetScalerService() *schema.Resource {
@@ -20,17 +19,17 @@ func resourceNetScalerService() *schema.Resource {
 		Update:        updateServiceFunc,
 		Delete:        deleteServiceFunc,
 		Schema: map[string]*schema.Schema{
-			"accessdown": &schema.Schema{
+			"accessdown": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"all": &schema.Schema{
+			"all": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"appflowlog": &schema.Schema{
+			"appflowlog": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -159,6 +158,7 @@ func resourceNetScalerService() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"netprofile": &schema.Schema{
 				Type:     schema.TypeString,
@@ -273,6 +273,10 @@ func resourceNetScalerService() *schema.Resource {
 func createServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] netscaler-provider:  In createServiceFunc")
 	client := meta.(*NetScalerNitroClient).client
+
+	meta.(*NetScalerNitroClient).serviceLock.Lock()
+	defer meta.(*NetScalerNitroClient).serviceLock.Unlock()
+
 	var serviceName string
 	if v, ok := d.GetOk("name"); ok {
 		serviceName = v.(string)
@@ -398,6 +402,7 @@ func createServiceFunc(d *schema.ResourceData, meta interface{}) error {
 
 func readServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] netscaler-provider:  In readServiceFunc")
+
 	client := meta.(*NetScalerNitroClient).client
 	serviceName := d.Id()
 	log.Printf("[DEBUG] netscaler-provider: Reading service state %s", serviceName)
@@ -503,6 +508,10 @@ func readServiceFunc(d *schema.ResourceData, meta interface{}) error {
 func updateServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] netscaler-provider:  In updateServiceFunc")
 	client := meta.(*NetScalerNitroClient).client
+
+	meta.(*NetScalerNitroClient).serviceLock.Lock()
+	defer meta.(*NetScalerNitroClient).serviceLock.Unlock()
+
 	serviceName := d.Get("name").(string)
 
 	hasChange := false
@@ -830,6 +839,10 @@ func updateServiceFunc(d *schema.ResourceData, meta interface{}) error {
 func deleteServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] netscaler-provider:  In deleteServiceFunc")
 	client := meta.(*NetScalerNitroClient).client
+
+	meta.(*NetScalerNitroClient).serviceLock.Lock()
+	defer meta.(*NetScalerNitroClient).serviceLock.Unlock()
+
 	serviceName := d.Id()
 	err := client.DeleteResource(netscaler.Service.Type(), serviceName)
 	if err != nil {
