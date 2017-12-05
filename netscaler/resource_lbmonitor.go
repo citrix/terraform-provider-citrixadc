@@ -486,6 +486,10 @@ func resourceNetScalerLbmonitor() *schema.Resource {
 func createLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] netscaler-provider:  In createLbmonitorFunc")
 	client := meta.(*NetScalerNitroClient).client
+
+	meta.(*NetScalerNitroClient).lock.Lock()
+	defer meta.(*NetScalerNitroClient).lock.Unlock()
+
 	var lbmonitorName string
 	if v, ok := d.GetOk("monitorname"); ok {
 		lbmonitorName = v.(string)
@@ -606,6 +610,7 @@ func createLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 func readLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] netscaler-provider:  In readLbmonitorFunc")
 	client := meta.(*NetScalerNitroClient).client
+
 	lbmonitorName := d.Id()
 	log.Printf("[DEBUG] netscaler-provider: Reading lbmonitor state %s", lbmonitorName)
 	data, err := client.FindResource(netscaler.Lbmonitor.Type(), lbmonitorName)
@@ -714,6 +719,10 @@ func readLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 func updateLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] netscaler-provider:  In updateLbmonitorFunc")
 	client := meta.(*NetScalerNitroClient).client
+
+	meta.(*NetScalerNitroClient).lock.Lock()
+	defer meta.(*NetScalerNitroClient).lock.Unlock()
+
 	lbmonitorName := d.Get("monitorname").(string)
 
 	lbmonitor := lb.Lbmonitor{
@@ -1194,6 +1203,10 @@ func updateLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 func deleteLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] netscaler-provider:  In deleteLbmonitorFunc")
 	client := meta.(*NetScalerNitroClient).client
+
+	meta.(*NetScalerNitroClient).lock.Lock()
+	defer meta.(*NetScalerNitroClient).lock.Unlock()
+
 	lbmonitorName := d.Id()
 	args := make([]string, 1, 1)
 	args[0] = "type:" + d.Get("type").(string)
