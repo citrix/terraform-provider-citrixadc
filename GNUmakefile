@@ -14,23 +14,23 @@
 
 PROVIDER_ONLY_PKGS=$(shell go list ./... | grep -v "/vendor/" | grep -v "tools")
 
-default: build 
+default: build
 
 update:
-	go get ./...
-	godep update ./...
+	dep ensure -update
+	dep prune
 
 build:
-	godep go build -o terraform-provider-netscaler .
+	go build -o terraform-provider-netscaler .
 
 build-windows:
-	GOOS=windows godep go build -a -installsuffix windows  -o terraform-provider-netscaler.exe
+	GOOS=windows go build -a -installsuffix windows  -o terraform-provider-netscaler.exe
 
 build-linux:
-	GOOS=linux godep go build -a -installsuffix linux  -o terraform-provider-netscaler
+	GOOS=linux go build -a -installsuffix linux  -o terraform-provider-netscaler
 
 test:
-	TF_ACC=1 TF_LOG=INFO godep go test -v $(PROVIDER_ONLY_PKGS)
+	TF_ACC=1 TF_LOG=INFO go test -v $(PROVIDER_ONLY_PKGS)
 
 plan:
 	@terraform plan
@@ -48,4 +48,4 @@ release-linux: clean build-linux
 	tar cvzf terraform-provider-netscaler-linux-amd64.tar.gz terraform-provider-netscaler
 
 release-windows: clean-windows build-windows
-	zip  terraform-provider-netscaler-windows-amd64.zip terraform-provider-netscaler.exe
+	zip terraform-provider-netscaler-windows-amd64.zip terraform-provider-netscaler.exe
