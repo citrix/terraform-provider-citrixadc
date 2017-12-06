@@ -1,3 +1,4 @@
+# Copyright 2017 Joyent, Inc
 # Copyright 2016 Citrix Systems, Inc
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,40 +13,57 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-PROVIDER_ONLY_PKGS=$(shell go list ./... | grep -v "/vendor/" | grep -v "tools")
+TEST?=$$(go list ./... |grep -v 'vendor')
+GOFMT_FILES?=$$(find . -name '*.go' |grep -v vendor)
 
 default: build
 
-update:
-	dep ensure -update
-	dep prune
+.PHONY: build
+build: fmtcheck ## Build the provider
+	go install
 
-build:
-	go build -o terraform-provider-netscaler .
+.PHONY: test
+test: fmtcheck ## Test the provider
+	go test -i $(TEST) || exit 1
+	echo $(TEST) | \
+		xargs -t -n4 go test $(TESTARGS) -timeout=30s -parallel=4
 
-build-windows:
-	GOOS=windows go build -a -installsuffix windows  -o terraform-provider-netscaler.exe
+.PHONY: testacc
+testacc: fmtcheck ## Test acceptance of the provider
+	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 120m
 
-build-linux:
-	GOOS=linux go build -a -installsuffix linux  -o terraform-provider-netscaler
+.PHONY: vet
+vet: ## Run go vet across the provider
+	@echo "go vet ."
+	@go vet $$(go list ./... | grep -v vendor/) ; if [ $$? -eq 1 ]; then \
+		echo ""; \
+		echo "Vet found suspicious constructs. Please check the reported constructs"; \
+		echo "and fix them if necessary before submitting the code for review."; \
+		exit 1; \
+	fi
 
-test:
-	TF_ACC=1 TF_LOG=INFO go test -v $(PROVIDER_ONLY_PKGS)
+.PHONY: fmt
+fmt: ## Run gofmt across all go files
+	gofmt -w $(GOFMT_FILES)
 
-plan:
-	@terraform plan
+.PHONY: fmtcheck
+fmtcheck: ## Check that code complies with gofmt requirements
+	@sh -c "'$(CURDIR)/scripts/gofmtcheck.sh'"
 
-clean:
-	rm terraform-provider-netscaler
+.PHONY: errcheck
+errcheck: ## Check for unchecked errors
+	@sh -c "'$(CURDIR)/scripts/errcheck.sh'"
 
-clean-windows:
-	rm terraform-provider-netscaler.exe
+.PHONY: test-compile
+test-compile:
+	@if [ "$(TEST)" = "./..." ]; then \
+		echo "ERROR: Set TEST to a specific package. For example,"; \
+		echo "  make test-compile TEST=./aws"; \
+		exit 1; \
+	fi
+	go test -c $(TEST) $(TESTARGS)
 
-release: clean build
-	tar cvzf terraform-provider-netscaler-darwin-amd64.tar.gz terraform-provider-netscaler
-
-release-linux: clean build-linux
-	tar cvzf terraform-provider-netscaler-linux-amd64.tar.gz terraform-provider-netscaler
-
-release-windows: clean-windows build-windows
-	zip terraform-provider-netscaler-windows-amd64.zip terraform-provider-netscaler.exe
+.PHONY: help
+help:
+	@echo "Valid targets:"
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
