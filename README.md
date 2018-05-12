@@ -58,6 +58,8 @@ provider "netscaler" {
 }
 ```
 
+We can use a `https` URL and accept the untrusted authority certificate on the NetScaler by specifying `insecure_skip_verify = true`
+
 ##### Argument Reference
 
 The following arguments are supported.
@@ -65,6 +67,7 @@ The following arguments are supported.
 * `username` - This is the user name to access to NetScaler. Defaults to `nsroot` unless environment variable `NS_LOGIN` has been set
 * `password` - This is the password to access to NetScaler. Defaults to `nsroot` unless environment variable `NS_PASSWORD` has been set
 * `endpoint` - (Required) Nitro API endpoint in the form `http://<NS_IP>/` or `http://<NS_IP>:<PORT>/`. Can be specified in environment variable `NS_URL`
+* `insecure_skip_verify` - (Optional, true/false) Whether to accept the untrusted certificate on the NetScaler when the NetScaler endpoint is `https`
 
 The username, password and endpoint can be provided in environment variables `NS_LOGIN`, `NS_PASSWORD` and `NS_URL`. 
 
@@ -185,10 +188,9 @@ its configuration files, tfstate files, etc.
 * You are comfortable with the Go language and its code organization.
 
 1. Install `terraform` from <https://www.terraform.io/downloads.html>
-2. `go get -u github.com/hashicorp/terraform`
-3. Install `godep` (<https://github.com/tools/godep>)
-4. Check out this code: `git clone https://<>`
-5. Build this code using `make build`
+2. Install `dep` (<https://github.com/golang/dep>)
+3. Check out this code: `git clone https://<>`
+4. Build this code using `make build`
 
 
 
