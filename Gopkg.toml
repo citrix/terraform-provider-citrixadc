@@ -23,6 +23,8 @@
 
 [[constraint]]
   name = "github.com/chiradeep/go-nitro"
+  branch = "master"
 
 [[constraint]]
   name = "github.com/hashicorp/terraform"
+  version = "0.11.7"

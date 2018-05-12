@@ -49,6 +49,8 @@ The `structs` for the config objects under `config/` are generated from JSON dec
 ### Unit Tests
 The unit tests are invoked with `make unit`. Note that they are actually functional tests and need a running NetScaler. The tests also need the environment variables `NS_URL`, `NS_LOGIN` and `NS_PASSWORD` to be set.
 
+### Using HTTPS
+If you specify `https` in the URL then the client will use HTTPS. By default it will verify the presented certificate. If you want to use the default or self-signed certificates without verification, specify `sslVerify=false` in the constructor `NewNitroClientFromParams` or set the environment variable `NS_SSLVERIFY` to `false` and use the `NewNitroClientFromEnv` constructor
 
 ## TODO
 Some REST operations are not yet supported:

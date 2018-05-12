@@ -31,7 +31,7 @@ func (c *NitroClient) AddResource(resourceType string, name string, resourceStru
 
 	resourceJSON, err := json.Marshal(nsResource)
 
-	log.Println("[TRACE] go-nitro: Resourcejson is " + string(resourceJSON))
+	log.Printf("[TRACE] go-nitro: Resourcejson is " + string(resourceJSON))
 
 	body, err := c.createResource(resourceType, resourceJSON)
 	if err != nil {
@@ -50,7 +50,7 @@ func (c *NitroClient) ApplyResource(resourceType string, resourceStruct interfac
 
 	resourceJSON, err := json.Marshal(nsResource)
 
-	log.Println("[TRACE] go-nitro: Resourcejson is " + string(resourceJSON))
+	log.Printf("[TRACE] go-nitro: Resourcejson is " + string(resourceJSON))
 
 	body, err := c.applyResource(resourceType, resourceJSON)
 	if err != nil {
@@ -69,7 +69,7 @@ func (c *NitroClient) UpdateResource(resourceType string, name string, resourceS
 		nsResource[resourceType] = resourceStruct
 		resourceJSON, err := json.Marshal(nsResource)
 
-		log.Println("[DEBUG] go-nitro: UpdateResource: Resourcejson is " + string(resourceJSON))
+		log.Printf("[DEBUG] go-nitro: UpdateResource: Resourcejson is " + string(resourceJSON))
 
 		body, err := c.updateResource(resourceType, name, resourceJSON)
 		if err != nil {
@@ -89,7 +89,7 @@ func (c *NitroClient) ChangeResource(resourceType string, name string, resourceS
 		nsResource[resourceType] = resourceStruct
 		resourceJSON, err := json.Marshal(nsResource)
 
-		log.Println("[DEBUG] go-nitro: ChangeResource: Resourcejson is " + string(resourceJSON))
+		log.Printf("[DEBUG] go-nitro: ChangeResource: Resourcejson is " + string(resourceJSON))
 
 		body, err := c.changeResource(resourceType, name, resourceJSON)
 		if err != nil {
@@ -167,7 +167,7 @@ func (c *NitroClient) UnbindResource(boundToResourceType string, boundToResource
 	}
 
 	if c.ResourceExists(boundResourceType, boundResourceName) == false {
-		log.Println("[INFO] go-nitro: Unbind: Bound Resource %s of type %s does not exist", boundResourceType, boundResourceName)
+		log.Printf("[INFO] go-nitro: Unbind: Bound Resource %s of type %s does not exist", boundResourceType, boundResourceName)
 		return nil
 	}
 
@@ -199,7 +199,7 @@ func (c *NitroClient) FindResourceArray(resourceType string, resourceName string
 		return nil, fmt.Errorf("[INFO] go-nitro: FindResourceArray: No resource %s of type %s found", resourceName, resourceType)
 	}
 	if err = json.Unmarshal(result, &data); err != nil {
-		log.Println("[ERROR] go-nitro: FindResourceArray: Failed to unmarshal Netscaler Response!")
+		log.Printf("[ERROR] go-nitro: FindResourceArray: Failed to unmarshal Netscaler Response!")
 		return nil, fmt.Errorf("[ERROR] go-nitro: FindResourceArray: Failed to unmarshal Netscaler Response:resource %s of type %s", resourceName, resourceType)
 	}
 	rsrcs, ok := data[resourceType]
@@ -224,7 +224,7 @@ func (c *NitroClient) FindResource(resourceType string, resourceName string) (ma
 		return nil, fmt.Errorf("[INFO] go-nitro: FindResource: No resource %s of type %s found", resourceName, resourceType)
 	}
 	if err = json.Unmarshal(result, &data); err != nil {
-		log.Println("[ERROR] go-nitro: FindResource: Failed to unmarshal Netscaler Response!")
+		log.Printf("[ERROR] go-nitro: FindResource: Failed to unmarshal Netscaler Response!")
 		return nil, fmt.Errorf("[ERROR] go-nitro: FindResource: Failed to unmarshal Netscaler Response:resource %s of type %s", resourceName, resourceType)
 	}
 	rsrc, ok := data[resourceType]
@@ -246,7 +246,7 @@ func (c *NitroClient) FindAllResources(resourceType string) ([]map[string]interf
 		return make([]map[string]interface{}, 0, 0), nil
 	}
 	if err = json.Unmarshal(result, &data); err != nil {
-		log.Println("[ERROR] go-nitro: FindAllResources: Failed to unmarshal Netscaler Response!")
+		log.Printf("[ERROR] go-nitro: FindAllResources: Failed to unmarshal Netscaler Response!")
 		return nil, fmt.Errorf("[ERROR] go-nitro: FindAllResources: Failed to unmarshal Netscaler Response: of type %s", resourceType)
 	}
 	rsrcs, ok := data[resourceType]
@@ -274,7 +274,7 @@ func (c *NitroClient) ResourceBindingExists(resourceType string, resourceName st
 
 	var data map[string]interface{}
 	if err := json.Unmarshal(result, &data); err != nil {
-		log.Println("[ERROR] go-nitro: ResourceBindingExists: Failed to unmarshal Netscaler Response!")
+		log.Printf("[ERROR] go-nitro: ResourceBindingExists: Failed to unmarshal Netscaler Response!")
 		return false
 	}
 	binding := fmt.Sprintf("%s_%s_binding", resourceType, boundResourceType)
@@ -297,7 +297,7 @@ func (c *NitroClient) FindBoundResource(resourceType string, resourceName string
 
 	var data map[string]interface{}
 	if err := json.Unmarshal(result, &data); err != nil {
-		log.Println("[ERROR] go-nitro: FindBoundResource: Failed to unmarshal Netscaler Response!")
+		log.Printf("[ERROR] go-nitro: FindBoundResource: Failed to unmarshal Netscaler Response!")
 		return nil, fmt.Errorf("[ERROR] go-nitro: FindBoundResource: Failed to unmarshal Netscaler Response!, err=%s", err)
 	}
 	bindingType := fmt.Sprintf("%s_%s_binding", resourceType, boundResourceType)
@@ -321,7 +321,7 @@ func (c *NitroClient) FindAllBoundResources(resourceType string, resourceName st
 
 	var data map[string]interface{}
 	if err := json.Unmarshal(result, &data); err != nil {
-		log.Println("[ERROR] go-nitro: FindAllBoundResources: Failed to unmarshal Netscaler Response!")
+		log.Printf("[ERROR] go-nitro: FindAllBoundResources: Failed to unmarshal Netscaler Response!")
 		return nil, fmt.Errorf("[ERROR] go-nitro: FindAllBoundResources: Failed to unmarshal Netscaler Response!, err=%s", err)
 	}
 	bindingType := fmt.Sprintf("%s_%s_binding", resourceType, boundResourceType)
@@ -355,13 +355,13 @@ func (c *NitroClient) EnableFeatures(featureNames []string) error {
 
 	featureJSON, err := json.Marshal(featureStruct)
 	if err != nil {
-		log.Println("[ERROR] go-nitro: EnableFeatures: Failed to marshal features to JSON")
+		log.Printf("[ERROR] go-nitro: EnableFeatures: Failed to marshal features to JSON")
 		return fmt.Errorf("[ERROR] go-nitro: Failed to marshal features to JSON")
 	}
 
 	_, err = c.enableFeatures(featureJSON)
 	if err != nil {
-		return fmt.Errorf("[ERROR] go-nitro: Failed to enable feature ", err)
+		return fmt.Errorf("[ERROR] go-nitro: Failed to enable feature %v", err)
 	}
 	return nil
 }
@@ -371,11 +371,11 @@ func (c *NitroClient) ListEnabledFeatures() ([]string, error) {
 
 	bytes, err := c.listEnabledFeatures()
 	if err != nil {
-		return []string{}, fmt.Errorf("[ERROR] go-nitro: Failed to list features ", err)
+		return []string{}, fmt.Errorf("[ERROR] go-nitro: Failed to list features %v", err)
 	}
 	var data map[string]interface{}
 	if err = json.Unmarshal(bytes, &data); err != nil {
-		log.Println("[ERROR] go-nitro: FindAllBoundResources: Failed to unmarshal Netscaler Response!")
+		log.Printf("[ERROR] go-nitro: FindAllBoundResources: Failed to unmarshal Netscaler Response!")
 		return []string{}, fmt.Errorf("[ERROR] go-nitro: Failed to unmarshal Netscaler Response to list Features")
 	}
 	feat, ok := data["nsfeature"]
@@ -410,14 +410,14 @@ func (c *NitroClient) SaveConfig() error {
 
 	saveJSON, err := json.Marshal(saveStruct)
 	if err != nil {
-		log.Println("[ERROR] go-nitro: SaveConfig: Failed to marshal save config to JSON")
+		log.Printf("[ERROR] go-nitro: SaveConfig: Failed to marshal save config to JSON")
 		return fmt.Errorf("[ERROR] go-nitro: Failed to marshal save config to JSON")
 	}
-	log.Println("saveJSON is " + string(saveJSON))
+	log.Printf("saveJSON is " + string(saveJSON))
 
 	err = c.saveConfig(saveJSON)
 	if err != nil {
-		return fmt.Errorf("[ERROR] go-nitro: Failed to save config ", err)
+		return fmt.Errorf("[ERROR] go-nitro: Failed to save config %v", err)
 	}
 	return nil
 }
@@ -436,14 +436,14 @@ func (c *NitroClient) ClearConfig() error {
 
 	clearJSON, err := json.Marshal(clearStruct)
 	if err != nil {
-		log.Println("[ERROR] go-nitro: ClearConfig: Failed to marshal clear config to JSON")
+		log.Printf("[ERROR] go-nitro: ClearConfig: Failed to marshal clear config to JSON")
 		return fmt.Errorf("[ERROR] go-nitro: Failed to marshal clear config to JSON")
 	}
-	log.Println("clearJSON is " + string(clearJSON))
+	log.Printf("clearJSON is " + string(clearJSON))
 
 	err = c.clearConfig(clearJSON)
 	if err != nil {
-		return fmt.Errorf("[ERROR] go-nitro: Failed to clear config ", err)
+		return fmt.Errorf("[ERROR] go-nitro: Failed to clear config %v", err)
 	}
 	return nil
 }

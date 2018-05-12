@@ -57,26 +57,40 @@ func TestClientCreate(t *testing.T) {
 	if client.proxiedNs != "10.221.48.207" {
 		t.Error("proxiedNS not set despite being set in the environment")
 	}
-
-	os.Unsetenv("NS_URL")
-	_, err = NewNitroClientFromEnv("http://127.0.0.11:34552")
+	os.Setenv("NS_SSLVERIFY", "False")
+	_, err = NewNitroClientFromEnv()
 	if err != nil {
-		t.Error("Didnt expect to fail in creating client")
-	}
-
-	os.Unsetenv("NS_LOGIN")
-	_, err = NewNitroClientFromEnv("http://127.0.0.11:34552", "nsroot")
-	if err != nil {
-		t.Error("Didnt expect to fail in creating client")
-	}
-
-	os.Unsetenv("NS_PASSWORD")
-	_, err = NewNitroClientFromEnv("http://127.0.0.11:34552", "nsroot", "nsroot")
-	if err != nil {
-		t.Error("Didnt expect to fail in creating client")
+		t.Error("Didnt expect to fail in creating client with SSL verify option")
 	}
 
 	os.Setenv("NS_URL", oldURL)
 	os.Setenv("NS_LOGIN", oldLogin)
 	os.Setenv("NS_PASSWORD", oldPwd)
+}
+
+func TestClientCreateFromParams(t *testing.T) {
+	t.Log("Create client from supplied params")
+
+	params := NitroParams{
+		Url:      os.Getenv("NS_URL"),
+		Username: os.Getenv("NS_LOGIN"),
+		Password: os.Getenv("NS_PASSWORD"),
+	}
+	client, err := NewNitroClientFromParams(params)
+	if client == nil {
+		t.Error("Expected to succeed in creating client")
+	}
+
+	params.SslVerify = false
+	client, err = NewNitroClientFromParams(params)
+	if client == nil {
+		t.Error("Expected to succeed in creating client")
+	}
+
+	params.Url = "localhost:32770"
+	client, err = NewNitroClientFromParams(params)
+	if err == nil {
+		t.Error("Expected to fail in creating client due to invalid URL")
+	}
+
 }

@@ -75,11 +75,16 @@ func TestAdd(t *testing.T) {
 		Servicetype: "HTTP",
 		Port:        8000,
 	}
-	client.AddResource(Lbvserver.Type(), lbName, &lb1)
+	_, err := client.AddResource(Lbvserver.Type(), lbName, &lb1)
+	if err != nil {
+		t.Error("Could not add Lbvserver: ", err)
+		log.Println("Not continuing test")
+		return
+	}
 
 	rsrc, err := client.FindResource(Lbvserver.Type(), lbName)
 	if err != nil {
-		t.Error("Did not find resource of type ", Lbvserver.Type(), ":", lbName)
+		t.Error("Did not find resource of type ", err, Lbvserver.Type(), ":", lbName)
 	}
 	val, ok := rsrc["ipv46"]
 	if ok {
@@ -92,7 +97,7 @@ func TestAdd(t *testing.T) {
 		}
 		val, ok = rsrc["servicetype"]
 		if val != "HTTP" {
-			t.Error("Wrong servicetype for lb ", lbName, ": ", val)
+			t.Error("Wrong servicetype for lb ", err, lbName, ": ", val)
 		}
 	}
 	if !ok {
@@ -113,7 +118,7 @@ func TestAdd(t *testing.T) {
 
 	_, err = client.FindResource(Service.Type(), svcName)
 	if err != nil {
-		t.Error("Did not find resource of type ", Service.Type(), ":", svcName)
+		t.Error("Did not find resource of type ", err, Service.Type(), ":", svcName)
 	}
 }
 
@@ -129,19 +134,26 @@ func TestApply(t *testing.T) {
 		Priority:  1100,
 	}
 
-	client.AddResource(Nsacl.Type(), aclName, &acl1)
+	_, err := client.AddResource(Nsacl.Type(), aclName, &acl1)
+	if err != nil {
+		t.Error("Could not add resource Nsacl", err)
+		log.Println("Cannot continue")
+		return
+	}
 
 	acls := ns.Nsacls{}
 	client.ApplyResource(Nsacls.Type(), &acls)
 
 	readAcls, err := client.FindResourceArray(Nsacl.Type(), aclName)
 	if err != nil {
-		t.Error("Did not find resource of type ", Nsacl.Type(), ":", aclName)
+		t.Error("Did not find resource of type ", Nsacl.Type(), err, ":", aclName)
 	}
-	acl2 := readAcls[0]
-	log.Println("Found acl, kernelstate= ", acl2["kernelstate"])
-	if acl2["kernelstate"].(string) != "APPLIED" {
-		t.Error("ACL created but not APPLIED ", Nsacl.Type(), ":", aclName)
+	if err == nil {
+		acl2 := readAcls[0]
+		log.Println("Found acl, kernelstate= ", acl2["kernelstate"])
+		if acl2["kernelstate"].(string) != "APPLIED" {
+			t.Error("ACL created but not APPLIED ", Nsacl.Type(), ":", aclName)
+		}
 	}
 }
 
@@ -158,17 +170,26 @@ func TestUpdate(t *testing.T) {
 	}
 	_, err := client.AddResource(Lbvserver.Type(), lbName, &lb1)
 	if err != nil {
-		t.Error("Could not create LB")
+		t.Error("Could not create LB", err)
+		log.Println("Cannot continue")
+		return
 	}
 
 	lb1 = lb.Lbvserver{
 		Name:     lbName,
 		Lbmethod: "LEASTCONNECTION",
 	}
-	client.UpdateResource(Lbvserver.Type(), lbName, &lb1)
+	_, err = client.UpdateResource(Lbvserver.Type(), lbName, &lb1)
+	if err != nil {
+		t.Error("Could not update LB")
+		log.Println("Cannot continue")
+		return
+	}
 	rsrc, err := client.FindResource(Lbvserver.Type(), lbName)
 	if err != nil {
-		t.Error("Did not find resource of type ", Lbvserver.Type(), ":", lbName)
+		t.Error("Did not find resource of type ", Lbvserver.Type(), ":", lbName, err)
+		log.Println("Cannot continue")
+		return
 	}
 	val, ok := rsrc["lbmethod"]
 	if ok {
@@ -196,7 +217,9 @@ func TestBindUnBind(t *testing.T) {
 	}
 	_, err := client.AddResource(Lbvserver.Type(), lbName, &lb1)
 	if err != nil {
-		t.Error("Could not create LB")
+		t.Error("Could not create LB", err)
+		log.Println("Cannot continue")
+		return
 	}
 	service1 := basic.Service{
 		Name:        svcName,
@@ -207,7 +230,9 @@ func TestBindUnBind(t *testing.T) {
 
 	_, err = client.AddResource(Service.Type(), svcName, &service1)
 	if err != nil {
-		t.Error("Could not create service")
+		t.Error("Could not create service", err)
+		log.Println("Cannot continue")
+		return
 	}
 
 	binding := lb.Lbvserverservicebinding{
@@ -215,12 +240,24 @@ func TestBindUnBind(t *testing.T) {
 		Servicename: svcName,
 	}
 
-	client.BindResource(Lbvserver.Type(), lbName, Service.Type(), svcName, &binding)
+	err = client.BindResource(Lbvserver.Type(), lbName, Service.Type(), svcName, &binding)
+	if err != nil {
+		t.Error("Could not bind LB to svc", err)
+		log.Println("Cannot continue")
+		return
+	}
 	exists := client.ResourceBindingExists(Lbvserver.Type(), lbName, Service.Type(), "servicename", svcName)
 	if !exists {
 		t.Error("Failed to bind service to lb vserver")
+		log.Println("Cannot continue")
+		return
 	}
 	err = client.UnbindResource(Lbvserver.Type(), lbName, Service.Type(), svcName, "servicename")
+	if err != nil {
+		t.Error("Could not unbind LB to svc", err)
+		log.Println("Cannot continue")
+		return
+	}
 	exists = client.ResourceBindingExists(Lbvserver.Type(), lbName, Service.Type(), "servicename", svcName)
 	if exists {
 		t.Error("Failed to unbind service to lb vserver")
@@ -239,7 +276,9 @@ func TestFindBoundResource(t *testing.T) {
 	}
 	_, err := client.AddResource(Lbvserver.Type(), lbName, &lb1)
 	if err != nil {
-		t.Error("Failed to add resource of type ", Lbvserver.Type(), ":", "sample_lb_1")
+		t.Error("Failed to add resource of type ", Lbvserver.Type(), ":", "sample_lb_1", err)
+		log.Println("Cannot continue")
+		return
 	}
 	svcName := "test_svc_" + randomString(5)
 	service1 := basic.Service{
@@ -251,7 +290,9 @@ func TestFindBoundResource(t *testing.T) {
 
 	_, err = client.AddResource(Service.Type(), svcName, &service1)
 	if err != nil {
-		t.Error("Failed to add resource of type ", Service.Type(), ":", svcName)
+		t.Error("Failed to add resource of type ", Service.Type(), ":", svcName, err)
+		log.Println("Cannot continue")
+		return
 
 	}
 	binding := lb.Lbvserverservicebinding{
@@ -261,11 +302,15 @@ func TestFindBoundResource(t *testing.T) {
 	err = client.BindResource(Lbvserver.Type(), lbName, Service.Type(), svcName, &binding)
 	if err != nil {
 		t.Error("Failed to bind resource of type ", Service.Type(), ":", svcName)
+		log.Println("Cannot continue")
+		return
 
 	}
 	result, err := client.FindBoundResource(Lbvserver.Type(), lbName, Service.Type(), "servicename", svcName)
 	if err != nil {
 		t.Error("Failed to find bound resource of type ", Service.Type(), ":", svcName)
+		log.Println("Cannot continue")
+		return
 
 	}
 	//log.Println("Found bound resource ", result)
@@ -288,10 +333,17 @@ func TestDelete(t *testing.T) {
 	}
 	_, err := client.AddResource(Lbvserver.Type(), lbName, &lb1)
 	if err != nil {
-		t.Error("Could not create LB")
+		t.Error("Could not create LB", err)
+		log.Println("Cannot continue")
+		return
 	}
 
-	client.DeleteResource(Lbvserver.Type(), lbName)
+	err = client.DeleteResource(Lbvserver.Type(), lbName)
+	if err != nil {
+		t.Error("Could not delete LB", lbName, err)
+		log.Println("Cannot continue")
+		return
+	}
 	if client.ResourceExists(Lbvserver.Type(), lbName) {
 		t.Error("Failed to delete ", lbName)
 	}
@@ -301,11 +353,15 @@ func TestEnableFeatures(t *testing.T) {
 	features := []string{"SSL", "CS"}
 	err := client.EnableFeatures(features)
 	if err != nil {
-		t.Error("Failed to enable features")
+		t.Error("Failed to enable features", err)
+		log.Println("Cannot continue")
+		return
 	}
 	result, err := client.ListEnabledFeatures()
 	if err != nil {
-		t.Error("Failed to retrieve features")
+		t.Error("Failed to retrieve features", err)
+		log.Println("Cannot continue")
+		return
 	}
 	found := 0
 	for _, f := range features {
@@ -323,7 +379,7 @@ func TestEnableFeatures(t *testing.T) {
 func TestSaveConfig(t *testing.T) {
 	err := client.SaveConfig()
 	if err != nil {
-		t.Error("Failed to save config")
+		t.Error("Failed to save config", err)
 	}
 }
 
@@ -347,14 +403,18 @@ func TestFindAllResources(t *testing.T) {
 	_, err := client.AddResource(Lbvserver.Type(), lbName1, &lb1)
 	if err != nil {
 		t.Error("Failed to add resource of type ", Lbvserver.Type(), ":", lbName1)
+		log.Println("Cannot continue")
+		return
 	}
 	_, err = client.AddResource(Lbvserver.Type(), lbName2, &lb2)
 	if err != nil {
 		t.Error("Failed to add resource of type ", Lbvserver.Type(), ":", lbName2)
+		log.Println("Cannot continue")
+		return
 	}
 	rsrcs, err := client.FindAllResources(Lbvserver.Type())
 	if err != nil {
-		t.Error("Did not find resources of type ", Lbvserver.Type())
+		t.Error("Did not find resources of type ", Lbvserver.Type(), err)
 	}
 	if len(rsrcs) < 2 {
 		t.Error("Found only ", len(rsrcs), " resources of type ", Lbvserver.Type(), " expected at least 2")
@@ -403,11 +463,15 @@ func TestFindAllBoundResources(t *testing.T) {
 
 	_, err = client.AddResource(Service.Type(), svcName1, &service1)
 	if err != nil {
-		t.Error("Could not create service service1")
+		t.Error("Could not create service service1", err)
+		log.Println("Cannot continue")
+		return
 	}
 	_, err = client.AddResource(Service.Type(), svcName2, &service2)
 	if err != nil {
-		t.Error("Could not create service service2")
+		t.Error("Could not create service service2", err)
+		log.Println("Cannot continue")
+		return
 	}
 
 	binding1 := lb.Lbvserverservicebinding{
@@ -422,11 +486,15 @@ func TestFindAllBoundResources(t *testing.T) {
 	err = client.BindResource(Lbvserver.Type(), lbName1, Service.Type(), svcName1, &binding1)
 	if err != nil {
 		t.Error("Could not bind service service1")
+		log.Println("Cannot continue")
+		return
 	}
 
 	err = client.BindResource(Lbvserver.Type(), lbName1, Service.Type(), svcName2, &binding2)
 	if err != nil {
 		t.Error("Could not bind service service2")
+		log.Println("Cannot continue")
+		return
 	}
 	rsrcs, err := client.FindAllBoundResources(Lbvserver.Type(), lbName1, Service.Type())
 	if err != nil {
@@ -434,6 +502,8 @@ func TestFindAllBoundResources(t *testing.T) {
 	}
 	if len(rsrcs) < 2 {
 		t.Error("Found only ", len(rsrcs), " resources of type ", Service.Type(), " expected at least 2")
+		log.Println("Cannot continue")
+		return
 	}
 
 	found := 0
