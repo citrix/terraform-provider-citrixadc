@@ -58,6 +58,12 @@ func providerSchema() map[string]*schema.Schema {
 			Description: "The URL to the API",
 			DefaultFunc: schema.EnvDefaultFunc("NS_URL", nil),
 		},
+		"insecure_skip_verify": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Description: "Ignore validity of endpoint TLS certificate if true",
+			Default:     false,
+		},
 	}
 }
 
@@ -80,7 +86,17 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		Password: d.Get("password").(string),
 		Endpoint: d.Get("endpoint").(string),
 	}
-	client := netscaler.NewNitroClient(c.Endpoint, c.Username, c.Password)
+
+	params := netscaler.NitroParams{
+		Url:       d.Get("endpoint").(string),
+		Username:  d.Get("username").(string),
+		Password:  d.Get("password").(string),
+		SslVerify: !d.Get("insecure_skip_verify").(bool),
+	}
+	client, err := netscaler.NewNitroClientFromParams(params)
+	if err != nil {
+		return nil, err
+	}
 
 	c.client = client
 
