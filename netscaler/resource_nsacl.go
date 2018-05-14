@@ -29,11 +29,6 @@ func resourceNetScalerNsacl() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"destip": &schema.Schema{
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
 			"destipop": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -41,11 +36,6 @@ func resourceNetScalerNsacl() *schema.Resource {
 			},
 			"destipval": &schema.Schema{
 				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"destport": &schema.Schema{
-				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
@@ -104,11 +94,6 @@ func resourceNetScalerNsacl() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"srcip": &schema.Schema{
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
 			"srcipop": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -121,11 +106,6 @@ func resourceNetScalerNsacl() *schema.Resource {
 			},
 			"srcmac": &schema.Schema{
 				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"srcport": &schema.Schema{
-				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
@@ -173,13 +153,43 @@ func createNsaclFunc(d *schema.ResourceData, meta interface{}) error {
 		nsaclName = resource.PrefixedUniqueId("tf-nsacl-")
 		d.Set("aclname", nsaclName)
 	}
+	destip := false
+	destport := false
+	srcip := false
+	srcport := false
+	if d.Get("destipval") != nil && d.Get("destipval") != "" {
+		destip = true
+	}
+	if d.Get("destportval") != nil && d.Get("destportval") != "" {
+		destport = true
+	}
+	if d.Get("srcipval") != nil && d.Get("srcipval") != "" {
+		srcip = true
+	}
+	if d.Get("srcportval") != nil && d.Get("srcportval") != "" {
+		srcport = true
+	}
+
+	if d.Get("destipop") != nil && d.Get("destipval") == nil {
+		return fmt.Errorf("Error in nsacl spec %s cannot have destipop without destipval", nsaclName)
+	}
+	if d.Get("destportop") != nil && d.Get("destipval") == nil {
+		return fmt.Errorf("Error in nsacl spec %s cannot have destipop without destipval", nsaclName)
+	}
+	if d.Get("srcipop") != nil && d.Get("srcipval") == nil {
+		return fmt.Errorf("Error in nsacl spec %s cannot have srcipop without srcipval", nsaclName)
+	}
+	if d.Get("srcportop") != nil && d.Get("srcportval") == nil {
+		return fmt.Errorf("Error in nsacl spec %s cannot have srcportop without srcportval", nsaclName)
+	}
+
 	nsacl := ns.Nsacl{
 		Aclaction:      d.Get("aclaction").(string),
 		Aclname:        d.Get("aclname").(string),
-		Destip:         d.Get("destip").(bool),
+		Destip:         destip,
 		Destipop:       d.Get("destipop").(string),
 		Destipval:      d.Get("destipval").(string),
-		Destport:       d.Get("destport").(bool),
+		Destport:       destport,
 		Destportop:     d.Get("destportop").(string),
 		Destportval:    d.Get("destportval").(string),
 		Established:    d.Get("established").(bool),
@@ -191,11 +201,11 @@ func createNsaclFunc(d *schema.ResourceData, meta interface{}) error {
 		Protocol:       d.Get("protocol").(string),
 		Protocolnumber: d.Get("protocolnumber").(int),
 		Ratelimit:      d.Get("ratelimit").(int),
-		Srcip:          d.Get("srcip").(bool),
+		Srcip:          srcip,
 		Srcipop:        d.Get("srcipop").(string),
 		Srcipval:       d.Get("srcipval").(string),
 		Srcmac:         d.Get("srcmac").(string),
-		Srcport:        d.Get("srcport").(bool),
+		Srcport:        srcport,
 		Srcportop:      d.Get("srcportop").(string),
 		Srcportval:     d.Get("srcportval").(string),
 		State:          d.Get("state").(string),

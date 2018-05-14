@@ -113,9 +113,10 @@ resource "netscaler_nsacl" "foo" {
   
   aclaction = "DENY"
   aclname = "test_acl"
-  destip = "192.168.1.1"
+  destipval = "192.168.1.33"
   protocol = "TCP"
-  srcport = "45-1024"
+  srcportval = "45-1024"
+  priority = "100"
 
 }
 `
