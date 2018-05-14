@@ -293,34 +293,28 @@ func updateNsaclFunc(d *schema.ResourceData, meta interface{}) error {
 		nsacl.Aclname = d.Get("aclname").(string)
 		hasChange = true
 	}
-	if d.HasChange("destip") {
-		log.Printf("[DEBUG]  netscaler-provider: Destip has changed for nsacl %s, starting update", nsaclName)
-		nsacl.Destip = d.Get("destip").(bool)
-		hasChange = true
-	}
 	if d.HasChange("destipop") {
 		log.Printf("[DEBUG]  netscaler-provider: Destipop has changed for nsacl %s, starting update", nsaclName)
 		nsacl.Destipop = d.Get("destipop").(string)
+		nsacl.Destip = true
 		hasChange = true
 	}
 	if d.HasChange("destipval") {
 		log.Printf("[DEBUG]  netscaler-provider: Destipval has changed for nsacl %s, starting update", nsaclName)
 		nsacl.Destipval = d.Get("destipval").(string)
-		hasChange = true
-	}
-	if d.HasChange("destport") {
-		log.Printf("[DEBUG]  netscaler-provider: Destport has changed for nsacl %s, starting update", nsaclName)
-		nsacl.Destport = d.Get("destport").(bool)
+		nsacl.Destip = true
 		hasChange = true
 	}
 	if d.HasChange("destportop") {
 		log.Printf("[DEBUG]  netscaler-provider: Destportop has changed for nsacl %s, starting update", nsaclName)
 		nsacl.Destportop = d.Get("destportop").(string)
+		nsacl.Destport = true
 		hasChange = true
 	}
 	if d.HasChange("destportval") {
 		log.Printf("[DEBUG]  netscaler-provider: Destportval has changed for nsacl %s, starting update", nsaclName)
 		nsacl.Destportval = d.Get("destportval").(string)
+		nsacl.Destport = true
 		hasChange = true
 	}
 	if d.HasChange("established") {
@@ -368,19 +362,16 @@ func updateNsaclFunc(d *schema.ResourceData, meta interface{}) error {
 		nsacl.Ratelimit = d.Get("ratelimit").(int)
 		hasChange = true
 	}
-	if d.HasChange("srcip") {
-		log.Printf("[DEBUG]  netscaler-provider: Srcip has changed for nsacl %s, starting update", nsaclName)
-		nsacl.Srcip = d.Get("srcip").(bool)
-		hasChange = true
-	}
 	if d.HasChange("srcipop") {
 		log.Printf("[DEBUG]  netscaler-provider: Srcipop has changed for nsacl %s, starting update", nsaclName)
 		nsacl.Srcipop = d.Get("srcipop").(string)
+		nsacl.Srcip = true
 		hasChange = true
 	}
 	if d.HasChange("srcipval") {
 		log.Printf("[DEBUG]  netscaler-provider: Srcipval has changed for nsacl %s, starting update", nsaclName)
 		nsacl.Srcipval = d.Get("srcipval").(string)
+		nsacl.Srcip = true
 		hasChange = true
 	}
 	if d.HasChange("srcmac") {
@@ -388,19 +379,16 @@ func updateNsaclFunc(d *schema.ResourceData, meta interface{}) error {
 		nsacl.Srcmac = d.Get("srcmac").(string)
 		hasChange = true
 	}
-	if d.HasChange("srcport") {
-		log.Printf("[DEBUG]  netscaler-provider: Srcport has changed for nsacl %s, starting update", nsaclName)
-		nsacl.Srcport = d.Get("srcport").(bool)
-		hasChange = true
-	}
 	if d.HasChange("srcportop") {
 		log.Printf("[DEBUG]  netscaler-provider: Srcportop has changed for nsacl %s, starting update", nsaclName)
 		nsacl.Srcportop = d.Get("srcportop").(string)
+		nsacl.Srcport = true
 		hasChange = true
 	}
 	if d.HasChange("srcportval") {
 		log.Printf("[DEBUG]  netscaler-provider: Srcportval has changed for nsacl %s, starting update", nsaclName)
 		nsacl.Srcportval = d.Get("srcportval").(string)
+		nsacl.Srcport = true
 		hasChange = true
 	}
 	if d.HasChange("state") {
