@@ -36,3 +36,6 @@ resource "netscaler_nsacl" "acl5" {
   aclaction = "DENY"
   vlan = "2000"
 }
+
+resource "netscaler_nsacls" "allacls" {
+}
