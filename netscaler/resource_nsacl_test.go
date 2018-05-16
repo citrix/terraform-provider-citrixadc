@@ -39,11 +39,11 @@ func TestAccNsacl_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"netscaler_nsacl.foo", "aclname", "test_acl"),
 					resource.TestCheckResourceAttr(
-						"netscaler_nsacl.foo", "destip", "192.168.1.1"),
+						"netscaler_nsacl.foo", "destipval", "192.168.1.33"),
 					resource.TestCheckResourceAttr(
 						"netscaler_nsacl.foo", "protocol", "TCP"),
 					resource.TestCheckResourceAttr(
-						"netscaler_nsacl.foo", "srcport", "45-1024"),
+						"netscaler_nsacl.foo", "srcportval", "45-1024"),
 				),
 			},
 		},
