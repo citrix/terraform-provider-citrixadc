@@ -107,22 +107,12 @@ func testAccCheckCsvserverDestroy(s *terraform.State) error {
 const testAccCsvserver_basic = `
 
 
-
-resource "netscaler_sslcertkey" "foosslcs" {
-  certkey = "sample_ssl_cert_foo_cs"
-  cert = "/var/certs/server.crt"
-  key = "/var/certs/server.key"
-  notificationperiod = 40
-  expirymonitor = "ENABLED"
-}
-
 resource "netscaler_csvserver" "foo" {
   
   ipv46 = "10.202.11.11"
   name = "terraform-cs"
   port = 443
   servicetype = "SSL"
-  sslcertkey = "${netscaler_sslcertkey.foosslcs.certkey}"
 
 }
 `

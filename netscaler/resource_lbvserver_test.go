@@ -110,16 +110,6 @@ func testAccCheckLbvserverDestroy(s *terraform.State) error {
 
 const testAccLbvserver_basic = `
 
-
-
-resource "netscaler_sslcertkey" "foossl" {
-  certkey = "sample_ssl_cert_foo"
-  cert = "/var/certs/server.crt"
-  key = "/var/certs/server.key"
-  notificationperiod = 40
-  expirymonitor = "ENABLED"
-}
-
 resource "netscaler_lbvserver" "foo" {
   
   ipv46 = "10.202.11.11"
@@ -128,6 +118,5 @@ resource "netscaler_lbvserver" "foo" {
   persistencetype = "COOKIEINSERT"
   port = 443
   servicetype = "SSL"
-  sslcertkey = "${netscaler_sslcertkey.foossl.certkey}"
 }
 `
