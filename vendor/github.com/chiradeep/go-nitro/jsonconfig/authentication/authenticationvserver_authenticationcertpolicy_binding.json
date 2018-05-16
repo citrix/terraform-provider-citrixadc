@@ -1,0 +1,27 @@
+{
+  "type" : "object",
+  "properties" : {
+    "acttype" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "groupextraction" : {
+      "type" : "boolean"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "policy" : {
+      "type" : "string"
+    },
+    "priority" : {
+      "type" : "integer"
+    },
+    "secondary" : {
+      "type" : "boolean"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "authenticationvserver_authenticationcertpolicy_binding",
+  "title" : "authenticationvserver_authenticationcertpolicy_binding"
+}

@@ -1,0 +1,56 @@
+{
+  "type" : "object",
+  "properties" : {
+    "crlmemorysizemb" : {
+      "type" : "integer"
+    },
+    "denysslreneg" : {
+      "type" : "string",
+      "enum" : [ "NO", "FRONTEND_CLIENT", "FRONTEND_CLIENTSERVER", "ALL", "NONSECURE" ]
+    },
+    "dropreqwithnohostheader" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ]
+    },
+    "encrypttriggerpktcount" : {
+      "type" : "integer"
+    },
+    "insertionencoding" : {
+      "type" : "string",
+      "enum" : [ "Unicode", "UTF-8" ]
+    },
+    "ocspcachesize" : {
+      "type" : "integer"
+    },
+    "pushenctriggertimeout" : {
+      "type" : "integer"
+    },
+    "pushflag" : {
+      "type" : "integer"
+    },
+    "quantumsize" : {
+      "type" : "string",
+      "enum" : [ "4096", "8192", "16384" ]
+    },
+    "sendclosenotify" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ]
+    },
+    "ssltriggertimeout" : {
+      "type" : "integer"
+    },
+    "strictcachecks" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ]
+    },
+    "undefactioncontrol" : {
+      "type" : "string"
+    },
+    "undefactiondata" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "sslparameter",
+  "title" : "sslparameter"
+}

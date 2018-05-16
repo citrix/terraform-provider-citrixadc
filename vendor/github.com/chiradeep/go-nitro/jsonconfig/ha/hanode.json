@@ -1,0 +1,111 @@
+{
+  "type" : "object",
+  "properties" : {
+    "completedfliptime" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "curflips" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "deadinterval" : {
+      "type" : "integer"
+    },
+    "disifaces" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "enaifaces" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "failsafe" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
+    "flags" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "hamonifaces" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "haprop" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "hastatus" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "STAYSECONDARY", "DISABLED", "STAYPRIMARY" ]
+    },
+    "hasync" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "hellointerval" : {
+      "type" : "integer"
+    },
+    "id" : {
+      "type" : "integer"
+    },
+    "ifaces" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "inc" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "ipaddress" : {
+      "type" : "string"
+    },
+    "masterstatetime" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "maxflips" : {
+      "type" : "integer"
+    },
+    "maxfliptime" : {
+      "type" : "integer"
+    },
+    "name" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "netmask" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "network" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "pfifaces" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "routemonitor" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "ssl2" : {
+      "type" : "string",
+      "enum" : [ "DOWN", "UP", "NOT PRESENT", "UNKNOWN" ],
+      "readonly" : true
+    },
+    "state" : {
+      "type" : "string",
+      "enum" : [ "Primary", "Secondary", "UNKNOWN" ],
+      "readonly" : true
+    },
+    "syncvlan" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "hanode",
+  "title" : "hanode"
+}

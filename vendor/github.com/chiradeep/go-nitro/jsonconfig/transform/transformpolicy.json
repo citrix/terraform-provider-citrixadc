@@ -1,0 +1,34 @@
+{
+  "type" : "object",
+  "properties" : {
+    "comment" : {
+      "type" : "string"
+    },
+    "hits" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "isdefault" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "logaction" : {
+      "type" : "string"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "newname" : {
+      "type" : "string"
+    },
+    "profilename" : {
+      "type" : "string"
+    },
+    "rule" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "transformpolicy",
+  "title" : "transformpolicy"
+}

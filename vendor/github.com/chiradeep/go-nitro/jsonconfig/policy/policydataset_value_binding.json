@@ -1,0 +1,17 @@
+{
+  "type" : "object",
+  "properties" : {
+    "index" : {
+      "type" : "integer"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "value" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "policydataset_value_binding",
+  "title" : "policydataset_value_binding"
+}

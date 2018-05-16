@@ -1,0 +1,17 @@
+{
+  "type" : "object",
+  "properties" : {
+    "name" : {
+      "type" : "string"
+    },
+    "srcip" : {
+      "type" : "string"
+    },
+    "td" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "netprofile",
+  "title" : "netprofile"
+}

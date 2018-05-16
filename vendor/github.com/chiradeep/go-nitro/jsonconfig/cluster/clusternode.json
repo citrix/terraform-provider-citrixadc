@@ -1,0 +1,89 @@
+{
+  "type" : "object",
+  "properties" : {
+    "backplane" : {
+      "type" : "string"
+    },
+    "clusterhealth" : {
+      "type" : "string",
+      "enum" : [ "UP", "Configurations of the node are lagging behind the cluster by more than 256 commands", "The config sync operation has exceeded the time limit of 60 seconds", "The config sync operation (full sync) is in progress", "The node is not in sync with the cluster configurations as sync is disabled on this node", "The execution of a configuration command has failed on this node", "UNKNOWN" ],
+      "readonly" : true
+    },
+    "disabledifaces" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "effectivestate" : {
+      "type" : "string",
+      "enum" : [ "UP", "NOT UP", "UNKNOWN", "INIT" ],
+      "readonly" : true
+    },
+    "enabledifaces" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "hamonifaces" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "health" : {
+      "type" : "string",
+      "enum" : [ "UNKNOWN", "INIT", "DOWN", "UP", "Some enabled and HAMON interfaces of the node are down", "All interfaces of the node are down or disabled", "SSL card(s) of the node have failed", "Route Monitor(s) of the node have failed", "Service state is being synchronized with the cluster", "The backplane interface is not set", " is down", " or is disabled", "The CLAG member(s) of the node are down", "Persistence sessions are being synchronized with the cluster", "The Syn Cookie is being synchronized with the cluster", "Unknown Health", "AAA keys are being sychronized with the cluster" ],
+      "readonly" : true
+    },
+    "ifaceslist" : {
+      "type" : "object",
+      "readonly" : true
+    },
+    "ipaddress" : {
+      "type" : "string"
+    },
+    "isconfigurationcoordinator" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "islocalnode" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "masterstate" : {
+      "type" : "string",
+      "enum" : [ "INACTIVE", "ACTIVE", "UNKNOWN" ],
+      "readonly" : true
+    },
+    "nodeid" : {
+      "type" : "integer"
+    },
+    "nodelicensemismatch" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "nodelist" : {
+      "type" : "object",
+      "readonly" : true
+    },
+    "nodersskeymismatch" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "operationalsyncstate" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "SUCCESS", "IN PROGRESS", "FAILED", "INCREMENTAL SYNC DISABLED", "DISABLED", "UNKNOWN" ],
+      "readonly" : true
+    },
+    "partialfailifaces" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "priority" : {
+      "type" : "integer"
+    },
+    "state" : {
+      "type" : "string",
+      "enum" : [ "ACTIVE", "SPARE", "PASSIVE" ]
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "clusternode",
+  "title" : "clusternode"
+}

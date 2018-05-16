@@ -1,0 +1,44 @@
+{
+  "type" : "object",
+  "properties" : {
+    "Add" : {
+      "type" : "string"
+    },
+    "append" : {
+      "type" : "string"
+    },
+    "clear" : {
+      "type" : "boolean"
+    },
+    "comment" : {
+      "type" : "string"
+    },
+    "hits" : {
+      "type" : "integer"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "newname" : {
+      "type" : "string"
+    },
+    "referencecount" : {
+      "type" : "integer"
+    },
+    "set" : {
+      "type" : "string"
+    },
+    "sub" : {
+      "type" : "string"
+    },
+    "undefhits" : {
+      "type" : "integer"
+    },
+    "variable" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "nsassignment",
+  "title" : "nsassignment"
+}

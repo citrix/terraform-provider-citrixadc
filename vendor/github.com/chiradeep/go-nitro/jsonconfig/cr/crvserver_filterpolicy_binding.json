@@ -1,0 +1,20 @@
+{
+  "type" : "object",
+  "properties" : {
+    "name" : {
+      "type" : "string"
+    },
+    "policyname" : {
+      "type" : "string"
+    },
+    "priority" : {
+      "type" : "integer"
+    },
+    "targetvserver" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "crvserver_filterpolicy_binding",
+  "title" : "crvserver_filterpolicy_binding"
+}

@@ -1,0 +1,41 @@
+{
+  "type" : "object",
+  "properties" : {
+    "comment" : {
+      "type" : "string"
+    },
+    "description" : {
+      "type" : "string"
+    },
+    "flowtype" : {
+      "type" : "integer"
+    },
+    "gotopriorityexpression" : {
+      "type" : "string"
+    },
+    "hits" : {
+      "type" : "integer"
+    },
+    "labelname" : {
+      "type" : "string"
+    },
+    "loginschema" : {
+      "type" : "string"
+    },
+    "newname" : {
+      "type" : "string"
+    },
+    "numpol" : {
+      "type" : "integer"
+    },
+    "policyname" : {
+      "type" : "string"
+    },
+    "priority" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "authenticationpolicylabel",
+  "title" : "authenticationpolicylabel"
+}

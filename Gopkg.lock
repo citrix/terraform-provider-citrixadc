@@ -56,8 +56,8 @@
     "service/s3",
     "service/sts"
   ]
-  revision = "31a85efbe3bc741eb539d6310c8e66030b7c5cb7"
-  version = "v1.13.47"
+  revision = "c7cd1ebe87257cde9b65112fc876b0339ea0ac30"
+  version = "v1.13.49"
 
 [[projects]]
   branch = "master"
@@ -84,10 +84,11 @@
     "config/basic",
     "config/cs",
     "config/lb",
+    "config/ns",
     "config/ssl",
     "netscaler"
   ]
-  revision = "ef5c0a97ddf828fc66240609088925824d288641"
+  revision = "9dba4fba4f6c0da675ac452fd0e06131da505dbb"
 
 [[projects]]
   name = "github.com/davecgh/go-spew"
@@ -98,8 +99,8 @@
 [[projects]]
   name = "github.com/fatih/color"
   packages = ["."]
-  revision = "507f6050b8568533fb3f5504de8e5205fa62a114"
-  version = "v1.6.0"
+  revision = "5b77d2a35fb0ede96d138fc9a99f5c9b6aef11b4"
+  version = "v1.7.0"
 
 [[projects]]
   name = "github.com/go-ini/ini"
@@ -381,7 +382,7 @@
     "openpgp/packet",
     "openpgp/s2k"
   ]
-  revision = "2d027ae1dddd4694d54f7a8b6cbe78dca8720226"
+  revision = "1a580b3eff7814fc9b40602fd35256c63b50f491"
 
 [[projects]]
   branch = "master"
@@ -403,7 +404,7 @@
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "d0faeb539838e250bd0a9db4182d48d4a1915181"
+  revision = "7c87d13f8e835d2fb3a70a2912c811ed0c1d241b"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -430,7 +431,7 @@
   branch = "master"
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
-  revision = "86e600f69ee4704c6efbf6a2a40a5c10700e76c2"
+  revision = "7bb2a897381c9c5ab2aeb8614f758d7766af68ff"
 
 [[projects]]
   name = "google.golang.org/grpc"
@@ -468,6 +469,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "97f0313e5df7c43e9b4024fecd843d96da09d195555daf57799262360f947250"
+  inputs-digest = "83be519ce2cc60172021a7dbf8a38304de010d7a7c27eb89152dd3fb1851cabc"
   solver-name = "gps-cdcl"
   solver-version = 1

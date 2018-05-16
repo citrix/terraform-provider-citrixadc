@@ -1,0 +1,32 @@
+{
+  "type" : "object",
+  "properties" : {
+    "authenticationschema" : {
+      "type" : "string"
+    },
+    "authenticationstrength" : {
+      "type" : "integer"
+    },
+    "builtin" : {
+      "type" : "object"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "passwdexpression" : {
+      "type" : "string"
+    },
+    "passwordcredentialindex" : {
+      "type" : "integer"
+    },
+    "usercredentialindex" : {
+      "type" : "integer"
+    },
+    "userexpression" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "authenticationloginschema",
+  "title" : "authenticationloginschema"
+}

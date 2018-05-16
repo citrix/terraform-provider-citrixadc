@@ -1,0 +1,11 @@
+{
+  "type" : "object",
+  "properties" : {
+    "labelname" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "appfwpolicylabel_binding",
+  "title" : "appfwpolicylabel_binding"
+}

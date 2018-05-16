@@ -1,0 +1,20 @@
+{
+  "type" : "object",
+  "properties" : {
+    "groupname" : {
+      "type" : "string"
+    },
+    "policyname" : {
+      "type" : "string"
+    },
+    "priority" : {
+      "type" : "integer"
+    },
+    "username" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "systemuser_systemgroup_binding",
+  "title" : "systemuser_systemgroup_binding"
+}

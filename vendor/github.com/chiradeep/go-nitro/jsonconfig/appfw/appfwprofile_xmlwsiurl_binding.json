@@ -1,0 +1,24 @@
+{
+  "type" : "object",
+  "properties" : {
+    "comment" : {
+      "type" : "string"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "state" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "xmlwsichecks" : {
+      "type" : "string"
+    },
+    "xmlwsiurl" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "appfwprofile_xmlwsiurl_binding",
+  "title" : "appfwprofile_xmlwsiurl_binding"
+}

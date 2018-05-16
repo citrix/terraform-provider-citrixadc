@@ -1,0 +1,62 @@
+{
+  "type" : "object",
+  "properties" : {
+    "detail" : {
+      "type" : "boolean"
+    },
+    "drop" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "flag" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "flags" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "hits" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "limitidentifier" : {
+      "type" : "string"
+    },
+    "maxbandwidth" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "name" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "number" : {
+      "type" : "object",
+      "readonly" : true
+    },
+    "referencecount" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "selectoripv61" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "selectoripv62" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "timeout" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "unit" : {
+      "type" : "integer",
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "nslimitsessions",
+  "title" : "nslimitsessions"
+}

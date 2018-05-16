@@ -1,0 +1,315 @@
+{
+  "type" : "object",
+  "properties" : {
+    "appflowlog" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "authentication" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
+    "authenticationhost" : {
+      "type" : "string"
+    },
+    "authn401" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
+    "authnprofile" : {
+      "type" : "string"
+    },
+    "authnvsname" : {
+      "type" : "string"
+    },
+    "backupvserver" : {
+      "type" : "string"
+    },
+    "bindpoint" : {
+      "type" : "string",
+      "enum" : [ "REQUEST", "RESPONSE" ],
+      "readonly" : true
+    },
+    "cacheable" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ]
+    },
+    "cachetype" : {
+      "type" : "string",
+      "enum" : [ "TRANSPARENT", "REVERSE", "FORWARD" ],
+      "readonly" : true
+    },
+    "cachevserver" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "casesensitive" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
+    "clttimeout" : {
+      "type" : "integer"
+    },
+    "comment" : {
+      "type" : "string"
+    },
+    "curstate" : {
+      "type" : "string",
+      "enum" : [ "UP", "DOWN", "UNKNOWN", "BUSY", "OUT OF SERVICE", "GOING OUT OF SERVICE", "DOWN WHEN GOING OUT OF SERVICE", "NS_EMPTY_STR", "Unknown", "DISABLED" ],
+      "readonly" : true
+    },
+    "dbprofilename" : {
+      "type" : "string"
+    },
+    "disableprimaryondown" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "dnsvservername" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "domain" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "downstateflush" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "gotopriorityexpression" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "gt2gb" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ],
+      "readonly" : true
+    },
+    "homepage" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "httpprofilename" : {
+      "type" : "string"
+    },
+    "icmpvsrresponse" : {
+      "type" : "string",
+      "enum" : [ "PASSIVE", "ACTIVE" ]
+    },
+    "insertvserveripport" : {
+      "type" : "string",
+      "enum" : [ "OFF", "VIPADDR", "V6TOV4MAPPING" ]
+    },
+    "invoke" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "ip" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "ipmask" : {
+      "type" : "string"
+    },
+    "ippattern" : {
+      "type" : "string"
+    },
+    "ipv46" : {
+      "type" : "string"
+    },
+    "l2conn" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
+    "labelname" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "labeltype" : {
+      "type" : "string",
+      "enum" : [ "reqvserver", "resvserver", "policylabel" ],
+      "readonly" : true
+    },
+    "lbvserver" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "listenpolicy" : {
+      "type" : "string"
+    },
+    "listenpriority" : {
+      "type" : "integer"
+    },
+    "mssqlserverversion" : {
+      "type" : "string",
+      "enum" : [ "70", "2000", "2000SP1", "2005", "2008", "2008R2", "2012" ]
+    },
+    "mysqlcharacterset" : {
+      "type" : "integer"
+    },
+    "mysqlprotocolversion" : {
+      "type" : "integer"
+    },
+    "mysqlservercapabilities" : {
+      "type" : "integer"
+    },
+    "mysqlserverversion" : {
+      "type" : "string"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "netprofile" : {
+      "type" : "string"
+    },
+    "newname" : {
+      "type" : "string"
+    },
+    "ngname" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "policyname" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "port" : {
+      "type" : "integer"
+    },
+    "precedence" : {
+      "type" : "string",
+      "enum" : [ "RULE", "URL" ]
+    },
+    "priority" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "push" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "pushlabel" : {
+      "type" : "string"
+    },
+    "pushmulticlients" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ]
+    },
+    "pushvserver" : {
+      "type" : "string"
+    },
+    "range" : {
+      "type" : "integer"
+    },
+    "redirect" : {
+      "type" : "string",
+      "enum" : [ "CACHE", "POLICY", "ORIGIN" ],
+      "readonly" : true
+    },
+    "redirectportrewrite" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "redirecturl" : {
+      "type" : "string"
+    },
+    "rtspnat" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
+    "sc" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ],
+      "readonly" : true
+    },
+    "servicename" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "servicetype" : {
+      "type" : "string",
+      "enum" : [ "HTTP", "SSL", "TCP", "FTP", "RTSP", "SSL_TCP", "UDP", "DNS", "SIP_UDP", "ANY", "RADIUS", "RDP", "MYSQL", "MSSQL", "DIAMETER", "SSL_DIAMETER" ]
+    },
+    "sobackupaction" : {
+      "type" : "string",
+      "enum" : [ "DROP", "ACCEPT", "REDIRECT" ]
+    },
+    "somethod" : {
+      "type" : "string",
+      "enum" : [ "CONNECTION", "DYNAMICCONNECTION", "BANDWIDTH", "HEALTH", "NONE" ]
+    },
+    "sopersistence" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "sopersistencetimeout" : {
+      "type" : "integer"
+    },
+    "sothreshold" : {
+      "type" : "integer"
+    },
+    "state" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "statechangetimemsec" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "statechangetimesec" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "stateupdate" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "status" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "targetlbvserver" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "targetvserver" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "tcpprofilename" : {
+      "type" : "string"
+    },
+    "td" : {
+      "type" : "integer"
+    },
+    "tickssincelaststatechange" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "type" : {
+      "type" : "string",
+      "enum" : [ "CONTENT", "ADDRESS" ],
+      "readonly" : true
+    },
+    "url" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "value" : {
+      "type" : "string",
+      "enum" : [ "Certkey not bound", "SSL feature disabled" ],
+      "readonly" : true
+    },
+    "vipheader" : {
+      "type" : "string"
+    },
+    "weight" : {
+      "type" : "integer",
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "csvserver",
+  "title" : "csvserver"
+}

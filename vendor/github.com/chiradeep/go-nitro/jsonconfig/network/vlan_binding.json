@@ -1,0 +1,11 @@
+{
+  "type" : "object",
+  "properties" : {
+    "id" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "vlan_binding",
+  "title" : "vlan_binding"
+}

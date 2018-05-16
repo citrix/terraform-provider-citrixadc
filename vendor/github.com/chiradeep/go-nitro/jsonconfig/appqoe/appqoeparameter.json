@@ -1,0 +1,20 @@
+{
+  "type" : "object",
+  "properties" : {
+    "avgwaitingclient" : {
+      "type" : "integer"
+    },
+    "dosattackthresh" : {
+      "type" : "integer"
+    },
+    "maxaltrespbandwidth" : {
+      "type" : "integer"
+    },
+    "sessionlife" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "appqoeparameter",
+  "title" : "appqoeparameter"
+}

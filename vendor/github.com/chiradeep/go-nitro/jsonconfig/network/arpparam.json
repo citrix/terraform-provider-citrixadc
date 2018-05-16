@@ -1,0 +1,15 @@
+{
+  "type" : "object",
+  "properties" : {
+    "spoofvalidation" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "timeout" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "arpparam",
+  "title" : "arpparam"
+}

@@ -1,0 +1,17 @@
+{
+  "type" : "object",
+  "properties" : {
+    "ifnum" : {
+      "type" : "string"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "ownernode" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "fis_channel_binding",
+  "title" : "fis_channel_binding"
+}

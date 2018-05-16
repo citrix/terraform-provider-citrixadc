@@ -1,0 +1,15 @@
+{
+  "type" : "object",
+  "properties" : {
+    "postbody" : {
+      "type" : "string"
+    },
+    "systemiid" : {
+      "type" : "string",
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "filterpostbodyinjection",
+  "title" : "filterpostbodyinjection"
+}

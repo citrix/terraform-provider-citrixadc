@@ -1,0 +1,23 @@
+{
+  "type" : "object",
+  "properties" : {
+    "ipaddress" : {
+      "type" : "string"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "netprofile" : {
+      "type" : "string"
+    },
+    "newname" : {
+      "type" : "string"
+    },
+    "port" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "appflowcollector",
+  "title" : "appflowcollector"
+}

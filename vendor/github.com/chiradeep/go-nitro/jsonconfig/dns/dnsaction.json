@@ -1,0 +1,42 @@
+{
+  "type" : "object",
+  "properties" : {
+    "actionname" : {
+      "type" : "string"
+    },
+    "actiontype" : {
+      "type" : "string",
+      "enum" : [ "ViewName", "GslbPrefLoc", "Drop", "Cache_Bypass", "Rewrite_Response" ]
+    },
+    "builtin" : {
+      "type" : "object",
+      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE" ],
+      "readonly" : true
+    },
+    "cachebypass" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ],
+      "readonly" : true
+    },
+    "drop" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ],
+      "readonly" : true
+    },
+    "ipaddress" : {
+      "type" : "object"
+    },
+    "preferredloclist" : {
+      "type" : "object"
+    },
+    "ttl" : {
+      "type" : "integer"
+    },
+    "viewname" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "dnsaction",
+  "title" : "dnsaction"
+}

@@ -1,0 +1,197 @@
+{
+  "type" : "object",
+  "properties" : {
+    "activeservices" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "appflowlog" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "backupip" : {
+      "type" : "string"
+    },
+    "backuplbmethod" : {
+      "type" : "string",
+      "enum" : [ "ROUNDROBIN", "LEASTCONNECTION", "LEASTRESPONSETIME", "SOURCEIPHASH", "LEASTBANDWIDTH", "LEASTPACKETS", "STATICPROXIMITY", "RTT", "CUSTOMLOAD" ]
+    },
+    "backupsessiontimeout" : {
+      "type" : "integer"
+    },
+    "backupvserver" : {
+      "type" : "string"
+    },
+    "comment" : {
+      "type" : "string"
+    },
+    "considereffectivestate" : {
+      "type" : "string",
+      "enum" : [ "NONE", "STATE_ONLY" ]
+    },
+    "cookie_domain" : {
+      "type" : "string"
+    },
+    "cookietimeout" : {
+      "type" : "integer"
+    },
+    "curstate" : {
+      "type" : "string",
+      "enum" : [ "UP", "DOWN", "UNKNOWN", "BUSY", "OUT OF SERVICE", "GOING OUT OF SERVICE", "DOWN WHEN GOING OUT OF SERVICE", "NS_EMPTY_STR", "Unknown", "DISABLED" ],
+      "readonly" : true
+    },
+    "disableprimaryondown" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "dnsrecordtype" : {
+      "type" : "string",
+      "enum" : [ "A", "AAAA", "CNAME" ]
+    },
+    "domainname" : {
+      "type" : "string"
+    },
+    "dynamicweight" : {
+      "type" : "string",
+      "enum" : [ "SERVICECOUNT", "SERVICEWEIGHT", "DISABLED" ]
+    },
+    "edr" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "gotopriorityexpression" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "health" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "iptype" : {
+      "type" : "string",
+      "enum" : [ "IPV4", "IPV6" ]
+    },
+    "iscname" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ],
+      "readonly" : true
+    },
+    "lbmethod" : {
+      "type" : "string",
+      "enum" : [ "ROUNDROBIN", "LEASTCONNECTION", "LEASTRESPONSETIME", "SOURCEIPHASH", "LEASTBANDWIDTH", "LEASTPACKETS", "STATICPROXIMITY", "RTT", "CUSTOMLOAD" ]
+    },
+    "lbrrreason" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "mir" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "netmask" : {
+      "type" : "string"
+    },
+    "newname" : {
+      "type" : "string"
+    },
+    "persistenceid" : {
+      "type" : "integer"
+    },
+    "persistencetype" : {
+      "type" : "string",
+      "enum" : [ "SOURCEIP", "NONE" ]
+    },
+    "persistmask" : {
+      "type" : "string"
+    },
+    "policyname" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "priority" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "servicename" : {
+      "type" : "string"
+    },
+    "servicetype" : {
+      "type" : "string",
+      "enum" : [ "HTTP", "FTP", "TCP", "UDP", "SSL", "SSL_BRIDGE", "SSL_TCP", "NNTP", "ANY", "SIP_UDP", "RADIUS", "RDP", "RTSP", "MYSQL", "MSSQL" ]
+    },
+    "sitedomainttl" : {
+      "type" : "integer"
+    },
+    "sobackupaction" : {
+      "type" : "string",
+      "enum" : [ "DROP", "ACCEPT", "REDIRECT" ]
+    },
+    "somethod" : {
+      "type" : "string",
+      "enum" : [ "CONNECTION", "DYNAMICCONNECTION", "BANDWIDTH", "HEALTH", "NONE" ]
+    },
+    "sopersistence" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "sopersistencetimeout" : {
+      "type" : "integer"
+    },
+    "sothreshold" : {
+      "type" : "integer"
+    },
+    "state" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "statechangetimemsec" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "statechangetimesec" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "status" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "tickssincelaststatechange" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "timeout" : {
+      "type" : "integer"
+    },
+    "tolerance" : {
+      "type" : "integer"
+    },
+    "totalservices" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "ttl" : {
+      "type" : "integer"
+    },
+    "type" : {
+      "type" : "string",
+      "enum" : [ "REQUEST", "RESPONSE" ],
+      "readonly" : true
+    },
+    "v6netmasklen" : {
+      "type" : "integer"
+    },
+    "v6persistmasklen" : {
+      "type" : "integer"
+    },
+    "weight" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "gslbvserver",
+  "title" : "gslbvserver"
+}

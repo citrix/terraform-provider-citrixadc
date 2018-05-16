@@ -1,0 +1,17 @@
+{
+  "type" : "object",
+  "properties" : {
+    "cipheraliasname" : {
+      "type" : "string"
+    },
+    "description" : {
+      "type" : "string"
+    },
+    "servicegroupname" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "sslservicegroup_sslcipher_binding",
+  "title" : "sslservicegroup_sslcipher_binding"
+}

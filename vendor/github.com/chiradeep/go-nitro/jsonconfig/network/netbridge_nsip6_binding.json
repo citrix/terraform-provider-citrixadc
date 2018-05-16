@@ -1,0 +1,17 @@
+{
+  "type" : "object",
+  "properties" : {
+    "ipaddress" : {
+      "type" : "string"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "netmask" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "netbridge_nsip6_binding",
+  "title" : "netbridge_nsip6_binding"
+}

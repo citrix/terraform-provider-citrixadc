@@ -1,0 +1,32 @@
+{
+  "type" : "object",
+  "properties" : {
+    "communityname" : {
+      "type" : "string"
+    },
+    "destport" : {
+      "type" : "integer"
+    },
+    "severity" : {
+      "type" : "string",
+      "enum" : [ "Critical", "Major", "Minor", "Warning", "Informational" ]
+    },
+    "srcip" : {
+      "type" : "string"
+    },
+    "trapclass" : {
+      "type" : "string",
+      "enum" : [ "generic", "specific" ]
+    },
+    "trapdestination" : {
+      "type" : "string"
+    },
+    "version" : {
+      "type" : "string",
+      "enum" : [ "V1", "V2" ]
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "snmptrap",
+  "title" : "snmptrap"
+}

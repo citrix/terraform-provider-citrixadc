@@ -1,0 +1,39 @@
+{
+  "type" : "object",
+  "properties" : {
+    "comment" : {
+      "type" : "string"
+    },
+    "hits" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "logaction" : {
+      "type" : "string"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "newname" : {
+      "type" : "string"
+    },
+    "policytype" : {
+      "type" : "string",
+      "enum" : [ "Classic Policy", "Advanced Policy" ],
+      "readonly" : true
+    },
+    "profilename" : {
+      "type" : "string"
+    },
+    "rule" : {
+      "type" : "string"
+    },
+    "undefhits" : {
+      "type" : "integer",
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "appfwpolicy",
+  "title" : "appfwpolicy"
+}

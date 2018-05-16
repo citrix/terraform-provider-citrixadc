@@ -1,0 +1,26 @@
+{
+  "type" : "object",
+  "properties" : {
+    "activepolicy" : {
+      "type" : "integer"
+    },
+    "boundto" : {
+      "type" : "string"
+    },
+    "gotopriorityexpression" : {
+      "type" : "string"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "nextfactor" : {
+      "type" : "string"
+    },
+    "priority" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "authenticationpolicy_authenticationvserver_binding",
+  "title" : "authenticationpolicy_authenticationvserver_binding"
+}

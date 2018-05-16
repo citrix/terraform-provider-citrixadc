@@ -1,0 +1,112 @@
+{
+  "type" : "object",
+  "properties" : {
+    "basedn" : {
+      "type" : "string"
+    },
+    "binary" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ]
+    },
+    "binddn" : {
+      "type" : "string"
+    },
+    "cacert" : {
+      "type" : "string"
+    },
+    "cacertfile" : {
+      "type" : "string"
+    },
+    "cakeyfile" : {
+      "type" : "string"
+    },
+    "crlname" : {
+      "type" : "string"
+    },
+    "crlpath" : {
+      "type" : "string"
+    },
+    "day" : {
+      "type" : "integer"
+    },
+    "daystoexpiration" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "flags" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "gencrl" : {
+      "type" : "string"
+    },
+    "indexfile" : {
+      "type" : "string"
+    },
+    "inform" : {
+      "type" : "string",
+      "enum" : [ "DER", "PEM" ]
+    },
+    "interval" : {
+      "type" : "string",
+      "enum" : [ "MONTHLY", "WEEKLY", "DAILY", "NONE" ]
+    },
+    "issuer" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "lastupdate" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "lastupdatetime" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "method" : {
+      "type" : "string",
+      "enum" : [ "HTTP", "LDAP" ]
+    },
+    "nextupdate" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "password" : {
+      "type" : "string"
+    },
+    "port" : {
+      "type" : "integer"
+    },
+    "refresh" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "revoke" : {
+      "type" : "string"
+    },
+    "scope" : {
+      "type" : "string",
+      "enum" : [ "Base", "One" ]
+    },
+    "server" : {
+      "type" : "string"
+    },
+    "signaturealgo" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "time" : {
+      "type" : "string"
+    },
+    "url" : {
+      "type" : "string"
+    },
+    "version" : {
+      "type" : "integer",
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "sslcrl",
+  "title" : "sslcrl"
+}

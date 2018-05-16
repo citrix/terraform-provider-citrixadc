@@ -1,0 +1,12 @@
+{
+  "type" : "object",
+  "properties" : {
+    "cleanuplevel" : {
+      "type" : "string",
+      "enum" : [ "global", "all" ]
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "nsstats",
+  "title" : "nsstats"
+}

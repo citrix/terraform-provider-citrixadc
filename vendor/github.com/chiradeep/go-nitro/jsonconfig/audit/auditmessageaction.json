@@ -1,0 +1,43 @@
+{
+  "type" : "object",
+  "properties" : {
+    "bypasssafetycheck" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ]
+    },
+    "hits" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "loglevel" : {
+      "type" : "string",
+      "enum" : [ "EMERGENCY", "ALERT", "CRITICAL", "ERROR", "WARNING", "NOTICE", "INFORMATIONAL", "DEBUG" ]
+    },
+    "loglevel1" : {
+      "type" : "string",
+      "enum" : [ "ALL", "EMERGENCY", "ALERT", "CRITICAL", "ERROR", "WARNING", "NOTICE", "INFORMATIONAL", "DEBUG", "NONE" ],
+      "readonly" : true
+    },
+    "logtonewnslog" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ]
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "referencecount" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "stringbuilderexpr" : {
+      "type" : "string"
+    },
+    "undefhits" : {
+      "type" : "integer",
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "auditmessageaction",
+  "title" : "auditmessageaction"
+}

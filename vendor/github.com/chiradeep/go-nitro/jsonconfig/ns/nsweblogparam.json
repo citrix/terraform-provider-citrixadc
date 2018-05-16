@@ -1,0 +1,17 @@
+{
+  "type" : "object",
+  "properties" : {
+    "buffersizemb" : {
+      "type" : "integer"
+    },
+    "customreqhdrs" : {
+      "type" : "object"
+    },
+    "customrsphdrs" : {
+      "type" : "object"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "nsweblogparam",
+  "title" : "nsweblogparam"
+}

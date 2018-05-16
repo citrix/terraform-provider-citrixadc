@@ -1,0 +1,19 @@
+{
+  "type" : "object",
+  "properties" : {
+    "Snmpoid" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "entitytype" : {
+      "type" : "string",
+      "enum" : [ "VSERVER", "SERVICE", "SERVICEGROUP" ]
+    },
+    "name" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "snmpoid",
+  "title" : "snmpoid"
+}

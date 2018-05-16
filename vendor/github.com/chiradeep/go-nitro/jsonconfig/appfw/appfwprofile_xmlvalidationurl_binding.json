@@ -1,0 +1,46 @@
+{
+  "type" : "object",
+  "properties" : {
+    "comment" : {
+      "type" : "string"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "state" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "xmladditionalsoapheaders" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
+    "xmlendpointcheck" : {
+      "type" : "string",
+      "enum" : [ "ABSOLUTE", "RELATIVE" ]
+    },
+    "xmlrequestschema" : {
+      "type" : "string"
+    },
+    "xmlresponseschema" : {
+      "type" : "string"
+    },
+    "xmlvalidateresponse" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
+    "xmlvalidatesoapenvelope" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
+    "xmlvalidationurl" : {
+      "type" : "string"
+    },
+    "xmlwsdl" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "appfwprofile_xmlvalidationurl_binding",
+  "title" : "appfwprofile_xmlvalidationurl_binding"
+}

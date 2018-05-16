@@ -1,0 +1,20 @@
+{
+  "type" : "object",
+  "properties" : {
+    "activepolicy" : {
+      "type" : "integer"
+    },
+    "boundto" : {
+      "type" : "string"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "priority" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "authenticationwebauthpolicy_vpnglobal_binding",
+  "title" : "authenticationwebauthpolicy_vpnglobal_binding"
+}

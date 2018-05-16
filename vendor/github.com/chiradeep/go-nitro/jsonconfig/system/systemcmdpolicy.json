@@ -1,0 +1,23 @@
+{
+  "type" : "object",
+  "properties" : {
+    "action" : {
+      "type" : "string",
+      "enum" : [ "ALLOW", "DENY" ]
+    },
+    "builtin" : {
+      "type" : "object",
+      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE" ],
+      "readonly" : true
+    },
+    "cmdspec" : {
+      "type" : "string"
+    },
+    "policyname" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "systemcmdpolicy",
+  "title" : "systemcmdpolicy"
+}

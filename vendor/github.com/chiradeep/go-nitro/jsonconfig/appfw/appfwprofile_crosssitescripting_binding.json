@@ -1,0 +1,32 @@
+{
+  "type" : "object",
+  "properties" : {
+    "as_scan_location_xss" : {
+      "type" : "string",
+      "enum" : [ "FORMFIELD", "HEADER", "COOKIE" ]
+    },
+    "comment" : {
+      "type" : "string"
+    },
+    "crosssitescripting" : {
+      "type" : "string"
+    },
+    "formactionurl_xss" : {
+      "type" : "string"
+    },
+    "isregex_xss" : {
+      "type" : "string",
+      "enum" : [ "REGEX", "NOTREGEX" ]
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "state" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "appfwprofile_crosssitescripting_binding",
+  "title" : "appfwprofile_crosssitescripting_binding"
+}

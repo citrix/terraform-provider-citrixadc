@@ -1,0 +1,18 @@
+{
+  "type" : "object",
+  "properties" : {
+    "acttype" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "urlname" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "vpnvserver_vpnurl_binding",
+  "title" : "vpnvserver_vpnurl_binding"
+}

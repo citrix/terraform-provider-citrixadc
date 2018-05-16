@@ -1,0 +1,22 @@
+{
+  "type" : "object",
+  "properties" : {
+    "boundto" : {
+      "type" : "string"
+    },
+    "gotopriorityexpression" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "priority" : {
+      "type" : "integer",
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "dnspolicy64_lbvserver_binding",
+  "title" : "dnspolicy64_lbvserver_binding"
+}

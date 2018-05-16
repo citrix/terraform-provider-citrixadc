@@ -151,10 +151,21 @@ func (c *NitroClient) applyResource(resourceType string, resourceJSON []byte) ([
 
 }
 
+func (c *NitroClient) actOnResource(resourceType string, resourceJSON []byte, action string) ([]byte, error) {
+	log.Println("[DEBUG] go-nitro: changing resource of type ", resourceType)
+
+	url := c.url + fmt.Sprintf("%s?action=%s", resourceType, action)
+	log.Println("[TRACE] go-nitro: url is ", url)
+
+	return c.doHTTPRequest("POST", url, bytes.NewBuffer(resourceJSON), createResponseHandler)
+
+}
+
 func (c *NitroClient) changeResource(resourceType string, resourceName string, resourceJSON []byte) ([]byte, error) {
 	log.Println("[DEBUG] go-nitro: changing resource of type ", resourceType)
 
 	url := c.url + resourceType + "/" + resourceName + "?action=update"
+	log.Println("[TRACE] go-nitro: url is ", url)
 
 	return c.doHTTPRequest("POST", url, bytes.NewBuffer(resourceJSON), createResponseHandler)
 
@@ -164,6 +175,7 @@ func (c *NitroClient) updateResource(resourceType string, resourceName string, r
 	log.Println("[DEBUG] go-nitro: Updating resource of type ", resourceType)
 
 	url := c.url + resourceType + "/" + resourceName
+	log.Println("[TRACE] go-nitro: url is ", url)
 
 	return c.doHTTPRequest("PUT", url, bytes.NewBuffer(resourceJSON), createResponseHandler)
 
@@ -171,20 +183,41 @@ func (c *NitroClient) updateResource(resourceType string, resourceName string, r
 
 func (c *NitroClient) deleteResource(resourceType string, resourceName string) ([]byte, error) {
 	log.Println("[DEBUG] go-nitro: Deleting resource of type ", resourceType)
-	url := c.url + resourceType + "/" + resourceName
+	var url string
+	if resourceName != "" {
+		url = c.url + fmt.Sprintf("%s/%s", resourceType, resourceName)
+	} else {
+		url = c.url + fmt.Sprintf("%s", resourceType)
+	}
+	log.Println("[TRACE] go-nitro: url is ", url)
 
 	return c.doHTTPRequest("DELETE", url, bytes.NewBuffer([]byte{}), deleteResponseHandler)
 
 }
 
 func (c *NitroClient) deleteResourceWithArgs(resourceType string, resourceName string, args []string) ([]byte, error) {
-	log.Println("[DEBUG] go-nitro: Deleting resource of type ", resourceType)
-	url := c.url + resourceType + "/" + resourceName + "?args="
-	for _, arg := range args {
-		url = url + arg
+	log.Println("[DEBUG] go-nitro: Deleting resource of type ", resourceType, "with args ", args)
+	var url string
+	if resourceName != "" {
+		url = c.url + fmt.Sprintf("%s/%s?args=", resourceType, resourceName)
+	} else {
+		url = c.url + fmt.Sprintf("%s?args=", resourceType)
 	}
+	url = url + strings.Join(args, ",")
+	log.Println("[TRACE] go-nitro: url is ", url)
 
 	return c.doHTTPRequest("DELETE", url, bytes.NewBuffer([]byte{}), deleteResponseHandler)
+
+}
+
+func (c *NitroClient) deleteResourceWithArgsMap(resourceType string, resourceName string, argsMap map[string]string) ([]byte, error) {
+	args := make([]string, len(argsMap))
+	i := 0
+	for key, value := range argsMap {
+		args[i] = fmt.Sprintf("%s:%s", key, value)
+		i++
+	}
+	return c.deleteResourceWithArgs(resourceType, resourceName, args)
 
 }
 
@@ -218,8 +251,37 @@ func (c *NitroClient) listResource(resourceType string, resourceName string) ([]
 	if resourceName != "" {
 		url = c.url + fmt.Sprintf("%s/%s", resourceType, resourceName)
 	}
+	log.Println("[TRACE] go-nitro: url is ", url)
 
 	return c.doHTTPRequest("GET", url, bytes.NewBuffer([]byte{}), readResponseHandler)
+
+}
+
+func (c *NitroClient) listResourceWithArgs(resourceType string, resourceName string, args []string) ([]byte, error) {
+	log.Println("[DEBUG] go-nitro: listing resource of type ", resourceType, ", name: ", resourceName, ", args:", args)
+	var url string
+
+	if resourceName != "" {
+		url = c.url + fmt.Sprintf("%s/%s", resourceType, resourceName)
+	} else {
+		url = c.url + fmt.Sprintf("%s", resourceType)
+	}
+	url = url + "?args="
+	url = url + strings.Join(args, ",")
+	log.Println("[TRACE] go-nitro: url is ", url)
+
+	return c.doHTTPRequest("GET", url, bytes.NewBuffer([]byte{}), readResponseHandler)
+
+}
+
+func (c *NitroClient) listResourceWithArgsMap(resourceType string, resourceName string, argsMap map[string]string) ([]byte, error) {
+	args := make([]string, len(argsMap))
+	i := 0
+	for key, value := range argsMap {
+		args[i] = fmt.Sprintf("%s:%s", key, value)
+		i++
+	}
+	return c.listResourceWithArgs(resourceType, resourceName, args)
 
 }
 

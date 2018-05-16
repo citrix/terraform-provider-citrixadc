@@ -1,0 +1,26 @@
+{
+  "type" : "object",
+  "properties" : {
+    "securitylevel" : {
+      "type" : "string"
+    },
+    "td" : {
+      "type" : "integer"
+    },
+    "trapclass" : {
+      "type" : "string"
+    },
+    "trapdestination" : {
+      "type" : "string"
+    },
+    "username" : {
+      "type" : "string"
+    },
+    "version" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "snmptrap_snmpuser_binding",
+  "title" : "snmptrap_snmpuser_binding"
+}

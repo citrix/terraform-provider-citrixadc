@@ -1,0 +1,31 @@
+{
+  "type" : "object",
+  "properties" : {
+    "builtin" : {
+      "type" : "object",
+      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE" ],
+      "readonly" : true
+    },
+    "cmptype" : {
+      "type" : "string",
+      "enum" : [ "compress", "gzip", "deflate", "nocompress" ]
+    },
+    "deltatype" : {
+      "type" : "string",
+      "enum" : [ "PERURL", "PERPOLICY" ]
+    },
+    "isdefault" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "newname" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "cmpaction",
+  "title" : "cmpaction"
+}

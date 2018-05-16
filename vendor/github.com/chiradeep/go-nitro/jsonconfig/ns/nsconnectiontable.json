@@ -1,0 +1,231 @@
+{
+  "type" : "object",
+  "properties" : {
+    "advwnd" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "channelidnnm" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "connid" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "destip" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "destport" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "detail" : {
+      "type" : "object",
+      "enum" : [ "LINK", "NAME", "CONNFAILOVER", "FULL", "NNM" ]
+    },
+    "entityname" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "filterexpression" : {
+      "type" : "string"
+    },
+    "httpendseq" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "httprequest" : {
+      "type" : "string",
+      "enum" : [ "OPTIONS", "GET", "HEAD", "POST", "PUT", "DELETE", "TRACE", "CONNECT", "RPCCONNECT" ],
+      "readonly" : true
+    },
+    "httpreqver" : {
+      "type" : "string",
+      "enum" : [ "HTTP_1_0", "HTTP_1_1", "HTTP_0_9", "RTSP_1_0", "SIP_2_0", "VPN_ICA_SOCKS", "VPN_ICA_CGP" ],
+      "readonly" : true
+    },
+    "httprspcode" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "httpstate" : {
+      "type" : "string",
+      "enum" : [ "INITIALIZED", "CONTENT_LENGTH", "CHUNKED", "WAIT_FINAL_ACK", "UNKNOWN", "DONE", "WAIT_FIN" ],
+      "readonly" : true
+    },
+    "idletime" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "irs" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "iss" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "link" : {
+      "type" : "boolean"
+    },
+    "linkconnid" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "linkdestip" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "linkdestport" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "linkentityname" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "linkidletime" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "linknswsvalue" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "linkoptionflag" : {
+      "type" : "object",
+      "enum" : [ "sack", "timstmp", "ws" ],
+      "readonly" : true
+    },
+    "linkpeerwsvalue" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "linkservicetype" : {
+      "type" : "string",
+      "enum" : [ "HTTP", "FTP", "TCP", "UDP", "SSL", "SSL_BRIDGE", "SSL_TCP", "NNTP", "RPCSVR", "DNS", "ADNS", "SNMP", "RTSP", "DHCPRA", "ANY", "SIP_UDP", "DNS_TCP", "ADNS_TCP", "HTTPSVR", "HTTPCLIENT", "NAT", "HA", "AAA", "SINCTCP", "VPN AFTP", "MONITORS", "SSLVPN UDP", "SINCUDP", "RIP", "UDP CLNT", "SASP", "RPCCLNTS", "ROUTE", "AUDIT", "STA HTTP", "STA SSL", "DNS RESOLVE", "RDP", "MYSQL", "MSSQL", "DIAMETER", "SSL_DIAMETER", "TFTP", "ICA", "RADIUS" ],
+      "readonly" : true
+    },
+    "linksourceip" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "linksourceport" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "linkstate" : {
+      "type" : "string",
+      "enum" : [ "CLOSED", "LISTEN", "SYN_SENT", "SYN_RECEIVED", "ESTABLISHED", "CLOSE_WAIT", "FIN_WAIT_1", "CLOSING", "LAST_ACK", "FIN_WAIT_2", "TIME_WAIT", "NA" ],
+      "readonly" : true
+    },
+    "maxack" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "msgversionnnm" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "mss" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "name" : {
+      "type" : "boolean"
+    },
+    "nswsvalue" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "optionflags" : {
+      "type" : "object",
+      "enum" : [ "sack", "timstmp", "ws" ],
+      "readonly" : true
+    },
+    "outoforderpkts" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "peerwsvalue" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "priority" : {
+      "type" : "string",
+      "enum" : [ "SC Priority", "Priority queue1", "priority queue2", "priority queue3", "DoS Priority", "Surge Priority" ],
+      "readonly" : true
+    },
+    "rcvnxt" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "rcvwnd" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "retxretrycnt" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "rttsmoothed" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "rttvariance" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "sndcwnd" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "sndnxt" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "sndunack" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "sourceip" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "sourcenodeidnnm" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "sourceport" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "state" : {
+      "type" : "string",
+      "enum" : [ "CLOSED", "LISTEN", "SYN_SENT", "SYN_RECEIVED", "ESTABLISHED", "CLOSE_WAIT", "FIN_WAIT_1", "CLOSING", "LAST_ACK", "FIN_WAIT_2", "TIME_WAIT", "NA" ],
+      "readonly" : true
+    },
+    "svctype" : {
+      "type" : "string",
+      "enum" : [ "HTTP", "FTP", "TCP", "UDP", "SSL", "SSL_BRIDGE", "SSL_TCP", "NNTP", "RPCSVR", "DNS", "ADNS", "SNMP", "RTSP", "DHCPRA", "ANY", "SIP_UDP", "DNS_TCP", "ADNS_TCP", "HTTPSVR", "HTTPCLIENT", "NAT", "HA", "AAA", "SINCTCP", "VPN AFTP", "MONITORS", "SSLVPN UDP", "SINCUDP", "RIP", "UDP CLNT", "SASP", "RPCCLNTS", "ROUTE", "AUDIT", "STA HTTP", "STA SSL", "DNS RESOLVE", "RDP", "MYSQL", "MSSQL", "DIAMETER", "SSL_DIAMETER", "TFTP", "ICA", "RADIUS" ],
+      "readonly" : true
+    },
+    "targetnodeidnnm" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "td" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "trcount" : {
+      "type" : "integer",
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "nsconnectiontable",
+  "title" : "nsconnectiontable"
+}

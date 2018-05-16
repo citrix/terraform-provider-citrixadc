@@ -1,0 +1,15 @@
+{
+  "type" : "object",
+  "properties" : {
+    "prebody" : {
+      "type" : "string"
+    },
+    "systemiid" : {
+      "type" : "string",
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "filterprebodyinjection",
+  "title" : "filterprebodyinjection"
+}

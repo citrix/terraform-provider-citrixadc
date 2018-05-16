@@ -1,0 +1,34 @@
+{
+  "type" : "object",
+  "properties" : {
+    "gotopriorityexpression" : {
+      "type" : "string"
+    },
+    "invoke" : {
+      "type" : "boolean"
+    },
+    "labelname" : {
+      "type" : "string"
+    },
+    "labeltype" : {
+      "type" : "string",
+      "enum" : [ "vserver", "service", "policylabel" ]
+    },
+    "policyname" : {
+      "type" : "string"
+    },
+    "polinherit" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "priority" : {
+      "type" : "integer"
+    },
+    "servicename" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "sslservice_sslpolicy_binding",
+  "title" : "sslservice_sslpolicy_binding"
+}

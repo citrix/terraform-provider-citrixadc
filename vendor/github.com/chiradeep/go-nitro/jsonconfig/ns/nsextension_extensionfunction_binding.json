@@ -1,0 +1,47 @@
+{
+  "type" : "object",
+  "properties" : {
+    "activeextensionfunction" : {
+      "type" : "integer"
+    },
+    "extensionfuncdescription" : {
+      "type" : "string"
+    },
+    "extensionfunctionallparams" : {
+      "type" : "object"
+    },
+    "extensionfunctionallparamscount" : {
+      "type" : "integer"
+    },
+    "extensionfunctionargcount" : {
+      "type" : "integer"
+    },
+    "extensionfunctionargtype" : {
+      "type" : "object"
+    },
+    "extensionfunctionclasses" : {
+      "type" : "object"
+    },
+    "extensionfunctionclassescount" : {
+      "type" : "integer"
+    },
+    "extensionfunctionclasstype" : {
+      "type" : "string"
+    },
+    "extensionfunctionlinenumber" : {
+      "type" : "integer"
+    },
+    "extensionfunctionname" : {
+      "type" : "string"
+    },
+    "extensionfunctionreturntype" : {
+      "type" : "string"
+    },
+    "name" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "nsextension_extensionfunction_binding",
+  "title" : "nsextension_extensionfunction_binding"
+}

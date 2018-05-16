@@ -1,0 +1,15 @@
+{
+  "type" : "object",
+  "properties" : {
+    "keyvalue" : {
+      "type" : "string"
+    },
+    "method" : {
+      "type" : "string",
+      "enum" : [ "NONE", "RC4", "DES3", "AES128", "AES192", "AES256" ]
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "nsencryptionparams",
+  "title" : "nsencryptionparams"
+}

@@ -1,0 +1,44 @@
+{
+  "type" : "object",
+  "properties" : {
+    "comment" : {
+      "type" : "string"
+    },
+    "detail" : {
+      "type" : "string"
+    },
+    "functionhaltcount" : {
+      "type" : "integer"
+    },
+    "functionhits" : {
+      "type" : "integer"
+    },
+    "functionundefhits" : {
+      "type" : "integer"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "overwrite" : {
+      "type" : "boolean"
+    },
+    "src" : {
+      "type" : "string"
+    },
+    "trace" : {
+      "type" : "string"
+    },
+    "tracefunctions" : {
+      "type" : "string"
+    },
+    "tracevariables" : {
+      "type" : "string"
+    },
+    "type" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "nsextension",
+  "title" : "nsextension"
+}

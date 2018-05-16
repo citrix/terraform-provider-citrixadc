@@ -1,0 +1,17 @@
+{
+  "type" : "object",
+  "properties" : {
+    "Locationfile" : {
+      "type" : "string"
+    },
+    "format" : {
+      "type" : "string"
+    },
+    "src" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "locationfile6",
+  "title" : "locationfile6"
+}
