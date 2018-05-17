@@ -1,0 +1,30 @@
+{
+  "type" : "object",
+  "properties" : {
+    "hits" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "policyname" : {
+      "type" : "string"
+    },
+    "polqdepth" : {
+      "type" : "integer"
+    },
+    "priority" : {
+      "type" : "integer"
+    },
+    "qdepth" : {
+      "type" : "integer"
+    },
+    "rule" : {
+      "type" : "string"
+    },
+    "weight" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "pqpolicy",
+  "title" : "pqpolicy"
+}

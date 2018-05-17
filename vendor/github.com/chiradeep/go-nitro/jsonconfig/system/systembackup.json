@@ -1,0 +1,38 @@
+{
+  "type" : "object",
+  "properties" : {
+    "comment" : {
+      "type" : "string"
+    },
+    "createdby" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "creationtime" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "filename" : {
+      "type" : "string"
+    },
+    "ipaddress" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "level" : {
+      "type" : "string",
+      "enum" : [ "basic", "full" ]
+    },
+    "size" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "version" : {
+      "type" : "string",
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "systembackup",
+  "title" : "systembackup"
+}

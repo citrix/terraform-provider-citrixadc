@@ -1,0 +1,14 @@
+{
+  "type" : "object",
+  "properties" : {
+    "memlimit" : {
+      "type" : "integer"
+    },
+    "size" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "nstcpbufparam",
+  "title" : "nstcpbufparam"
+}

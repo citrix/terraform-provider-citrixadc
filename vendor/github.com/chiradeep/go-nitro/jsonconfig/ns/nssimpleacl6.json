@@ -1,0 +1,38 @@
+{
+  "type" : "object",
+  "properties" : {
+    "aclaction" : {
+      "type" : "string",
+      "enum" : [ "DENY" ]
+    },
+    "aclname" : {
+      "type" : "string"
+    },
+    "destport" : {
+      "type" : "integer"
+    },
+    "estsessions" : {
+      "type" : "boolean"
+    },
+    "hits" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "protocol" : {
+      "type" : "string",
+      "enum" : [ "TCP", "UDP" ]
+    },
+    "srcipv6" : {
+      "type" : "string"
+    },
+    "td" : {
+      "type" : "integer"
+    },
+    "ttl" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "nssimpleacl6",
+  "title" : "nssimpleacl6"
+}

@@ -1,0 +1,14 @@
+{
+  "type" : "object",
+  "properties" : {
+    "groupname" : {
+      "type" : "string"
+    },
+    "username" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "systemgroup_systemuser_binding",
+  "title" : "systemgroup_systemuser_binding"
+}

@@ -1,0 +1,25 @@
+{
+  "type" : "object",
+  "properties" : {
+    "String" : {
+      "type" : "string"
+    },
+    "builtin" : {
+      "type" : "object",
+      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE" ]
+    },
+    "charset" : {
+      "type" : "string",
+      "enum" : [ "ASCII", "UTF_8" ]
+    },
+    "index" : {
+      "type" : "integer"
+    },
+    "name" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "policypatset_pattern_binding",
+  "title" : "policypatset_pattern_binding"
+}

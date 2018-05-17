@@ -1,0 +1,32 @@
+{
+  "type" : "object",
+  "properties" : {
+    "ipaddress" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "name" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "numsites" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "rtt" : {
+      "type" : "object",
+      "readonly" : true
+    },
+    "sitename" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "ttl" : {
+      "type" : "integer",
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "gslbldnsentries",
+  "title" : "gslbldnsentries"
+}

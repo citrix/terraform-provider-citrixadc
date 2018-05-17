@@ -1,0 +1,17 @@
+{
+  "type" : "object",
+  "properties" : {
+    "data" : {
+      "type" : "string"
+    },
+    "filename" : {
+      "type" : "string"
+    },
+    "name" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "vpnepaprofile",
+  "title" : "vpnepaprofile"
+}

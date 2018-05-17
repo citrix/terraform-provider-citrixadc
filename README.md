@@ -181,6 +181,33 @@ resource "netscaler_lbmonitor" "foo" {
 ##### Argument Reference
 See <https://docs.citrix.com/en-us/netscaler/11-1/nitro-api/nitro-rest/api-reference/configuration/load-balancing/lbmonitor.html> for possible values for these arguments and for an exhaustive list of arguments. 
 
+#### `netscaler_nsacls`
+
+```
+resource "netscaler_nsacls" "allacls" {
+  aclsname = "foo"
+  "acl" {
+  	aclname = "restrict"
+  	protocol = "TCP"
+  	aclaction = "DENY"
+  	destipval = "192.168.1.20"
+  	srcportval = "49-1024"
+        priority = 100
+	}
+  "acl"  {
+  	aclname = "restrictvlan"
+  	aclaction = "DENY"
+  	vlan = "2000"
+        priority = 130
+  }
+
+```
+
+##### Argument Reference
+You can have only one element of type `netscaler_nsacls`. Encapsulating every `nsacl` inside the `netscaler_nsacls` resource so that Terraform will automatically call `apply` on the `nsacls`.
+
+See <https://developer-docs.citrix.com/projects/netscaler-nitro-api/en/12.0/configuration/ns/nsacl/nsacl/#nsacl> for possible values for these arguments and for an exhaustive list of arguments. 
+
 ## Building
 ### Assumption
 * You have (some) experience with Terraform, the different provisioners and providers that come out of the box,

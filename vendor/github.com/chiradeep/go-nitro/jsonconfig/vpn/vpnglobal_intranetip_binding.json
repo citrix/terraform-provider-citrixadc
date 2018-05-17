@@ -1,0 +1,14 @@
+{
+  "type" : "object",
+  "properties" : {
+    "intranetip" : {
+      "type" : "string"
+    },
+    "netmask" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "vpnglobal_intranetip_binding",
+  "title" : "vpnglobal_intranetip_binding"
+}

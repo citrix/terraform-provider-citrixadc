@@ -1,0 +1,11 @@
+{
+  "type" : "object",
+  "properties" : {
+    "pptpgreidletimeout" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "appalgparam",
+  "title" : "appalgparam"
+}

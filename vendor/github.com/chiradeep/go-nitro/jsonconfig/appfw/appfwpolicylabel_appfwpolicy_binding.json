@@ -1,0 +1,30 @@
+{
+  "type" : "object",
+  "properties" : {
+    "gotopriorityexpression" : {
+      "type" : "string"
+    },
+    "invoke" : {
+      "type" : "boolean"
+    },
+    "invoke_labelname" : {
+      "type" : "string"
+    },
+    "labelname" : {
+      "type" : "string"
+    },
+    "labeltype" : {
+      "type" : "string",
+      "enum" : [ "reqvserver", "policylabel" ]
+    },
+    "policyname" : {
+      "type" : "string"
+    },
+    "priority" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "appfwpolicylabel_appfwpolicy_binding",
+  "title" : "appfwpolicylabel_appfwpolicy_binding"
+}

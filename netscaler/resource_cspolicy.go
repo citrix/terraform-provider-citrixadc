@@ -154,9 +154,9 @@ func createCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		err2 := client.DeleteResource(netscaler.Cspolicy.Type(), cspolicyName)
 		if err2 != nil {
-			return fmt.Errorf("[ERROR] netscaler-provider:  Failed to undo add cspolicy after bind cspolicy %s to Csvserver failed", cspolicyName, err2)
+			return fmt.Errorf("[ERROR] netscaler-provider:  Failed to undo add cspolicy after bind cspolicy %s to Csvserver failed err=%v", cspolicyName, err2)
 		}
-		return fmt.Errorf("[ERROR] netscaler-provider:  Failed to bind cspolicy %s to Csvserver", cspolicyName, err)
+		return fmt.Errorf("[ERROR] netscaler-provider:  Failed to bind cspolicy %s to Csvserver, err=%v", cspolicyName, err)
 	}
 	d.SetId(cspolicyName)
 	err = readCspolicyFunc(d, meta)

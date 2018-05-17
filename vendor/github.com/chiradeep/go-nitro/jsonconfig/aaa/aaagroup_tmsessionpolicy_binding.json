@@ -1,0 +1,27 @@
+{
+  "type" : "object",
+  "properties" : {
+    "acttype" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "groupname" : {
+      "type" : "string"
+    },
+    "intranetapplication" : {
+      "type" : "string"
+    },
+    "policy" : {
+      "type" : "string"
+    },
+    "priority" : {
+      "type" : "integer"
+    },
+    "urlname" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "aaagroup_tmsessionpolicy_binding",
+  "title" : "aaagroup_tmsessionpolicy_binding"
+}

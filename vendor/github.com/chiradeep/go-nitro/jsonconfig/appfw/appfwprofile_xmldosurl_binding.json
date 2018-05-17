@@ -1,0 +1,148 @@
+{
+  "type" : "object",
+  "properties" : {
+    "comment" : {
+      "type" : "string"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "state" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "xmlblockdtd" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
+    "xmlblockexternalentities" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
+    "xmlblockpi" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
+    "xmldosurl" : {
+      "type" : "string"
+    },
+    "xmlmaxattributenamelength" : {
+      "type" : "integer"
+    },
+    "xmlmaxattributenamelengthcheck" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
+    "xmlmaxattributes" : {
+      "type" : "integer"
+    },
+    "xmlmaxattributescheck" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
+    "xmlmaxattributevaluelength" : {
+      "type" : "integer"
+    },
+    "xmlmaxattributevaluelengthcheck" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
+    "xmlmaxchardatalength" : {
+      "type" : "integer"
+    },
+    "xmlmaxchardatalengthcheck" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
+    "xmlmaxelementchildren" : {
+      "type" : "integer"
+    },
+    "xmlmaxelementchildrencheck" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
+    "xmlmaxelementdepth" : {
+      "type" : "integer"
+    },
+    "xmlmaxelementdepthcheck" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
+    "xmlmaxelementnamelength" : {
+      "type" : "integer"
+    },
+    "xmlmaxelementnamelengthcheck" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
+    "xmlmaxelements" : {
+      "type" : "integer"
+    },
+    "xmlmaxelementscheck" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
+    "xmlmaxentityexpansiondepth" : {
+      "type" : "integer"
+    },
+    "xmlmaxentityexpansiondepthcheck" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
+    "xmlmaxentityexpansions" : {
+      "type" : "integer"
+    },
+    "xmlmaxentityexpansionscheck" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
+    "xmlmaxfilesize" : {
+      "type" : "integer"
+    },
+    "xmlmaxfilesizecheck" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
+    "xmlmaxnamespaces" : {
+      "type" : "integer"
+    },
+    "xmlmaxnamespacescheck" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
+    "xmlmaxnamespaceurilength" : {
+      "type" : "integer"
+    },
+    "xmlmaxnamespaceurilengthcheck" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
+    "xmlmaxnodes" : {
+      "type" : "integer"
+    },
+    "xmlmaxnodescheck" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
+    "xmlmaxsoaparrayrank" : {
+      "type" : "integer"
+    },
+    "xmlmaxsoaparraysize" : {
+      "type" : "integer"
+    },
+    "xmlminfilesize" : {
+      "type" : "integer"
+    },
+    "xmlminfilesizecheck" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
+    "xmlsoaparraycheck" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "appfwprofile_xmldosurl_binding",
+  "title" : "appfwprofile_xmldosurl_binding"
+}

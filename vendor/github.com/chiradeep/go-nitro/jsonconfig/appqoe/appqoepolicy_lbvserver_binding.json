@@ -1,0 +1,26 @@
+{
+  "type" : "object",
+  "properties" : {
+    "activepolicy" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "bindpriority" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "boundto" : {
+      "type" : "string"
+    },
+    "gotopriorityexpression" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "name" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "appqoepolicy_lbvserver_binding",
+  "title" : "appqoepolicy_lbvserver_binding"
+}

@@ -1,0 +1,11 @@
+{
+  "type" : "object",
+  "properties" : {
+    "ciphergroupname" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "sslcipher_binding",
+  "title" : "sslcipher_binding"
+}

@@ -20,10 +20,14 @@ import (
 	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+	"os"
 	"testing"
 )
 
 func TestAccSslcertkey_basic(t *testing.T) {
+	if os.Getenv("TF_TEST_SSLCERTKEY") == "" {
+		t.Skip("skipping test; $TF_TEST_SSLCERTKEY not set")
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,

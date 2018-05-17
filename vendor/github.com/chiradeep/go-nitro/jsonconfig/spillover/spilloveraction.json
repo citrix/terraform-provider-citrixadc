@@ -1,0 +1,23 @@
+{
+  "type" : "object",
+  "properties" : {
+    "action" : {
+      "type" : "string",
+      "enum" : [ "SPILLOVER" ]
+    },
+    "builtin" : {
+      "type" : "object",
+      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE" ],
+      "readonly" : true
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "newname" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "spilloveraction",
+  "title" : "spilloveraction"
+}

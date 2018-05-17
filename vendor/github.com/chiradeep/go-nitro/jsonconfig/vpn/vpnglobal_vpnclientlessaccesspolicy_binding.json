@@ -1,0 +1,29 @@
+{
+  "type" : "object",
+  "properties" : {
+    "builtin" : {
+      "type" : "object",
+      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE" ]
+    },
+    "groupextraction" : {
+      "type" : "boolean"
+    },
+    "policyname" : {
+      "type" : "string"
+    },
+    "priority" : {
+      "type" : "integer"
+    },
+    "secondary" : {
+      "type" : "boolean"
+    },
+    "type" : {
+      "type" : "string",
+      "enum" : [ "REQ_OVERRIDE", "REQ_DEFAULT", "RES_OVERRIDE", "RES_DEFAULT" ],
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "vpnglobal_vpnclientlessaccesspolicy_binding",
+  "title" : "vpnglobal_vpnclientlessaccesspolicy_binding"
+}

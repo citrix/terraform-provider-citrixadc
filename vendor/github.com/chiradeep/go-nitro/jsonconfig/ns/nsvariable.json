@@ -1,0 +1,38 @@
+{
+  "type" : "object",
+  "properties" : {
+    "comment" : {
+      "type" : "string"
+    },
+    "expires" : {
+      "type" : "integer"
+    },
+    "iffull" : {
+      "type" : "string"
+    },
+    "ifnovalue" : {
+      "type" : "string"
+    },
+    "ifvaluetoobig" : {
+      "type" : "string"
+    },
+    "init" : {
+      "type" : "string"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "referencecount" : {
+      "type" : "integer"
+    },
+    "scope" : {
+      "type" : "string"
+    },
+    "type" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "nsvariable",
+  "title" : "nsvariable"
+}

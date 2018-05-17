@@ -1,0 +1,16 @@
+{
+  "type" : "object",
+  "properties" : {
+    "scope" : {
+      "type" : "string",
+      "enum" : [ "NODE", "CLUSTER" ]
+    },
+    "servername" : {
+      "type" : "string",
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "techsupport",
+  "title" : "techsupport"
+}

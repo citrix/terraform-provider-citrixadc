@@ -1,0 +1,24 @@
+{
+  "type" : "object",
+  "properties" : {
+    "comment" : {
+      "type" : "string"
+    },
+    "csrfformactionurl" : {
+      "type" : "string"
+    },
+    "csrftag" : {
+      "type" : "string"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "state" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "appfwprofile_csrftag_binding",
+  "title" : "appfwprofile_csrftag_binding"
+}

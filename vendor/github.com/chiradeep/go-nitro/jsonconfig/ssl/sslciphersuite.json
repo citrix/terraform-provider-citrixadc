@@ -1,0 +1,15 @@
+{
+  "type" : "object",
+  "properties" : {
+    "ciphername" : {
+      "type" : "string"
+    },
+    "description" : {
+      "type" : "string",
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "sslciphersuite",
+  "title" : "sslciphersuite"
+}

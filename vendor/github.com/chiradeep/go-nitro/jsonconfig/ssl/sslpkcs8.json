@@ -1,0 +1,21 @@
+{
+  "type" : "object",
+  "properties" : {
+    "keyfile" : {
+      "type" : "string"
+    },
+    "keyform" : {
+      "type" : "string",
+      "enum" : [ "DER", "PEM" ]
+    },
+    "password" : {
+      "type" : "string"
+    },
+    "pkcs8file" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "sslpkcs8",
+  "title" : "sslpkcs8"
+}

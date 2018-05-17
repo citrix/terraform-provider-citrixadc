@@ -1,0 +1,18 @@
+{
+  "type" : "object",
+  "properties" : {
+    "id" : {
+      "type" : "integer"
+    },
+    "rnat" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "vlan" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "bridgegroup_vlan_binding",
+  "title" : "bridgegroup_vlan_binding"
+}

@@ -13,8 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-TEST?=$$(go list ./... |grep -v 'vendor')
-GOFMT_FILES?=$$(find . -name '*.go' |grep -v vendor)
+TEST?=$$(go list ./... |grep -v 'vendor' | grep -v tools)
+GOFMT_FILES?=$$(find . -name '*.go' |grep -v vendor | grep -v tools)
 
 default: build
 

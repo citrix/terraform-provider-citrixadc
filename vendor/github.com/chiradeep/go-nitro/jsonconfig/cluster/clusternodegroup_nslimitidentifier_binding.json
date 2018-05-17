@@ -1,0 +1,14 @@
+{
+  "type" : "object",
+  "properties" : {
+    "identifiername" : {
+      "type" : "string"
+    },
+    "name" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "clusternodegroup_nslimitidentifier_binding",
+  "title" : "clusternodegroup_nslimitidentifier_binding"
+}

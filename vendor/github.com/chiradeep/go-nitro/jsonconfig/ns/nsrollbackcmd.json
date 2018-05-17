@@ -1,0 +1,15 @@
+{
+  "type" : "object",
+  "properties" : {
+    "filename" : {
+      "type" : "string"
+    },
+    "outtype" : {
+      "type" : "string",
+      "enum" : [ "cli", "xml" ]
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "nsrollbackcmd",
+  "title" : "nsrollbackcmd"
+}

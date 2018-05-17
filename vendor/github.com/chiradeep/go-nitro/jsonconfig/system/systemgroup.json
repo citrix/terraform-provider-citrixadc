@@ -1,0 +1,17 @@
+{
+  "type" : "object",
+  "properties" : {
+    "groupname" : {
+      "type" : "string"
+    },
+    "promptstring" : {
+      "type" : "string"
+    },
+    "timeout" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "systemgroup",
+  "title" : "systemgroup"
+}

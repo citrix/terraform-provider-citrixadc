@@ -1,0 +1,14 @@
+{
+  "type" : "object",
+  "properties" : {
+    "name" : {
+      "type" : "string"
+    },
+    "vserver" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "clusternodegroup_lbvserver_binding",
+  "title" : "clusternodegroup_lbvserver_binding"
+}

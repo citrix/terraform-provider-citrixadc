@@ -1,0 +1,27 @@
+{
+  "type" : "object",
+  "properties" : {
+    "acl6name" : {
+      "type" : "string"
+    },
+    "aclname" : {
+      "type" : "string"
+    },
+    "connfailover" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "netmask" : {
+      "type" : "string"
+    },
+    "network" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "forwardingsession",
+  "title" : "forwardingsession"
+}

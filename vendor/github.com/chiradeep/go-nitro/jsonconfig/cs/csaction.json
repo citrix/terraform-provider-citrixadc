@@ -1,0 +1,40 @@
+{
+  "type" : "object",
+  "properties" : {
+    "builtin" : {
+      "type" : "object",
+      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE" ],
+      "readonly" : true
+    },
+    "comment" : {
+      "type" : "string"
+    },
+    "hits" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "newname" : {
+      "type" : "string"
+    },
+    "referencecount" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "targetlbvserver" : {
+      "type" : "string"
+    },
+    "targetvserverexpr" : {
+      "type" : "string"
+    },
+    "undefhits" : {
+      "type" : "integer",
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "csaction",
+  "title" : "csaction"
+}

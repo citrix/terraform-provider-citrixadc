@@ -1,0 +1,47 @@
+{
+  "type" : "object",
+  "properties" : {
+    "action" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "domain" : {
+      "type" : "string"
+    },
+    "hits" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "labelname" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "labeltype" : {
+      "type" : "string",
+      "enum" : [ "reqvserver", "resvserver", "policylabel" ],
+      "readonly" : true
+    },
+    "pihits" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "pipolicyhits" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "policyname" : {
+      "type" : "string"
+    },
+    "priority" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "url" : {
+      "type" : "string",
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "cspolicy_csvserver_binding",
+  "title" : "cspolicy_csvserver_binding"
+}

@@ -1,0 +1,33 @@
+{
+  "type" : "object",
+  "properties" : {
+    "action" : {
+      "type" : "string",
+      "enum" : [ "ACS", "NS", "NOACTION" ]
+    },
+    "altcontentpath" : {
+      "type" : "string"
+    },
+    "altcontentsvcname" : {
+      "type" : "string"
+    },
+    "delay" : {
+      "type" : "integer"
+    },
+    "maxconn" : {
+      "type" : "integer"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "rule" : {
+      "type" : "string"
+    },
+    "url" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "scpolicy",
+  "title" : "scpolicy"
+}

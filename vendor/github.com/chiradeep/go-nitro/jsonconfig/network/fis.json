@@ -1,0 +1,15 @@
+{
+  "type" : "object",
+  "properties" : {
+    "ifaces" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "name" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "fis",
+  "title" : "fis"
+}

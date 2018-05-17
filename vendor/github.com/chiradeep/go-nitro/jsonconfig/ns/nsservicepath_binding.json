@@ -1,0 +1,11 @@
+{
+  "type" : "object",
+  "properties" : {
+    "servicepathname" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "nsservicepath_binding",
+  "title" : "nsservicepath_binding"
+}

@@ -1,0 +1,21 @@
+{
+  "type" : "object",
+  "properties" : {
+    "core" : {
+      "type" : "integer"
+    },
+    "datasource" : {
+      "type" : "string"
+    },
+    "response" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "type" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "systementity",
+  "title" : "systementity"
+}

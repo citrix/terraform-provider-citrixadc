@@ -1,0 +1,38 @@
+{
+  "type" : "object",
+  "properties" : {
+    "conmultiplex" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "dropinvalreqs" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
+    "insnssrvrhdr" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
+    "logerrresp" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
+    "markconnreqinval" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
+    "markhttp09inval" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
+    "maxreusepool" : {
+      "type" : "integer"
+    },
+    "nssrvrhdr" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "nshttpparam",
+  "title" : "nshttpparam"
+}

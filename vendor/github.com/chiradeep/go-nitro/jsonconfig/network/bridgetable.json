@@ -1,0 +1,25 @@
+{
+  "type" : "object",
+  "properties" : {
+    "bridgeage" : {
+      "type" : "integer"
+    },
+    "channel" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "ifnum" : {
+      "type" : "string"
+    },
+    "mac" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "vlan" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "bridgetable",
+  "title" : "bridgetable"
+}

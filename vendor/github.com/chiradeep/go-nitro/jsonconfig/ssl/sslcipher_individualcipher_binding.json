@@ -1,0 +1,24 @@
+{
+  "type" : "object",
+  "properties" : {
+    "ciphergroupname" : {
+      "type" : "string"
+    },
+    "ciphername" : {
+      "type" : "string"
+    },
+    "cipheroperation" : {
+      "type" : "string",
+      "enum" : [ "ADD", "REM", "ORD" ]
+    },
+    "ciphgrpals" : {
+      "type" : "string"
+    },
+    "description" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "sslcipher_individualcipher_binding",
+  "title" : "sslcipher_individualcipher_binding"
+}

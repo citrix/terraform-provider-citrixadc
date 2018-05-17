@@ -1,0 +1,18 @@
+{
+  "type" : "object",
+  "properties" : {
+    "boundto" : {
+      "type" : "string"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "priority" : {
+      "type" : "integer",
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "authorizationpolicy_aaauser_binding",
+  "title" : "authorizationpolicy_aaauser_binding"
+}

@@ -1,0 +1,11 @@
+{
+  "type" : "object",
+  "properties" : {
+    "id" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "linkset_binding",
+  "title" : "linkset_binding"
+}

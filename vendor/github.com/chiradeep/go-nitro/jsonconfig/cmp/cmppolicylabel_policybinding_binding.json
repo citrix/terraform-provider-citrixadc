@@ -1,0 +1,30 @@
+{
+  "type" : "object",
+  "properties" : {
+    "gotopriorityexpression" : {
+      "type" : "string"
+    },
+    "invoke" : {
+      "type" : "boolean"
+    },
+    "invoke_labelname" : {
+      "type" : "string"
+    },
+    "labelname" : {
+      "type" : "string"
+    },
+    "labeltype" : {
+      "type" : "string",
+      "enum" : [ "reqvserver", "resvserver", "policylabel" ]
+    },
+    "policyname" : {
+      "type" : "string"
+    },
+    "priority" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "cmppolicylabel_policybinding_binding",
+  "title" : "cmppolicylabel_policybinding_binding"
+}

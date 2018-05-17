@@ -1,0 +1,35 @@
+{
+  "type" : "object",
+  "properties" : {
+    "encalgo" : {
+      "type" : "object",
+      "enum" : [ "AES", "3DES" ]
+    },
+    "hashalgo" : {
+      "type" : "object",
+      "enum" : [ "HMAC_SHA1", "HMAC_SHA256", "HMAC_SHA384", "HMAC_SHA512", "HMAC_MD5" ]
+    },
+    "ikeretryinterval" : {
+      "type" : "integer"
+    },
+    "ikeversion" : {
+      "type" : "string",
+      "enum" : [ "V1", "V2" ]
+    },
+    "lifetime" : {
+      "type" : "integer"
+    },
+    "livenesscheckinterval" : {
+      "type" : "integer"
+    },
+    "replaywindowsize" : {
+      "type" : "integer"
+    },
+    "retransmissiontime" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "ipsecparameter",
+  "title" : "ipsecparameter"
+}

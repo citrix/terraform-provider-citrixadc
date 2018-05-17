@@ -1,0 +1,38 @@
+{
+  "type" : "object",
+  "properties" : {
+    "Import" : {
+      "type" : "boolean"
+    },
+    "certfile" : {
+      "type" : "string"
+    },
+    "des" : {
+      "type" : "boolean"
+    },
+    "des3" : {
+      "type" : "boolean"
+    },
+    "export" : {
+      "type" : "boolean"
+    },
+    "keyfile" : {
+      "type" : "string"
+    },
+    "outfile" : {
+      "type" : "string"
+    },
+    "password" : {
+      "type" : "string"
+    },
+    "pempassphrase" : {
+      "type" : "string"
+    },
+    "pkcs12file" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "sslpkcs12",
+  "title" : "sslpkcs12"
+}

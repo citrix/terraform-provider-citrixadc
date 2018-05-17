@@ -1,0 +1,11 @@
+{
+  "type" : "object",
+  "properties" : {
+    "zonename" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "dnszone_binding",
+  "title" : "dnszone_binding"
+}

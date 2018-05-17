@@ -1,0 +1,18 @@
+{
+  "type" : "object",
+  "properties" : {
+    "acttype" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "intranetapplication" : {
+      "type" : "string"
+    },
+    "name" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "vpnvserver_vpnintranetapplication_binding",
+  "title" : "vpnvserver_vpnintranetapplication_binding"
+}

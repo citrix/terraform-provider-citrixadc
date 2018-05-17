@@ -1,0 +1,74 @@
+{
+  "type" : "object",
+  "properties" : {
+    "accounting" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
+    "authtimeout" : {
+      "type" : "integer"
+    },
+    "callingstationid" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "defaultauthenticationgroup" : {
+      "type" : "string"
+    },
+    "groupauthname" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "ipaddress" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "ipattributetype" : {
+      "type" : "integer"
+    },
+    "ipvendorid" : {
+      "type" : "integer"
+    },
+    "passencoding" : {
+      "type" : "string",
+      "enum" : [ "pap", "chap", "mschapv1", "mschapv2" ]
+    },
+    "pwdattributetype" : {
+      "type" : "integer"
+    },
+    "pwdvendorid" : {
+      "type" : "integer"
+    },
+    "radattributetype" : {
+      "type" : "integer"
+    },
+    "radgroupseparator" : {
+      "type" : "string"
+    },
+    "radgroupsprefix" : {
+      "type" : "string"
+    },
+    "radkey" : {
+      "type" : "string"
+    },
+    "radnasid" : {
+      "type" : "string"
+    },
+    "radnasip" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "radvendorid" : {
+      "type" : "integer"
+    },
+    "serverip" : {
+      "type" : "string"
+    },
+    "serverport" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "aaaradiusparams",
+  "title" : "aaaradiusparams"
+}

@@ -1,0 +1,18 @@
+{
+  "type" : "object",
+  "properties" : {
+    "bits" : {
+      "type" : "integer"
+    },
+    "dhfile" : {
+      "type" : "string"
+    },
+    "gen" : {
+      "type" : "string",
+      "enum" : [ "2", "5" ]
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "ssldhparam",
+  "title" : "ssldhparam"
+}

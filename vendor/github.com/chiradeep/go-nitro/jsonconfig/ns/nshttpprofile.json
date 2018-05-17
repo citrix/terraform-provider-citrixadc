@@ -1,0 +1,81 @@
+{
+  "type" : "object",
+  "properties" : {
+    "adpttimeout" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "clientiphdrexpr" : {
+      "type" : "string"
+    },
+    "cmponpush" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "conmultiplex" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "dropextracrlf" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "dropextradata" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "dropinvalreqs" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "incomphdrdelay" : {
+      "type" : "integer"
+    },
+    "markconnreqinval" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "markhttp09inval" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "maxreq" : {
+      "type" : "integer"
+    },
+    "maxreusepool" : {
+      "type" : "integer"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "persistentetag" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "refcnt" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "reqtimeout" : {
+      "type" : "integer"
+    },
+    "reqtimeoutaction" : {
+      "type" : "string"
+    },
+    "spdy" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "weblog" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "websocket" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "nshttpprofile",
+  "title" : "nshttpprofile"
+}

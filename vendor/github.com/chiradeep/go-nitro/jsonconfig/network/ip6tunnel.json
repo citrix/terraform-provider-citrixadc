@@ -1,0 +1,29 @@
+{
+  "type" : "object",
+  "properties" : {
+    "encapip" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "local" : {
+      "type" : "string"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "remote" : {
+      "type" : "string"
+    },
+    "remoteip" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "type" : {
+      "type" : "integer",
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "ip6tunnel",
+  "title" : "ip6tunnel"
+}

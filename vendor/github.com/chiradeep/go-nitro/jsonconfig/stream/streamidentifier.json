@@ -1,0 +1,28 @@
+{
+  "type" : "object",
+  "properties" : {
+    "interval" : {
+      "type" : "integer"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "rule" : {
+      "type" : "object",
+      "readonly" : true
+    },
+    "samplecount" : {
+      "type" : "integer"
+    },
+    "selectorname" : {
+      "type" : "string"
+    },
+    "sort" : {
+      "type" : "string",
+      "enum" : [ "REQUESTS", "CONNECTIONS", "RESPTIME", "BANDWIDTH", "NONE" ]
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "streamidentifier",
+  "title" : "streamidentifier"
+}

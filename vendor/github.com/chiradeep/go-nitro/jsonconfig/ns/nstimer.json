@@ -1,0 +1,24 @@
+{
+  "type" : "object",
+  "properties" : {
+    "comment" : {
+      "type" : "string"
+    },
+    "interval" : {
+      "type" : "integer"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "newname" : {
+      "type" : "string"
+    },
+    "unit" : {
+      "type" : "string",
+      "enum" : [ "SEC", "MIN" ]
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "nstimer",
+  "title" : "nstimer"
+}
