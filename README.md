@@ -248,6 +248,9 @@ You can have only one element of type `netscaler_rnat`. Encapsulate every `rnat`
 
 See <https://developer-docs.citrix.com/projects/netscaler-nitro-api/en/12.0/configuration/network/rnat/rnat/#rnat> for possible values for these arguments and for an exhaustive list of arguments. 
 
+## Using `remote-exec` for one-time tasks
+Terraform is useful for maintaining desired state for a set of resources. It is less useful for tasks such as network configuration which don't change. Network configuration is like using a provisioner inside Terraform. The directory `examples/remote-exec` show examples of how Terraform can use ssh to accomplish these one-time tasks.
+
 ## Building
 ### Assumption
 * You have (some) experience with Terraform, the different provisioners and providers that come out of the box,
