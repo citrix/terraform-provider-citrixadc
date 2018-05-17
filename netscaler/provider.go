@@ -78,6 +78,7 @@ func providerResources() map[string]*schema.Resource {
 		"netscaler_servicegroup": resourceNetScalerServicegroup(),
 		"netscaler_nsacl":        resourceNetScalerNsacl(),
 		"netscaler_nsacls":       resourceNetScalerNsacls(),
+		"netscaler_inat":         resourceNetScalerInat(),
 	}
 }
 

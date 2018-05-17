@@ -67,14 +67,8 @@ func testAccCheckNsaclsExist(n string, id *string) resource.TestCheckFunc {
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		acls := rs.Primary.Attributes["netscaler_nsacls.foo"]
-		if len(acls) > 0 {
-			fmt.Printf("Found %d acls", len(acls))
-			for _, val := range acls {
-				fmt.Printf("[INFO] netscaler-provide testNsAcls acl=%v", val)
-			}
-		}
 		deviceAcls, err := nsClient.FindAllResources(netscaler.Nsacl.Type())
+
 		if err != nil {
 			return err
 		}
@@ -114,9 +108,9 @@ func testAccCheckNsaclsExist(n string, id *string) resource.TestCheckFunc {
 			}
 		}
 		if found1 && found2 && found3 {
-			fmt.Printf("[INFO] netscaler-provider testNsAcls Found acls\n")
+			//fmt.Printf("netscaler-provider testNsAcls Found acls\n")
 		} else {
-			fmt.Printf("[INFO] netscaler-provider testNsAcls Did not find all acls\n")
+			//fmt.Printf("netscaler-provider testNsAcls Did not find all acls\n")
 			return fmt.Errorf("netscaler-provider testNsAcls Did not find all acls")
 		}
 
@@ -215,9 +209,9 @@ func testAccCheckNsaclsUpdateExist(n string, id *string) resource.TestCheckFunc 
 
 		}
 		if found1 && found2 {
-			fmt.Printf("[INFO] netscaler-provider testNsAclsUpdate Found acls\n")
+			//fmt.Printf("netscaler-provider testNsAclsUpdate Found acls\n")
 		} else {
-			fmt.Printf("[INFO] netscaler-provider testNsAclsUpdate Did not find all acls\n")
+			//fmt.Printf("netscaler-provider testNsAclsUpdate Did not find all acls\n")
 			return fmt.Errorf("netscaler-provider testNsAcls Did not find all acls")
 		}
 
