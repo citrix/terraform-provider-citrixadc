@@ -56,8 +56,8 @@
     "service/s3",
     "service/sts"
   ]
-  revision = "c7cd1ebe87257cde9b65112fc876b0339ea0ac30"
-  version = "v1.13.49"
+  revision = "ee7b4b1162937cba700de23bd90acb742982e626"
+  version = "v1.13.50"
 
 [[projects]]
   branch = "master"
@@ -84,11 +84,12 @@
     "config/basic",
     "config/cs",
     "config/lb",
+    "config/network",
     "config/ns",
     "config/ssl",
     "netscaler"
   ]
-  revision = "9dba4fba4f6c0da675ac452fd0e06131da505dbb"
+  revision = "05422464c7889eec18eb90933de277cf74140a0f"
 
 [[projects]]
   name = "github.com/davecgh/go-spew"
@@ -469,6 +470,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "83be519ce2cc60172021a7dbf8a38304de010d7a7c27eb89152dd3fb1851cabc"
+  inputs-digest = "8f57e82657915b1183a32427b637ae53bca5130bccaa9725ebf925743192e1dc"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -4,3 +4,5 @@ terraform-provider-netscaler
 tools/tools
 .idea
 *.iml
+.terraform/
+crash.log

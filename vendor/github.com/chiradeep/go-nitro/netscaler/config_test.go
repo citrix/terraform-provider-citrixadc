@@ -24,7 +24,9 @@ import (
 
 	"github.com/chiradeep/go-nitro/config/basic"
 	"github.com/chiradeep/go-nitro/config/lb"
+	"github.com/chiradeep/go-nitro/config/network"
 	"github.com/chiradeep/go-nitro/config/ns"
+	"os"
 )
 
 var client *NitroClient
@@ -53,6 +55,12 @@ func init() {
 		log.Fatal("Could not create a client: ", err)
 	}
 
+}
+
+func TestMain(m *testing.M) {
+	r := m.Run()
+	client.ClearConfig()
+	os.Exit(r)
 }
 
 // Functional tests
@@ -637,4 +645,50 @@ func TestAction(t *testing.T) {
 		return
 	}
 
+}
+
+func TestUpdateUnnamedResource(t *testing.T) {
+	rnat := network.Rnat{
+		Natip:   "172.17.0.2",
+		Netmask: "255.255.240.0",
+		Network: "192.168.16.0",
+	}
+
+	err := client.UpdateUnnamedResource(Rnat.Type(), &rnat)
+	if err != nil {
+		t.Error("Could not add Rnat", err)
+		log.Println("Cannot continue")
+		return
+	}
+}
+
+func TestFindFilteredResource(t *testing.T) {
+	rnat := network.Rnat{
+		Natip:   "172.17.0.2",
+		Netmask: "255.255.240.0",
+		Network: "192.168.16.0",
+	}
+
+	err := client.UpdateUnnamedResource(Rnat.Type(), &rnat)
+	if err != nil {
+		t.Error("Could not add Rnat", err)
+		log.Println("Cannot continue")
+		return
+	}
+	d, err := client.FindFilteredResourceArray(Rnat.Type(), map[string]string{"network": "192.168.16.0", "netmask": "255.255.240.0", "natip": "172.17.0.2"})
+	if err != nil {
+		t.Error("Could not find Rnat", err)
+		log.Println("Cannot continue")
+		return
+	}
+	if len(d) != 1 {
+		t.Error("Error finding Rnat", fmt.Errorf("Wrong number of RNAT discovered: %d", len(d)))
+		return
+	}
+	rnat2 := d[0]
+	if rnat2["natip"].(string) == "172.17.0.2" && rnat2["netmask"].(string) == "255.255.240.0" && rnat2["network"].(string) == "192.168.16.0" {
+		return
+	} else {
+		t.Error("Error finding Rnat", fmt.Errorf("Discovered RNAT does not match"))
+	}
 }

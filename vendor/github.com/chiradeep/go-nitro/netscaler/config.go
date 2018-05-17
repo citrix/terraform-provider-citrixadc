@@ -99,6 +99,24 @@ func (c *NitroClient) UpdateResource(resourceType string, name string, resourceS
 	return name, nil
 }
 
+//UpdateUnnamedResource updates a resource of supplied type , which doesn't have a name. E.g., rnat rule
+func (c *NitroClient) UpdateUnnamedResource(resourceType string, resourceStruct interface{}) error {
+
+	nsResource := make(map[string]interface{})
+	nsResource[resourceType] = resourceStruct
+	resourceJSON, err := json.Marshal(nsResource)
+
+	log.Printf("[DEBUG] go-nitro: UpdateResource: Resourcejson is " + string(resourceJSON))
+
+	body, err := c.updateUnnamedResource(resourceType, resourceJSON)
+	if err != nil {
+		return fmt.Errorf("[ERROR] go-nitro: Failed to update resource of type %s,  err=%s", resourceType, err)
+	}
+	_ = body
+
+	return nil
+}
+
 //ChangeResource updates a resource of supplied type and name (used for SSL objects)
 func (c *NitroClient) ChangeResource(resourceType string, name string, resourceStruct interface{}) (string, error) {
 
@@ -242,6 +260,31 @@ func (c *NitroClient) FindResourceArray(resourceType string, resourceName string
 	if !ok || rsrcs == nil {
 		log.Printf("[WARN] go-nitro: FindResourceArray No %s type with name %s found", resourceType, resourceName)
 		return nil, fmt.Errorf("[INFO] go-nitro: FindResourceArray: No resource %s of type %s found", resourceName, resourceType)
+	}
+	resources := data[resourceType].([]interface{})
+	ret := make([]map[string]interface{}, len(resources), len(resources))
+	for i, v := range resources {
+		ret[i] = v.(map[string]interface{})
+	}
+	return ret, nil
+}
+
+//FindFilteredResourceArray returns the config of the supplied resource type, filtered with given filter
+func (c *NitroClient) FindFilteredResourceArray(resourceType string, filter map[string]string) ([]map[string]interface{}, error) {
+	var data map[string]interface{}
+	result, err := c.listFilteredResource(resourceType, filter)
+	if err != nil {
+		log.Printf("[WARN] go-nitro: FindFilteredResourceArray: No %s found matching filter %s", resourceType, filter)
+		return nil, fmt.Errorf("[INFO] go-nitro: FindFilteredResourceArray: No resource of type %s found matching filter %s", resourceType, filter)
+	}
+	if err = json.Unmarshal(result, &data); err != nil {
+		log.Println("[ERROR] go-nitro: FindFilteredResourceArray: Failed to unmarshal Netscaler Response!")
+		return nil, fmt.Errorf("[ERROR] go-nitro: FindFilteredResourceArray: Failed to unmarshal Netscaler Response:resource of type %s matching filter %s", resourceType, filter)
+	}
+	rsrcs, ok := data[resourceType]
+	if !ok || rsrcs == nil {
+		log.Printf("[WARN] go-nitro: FindFilteredResourceArray No %s type matching filter %s found", resourceType, filter)
+		return nil, fmt.Errorf("[INFO] go-nitro: FindFilteredResourceArray: No resource type %s matching filter %s found", filter, resourceType)
 	}
 	resources := data[resourceType].([]interface{})
 	ret := make([]map[string]interface{}, len(resources), len(resources))
