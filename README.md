@@ -200,6 +200,7 @@ resource "netscaler_nsacls" "allacls" {
   	vlan = "2000"
         priority = 130
   }
+}
 
 ```
 
@@ -207,6 +208,45 @@ resource "netscaler_nsacls" "allacls" {
 You can have only one element of type `netscaler_nsacls`. Encapsulating every `nsacl` inside the `netscaler_nsacls` resource so that Terraform will automatically call `apply` on the `nsacls`.
 
 See <https://developer-docs.citrix.com/projects/netscaler-nitro-api/en/12.0/configuration/ns/nsacl/nsacl/#nsacl> for possible values for these arguments and for an exhaustive list of arguments. 
+
+#### `netscaler_inat`
+
+```
+resource "netscaler_inat" "foo" {
+  
+  name = "ip4ip4"
+  privateip = "192.168.2.5"
+  publicip = "172.17.1.2"
+}
+
+```
+See <https://developer-docs.citrix.com/projects/netscaler-nitro-api/en/12.0/configuration/network/inat/inat/#inat> for possible values for these arguments and for an exhaustive list of arguments. 
+
+#### `netscaler_rnat`
+
+```
+resource "netscaler_rnat" "allrnat" {
+  depends_on = ["netscaler_nsacls.allacls"]
+
+  rnatsname = "rnatsall"
+
+  rnat  {
+      network = "192.168.88.0"
+      netmask = "255.255.255.0"
+      natip = "172.17.0.2"
+  }
+
+  rnat  {
+      aclname = "RNAT_ACL_1"
+  }
+}
+
+```
+
+##### Argument Reference
+You can have only one element of type `netscaler_rnat`. Encapsulate every `rnat` inside the `netscaler_rnat` resource.
+
+See <https://developer-docs.citrix.com/projects/netscaler-nitro-api/en/12.0/configuration/network/rnat/rnat/#rnat> for possible values for these arguments and for an exhaustive list of arguments. 
 
 ## Building
 ### Assumption
