@@ -139,10 +139,10 @@ func updateRnatsFunc(d *schema.ResourceData, meta interface{}) error {
 
 		for _, val := range add {
 			rnat := val.(map[string]interface{})
-			log.Printf("[DEBUG]  netscaler-provider: going to add rnat %s", rnat["rnatname"].(string))
+			log.Printf("[DEBUG]  netscaler-provider: going to add rnat %s", rnat["rnatsname"].(string))
 			err := createSingleRnat(rnat, meta)
 			if err != nil {
-				log.Printf("[DEBUG]  netscaler-provider: error adding rnat %s", rnat["rnatname"].(string))
+				log.Printf("[DEBUG]  netscaler-provider: error adding rnat %s", rnat["rnatsname"].(string))
 			}
 		}
 	}
