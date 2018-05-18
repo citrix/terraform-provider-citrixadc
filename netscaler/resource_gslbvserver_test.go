@@ -17,10 +17,11 @@ package netscaler
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"testing"
 )
 
 func TestAccGslbvserver_basic(t *testing.T) {
@@ -110,5 +111,13 @@ resource "netscaler_gslbvserver" "foo" {
   dnsrecordtype = "A"
   name = "GSLB-East-Coast-Vserver"
   servicetype = "HTTP"
+  domain {
+	  domainname =  "www.fooco.co"
+	  ttl = "60"
+  }
+  domain {
+	  domainname = "www.barco.com"
+	  ttl = "55"
+  }
 }
 `

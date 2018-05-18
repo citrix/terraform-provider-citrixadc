@@ -2,6 +2,7 @@ package netscaler
 
 import (
 	"github.com/chiradeep/go-nitro/config/gslb"
+	"github.com/mitchellh/mapstructure"
 
 	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -209,6 +210,60 @@ func resourceNetScalerGslbvserver() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"domain": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"backupip": &schema.Schema{
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"backupipflag": &schema.Schema{
+							Type:     schema.TypeBool,
+							Optional: true,
+							Computed: true,
+						},
+						"cookiedomain": &schema.Schema{
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"cookiedomainflag": &schema.Schema{
+							Type:     schema.TypeBool,
+							Optional: true,
+							Computed: true,
+						},
+						"cookietimeout": &schema.Schema{
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
+						},
+						"domainname": &schema.Schema{
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"name": &schema.Schema{
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"sitedomainttl": &schema.Schema{
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
+						},
+						"ttl": &schema.Schema{
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -270,6 +325,11 @@ func createGslbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(gslbvserverName)
+	domains := d.Get("domain").(*schema.Set).List()
+	for _, val := range domains {
+		domain := val.(map[string]interface{})
+		_ = bindDomainToVserver(gslbvserverName, domain, meta)
+	}
 
 	err = readGslbvserverFunc(d, meta)
 	if err != nil {
@@ -540,6 +600,43 @@ func updateGslbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("Error updating gslbvserver %s", gslbvserverName)
 		}
 	}
+
+	if d.HasChange("domain") {
+		log.Printf("[DEBUG]  netscaler-provider: Domain binding has changed for gslbvserver %s, starting update", gslbvserverName)
+		orig, noo := d.GetChange("domain")
+		if orig == nil {
+			orig = new(schema.Set)
+		}
+		if noo == nil {
+			noo = new(schema.Set)
+		}
+		oset := orig.(*schema.Set)
+		nset := noo.(*schema.Set)
+
+		remove := oset.Difference(nset).List()
+		add := nset.Difference(oset).List()
+		log.Printf("[DEBUG]  netscaler-provider: need to remove %d domain", len(remove))
+		log.Printf("[DEBUG]  netscaler-provider: need to add %d domain", len(add))
+
+		for _, val := range remove {
+			domain := val.(map[string]interface{})
+			log.Printf("[DEBUG]  netscaler-provider: going to delete domain %v", domain)
+			err := unbindDomain(gslbvserverName, domain, meta)
+			if err != nil {
+				log.Printf("[DEBUG]  netscaler-provider: error deleting domain %v", domain)
+			}
+		}
+
+		for _, val := range add {
+			domain := val.(map[string]interface{})
+			log.Printf("[DEBUG]  netscaler-provider: going to add domain %s", domain["domainname"].(string))
+			err := bindDomainToVserver(gslbvserverName, domain, meta)
+			if err != nil {
+				log.Printf("[DEBUG]  netscaler-provider: error adding domain %s", domain["domainname"].(string))
+			}
+		}
+
+	}
 	return readGslbvserverFunc(d, meta)
 }
 
@@ -547,6 +644,11 @@ func deleteGslbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  netscaler-provider: In deleteGslbvserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	gslbvserverName := d.Id()
+	domains := d.Get("domain").(*schema.Set).List()
+	for _, val := range domains {
+		domain := val.(map[string]interface{})
+		_ = unbindDomain(gslbvserverName, domain, meta)
+	}
 	err := client.DeleteResource(netscaler.Gslbvserver.Type(), gslbvserverName)
 	if err != nil {
 		return err
@@ -555,4 +657,25 @@ func deleteGslbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.SetId("")
 
 	return nil
+}
+
+func bindDomainToVserver(vserver string, domain map[string]interface{}, meta interface{}) error {
+	client := meta.(*NetScalerNitroClient).client
+	domainname := domain["domainname"].(string)
+	binding := gslb.Gslbvserverdomainbinding{}
+	mapstructure.Decode(domain, &binding)
+	binding.Name = vserver
+	log.Printf("[INFO] netscaler-provider:  Binding domain %s to gslb vserver %s", domainname, vserver)
+	_, err := client.AddResource(netscaler.Gslbvserver_domain_binding.Type(), domainname, &binding)
+
+	return err
+}
+
+func unbindDomain(gslbvserverName string, domain map[string]interface{}, meta interface{}) error {
+	client := meta.(*NetScalerNitroClient).client
+	domainname := domain["domainname"].(string)
+	args := []string{fmt.Sprintf("%s:%s", "domainname", domainname)}
+	log.Printf("[INFO] netscaler-provider:  Deleting binding of domain %s to gslb vserver %s", domainname, gslbvserverName)
+	return client.DeleteResourceWithArgs(netscaler.Gslbvserver_domain_binding.Type(), gslbvserverName, args)
+
 }
