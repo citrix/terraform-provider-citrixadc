@@ -6,3 +6,4 @@ tools/tools
 *.iml
 .terraform/
 crash.log
+dist/
