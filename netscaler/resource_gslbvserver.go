@@ -674,8 +674,7 @@ func bindDomainToVserver(vserver string, domain map[string]interface{}, meta int
 func unbindDomain(gslbvserverName string, domain map[string]interface{}, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	domainname := domain["domainname"].(string)
-	args := []string{fmt.Sprintf("%s:%s", "domainname", domainname)}
+	args := map[string]string{"domainname": domainname}
 	log.Printf("[INFO] netscaler-provider:  Deleting binding of domain %s to gslb vserver %s", domainname, gslbvserverName)
-	return client.DeleteResourceWithArgs(netscaler.Gslbvserver_domain_binding.Type(), gslbvserverName, args)
-
+	return client.DeleteResourceWithArgsMap(netscaler.Gslbvserver_domain_binding.Type(), gslbvserverName, args)
 }
