@@ -292,11 +292,17 @@ func (c *NitroClient) listResourceWithArgs(resourceType string, resourceName str
 	} else {
 		url = c.url + fmt.Sprintf("%s", resourceType)
 	}
-	url = url + "?args="
-	url = url + strings.Join(args, ",")
+	strArgs := strings.Join(args, ",")
+	url2 := url + "?args=" + strArgs
 	log.Println("[TRACE] go-nitro: url is ", url)
 
-	return c.doHTTPRequest("GET", url, bytes.NewBuffer([]byte{}), readResponseHandler)
+	data, err := c.doHTTPRequest("GET", url2, bytes.NewBuffer([]byte{}), readResponseHandler)
+	if err != nil {
+		log.Println("[DEBUG] go-nitro: error listing with args, trying filter")
+		url2 = url + "?filter=" + strArgs
+		return c.doHTTPRequest("GET", url2, bytes.NewBuffer([]byte{}), readResponseHandler)
+	}
+	return data, err
 
 }
 
