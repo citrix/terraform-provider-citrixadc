@@ -265,7 +265,7 @@ func readGslbserviceFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("downstateflush", data["downstateflush"])
 	d.Set("hashid", data["hashid"])
 	d.Set("healthmonitor", data["healthmonitor"])
-	d.Set("ip", data["ipaddress"])
+	d.Set("ip", data["ipaddress"]) //ip is not returned, but it ipaddress is returned by NITRO
 	d.Set("ipaddress", data["ipaddress"])
 	d.Set("maxaaausers", data["maxaaausers"])
 	d.Set("maxbandwidth", data["maxbandwidth"])
@@ -353,7 +353,7 @@ func updateGslbserviceFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("ip") {
 		log.Printf("[DEBUG]  netscaler-provider: Ip has changed for gslbservice %s, starting update", gslbserviceName)
-		gslbservice.Ip = d.Get("ip").(string)
+		gslbservice.Ipaddress = d.Get("ip").(string) //use ipaddress during Update
 		hasChange = true
 	}
 	if d.HasChange("ipaddress") {
