@@ -264,6 +264,28 @@ func resourceNetScalerGslbvserver() *schema.Resource {
 					},
 				},
 			},
+			"service": &schema.Schema{
+				Type: schema.TypeSet,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"domainname": &schema.Schema{
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"servicename": &schema.Schema{
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"weight": &schema.Schema{
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
+				Optional: true,
+			},
 		},
 	}
 }
@@ -328,7 +350,19 @@ func createGslbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	domains := d.Get("domain").(*schema.Set).List()
 	for _, val := range domains {
 		domain := val.(map[string]interface{})
-		_ = bindDomainToVserver(gslbvserverName, domain, meta)
+		err = bindDomainToVserver(gslbvserverName, domain, meta)
+		if err != nil {
+			return err
+		}
+	}
+
+	services := d.Get("service").(*schema.Set).List()
+	for _, val := range services {
+		svc := val.(map[string]interface{})
+		err = bindGslbServiceToVserver(gslbvserverName, svc, meta)
+		if err != nil {
+			return err
+		}
 	}
 
 	err = readGslbvserverFunc(d, meta)
@@ -390,6 +424,19 @@ func readGslbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("v6persistmasklen", data["v6persistmasklen"])
 	d.Set("weight", data["weight"])
 
+	data2, _ := client.FindResourceArray(netscaler.Gslbvserver_domain_binding.Type(), gslbvserverName)
+	domainBindings := make([]map[string]interface{}, len(data2))
+	for i, binding := range data2 {
+		domainBindings[i] = binding
+	}
+	d.Set("domain", domainBindings)
+
+	data3, _ := client.FindResourceArray(netscaler.Gslbvserver_gslbservice_binding.Type(), gslbvserverName)
+	svcBindings := make([]map[string]interface{}, len(data3))
+	for i, binding := range data3 {
+		svcBindings[i] = binding
+	}
+	d.Set("service", svcBindings)
 	return nil
 
 }
@@ -637,6 +684,46 @@ func updateGslbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		}
 
 	}
+
+	if d.HasChange("service") {
+		log.Printf("[DEBUG]  netscaler-provider: services binding has changed for gslbvserver %s, starting update", gslbvserverName)
+		orig, noo := d.GetChange("service")
+		if orig == nil {
+			orig = new(schema.Set)
+		}
+		if noo == nil {
+			noo = new(schema.Set)
+		}
+		oset := orig.(*schema.Set)
+		nset := noo.(*schema.Set)
+
+		remove := oset.Difference(nset).List()
+		add := nset.Difference(oset).List()
+		log.Printf("[DEBUG]  netscaler-provider: need to remove gslb vserver binding to %d service", len(remove))
+		log.Printf("[DEBUG]  netscaler-provider: need to add gslb vserver binding to %d service", len(add))
+
+		for _, val := range remove {
+			service := val.(map[string]interface{})
+			log.Printf("[DEBUG]  netscaler-provider: going to delete gslb vserver binding to service %v", service)
+			err := unbindGslbService(gslbvserverName, service, meta)
+			if err != nil {
+				log.Printf("[DEBUG]  netscaler-provider: error deleting gslb vserver binding to service %v", service)
+				return err
+			}
+		}
+
+		for _, val := range add {
+			service := val.(map[string]interface{})
+			log.Printf("[DEBUG]  netscaler-provider: going to bind service %s", service["servicename"].(string))
+			err := bindGslbServiceToVserver(gslbvserverName, service, meta)
+			if err != nil {
+				log.Printf("[DEBUG]  netscaler-provider: error binding service %s", service["servicename"].(string))
+				return err
+			}
+		}
+
+	}
+
 	return readGslbvserverFunc(d, meta)
 }
 
@@ -655,6 +742,7 @@ func deleteGslbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId("")
+	//domain and bindings to gslb service are automatically deleted
 
 	return nil
 }
@@ -677,4 +765,24 @@ func unbindDomain(gslbvserverName string, domain map[string]interface{}, meta in
 	args := map[string]string{"domainname": domainname}
 	log.Printf("[INFO] netscaler-provider:  Deleting binding of domain %s to gslb vserver %s", domainname, gslbvserverName)
 	return client.DeleteResourceWithArgsMap(netscaler.Gslbvserver_domain_binding.Type(), gslbvserverName, args)
+}
+
+func bindGslbServiceToVserver(vserver string, service map[string]interface{}, meta interface{}) error {
+	client := meta.(*NetScalerNitroClient).client
+	servicename := service["servicename"].(string)
+	binding := gslb.Gslbvservergslbservicebinding{}
+	mapstructure.Decode(service, &binding)
+	binding.Name = vserver
+	log.Printf("[INFO] netscaler-provider:  Binding service %s to gslb vserver %s", servicename, vserver)
+	_, err := client.AddResource(netscaler.Gslbvserver_gslbservice_binding.Type(), servicename, &binding)
+
+	return err
+}
+
+func unbindGslbService(gslbvserverName string, service map[string]interface{}, meta interface{}) error {
+	client := meta.(*NetScalerNitroClient).client
+	servicename := service["servicename"].(string)
+	args := map[string]string{"servicename": servicename}
+	log.Printf("[INFO] netscaler-provider:  Deleting binding of service %s to gslb vserver %s", servicename, gslbvserverName)
+	return client.DeleteResourceWithArgsMap(netscaler.Gslbvserver_gslbservice_binding.Type(), gslbvserverName, args)
 }

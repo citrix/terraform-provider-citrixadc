@@ -5,6 +5,12 @@ resource "netscaler_gslbsite" "site_local" {
   sessionexchange = "DISABLED"
 }
 
+resource "netscaler_gslbsite" "site_remote" {
+  sitename = "Site-Remote"
+  siteipaddress = "172.31.48.18"
+  sessionexchange = "ENABLED"
+}
+
 resource "netscaler_gslbservice" "gslb_svc1" {
   ip = "172.16.1.121"
   port = "80"
@@ -12,6 +18,15 @@ resource "netscaler_gslbservice" "gslb_svc1" {
   servicetype = "HTTP"
   sitename = "${netscaler_gslbsite.site_local.sitename}"
 }
+
+resource "netscaler_gslbservice" "gslb_svc2" {
+  ip = "172.16.17.121"
+  port = "80"
+  servicename = "gslb2vservice"
+  servicetype = "HTTP"
+  sitename = "${netscaler_gslbsite.site_remote.sitename}"
+}
+
 
 resource "netscaler_gslbvserver" "foo" {
 
@@ -24,7 +39,15 @@ resource "netscaler_gslbvserver" "foo" {
   }
   domain {
 	  domainname = "www.barco.com"
-	  ttl = "55"
+	  ttl = "65"
+  }
+  service {
+     servicename = "${netscaler_gslbservice.gslb_svc1.servicename}"
+     weight = "75"
+  }
+  service {
+     servicename = "${netscaler_gslbservice.gslb_svc2.servicename}"
+     weight = "100"
   }
 }
 
