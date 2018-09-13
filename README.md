@@ -5,7 +5,7 @@ NetScaler](https://www.citrix.com/products/netscaler-adc/)
 
 ## Description
 
-This project is a terraform custom provider for Citrix NetScaler. It uses the [Nitro API](https://docs.citrix.com/en-us/netscaler/11/nitro-api.html) to create/configure LB configurations. 
+This project is a terraform custom provider for Citrix NetScaler. It uses the [Nitro API](https://developer-docs.citrix.com/projects/netscaler-nitro-api/en/12.0/) to create/configure LB configurations. 
 
 **Important note: The provider will not commit the config changes to NetScaler's persistent
 store.**
@@ -88,7 +88,7 @@ resource "netscaler_lbvserver" "foo" {
 ```
 
 ##### Argument Reference
-See <https://docs.citrix.com/en-us/netscaler/11-1/nitro-api/nitro-rest/api-reference/configuration/load-balancing/lbvserver.html> for possible values for these arguments and for an exhaustive list of arguments. Additionally, you can specify the SSL `certkey` to be bound to this `lbvserver` using the `sslcertkey` parameter
+See <https://developer-docs.citrix.com/projects/netscaler-nitro-api/en/12.0/configuration/load-balancing/lbvserver/lbvserver/> for possible values for these arguments and for an exhaustive list of arguments. Additionally, you can specify the SSL `certkey` to be bound to this `lbvserver` using the `sslcertkey` parameter
 
 #### `netscaler_service`
 
@@ -103,7 +103,7 @@ resource "netscaler_service" "backend_1" {
 ```
 
 ##### Argument Reference
-See <https://docs.citrix.com/en-us/netscaler/11-1/nitro-api/nitro-rest/api-reference/configuration/basic/service.html> for possible values for these arguments and for an exhaustive list of arguments. Additionally, you can specify the LB vserver  to be bound to this service  using the `lbvserver` parameter, and the `lbmonitor` parameter specifies the LB monitor to be bound.
+See <https://developer-docs.citrix.com/projects/netscaler-nitro-api/en/12.0/configuration/basic/service/service/> for possible values for these arguments and for an exhaustive list of arguments. Additionally, you can specify the LB vserver  to be bound to this service  using the `lbvserver` parameter, and the `lbmonitor` parameter specifies the LB monitor to be bound.
 
 #### `netscaler_servicegroup`
 
@@ -119,7 +119,7 @@ resource "netscaler_servicegroup" "backend_1" {
 ```
 
 ##### Argument Reference
-See <https://docs.citrix.com/en-us/netscaler/11-1/nitro-api/nitro-rest/api-reference/configuration/basic/servicegroup.html> for possible values for these arguments and for an exhaustive list of arguments. Additionally, you can specify the LB vservers  to be bound to this service using the `lbvservers` parameter. The `lbmonitor` parameter specifies the LB monitor to be bound.
+See <https://developer-docs.citrix.com/projects/netscaler-nitro-api/en/12.0/configuration/basic/servicegroup/servicegroup/> for possible values for these arguments and for an exhaustive list of arguments. Additionally, you can specify the LB vservers  to be bound to this service using the `lbvservers` parameter. The `lbmonitor` parameter specifies the LB monitor to be bound.
 
 #### `netscaler_csvserver`
 
@@ -133,7 +133,7 @@ resource "netscaler_csvserver" "foo" {
 ```
 
 ##### Argument Reference
-See <https://docs.citrix.com/en-us/netscaler/11-1/nitro-api/nitro-rest/api-reference/configuration/content-switching/csvserver.html> for possible values for these arguments and for an exhaustive list of arguments. Additionally, you can specify the SSL cert to be bound using the `sslcertkey` parameter
+See <https://developer-docs.citrix.com/projects/netscaler-nitro-api/en/12.0/configuration/content-switching/csvserver/csvserver/> for possible values for these arguments and for an exhaustive list of arguments. Additionally, you can specify the SSL cert to be bound using the `sslcertkey` parameter
 
 
 #### `netscaler_sslcertkey`
@@ -149,7 +149,7 @@ resource "netscaler_sslcertkey" "foo" {
 ```
 
 ##### Argument Reference
-See <https://docs.citrix.com/en-us/netscaler/11-1/nitro-api/nitro-rest/api-reference/configuration/ssl/sslcertkey.html> for possible values for these arguments and for an exhaustive list of arguments. 
+See <https://developer-docs.citrix.com/projects/netscaler-nitro-api/en/12.0/configuration/ssl/sslcertkey/sslcertkey/> for possible values for these arguments and for an exhaustive list of arguments. 
 
 
 #### `netscaler_cspolicy`
@@ -164,7 +164,7 @@ resource "netscaler_cspolicy" "foo" {
 ```
 
 ##### Argument Reference
-See <https://docs.citrix.com/en-us/netscaler/11-1/nitro-api/nitro-rest/api-reference/configuration/content-switching/cspolicy.html> for possible values for these arguments and for an exhaustive list of arguments. 
+See <https://developer-docs.citrix.com/projects/netscaler-nitro-api/en/12.0/configuration/content-switching/cspolicy/cspolicy/> for possible values for these arguments and for an exhaustive list of arguments. 
 
 
 #### `netscaler_lbmonitor`
@@ -179,7 +179,7 @@ resource "netscaler_lbmonitor" "foo" {
 ```
 
 ##### Argument Reference
-See <https://docs.citrix.com/en-us/netscaler/11-1/nitro-api/nitro-rest/api-reference/configuration/load-balancing/lbmonitor.html> for possible values for these arguments and for an exhaustive list of arguments. 
+See <https://developer-docs.citrix.com/projects/netscaler-nitro-api/en/12.0/configuration/load-balancing/lbmonitor/lbmonitor/> for possible values for these arguments and for an exhaustive list of arguments. 
 
 #### `netscaler_nsacls`
 
