@@ -181,6 +181,64 @@ resource "netscaler_lbmonitor" "foo" {
 ##### Argument Reference
 See <https://developer-docs.citrix.com/projects/netscaler-nitro-api/en/12.0/configuration/load-balancing/lbmonitor/lbmonitor/> for possible values for these arguments and for an exhaustive list of arguments. 
 
+#### `netscaler_gslbvserver`
+
+```
+resource "netscaler_gslbvserver" "foo" {
+  
+  dnsrecordtype = "A"
+  name = "GSLB-East-Coast-Vserver"
+  servicetype = "HTTP"
+  domain {
+	  domainname =  "www.fooco.co"
+	  ttl = "60"
+  }
+  domain {
+	  domainname = "www.barco.com"
+	  ttl = "55"
+  }
+  service {
+          servicename = "Gslb-EastCoast-Svc"
+          weight = "10"
+  }
+}
+```
+
+##### Argument Reference
+See <https://developer-docs.citrix.com/projects/netscaler-nitro-api/en/12.0/configuration/global-server-load-balancing/gslbvserver/gslbvserverl> for possible values for these arguments and for an exhaustive list of arguments. Additionally, you can specify the GSLB services  to be bound to this service using the `service` parameter. 
+
+#### `netscaler_gslbservice`
+
+```
+resource "netscaler_gslbservice" "foo" {
+  
+  ip = "172.16.1.101"
+  port = "80"
+  servicename = "gslb1vservice"
+  servicetype = "HTTP"
+  sitename = "${netscaler_gslbsite.foo.sitename}"
+
+}
+```
+
+##### Argument Reference
+See <https://developer-docs.citrix.com/projects/netscaler-nitro-api/en/12.0/configuration/global-server-load-balancing/gslbservice/gslbservice/> for possible values for these arguments and for an exhaustive list of arguments. 
+
+
+#### `netscaler_gslbsite`
+
+```
+resource "netscaler_gslbsite" "foo" {
+  
+  siteipaddress = "172.31.11.20"
+  sitename = "Site-GSLB-East-Coast"
+
+}
+```
+
+##### Argument Reference
+See <https://developer-docs.citrix.com/projects/netscaler-nitro-api/en/12.0/configuration/global-server-load-balancing/gslbsite/gslbsite/> for possible values for these arguments and for an exhaustive list of arguments. 
+
 #### `netscaler_nsacls`
 
 ```

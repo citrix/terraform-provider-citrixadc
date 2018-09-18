@@ -56,8 +56,8 @@
     "service/s3",
     "service/sts"
   ]
-  revision = "ee7b4b1162937cba700de23bd90acb742982e626"
-  version = "v1.13.50"
+  revision = "5f796043d63bfddca929cfbcffce01e5a894aad5"
+  version = "v1.13.52"
 
 [[projects]]
   branch = "master"
@@ -83,13 +83,14 @@
   packages = [
     "config/basic",
     "config/cs",
+    "config/gslb",
     "config/lb",
     "config/network",
     "config/ns",
     "config/ssl",
     "netscaler"
   ]
-  revision = "05422464c7889eec18eb90933de277cf74140a0f"
+  revision = "eafc63ab1759fce090a23b3e9bf7446555c9ccde"
 
 [[projects]]
   name = "github.com/davecgh/go-spew"
@@ -399,7 +400,7 @@
     "internal/timeseries",
     "trace"
   ]
-  revision = "2491c5de3490fced2f6cff376127c667efeed857"
+  revision = "57065200b4b034a1c8ad54ff77069408c2218ae6"
 
 [[projects]]
   branch = "master"
@@ -432,7 +433,7 @@
   branch = "master"
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
-  revision = "7bb2a897381c9c5ab2aeb8614f758d7766af68ff"
+  revision = "11a468237815f3a3ddf9f7c6e8b6b3b382a24d15"
 
 [[projects]]
   name = "google.golang.org/grpc"
@@ -470,6 +471,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "8f57e82657915b1183a32427b637ae53bca5130bccaa9725ebf925743192e1dc"
+  inputs-digest = "5a9ea9e19f6994e1786089d58b8b2a21a2b9ac2263af2cadd882d8e270a84e76"
   solver-name = "gps-cdcl"
   solver-version = 1

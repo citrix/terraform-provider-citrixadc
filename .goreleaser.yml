@@ -1,0 +1,10 @@
+# .goreleaser.yml
+# Build customization
+builds:
+  - binary: terraform-provider-netscaler
+    goos:
+      - windows
+      - darwin
+      - linux
+    goarch:
+      - amd64
