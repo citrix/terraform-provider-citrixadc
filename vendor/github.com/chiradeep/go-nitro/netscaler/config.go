@@ -17,11 +17,21 @@ limitations under the License.
 package netscaler
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
 )
+
+// https://stackoverflow.com/questions/28595664/how-to-stop-json-marshal-from-escaping-and/28596225#28596225
+func JSONMarshal(t interface{}) ([]byte, error) {
+    buffer := &bytes.Buffer{}
+    encoder := json.NewEncoder(buffer)
+    encoder.SetEscapeHTML(false)
+    err := encoder.Encode(t)
+    return buffer.Bytes(), err
+}
 
 //AddResource adds a resource of supplied type and name
 func (c *NitroClient) AddResource(resourceType string, name string, resourceStruct interface{}) (string, error) {
@@ -29,7 +39,7 @@ func (c *NitroClient) AddResource(resourceType string, name string, resourceStru
 	nsResource := make(map[string]interface{})
 	nsResource[resourceType] = resourceStruct
 
-	resourceJSON, err := json.Marshal(nsResource)
+	resourceJSON, err := JSONMarshal(nsResource)
 
 	log.Printf("[TRACE] go-nitro: Resourcejson is " + string(resourceJSON))
 
@@ -48,7 +58,7 @@ func (c *NitroClient) ApplyResource(resourceType string, resourceStruct interfac
 	nsResource := make(map[string]interface{})
 	nsResource[resourceType] = resourceStruct
 
-	resourceJSON, err := json.Marshal(nsResource)
+	resourceJSON, err := JSONMarshal(nsResource)
 
 	log.Printf("[TRACE] go-nitro: Resourcejson is " + string(resourceJSON))
 
@@ -67,7 +77,7 @@ func (c *NitroClient) ActOnResource(resourceType string, resourceStruct interfac
 	nsResource := make(map[string]interface{})
 	nsResource[resourceType] = resourceStruct
 
-	resourceJSON, err := json.Marshal(nsResource)
+	resourceJSON, err := JSONMarshal(nsResource)
 
 	log.Printf("[TRACE] go-nitro: Resourcejson is " + string(resourceJSON))
 
@@ -85,7 +95,7 @@ func (c *NitroClient) UpdateResource(resourceType string, name string, resourceS
 	if c.ResourceExists(resourceType, name) == true {
 		nsResource := make(map[string]interface{})
 		nsResource[resourceType] = resourceStruct
-		resourceJSON, err := json.Marshal(nsResource)
+		resourceJSON, err := JSONMarshal(nsResource)
 
 		log.Printf("[DEBUG] go-nitro: UpdateResource: Resourcejson is " + string(resourceJSON))
 
@@ -104,7 +114,7 @@ func (c *NitroClient) UpdateUnnamedResource(resourceType string, resourceStruct 
 
 	nsResource := make(map[string]interface{})
 	nsResource[resourceType] = resourceStruct
-	resourceJSON, err := json.Marshal(nsResource)
+	resourceJSON, err := JSONMarshal(nsResource)
 
 	log.Printf("[DEBUG] go-nitro: UpdateResource: Resourcejson is " + string(resourceJSON))
 
@@ -202,7 +212,7 @@ func (c *NitroClient) BindResource(bindToResourceType string, bindToResourceName
 	nsBinding := make(map[string]interface{})
 	nsBinding[bindingName] = bindingStruct
 
-	resourceJSON, err := json.Marshal(nsBinding)
+	resourceJSON, err := JSONMarshal(nsBinding)
 
 	body, err := c.createResource(bindingName, resourceJSON)
 	if err != nil {
@@ -432,7 +442,7 @@ func (c *NitroClient) EnableFeatures(featureNames []string) error {
 	featureStruct["nsfeature"] = make(map[string][]string)
 	featureStruct["nsfeature"]["feature"] = featureNames
 
-	featureJSON, err := json.Marshal(featureStruct)
+	featureJSON, err := JSONMarshal(featureStruct)
 	if err != nil {
 		log.Printf("[ERROR] go-nitro: EnableFeatures: Failed to marshal features to JSON")
 		return fmt.Errorf("[ERROR] go-nitro: Failed to marshal features to JSON")
@@ -487,7 +497,7 @@ func (c *NitroClient) SaveConfig() error {
 	saveStruct := make(map[string]interface{})
 	saveStruct["nsconfig"] = make(map[string]interface{})
 
-	saveJSON, err := json.Marshal(saveStruct)
+	saveJSON, err := JSONMarshal(saveStruct)
 	if err != nil {
 		log.Printf("[ERROR] go-nitro: SaveConfig: Failed to marshal save config to JSON")
 		return fmt.Errorf("[ERROR] go-nitro: Failed to marshal save config to JSON")
@@ -513,7 +523,7 @@ func (c *NitroClient) ClearConfig() error {
 
 	clearStruct["nsconfig"]["level"] = "basic"
 
-	clearJSON, err := json.Marshal(clearStruct)
+	clearJSON, err := JSONMarshal(clearStruct)
 	if err != nil {
 		log.Printf("[ERROR] go-nitro: ClearConfig: Failed to marshal clear config to JSON")
 		return fmt.Errorf("[ERROR] go-nitro: Failed to marshal clear config to JSON")
