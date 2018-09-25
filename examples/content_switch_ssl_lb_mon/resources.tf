@@ -13,6 +13,7 @@ resource "netscaler_csvserver" "generic_cs" {
   port = "${lookup(var.lb_config, "port")}"
   servicetype = "${lookup(var.lb_config, "servicetype")}"
   sslcertkey = "${netscaler_sslcertkey.generic-cert.certkey}"
+  sslprofile = "ns_default_ssl_profile_secure_frontend"
 }
 
 resource "netscaler_cspolicy" "cart" {

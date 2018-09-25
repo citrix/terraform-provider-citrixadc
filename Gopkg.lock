@@ -95,7 +95,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:8a340d9c7d3192e3148f03868b6b8471756597a6d8c8421d1c089c5196905784"
+  digest = "1:39e062e2a4d43fb87911a049bc0a6014b1b0b4ab24bcaa3b0b13036caead6c52"
   name = "github.com/chiradeep/go-nitro"
   packages = [
     "config/basic",
@@ -108,7 +108,7 @@
     "netscaler",
   ]
   pruneopts = ""
-  revision = "1c6319d70e8d62054b6f5a8624254bd335eda0c3"
+  revision = "dc93fece3b47b128b55ff7a2665a38b91afebe3b"
 
 [[projects]]
   digest = "1:56c130d885a4aacae1dd9c7b71cfe39912c7ebc1ff7d2b46083c8812996dc43b"
@@ -313,11 +313,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:38c88e6e5564d7dd92360b432e841a41749f6f1985bbae325e56d2aa1a4dd143"
+  digest = "1:0db944d08f7a506ee635f0ca7d133d1f5fbc773750dc3325030688f8f6c0e681"
   name = "github.com/hashicorp/yamux"
   packages = ["."]
   pruneopts = ""
-  revision = "2658be15c5f05e76244154714161f17e3e77de2e"
+  revision = "7221087c3d281fda5f794e28c2ea4c6e4d5c4558"
 
 [[projects]]
   digest = "1:6f49eae0c1e5dab1dafafee34b207aeb7a42303105960944828c2079b92fc88e"

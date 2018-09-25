@@ -37,4 +37,5 @@ type Sslvserver struct {
 	Tls11               string `json:"tls11,omitempty"`
 	Tls12               string `json:"tls12,omitempty"`
 	Vservername         string `json:"vservername,omitempty"`
+	Sslprofile          string `json:"sslprofile,omitempty"`
 }

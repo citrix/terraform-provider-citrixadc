@@ -284,6 +284,10 @@ func resourceNetScalerCsvserver() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"sslprofile": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -383,6 +387,25 @@ func createCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	sslprofile, spok := d.GetOk("sslprofile")
+	if spok { //ssl profile is specified
+		sslvserver := ssl.Sslvserver{
+			Vservername: csvserverName,
+			Sslprofile:  sslprofile.(string),
+		}
+		log.Printf("[INFO] netscaler-provider:  Binding ssl profile %s to csvserver %s", sslprofile, csvserverName)
+		_, err := client.UpdateResource(netscaler.Sslvserver.Type(), csvserverName, &sslvserver)
+		if err != nil {
+			log.Printf("[ERROR] netscaler-provider:  Failed to bind ssl profile %s to csvserver %s", sslprofile, csvserverName)
+			err2 := client.DeleteResource(netscaler.Csvserver.Type(), csvserverName)
+			if err2 != nil {
+				log.Printf("[ERROR] netscaler-provider:  Failed to delete csvserver %s after bind to ssl profile failed", csvserverName)
+				return fmt.Errorf("[ERROR] netscaler-provider:  Failed to delete csvserver %s after bind to ssl profile failed", csvserverName)
+			}
+			return fmt.Errorf("[ERROR] netscaler-provider:  Failed to bind ssl profile %s to csvserver %s", sslprofile, csvserverName)
+		}
+	}
+
 	d.SetId(csvserverName)
 
 	err = readCsvserverFunc(d, meta)
@@ -473,6 +496,9 @@ func readCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("sslcertkey", boundCert)
 
+	dataSsl, _ := client.FindResource(netscaler.Sslvserver.Type(), csvserverName)
+	d.Set("sslprofile", dataSsl["sslprofile"])
+
 	return nil
 
 }
@@ -487,6 +513,7 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	hasChange := false
 	sslcertkeyChanged := false
+	sslprofileChanged := false
 	if d.HasChange("appflowlog") {
 		log.Printf("[DEBUG] netscaler-provider:  Appflowlog has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Appflowlog = d.Get("appflowlog").(string)
@@ -751,6 +778,10 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] netscaler-provider:  ssl certkey has changed for csvserver %s, starting update", csvserverName)
 		sslcertkeyChanged = true
 	}
+	if d.HasChange("sslprofile") {
+		log.Printf("[DEBUG] netscaler-provider:  ssl profile has changed for csvserver %s, starting update", csvserverName)
+		sslprofileChanged = true
+	}
 
 	sslcertkey := d.Get("sslcertkey")
 	sslcertkeyName := sslcertkey.(string)
@@ -790,6 +821,34 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("[ERROR] netscaler-provider:  Failed to bind ssl cert %s to csvserver %s", sslcertkeyName, csvserverName)
 		}
 		log.Printf("[DEBUG] netscaler-provider: new ssl cert has been bound to csvserver  sslcertkey %s csvserver %s", sslcertkeyName, csvserverName)
+	}
+
+	sslprofile := d.Get("sslprofile")
+	if sslprofileChanged {
+		sslprofileName := sslprofile.(string)
+
+		if sslprofileName == "" {
+			sslvserver := ssl.Sslvserver{
+				Vservername: csvserverName,
+				Sslprofile:  "true",
+			}
+			err := client.ActOnResource(netscaler.Sslvserver.Type(), &sslvserver, "unset")
+			if err != nil {
+				return fmt.Errorf("[ERROR] netscaler-provider: Error unbinding ssl profile from csvserver %s", csvserverName)
+			}
+		} else {
+			sslvserver := ssl.Sslvserver{
+				Vservername: csvserverName,
+				Sslprofile:  sslprofileName,
+			}
+			log.Printf("[INFO] netscaler-provider:  Binding ssl profile %s to csvserver %s", sslprofileName, csvserverName)
+			_, err := client.UpdateResource(netscaler.Sslvserver.Type(), csvserverName, &sslvserver)
+			if err != nil {
+				log.Printf("[ERROR] netscaler-provider:  Failed to bind ssl profile %s to csvserver %s", sslprofileName, csvserverName)
+				return fmt.Errorf("[ERROR] netscaler-provider:  Failed to bind ssl profile %s to csvserver %s", sslprofileName, csvserverName)
+			}
+			log.Printf("[DEBUG] netscaler-provider: new ssl profile has been bound to csvserver  sslprofile %s csvserver %s", sslprofileName, csvserverName)
+		}
 	}
 
 	return readCsvserverFunc(d, meta)
