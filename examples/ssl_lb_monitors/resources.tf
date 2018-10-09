@@ -15,6 +15,7 @@ resource "netscaler_lbvserver" "generic_lb" {
   persistencetype = "COOKIEINSERT"
   servicetype = "${lookup(var.lb_config, "servicetype")}"
   sslcertkey = "${netscaler_sslcertkey.generic-cert.certkey}"
+  sslprofile = "ns_default_ssl_profile_secure_frontend"
 }
 
 

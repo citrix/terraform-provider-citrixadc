@@ -39,6 +39,7 @@ type NitroParams struct {
 //It abstracts the REST operations of the NITRO API
 type NitroClient struct {
 	url       string
+	statsURL  string
 	username  string
 	password  string
 	proxiedNs string
@@ -51,6 +52,7 @@ type NitroClient struct {
 func NewNitroClient(url string, username string, password string) *NitroClient {
 	c := new(NitroClient)
 	c.url = strings.Trim(url, " /") + "/nitro/v1/config/"
+	c.statsURL = strings.Trim(url, " /") + "/nitro/v1/stat/"
 	c.username = username
 	c.password = password
 	c.client = &http.Client{}
@@ -68,6 +70,7 @@ func NewNitroClientFromParams(params NitroParams) (*NitroClient, error) {
 	}
 	c := new(NitroClient)
 	c.url = strings.Trim(params.Url, " /") + "/nitro/v1/config/"
+	c.statsURL = strings.Trim(params.Url, " /") + "/nitro/v1/stat/"
 	c.username = params.Username
 	c.password = params.Password
 	c.proxiedNs = params.ProxiedNs

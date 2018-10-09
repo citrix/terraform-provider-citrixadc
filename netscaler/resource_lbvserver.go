@@ -449,6 +449,10 @@ func resourceNetScalerLbvserver() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"sslprofile": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -582,6 +586,25 @@ func createLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	sslprofile, spok := d.GetOk("sslprofile")
+	if spok { //ssl profile is specified
+		sslvserver := ssl.Sslvserver{
+			Vservername: lbvserverName,
+			Sslprofile:  sslprofile.(string),
+		}
+		log.Printf("[INFO] netscaler-provider:  Binding ssl profile %s to lbvserver %s", sslprofile, lbvserverName)
+		_, err := client.UpdateResource(netscaler.Sslvserver.Type(), lbvserverName, &sslvserver)
+		if err != nil {
+			log.Printf("[ERROR] netscaler-provider:  Failed to bind ssl profile %s to lbvserver %s", sslprofile, lbvserverName)
+			err2 := client.DeleteResource(netscaler.Lbvserver.Type(), lbvserverName)
+			if err2 != nil {
+				log.Printf("[ERROR] netscaler-provider:  Failed to delete lbvserver %s after bind to ssl profile failed", lbvserverName)
+				return fmt.Errorf("[ERROR] netscaler-provider:  Failed to delete lbvserver %s after bind to ssl profile failed", lbvserverName)
+			}
+			return fmt.Errorf("[ERROR] netscaler-provider:  Failed to bind ssl profile %s to lbvserver %s", sslprofile, lbvserverName)
+		}
+	}
+
 	d.SetId(lbvserverName)
 
 	err = readLbvserverFunc(d, meta)
@@ -705,6 +728,9 @@ func readLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("sslcertkey", boundCert)
 
+	dataSsl, _ := client.FindResource(netscaler.Sslvserver.Type(), lbvserverName)
+	d.Set("sslprofile", dataSsl["sslprofile"])
+
 	return nil
 
 }
@@ -719,6 +745,7 @@ func updateLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	hasChange := false
 	sslcertkeyChanged := false
+	sslprofileChanged := false
 	if d.HasChange("appflowlog") {
 		log.Printf("[DEBUG] netscaler-provider:  Appflowlog has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Appflowlog = d.Get("appflowlog").(string)
@@ -1148,6 +1175,10 @@ func updateLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] netscaler-provider:  ssl certkey has changed for lbvserver %s, starting update", lbvserverName)
 		sslcertkeyChanged = true
 	}
+	if d.HasChange("sslprofile") {
+		log.Printf("[DEBUG] netscaler-provider:  ssl profile has changed for lbvserver %s, starting update", lbvserverName)
+		sslprofileChanged = true
+	}
 
 	sslcertkey := d.Get("sslcertkey")
 	sslcertkeyName := sslcertkey.(string)
@@ -1187,6 +1218,34 @@ func updateLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("[ERROR] netscaler-provider:  Failed to bind ssl cert %s to lbvserver %s", sslcertkeyName, lbvserverName)
 		}
 		log.Printf("[DEBUG] netscaler-provider: new ssl cert has been bound to lbvserver  sslcertkey %s lbvserver %s", sslcertkeyName, lbvserverName)
+	}
+
+	sslprofile := d.Get("sslprofile")
+	if sslprofileChanged {
+		sslprofileName := sslprofile.(string)
+
+		if sslprofileName == "" {
+			sslvserver := ssl.Sslvserver{
+				Vservername: lbvserverName,
+				Sslprofile:  "true",
+			}
+			err := client.ActOnResource(netscaler.Sslvserver.Type(), &sslvserver, "unset")
+			if err != nil {
+				return fmt.Errorf("[ERROR] netscaler-provider: Error unbinding ssl profile from lbvserver %s", lbvserverName)
+			}
+		} else {
+			sslvserver := ssl.Sslvserver{
+				Vservername: lbvserverName,
+				Sslprofile:  sslprofileName,
+			}
+			log.Printf("[INFO] netscaler-provider:  Binding ssl profile %s to lbvserver %s", sslprofileName, lbvserverName)
+			_, err := client.UpdateResource(netscaler.Sslvserver.Type(), lbvserverName, &sslvserver)
+			if err != nil {
+				log.Printf("[ERROR] netscaler-provider:  Failed to bind ssl profile %s to lbvserver %s", sslprofileName, lbvserverName)
+				return fmt.Errorf("[ERROR] netscaler-provider:  Failed to bind ssl profile %s to lbvserver %s", sslprofileName, lbvserverName)
+			}
+			log.Printf("[DEBUG] netscaler-provider: new ssl profile has been bound to lbvserver  sslprofile %s lbvserver %s", sslprofileName, lbvserverName)
+		}
 	}
 	return readLbvserverFunc(d, meta)
 }

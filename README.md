@@ -84,6 +84,7 @@ resource "netscaler_lbvserver" "foo" {
   lbmethod = "ROUNDROBIN"
   persistencetype = "COOKIEINSERT"
   sslcertkey = "${netscaler_sslcertkey.foo.certkey}"
+  sslprofile = "ns_default_ssl_profile_secure_frontend"
 }
 ```
 
@@ -129,6 +130,7 @@ resource "netscaler_csvserver" "foo" {
   ipv46 = "10.71.139.151"
   servicetype = "SSL"
   port = 443
+  sslprofile = "ns_default_ssl_profile_secure_frontend"
 }
 ```
 

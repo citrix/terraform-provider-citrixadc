@@ -349,3 +349,16 @@ func (c *NitroClient) clearConfig(clearJSON []byte) error {
 	_, err := c.doHTTPRequest("POST", url, bytes.NewBuffer(clearJSON), createResponseHandler)
 	return err
 }
+
+func (c *NitroClient) listStat(resourceType, resourceName string) ([]byte, error) {
+	log.Println("[DEBUG] go-nitro: listing resource of type ", resourceType, ", name: ", resourceName)
+	url := c.statsURL + resourceType
+
+	if resourceName != "" {
+		url = c.statsURL + fmt.Sprintf("%s/%s", resourceType, resourceName)
+	}
+	log.Println("[TRACE] go-nitro: url is ", url)
+
+	return c.doHTTPRequest("GET", url, bytes.NewBuffer([]byte{}), readResponseHandler)
+
+}
