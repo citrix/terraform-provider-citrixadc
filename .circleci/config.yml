@@ -1,0 +1,48 @@
+version: 2
+jobs:
+ build:
+   working_directory: /home/circleci/.go_workspace/src/github.com/citrix/terraform-provider-netscaler/tests
+   machine: true
+   environment:
+      NETSCALER_VERSION: 12.0-56.20 
+      TERRAFORM_VERSION: 0.11.8
+   steps:
+     - checkout:
+         path: /home/circleci/.go_workspace/src/github.com/citrix/terraform-provider-netscaler/
+
+     - run:
+         name: Build
+         command: |
+           go build -o terraform-provider-netscaler ../main.go
+
+     - run:
+         name: Install Terraform
+         command: |
+           wget https://releases.hashicorp.com/terraform/$TERRAFORM_VERSION/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
+           unzip terraform_${TERRAFORM_VERSION}_linux_amd64.zip
+           chmod a+x terraform
+
+     - run:
+        name: Prepare Netscaler
+        command: |
+           echo $DOCKERPWD|docker login -u $DOCKERUSER --password-stdin
+           docker run --rm --name netscaler -p 80:80 --env EULA=yes --detach --cap-add=NET_ADMIN store/citrix/netscalercpx:$NETSCALER_VERSION
+           sleep 30s
+           docker exec netscaler /var/netscaler/bins/cli_script.sh "save ns conf"
+
+     - run:
+        name: Run tests
+        command: |
+           ./terraform init
+           ./terraform apply -no-color -auto-approve
+           docker exec netscaler /var/netscaler/bins/cli_script.sh "save ns conf"
+
+     - run:
+        name: Verify plan
+        command: |
+           ./terraform plan
+
+     - run:
+        name: Cleanup
+        command: docker stop netscaler
+
