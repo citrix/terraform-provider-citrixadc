@@ -1,0 +1,21 @@
+{
+  "type" : "object",
+  "properties" : {
+    "rtspalgprofilename" : {
+      "type" : "string"
+    },
+    "rtspidletimeout" : {
+      "type" : "integer"
+    },
+    "rtspportrange" : {
+      "type" : "string"
+    },
+    "rtsptransportprotocol" : {
+      "type" : "string",
+      "enum" : [ "TCP", "UDP" ]
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "lsnrtspalgprofile",
+  "title" : "lsnrtspalgprofile"
+}

@@ -1,7 +1,8 @@
 package aaa
 
 type Aaauserintranetipbinding struct {
-	Intranetip string `json:"intranetip,omitempty"`
-	Netmask    string `json:"netmask,omitempty"`
-	Username   string `json:"username,omitempty"`
+	Gotopriorityexpression string `json:"gotopriorityexpression,omitempty"`
+	Intranetip             string `json:"intranetip,omitempty"`
+	Netmask                string `json:"netmask,omitempty"`
+	Username               string `json:"username,omitempty"`
 }

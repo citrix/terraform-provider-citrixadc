@@ -1,0 +1,32 @@
+{
+  "type" : "object",
+  "properties" : {
+    "gptimeleft" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "grace" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "licenseserverip" : {
+      "type" : "string"
+    },
+    "nodeid" : {
+      "type" : "integer"
+    },
+    "port" : {
+      "type" : "integer"
+    },
+    "servername" : {
+      "type" : "string"
+    },
+    "status" : {
+      "type" : "integer",
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "nslicenseserver",
+  "title" : "nslicenseserver"
+}

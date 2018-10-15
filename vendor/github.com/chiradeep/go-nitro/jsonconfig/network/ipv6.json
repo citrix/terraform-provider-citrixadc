@@ -37,6 +37,12 @@
     "routerredirection" : {
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "td" : {
+      "type" : "integer"
+    },
+    "usipnatprefix" : {
+      "type" : "string"
     }
   },
   "$schema" : "http://json-schema.org/draft-04/schema#",

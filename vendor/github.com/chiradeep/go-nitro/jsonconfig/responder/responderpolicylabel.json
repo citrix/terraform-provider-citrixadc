@@ -1,6 +1,9 @@
 {
   "type" : "object",
   "properties" : {
+    "comment" : {
+      "type" : "string"
+    },
     "gotopriorityexpression" : {
       "type" : "string",
       "readonly" : true
@@ -30,7 +33,7 @@
     },
     "policylabeltype" : {
       "type" : "string",
-      "enum" : [ "HTTP", "OTHERTCP", "SIP_UDP", "MYSQL", "MSSQL" ]
+      "enum" : [ "HTTP", "OTHERTCP", "SIP_UDP", "SIP_TCP", "MYSQL", "MSSQL", "NAT", "DIAMETER", "RADIUS", "DNS" ]
     },
     "priority" : {
       "type" : "integer",

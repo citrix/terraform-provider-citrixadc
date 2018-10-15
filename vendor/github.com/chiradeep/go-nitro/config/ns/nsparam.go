@@ -16,9 +16,14 @@ type Nsparam struct {
 	Internaluserlogin         string      `json:"internaluserlogin,omitempty"`
 	Maxconn                   int         `json:"maxconn,omitempty"`
 	Maxreq                    int         `json:"maxreq,omitempty"`
+	Mgmthttpport              int         `json:"mgmthttpport,omitempty"`
+	Mgmthttpsport             int         `json:"mgmthttpsport,omitempty"`
 	Pmtumin                   int         `json:"pmtumin,omitempty"`
 	Pmtutimeout               int         `json:"pmtutimeout,omitempty"`
 	Securecookie              string      `json:"securecookie,omitempty"`
+	Secureicaports            interface{} `json:"secureicaports,omitempty"`
+	Servicepathingressvlan    int         `json:"servicepathingressvlan,omitempty"`
+	Tcpcip                    string      `json:"tcpcip,omitempty"`
 	Timezone                  string      `json:"timezone,omitempty"`
 	Useproxyport              string      `json:"useproxyport,omitempty"`
 }

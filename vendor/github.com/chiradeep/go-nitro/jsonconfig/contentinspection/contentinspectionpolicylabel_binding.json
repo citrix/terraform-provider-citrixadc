@@ -1,0 +1,11 @@
+{
+  "type" : "object",
+  "properties" : {
+    "labelname" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "contentinspectionpolicylabel_binding",
+  "title" : "contentinspectionpolicylabel_binding"
+}

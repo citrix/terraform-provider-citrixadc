@@ -6,6 +6,7 @@ type Appfwtransactionrecords struct {
 	Destip                    string `json:"destip,omitempty"`
 	Endtime                   string `json:"endtime,omitempty"`
 	Httptransactionid         int    `json:"httptransactionid,omitempty"`
+	Nodeid                    int    `json:"nodeid,omitempty"`
 	Packetengineid            int    `json:"packetengineid,omitempty"`
 	Profilename               string `json:"profilename,omitempty"`
 	Requestcontentlength      int    `json:"requestcontentlength,omitempty"`

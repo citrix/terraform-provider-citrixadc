@@ -1,0 +1,23 @@
+{
+  "type" : "object",
+  "properties" : {
+    "eabitlength" : {
+      "type" : "integer"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "psidlength" : {
+      "type" : "integer"
+    },
+    "psidoffset" : {
+      "type" : "integer"
+    },
+    "ruleipv6prefix" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "mapbmr",
+  "title" : "mapbmr"
+}

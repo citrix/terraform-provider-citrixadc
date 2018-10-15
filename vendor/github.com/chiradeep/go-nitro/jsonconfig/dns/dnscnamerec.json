@@ -12,6 +12,12 @@
     "canonicalname" : {
       "type" : "string"
     },
+    "ecssubnet" : {
+      "type" : "string"
+    },
+    "nodeid" : {
+      "type" : "integer"
+    },
     "ttl" : {
       "type" : "integer"
     },

@@ -5,9 +5,6 @@
       "type" : "boolean",
       "readonly" : true
     },
-    "cipherdetails" : {
-      "type" : "boolean"
-    },
     "cipherredirect" : {
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
@@ -38,8 +35,16 @@
     "dhcount" : {
       "type" : "integer"
     },
+    "dhekeyexchangewithpsk" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ]
+    },
     "dhfile" : {
       "type" : "string"
+    },
+    "dhkeyexpsizelimit" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
     },
     "dtlsflag" : {
       "type" : "boolean",
@@ -55,14 +60,30 @@
     "ersacount" : {
       "type" : "integer"
     },
-    "nonfipsciphers" : {
+    "hsts" : {
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "includesubdomains" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ]
+    },
+    "maxage" : {
+      "type" : "integer"
+    },
+    "nonfipsciphers" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ],
+      "readonly" : true
     },
     "ocspcheck" : {
       "type" : "string",
       "enum" : [ "Mandatory", "Optional" ],
       "readonly" : true
+    },
+    "ocspstapling" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
     },
     "pushenctrigger" : {
       "type" : "string",
@@ -78,10 +99,6 @@
     },
     "service" : {
       "type" : "integer",
-      "readonly" : true
-    },
-    "servicename" : {
-      "type" : "string",
       "readonly" : true
     },
     "sessreuse" : {
@@ -111,6 +128,9 @@
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
     },
+    "sslprofile" : {
+      "type" : "string"
+    },
     "sslredirect" : {
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
@@ -121,6 +141,10 @@
     },
     "sslv2url" : {
       "type" : "string"
+    },
+    "strictsigdigestcheck" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
     },
     "tls1" : {
       "type" : "string",
@@ -134,11 +158,19 @@
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
     },
+    "tls13" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "tls13sessionticketsperauthcontext" : {
+      "type" : "integer"
+    },
     "vservername" : {
       "type" : "string"
     },
-    "sslprofile" : {
-      "type" : "string"
+    "zerorttearlydata" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
     }
   },
   "$schema" : "http://json-schema.org/draft-04/schema#",

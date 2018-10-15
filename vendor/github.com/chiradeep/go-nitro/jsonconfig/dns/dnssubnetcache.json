@@ -1,0 +1,26 @@
+{
+  "type" : "object",
+  "properties" : {
+    "all" : {
+      "type" : "boolean"
+    },
+    "ecssubnet" : {
+      "type" : "string"
+    },
+    "hostname" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "nextrecs" : {
+      "type" : "object",
+      "enum" : [ "A", "NS", "CNAME", "SOA", "MX", "AAAA", "SRV", "RRSIG", "NSEC", "DNSKEY", "PTR", "TXT", "NAPTR" ],
+      "readonly" : true
+    },
+    "nodeid" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "dnssubnetcache",
+  "title" : "dnssubnetcache"
+}

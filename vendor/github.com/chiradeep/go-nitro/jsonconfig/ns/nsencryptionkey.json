@@ -1,0 +1,28 @@
+{
+  "type" : "object",
+  "properties" : {
+    "comment" : {
+      "type" : "string"
+    },
+    "iv" : {
+      "type" : "string"
+    },
+    "keyvalue" : {
+      "type" : "string"
+    },
+    "method" : {
+      "type" : "string",
+      "enum" : [ "NONE", "RC4", "DES3", "AES128", "AES192", "AES256", "DES", "DES-CBC", "DES-CFB", "DES-OFB", "DES-ECB", "DES3-CBC", "DES3-CFB", "DES3-OFB", "DES3-ECB", "AES128-CBC", "AES128-CFB", "AES128-OFB", "AES128-ECB", "AES192-CBC", "AES192-CFB", "AES192-OFB", "AES192-ECB", "AES256-CBC", "AES256-CFB", "AES256-OFB", "AES256-ECB" ]
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "padding" : {
+      "type" : "string",
+      "enum" : [ "OFF", "ON" ]
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "nsencryptionkey",
+  "title" : "nsencryptionkey"
+}

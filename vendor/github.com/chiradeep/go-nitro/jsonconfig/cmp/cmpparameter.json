@@ -5,12 +5,17 @@
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
     },
+    "builtin" : {
+      "type" : "object",
+      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE", "PARTITION_ALL" ],
+      "readonly" : true
+    },
     "cmpbypasspct" : {
       "type" : "integer"
     },
     "cmplevel" : {
       "type" : "string",
-      "enum" : [ "optimal", "bestspeed", "bestcompression", "spdy" ]
+      "enum" : [ "optimal", "bestspeed", "bestcompression" ]
     },
     "cmponpush" : {
       "type" : "string",
@@ -43,6 +48,9 @@
     "servercmp" : {
       "type" : "string",
       "enum" : [ "ON", "OFF" ]
+    },
+    "varyheadervalue" : {
+      "type" : "string"
     }
   },
   "$schema" : "http://json-schema.org/draft-04/schema#",

@@ -8,5 +8,6 @@ type Systembackup struct {
 	Ipaddress    string `json:"ipaddress,omitempty"`
 	Level        string `json:"level,omitempty"`
 	Size         int    `json:"size,omitempty"`
+	Skipbackup   bool   `json:"skipbackup,omitempty"`
 	Version      string `json:"version,omitempty"`
 }

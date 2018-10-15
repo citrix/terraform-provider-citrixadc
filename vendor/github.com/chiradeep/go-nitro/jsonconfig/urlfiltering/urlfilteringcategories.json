@@ -1,0 +1,15 @@
+{
+  "type" : "object",
+  "properties" : {
+    "categories" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "group" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "urlfilteringcategories",
+  "title" : "urlfilteringcategories"
+}

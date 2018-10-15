@@ -92,6 +92,9 @@
       "type" : "boolean",
       "readonly" : true
     },
+    "ownergroup" : {
+      "type" : "string"
+    },
     "permanent" : {
       "type" : "boolean",
       "readonly" : true
@@ -137,6 +140,9 @@
       "readonly" : true
     },
     "vlan" : {
+      "type" : "integer"
+    },
+    "vxlan" : {
       "type" : "integer"
     },
     "weight" : {

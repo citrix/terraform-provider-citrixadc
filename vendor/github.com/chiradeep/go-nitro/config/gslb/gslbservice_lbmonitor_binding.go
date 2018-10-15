@@ -2,6 +2,7 @@ package gslb
 
 type Gslbservicelbmonitorbinding struct {
 	Failedprobes               int    `json:"failedprobes,omitempty"`
+	Lastresponse               string `json:"lastresponse,omitempty"`
 	Monitorcurrentfailedprobes int    `json:"monitorcurrentfailedprobes,omitempty"`
 	Monitorname                string `json:"monitor_name,omitempty"`
 	Monitorstate               string `json:"monitor_state,omitempty"`

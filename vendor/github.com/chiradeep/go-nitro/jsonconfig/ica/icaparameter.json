@@ -1,0 +1,12 @@
+{
+  "type" : "object",
+  "properties" : {
+    "enablesronhafailover" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ]
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "icaparameter",
+  "title" : "icaparameter"
+}

@@ -1,0 +1,66 @@
+{
+  "type" : "object",
+  "properties" : {
+    "curstate" : {
+      "type" : "string",
+      "enum" : [ "UP", "DOWN", "UNKNOWN", "BUSY", "OUT OF SERVICE", "GOING OUT OF SERVICE", "DOWN WHEN GOING OUT OF SERVICE", "NS_EMPTY_STR", "Unknown", "DISABLED" ],
+      "readonly" : true
+    },
+    "dynamicweight" : {
+      "type" : "string",
+      "enum" : [ "SERVICECOUNT", "SERVICEWEIGHT", "DISABLED" ],
+      "readonly" : true
+    },
+    "gslbthreshold" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "ipaddress" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "port" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "preferredlocation" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "servicegroupname" : {
+      "type" : "string"
+    },
+    "servicetype" : {
+      "type" : "string",
+      "enum" : [ "HTTP", "FTP", "TCP", "UDP", "SSL", "SSL_BRIDGE", "SSL_TCP", "NNTP", "ANY", "SIP_UDP", "SIP_TCP", "SIP_SSL", "RADIUS", "RDP", "RTSP", "MYSQL", "MSSQL", "ORACLE" ],
+      "readonly" : true
+    },
+    "sitepersistcookie" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "svcsitepersistence" : {
+      "type" : "string",
+      "enum" : [ "ConnectionProxy", "HTTPRedirect", "NONE" ],
+      "readonly" : true
+    },
+    "svreffgslbstate" : {
+      "type" : "string",
+      "enum" : [ "UP", "DOWN", "UNKNOWN", "BUSY", "OUT OF SERVICE", "GOING OUT OF SERVICE", "DOWN WHEN GOING OUT OF SERVICE", "NS_EMPTY_STR", "Unknown", "DISABLED" ],
+      "readonly" : true
+    },
+    "thresholdvalue" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "weight" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "gslbvserver_gslbservicegroupmember_binding",
+  "title" : "gslbvserver_gslbservicegroupmember_binding"
+}

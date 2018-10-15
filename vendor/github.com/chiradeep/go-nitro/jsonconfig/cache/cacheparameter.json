@@ -1,13 +1,21 @@
 {
   "type" : "object",
   "properties" : {
+    "disklimit" : {
+      "type" : "integer",
+      "readonly" : true
+    },
     "enablebypass" : {
       "type" : "string",
       "enum" : [ "YES", "NO" ]
     },
-    "enablediskcache" : {
+    "enablehaobjpersist" : {
       "type" : "string",
       "enum" : [ "YES", "NO" ]
+    },
+    "maxdisklimit" : {
+      "type" : "integer",
+      "readonly" : true
     },
     "maxmemlimit" : {
       "type" : "integer",

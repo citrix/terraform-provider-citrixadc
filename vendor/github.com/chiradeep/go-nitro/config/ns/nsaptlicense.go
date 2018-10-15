@@ -15,4 +15,5 @@ type Nsaptlicense struct {
 	Response       string      `json:"response,omitempty"`
 	Serialno       string      `json:"serialno,omitempty"`
 	Sessionid      string      `json:"sessionid,omitempty"`
+	Useproxy       string      `json:"useproxy,omitempty"`
 }

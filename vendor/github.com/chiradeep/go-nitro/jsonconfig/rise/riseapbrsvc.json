@@ -1,0 +1,38 @@
+{
+  "type" : "object",
+  "properties" : {
+    "name" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "nexthopip" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "protocol" : {
+      "type" : "string",
+      "enum" : [ "HTTP", "FTP", "TCP", "UDP", "SSL", "SSL_BRIDGE", "SSL_TCP", "DTLS", "NNTP", "RPCSVR", "DNS", "ADNS", "SNMP", "RTSP", "DHCPRA", "ANY", "SIP_UDP", "SIP_TCP", "SIP_SSL", "DNS_TCP", "ADNS_TCP", "MYSQL", "MSSQL", "ORACLE", "RADIUS", "RADIUSListener", "RDP", "DIAMETER", "SSL_DIAMETER", "TFTP", "SMPP", "PPTP", "GRE", "SYSLOGTCP", "SYSLOGUDP", "FIX", "SSL_FIX", "USER_TCP", "USER_SSL_TCP", "QUIC", "IPFIX", "LOGSTREAM" ],
+      "readonly" : true
+    },
+    "risesvctype" : {
+      "type" : "string",
+      "enum" : [ "Service", "ServiceGroup" ],
+      "readonly" : true
+    },
+    "serverip" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "serverport" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vlan" : {
+      "type" : "integer",
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "riseapbrsvc",
+  "title" : "riseapbrsvc"
+}

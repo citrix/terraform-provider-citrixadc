@@ -9,6 +9,9 @@
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
     },
+    "bridgeagetimeout" : {
+      "type" : "integer"
+    },
     "garponvridintf" : {
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
@@ -44,6 +47,10 @@
       "enum" : [ "ENABLED", "DISABLED" ]
     },
     "skipproxyingbsdtraffic" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "stopmacmoveupdate" : {
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
     },

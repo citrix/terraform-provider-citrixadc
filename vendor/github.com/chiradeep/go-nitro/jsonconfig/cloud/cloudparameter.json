@@ -1,0 +1,26 @@
+{
+  "type" : "object",
+  "properties" : {
+    "activationcode" : {
+      "type" : "string"
+    },
+    "controllerfqdn" : {
+      "type" : "string"
+    },
+    "controllerport" : {
+      "type" : "integer"
+    },
+    "customerid" : {
+      "type" : "string"
+    },
+    "instanceid" : {
+      "type" : "string"
+    },
+    "resourcelocation" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "cloudparameter",
+  "title" : "cloudparameter"
+}

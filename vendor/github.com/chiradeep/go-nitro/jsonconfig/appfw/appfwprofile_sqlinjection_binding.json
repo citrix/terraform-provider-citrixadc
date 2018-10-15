@@ -5,6 +5,13 @@
       "type" : "string",
       "enum" : [ "FORMFIELD", "HEADER", "COOKIE" ]
     },
+    "as_value_expr_sql" : {
+      "type" : "string"
+    },
+    "as_value_type_sql" : {
+      "type" : "string",
+      "enum" : [ "Keyword", "SpecialString", "Wildchar" ]
+    },
     "comment" : {
       "type" : "string"
     },
@@ -12,6 +19,10 @@
       "type" : "string"
     },
     "isregex_sql" : {
+      "type" : "string",
+      "enum" : [ "REGEX", "NOTREGEX" ]
+    },
+    "isvalueregex_sql" : {
       "type" : "string",
       "enum" : [ "REGEX", "NOTREGEX" ]
     },

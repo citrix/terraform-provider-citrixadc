@@ -14,7 +14,8 @@
       "type" : "string"
     },
     "hits" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
     },
     "name" : {
       "type" : "string"
@@ -23,7 +24,8 @@
       "type" : "string"
     },
     "referencecount" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
     },
     "set" : {
       "type" : "string"
@@ -32,7 +34,8 @@
       "type" : "string"
     },
     "undefhits" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
     },
     "variable" : {
       "type" : "string"

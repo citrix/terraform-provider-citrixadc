@@ -1,0 +1,40 @@
+{
+  "type" : "object",
+  "properties" : {
+    "builtin" : {
+      "type" : "object",
+      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE", "PARTITION_ALL" ],
+      "readonly" : true
+    },
+    "isdefault" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "l7latencymaxnotifycount" : {
+      "type" : "integer"
+    },
+    "l7latencymonitoring" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "l7latencynotifyinterval" : {
+      "type" : "integer"
+    },
+    "l7latencythresholdfactor" : {
+      "type" : "integer"
+    },
+    "l7latencywaittime" : {
+      "type" : "integer"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "refcnt" : {
+      "type" : "integer",
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "icalatencyprofile",
+  "title" : "icalatencyprofile"
+}

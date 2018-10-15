@@ -1,5 +1,6 @@
 package vpn
 
 type Vpnglobalvpnnexthopserverbinding struct {
-	Nexthopserver string `json:"nexthopserver,omitempty"`
+	Gotopriorityexpression string `json:"gotopriorityexpression,omitempty"`
+	Nexthopserver          string `json:"nexthopserver,omitempty"`
 }

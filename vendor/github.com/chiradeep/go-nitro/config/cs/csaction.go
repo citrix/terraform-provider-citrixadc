@@ -8,6 +8,7 @@ type Csaction struct {
 	Newname           string      `json:"newname,omitempty"`
 	Referencecount    int         `json:"referencecount,omitempty"`
 	Targetlbvserver   string      `json:"targetlbvserver,omitempty"`
+	Targetvserver     string      `json:"targetvserver,omitempty"`
 	Targetvserverexpr string      `json:"targetvserverexpr,omitempty"`
 	Undefhits         int         `json:"undefhits,omitempty"`
 }

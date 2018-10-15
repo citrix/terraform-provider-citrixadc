@@ -1,6 +1,10 @@
 {
   "type" : "object",
   "properties" : {
+    "automaticconfigsync" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
     "dropldnsreq" : {
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
@@ -8,6 +12,9 @@
     "flags" : {
       "type" : "integer",
       "readonly" : true
+    },
+    "gslbsvcstatedelaytime" : {
+      "type" : "integer"
     },
     "ldnsentrytimeout" : {
       "type" : "integer"

@@ -5,7 +5,8 @@
       "type" : "integer"
     },
     "ecccurvename" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "ALL", "P_224", "P_256", "P_384", "P_521" ]
     },
     "name" : {
       "type" : "string"

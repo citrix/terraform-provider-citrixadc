@@ -1,0 +1,34 @@
+{
+  "type" : "object",
+  "properties" : {
+    "destip" : {
+      "type" : "string"
+    },
+    "destip_alg" : {
+      "type" : "string"
+    },
+    "natip" : {
+      "type" : "string"
+    },
+    "natip_alg" : {
+      "type" : "string"
+    },
+    "sourceip" : {
+      "type" : "string"
+    },
+    "sourceip_alg" : {
+      "type" : "string"
+    },
+    "spiin" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "spiout" : {
+      "type" : "integer",
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "ipsecalgsession",
+  "title" : "ipsecalgsession"
+}

@@ -4,6 +4,7 @@ type Channel struct {
 	Actflowctl                string      `json:"actflowctl,omitempty"`
 	Actspeed                  string      `json:"actspeed,omitempty"`
 	Actthroughput             int         `json:"actthroughput,omitempty"`
+	Actualmtu                 int         `json:"actualmtu,omitempty"`
 	Autoneg                   int         `json:"autoneg,omitempty"`
 	Autonegresult             int         `json:"autonegresult,omitempty"`
 	Backplane                 string      `json:"backplane,omitempty"`
@@ -19,6 +20,7 @@ type Channel struct {
 	Fctls                     int         `json:"fctls,omitempty"`
 	Flags                     int         `json:"flags,omitempty"`
 	Flowctl                   string      `json:"flowctl,omitempty"`
+	Haheartbeat               string      `json:"haheartbeat,omitempty"`
 	Hamonitor                 string      `json:"hamonitor,omitempty"`
 	Hangdetect                int         `json:"hangdetect,omitempty"`
 	Hangreset                 int         `json:"hangreset,omitempty"`
@@ -54,7 +56,9 @@ type Channel struct {
 	Lacptimeout               string      `json:"lacptimeout,omitempty"`
 	Lamac                     string      `json:"lamac,omitempty"`
 	Lamode                    string      `json:"lamode,omitempty"`
+	Linkredundancy            string      `json:"linkredundancy,omitempty"`
 	Linkstate                 int         `json:"linkstate,omitempty"`
+	Lldpmode                  string      `json:"lldpmode,omitempty"`
 	Lrminthroughput           int         `json:"lrminthroughput,omitempty"`
 	Mac                       string      `json:"mac,omitempty"`
 	Macdistr                  string      `json:"macdistr,omitempty"`

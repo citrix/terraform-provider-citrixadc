@@ -31,6 +31,7 @@ type Cacheobject struct {
 	Cachefilename                string      `json:"cachefilename,omitempty"`
 	Cacheindisk                  string      `json:"cacheindisk,omitempty"`
 	Cacheinmemory                string      `json:"cacheinmemory,omitempty"`
+	Cacheinsecondary             string      `json:"cacheinsecondary,omitempty"`
 	Cacheresdate                 string      `json:"cacheresdate,omitempty"`
 	Cachereshdrsize              int         `json:"cachereshdrsize,omitempty"`
 	Cachereslastmod              string      `json:"cachereslastmod,omitempty"`
@@ -41,7 +42,6 @@ type Cacheobject struct {
 	Destipv46                    string      `json:"destipv46,omitempty"`
 	Destport                     int         `json:"destport,omitempty"`
 	Flushed                      string      `json:"flushed,omitempty"`
-	Force                        bool        `json:"force,omitempty"`
 	Group                        string      `json:"group,omitempty"`
 	Groupname                    string      `json:"groupname,omitempty"`
 	Hitparams                    interface{} `json:"hitparams,omitempty"`
@@ -56,7 +56,9 @@ type Cacheobject struct {
 	Ignoremarkerobjects          string      `json:"ignoremarkerobjects,omitempty"`
 	Includenotreadyobjects       string      `json:"includenotreadyobjects,omitempty"`
 	Locator                      int         `json:"locator,omitempty"`
+	Locatorshow                  int         `json:"locatorshow,omitempty"`
 	Markerreason                 string      `json:"markerreason,omitempty"`
+	Nodeid                       int         `json:"nodeid,omitempty"`
 	Policy                       int         `json:"policy,omitempty"`
 	Policyname                   string      `json:"policyname,omitempty"`
 	Port                         int         `json:"port,omitempty"`
@@ -67,6 +69,7 @@ type Cacheobject struct {
 	Rule                         interface{} `json:"rule,omitempty"`
 	Selectorname                 interface{} `json:"selectorname,omitempty"`
 	Selectorvalue                interface{} `json:"selectorvalue,omitempty"`
+	Tosecondary                  string      `json:"tosecondary,omitempty"`
 	Totalobjs                    int         `json:"totalobjs,omitempty"`
 	Url                          string      `json:"url,omitempty"`
 	Warnbucketskip               int         `json:"warnbucketskip,omitempty"`

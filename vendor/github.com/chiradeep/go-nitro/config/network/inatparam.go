@@ -6,4 +6,5 @@ type Inatparam struct {
 	Nat46v6mtu        int    `json:"nat46v6mtu,omitempty"`
 	Nat46v6prefix     string `json:"nat46v6prefix,omitempty"`
 	Nat46zerochecksum string `json:"nat46zerochecksum,omitempty"`
+	Td                int    `json:"td,omitempty"`
 }

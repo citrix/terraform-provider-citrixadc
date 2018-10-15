@@ -1,6 +1,9 @@
 {
   "type" : "object",
   "properties" : {
+    "gotopriorityexpression" : {
+      "type" : "string"
+    },
     "intranetip6" : {
       "type" : "string"
     },

@@ -1,0 +1,39 @@
+{
+  "type" : "object",
+  "properties" : {
+    "channelflags" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "channelip" : {
+      "type" : "string"
+    },
+    "channelnatip" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "channelnatport" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "channelport" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "channelprotocol" : {
+      "type" : "string",
+      "enum" : [ "HTTP", "FTP", "TCP", "UDP", "SSL", "SSL_BRIDGE", "SSL_TCP", "NNTP", "RPCSVR", "DNS", "ADNS", "SNMP", "RTSP", "DHCPRA", "ANY", "SIP_UDP", "SIP_TCP", "SIP_SSL", "DNS_TCP", "ADNS_TCP", "HTTPSVR", "HTTPCLIENT", "NAT", "HA", "AAA", "SINCTCP", "VPN AFTP", "MONITORS", "SSLVPN UDP", "SINCUDP", "RIP", "UDP CLNT", "SASP", "RPCCLNTS", "ROUTE", "AUDIT", "STA HTTP", "STA SSL", "DNS RESOLVE", "RDP", "MYSQL", "MSSQL", "DIAMETER", "SSL_DIAMETER", "TFTP", "ORACLE", "ICA", "RADIUS", "RADIUSListener", "SMPP", "PPTP", "GRE", "SYSLOGTCP", "SYSLOGUDP", "FIX", "SSL_FIX", "QUIC", "TFTP_DATA", "USER_TCP", "USER_SSL_TCP" ],
+      "readonly" : true
+    },
+    "channeltimeout" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "sessionid" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "lsnrtspalgsession_datachannel_binding",
+  "title" : "lsnrtspalgsession_datachannel_binding"
+}

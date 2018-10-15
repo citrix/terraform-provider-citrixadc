@@ -5,6 +5,22 @@
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
     },
+    "altsvc" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "apdexcltresptimethreshold" : {
+      "type" : "integer"
+    },
+    "apdexsvrresptimethreshold" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "builtin" : {
+      "type" : "object",
+      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE", "PARTITION_ALL" ],
+      "readonly" : true
+    },
     "clientiphdrexpr" : {
       "type" : "string"
     },
@@ -28,6 +44,32 @@
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
     },
+    "http2" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "http2direct" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "http2headertablesize" : {
+      "type" : "integer"
+    },
+    "http2initialwindowsize" : {
+      "type" : "integer"
+    },
+    "http2maxconcurrentstreams" : {
+      "type" : "integer"
+    },
+    "http2maxframesize" : {
+      "type" : "integer"
+    },
+    "http2maxheaderlistsize" : {
+      "type" : "integer"
+    },
+    "http2minseverconn" : {
+      "type" : "integer"
+    },
     "incomphdrdelay" : {
       "type" : "integer"
     },
@@ -39,10 +81,16 @@
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
     },
+    "maxheaderlen" : {
+      "type" : "integer"
+    },
     "maxreq" : {
       "type" : "integer"
     },
     "maxreusepool" : {
+      "type" : "integer"
+    },
+    "minreusepool" : {
       "type" : "integer"
     },
     "name" : {
@@ -62,9 +110,16 @@
     "reqtimeoutaction" : {
       "type" : "string"
     },
-    "spdy" : {
+    "reusepooltimeout" : {
+      "type" : "integer"
+    },
+    "rtsptunnel" : {
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "spdy" : {
+      "type" : "string",
+      "enum" : [ "DISABLED", "ENABLED", "V2", "V3" ]
     },
     "weblog" : {
       "type" : "string",

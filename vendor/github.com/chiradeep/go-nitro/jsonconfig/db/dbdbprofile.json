@@ -5,6 +5,10 @@
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
     },
+    "enablecachingconmuxoff" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
     "interpretquery" : {
       "type" : "string",
       "enum" : [ "YES", "NO" ]

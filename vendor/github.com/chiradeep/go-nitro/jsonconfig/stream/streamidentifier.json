@@ -1,7 +1,23 @@
 {
   "type" : "object",
   "properties" : {
+    "acceptancethreshold" : {
+      "type" : "string"
+    },
+    "appflowlog" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "breachthreshold" : {
+      "type" : "integer"
+    },
     "interval" : {
+      "type" : "integer"
+    },
+    "maxtransactionthreshold" : {
+      "type" : "integer"
+    },
+    "mintransactionthreshold" : {
       "type" : "integer"
     },
     "name" : {
@@ -17,9 +33,21 @@
     "selectorname" : {
       "type" : "string"
     },
+    "snmptrap" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
     "sort" : {
       "type" : "string",
-      "enum" : [ "REQUESTS", "CONNECTIONS", "RESPTIME", "BANDWIDTH", "NONE" ]
+      "enum" : [ "REQUESTS", "CONNECTIONS", "RESPTIME", "BANDWIDTH", "RESPTIME_BREACHES", "NONE" ]
+    },
+    "trackackonlypackets" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "tracktransactions" : {
+      "type" : "string",
+      "enum" : [ "RESPTIME", "NONE" ]
     }
   },
   "$schema" : "http://json-schema.org/draft-04/schema#",

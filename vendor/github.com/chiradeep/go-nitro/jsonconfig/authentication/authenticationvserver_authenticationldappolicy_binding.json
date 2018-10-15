@@ -5,10 +5,16 @@
       "type" : "integer",
       "readonly" : true
     },
+    "gotopriorityexpression" : {
+      "type" : "string"
+    },
     "groupextraction" : {
       "type" : "boolean"
     },
     "name" : {
+      "type" : "string"
+    },
+    "nextfactor" : {
       "type" : "string"
     },
     "policy" : {

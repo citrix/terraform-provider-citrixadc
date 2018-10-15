@@ -2,7 +2,9 @@
   "type" : "object",
   "properties" : {
     "appflowlog" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ],
+      "readonly" : true
     },
     "backupip" : {
       "type" : "string"

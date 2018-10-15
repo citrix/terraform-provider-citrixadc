@@ -1,6 +1,10 @@
 {
   "type" : "object",
   "properties" : {
+    "clientsidemeasurements" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
     "collectors" : {
       "type" : "object"
     },
@@ -11,9 +15,16 @@
       "type" : "string",
       "readonly" : true
     },
+    "distributionalgorithm" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
     "hits" : {
       "type" : "integer",
       "readonly" : true
+    },
+    "metricslog" : {
+      "type" : "boolean"
     },
     "name" : {
       "type" : "string"
@@ -21,9 +32,29 @@
     "newname" : {
       "type" : "string"
     },
+    "pagetracking" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
     "referencecount" : {
       "type" : "integer",
       "readonly" : true
+    },
+    "securityinsight" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "transactionlog" : {
+      "type" : "string",
+      "enum" : [ "ALL", "ANOMALOUS" ]
+    },
+    "videoanalytics" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "webinsight" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
     }
   },
   "$schema" : "http://json-schema.org/draft-04/schema#",

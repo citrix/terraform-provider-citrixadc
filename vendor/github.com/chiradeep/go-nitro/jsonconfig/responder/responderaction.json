@@ -3,7 +3,7 @@
   "properties" : {
     "builtin" : {
       "type" : "object",
-      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE" ],
+      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE", "PARTITION_ALL" ],
       "readonly" : true
     },
     "bypasssafetycheck" : {
@@ -26,9 +26,15 @@
     "newname" : {
       "type" : "string"
     },
+    "reasonphrase" : {
+      "type" : "string"
+    },
     "referencecount" : {
       "type" : "integer",
       "readonly" : true
+    },
+    "responsestatuscode" : {
+      "type" : "integer"
     },
     "target" : {
       "type" : "string"

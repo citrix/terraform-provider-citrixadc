@@ -1,0 +1,20 @@
+{
+  "type" : "object",
+  "properties" : {
+    "clientname" : {
+      "type" : "string"
+    },
+    "netmask" : {
+      "type" : "string"
+    },
+    "network" : {
+      "type" : "string"
+    },
+    "td" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "lsnclient_network_binding",
+  "title" : "lsnclient_network_binding"
+}

@@ -9,13 +9,40 @@
     "clid" : {
       "type" : "integer"
     },
+    "clusternoheartbeatonnode" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "clusternolinksetmbf" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "clusternospottedip" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
     "deadinterval" : {
       "type" : "integer"
     },
     "hellointerval" : {
       "type" : "integer"
     },
+    "inc" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "jumbonotsupported" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
     "licensemismatch" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "nodegroup" : {
+      "type" : "string"
+    },
+    "nodegroupstatewarning" : {
       "type" : "boolean",
       "readonly" : true
     },
@@ -33,10 +60,22 @@
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
     },
+    "processlocal" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
     "propstate" : {
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ],
       "readonly" : true
+    },
+    "quorumtype" : {
+      "type" : "string",
+      "enum" : [ "MAJORITY", "NONE" ]
+    },
+    "retainconnectionsoncluster" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ]
     },
     "rsskeymismatch" : {
       "type" : "boolean",
@@ -45,6 +84,10 @@
     "status" : {
       "type" : "string",
       "enum" : [ "DOWN", "UP", "PARTIAL-UP", "UNKNOWN" ],
+      "readonly" : true
+    },
+    "validmtu" : {
+      "type" : "integer",
       "readonly" : true
     }
   },

@@ -1,0 +1,126 @@
+{
+  "type" : "object",
+  "properties" : {
+    "builtin" : {
+      "type" : "object",
+      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE", "PARTITION_ALL" ],
+      "readonly" : true
+    },
+    "cachemaxage" : {
+      "type" : "integer"
+    },
+    "clientsidemeasurements" : {
+      "type" : "boolean"
+    },
+    "convertimporttolink" : {
+      "type" : "boolean"
+    },
+    "csscombine" : {
+      "type" : "boolean"
+    },
+    "cssflattenimports" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "cssimginline" : {
+      "type" : "boolean"
+    },
+    "cssinline" : {
+      "type" : "boolean"
+    },
+    "cssminify" : {
+      "type" : "boolean"
+    },
+    "cssmovetohead" : {
+      "type" : "boolean"
+    },
+    "dnsshards" : {
+      "type" : "object"
+    },
+    "domainsharding" : {
+      "type" : "string"
+    },
+    "hits" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "htmlminify" : {
+      "type" : "boolean"
+    },
+    "htmlrmattribquotes" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "htmlrmdefaultattribs" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "htmltrimurls" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "imgadddimensions" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "imggiftopng" : {
+      "type" : "boolean"
+    },
+    "imginline" : {
+      "type" : "boolean"
+    },
+    "imglazyload" : {
+      "type" : "boolean"
+    },
+    "imgshrinkformobile" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "imgshrinktoattrib" : {
+      "type" : "boolean"
+    },
+    "imgtojpegxr" : {
+      "type" : "boolean"
+    },
+    "imgtowebp" : {
+      "type" : "boolean"
+    },
+    "imgweaken" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "jpgoptimize" : {
+      "type" : "boolean"
+    },
+    "jpgprogressive" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "jscombine" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "jsinline" : {
+      "type" : "boolean"
+    },
+    "jsminify" : {
+      "type" : "boolean"
+    },
+    "jsmovetoend" : {
+      "type" : "boolean"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "pageextendcache" : {
+      "type" : "boolean"
+    },
+    "undefhits" : {
+      "type" : "integer",
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "feoaction",
+  "title" : "feoaction"
+}

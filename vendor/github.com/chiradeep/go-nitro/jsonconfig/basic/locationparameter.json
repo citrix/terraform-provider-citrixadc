@@ -17,7 +17,20 @@
       "type" : "integer",
       "readonly" : true
     },
+    "custom6" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "databasemode" : {
+      "type" : "string",
+      "enum" : [ "File", "Internal", "Not applicable" ],
+      "readonly" : true
+    },
     "entries" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "entries6" : {
       "type" : "integer",
       "readonly" : true
     },
@@ -25,8 +38,17 @@
       "type" : "integer",
       "readonly" : true
     },
+    "errors6" : {
+      "type" : "integer",
+      "readonly" : true
+    },
     "flags" : {
       "type" : "integer",
+      "readonly" : true
+    },
+    "flushing" : {
+      "type" : "string",
+      "enum" : [ "In progress", "Idle" ],
       "readonly" : true
     },
     "format" : {
@@ -34,8 +56,31 @@
       "enum" : [ "netscaler", "ip-country", "ip-country-isp", "ip-country-region-city", "ip-country-region-city-isp", "geoip-country", "geoip-region", "geoip-city", "geoip-country-org", "geoip-country-isp", "geoip-city-isp-org" ],
       "readonly" : true
     },
+    "format6" : {
+      "type" : "string",
+      "enum" : [ "netscaler6", "geoip-country6" ],
+      "readonly" : true
+    },
     "lines" : {
       "type" : "integer",
+      "readonly" : true
+    },
+    "lines6" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "loading" : {
+      "type" : "string",
+      "enum" : [ "In progress", "Idle" ],
+      "readonly" : true
+    },
+    "locationfile6" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "matchwildcardtoany" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ],
       "readonly" : true
     },
     "q1label" : {
@@ -56,11 +101,19 @@
     "q6label" : {
       "type" : "string"
     },
+    "static6" : {
+      "type" : "integer",
+      "readonly" : true
+    },
     "status" : {
       "type" : "integer",
       "readonly" : true
     },
     "warnings" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "warnings6" : {
       "type" : "integer",
       "readonly" : true
     }

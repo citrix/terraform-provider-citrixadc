@@ -1,0 +1,50 @@
+{
+  "type" : "object",
+  "properties" : {
+    "hits" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "icapprofilename" : {
+      "type" : "string"
+    },
+    "ifserverdown" : {
+      "type" : "string",
+      "enum" : [ "CONTINUE", "DROP", "RESET" ]
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "referencecount" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "reqtimeout" : {
+      "type" : "integer"
+    },
+    "reqtimeoutaction" : {
+      "type" : "string",
+      "enum" : [ "BYPASS", "DROP", "RESET" ]
+    },
+    "serverip" : {
+      "type" : "string"
+    },
+    "servername" : {
+      "type" : "string"
+    },
+    "serverport" : {
+      "type" : "integer"
+    },
+    "type" : {
+      "type" : "string",
+      "enum" : [ "ICAP", "INLINEINSPECTION", "NSTRACE" ]
+    },
+    "undefhits" : {
+      "type" : "integer",
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "contentinspectionaction",
+  "title" : "contentinspectionaction"
+}

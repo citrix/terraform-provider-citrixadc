@@ -8,9 +8,6 @@
     "id" : {
       "type" : "integer"
     },
-    "ifaces" : {
-      "type" : "string"
-    },
     "ifnum" : {
       "type" : "string"
     },

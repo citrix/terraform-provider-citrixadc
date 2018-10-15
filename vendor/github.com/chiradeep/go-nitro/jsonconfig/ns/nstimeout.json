@@ -7,6 +7,12 @@
     "anyserver" : {
       "type" : "integer"
     },
+    "anytcpclient" : {
+      "type" : "integer"
+    },
+    "anytcpserver" : {
+      "type" : "integer"
+    },
     "client" : {
       "type" : "integer"
     },
@@ -26,6 +32,9 @@
       "type" : "integer"
     },
     "reducedfintimeout" : {
+      "type" : "integer"
+    },
+    "reducedrsttimeout" : {
       "type" : "integer"
     },
     "server" : {

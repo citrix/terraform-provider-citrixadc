@@ -2,25 +2,35 @@
   "type" : "object",
   "properties" : {
     "channelnumber" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
     },
     "destip" : {
-      "type" : "string"
+      "type" : "string",
+      "readonly" : true
     },
     "destport" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
     },
     "domain" : {
-      "type" : "string"
+      "type" : "string",
+      "readonly" : true
+    },
+    "nodeid" : {
+      "type" : "integer"
     },
     "peid" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
     },
     "srcip" : {
-      "type" : "string"
+      "type" : "string",
+      "readonly" : true
     },
     "srcport" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
     },
     "username" : {
       "type" : "string"

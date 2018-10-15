@@ -43,6 +43,9 @@
     "respondwith" : {
       "type" : "string",
       "enum" : [ "ACS", "NS" ]
+    },
+    "tcpprofile" : {
+      "type" : "string"
     }
   },
   "$schema" : "http://json-schema.org/draft-04/schema#",

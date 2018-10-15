@@ -14,8 +14,19 @@
       "readonly" : true
     },
     "fipsfw" : {
+      "type" : "string"
+    },
+    "fipshwmajorversion" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "fipshwminorversion" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "fipshwversionstring" : {
       "type" : "string",
-      "enum" : [ "4.6.1" ]
+      "readonly" : true
     },
     "firmwarereleasedate" : {
       "type" : "string",
@@ -46,6 +57,10 @@
     },
     "minorversion" : {
       "type" : "integer",
+      "readonly" : true
+    },
+    "model" : {
+      "type" : "string",
       "readonly" : true
     },
     "oldsopassword" : {

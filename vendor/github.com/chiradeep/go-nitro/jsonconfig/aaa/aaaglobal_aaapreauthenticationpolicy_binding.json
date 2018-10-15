@@ -7,16 +7,13 @@
     },
     "builtin" : {
       "type" : "object",
-      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE" ]
+      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE", "PARTITION_ALL" ]
     },
     "policy" : {
       "type" : "string"
     },
     "priority" : {
       "type" : "integer"
-    },
-    "windowsprofile" : {
-      "type" : "string"
     }
   },
   "$schema" : "http://json-schema.org/draft-04/schema#",

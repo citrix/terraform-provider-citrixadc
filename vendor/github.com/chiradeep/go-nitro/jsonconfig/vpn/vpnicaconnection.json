@@ -1,6 +1,9 @@
 {
   "type" : "object",
   "properties" : {
+    "all" : {
+      "type" : "boolean"
+    },
     "destip" : {
       "type" : "string",
       "readonly" : true
@@ -13,6 +16,9 @@
       "type" : "string",
       "readonly" : true
     },
+    "nodeid" : {
+      "type" : "integer"
+    },
     "peid" : {
       "type" : "integer",
       "readonly" : true
@@ -24,6 +30,10 @@
     "srcport" : {
       "type" : "integer",
       "readonly" : true
+    },
+    "transproto" : {
+      "type" : "string",
+      "enum" : [ "TCP", "UDP" ]
     },
     "username" : {
       "type" : "string"

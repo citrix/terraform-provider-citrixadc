@@ -1,10 +1,6 @@
 {
   "type" : "object",
   "properties" : {
-    "activepolicy" : {
-      "type" : "integer",
-      "readonly" : true
-    },
     "boundto" : {
       "type" : "string"
     },

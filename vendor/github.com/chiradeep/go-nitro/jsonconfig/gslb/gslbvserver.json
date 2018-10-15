@@ -46,7 +46,7 @@
     },
     "dnsrecordtype" : {
       "type" : "string",
-      "enum" : [ "A", "AAAA", "CNAME" ]
+      "enum" : [ "A", "AAAA", "CNAME", "NAPTR" ]
     },
     "domainname" : {
       "type" : "string"
@@ -54,6 +54,14 @@
     "dynamicweight" : {
       "type" : "string",
       "enum" : [ "SERVICECOUNT", "SERVICEWEIGHT", "DISABLED" ]
+    },
+    "ecs" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "ecsaddrvalidation" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
     },
     "edr" : {
       "type" : "string",
@@ -97,6 +105,11 @@
     "newname" : {
       "type" : "string"
     },
+    "nodefaultbindings" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ],
+      "readonly" : true
+    },
     "persistenceid" : {
       "type" : "integer"
     },
@@ -115,15 +128,24 @@
       "type" : "integer",
       "readonly" : true
     },
+    "servername" : {
+      "type" : "string",
+      "readonly" : true
+    },
     "servicename" : {
       "type" : "string"
     },
     "servicetype" : {
       "type" : "string",
-      "enum" : [ "HTTP", "FTP", "TCP", "UDP", "SSL", "SSL_BRIDGE", "SSL_TCP", "NNTP", "ANY", "SIP_UDP", "RADIUS", "RDP", "RTSP", "MYSQL", "MSSQL" ]
+      "enum" : [ "HTTP", "FTP", "TCP", "UDP", "SSL", "SSL_BRIDGE", "SSL_TCP", "NNTP", "ANY", "SIP_UDP", "SIP_TCP", "SIP_SSL", "RADIUS", "RDP", "RTSP", "MYSQL", "MSSQL", "ORACLE" ]
     },
     "sitedomainttl" : {
       "type" : "integer"
+    },
+    "sitepersistence" : {
+      "type" : "string",
+      "enum" : [ "ConnectionProxy", "HTTPRedirect", "NONE" ],
+      "readonly" : true
     },
     "sobackupaction" : {
       "type" : "string",
@@ -186,6 +208,14 @@
     },
     "v6persistmasklen" : {
       "type" : "integer"
+    },
+    "vsvrbindsvcip" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "vsvrbindsvcport" : {
+      "type" : "integer",
+      "readonly" : true
     },
     "weight" : {
       "type" : "integer"

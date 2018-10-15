@@ -2,7 +2,18 @@
   "type" : "object",
   "properties" : {
     "builtin" : {
-      "type" : "object"
+      "type" : "object",
+      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE", "PARTITION_ALL" ]
+    },
+    "globalbindtype" : {
+      "type" : "string",
+      "enum" : [ "SYSTEM_GLOBAL", "VPN_GLOBAL", "RNAT_GLOBAL" ]
+    },
+    "gotopriorityexpression" : {
+      "type" : "string"
+    },
+    "nextfactor" : {
+      "type" : "string"
     },
     "policyname" : {
       "type" : "string"

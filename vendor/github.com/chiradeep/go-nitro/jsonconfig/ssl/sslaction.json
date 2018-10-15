@@ -3,8 +3,18 @@
   "properties" : {
     "builtin" : {
       "type" : "object",
-      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE" ],
+      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE", "PARTITION_ALL" ],
       "readonly" : true
+    },
+    "cacertgrpname" : {
+      "type" : "string"
+    },
+    "certfingerprintdigest" : {
+      "type" : "string",
+      "enum" : [ "SHA1", "SHA224", "SHA256", "SHA384", "SHA512" ]
+    },
+    "certfingerprintheader" : {
+      "type" : "string"
     },
     "certhashheader" : {
       "type" : "string"
@@ -42,6 +52,10 @@
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
     },
+    "clientcertfingerprint" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
     "clientcerthash" : {
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
@@ -70,6 +84,9 @@
       "type" : "string",
       "readonly" : true
     },
+    "forward" : {
+      "type" : "string"
+    },
     "hits" : {
       "type" : "integer",
       "readonly" : true
@@ -90,6 +107,9 @@
       "enum" : [ "ENABLED", "DISABLED" ]
     },
     "sessionidheader" : {
+      "type" : "string"
+    },
+    "ssllogprofile" : {
       "type" : "string"
     },
     "undefhits" : {

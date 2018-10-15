@@ -1,0 +1,38 @@
+{
+  "type" : "object",
+  "properties" : {
+    "builtin" : {
+      "type" : "object",
+      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE", "PARTITION_ALL" ],
+      "readonly" : true
+    },
+    "comment" : {
+      "type" : "string"
+    },
+    "hits" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "newname" : {
+      "type" : "string"
+    },
+    "referencecount" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "type" : {
+      "type" : "string",
+      "enum" : [ "clear_text_pd", "clear_text_abr", "encrypted_abr", "trigger_enc_abr", "trigger_body_detection" ]
+    },
+    "undefhits" : {
+      "type" : "integer",
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "videooptimizationdetectionaction",
+  "title" : "videooptimizationdetectionaction"
+}

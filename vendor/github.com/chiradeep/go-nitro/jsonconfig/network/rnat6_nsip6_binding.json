@@ -6,6 +6,13 @@
     },
     "natip6" : {
       "type" : "string"
+    },
+    "ownergroup" : {
+      "type" : "string"
+    },
+    "td" : {
+      "type" : "integer",
+      "readonly" : true
     }
   },
   "$schema" : "http://json-schema.org/draft-04/schema#",

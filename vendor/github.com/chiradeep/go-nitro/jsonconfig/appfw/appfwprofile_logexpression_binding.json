@@ -1,0 +1,24 @@
+{
+  "type" : "object",
+  "properties" : {
+    "as_logexpression" : {
+      "type" : "string"
+    },
+    "comment" : {
+      "type" : "string"
+    },
+    "logexpression" : {
+      "type" : "string"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "state" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "appfwprofile_logexpression_binding",
+  "title" : "appfwprofile_logexpression_binding"
+}

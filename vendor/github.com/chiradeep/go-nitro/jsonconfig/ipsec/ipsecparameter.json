@@ -3,7 +3,7 @@
   "properties" : {
     "encalgo" : {
       "type" : "object",
-      "enum" : [ "AES", "3DES" ]
+      "enum" : [ "AES", "3DES", "AES192", "AES256" ]
     },
     "hashalgo" : {
       "type" : "object",
@@ -22,8 +22,17 @@
     "livenesscheckinterval" : {
       "type" : "integer"
     },
+    "perfectforwardsecrecy" : {
+      "type" : "string",
+      "enum" : [ "ENABLE", "DISABLE" ]
+    },
     "replaywindowsize" : {
       "type" : "integer"
+    },
+    "responderonly" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ],
+      "readonly" : true
     },
     "retransmissiontime" : {
       "type" : "integer"

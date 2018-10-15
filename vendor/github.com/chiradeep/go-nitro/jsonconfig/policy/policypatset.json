@@ -1,6 +1,9 @@
 {
   "type" : "object",
   "properties" : {
+    "comment" : {
+      "type" : "string"
+    },
     "description" : {
       "type" : "string",
       "readonly" : true

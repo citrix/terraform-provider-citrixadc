@@ -5,7 +5,8 @@
       "type" : "integer"
     },
     "ifaces" : {
-      "type" : "string"
+      "type" : "string",
+      "readonly" : true
     },
     "ifnum" : {
       "type" : "object"

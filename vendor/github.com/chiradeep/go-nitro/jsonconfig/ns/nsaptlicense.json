@@ -50,6 +50,10 @@
     },
     "sessionid" : {
       "type" : "string"
+    },
+    "useproxy" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ]
     }
   },
   "$schema" : "http://json-schema.org/draft-04/schema#",

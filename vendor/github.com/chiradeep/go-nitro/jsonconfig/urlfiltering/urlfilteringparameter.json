@@ -1,0 +1,59 @@
+{
+  "type" : "object",
+  "properties" : {
+    "clouddblookuptimeout" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "cloudhost" : {
+      "type" : "string"
+    },
+    "cloudkeepalivetimeout" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "cloudserverconnecttimeout" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "hoursbetweendbupdates" : {
+      "type" : "integer"
+    },
+    "localdatabasethreads" : {
+      "type" : "integer"
+    },
+    "maxnumberofcloudthreads" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "proxyhostip" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "proxypassword" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "proxyport" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "proxyusername" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "seeddbpath" : {
+      "type" : "string"
+    },
+    "seeddbsizelevel" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "timeofdaytoupdatedb" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "urlfilteringparameter",
+  "title" : "urlfilteringparameter"
+}

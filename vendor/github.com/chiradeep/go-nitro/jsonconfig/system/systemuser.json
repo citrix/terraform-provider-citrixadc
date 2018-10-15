@@ -9,12 +9,24 @@
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
     },
+    "hashmethod" : {
+      "type" : "string",
+      "enum" : [ "SHA1", "SHA512" ],
+      "readonly" : true
+    },
+    "logging" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "maxsession" : {
+      "type" : "integer"
+    },
     "password" : {
       "type" : "string"
     },
     "promptinheritedfrom" : {
       "type" : "string",
-      "enum" : [ "User", "Group", "Global" ],
+      "enum" : [ "User", "Group", "Global", "Climode" ],
       "readonly" : true
     },
     "promptstring" : {
@@ -25,7 +37,7 @@
     },
     "timeoutkind" : {
       "type" : "string",
-      "enum" : [ "User", "Group", "Global" ],
+      "enum" : [ "User", "Group", "Global", "Climode" ],
       "readonly" : true
     },
     "username" : {

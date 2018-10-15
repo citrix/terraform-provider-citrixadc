@@ -1,0 +1,68 @@
+{
+  "type" : "object",
+  "properties" : {
+    "harqretxdelay" : {
+      "type" : "integer"
+    },
+    "lr1coeflist" : {
+      "type" : "string"
+    },
+    "lr1probthresh" : {
+      "type" : "number"
+    },
+    "lr2coeflist" : {
+      "type" : "string"
+    },
+    "lr2probthresh" : {
+      "type" : "number"
+    },
+    "minrttnet1" : {
+      "type" : "integer"
+    },
+    "minrttnet2" : {
+      "type" : "integer"
+    },
+    "minrttnet3" : {
+      "type" : "integer"
+    },
+    "net1cclscale" : {
+      "type" : "string"
+    },
+    "net1csqscale" : {
+      "type" : "string"
+    },
+    "net1label" : {
+      "type" : "string"
+    },
+    "net1logcoef" : {
+      "type" : "string"
+    },
+    "net2cclscale" : {
+      "type" : "string"
+    },
+    "net2csqscale" : {
+      "type" : "string"
+    },
+    "net2label" : {
+      "type" : "string"
+    },
+    "net2logcoef" : {
+      "type" : "string"
+    },
+    "net3cclscale" : {
+      "type" : "string"
+    },
+    "net3csqscale" : {
+      "type" : "string"
+    },
+    "net3label" : {
+      "type" : "string"
+    },
+    "net3logcoef" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "nscqaparam",
+  "title" : "nscqaparam"
+}

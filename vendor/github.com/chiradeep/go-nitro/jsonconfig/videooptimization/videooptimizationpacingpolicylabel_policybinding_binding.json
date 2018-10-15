@@ -1,0 +1,30 @@
+{
+  "type" : "object",
+  "properties" : {
+    "gotopriorityexpression" : {
+      "type" : "string"
+    },
+    "invoke" : {
+      "type" : "boolean"
+    },
+    "invoke_labelname" : {
+      "type" : "string"
+    },
+    "labelname" : {
+      "type" : "string"
+    },
+    "labeltype" : {
+      "type" : "string",
+      "enum" : [ "vserver", "policylabel" ]
+    },
+    "policyname" : {
+      "type" : "string"
+    },
+    "priority" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "videooptimizationpacingpolicylabel_policybinding_binding",
+  "title" : "videooptimizationpacingpolicylabel_policybinding_binding"
+}

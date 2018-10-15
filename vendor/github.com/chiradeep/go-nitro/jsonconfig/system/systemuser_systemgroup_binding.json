@@ -4,12 +4,6 @@
     "groupname" : {
       "type" : "string"
     },
-    "policyname" : {
-      "type" : "string"
-    },
-    "priority" : {
-      "type" : "integer"
-    },
     "username" : {
       "type" : "string"
     }

@@ -5,7 +5,8 @@
       "type" : "string"
     },
     "format" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "netscaler6", "geoip-country6" ]
     },
     "src" : {
       "type" : "string"

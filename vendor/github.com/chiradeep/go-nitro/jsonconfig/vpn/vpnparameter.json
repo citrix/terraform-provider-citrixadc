@@ -1,10 +1,17 @@
 {
   "type" : "object",
   "properties" : {
+    "advancedclientlessvpnmode" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
     "allowedlogingroups" : {
       "type" : "string"
     },
     "allprotocolproxy" : {
+      "type" : "string"
+    },
+    "alwaysonprofilename" : {
       "type" : "string"
     },
     "apptokentimeout" : {
@@ -12,6 +19,17 @@
     },
     "authorizationgroup" : {
       "type" : "string"
+    },
+    "autoproxyurl" : {
+      "type" : "string"
+    },
+    "backendcertvalidation" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "backendserversni" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
     },
     "citrixreceiverhome" : {
       "type" : "string"
@@ -26,7 +44,7 @@
     },
     "clientconfiguration" : {
       "type" : "object",
-      "enum" : [ "none", "all", "general", "tunnel", "trace", "compression" ]
+      "enum" : [ "none", "trace" ]
     },
     "clientdebug" : {
       "type" : "string",
@@ -66,6 +84,9 @@
       "enum" : [ "ON", "OFF" ]
     },
     "clientsecuritymessage" : {
+      "type" : "string"
+    },
+    "clientversions" : {
       "type" : "string"
     },
     "defaultauthorizationaction" : {
@@ -115,6 +136,17 @@
       "type" : "string",
       "enum" : [ "ON", "OFF" ]
     },
+    "icasessiontimeout" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
+    "icauseraccounting" : {
+      "type" : "string"
+    },
+    "iconwithreceiver" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
     "iipdnssuffix" : {
       "type" : "string"
     },
@@ -124,6 +156,10 @@
     "killconnections" : {
       "type" : "string",
       "enum" : [ "ON", "OFF" ]
+    },
+    "linuxpluginupgrade" : {
+      "type" : "string",
+      "enum" : [ "Always", "Essential", "Never" ]
     },
     "locallanaccess" : {
       "type" : "string",
@@ -135,6 +171,10 @@
     "logoutscript" : {
       "type" : "string"
     },
+    "macpluginupgrade" : {
+      "type" : "string",
+      "enum" : [ "Always", "Essential", "Never" ]
+    },
     "mdxtokentimeout" : {
       "type" : "integer"
     },
@@ -143,6 +183,9 @@
       "readonly" : true
     },
     "ntdomain" : {
+      "type" : "string"
+    },
+    "pcoipprofilename" : {
       "type" : "string"
     },
     "proxy" : {
@@ -156,6 +199,9 @@
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
     },
+    "rdpclientprofilename" : {
+      "type" : "string"
+    },
     "rfc1918" : {
       "type" : "string",
       "enum" : [ "ON", "OFF" ]
@@ -166,6 +212,9 @@
     },
     "sesstimeout" : {
       "type" : "integer"
+    },
+    "smartgroup" : {
+      "type" : "string"
     },
     "socksproxy" : {
       "type" : "string"
@@ -212,8 +261,24 @@
       "type" : "string",
       "enum" : [ "NS", "OFF" ]
     },
+    "userdomains" : {
+      "type" : "string"
+    },
+    "vpnsessionpolicybindtype" : {
+      "type" : "string",
+      "enum" : [ "Classic Policy", "Advanced Policy" ],
+      "readonly" : true
+    },
+    "vpnsessionpolicycount" : {
+      "type" : "integer",
+      "readonly" : true
+    },
     "wihome" : {
       "type" : "string"
+    },
+    "wihomeaddresstype" : {
+      "type" : "string",
+      "enum" : [ "IPV4", "IPV6" ]
     },
     "windowsautologon" : {
       "type" : "string",
@@ -222,6 +287,10 @@
     "windowsclienttype" : {
       "type" : "string",
       "enum" : [ "AGENT", "PLUGIN" ]
+    },
+    "windowspluginupgrade" : {
+      "type" : "string",
+      "enum" : [ "Always", "Essential", "Never" ]
     },
     "winsip" : {
       "type" : "string"

@@ -5,14 +5,8 @@
       "type" : "integer",
       "readonly" : true
     },
-    "intranetapplication" : {
+    "gotopriorityexpression" : {
       "type" : "string"
-    },
-    "policy" : {
-      "type" : "string"
-    },
-    "priority" : {
-      "type" : "integer"
     },
     "urlname" : {
       "type" : "string"

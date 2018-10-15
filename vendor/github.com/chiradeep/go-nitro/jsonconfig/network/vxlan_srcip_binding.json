@@ -1,0 +1,14 @@
+{
+  "type" : "object",
+  "properties" : {
+    "id" : {
+      "type" : "integer"
+    },
+    "srcip" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "vxlan_srcip_binding",
+  "title" : "vxlan_srcip_binding"
+}

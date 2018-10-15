@@ -3,7 +3,7 @@
   "properties" : {
     "bindpoint" : {
       "type" : "string",
-      "enum" : [ "REQUEST", "RESPONSE" ]
+      "enum" : [ "REQUEST", "RESPONSE", "ICA_REQUEST", "OTHERTCP_REQUEST" ]
     },
     "gotopriorityexpression" : {
       "type" : "string"

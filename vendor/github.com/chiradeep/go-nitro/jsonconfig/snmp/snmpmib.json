@@ -13,6 +13,9 @@
     "name" : {
       "type" : "string"
     },
+    "ownernode" : {
+      "type" : "integer"
+    },
     "sysdesc" : {
       "type" : "string",
       "readonly" : true

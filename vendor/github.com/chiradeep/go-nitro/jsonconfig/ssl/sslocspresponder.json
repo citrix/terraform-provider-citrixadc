@@ -14,20 +14,31 @@
     "cachetimeout" : {
       "type" : "integer"
     },
-    "dns" : {
+    "httpmethod" : {
       "type" : "string",
-      "readonly" : true
+      "enum" : [ "GET", "POST" ]
     },
     "insertclientcert" : {
       "type" : "string",
       "enum" : [ "YES", "NO" ]
     },
-    "ipaddress" : {
+    "name" : {
+      "type" : "string"
+    },
+    "ocspaiarefcount" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "ocspipaddrstr" : {
       "type" : "string",
       "readonly" : true
     },
-    "name" : {
-      "type" : "string"
+    "ocspurlresolvetimeout" : {
+      "type" : "integer"
+    },
+    "port" : {
+      "type" : "integer",
+      "readonly" : true
     },
     "producedattimeskew" : {
       "type" : "integer"
@@ -46,10 +57,6 @@
     },
     "url" : {
       "type" : "string"
-    },
-    "useaia" : {
-      "type" : "boolean",
-      "readonly" : true
     },
     "usenonce" : {
       "type" : "string",

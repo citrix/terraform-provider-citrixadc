@@ -7,6 +7,9 @@
     "delegateduser" : {
       "type" : "string"
     },
+    "enterpriserealm" : {
+      "type" : "string"
+    },
     "kcdaccount" : {
       "type" : "string"
     },
@@ -27,7 +30,13 @@
     "realmstr" : {
       "type" : "string"
     },
+    "servicespn" : {
+      "type" : "string"
+    },
     "usercert" : {
+      "type" : "string"
+    },
+    "userrealm" : {
       "type" : "string"
     }
   },

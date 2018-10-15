@@ -16,7 +16,7 @@
     },
     "health" : {
       "type" : "string",
-      "enum" : [ "UNKNOWN", "INIT", "DOWN", "UP", "Some enabled and HAMON interfaces of the node are down", "All interfaces of the node are down or disabled", "SSL card(s) of the node have failed", "Route Monitor(s) of the node have failed", "Service state is being synchronized with the cluster", "The backplane interface is not set", " is down", " or is disabled", "The CLAG member(s) of the node are down", "Persistence sessions are being synchronized with the cluster", "The Syn Cookie is being synchronized with the cluster", "Unknown Health", "AAA keys are being sychronized with the cluster" ],
+      "enum" : [ "UNKNOWN", "INIT", "DOWN", "UP", "Some enabled and HAMON interfaces of the node are down", "All interfaces of the node are down or disabled", "SSL card(s) of the node have failed", "Route Monitor(s) of the node have failed", "Service state is being synchronized with the cluster", "The backplane interface is either not set or it is down or is disabled", "The CLAG member(s) of the node are down", "Persistence sessions are being synchronized with the cluster", "The Syn Cookie is being synchronized with the cluster", "Unknown Health", "AAA keys are being sychronized with the cluster", "Cluster health is not up due to config sync is in progress" ],
       "readonly" : true
     },
     "ipaddress" : {
@@ -38,6 +38,10 @@
     },
     "nodeid" : {
       "type" : "integer"
+    },
+    "nodejumbonotsupported" : {
+      "type" : "boolean",
+      "readonly" : true
     },
     "nodelicensemismatch" : {
       "type" : "boolean",

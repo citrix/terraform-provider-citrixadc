@@ -1,0 +1,29 @@
+{
+  "type" : "object",
+  "properties" : {
+    "builtin" : {
+      "type" : "object",
+      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE", "PARTITION_ALL" ],
+      "readonly" : true
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "psk" : {
+      "type" : "string"
+    },
+    "rdpip" : {
+      "type" : "string"
+    },
+    "rdpport" : {
+      "type" : "integer"
+    },
+    "rdpredirection" : {
+      "type" : "string",
+      "enum" : [ "ENABLE", "DISABLE" ]
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "rdpserverprofile",
+  "title" : "rdpserverprofile"
+}

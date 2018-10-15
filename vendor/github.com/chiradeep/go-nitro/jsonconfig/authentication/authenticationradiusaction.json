@@ -5,6 +5,13 @@
       "type" : "string",
       "enum" : [ "ON", "OFF" ]
     },
+    "authentication" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
+    "authservretry" : {
+      "type" : "integer"
+    },
     "authtimeout" : {
       "type" : "integer"
     },
@@ -67,12 +74,19 @@
     "serverip" : {
       "type" : "string"
     },
+    "servername" : {
+      "type" : "string"
+    },
     "serverport" : {
       "type" : "integer"
     },
     "success" : {
       "type" : "integer",
       "readonly" : true
+    },
+    "tunnelendpointclientip" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
     }
   },
   "$schema" : "http://json-schema.org/draft-04/schema#",

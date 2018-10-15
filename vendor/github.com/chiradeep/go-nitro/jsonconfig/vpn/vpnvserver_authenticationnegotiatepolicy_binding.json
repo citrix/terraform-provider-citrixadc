@@ -5,6 +5,16 @@
       "type" : "integer",
       "readonly" : true
     },
+    "bindpoint" : {
+      "type" : "string",
+      "enum" : [ "REQUEST", "RESPONSE", "ICA_REQUEST", "OTHERTCP_REQUEST" ]
+    },
+    "gotopriorityexpression" : {
+      "type" : "string"
+    },
+    "groupextraction" : {
+      "type" : "boolean"
+    },
     "name" : {
       "type" : "string"
     },

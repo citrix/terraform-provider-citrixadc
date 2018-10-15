@@ -8,10 +8,25 @@
     "dropfragcputhreshold" : {
       "type" : "integer"
     },
+    "enablestrictrx" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ]
+    },
+    "enablestricttx" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ]
+    },
+    "mac" : {
+      "type" : "string"
+    },
     "srcip" : {
       "type" : "string"
     },
     "srciproundrobin" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ]
+    },
+    "useclientsourceip" : {
       "type" : "string",
       "enum" : [ "YES", "NO" ]
     }

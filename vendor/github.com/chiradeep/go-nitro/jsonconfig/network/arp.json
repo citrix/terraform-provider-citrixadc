@@ -8,6 +8,10 @@
       "type" : "integer",
       "readonly" : true
     },
+    "controlplane" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
     "flags" : {
       "type" : "integer",
       "readonly" : true
@@ -20,6 +24,9 @@
     },
     "mac" : {
       "type" : "string"
+    },
+    "nodeid" : {
+      "type" : "integer"
     },
     "ownernode" : {
       "type" : "integer"
@@ -41,8 +48,13 @@
       "readonly" : true
     },
     "vlan" : {
-      "type" : "integer",
-      "readonly" : true
+      "type" : "integer"
+    },
+    "vtep" : {
+      "type" : "string"
+    },
+    "vxlan" : {
+      "type" : "integer"
     }
   },
   "$schema" : "http://json-schema.org/draft-04/schema#",

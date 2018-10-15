@@ -1,9 +1,6 @@
 {
   "type" : "object",
   "properties" : {
-    "cipheraliasname" : {
-      "type" : "string"
-    },
     "ciphername" : {
       "type" : "string"
     },

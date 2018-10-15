@@ -2,28 +2,37 @@
   "type" : "object",
   "properties" : {
     "builtin" : {
-      "type" : "object"
+      "type" : "object",
+      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE", "PARTITION_ALL" ],
+      "readonly" : true
     },
     "comment" : {
-      "type" : "string"
+      "type" : "string",
+      "readonly" : true
     },
     "crtype" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "origin", "cache" ],
+      "readonly" : true
     },
     "hits" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
     },
     "isdefault" : {
-      "type" : "boolean"
+      "type" : "boolean",
+      "readonly" : true
     },
     "name" : {
       "type" : "string"
     },
     "referencecount" : {
-      "type" : "string"
+      "type" : "string",
+      "readonly" : true
     },
     "undefhits" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
     }
   },
   "$schema" : "http://json-schema.org/draft-04/schema#",

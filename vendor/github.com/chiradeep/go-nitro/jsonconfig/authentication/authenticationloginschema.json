@@ -8,7 +8,9 @@
       "type" : "integer"
     },
     "builtin" : {
-      "type" : "object"
+      "type" : "object",
+      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE", "PARTITION_ALL" ],
+      "readonly" : true
     },
     "name" : {
       "type" : "string"
@@ -18,6 +20,10 @@
     },
     "passwordcredentialindex" : {
       "type" : "integer"
+    },
+    "ssocredentials" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ]
     },
     "usercredentialindex" : {
       "type" : "integer"

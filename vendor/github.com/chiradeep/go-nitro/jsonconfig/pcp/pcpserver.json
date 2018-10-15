@@ -1,0 +1,20 @@
+{
+  "type" : "object",
+  "properties" : {
+    "ipaddress" : {
+      "type" : "string"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "pcpprofile" : {
+      "type" : "string"
+    },
+    "port" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "pcpserver",
+  "title" : "pcpserver"
+}

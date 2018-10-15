@@ -5,13 +5,15 @@
       "type" : "integer"
     },
     "trapclass" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "generic", "specific" ]
     },
     "trapdestination" : {
       "type" : "string"
     },
     "version" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "V1", "V2", "V3" ]
     }
   },
   "$schema" : "http://json-schema.org/draft-04/schema#",

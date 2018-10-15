@@ -8,10 +8,12 @@
       "type" : "string"
     },
     "gotopriorityexpression" : {
-      "type" : "string"
+      "type" : "string",
+      "readonly" : true
     },
     "hits" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
     },
     "logaction" : {
       "type" : "string"

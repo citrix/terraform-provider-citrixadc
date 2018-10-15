@@ -23,6 +23,10 @@
     "policyname" : {
       "type" : "string"
     },
+    "policysubtype" : {
+      "type" : "integer",
+      "readonly" : true
+    },
     "priority" : {
       "type" : "integer"
     }

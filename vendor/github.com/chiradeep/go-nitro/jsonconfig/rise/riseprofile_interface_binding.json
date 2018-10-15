@@ -1,0 +1,14 @@
+{
+  "type" : "object",
+  "properties" : {
+    "memberinterface" : {
+      "type" : "string"
+    },
+    "profilename" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "riseprofile_interface_binding",
+  "title" : "riseprofile_interface_binding"
+}

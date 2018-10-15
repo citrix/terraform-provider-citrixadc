@@ -1,10 +1,15 @@
 package vpn
 
 type Vpnparameter struct {
+	Advancedclientlessvpnmode  string      `json:"advancedclientlessvpnmode,omitempty"`
 	Allowedlogingroups         string      `json:"allowedlogingroups,omitempty"`
 	Allprotocolproxy           string      `json:"allprotocolproxy,omitempty"`
+	Alwaysonprofilename        string      `json:"alwaysonprofilename,omitempty"`
 	Apptokentimeout            int         `json:"apptokentimeout,omitempty"`
 	Authorizationgroup         string      `json:"authorizationgroup,omitempty"`
+	Autoproxyurl               string      `json:"autoproxyurl,omitempty"`
+	Backendcertvalidation      string      `json:"backendcertvalidation,omitempty"`
+	Backendserversni           string      `json:"backendserversni,omitempty"`
 	Citrixreceiverhome         string      `json:"citrixreceiverhome,omitempty"`
 	Clientchoices              string      `json:"clientchoices,omitempty"`
 	Clientcleanupprompt        string      `json:"clientcleanupprompt,omitempty"`
@@ -20,6 +25,7 @@ type Vpnparameter struct {
 	Clientsecuritygroup        string      `json:"clientsecuritygroup,omitempty"`
 	Clientsecuritylog          string      `json:"clientsecuritylog,omitempty"`
 	Clientsecuritymessage      string      `json:"clientsecuritymessage,omitempty"`
+	Clientversions             string      `json:"clientversions,omitempty"`
 	Defaultauthorizationaction string      `json:"defaultauthorizationaction,omitempty"`
 	Dnsvservername             string      `json:"dnsvservername,omitempty"`
 	Emailhome                  string      `json:"emailhome,omitempty"`
@@ -34,21 +40,29 @@ type Vpnparameter struct {
 	Httpport                   interface{} `json:"httpport,omitempty"`
 	Httpproxy                  string      `json:"httpproxy,omitempty"`
 	Icaproxy                   string      `json:"icaproxy,omitempty"`
+	Icasessiontimeout          string      `json:"icasessiontimeout,omitempty"`
+	Icauseraccounting          string      `json:"icauseraccounting,omitempty"`
+	Iconwithreceiver           string      `json:"iconwithreceiver,omitempty"`
 	Iipdnssuffix               string      `json:"iipdnssuffix,omitempty"`
 	Kcdaccount                 string      `json:"kcdaccount,omitempty"`
 	Killconnections            string      `json:"killconnections,omitempty"`
+	Linuxpluginupgrade         string      `json:"linuxpluginupgrade,omitempty"`
 	Locallanaccess             string      `json:"locallanaccess,omitempty"`
 	Loginscript                string      `json:"loginscript,omitempty"`
 	Logoutscript               string      `json:"logoutscript,omitempty"`
+	Macpluginupgrade           string      `json:"macpluginupgrade,omitempty"`
 	Mdxtokentimeout            int         `json:"mdxtokentimeout,omitempty"`
 	Name                       string      `json:"name,omitempty"`
 	Ntdomain                   string      `json:"ntdomain,omitempty"`
+	Pcoipprofilename           string      `json:"pcoipprofilename,omitempty"`
 	Proxy                      string      `json:"proxy,omitempty"`
 	Proxyexception             string      `json:"proxyexception,omitempty"`
 	Proxylocalbypass           string      `json:"proxylocalbypass,omitempty"`
+	Rdpclientprofilename       string      `json:"rdpclientprofilename,omitempty"`
 	Rfc1918                    string      `json:"rfc1918,omitempty"`
 	Securebrowse               string      `json:"securebrowse,omitempty"`
 	Sesstimeout                int         `json:"sesstimeout,omitempty"`
+	Smartgroup                 string      `json:"smartgroup,omitempty"`
 	Socksproxy                 string      `json:"socksproxy,omitempty"`
 	Splitdns                   string      `json:"splitdns,omitempty"`
 	Splittunnel                string      `json:"splittunnel,omitempty"`
@@ -61,9 +75,14 @@ type Vpnparameter struct {
 	Uitheme                    string      `json:"uitheme,omitempty"`
 	Useiip                     string      `json:"useiip,omitempty"`
 	Usemip                     string      `json:"usemip,omitempty"`
+	Userdomains                string      `json:"userdomains,omitempty"`
+	Vpnsessionpolicybindtype   string      `json:"vpnsessionpolicybindtype,omitempty"`
+	Vpnsessionpolicycount      int         `json:"vpnsessionpolicycount,omitempty"`
 	Wihome                     string      `json:"wihome,omitempty"`
+	Wihomeaddresstype          string      `json:"wihomeaddresstype,omitempty"`
 	Windowsautologon           string      `json:"windowsautologon,omitempty"`
 	Windowsclienttype          string      `json:"windowsclienttype,omitempty"`
+	Windowspluginupgrade       string      `json:"windowspluginupgrade,omitempty"`
 	Winsip                     string      `json:"winsip,omitempty"`
 	Wiportalmode               string      `json:"wiportalmode,omitempty"`
 }

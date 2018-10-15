@@ -16,7 +16,15 @@
     "authtimeout" : {
       "type" : "integer"
     },
+    "builtin" : {
+      "type" : "object",
+      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE", "PARTITION_ALL" ],
+      "readonly" : true
+    },
     "defaultauthenticationgroup" : {
+      "type" : "string"
+    },
+    "groupattrname" : {
       "type" : "string"
     },
     "serverip" : {

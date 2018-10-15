@@ -5,6 +5,7 @@ type Dnsaction struct {
 	Actiontype       string      `json:"actiontype,omitempty"`
 	Builtin          interface{} `json:"builtin,omitempty"`
 	Cachebypass      string      `json:"cachebypass,omitempty"`
+	Dnsprofilename   string      `json:"dnsprofilename,omitempty"`
 	Drop             string      `json:"drop,omitempty"`
 	Ipaddress        interface{} `json:"ipaddress,omitempty"`
 	Preferredloclist interface{} `json:"preferredloclist,omitempty"`

@@ -8,6 +8,9 @@
       "type" : "string",
       "enum" : [ "ADD", "REM", "ORD" ]
     },
+    "cipherpriority" : {
+      "type" : "integer"
+    },
     "ciphgrpals" : {
       "type" : "string"
     },

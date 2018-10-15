@@ -1,24 +1,50 @@
 {
   "type" : "object",
   "properties" : {
+    "capdroppkt" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "capsslkeys" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "doruntimecleanup" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
     "fileid" : {
       "type" : "string"
     },
     "filename" : {
       "type" : "string"
     },
+    "filesize" : {
+      "type" : "integer"
+    },
     "filter" : {
       "type" : "string"
+    },
+    "inmemorytrace" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
     },
     "link" : {
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
     },
+    "merge" : {
+      "type" : "string",
+      "enum" : [ "ONSTOP", "ONTHEFLY", "NOMERGE" ]
+    },
     "mode" : {
       "type" : "object",
-      "enum" : [ "TX", "TXB", "RX", "IPV6", "NEW_RX", "C2C", "NS_FR_TX" ]
+      "enum" : [ "TX", "TXB", "RX", "IPV6", "NEW_RX", "C2C", "NS_FR_TX", "APPFW", "MPTCP", "PolicyBased" ]
     },
     "nf" : {
+      "type" : "integer"
+    },
+    "nodeid" : {
       "type" : "integer"
     },
     "nodes" : {
@@ -36,17 +62,28 @@
     "size" : {
       "type" : "integer"
     },
+    "skiplocalssh" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "skiprpc" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
     "state" : {
       "type" : "string",
       "enum" : [ "RUNNING", "STOPPED" ],
       "readonly" : true
     },
-    "tcpdump" : {
-      "type" : "string",
-      "enum" : [ "ENABLED", "DISABLED" ]
-    },
     "time" : {
       "type" : "integer"
+    },
+    "tracebuffers" : {
+      "type" : "integer"
+    },
+    "traceformat" : {
+      "type" : "string",
+      "enum" : [ "NSCAP", "PCAP" ]
     },
     "tracelocation" : {
       "type" : "string",

@@ -6,7 +6,7 @@
     },
     "builtin" : {
       "type" : "object",
-      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE" ],
+      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE", "PARTITION_ALL" ],
       "readonly" : true
     },
     "clienttransactions" : {
@@ -17,6 +17,14 @@
       "type" : "integer",
       "readonly" : true
     },
+    "comment" : {
+      "type" : "string"
+    },
+    "expressiontype" : {
+      "type" : "string",
+      "enum" : [ "Classic Policy", "Advanced Policy" ],
+      "readonly" : true
+    },
     "hits" : {
       "type" : "integer",
       "readonly" : true
@@ -25,7 +33,13 @@
       "type" : "boolean",
       "readonly" : true
     },
+    "logaction" : {
+      "type" : "string"
+    },
     "name" : {
+      "type" : "string"
+    },
+    "newname" : {
       "type" : "string"
     },
     "rule" : {
@@ -44,6 +58,10 @@
       "readonly" : true
     },
     "txbytes" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "undefhits" : {
       "type" : "integer",
       "readonly" : true
     }

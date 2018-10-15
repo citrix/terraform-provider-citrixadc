@@ -9,8 +9,14 @@
     "domain" : {
       "type" : "string"
     },
+    "ecssubnet" : {
+      "type" : "string"
+    },
     "nameserver" : {
       "type" : "string"
+    },
+    "nodeid" : {
+      "type" : "integer"
     },
     "ttl" : {
       "type" : "integer"

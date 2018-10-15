@@ -1,0 +1,23 @@
+{
+  "type" : "object",
+  "properties" : {
+    "logcompact" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "logipfix" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "logprofilename" : {
+      "type" : "string"
+    },
+    "logsubscrinfo" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "lsnlogprofile",
+  "title" : "lsnlogprofile"
+}

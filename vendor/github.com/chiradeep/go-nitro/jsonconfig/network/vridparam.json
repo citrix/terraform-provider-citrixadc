@@ -1,6 +1,12 @@
 {
   "type" : "object",
   "properties" : {
+    "deadinterval" : {
+      "type" : "integer"
+    },
+    "hellointerval" : {
+      "type" : "integer"
+    },
     "sendtomaster" : {
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]

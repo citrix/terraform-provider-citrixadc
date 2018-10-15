@@ -5,7 +5,7 @@
       "type" : "string"
     },
     "invoke" : {
-      "type" : "integer"
+      "type" : "boolean"
     },
     "invoke_labelname" : {
       "type" : "string"

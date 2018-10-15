@@ -11,10 +11,20 @@
       "type" : "string",
       "enum" : [ "ON", "OFF" ]
     },
+    "hdx" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
     "kcdaccount" : {
       "type" : "string"
     },
     "name" : {
+      "type" : "string"
+    },
+    "passwdexpression" : {
+      "type" : "string"
+    },
+    "proxy" : {
       "type" : "string"
     },
     "qual" : {
@@ -27,6 +37,9 @@
     "sso" : {
       "type" : "string",
       "enum" : [ "ON", "OFF" ]
+    },
+    "userexpression" : {
+      "type" : "string"
     },
     "wanscaler" : {
       "type" : "string",

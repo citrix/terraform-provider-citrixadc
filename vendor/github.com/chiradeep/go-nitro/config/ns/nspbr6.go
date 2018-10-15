@@ -14,6 +14,7 @@ type Nspbr6 struct {
 	Failedprobes      int    `json:"failedprobes,omitempty"`
 	Hits              int    `json:"hits,omitempty"`
 	Interface         string `json:"Interface,omitempty"`
+	Iptunnel          string `json:"iptunnel,omitempty"`
 	Kernelstate       string `json:"kernelstate,omitempty"`
 	Monitor           string `json:"monitor,omitempty"`
 	Monstatcode       int    `json:"monstatcode,omitempty"`
@@ -25,6 +26,7 @@ type Nspbr6 struct {
 	Nexthop           bool   `json:"nexthop,omitempty"`
 	Nexthopval        string `json:"nexthopval,omitempty"`
 	Nexthopvlan       int    `json:"nexthopvlan,omitempty"`
+	Ownergroup        string `json:"ownergroup,omitempty"`
 	Priority          int    `json:"priority,omitempty"`
 	Protocol          string `json:"protocol,omitempty"`
 	Protocolnumber    int    `json:"protocolnumber,omitempty"`
@@ -32,6 +34,7 @@ type Nspbr6 struct {
 	Srcipv6           bool   `json:"srcipv6,omitempty"`
 	Srcipv6val        string `json:"srcipv6val,omitempty"`
 	Srcmac            string `json:"srcmac,omitempty"`
+	Srcmacmask        string `json:"srcmacmask,omitempty"`
 	Srcport           bool   `json:"srcport,omitempty"`
 	Srcportop         string `json:"srcportop,omitempty"`
 	Srcportval        string `json:"srcportval,omitempty"`
@@ -40,4 +43,6 @@ type Nspbr6 struct {
 	Totalfailedprobes int    `json:"totalfailedprobes,omitempty"`
 	Totalprobes       int    `json:"totalprobes,omitempty"`
 	Vlan              int    `json:"vlan,omitempty"`
+	Vxlan             int    `json:"vxlan,omitempty"`
+	Vxlanvlanmap      string `json:"vxlanvlanmap,omitempty"`
 }

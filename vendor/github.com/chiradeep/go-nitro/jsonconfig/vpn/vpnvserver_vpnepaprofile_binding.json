@@ -2,7 +2,8 @@
   "type" : "object",
   "properties" : {
     "acttype" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
     },
     "epaprofile" : {
       "type" : "string"

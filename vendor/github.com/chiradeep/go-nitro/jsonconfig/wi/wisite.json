@@ -5,6 +5,9 @@
       "type" : "string",
       "enum" : [ "Explicit", "SmartCard" ]
     },
+    "agcallbackurl" : {
+      "type" : "string"
+    },
     "agurl" : {
       "type" : "string"
     },
@@ -29,9 +32,16 @@
     "footertext" : {
       "type" : "string"
     },
+    "hidedomainfield" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
     "kioskmode" : {
       "type" : "string",
       "enum" : [ "ON", "OFF" ]
+    },
+    "logindomains" : {
+      "type" : "string"
     },
     "loginsysmessage" : {
       "type" : "string"
@@ -51,6 +61,10 @@
     "publishedresourcetype" : {
       "type" : "string",
       "enum" : [ "Online", "Offline", "DualMode" ]
+    },
+    "restrictdomains" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
     },
     "secondstaurl" : {
       "type" : "string"

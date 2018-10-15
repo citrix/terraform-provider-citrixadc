@@ -1,0 +1,24 @@
+{
+  "type" : "object",
+  "properties" : {
+    "ipaddress" : {
+      "type" : "string"
+    },
+    "password" : {
+      "type" : "string"
+    },
+    "servername" : {
+      "type" : "string"
+    },
+    "type" : {
+      "type" : "string",
+      "enum" : [ "CLOUD", "ONPREM" ]
+    },
+    "username" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "nscentralmanagementserver",
+  "title" : "nscentralmanagementserver"
+}

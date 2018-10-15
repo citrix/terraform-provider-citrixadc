@@ -1,0 +1,24 @@
+{
+  "type" : "object",
+  "properties" : {
+    "azcount" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "aznames" : {
+      "type" : "object",
+      "readonly" : true
+    },
+    "graceful" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ],
+      "readonly" : true
+    },
+    "name" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "cloudautoscalegroup",
+  "title" : "cloudautoscalegroup"
+}

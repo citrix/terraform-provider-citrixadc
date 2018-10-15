@@ -1,6 +1,9 @@
 {
   "type" : "object",
   "properties" : {
+    "gotopriorityexpression" : {
+      "type" : "string"
+    },
     "urlname" : {
       "type" : "string"
     }

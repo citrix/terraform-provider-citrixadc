@@ -131,6 +131,11 @@
       "type" : "integer",
       "readonly" : true
     },
+    "lrtmconfstr" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ],
+      "readonly" : true
+    },
     "maxforwards" : {
       "type" : "integer"
     },
@@ -151,13 +156,16 @@
     },
     "mssqlprotocolversion" : {
       "type" : "string",
-      "enum" : [ "70", "2000", "2000SP1", "2005", "2008", "2008R2", "2012" ]
+      "enum" : [ "70", "2000", "2000SP1", "2005", "2008", "2008R2", "2012", "2014" ]
     },
     "multimetrictable" : {
       "type" : "object",
       "readonly" : true
     },
     "netprofile" : {
+      "type" : "string"
+    },
+    "oraclesid" : {
       "type" : "string"
     },
     "originhost" : {
@@ -273,6 +281,9 @@
     "sqlquery" : {
       "type" : "string"
     },
+    "sslprofile" : {
+      "type" : "string"
+    },
     "state" : {
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
@@ -282,6 +293,10 @@
       "enum" : [ "ENABLED", "DISABLED" ]
     },
     "storefrontacctservice" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ]
+    },
+    "storefrontcheckbackendservices" : {
       "type" : "string",
       "enum" : [ "YES", "NO" ]
     },
@@ -305,9 +320,15 @@
       "type" : "string",
       "enum" : [ "YES", "NO" ]
     },
+    "trofscode" : {
+      "type" : "integer"
+    },
+    "trofsstring" : {
+      "type" : "string"
+    },
     "type" : {
       "type" : "string",
-      "enum" : [ "PING", "TCP", "HTTP", "TCP-ECV", "HTTP-ECV", "UDP-ECV", "DNS", "FTP", "LDNS-PING", "LDNS-TCP", "LDNS-DNS", "RADIUS", "USER", "HTTP-INLINE", "SIP-UDP", "LOAD", "FTP-EXTENDED", "SMTP", "SNMP", "NNTP", "MYSQL", "MYSQL-ECV", "MSSQL-ECV", "ORACLE-ECV", "LDAP", "POP3", "CITRIX-XML-SERVICE", "CITRIX-WEB-INTERFACE", "DNS-TCP", "RTSP", "ARP", "CITRIX-AG", "CITRIX-AAC-LOGINPAGE", "CITRIX-AAC-LAS", "CITRIX-XD-DDC", "ND6", "CITRIX-WI-EXTENDED", "DIAMETER", "RADIUS_ACCOUNTING", "STOREFRONT" ]
+      "enum" : [ "PING", "TCP", "HTTP", "TCP-ECV", "HTTP-ECV", "UDP-ECV", "DNS", "FTP", "LDNS-PING", "LDNS-TCP", "LDNS-DNS", "RADIUS", "USER", "HTTP-INLINE", "SIP-UDP", "SIP-TCP", "LOAD", "FTP-EXTENDED", "SMTP", "SNMP", "NNTP", "MYSQL", "MYSQL-ECV", "MSSQL-ECV", "ORACLE-ECV", "LDAP", "POP3", "CITRIX-XML-SERVICE", "CITRIX-WEB-INTERFACE", "DNS-TCP", "RTSP", "ARP", "CITRIX-AG", "CITRIX-AAC-LOGINPAGE", "CITRIX-AAC-LAS", "CITRIX-XD-DDC", "ND6", "CITRIX-WI-EXTENDED", "DIAMETER", "RADIUS_ACCOUNTING", "STOREFRONT", "APPC", "SMPP", "CITRIX-XNC-ECV", "CITRIX-XDM", "CITRIX-STA-SERVICE", "CITRIX-STA-SERVICE-NHOP" ]
     },
     "units1" : {
       "type" : "string",

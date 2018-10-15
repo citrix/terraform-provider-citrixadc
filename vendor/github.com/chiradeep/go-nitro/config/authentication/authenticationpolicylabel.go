@@ -12,4 +12,5 @@ type Authenticationpolicylabel struct {
 	Numpol                 int    `json:"numpol,omitempty"`
 	Policyname             string `json:"policyname,omitempty"`
 	Priority               int    `json:"priority,omitempty"`
+	Type                   string `json:"type,omitempty"`
 }

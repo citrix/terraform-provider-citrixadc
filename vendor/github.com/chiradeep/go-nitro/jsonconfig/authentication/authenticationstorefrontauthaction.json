@@ -1,0 +1,28 @@
+{
+  "type" : "object",
+  "properties" : {
+    "defaultauthenticationgroup" : {
+      "type" : "string"
+    },
+    "domain" : {
+      "type" : "string"
+    },
+    "failure" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "serverurl" : {
+      "type" : "string"
+    },
+    "success" : {
+      "type" : "integer",
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "authenticationstorefrontauthaction",
+  "title" : "authenticationstorefrontauthaction"
+}

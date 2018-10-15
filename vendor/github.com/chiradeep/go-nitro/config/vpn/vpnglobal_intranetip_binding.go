@@ -1,6 +1,7 @@
 package vpn
 
 type Vpnglobalintranetipbinding struct {
-	Intranetip string `json:"intranetip,omitempty"`
-	Netmask    string `json:"netmask,omitempty"`
+	Gotopriorityexpression string `json:"gotopriorityexpression,omitempty"`
+	Intranetip             string `json:"intranetip,omitempty"`
+	Netmask                string `json:"netmask,omitempty"`
 }

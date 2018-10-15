@@ -2,13 +2,21 @@
   "type" : "object",
   "properties" : {
     "authtype" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "ALL", "ADNS", "PROXY" ],
+      "readonly" : true
     },
     "domain" : {
       "type" : "string"
     },
+    "ecssubnet" : {
+      "type" : "string"
+    },
     "flags" : {
       "type" : "string"
+    },
+    "nodeid" : {
+      "type" : "integer"
     },
     "order" : {
       "type" : "integer"
@@ -32,10 +40,12 @@
       "type" : "integer"
     },
     "type" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "ALL", "ADNS", "PROXY" ]
     },
     "vservername" : {
-      "type" : "string"
+      "type" : "string",
+      "readonly" : true
     }
   },
   "$schema" : "http://json-schema.org/draft-04/schema#",

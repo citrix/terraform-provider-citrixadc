@@ -41,11 +41,23 @@
       "type" : "boolean",
       "readonly" : true
     },
+    "mediaclassification" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
     "mode" : {
       "type" : "object",
-      "enum" : [ "FR", "FastRamp", "L2", "L2mode", "L3", "L3mode", "USIP", "UseSourceIP", "CKA", "ClientKeepAlive", "TCPB", "TCPBuffering", "MBF", "MACbasedforwarding", "Edge", "USNIP", "SRADV", "DRADV", "IRADV", "SRADV6", "DRADV6", "PMTUD", "BridgeBPDUs" ]
+      "enum" : [ "FR", "FastRamp", "L2", "L2mode", "L3", "L3mode", "USIP", "UseSourceIP", "CKA", "ClientKeepAlive", "TCPB", "TCPBuffering", "MBF", "MACbasedforwarding", "Edge", "USNIP", "SRADV", "DRADV", "IRADV", "SRADV6", "DRADV6", "PMTUD", "RISE_APBR", "RISE_RHI", "BridgeBPDUs", "ULFD" ]
     },
     "pmtud" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "rise_apbr" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "rise_rhi" : {
       "type" : "boolean",
       "readonly" : true
     },
@@ -58,6 +70,10 @@
       "readonly" : true
     },
     "tcpb" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "ulfd" : {
       "type" : "boolean",
       "readonly" : true
     },

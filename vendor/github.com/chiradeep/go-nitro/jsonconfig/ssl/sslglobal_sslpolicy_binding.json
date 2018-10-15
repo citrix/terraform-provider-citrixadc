@@ -1,6 +1,23 @@
 {
   "type" : "object",
   "properties" : {
+    "globalbindtype" : {
+      "type" : "string",
+      "enum" : [ "SYSTEM_GLOBAL", "VPN_GLOBAL", "RNAT_GLOBAL" ]
+    },
+    "gotopriorityexpression" : {
+      "type" : "string"
+    },
+    "invoke" : {
+      "type" : "boolean"
+    },
+    "labelname" : {
+      "type" : "string"
+    },
+    "labeltype" : {
+      "type" : "string",
+      "enum" : [ "vserver", "service", "policylabel" ]
+    },
     "policyname" : {
       "type" : "string"
     },

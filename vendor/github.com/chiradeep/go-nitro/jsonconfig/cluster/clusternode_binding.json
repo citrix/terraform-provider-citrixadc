@@ -1,0 +1,11 @@
+{
+  "type" : "object",
+  "properties" : {
+    "nodeid" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "clusternode_binding",
+  "title" : "clusternode_binding"
+}

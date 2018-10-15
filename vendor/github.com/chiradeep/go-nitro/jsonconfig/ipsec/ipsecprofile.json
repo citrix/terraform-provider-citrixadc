@@ -3,12 +3,12 @@
   "properties" : {
     "builtin" : {
       "type" : "object",
-      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE" ],
+      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE", "PARTITION_ALL" ],
       "readonly" : true
     },
     "encalgo" : {
       "type" : "object",
-      "enum" : [ "AES", "3DES" ]
+      "enum" : [ "AES", "3DES", "AES192", "AES256" ]
     },
     "hashalgo" : {
       "type" : "object",
@@ -33,6 +33,10 @@
     "peerpublickey" : {
       "type" : "string"
     },
+    "perfectforwardsecrecy" : {
+      "type" : "string",
+      "enum" : [ "ENABLE", "DISABLE" ]
+    },
     "privatekey" : {
       "type" : "string"
     },
@@ -44,6 +48,11 @@
     },
     "replaywindowsize" : {
       "type" : "integer"
+    },
+    "responderonly" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ],
+      "readonly" : true
     },
     "retransmissiontime" : {
       "type" : "integer"

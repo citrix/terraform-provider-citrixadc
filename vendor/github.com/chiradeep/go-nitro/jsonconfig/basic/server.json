@@ -4,6 +4,26 @@
     "Internal" : {
       "type" : "boolean"
     },
+    "autoscale" : {
+      "type" : "string",
+      "enum" : [ "DISABLED", "DNS", "POLICY", "CLOUD" ],
+      "readonly" : true
+    },
+    "cacheable" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ],
+      "readonly" : true
+    },
+    "cka" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ],
+      "readonly" : true
+    },
+    "cmp" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ],
+      "readonly" : true
+    },
     "comment" : {
       "type" : "string"
     },
@@ -36,12 +56,27 @@
     "newname" : {
       "type" : "string"
     },
+    "sc" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ],
+      "readonly" : true
+    },
+    "sp" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ],
+      "readonly" : true
+    },
     "state" : {
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
     },
     "statechangetimesec" : {
       "type" : "string",
+      "readonly" : true
+    },
+    "tcpb" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ],
       "readonly" : true
     },
     "td" : {
@@ -56,6 +91,11 @@
     },
     "translationmask" : {
       "type" : "string"
+    },
+    "usip" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ],
+      "readonly" : true
     }
   },
   "$schema" : "http://json-schema.org/draft-04/schema#",

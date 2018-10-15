@@ -28,6 +28,10 @@
       "type" : "integer",
       "readonly" : true
     },
+    "haheartbeatifaces" : {
+      "type" : "string",
+      "readonly" : true
+    },
     "hamonifaces" : {
       "type" : "string",
       "readonly" : true
@@ -79,16 +83,17 @@
       "type" : "string",
       "readonly" : true
     },
-    "network" : {
-      "type" : "string",
-      "readonly" : true
-    },
     "pfifaces" : {
       "type" : "string",
       "readonly" : true
     },
     "routemonitor" : {
       "type" : "string",
+      "readonly" : true
+    },
+    "routemonitorstate" : {
+      "type" : "string",
+      "enum" : [ "UP", "DOWN" ],
       "readonly" : true
     },
     "ssl2" : {

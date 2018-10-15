@@ -12,10 +12,16 @@
     "domain" : {
       "type" : "string"
     },
+    "ecssubnet" : {
+      "type" : "string"
+    },
     "expire" : {
       "type" : "integer"
     },
     "minimum" : {
+      "type" : "integer"
+    },
+    "nodeid" : {
       "type" : "integer"
     },
     "originserver" : {

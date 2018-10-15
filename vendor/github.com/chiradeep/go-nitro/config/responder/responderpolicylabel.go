@@ -1,6 +1,7 @@
 package responder
 
 type Responderpolicylabel struct {
+	Comment                string `json:"comment,omitempty"`
 	Gotopriorityexpression string `json:"gotopriorityexpression,omitempty"`
 	Hits                   int    `json:"hits,omitempty"`
 	Invokelabelname        string `json:"invoke_labelname,omitempty"`

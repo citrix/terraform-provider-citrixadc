@@ -1,6 +1,18 @@
 {
   "type" : "object",
   "properties" : {
+    "cacheecszeroprefix" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "cachehitbypass" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "cachenoexpire" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
     "cacherecords" : {
       "type" : "string",
       "enum" : [ "YES", "NO" ]
@@ -16,10 +28,25 @@
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
     },
+    "ecsmaxsubnets" : {
+      "type" : "integer"
+    },
+    "maxcachesize" : {
+      "type" : "integer"
+    },
+    "maxnegativecachesize" : {
+      "type" : "integer"
+    },
+    "maxnegcachettl" : {
+      "type" : "integer"
+    },
     "maxpipeline" : {
       "type" : "integer"
     },
     "maxttl" : {
+      "type" : "integer"
+    },
+    "maxudppacketsize" : {
       "type" : "integer"
     },
     "minttl" : {
@@ -39,6 +66,10 @@
     },
     "retries" : {
       "type" : "integer"
+    },
+    "splitpktqueryprocessing" : {
+      "type" : "string",
+      "enum" : [ "ALLOW", "DROP" ]
     }
   },
   "$schema" : "http://json-schema.org/draft-04/schema#",

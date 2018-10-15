@@ -1,20 +1,6 @@
 {
   "type" : "object",
   "properties" : {
-    "bindpolicytype" : {
-      "type" : "integer",
-      "readonly" : true
-    },
-    "builtin" : {
-      "type" : "object",
-      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE" ]
-    },
-    "policy" : {
-      "type" : "string"
-    },
-    "priority" : {
-      "type" : "integer"
-    },
     "windowsprofile" : {
       "type" : "string"
     }

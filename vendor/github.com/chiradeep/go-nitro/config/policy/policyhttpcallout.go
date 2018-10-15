@@ -3,6 +3,8 @@ package policy
 type Policyhttpcallout struct {
 	Bodyexpr         string      `json:"bodyexpr,omitempty"`
 	Cacheforsecs     int         `json:"cacheforsecs,omitempty"`
+	Comment          string      `json:"comment,omitempty"`
+	Effectivestate   string      `json:"effectivestate,omitempty"`
 	Fullreqexpr      string      `json:"fullreqexpr,omitempty"`
 	Headers          interface{} `json:"headers,omitempty"`
 	Hits             int         `json:"hits,omitempty"`

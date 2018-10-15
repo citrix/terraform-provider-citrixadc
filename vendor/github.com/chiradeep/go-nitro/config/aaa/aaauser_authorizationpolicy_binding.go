@@ -1,10 +1,10 @@
 package aaa
 
 type Aaauserauthorizationpolicybinding struct {
-	Acttype             int    `json:"acttype,omitempty"`
-	Intranetapplication string `json:"intranetapplication,omitempty"`
-	Policy              string `json:"policy,omitempty"`
-	Priority            int    `json:"priority,omitempty"`
-	Urlname             string `json:"urlname,omitempty"`
-	Username            string `json:"username,omitempty"`
+	Acttype                int    `json:"acttype,omitempty"`
+	Gotopriorityexpression string `json:"gotopriorityexpression,omitempty"`
+	Policy                 string `json:"policy,omitempty"`
+	Priority               int    `json:"priority,omitempty"`
+	Type                   string `json:"type,omitempty"`
+	Username               string `json:"username,omitempty"`
 }

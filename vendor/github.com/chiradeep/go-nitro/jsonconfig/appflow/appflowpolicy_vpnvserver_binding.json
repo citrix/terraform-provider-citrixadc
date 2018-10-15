@@ -2,25 +2,31 @@
   "type" : "object",
   "properties" : {
     "activepolicy" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
     },
     "boundto" : {
       "type" : "string"
     },
     "gotopriorityexpression" : {
-      "type" : "string"
+      "type" : "string",
+      "readonly" : true
     },
     "labelname" : {
-      "type" : "string"
+      "type" : "string",
+      "readonly" : true
     },
     "labeltype" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "vserver", "policylabel" ],
+      "readonly" : true
     },
     "name" : {
       "type" : "string"
     },
     "priority" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
     }
   },
   "$schema" : "http://json-schema.org/draft-04/schema#",

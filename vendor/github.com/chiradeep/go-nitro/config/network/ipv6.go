@@ -11,4 +11,6 @@ type Ipv6 struct {
 	Reachtime            int    `json:"reachtime,omitempty"`
 	Retransmissiontime   int    `json:"retransmissiontime,omitempty"`
 	Routerredirection    string `json:"routerredirection,omitempty"`
+	Td                   int    `json:"td,omitempty"`
+	Usipnatprefix        string `json:"usipnatprefix,omitempty"`
 }

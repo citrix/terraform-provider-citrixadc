@@ -8,6 +8,11 @@
     "cert" : {
       "type" : "string"
     },
+    "certificatetype" : {
+      "type" : "object",
+      "enum" : [ "ROOT_CERT", "INTM_CERT", "CLNT_CERT", "SRVR_CERT", "UNKNOWN_CERT" ],
+      "readonly" : true
+    },
     "certkey" : {
       "type" : "string"
     },
@@ -34,9 +39,12 @@
     "fipskey" : {
       "type" : "string"
     },
+    "hsmkey" : {
+      "type" : "string"
+    },
     "inform" : {
       "type" : "string",
-      "enum" : [ "DER", "PEM" ]
+      "enum" : [ "DER", "PEM", "PFX" ]
     },
     "issuer" : {
       "type" : "string",
@@ -53,6 +61,14 @@
     },
     "notificationperiod" : {
       "type" : "integer"
+    },
+    "ocspresponsestatus" : {
+      "type" : "string",
+      "enum" : [ "NONE", "EXPIRED", "VALID" ],
+      "readonly" : true
+    },
+    "ocspstaplingcache" : {
+      "type" : "boolean"
     },
     "passcrypt" : {
       "type" : "string",

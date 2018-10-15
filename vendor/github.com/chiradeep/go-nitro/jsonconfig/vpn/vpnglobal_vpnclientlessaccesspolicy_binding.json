@@ -3,7 +3,14 @@
   "properties" : {
     "builtin" : {
       "type" : "object",
-      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE" ]
+      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE", "PARTITION_ALL" ]
+    },
+    "globalbindtype" : {
+      "type" : "string",
+      "enum" : [ "SYSTEM_GLOBAL", "VPN_GLOBAL", "RNAT_GLOBAL" ]
+    },
+    "gotopriorityexpression" : {
+      "type" : "string"
     },
     "groupextraction" : {
       "type" : "boolean"
@@ -19,8 +26,7 @@
     },
     "type" : {
       "type" : "string",
-      "enum" : [ "REQ_OVERRIDE", "REQ_DEFAULT", "RES_OVERRIDE", "RES_DEFAULT" ],
-      "readonly" : true
+      "enum" : [ "REQ_OVERRIDE", "REQ_DEFAULT", "RES_OVERRIDE", "RES_DEFAULT" ]
     }
   },
   "$schema" : "http://json-schema.org/draft-04/schema#",

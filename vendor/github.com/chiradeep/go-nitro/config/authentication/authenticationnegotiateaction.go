@@ -8,5 +8,6 @@ type Authenticationnegotiateaction struct {
 	Kcdspn                     string `json:"kcdspn,omitempty"`
 	Keytab                     string `json:"keytab,omitempty"`
 	Name                       string `json:"name,omitempty"`
+	Ntlmpath                   string `json:"ntlmpath,omitempty"`
 	Ou                         string `json:"ou,omitempty"`
 }

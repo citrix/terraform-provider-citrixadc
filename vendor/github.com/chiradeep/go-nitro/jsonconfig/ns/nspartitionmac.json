@@ -1,0 +1,16 @@
+{
+  "type" : "object",
+  "properties" : {
+    "partitionmac" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "partitionname" : {
+      "type" : "string",
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "nspartitionmac",
+  "title" : "nspartitionmac"
+}

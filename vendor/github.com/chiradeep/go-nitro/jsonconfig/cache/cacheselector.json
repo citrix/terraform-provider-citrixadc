@@ -1,6 +1,11 @@
 {
   "type" : "object",
   "properties" : {
+    "builtin" : {
+      "type" : "object",
+      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE", "PARTITION_ALL" ],
+      "readonly" : true
+    },
     "flags" : {
       "type" : "integer",
       "readonly" : true

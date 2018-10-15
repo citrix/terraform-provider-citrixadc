@@ -4,6 +4,9 @@
     "cipheraliasname" : {
       "type" : "string"
     },
+    "ciphername" : {
+      "type" : "string"
+    },
     "description" : {
       "type" : "string"
     },

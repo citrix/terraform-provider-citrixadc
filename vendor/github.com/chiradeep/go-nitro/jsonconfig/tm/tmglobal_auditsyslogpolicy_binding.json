@@ -5,6 +5,9 @@
       "type" : "integer",
       "readonly" : true
     },
+    "gotopriorityexpression" : {
+      "type" : "string"
+    },
     "policyname" : {
       "type" : "string"
     },

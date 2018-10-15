@@ -1,6 +1,9 @@
 {
   "type" : "object",
   "properties" : {
+    "aes256" : {
+      "type" : "boolean"
+    },
     "bits" : {
       "type" : "integer"
     },
@@ -23,6 +26,9 @@
     },
     "password" : {
       "type" : "string"
+    },
+    "pkcs8" : {
+      "type" : "boolean"
     }
   },
   "$schema" : "http://json-schema.org/draft-04/schema#",

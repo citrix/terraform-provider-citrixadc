@@ -2,7 +2,8 @@
   "type" : "object",
   "properties" : {
     "ecccurvename" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "ALL", "P_224", "P_256", "P_384", "P_521" ]
     },
     "vservername" : {
       "type" : "string"

@@ -8,10 +8,12 @@
       "type" : "string"
     },
     "description" : {
-      "type" : "string"
+      "type" : "string",
+      "readonly" : true
     },
     "hits" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
     },
     "logaction" : {
       "type" : "string"
@@ -23,7 +25,9 @@
       "type" : "string"
     },
     "policysubtype" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "LOCAL", "RADIUS", "LDAP", "TACACS", "CERT", "NEGOTIATE", "SAML", "PROFILE", "DFA", "SAMLIDP", "WEBAUTH", "OAUTH", "NO_AUTHN", "EPA", "SFAUTH", "AZUREVAULT", "EMAIL", "CAPTCHA" ],
+      "readonly" : true
     },
     "rule" : {
       "type" : "string"

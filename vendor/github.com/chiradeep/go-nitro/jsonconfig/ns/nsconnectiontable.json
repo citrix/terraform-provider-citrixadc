@@ -1,7 +1,20 @@
 {
   "type" : "object",
   "properties" : {
+    "adaptivetcpprofname" : {
+      "type" : "string",
+      "readonly" : true
+    },
     "advwnd" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "burstratecontrol" : {
+      "type" : "string",
+      "enum" : [ "DISABLED", "FIXED", "DYNAMIC" ],
+      "readonly" : true
+    },
+    "bwestimate" : {
       "type" : "integer",
       "readonly" : true
     },
@@ -9,7 +22,105 @@
       "type" : "integer",
       "readonly" : true
     },
+    "congstate" : {
+      "type" : "string",
+      "enum" : [ "open", "recovery", "loss", "reneg", "partial_ACK", "retx_lost" ],
+      "readonly" : true
+    },
     "connid" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "connproperties" : {
+      "type" : "object",
+      "enum" : [ "LINK", "HASLINK", "CLIENT", "SERVER", "NNM", "MPTCP", "SUBFLOW" ],
+      "readonly" : true
+    },
+    "cqabifavg" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "cqaccl" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "cqacsq" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "cqaiai1mspct" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "cqaiai2mspct" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "cqaiaiavg" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "cqaiaisamples" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "cqaisiavg" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "cqaloaddelayavg" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "cqanetclass" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "cqanoisedelayavg" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "cqarcvwndavg" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "cqarcvwndmin" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "cqaretxcong" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "cqaretxcorr" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "cqaretxpackets" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "cqarttavg" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "cqarttmax" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "cqarttmin" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "cqasamples" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "cqathruputavg" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "creditsinbytes" : {
       "type" : "integer",
       "readonly" : true
     },
@@ -23,7 +134,7 @@
     },
     "detail" : {
       "type" : "object",
-      "enum" : [ "LINK", "NAME", "CONNFAILOVER", "FULL", "NNM" ]
+      "enum" : [ "LINK", "NAME", "CONNFAILOVER", "FULL", "NNM", "FULL+" ]
     },
     "entityname" : {
       "type" : "string",
@@ -31,6 +142,14 @@
     },
     "filterexpression" : {
       "type" : "string"
+    },
+    "filtername" : {
+      "type" : "boolean"
+    },
+    "flavor" : {
+      "type" : "string",
+      "enum" : [ "Default", "Westwood", "BIC", "CUBIC", "Nile" ],
+      "readonly" : true
     },
     "httpendseq" : {
       "type" : "integer",
@@ -43,7 +162,7 @@
     },
     "httpreqver" : {
       "type" : "string",
-      "enum" : [ "HTTP_1_0", "HTTP_1_1", "HTTP_0_9", "RTSP_1_0", "SIP_2_0", "VPN_ICA_SOCKS", "VPN_ICA_CGP" ],
+      "enum" : [ "HTTP_1_0", "HTTP_1_1", "HTTP_0_9", "RTSP_1_0", "SIP_2_0", "VPN_ICA_SOCKS", "VPN_ICA_CGP", "HTTP_2_0" ],
       "readonly" : true
     },
     "httprspcode" : {
@@ -70,7 +189,25 @@
     "link" : {
       "type" : "boolean"
     },
+    "linkburstratecontrol" : {
+      "type" : "string",
+      "enum" : [ "DISABLED", "FIXED", "DYNAMIC" ],
+      "readonly" : true
+    },
+    "linkbwestimate" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "linkcongstate" : {
+      "type" : "string",
+      "enum" : [ "open", "recovery", "loss", "reneg", "partial_ACK", "retx_lost" ],
+      "readonly" : true
+    },
     "linkconnid" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "linkcredits" : {
       "type" : "integer",
       "readonly" : true
     },
@@ -86,7 +223,32 @@
       "type" : "string",
       "readonly" : true
     },
+    "linkflavor" : {
+      "type" : "string",
+      "enum" : [ "Default", "Westwood", "BIC", "CUBIC", "Nile" ],
+      "readonly" : true
+    },
     "linkidletime" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "linkmaxrcvbuf" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "linkmaxsndbuf" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "linkname" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "linknsbretxq" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "linknsbtcpwaitq" : {
       "type" : "integer",
       "readonly" : true
     },
@@ -103,9 +265,41 @@
       "type" : "integer",
       "readonly" : true
     },
+    "linkrateinbytes" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "linkrateschedulerqueue" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "linkrealtimertt" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "linkrttmin" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "linkrxqsize" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "linksackblocks" : {
+      "type" : "integer",
+      "readonly" : true
+    },
     "linkservicetype" : {
       "type" : "string",
-      "enum" : [ "HTTP", "FTP", "TCP", "UDP", "SSL", "SSL_BRIDGE", "SSL_TCP", "NNTP", "RPCSVR", "DNS", "ADNS", "SNMP", "RTSP", "DHCPRA", "ANY", "SIP_UDP", "DNS_TCP", "ADNS_TCP", "HTTPSVR", "HTTPCLIENT", "NAT", "HA", "AAA", "SINCTCP", "VPN AFTP", "MONITORS", "SSLVPN UDP", "SINCUDP", "RIP", "UDP CLNT", "SASP", "RPCCLNTS", "ROUTE", "AUDIT", "STA HTTP", "STA SSL", "DNS RESOLVE", "RDP", "MYSQL", "MSSQL", "DIAMETER", "SSL_DIAMETER", "TFTP", "ICA", "RADIUS" ],
+      "enum" : [ "HTTP", "FTP", "TCP", "UDP", "SSL", "SSL_BRIDGE", "SSL_TCP", "NNTP", "RPCSVR", "DNS", "ADNS", "SNMP", "RTSP", "DHCPRA", "ANY", "SIP_UDP", "SIP_TCP", "SIP_SSL", "DNS_TCP", "ADNS_TCP", "HTTPSVR", "HTTPCLIENT", "NAT", "HA", "AAA", "SINCTCP", "VPN AFTP", "MONITORS", "SSLVPN UDP", "SINCUDP", "RIP", "UDP CLNT", "SASP", "RPCCLNTS", "ROUTE", "AUDIT", "STA HTTP", "STA SSL", "DNS RESOLVE", "RDP", "MYSQL", "MSSQL", "DIAMETER", "SSL_DIAMETER", "TFTP", "ORACLE", "ICA", "RADIUS", "RADIUSListener", "SMPP", "PPTP", "GRE", "SYSLOGTCP", "SYSLOGUDP", "FIX", "SSL_FIX", "QUIC", "TFTP_DATA", "USER_TCP", "USER_SSL_TCP" ],
+      "readonly" : true
+    },
+    "linksndbuf" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "linksndrecoverle" : {
+      "type" : "integer",
       "readonly" : true
     },
     "linksourceip" : {
@@ -121,7 +315,27 @@
       "enum" : [ "CLOSED", "LISTEN", "SYN_SENT", "SYN_RECEIVED", "ESTABLISHED", "CLOSE_WAIT", "FIN_WAIT_1", "CLOSING", "LAST_ACK", "FIN_WAIT_2", "TIME_WAIT", "NA" ],
       "readonly" : true
     },
+    "linktcpmode" : {
+      "type" : "string",
+      "enum" : [ "TRANSPARENT", "ENDPOINT" ],
+      "readonly" : true
+    },
+    "linktxqsize" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "listen" : {
+      "type" : "boolean"
+    },
     "maxack" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "maxrcvbuf" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "maxsndbuf" : {
       "type" : "integer",
       "readonly" : true
     },
@@ -134,7 +348,19 @@
       "readonly" : true
     },
     "name" : {
-      "type" : "boolean"
+      "type" : "string",
+      "readonly" : true
+    },
+    "nodeid" : {
+      "type" : "integer"
+    },
+    "nsbretxq" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "nsbtcpwaitq" : {
+      "type" : "integer",
+      "readonly" : true
     },
     "nswsvalue" : {
       "type" : "integer",
@@ -158,6 +384,14 @@
       "enum" : [ "SC Priority", "Priority queue1", "priority queue2", "priority queue3", "DoS Priority", "Surge Priority" ],
       "readonly" : true
     },
+    "rateinbytes" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "rateschedulerqueue" : {
+      "type" : "integer",
+      "readonly" : true
+    },
     "rcvnxt" : {
       "type" : "integer",
       "readonly" : true
@@ -166,7 +400,15 @@
       "type" : "integer",
       "readonly" : true
     },
+    "realtimertt" : {
+      "type" : "integer",
+      "readonly" : true
+    },
     "retxretrycnt" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "rttmin" : {
       "type" : "integer",
       "readonly" : true
     },
@@ -178,11 +420,27 @@
       "type" : "integer",
       "readonly" : true
     },
+    "rxqsize" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "sackblocks" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "sndbuf" : {
+      "type" : "integer",
+      "readonly" : true
+    },
     "sndcwnd" : {
       "type" : "integer",
       "readonly" : true
     },
     "sndnxt" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "sndrecoverle" : {
       "type" : "integer",
       "readonly" : true
     },
@@ -209,11 +467,16 @@
     },
     "svctype" : {
       "type" : "string",
-      "enum" : [ "HTTP", "FTP", "TCP", "UDP", "SSL", "SSL_BRIDGE", "SSL_TCP", "NNTP", "RPCSVR", "DNS", "ADNS", "SNMP", "RTSP", "DHCPRA", "ANY", "SIP_UDP", "DNS_TCP", "ADNS_TCP", "HTTPSVR", "HTTPCLIENT", "NAT", "HA", "AAA", "SINCTCP", "VPN AFTP", "MONITORS", "SSLVPN UDP", "SINCUDP", "RIP", "UDP CLNT", "SASP", "RPCCLNTS", "ROUTE", "AUDIT", "STA HTTP", "STA SSL", "DNS RESOLVE", "RDP", "MYSQL", "MSSQL", "DIAMETER", "SSL_DIAMETER", "TFTP", "ICA", "RADIUS" ],
+      "enum" : [ "HTTP", "FTP", "TCP", "UDP", "SSL", "SSL_BRIDGE", "SSL_TCP", "NNTP", "RPCSVR", "DNS", "ADNS", "SNMP", "RTSP", "DHCPRA", "ANY", "SIP_UDP", "SIP_TCP", "SIP_SSL", "DNS_TCP", "ADNS_TCP", "HTTPSVR", "HTTPCLIENT", "NAT", "HA", "AAA", "SINCTCP", "VPN AFTP", "MONITORS", "SSLVPN UDP", "SINCUDP", "RIP", "UDP CLNT", "SASP", "RPCCLNTS", "ROUTE", "AUDIT", "STA HTTP", "STA SSL", "DNS RESOLVE", "RDP", "MYSQL", "MSSQL", "DIAMETER", "SSL_DIAMETER", "TFTP", "ORACLE", "ICA", "RADIUS", "RADIUSListener", "SMPP", "PPTP", "GRE", "SYSLOGTCP", "SYSLOGUDP", "FIX", "SSL_FIX", "QUIC", "TFTP_DATA", "USER_TCP", "USER_SSL_TCP" ],
       "readonly" : true
     },
     "targetnodeidnnm" : {
       "type" : "integer",
+      "readonly" : true
+    },
+    "tcpmode" : {
+      "type" : "string",
+      "enum" : [ "TRANSPARENT", "ENDPOINT" ],
       "readonly" : true
     },
     "td" : {
@@ -221,6 +484,10 @@
       "readonly" : true
     },
     "trcount" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "txqsize" : {
       "type" : "integer",
       "readonly" : true
     }

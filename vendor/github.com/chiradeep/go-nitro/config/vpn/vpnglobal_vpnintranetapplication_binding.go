@@ -1,5 +1,6 @@
 package vpn
 
 type Vpnglobalvpnintranetapplicationbinding struct {
-	Intranetapplication string `json:"intranetapplication,omitempty"`
+	Gotopriorityexpression string `json:"gotopriorityexpression,omitempty"`
+	Intranetapplication    string `json:"intranetapplication,omitempty"`
 }

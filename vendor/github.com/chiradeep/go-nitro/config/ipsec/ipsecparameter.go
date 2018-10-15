@@ -7,6 +7,8 @@ type Ipsecparameter struct {
 	Ikeversion            string      `json:"ikeversion,omitempty"`
 	Lifetime              int         `json:"lifetime,omitempty"`
 	Livenesscheckinterval int         `json:"livenesscheckinterval,omitempty"`
+	Perfectforwardsecrecy string      `json:"perfectforwardsecrecy,omitempty"`
 	Replaywindowsize      int         `json:"replaywindowsize,omitempty"`
+	Responderonly         string      `json:"responderonly,omitempty"`
 	Retransmissiontime    int         `json:"retransmissiontime,omitempty"`
 }

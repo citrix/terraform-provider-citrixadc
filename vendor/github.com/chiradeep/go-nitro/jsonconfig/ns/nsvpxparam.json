@@ -1,0 +1,15 @@
+{
+  "type" : "object",
+  "properties" : {
+    "cpuyield" : {
+      "type" : "string",
+      "enum" : [ "DEFAULT", "YES", "NO" ]
+    },
+    "ownernode" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "nsvpxparam",
+  "title" : "nsvpxparam"
+}

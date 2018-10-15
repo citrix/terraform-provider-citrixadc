@@ -8,5 +8,6 @@ type Sslvserversslpolicybinding struct {
 	Policyname             string `json:"policyname,omitempty"`
 	Polinherit             int    `json:"polinherit,omitempty"`
 	Priority               int    `json:"priority,omitempty"`
+	Type                   string `json:"type,omitempty"`
 	Vservername            string `json:"vservername,omitempty"`
 }

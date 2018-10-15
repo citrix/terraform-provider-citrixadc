@@ -1,6 +1,10 @@
 {
   "type" : "object",
   "properties" : {
+    "bmcrevision" : {
+      "type" : "string",
+      "readonly" : true
+    },
     "cpufrequncy" : {
       "type" : "integer",
       "readonly" : true
@@ -31,6 +35,10 @@
     },
     "manufactureyear" : {
       "type" : "integer",
+      "readonly" : true
+    },
+    "netscaleruuid" : {
+      "type" : "string",
       "readonly" : true
     },
     "serialno" : {

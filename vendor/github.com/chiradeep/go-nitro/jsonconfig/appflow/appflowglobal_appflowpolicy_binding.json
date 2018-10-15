@@ -5,6 +5,10 @@
       "type" : "integer",
       "readonly" : true
     },
+    "globalbindtype" : {
+      "type" : "string",
+      "enum" : [ "SYSTEM_GLOBAL", "VPN_GLOBAL", "RNAT_GLOBAL" ]
+    },
     "gotopriorityexpression" : {
       "type" : "string"
     },

@@ -1,6 +1,10 @@
 {
   "type" : "object",
   "properties" : {
+    "curve" : {
+      "type" : "string",
+      "enum" : [ "P_256", "P_384" ]
+    },
     "exponent" : {
       "type" : "string",
       "enum" : [ "3", "F4" ]
@@ -17,6 +21,10 @@
     },
     "key" : {
       "type" : "string"
+    },
+    "keytype" : {
+      "type" : "string",
+      "enum" : [ "RSA", "ECDSA" ]
     },
     "modulus" : {
       "type" : "integer"

@@ -1,0 +1,39 @@
+{
+  "type" : "object",
+  "properties" : {
+    "action" : {
+      "type" : "string"
+    },
+    "builtin" : {
+      "type" : "object",
+      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE", "PARTITION_ALL" ],
+      "readonly" : true
+    },
+    "comment" : {
+      "type" : "string"
+    },
+    "hits" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "logaction" : {
+      "type" : "string"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "newname" : {
+      "type" : "string"
+    },
+    "rule" : {
+      "type" : "string"
+    },
+    "undefhits" : {
+      "type" : "integer",
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "icapolicy",
+  "title" : "icapolicy"
+}

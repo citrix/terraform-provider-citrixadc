@@ -1,0 +1,41 @@
+{
+  "type" : "object",
+  "properties" : {
+    "accessprofilename" : {
+      "type" : "string"
+    },
+    "builtin" : {
+      "type" : "object",
+      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE", "PARTITION_ALL" ],
+      "readonly" : true
+    },
+    "hits" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "isdefault" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "latencyprofilename" : {
+      "type" : "string"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "newname" : {
+      "type" : "string"
+    },
+    "referencecount" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "undefhits" : {
+      "type" : "integer",
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "icaaction",
+  "title" : "icaaction"
+}

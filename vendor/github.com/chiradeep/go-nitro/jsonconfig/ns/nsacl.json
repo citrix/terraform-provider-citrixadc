@@ -8,6 +8,11 @@
       "type" : "string",
       "enum" : [ "BRIDGE", "DENY", "ALLOW" ]
     },
+    "aclassociate" : {
+      "type" : "object",
+      "enum" : [ "NAT", "FORWARDINGSESSION", "NAT64", "LSN" ],
+      "readonly" : true
+    },
     "aclname" : {
       "type" : "string"
     },
@@ -30,6 +35,10 @@
     },
     "destportval" : {
       "type" : "string"
+    },
+    "dfdhash" : {
+      "type" : "string",
+      "enum" : [ "SIP-SPORT-DIP-DPORT", "SIP", "DIP", "SIP-DIP", "SIP-SPORT", "DIP-DPORT" ]
     },
     "established" : {
       "type" : "boolean"
@@ -82,6 +91,9 @@
     "srcmac" : {
       "type" : "string"
     },
+    "srcmacmask" : {
+      "type" : "string"
+    },
     "srcport" : {
       "type" : "boolean"
     },
@@ -96,13 +108,24 @@
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
     },
+    "stateful" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ]
+    },
     "td" : {
       "type" : "integer"
     },
     "ttl" : {
       "type" : "integer"
     },
+    "type" : {
+      "type" : "string",
+      "enum" : [ "CLASSIC", "DFD" ]
+    },
     "vlan" : {
+      "type" : "integer"
+    },
+    "vxlan" : {
       "type" : "integer"
     }
   },

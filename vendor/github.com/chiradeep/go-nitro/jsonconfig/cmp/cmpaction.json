@@ -1,9 +1,13 @@
 {
   "type" : "object",
   "properties" : {
+    "addvaryheader" : {
+      "type" : "string",
+      "enum" : [ "GLOBAL", "DISABLED", "ENABLED" ]
+    },
     "builtin" : {
       "type" : "object",
-      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE" ],
+      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE", "PARTITION_ALL" ],
       "readonly" : true
     },
     "cmptype" : {
@@ -22,6 +26,9 @@
       "type" : "string"
     },
     "newname" : {
+      "type" : "string"
+    },
+    "varyheadervalue" : {
       "type" : "string"
     }
   },

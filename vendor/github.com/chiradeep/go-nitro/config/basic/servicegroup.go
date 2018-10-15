@@ -2,6 +2,8 @@ package basic
 
 type Servicegroup struct {
 	Appflowlog                 string `json:"appflowlog,omitempty"`
+	Autodisabledelay           int    `json:"autodisabledelay,omitempty"`
+	Autodisablegraceful        string `json:"autodisablegraceful,omitempty"`
 	Autoscale                  string `json:"autoscale,omitempty"`
 	Cacheable                  string `json:"cacheable,omitempty"`
 	Cachetype                  string `json:"cachetype,omitempty"`
@@ -28,11 +30,8 @@ type Servicegroup struct {
 	Maxclient                  int    `json:"maxclient,omitempty"`
 	Maxreq                     int    `json:"maxreq,omitempty"`
 	Memberport                 int    `json:"memberport,omitempty"`
-	Monitorcurrentfailedprobes int    `json:"monitorcurrentfailedprobes,omitempty"`
+	Monconnectionclose         string `json:"monconnectionclose,omitempty"`
 	Monitornamesvc             string `json:"monitor_name_svc,omitempty"`
-	Monitorstate               string `json:"monitor_state,omitempty"`
-	Monitortotalfailedprobes   int    `json:"monitortotalfailedprobes,omitempty"`
-	Monitortotalprobes         int    `json:"monitortotalprobes,omitempty"`
 	Monstatcode                int    `json:"monstatcode,omitempty"`
 	Monstatparam1              int    `json:"monstatparam1,omitempty"`
 	Monstatparam2              int    `json:"monstatparam2,omitempty"`
@@ -40,29 +39,31 @@ type Servicegroup struct {
 	Monthreshold               int    `json:"monthreshold,omitempty"`
 	Netprofile                 string `json:"netprofile,omitempty"`
 	Newname                    string `json:"newname,omitempty"`
+	Nodefaultbindings          string `json:"nodefaultbindings,omitempty"`
 	Numofconnections           int    `json:"numofconnections,omitempty"`
 	Pathmonitor                string `json:"pathmonitor,omitempty"`
 	Pathmonitorindv            string `json:"pathmonitorindv,omitempty"`
 	Port                       int    `json:"port,omitempty"`
+	Riseapbrstatsmsgcode       int    `json:"riseapbrstatsmsgcode,omitempty"`
+	Riseapbrstatsmsgcode2      int    `json:"riseapbrstatsmsgcode2,omitempty"`
 	Rtspsessionidremap         string `json:"rtspsessionidremap,omitempty"`
 	Sc                         string `json:"sc,omitempty"`
 	Serverid                   int    `json:"serverid,omitempty"`
 	Servername                 string `json:"servername,omitempty"`
 	Serviceconftype            bool   `json:"serviceconftype,omitempty"`
+	Servicegroupeffectivestate string `json:"servicegroupeffectivestate,omitempty"`
 	Servicegroupname           string `json:"servicegroupname,omitempty"`
 	Serviceipstr               string `json:"serviceipstr,omitempty"`
 	Servicetype                string `json:"servicetype,omitempty"`
 	Sp                         string `json:"sp,omitempty"`
 	State                      string `json:"state,omitempty"`
 	Statechangetimemsec        int    `json:"statechangetimemsec,omitempty"`
-	Statechangetimesec         string `json:"statechangetimesec,omitempty"`
 	Stateupdatereason          int    `json:"stateupdatereason,omitempty"`
 	Svrstate                   string `json:"svrstate,omitempty"`
 	Svrtimeout                 int    `json:"svrtimeout,omitempty"`
 	Tcpb                       string `json:"tcpb,omitempty"`
 	Tcpprofilename             string `json:"tcpprofilename,omitempty"`
 	Td                         int    `json:"td,omitempty"`
-	Tickssincelaststatechange  int    `json:"tickssincelaststatechange,omitempty"`
 	Useproxyport               string `json:"useproxyport,omitempty"`
 	Usip                       string `json:"usip,omitempty"`
 	Value                      string `json:"value,omitempty"`

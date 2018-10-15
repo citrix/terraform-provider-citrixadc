@@ -5,5 +5,4 @@ type Aaaglobalaaapreauthenticationpolicybinding struct {
 	Builtin        interface{} `json:"builtin,omitempty"`
 	Policy         string      `json:"policy,omitempty"`
 	Priority       int         `json:"priority,omitempty"`
-	Windowsprofile string      `json:"windowsprofile,omitempty"`
 }

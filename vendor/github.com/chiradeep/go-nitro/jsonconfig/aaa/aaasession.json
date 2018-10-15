@@ -22,12 +22,19 @@
       "type" : "string",
       "readonly" : true
     },
+    "intranetip6" : {
+      "type" : "string",
+      "readonly" : true
+    },
     "ipaddress" : {
       "type" : "string",
       "readonly" : true
     },
     "netmask" : {
       "type" : "string"
+    },
+    "nodeid" : {
+      "type" : "integer"
     },
     "peid" : {
       "type" : "integer",
@@ -52,6 +59,9 @@
     "publicport" : {
       "type" : "integer",
       "readonly" : true
+    },
+    "sessionkey" : {
+      "type" : "string"
     },
     "username" : {
       "type" : "string"

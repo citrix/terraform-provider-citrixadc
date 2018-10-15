@@ -3,7 +3,7 @@
   "properties" : {
     "mode" : {
       "type" : "object",
-      "enum" : [ "all", "bookmarks", "ssl", "htmlinjection", "imports", "misc", "dns", "krb", "all_plus_misc" ]
+      "enum" : [ "all", "bookmarks", "ssl", "htmlinjection", "imports", "misc", "dns", "krb", "AAA", "app_catalog", "all_plus_misc", "all_minus_misc" ]
     }
   },
   "$schema" : "http://json-schema.org/draft-04/schema#",

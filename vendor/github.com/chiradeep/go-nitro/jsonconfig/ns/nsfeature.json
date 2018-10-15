@@ -5,6 +5,10 @@
       "type" : "boolean",
       "readonly" : true
     },
+    "adaptivetcp" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
     "appflow" : {
       "type" : "boolean",
       "readonly" : true
@@ -29,11 +33,23 @@
       "type" : "boolean",
       "readonly" : true
     },
+    "ci" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
     "cloudbridge" : {
       "type" : "boolean",
       "readonly" : true
     },
     "cmp" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "contentaccelerator" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "cqa" : {
       "type" : "boolean",
       "readonly" : true
     },
@@ -47,7 +63,15 @@
     },
     "feature" : {
       "type" : "object",
-      "enum" : [ "WL", "WebLogging", "SP", "SurgeProtection", "LB", "LoadBalancing", "CS", "ContentSwitching", "CR", "CacheRedirection", "SC", "SureConnect", "CMP", "CMPcntl", "CompressionControl", "PQ", "PriorityQueuing", "HDOSP", "HttpDoSProtection", "SSLVPN", "AAA", "GSLB", "GlobalServerLoadBalancing", "SSL", "SSLOffload", "SSLOffloading", "CF", "ContentFiltering", "IC", "IntegratedCaching", "OSPF", "OSPFRouting", "RIP", "RIPRouting", "BGP", "BGPRouting", "REWRITE", "IPv6PT", "IPv6protocoltranslation", "AppFw", "ApplicationFirewall", "RESPONDER", "HTMLInjection", "push", "NSPush", "NetScalerPush", "AppFlow", "CloudBridge", "ISIS", "ISISRouting", "CH", "CallHome", "AppQoE", "Vpath" ]
+      "enum" : [ "WL", "WebLogging", "SP", "SurgeProtection", "LB", "LoadBalancing", "CS", "ContentSwitching", "CR", "CacheRedirection", "SC", "SureConnect", "CMP", "CMPcntl", "CompressionControl", "PQ", "PriorityQueuing", "HDOSP", "HttpDoSProtection", "SSLVPN", "AAA", "GSLB", "GlobalServerLoadBalancing", "SSL", "SSLOffload", "SSLOffloading", "CF", "ContentFiltering", "IC", "IntegratedCaching", "OSPF", "OSPFRouting", "RIP", "RIPRouting", "BGP", "BGPRouting", "REWRITE", "IPv6PT", "IPv6protocoltranslation", "AppFw", "ApplicationFirewall", "RESPONDER", "HTMLInjection", "push", "NSPush", "NetScalerPush", "AppFlow", "CloudBridge", "ISIS", "ISISRouting", "CH", "CallHome", "AppQoE", "ContentAccelerator", "RISE", "FEO", "LSN", "LargeScaleNAT", "RDPProxy", "Rep", "Reputation", "URLFiltering", "VideoOptimization", "ForwardProxy", "SSLInterception", "AdaptiveTCP", "CQA", "CI", "ContentInspection" ]
+    },
+    "feo" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "forwardproxy" : {
+      "type" : "boolean",
+      "readonly" : true
     },
     "gslb" : {
       "type" : "boolean",
@@ -77,6 +101,10 @@
       "type" : "boolean",
       "readonly" : true
     },
+    "lsn" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
     "ospf" : {
       "type" : "boolean",
       "readonly" : true
@@ -86,6 +114,14 @@
       "readonly" : true
     },
     "push" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "rdpproxy" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "rep" : {
       "type" : "boolean",
       "readonly" : true
     },
@@ -101,6 +137,10 @@
       "type" : "boolean",
       "readonly" : true
     },
+    "rise" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
     "sc" : {
       "type" : "boolean",
       "readonly" : true
@@ -113,11 +153,19 @@
       "type" : "boolean",
       "readonly" : true
     },
+    "sslinterception" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
     "sslvpn" : {
       "type" : "boolean",
       "readonly" : true
     },
-    "vpath" : {
+    "urlfiltering" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "videooptimization" : {
       "type" : "boolean",
       "readonly" : true
     },

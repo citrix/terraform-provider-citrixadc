@@ -9,8 +9,14 @@
     "domain" : {
       "type" : "string"
     },
+    "ecssubnet" : {
+      "type" : "string"
+    },
     "mx" : {
       "type" : "string"
+    },
+    "nodeid" : {
+      "type" : "integer"
     },
     "pref" : {
       "type" : "integer"

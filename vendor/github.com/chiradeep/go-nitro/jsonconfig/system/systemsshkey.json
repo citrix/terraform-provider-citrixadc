@@ -8,7 +8,8 @@
       "type" : "string"
     },
     "sshkeytype" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "PRIVATE", "PUBLIC" ]
     }
   },
   "$schema" : "http://json-schema.org/draft-04/schema#",

@@ -1,0 +1,45 @@
+{
+  "type" : "object",
+  "properties" : {
+    "i" : {
+      "type" : "integer"
+    },
+    "s" : {
+      "type" : "integer"
+    },
+    "T" : {
+      "type" : "integer"
+    },
+    "V" : {
+      "type" : "integer"
+    },
+    "b" : {
+      "type" : "integer"
+    },
+    "c" : {
+      "type" : "integer"
+    },
+    "hostName" : {
+      "type" : "string"
+    },
+    "m" : {
+      "type" : "boolean"
+    },
+    "n" : {
+      "type" : "boolean"
+    },
+    "p" : {
+      "type" : "string"
+    },
+    "q" : {
+      "type" : "boolean"
+    },
+    "response" : {
+      "type" : "string",
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "ping6",
+  "title" : "ping6"
+}

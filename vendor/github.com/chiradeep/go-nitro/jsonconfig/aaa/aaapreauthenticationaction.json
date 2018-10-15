@@ -3,8 +3,11 @@
   "properties" : {
     "builtin" : {
       "type" : "object",
-      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE" ],
+      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE", "PARTITION_ALL" ],
       "readonly" : true
+    },
+    "defaultepagroup" : {
+      "type" : "string"
     },
     "deletefiles" : {
       "type" : "string"

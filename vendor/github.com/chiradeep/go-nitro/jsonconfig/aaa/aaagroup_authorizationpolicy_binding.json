@@ -5,10 +5,10 @@
       "type" : "integer",
       "readonly" : true
     },
-    "groupname" : {
+    "gotopriorityexpression" : {
       "type" : "string"
     },
-    "intranetapplication" : {
+    "groupname" : {
       "type" : "string"
     },
     "policy" : {
@@ -17,8 +17,9 @@
     "priority" : {
       "type" : "integer"
     },
-    "urlname" : {
-      "type" : "string"
+    "type" : {
+      "type" : "string",
+      "enum" : [ "REQUEST", "UDP_REQUEST", "DNS_REQUEST", "ICMP_REQUEST" ]
     }
   },
   "$schema" : "http://json-schema.org/draft-04/schema#",

@@ -1,0 +1,52 @@
+{
+  "type" : "object",
+  "properties" : {
+    "clientname" : {
+      "type" : "string"
+    },
+    "firstport" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "lastport" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "natip" : {
+      "type" : "string"
+    },
+    "natip2" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "natprefix" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "nattype" : {
+      "type" : "string",
+      "enum" : [ "NAT44", "DS-Lite", "NAT64" ],
+      "readonly" : true
+    },
+    "network6" : {
+      "type" : "string"
+    },
+    "srctd" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "subscrip" : {
+      "type" : "string"
+    },
+    "subscrip2" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "td" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "lsndeterministicnat",
+  "title" : "lsndeterministicnat"
+}

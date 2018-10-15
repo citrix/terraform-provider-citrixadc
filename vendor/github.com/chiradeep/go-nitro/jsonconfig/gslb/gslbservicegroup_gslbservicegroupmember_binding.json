@@ -1,0 +1,74 @@
+{
+  "type" : "object",
+  "properties" : {
+    "delay" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "graceful" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ],
+      "readonly" : true
+    },
+    "gslbthreshold" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "hashid" : {
+      "type" : "integer"
+    },
+    "ip" : {
+      "type" : "string"
+    },
+    "port" : {
+      "type" : "integer"
+    },
+    "preferredlocation" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "publicip" : {
+      "type" : "string"
+    },
+    "publicport" : {
+      "type" : "integer"
+    },
+    "servername" : {
+      "type" : "string"
+    },
+    "servicegroupname" : {
+      "type" : "string"
+    },
+    "siteprefix" : {
+      "type" : "string"
+    },
+    "state" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "statechangetimesec" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "svrstate" : {
+      "type" : "string",
+      "enum" : [ "UP", "DOWN", "UNKNOWN", "BUSY", "OUT OF SERVICE", "GOING OUT OF SERVICE", "DOWN WHEN GOING OUT OF SERVICE", "NS_EMPTY_STR", "Unknown", "DISABLED" ],
+      "readonly" : true
+    },
+    "threshold" : {
+      "type" : "string",
+      "enum" : [ "ABOVE", "BELOW" ],
+      "readonly" : true
+    },
+    "tickssincelaststatechange" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "weight" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "gslbservicegroup_gslbservicegroupmember_binding",
+  "title" : "gslbservicegroup_gslbservicegroupmember_binding"
+}

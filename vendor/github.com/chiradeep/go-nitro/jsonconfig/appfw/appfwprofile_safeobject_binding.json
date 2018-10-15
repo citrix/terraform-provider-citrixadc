@@ -5,10 +5,10 @@
       "type" : "object",
       "enum" : [ "none", "block", "log", "remove", "stats", "xout" ]
     },
-    "comment" : {
+    "as_expression" : {
       "type" : "string"
     },
-    "expression" : {
+    "comment" : {
       "type" : "string"
     },
     "maxmatchlength" : {

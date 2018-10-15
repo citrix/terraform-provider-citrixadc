@@ -135,6 +135,11 @@
       "enum" : [ "YES", "NO" ],
       "readonly" : true
     },
+    "cacheinsecondary" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ],
+      "readonly" : true
+    },
     "cacheresdate" : {
       "type" : "string",
       "readonly" : true
@@ -175,9 +180,6 @@
       "type" : "string",
       "enum" : [ "YES", "NO" ],
       "readonly" : true
-    },
-    "force" : {
-      "type" : "boolean"
     },
     "group" : {
       "type" : "string"
@@ -231,10 +233,17 @@
     "locator" : {
       "type" : "integer"
     },
+    "locatorshow" : {
+      "type" : "integer",
+      "readonly" : true
+    },
     "markerreason" : {
       "type" : "string",
       "enum" : [ "Waiting for min hit", "Response header is too big", "Content-length header said response size is not in group size limit", "Content-length response received more data", "Content-length response received less data", "Content-length response data is not in group size limit", "Chunk response received more data", "Chunk response data is not in group size limit", "Bad chunk format", "Fin terminated response data is not in group size limit" ],
       "readonly" : true
+    },
+    "nodeid" : {
+      "type" : "integer"
     },
     "policy" : {
       "type" : "integer",
@@ -276,6 +285,10 @@
     "selectorvalue" : {
       "type" : "object",
       "readonly" : true
+    },
+    "tosecondary" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ]
     },
     "totalobjs" : {
       "type" : "integer",

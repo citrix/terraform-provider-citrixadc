@@ -14,4 +14,5 @@ type Appqoeaction struct {
 	Priority          string `json:"priority,omitempty"`
 	Priqdepth         int    `json:"priqdepth,omitempty"`
 	Respondwith       string `json:"respondwith,omitempty"`
+	Tcpprofile        string `json:"tcpprofile,omitempty"`
 }

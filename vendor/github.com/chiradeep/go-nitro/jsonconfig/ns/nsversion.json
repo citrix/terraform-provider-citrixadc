@@ -1,6 +1,9 @@
 {
   "type" : "object",
   "properties" : {
+    "installedversion" : {
+      "type" : "boolean"
+    },
     "mode" : {
       "type" : "integer",
       "readonly" : true

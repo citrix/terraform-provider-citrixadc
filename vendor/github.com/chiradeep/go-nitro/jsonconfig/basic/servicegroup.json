@@ -5,9 +5,16 @@
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
     },
+    "autodisabledelay" : {
+      "type" : "integer"
+    },
+    "autodisablegraceful" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ]
+    },
     "autoscale" : {
       "type" : "string",
-      "enum" : [ "DISABLED", "DNS", "POLICY" ]
+      "enum" : [ "DISABLED", "DNS", "POLICY", "CLOUD" ]
     },
     "cacheable" : {
       "type" : "string",
@@ -96,25 +103,12 @@
     "memberport" : {
       "type" : "integer"
     },
+    "monconnectionclose" : {
+      "type" : "string",
+      "enum" : [ "RESET", "FIN" ]
+    },
     "monitor_name_svc" : {
       "type" : "string"
-    },
-    "monitor_state" : {
-      "type" : "string",
-      "enum" : [ "UP", "DOWN", "UNKNOWN", "BUSY", "OUT OF SERVICE", "GOING OUT OF SERVICE", "DOWN WHEN GOING OUT OF SERVICE", "NS_EMPTY_STR", "Unknown", "DISABLED" ],
-      "readonly" : true
-    },
-    "monitorcurrentfailedprobes" : {
-      "type" : "integer",
-      "readonly" : true
-    },
-    "monitortotalfailedprobes" : {
-      "type" : "integer",
-      "readonly" : true
-    },
-    "monitortotalprobes" : {
-      "type" : "integer",
-      "readonly" : true
     },
     "monstatcode" : {
       "type" : "integer",
@@ -141,6 +135,11 @@
     "newname" : {
       "type" : "string"
     },
+    "nodefaultbindings" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ],
+      "readonly" : true
+    },
     "numofconnections" : {
       "type" : "integer",
       "readonly" : true
@@ -155,6 +154,13 @@
     },
     "port" : {
       "type" : "integer"
+    },
+    "riseapbrstatsmsgcode" : {
+      "type" : "integer"
+    },
+    "riseapbrstatsmsgcode2" : {
+      "type" : "integer",
+      "readonly" : true
     },
     "rtspsessionidremap" : {
       "type" : "string",
@@ -174,6 +180,11 @@
       "type" : "boolean",
       "readonly" : true
     },
+    "servicegroupeffectivestate" : {
+      "type" : "string",
+      "enum" : [ "UP", "DOWN", "OUT OF SERVICE", "PARTIAL-UP", "PARTIAL-DOWN" ],
+      "readonly" : true
+    },
     "servicegroupname" : {
       "type" : "string"
     },
@@ -183,7 +194,7 @@
     },
     "servicetype" : {
       "type" : "string",
-      "enum" : [ "HTTP", "FTP", "TCP", "UDP", "SSL", "SSL_BRIDGE", "SSL_TCP", "DTLS", "NNTP", "RPCSVR", "DNS", "ADNS", "SNMP", "RTSP", "DHCPRA", "ANY", "SIP_UDP", "DNS_TCP", "ADNS_TCP", "MYSQL", "MSSQL", "RADIUS", "RDP", "DIAMETER", "SSL_DIAMETER", "TFTP" ]
+      "enum" : [ "HTTP", "FTP", "TCP", "UDP", "SSL", "SSL_BRIDGE", "SSL_TCP", "DTLS", "NNTP", "RPCSVR", "DNS", "ADNS", "SNMP", "RTSP", "DHCPRA", "ANY", "SIP_UDP", "SIP_TCP", "SIP_SSL", "DNS_TCP", "ADNS_TCP", "MYSQL", "MSSQL", "ORACLE", "RADIUS", "RADIUSListener", "RDP", "DIAMETER", "SSL_DIAMETER", "TFTP", "SMPP", "PPTP", "GRE", "SYSLOGTCP", "SYSLOGUDP", "FIX", "SSL_FIX", "USER_TCP", "USER_SSL_TCP", "QUIC", "IPFIX", "LOGSTREAM" ]
     },
     "sp" : {
       "type" : "string",
@@ -195,10 +206,6 @@
     },
     "statechangetimemsec" : {
       "type" : "integer",
-      "readonly" : true
-    },
-    "statechangetimesec" : {
-      "type" : "string",
       "readonly" : true
     },
     "stateupdatereason" : {
@@ -222,10 +229,6 @@
     },
     "td" : {
       "type" : "integer"
-    },
-    "tickssincelaststatechange" : {
-      "type" : "integer",
-      "readonly" : true
     },
     "useproxyport" : {
       "type" : "string",

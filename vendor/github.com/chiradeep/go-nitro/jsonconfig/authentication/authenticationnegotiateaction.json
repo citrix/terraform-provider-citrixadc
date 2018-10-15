@@ -23,6 +23,9 @@
     "name" : {
       "type" : "string"
     },
+    "ntlmpath" : {
+      "type" : "string"
+    },
     "ou" : {
       "type" : "string"
     }

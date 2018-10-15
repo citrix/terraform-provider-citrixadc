@@ -55,11 +55,17 @@
     "comment" : {
       "type" : "string"
     },
+    "contentinspectionprofilename" : {
+      "type" : "string"
+    },
     "customserverid" : {
       "type" : "string"
     },
     "delay" : {
       "type" : "integer"
+    },
+    "dnsprofilename" : {
+      "type" : "string"
     },
     "downstateflush" : {
       "type" : "string",
@@ -108,6 +114,10 @@
     "maxreq" : {
       "type" : "integer"
     },
+    "monconnectionclose" : {
+      "type" : "string",
+      "enum" : [ "RESET", "FIN" ]
+    },
     "monitor_name_svc" : {
       "type" : "string"
     },
@@ -144,8 +154,18 @@
     "newname" : {
       "type" : "string"
     },
+    "nodefaultbindings" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ],
+      "readonly" : true
+    },
     "numofconnections" : {
       "type" : "integer",
+      "readonly" : true
+    },
+    "oracleserverversion" : {
+      "type" : "string",
+      "enum" : [ "10G", "11G" ],
       "readonly" : true
     },
     "pathmonitor" : {
@@ -163,6 +183,10 @@
     "port" : {
       "type" : "integer"
     },
+    "processlocal" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
     "publicip" : {
       "type" : "string",
       "readonly" : true
@@ -172,6 +196,13 @@
       "readonly" : true
     },
     "responsetime" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "riseapbrstatsmsgcode" : {
+      "type" : "integer"
+    },
+    "riseapbrstatsmsgcode2" : {
       "type" : "integer",
       "readonly" : true
     },
@@ -204,7 +235,7 @@
     },
     "servicetype" : {
       "type" : "string",
-      "enum" : [ "HTTP", "FTP", "TCP", "UDP", "SSL", "SSL_BRIDGE", "SSL_TCP", "DTLS", "NNTP", "RPCSVR", "DNS", "ADNS", "SNMP", "RTSP", "DHCPRA", "ANY", "SIP_UDP", "DNS_TCP", "ADNS_TCP", "MYSQL", "MSSQL", "RADIUS", "RDP", "DIAMETER", "SSL_DIAMETER", "TFTP" ]
+      "enum" : [ "HTTP", "FTP", "TCP", "UDP", "SSL", "SSL_BRIDGE", "SSL_TCP", "DTLS", "NNTP", "RPCSVR", "DNS", "ADNS", "SNMP", "RTSP", "DHCPRA", "ANY", "SIP_UDP", "SIP_TCP", "SIP_SSL", "DNS_TCP", "ADNS_TCP", "MYSQL", "MSSQL", "ORACLE", "RADIUS", "RADIUSListener", "RDP", "DIAMETER", "SSL_DIAMETER", "TFTP", "SMPP", "PPTP", "GRE", "SYSLOGTCP", "SYSLOGUDP", "FIX", "SSL_FIX", "USER_TCP", "USER_SSL_TCP", "QUIC", "IPFIX", "LOGSTREAM" ]
     },
     "sp" : {
       "type" : "string",

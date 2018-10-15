@@ -1,13 +1,75 @@
 {
   "type" : "object",
   "properties" : {
+    "appflowlog" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ],
+      "readonly" : true
+    },
+    "boundtd" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "cacheable" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ],
+      "readonly" : true
+    },
+    "cip" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ],
+      "readonly" : true
+    },
+    "cipheader" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "cka" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ],
+      "readonly" : true
+    },
+    "clttimeout" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "cmp" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ],
+      "readonly" : true
+    },
+    "customserverid" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "downstateflush" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ],
+      "readonly" : true
+    },
     "dup_port" : {
       "type" : "integer",
       "readonly" : true
     },
     "dup_svctype" : {
       "type" : "string",
-      "enum" : [ "HTTP", "FTP", "TCP", "UDP", "SSL", "SSL_BRIDGE", "SSL_TCP", "DTLS", "NNTP", "RPCSVR", "DNS", "ADNS", "SNMP", "RTSP", "DHCPRA", "ANY", "SIP_UDP", "DNS_TCP", "ADNS_TCP", "MYSQL", "MSSQL", "RADIUS", "RDP", "DIAMETER", "SSL_DIAMETER", "TFTP" ],
+      "enum" : [ "HTTP", "FTP", "TCP", "UDP", "SSL", "SSL_BRIDGE", "SSL_TCP", "DTLS", "NNTP", "RPCSVR", "DNS", "ADNS", "SNMP", "RTSP", "DHCPRA", "ANY", "SIP_UDP", "SIP_TCP", "SIP_SSL", "DNS_TCP", "ADNS_TCP", "MYSQL", "MSSQL", "ORACLE", "RADIUS", "RADIUSListener", "RDP", "DIAMETER", "SSL_DIAMETER", "TFTP", "SMPP", "PPTP", "GRE", "SYSLOGTCP", "SYSLOGUDP", "FIX", "SSL_FIX", "USER_TCP", "USER_SSL_TCP", "QUIC", "IPFIX", "LOGSTREAM" ],
+      "readonly" : true
+    },
+    "maxbandwidth" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "maxclient" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "maxreq" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "monthreshold" : {
+      "type" : "integer",
       "readonly" : true
     },
     "name" : {
@@ -15,6 +77,11 @@
     },
     "port" : {
       "type" : "integer",
+      "readonly" : true
+    },
+    "sc" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ],
       "readonly" : true
     },
     "servicegroupname" : {
@@ -28,9 +95,14 @@
       "type" : "string",
       "readonly" : true
     },
+    "sp" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ],
+      "readonly" : true
+    },
     "svctype" : {
       "type" : "string",
-      "enum" : [ "HTTP", "FTP", "TCP", "UDP", "SSL", "SSL_BRIDGE", "SSL_TCP", "DTLS", "NNTP", "RPCSVR", "DNS", "ADNS", "SNMP", "RTSP", "DHCPRA", "ANY", "SIP_UDP", "DNS_TCP", "ADNS_TCP", "MYSQL", "MSSQL", "RADIUS", "RDP", "DIAMETER", "SSL_DIAMETER", "TFTP" ],
+      "enum" : [ "HTTP", "FTP", "TCP", "UDP", "SSL", "SSL_BRIDGE", "SSL_TCP", "DTLS", "NNTP", "RPCSVR", "DNS", "ADNS", "SNMP", "RTSP", "DHCPRA", "ANY", "SIP_UDP", "SIP_TCP", "SIP_SSL", "DNS_TCP", "ADNS_TCP", "MYSQL", "MSSQL", "ORACLE", "RADIUS", "RADIUSListener", "RDP", "DIAMETER", "SSL_DIAMETER", "TFTP", "SMPP", "PPTP", "GRE", "SYSLOGTCP", "SYSLOGUDP", "FIX", "SSL_FIX", "USER_TCP", "USER_SSL_TCP", "QUIC", "IPFIX", "LOGSTREAM" ],
       "readonly" : true
     },
     "svrcfgflags" : {
@@ -40,6 +112,20 @@
     "svrstate" : {
       "type" : "string",
       "enum" : [ "UP", "DOWN", "UNKNOWN", "BUSY", "OUT OF SERVICE", "GOING OUT OF SERVICE", "DOWN WHEN GOING OUT OF SERVICE", "NS_EMPTY_STR", "Unknown", "DISABLED" ],
+      "readonly" : true
+    },
+    "svrtimeout" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "tcpb" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ],
+      "readonly" : true
+    },
+    "usip" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ],
       "readonly" : true
     }
   },
