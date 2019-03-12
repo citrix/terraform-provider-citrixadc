@@ -115,12 +115,15 @@ resource "netscaler_servicegroup" "backend_1" {
   lbvservers = ["${netscaler_lbvserver.foo.name}]"
   lbmonitor = "${netscaler_lbmonitor.foo.name}"
   servicegroupmembers = ["172.20.0.20:200:50","172.20.0.101:80:10",  "172.20.0.10:80:40"]
+  servicegroupmembers_by_servername = ["server_1:200:50","server_2:80:10",  "server_3:80:40"]
 
 }
 ```
 
 ##### Argument Reference
 See <https://developer-docs.citrix.com/projects/netscaler-nitro-api/en/12.0/configuration/basic/servicegroup/servicegroup/> for possible values for these arguments and for an exhaustive list of arguments. Additionally, you can specify the LB vservers  to be bound to this service using the `lbvservers` parameter. The `lbmonitor` parameter specifies the LB monitor to be bound.
+
+`servicegroupmembers_by_servername` gives the ability to define servicegroup members by providing the server name. The heuristic rule for assigning members to either `servicegroupmembers_by_servername` or `servicegroupmembers` is whether the `servername` and `ip` property of the binding as read from the Netscaler configuration have idetical values. When the values are identical the member is classified as a `servicegroupmembers`. When they differ the member is classified as `servicegroupmembers_by_servername`.
 
 #### `netscaler_csvserver`
 

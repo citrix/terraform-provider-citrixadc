@@ -262,6 +262,12 @@ func resourceNetScalerServicegroup() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
+			"servicegroupmembers_by_servername": &schema.Schema{
+				Optional: true,
+				Type:     schema.TypeSet,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
+			},
 		},
 	}
 }
@@ -301,6 +307,12 @@ func createServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 	v, gok := d.GetOk("servicegroupmembers")
 	if gok {
 		groupmembers = expandStringList(v.(*schema.Set).List())
+	}
+
+	var groupmembersByServername []string
+	vbs, gbsok := d.GetOk("servicegroupmembers_by_servername")
+	if gbsok {
+		groupmembersByServername = expandStringList(vbs.(*schema.Set).List())
 	}
 
 	servicegroup := basic.Servicegroup{
@@ -382,7 +394,11 @@ func createServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if gok { //servicegroupmembers is specified
-		createServicegroupMemberBindings(client, servicegroupName, groupmembers)
+		createServicegroupMemberBindings(client, servicegroupName, groupmembers, false)
+	}
+
+	if gbsok { // servicegroupmembers_by_servername is specified
+		createServicegroupMemberBindings(client, servicegroupName, groupmembersByServername, true)
 	}
 
 	d.SetId(servicegroupName)
@@ -395,13 +411,17 @@ func createServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func createServicegroupMemberBindings(client *netscaler.NitroClient, servicegroupName string, groupmembers []string) error {
+func createServicegroupMemberBindings(client *netscaler.NitroClient, servicegroupName string, groupmembers []string, bindByServername bool) error {
 	for _, member := range groupmembers {
 		//format is ip:port:weight
 		parts := strings.Split(member, ":")
-		var ip string
+		var ip, servername string
 		var port, weight int
-		ip = parts[0]
+		if !bindByServername {
+			ip = parts[0]
+		} else {
+			servername = parts[0]
+		}
 		if len(parts) < 2 {
 			log.Printf("[WARN] netscaler-provider:  servicgroupmembers has invalid member: port not specified:%s", member)
 			//TODO: take it from memberport
@@ -419,11 +439,21 @@ func createServicegroupMemberBindings(client *netscaler.NitroClient, servicegrou
 				log.Printf("[WARN] netscaler-provider:  servicgroupmembers has invalid weight: not an integer:%s", parts[2])
 			}
 		}
-		binding := basic.Servicegroupservicegroupmemberbinding{
-			Servicegroupname: servicegroupName,
-			Ip:               ip,
-			Port:             port,
+		var binding basic.Servicegroupservicegroupmemberbinding
+		if !bindByServername {
+			binding = basic.Servicegroupservicegroupmemberbinding{
+				Servicegroupname: servicegroupName,
+				Ip:               ip,
+				Port:             port,
+			}
+		} else {
+			binding = basic.Servicegroupservicegroupmemberbinding{
+				Servicegroupname: servicegroupName,
+				Servername:       servername,
+				Port:             port,
+			}
 		}
+
 		if weight > -1 {
 			binding.Weight = weight
 		}
@@ -438,12 +468,16 @@ func createServicegroupMemberBindings(client *netscaler.NitroClient, servicegrou
 	return nil
 }
 
-func removeServicegroupMemberBindings(client *netscaler.NitroClient, servicegroupName string, groupmembers []string) error {
+func removeServicegroupMemberBindings(client *netscaler.NitroClient, servicegroupName string, groupmembers []string, bindByServername bool) error {
 	for _, member := range groupmembers {
 		//format is ip:port:weight
 		parts := strings.Split(member, ":")
-		var ip, port string
-		ip = parts[0]
+		var ip, servername, port string
+		if !bindByServername {
+			ip = parts[0]
+		} else {
+			servername = parts[0]
+		}
 		if len(parts) < 2 {
 			log.Printf("[WARN] netscaler-provider:  servicgroupmembers has invalid member: port not specified:%s", member)
 			//TODO: take it from memberport
@@ -452,7 +486,11 @@ func removeServicegroupMemberBindings(client *netscaler.NitroClient, servicegrou
 		port = parts[1]
 		log.Printf("[INFO] netscaler-provider:  UnBinding servicegroup %s from ip %s", servicegroupName, ip)
 		args := make([]string, 1, 1)
-		args[0] = fmt.Sprintf("ip:%s,port:%s", ip, port)
+		if !bindByServername {
+			args[0] = fmt.Sprintf("ip:%s,port:%s", ip, port)
+		} else {
+			args[0] = fmt.Sprintf("servername:%s,port:%s", servername, port)
+		}
 		err := client.DeleteResourceWithArgs(netscaler.Servicegroup_servicegroupmember_binding.Type(), servicegroupName, args)
 		if err != nil {
 			log.Printf("[ERROR] netscaler-provider:  Failed to unbind servicegroup %s from ip %s", servicegroupName, ip)
@@ -573,14 +611,24 @@ func readServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 
 	//boundMembers is of type []map[string]interface{}
 	servicegroupMembers := make([]string, 0, len(boundMembers))
+	servicegroupMembersByServername := make([]string, 0, len(boundMembers))
 	for _, member := range boundMembers {
 		ip := member["ip"].(string)
+		servername := member["servername"].(string)
 		port := member["port"].(float64) //TODO: why is this not int?
 		weight := member["weight"].(string)
-		strmember := fmt.Sprintf("%s:%.0f:%s", ip, port, weight)
-		servicegroupMembers = append(servicegroupMembers, strmember)
+		// Heuristic rule
+		var strmember string
+		if servername == ip {
+			strmember = fmt.Sprintf("%s:%.0f:%s", ip, port, weight)
+			servicegroupMembers = append(servicegroupMembers, strmember)
+		} else {
+			strmember = fmt.Sprintf("%s:%.0f:%s", servername, port, weight)
+			servicegroupMembersByServername = append(servicegroupMembersByServername, strmember)
+		}
 	}
 	d.Set("servicegroupmembers", servicegroupMembers)
+	d.Set("servicegroupmembers_by_servername", servicegroupMembersByServername)
 
 	//vserverBindings is of type []map[string]interface{}
 	var boundVserver string
@@ -621,6 +669,7 @@ func updateServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 	lbvserversChanged := false
 	lbmonitorChanged := false
 	servicegroupmembersChanged := false
+	servicegroupmembersByServernameChanged := false
 
 	if d.HasChange("appflowlog") {
 		log.Printf("[DEBUG]  netscaler-provider: Appflowlog has changed for servicegroup %s, starting update", servicegroupName)
@@ -860,6 +909,11 @@ func updateServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 		lbmonitorChanged = true
 		servicegroupmembersChanged = true
 	}
+	if d.HasChange("servicegroupmembers_by_servername") {
+		log.Printf("[DEBUG] netscaler-provider:  servicegroup membership has changed for servicegroup %s, starting update", servicegroupName)
+		lbmonitorChanged = true
+		servicegroupmembersByServernameChanged = true
+	}
 
 	if lbvserversChanged {
 		//Binding has to be updated
@@ -932,10 +986,27 @@ func updateServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 		add := expandStringList(ns.Difference(os).List())
 
 		if len(remove) > 0 {
-			removeServicegroupMemberBindings(client, servicegroupName, remove)
+			removeServicegroupMemberBindings(client, servicegroupName, remove, false)
 		}
 		if len(add) > 0 {
-			createServicegroupMemberBindings(client, servicegroupName, add)
+			createServicegroupMemberBindings(client, servicegroupName, add, false)
+		}
+
+	}
+
+	if servicegroupmembersByServernameChanged {
+		o, n := d.GetChange("servicegroupmembers_by_servername")
+		os := o.(*schema.Set)
+		ns := n.(*schema.Set)
+
+		remove := expandStringList(os.Difference(ns).List())
+		add := expandStringList(ns.Difference(os).List())
+
+		if len(remove) > 0 {
+			removeServicegroupMemberBindings(client, servicegroupName, remove, true)
+		}
+		if len(add) > 0 {
+			createServicegroupMemberBindings(client, servicegroupName, add, true)
 		}
 
 	}
