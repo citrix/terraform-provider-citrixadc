@@ -100,6 +100,7 @@ func testAccCheckServicegroupDestroy(s *terraform.State) error {
 	return nil
 }
 
+// TODO add testcase when we have servicegroupmembers_by_servername defined
 const testAccServicegroup_basic = `
 
 resource "netscaler_lbvserver" "foo1" {
