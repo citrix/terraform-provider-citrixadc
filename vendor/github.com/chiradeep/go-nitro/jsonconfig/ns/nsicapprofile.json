@@ -1,0 +1,52 @@
+{
+  "type" : "object",
+  "properties" : {
+    "allow204" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "connectionkeepalive" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "hostheader" : {
+      "type" : "string"
+    },
+    "inserticapheaders" : {
+      "type" : "string"
+    },
+    "mode" : {
+      "type" : "string",
+      "enum" : [ "REQMOD", "RESPMOD" ]
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "preview" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "previewlength" : {
+      "type" : "integer"
+    },
+    "queryparams" : {
+      "type" : "string"
+    },
+    "reqtimeout" : {
+      "type" : "integer"
+    },
+    "reqtimeoutaction" : {
+      "type" : "string",
+      "enum" : [ "BYPASS", "DROP", "RESET" ]
+    },
+    "uri" : {
+      "type" : "string"
+    },
+    "useragent" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "nsicapprofile",
+  "title" : "nsicapprofile"
+}

@@ -5,16 +5,20 @@
       "type" : "string"
     },
     "description" : {
-      "type" : "string"
+      "type" : "string",
+      "readonly" : true
     },
     "flowtype" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
     },
     "gotopriorityexpression" : {
-      "type" : "string"
+      "type" : "string",
+      "readonly" : true
     },
     "hits" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
     },
     "labelname" : {
       "type" : "string"
@@ -26,13 +30,20 @@
       "type" : "string"
     },
     "numpol" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
     },
     "policyname" : {
-      "type" : "string"
+      "type" : "string",
+      "readonly" : true
     },
     "priority" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
+    },
+    "type" : {
+      "type" : "string",
+      "enum" : [ "AAATM_REQ", "RBA_REQ" ]
     }
   },
   "$schema" : "http://json-schema.org/draft-04/schema#",

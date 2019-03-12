@@ -1,0 +1,16 @@
+{
+  "type" : "object",
+  "properties" : {
+    "directmode" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "indirectmode" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "riseparam",
+  "title" : "riseparam"
+}

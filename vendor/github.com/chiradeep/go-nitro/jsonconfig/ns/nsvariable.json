@@ -8,13 +8,16 @@
       "type" : "integer"
     },
     "iffull" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "undef", "lru" ]
     },
     "ifnovalue" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "undef", "init" ]
     },
     "ifvaluetoobig" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "undef", "truncate" ]
     },
     "init" : {
       "type" : "string"
@@ -23,10 +26,12 @@
       "type" : "string"
     },
     "referencecount" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
     },
     "scope" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "global", "transaction" ]
     },
     "type" : {
       "type" : "string"

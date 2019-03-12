@@ -1,6 +1,10 @@
 {
   "type" : "object",
   "properties" : {
+    "allpartitions" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
     "communityname" : {
       "type" : "string"
     },
@@ -14,6 +18,9 @@
     "srcip" : {
       "type" : "string"
     },
+    "td" : {
+      "type" : "integer"
+    },
     "trapclass" : {
       "type" : "string",
       "enum" : [ "generic", "specific" ]
@@ -23,7 +30,7 @@
     },
     "version" : {
       "type" : "string",
-      "enum" : [ "V1", "V2" ]
+      "enum" : [ "V1", "V2", "V3" ]
     }
   },
   "$schema" : "http://json-schema.org/draft-04/schema#",

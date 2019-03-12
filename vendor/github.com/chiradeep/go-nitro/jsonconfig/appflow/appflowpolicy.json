@@ -23,6 +23,13 @@
     },
     "rule" : {
       "type" : "string"
+    },
+    "undefaction" : {
+      "type" : "string"
+    },
+    "undefhits" : {
+      "type" : "integer",
+      "readonly" : true
     }
   },
   "$schema" : "http://json-schema.org/draft-04/schema#",

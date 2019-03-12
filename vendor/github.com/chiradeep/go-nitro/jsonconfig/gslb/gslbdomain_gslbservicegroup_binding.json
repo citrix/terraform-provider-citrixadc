@@ -1,0 +1,14 @@
+{
+  "type" : "object",
+  "properties" : {
+    "name" : {
+      "type" : "string"
+    },
+    "servicegroupname" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "gslbdomain_gslbservicegroup_binding",
+  "title" : "gslbdomain_gslbservicegroup_binding"
+}

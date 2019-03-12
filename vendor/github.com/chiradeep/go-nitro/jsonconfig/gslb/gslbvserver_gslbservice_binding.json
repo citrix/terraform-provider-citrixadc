@@ -21,6 +21,11 @@
       "type" : "integer",
       "readonly" : true
     },
+    "gslbboundsvctype" : {
+      "type" : "string",
+      "enum" : [ "HTTP", "FTP", "TCP", "UDP", "SSL", "SSL_BRIDGE", "SSL_TCP", "NNTP", "ANY", "SIP_UDP", "SIP_TCP", "SIP_SSL", "RADIUS", "RDP", "RTSP", "MYSQL", "MSSQL", "ORACLE" ],
+      "readonly" : true
+    },
     "gslbthreshold" : {
       "type" : "integer",
       "readonly" : true
@@ -48,12 +53,11 @@
     "servicename" : {
       "type" : "string"
     },
-    "servicetype" : {
+    "sitepersistcookie" : {
       "type" : "string",
-      "enum" : [ "HTTP", "FTP", "TCP", "UDP", "SSL", "SSL_BRIDGE", "SSL_TCP", "NNTP", "ANY", "SIP_UDP", "RADIUS", "RDP", "RTSP", "MYSQL", "MSSQL" ],
       "readonly" : true
     },
-    "sitepersistence" : {
+    "svcsitepersistence" : {
       "type" : "string",
       "enum" : [ "ConnectionProxy", "HTTPRedirect", "NONE" ],
       "readonly" : true

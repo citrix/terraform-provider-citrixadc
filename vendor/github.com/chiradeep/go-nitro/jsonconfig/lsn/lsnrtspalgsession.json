@@ -1,0 +1,27 @@
+{
+  "type" : "object",
+  "properties" : {
+    "callflags" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "callrefcount" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "calltimer" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "sessionid" : {
+      "type" : "string"
+    },
+    "xlatip" : {
+      "type" : "string",
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "lsnrtspalgsession",
+  "title" : "lsnrtspalgsession"
+}

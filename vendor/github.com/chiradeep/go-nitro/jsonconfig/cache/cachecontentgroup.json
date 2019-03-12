@@ -13,7 +13,7 @@
     },
     "builtin" : {
       "type" : "object",
-      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE" ],
+      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE", "PARTITION_ALL" ],
       "readonly" : true
     },
     "cache304hits" : {
@@ -39,6 +39,10 @@
       "type" : "integer",
       "readonly" : true
     },
+    "disklimit" : {
+      "type" : "integer",
+      "readonly" : true
+    },
     "expireatlastbyte" : {
       "type" : "string",
       "enum" : [ "YES", "NO" ]
@@ -50,9 +54,6 @@
     "flashcache" : {
       "type" : "string",
       "enum" : [ "YES", "NO" ]
-    },
-    "force" : {
-      "type" : "boolean"
     },
     "heurexpiryparam" : {
       "type" : "integer"
@@ -115,6 +116,10 @@
     "maxressize" : {
       "type" : "integer"
     },
+    "memdusage" : {
+      "type" : "integer",
+      "readonly" : true
+    },
     "memlimit" : {
       "type" : "integer"
     },
@@ -132,6 +137,11 @@
       "type" : "string"
     },
     "persist" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ],
+      "readonly" : true
+    },
+    "persistha" : {
       "type" : "string",
       "enum" : [ "YES", "NO" ]
     },
@@ -182,6 +192,10 @@
     },
     "selectorvalue" : {
       "type" : "string"
+    },
+    "tosecondary" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ]
     },
     "type" : {
       "type" : "string",

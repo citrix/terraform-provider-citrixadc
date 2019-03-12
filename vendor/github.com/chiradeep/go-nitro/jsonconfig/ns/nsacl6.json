@@ -15,6 +15,11 @@
       "type" : "string",
       "enum" : [ "BRIDGE", "DENY", "ALLOW" ]
     },
+    "aclassociate" : {
+      "type" : "object",
+      "enum" : [ "NAT", "FORWARDINGSESSION", "NAT64", "LSN" ],
+      "readonly" : true
+    },
     "destipop" : {
       "type" : "string",
       "enum" : [ "=", "!=", "EQ", "NEQ" ]
@@ -35,6 +40,13 @@
     "destportval" : {
       "type" : "string"
     },
+    "dfdhash" : {
+      "type" : "string",
+      "enum" : [ "SIP-SPORT-DIP-DPORT", "SIP", "DIP", "SIP-DIP", "SIP-SPORT", "DIP-DPORT" ]
+    },
+    "dfdprefix" : {
+      "type" : "integer"
+    },
     "established" : {
       "type" : "boolean"
     },
@@ -53,6 +65,10 @@
       "enum" : [ "APPLIED", "NOTAPPLIED", "RE-APPLY", "SFAPPLIED", "SFNOTAPPLIED" ],
       "readonly" : true
     },
+    "logstate" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
     "newname" : {
       "type" : "string"
     },
@@ -66,6 +82,9 @@
     "protocolnumber" : {
       "type" : "integer"
     },
+    "ratelimit" : {
+      "type" : "integer"
+    },
     "srcipop" : {
       "type" : "string",
       "enum" : [ "=", "!=", "EQ", "NEQ" ]
@@ -77,6 +96,9 @@
       "type" : "string"
     },
     "srcmac" : {
+      "type" : "string"
+    },
+    "srcmacmask" : {
       "type" : "string"
     },
     "srcport" : {
@@ -93,13 +115,24 @@
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
     },
+    "stateful" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ]
+    },
     "td" : {
       "type" : "integer"
     },
     "ttl" : {
       "type" : "integer"
     },
+    "type" : {
+      "type" : "string",
+      "enum" : [ "CLASSIC", "DFD" ]
+    },
     "vlan" : {
+      "type" : "integer"
+    },
+    "vxlan" : {
       "type" : "integer"
     }
   },

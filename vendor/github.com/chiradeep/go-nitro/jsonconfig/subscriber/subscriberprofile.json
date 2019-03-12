@@ -1,0 +1,39 @@
+{
+  "type" : "object",
+  "properties" : {
+    "avpdisplaybuffer" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "flags" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "ip" : {
+      "type" : "string"
+    },
+    "servicepath" : {
+      "type" : "string"
+    },
+    "subscriberrules" : {
+      "type" : "object"
+    },
+    "subscriptionidtype" : {
+      "type" : "string",
+      "enum" : [ "E164", "IMSI", "SIP_URI", "NAI", "PRIVATE" ]
+    },
+    "subscriptionidvalue" : {
+      "type" : "string"
+    },
+    "ttl" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vlan" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "subscriberprofile",
+  "title" : "subscriberprofile"
+}

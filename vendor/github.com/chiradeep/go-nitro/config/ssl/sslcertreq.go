@@ -5,6 +5,7 @@ type Sslcertreq struct {
 	Commonname           string `json:"commonname,omitempty"`
 	Companyname          string `json:"companyname,omitempty"`
 	Countryname          string `json:"countryname,omitempty"`
+	Digestmethod         string `json:"digestmethod,omitempty"`
 	Emailaddress         string `json:"emailaddress,omitempty"`
 	Fipskeyname          string `json:"fipskeyname,omitempty"`
 	Keyfile              string `json:"keyfile,omitempty"`
@@ -15,4 +16,5 @@ type Sslcertreq struct {
 	Pempassphrase        string `json:"pempassphrase,omitempty"`
 	Reqfile              string `json:"reqfile,omitempty"`
 	Statename            string `json:"statename,omitempty"`
+	Subjectaltname       string `json:"subjectaltname,omitempty"`
 }

@@ -3,6 +3,9 @@
   "properties" : {
     "name" : {
       "type" : "string"
+    },
+    "vxlanvlanmap" : {
+      "type" : "string"
     }
   },
   "$schema" : "http://json-schema.org/draft-04/schema#",

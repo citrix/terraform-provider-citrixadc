@@ -10,6 +10,9 @@
     "netmask" : {
       "type" : "string"
     },
+    "ownergroup" : {
+      "type" : "string"
+    },
     "td" : {
       "type" : "integer"
     }

@@ -6,6 +6,9 @@
     },
     "loggedin" : {
       "type" : "boolean"
+    },
+    "weight" : {
+      "type" : "integer"
     }
   },
   "$schema" : "http://json-schema.org/draft-04/schema#",

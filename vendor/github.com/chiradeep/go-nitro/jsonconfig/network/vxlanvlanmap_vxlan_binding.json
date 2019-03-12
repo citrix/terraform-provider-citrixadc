@@ -1,0 +1,17 @@
+{
+  "type" : "object",
+  "properties" : {
+    "name" : {
+      "type" : "string"
+    },
+    "vlan" : {
+      "type" : "object"
+    },
+    "vxlan" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "vxlanvlanmap_vxlan_binding",
+  "title" : "vxlanvlanmap_vxlan_binding"
+}

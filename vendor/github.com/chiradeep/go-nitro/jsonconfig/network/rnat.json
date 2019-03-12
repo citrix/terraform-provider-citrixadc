@@ -4,6 +4,10 @@
     "aclname" : {
       "type" : "string"
     },
+    "connfailover" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
     "natip" : {
       "type" : "string"
     },
@@ -16,11 +20,22 @@
     "network" : {
       "type" : "string"
     },
+    "ownergroup" : {
+      "type" : "string"
+    },
     "redirectport" : {
       "type" : "boolean"
     },
+    "srcippersistency" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
     "td" : {
       "type" : "integer"
+    },
+    "useproxyport" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
     }
   },
   "$schema" : "http://json-schema.org/draft-04/schema#",

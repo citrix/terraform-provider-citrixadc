@@ -5,28 +5,36 @@
       "type" : "string"
     },
     "gotopriorityexpression" : {
-      "type" : "string"
+      "type" : "string",
+      "readonly" : true
     },
     "hits" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
     },
     "labelname" : {
-      "type" : "string"
+      "type" : "string",
+      "readonly" : true
     },
     "labeltype" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "reqvserver", "resvserver", "policylabel" ],
+      "readonly" : true
     },
     "pihits" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
     },
     "pipolicyhits" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
     },
     "policyname" : {
       "type" : "string"
     },
     "priority" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
     }
   },
   "$schema" : "http://json-schema.org/draft-04/schema#",

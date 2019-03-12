@@ -7,10 +7,6 @@
     "certkey" : {
       "type" : "string"
     },
-    "crlcheck" : {
-      "type" : "string",
-      "enum" : [ "Mandatory", "Optional" ]
-    },
     "data" : {
       "type" : "integer",
       "readonly" : true

@@ -1,0 +1,37 @@
+{
+  "type" : "object",
+  "properties" : {
+    "bindpoint" : {
+      "type" : "string",
+      "enum" : [ "REQUEST", "RESPONSE", "ICA_REQUEST" ]
+    },
+    "gotopriorityexpression" : {
+      "type" : "string"
+    },
+    "invoke" : {
+      "type" : "boolean"
+    },
+    "labelname" : {
+      "type" : "string"
+    },
+    "labeltype" : {
+      "type" : "string",
+      "enum" : [ "reqvserver", "resvserver", "policylabel" ]
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "policyname" : {
+      "type" : "string"
+    },
+    "priority" : {
+      "type" : "integer"
+    },
+    "targetvserver" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "crvserver_appqoepolicy_binding",
+  "title" : "crvserver_appqoepolicy_binding"
+}

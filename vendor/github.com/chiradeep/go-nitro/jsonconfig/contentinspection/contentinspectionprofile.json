@@ -1,0 +1,31 @@
+{
+  "type" : "object",
+  "properties" : {
+    "egressinterface" : {
+      "type" : "string"
+    },
+    "egressvlan" : {
+      "type" : "integer"
+    },
+    "ingressinterface" : {
+      "type" : "string"
+    },
+    "ingressvlan" : {
+      "type" : "integer"
+    },
+    "mode" : {
+      "type" : "object",
+      "enum" : [ "RX", "TX", "RxLink", "TxLink" ]
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "type" : {
+      "type" : "string",
+      "enum" : [ "InlineInspection" ]
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "contentinspectionprofile",
+  "title" : "contentinspectionprofile"
+}

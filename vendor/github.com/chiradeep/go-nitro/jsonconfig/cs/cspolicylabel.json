@@ -3,7 +3,7 @@
   "properties" : {
     "cspolicylabeltype" : {
       "type" : "string",
-      "enum" : [ "HTTP", "TCP", "RTSP", "SSL", "SSL_TCP", "UDP", "DNS", "SIP_UDP", "ANY", "RADIUS", "RDP", "MYSQL", "MSSQL", "DIAMETER", "SSL_DIAMETER", "FTP" ]
+      "enum" : [ "HTTP", "TCP", "RTSP", "SSL", "SSL_TCP", "UDP", "DNS", "SIP_UDP", "SIP_TCP", "ANY", "RADIUS", "RDP", "MYSQL", "MSSQL", "ORACLE", "DIAMETER", "SSL_DIAMETER", "FTP", "DNS_TCP", "SMPP" ]
     },
     "gotopriorityexpression" : {
       "type" : "string",

@@ -1,0 +1,91 @@
+{
+  "type" : "object",
+  "properties" : {
+    "admindown" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "currentownerpe" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "localdiagnotic" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "localdiscriminator" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "localip" : {
+      "type" : "string"
+    },
+    "localport" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "minimumreceiveinterval" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "minimumtransmitinterval" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "multihop" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "multiplier" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "negotiatedminimumreceiveinterval" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "negotiatedminimumtransmitinterval" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "originalownerpe" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "ownernode" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "passive" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "remotediscriminator" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "remoteip" : {
+      "type" : "string"
+    },
+    "remotemultiplier" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "remoteport" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "state" : {
+      "type" : "string",
+      "enum" : [ "ADMIN DOWN", "DOWN", "INIT", "UP" ],
+      "readonly" : true
+    },
+    "vlan" : {
+      "type" : "integer",
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "bfdsession",
+  "title" : "bfdsession"
+}

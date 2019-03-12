@@ -11,88 +11,117 @@
       "type" : "string"
     },
     "istruncatedrefresult" : {
-      "type" : "boolean"
+      "type" : "boolean",
+      "readonly" : true
     },
     "pitactionerrorresult" : {
-      "type" : "string"
+      "type" : "string",
+      "readonly" : true
     },
     "pitactionevaltime" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
     },
     "pitboolerrorresult" : {
-      "type" : "string"
+      "type" : "string",
+      "readonly" : true
     },
     "pitboolevaltime" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
     },
     "pitboolresult" : {
-      "type" : "boolean"
+      "type" : "boolean",
+      "readonly" : true
     },
     "pitdoubleerrorresult" : {
-      "type" : "string"
+      "type" : "string",
+      "readonly" : true
     },
     "pitdoubleevaltime" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
     },
     "pitdoubleresult" : {
-      "type" : "number"
+      "type" : "number",
+      "readonly" : true
     },
     "pitmodifiedinputdata" : {
-      "type" : "string"
+      "type" : "string",
+      "readonly" : true
     },
     "pitnewoffsetarray" : {
-      "type" : "object"
+      "type" : "object",
+      "readonly" : true
     },
     "pitnumerrorresult" : {
-      "type" : "string"
+      "type" : "string",
+      "readonly" : true
     },
     "pitnumevaltime" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
     },
     "pitnumresult" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
     },
     "pitoffseterrorresult" : {
-      "type" : "string"
+      "type" : "string",
+      "readonly" : true
     },
     "pitoffsetevaltime" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
     },
     "pitoffsetlengtharray" : {
-      "type" : "object"
+      "type" : "object",
+      "readonly" : true
     },
     "pitoffsetresult" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
     },
     "pitoffsetresultlen" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
     },
     "pitoldoffsetarray" : {
-      "type" : "object"
+      "type" : "object",
+      "readonly" : true
     },
     "pitoperationperformerarray" : {
-      "type" : "object"
+      "type" : "object",
+      "enum" : [ "INSERT", "MODIFY", "DELETE" ],
+      "readonly" : true
     },
     "pitreferrorresult" : {
-      "type" : "string"
+      "type" : "string",
+      "readonly" : true
     },
     "pitrefevaltime" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
     },
     "pitrefresult" : {
-      "type" : "string"
+      "type" : "string",
+      "readonly" : true
     },
     "pitulongerrorresult" : {
-      "type" : "string"
+      "type" : "string",
+      "readonly" : true
     },
     "pitulongevaltime" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
     },
     "pitulongresult" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
     },
     "type" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "HTTP_REQ", "HTTP_RES", "TEXT" ]
     }
   },
   "$schema" : "http://json-schema.org/draft-04/schema#",

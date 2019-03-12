@@ -2,10 +2,12 @@
   "type" : "object",
   "properties" : {
     "acttype" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
     },
     "bindpoint" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "REQUEST", "RESPONSE", "ICA_REQUEST", "OTHERTCP_REQUEST" ]
     },
     "gotopriorityexpression" : {
       "type" : "string"

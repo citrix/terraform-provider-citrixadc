@@ -14,7 +14,8 @@
       "type" : "string"
     },
     "attribute10format" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "URI", "Basic" ]
     },
     "attribute10friendlyname" : {
       "type" : "string"
@@ -26,7 +27,8 @@
       "type" : "string"
     },
     "attribute11format" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "URI", "Basic" ]
     },
     "attribute11friendlyname" : {
       "type" : "string"
@@ -38,7 +40,8 @@
       "type" : "string"
     },
     "attribute12format" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "URI", "Basic" ]
     },
     "attribute12friendlyname" : {
       "type" : "string"
@@ -50,7 +53,8 @@
       "type" : "string"
     },
     "attribute13format" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "URI", "Basic" ]
     },
     "attribute13friendlyname" : {
       "type" : "string"
@@ -62,7 +66,8 @@
       "type" : "string"
     },
     "attribute14format" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "URI", "Basic" ]
     },
     "attribute14friendlyname" : {
       "type" : "string"
@@ -74,7 +79,8 @@
       "type" : "string"
     },
     "attribute15format" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "URI", "Basic" ]
     },
     "attribute15friendlyname" : {
       "type" : "string"
@@ -86,7 +92,8 @@
       "type" : "string"
     },
     "attribute16format" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "URI", "Basic" ]
     },
     "attribute16friendlyname" : {
       "type" : "string"
@@ -95,7 +102,8 @@
       "type" : "string"
     },
     "attribute1format" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "URI", "Basic" ]
     },
     "attribute1friendlyname" : {
       "type" : "string"
@@ -107,7 +115,8 @@
       "type" : "string"
     },
     "attribute2format" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "URI", "Basic" ]
     },
     "attribute2friendlyname" : {
       "type" : "string"
@@ -119,7 +128,8 @@
       "type" : "string"
     },
     "attribute3format" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "URI", "Basic" ]
     },
     "attribute3friendlyname" : {
       "type" : "string"
@@ -131,7 +141,8 @@
       "type" : "string"
     },
     "attribute4format" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "URI", "Basic" ]
     },
     "attribute4friendlyname" : {
       "type" : "string"
@@ -143,7 +154,8 @@
       "type" : "string"
     },
     "attribute5format" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "URI", "Basic" ]
     },
     "attribute5friendlyname" : {
       "type" : "string"
@@ -155,7 +167,8 @@
       "type" : "string"
     },
     "attribute6format" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "URI", "Basic" ]
     },
     "attribute6friendlyname" : {
       "type" : "string"
@@ -167,7 +180,8 @@
       "type" : "string"
     },
     "attribute7format" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "URI", "Basic" ]
     },
     "attribute7friendlyname" : {
       "type" : "string"
@@ -179,7 +193,8 @@
       "type" : "string"
     },
     "attribute8format" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "URI", "Basic" ]
     },
     "attribute8friendlyname" : {
       "type" : "string"
@@ -191,7 +206,8 @@
       "type" : "string"
     },
     "attribute9format" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "URI", "Basic" ]
     },
     "attribute9friendlyname" : {
       "type" : "string"
@@ -199,13 +215,38 @@
     "audience" : {
       "type" : "string"
     },
-    "digestmethod" : {
+    "defaultauthenticationgroup" : {
       "type" : "string"
+    },
+    "digestmethod" : {
+      "type" : "string",
+      "enum" : [ "SHA1", "SHA256" ]
     },
     "encryptassertion" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
     },
     "encryptionalgorithm" : {
+      "type" : "string",
+      "enum" : [ "DES3", "AES128", "AES192", "AES256" ]
+    },
+    "keytransportalg" : {
+      "type" : "string",
+      "enum" : [ "RSA-V1_5", "RSA_OAEP" ]
+    },
+    "logoutbinding" : {
+      "type" : "string",
+      "enum" : [ "REDIRECT", "POST" ]
+    },
+    "metadataimportstatus" : {
+      "type" : "string",
+      "enum" : [ "INIT", "SUCCESS", "FAIL" ],
+      "readonly" : true
+    },
+    "metadatarefreshinterval" : {
+      "type" : "integer"
+    },
+    "metadataurl" : {
       "type" : "string"
     },
     "name" : {
@@ -215,13 +256,16 @@
       "type" : "string"
     },
     "nameidformat" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "Unspecified", "emailAddress", "X509SubjectName", "WindowsDomainQualifiedName", "kerberos", "entity", "persistent", "transient" ]
     },
     "rejectunsignedrequests" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
     },
     "samlbinding" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "REDIRECT", "POST", "ARTIFACT" ]
     },
     "samlidpcertname" : {
       "type" : "string"
@@ -233,16 +277,25 @@
       "type" : "string"
     },
     "sendpassword" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
     },
     "serviceproviderid" : {
       "type" : "string"
     },
+    "signassertion" : {
+      "type" : "string",
+      "enum" : [ "NONE", "ASSERTION", "RESPONSE", "BOTH" ]
+    },
     "signaturealg" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "RSA-SHA1", "RSA-SHA256" ]
     },
     "skewtime" : {
       "type" : "integer"
+    },
+    "splogouturl" : {
+      "type" : "string"
     }
   },
   "$schema" : "http://json-schema.org/draft-04/schema#",

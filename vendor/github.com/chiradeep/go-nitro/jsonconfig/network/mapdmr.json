@@ -1,0 +1,14 @@
+{
+  "type" : "object",
+  "properties" : {
+    "bripv6prefix" : {
+      "type" : "string"
+    },
+    "name" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "mapdmr",
+  "title" : "mapdmr"
+}

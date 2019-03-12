@@ -3,6 +3,7 @@ package ssl
 type Sslcipherservicebinding struct {
 	Ciphergroupname  string `json:"ciphergroupname,omitempty"`
 	Cipheroperation  string `json:"cipheroperation,omitempty"`
+	Cipherpriority   int    `json:"cipherpriority,omitempty"`
 	Ciphgrpals       string `json:"ciphgrpals,omitempty"`
 	Service          bool   `json:"service,omitempty"`
 	Servicegroup     bool   `json:"servicegroup,omitempty"`

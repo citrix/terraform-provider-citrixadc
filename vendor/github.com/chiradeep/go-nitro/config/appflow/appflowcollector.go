@@ -6,4 +6,6 @@ type Appflowcollector struct {
 	Netprofile string `json:"netprofile,omitempty"`
 	Newname    string `json:"newname,omitempty"`
 	Port       int    `json:"port,omitempty"`
+	State      string `json:"state,omitempty"`
+	Transport  string `json:"transport,omitempty"`
 }

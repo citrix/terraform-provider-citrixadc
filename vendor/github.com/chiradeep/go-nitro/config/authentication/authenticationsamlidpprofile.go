@@ -67,9 +67,15 @@ type Authenticationsamlidpprofile struct {
 	Attribute9format            string `json:"attribute9format,omitempty"`
 	Attribute9friendlyname      string `json:"attribute9friendlyname,omitempty"`
 	Audience                    string `json:"audience,omitempty"`
+	Defaultauthenticationgroup  string `json:"defaultauthenticationgroup,omitempty"`
 	Digestmethod                string `json:"digestmethod,omitempty"`
 	Encryptassertion            string `json:"encryptassertion,omitempty"`
 	Encryptionalgorithm         string `json:"encryptionalgorithm,omitempty"`
+	Keytransportalg             string `json:"keytransportalg,omitempty"`
+	Logoutbinding               string `json:"logoutbinding,omitempty"`
+	Metadataimportstatus        string `json:"metadataimportstatus,omitempty"`
+	Metadatarefreshinterval     int    `json:"metadatarefreshinterval,omitempty"`
+	Metadataurl                 string `json:"metadataurl,omitempty"`
 	Name                        string `json:"name,omitempty"`
 	Nameidexpr                  string `json:"nameidexpr,omitempty"`
 	Nameidformat                string `json:"nameidformat,omitempty"`
@@ -80,6 +86,8 @@ type Authenticationsamlidpprofile struct {
 	Samlspcertname              string `json:"samlspcertname,omitempty"`
 	Sendpassword                string `json:"sendpassword,omitempty"`
 	Serviceproviderid           string `json:"serviceproviderid,omitempty"`
+	Signassertion               string `json:"signassertion,omitempty"`
 	Signaturealg                string `json:"signaturealg,omitempty"`
 	Skewtime                    int    `json:"skewtime,omitempty"`
+	Splogouturl                 string `json:"splogouturl,omitempty"`
 }

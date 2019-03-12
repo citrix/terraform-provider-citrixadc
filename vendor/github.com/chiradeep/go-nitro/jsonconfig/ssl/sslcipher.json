@@ -7,7 +7,13 @@
     "ciphername" : {
       "type" : "string"
     },
+    "cipherpriority" : {
+      "type" : "integer"
+    },
     "ciphgrpalias" : {
+      "type" : "string"
+    },
+    "sslprofile" : {
       "type" : "string"
     }
   },

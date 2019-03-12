@@ -1,6 +1,9 @@
 {
   "type" : "object",
   "properties" : {
+    "comment" : {
+      "type" : "string"
+    },
     "description" : {
       "type" : "string",
       "readonly" : true
@@ -14,7 +17,7 @@
     },
     "type" : {
       "type" : "string",
-      "enum" : [ "ipv4", "number", "ipv6" ]
+      "enum" : [ "ipv4", "number", "ipv6", "ulong", "double", "mac" ]
     }
   },
   "$schema" : "http://json-schema.org/draft-04/schema#",

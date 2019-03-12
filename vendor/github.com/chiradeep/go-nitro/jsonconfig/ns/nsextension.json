@@ -5,16 +5,20 @@
       "type" : "string"
     },
     "detail" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "brief", "all" ]
     },
     "functionhaltcount" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
     },
     "functionhits" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
     },
     "functionundefhits" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
     },
     "name" : {
       "type" : "string"
@@ -26,7 +30,8 @@
       "type" : "string"
     },
     "trace" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "off", "calls", "lines", "all" ]
     },
     "tracefunctions" : {
       "type" : "string"
@@ -35,7 +40,9 @@
       "type" : "string"
     },
     "type" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "WSDL", "CustomSettings", "XMLSchema", "XMLErrorPage", "htmlpage", "CustomResp", "Extension" ],
+      "readonly" : true
     }
   },
   "$schema" : "http://json-schema.org/draft-04/schema#",

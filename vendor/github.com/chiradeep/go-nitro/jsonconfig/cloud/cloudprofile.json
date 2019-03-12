@@ -1,0 +1,45 @@
+{
+  "type" : "object",
+  "properties" : {
+    "boundservicegroupsvctype" : {
+      "type" : "string",
+      "enum" : [ "HTTP", "FTP", "TCP", "UDP", "SSL", "SSL_BRIDGE", "SSL_TCP", "DTLS", "NNTP", "RPCSVR", "DNS", "ADNS", "SNMP", "RTSP", "DHCPRA", "ANY", "SIP_UDP", "SIP_TCP", "SIP_SSL", "DNS_TCP", "ADNS_TCP", "MYSQL", "MSSQL", "ORACLE", "RADIUS", "RADIUSListener", "RDP", "DIAMETER", "SSL_DIAMETER", "TFTP", "SMPP", "PPTP", "GRE", "SYSLOGTCP", "SYSLOGUDP", "FIX", "SSL_FIX", "USER_TCP", "USER_SSL_TCP", "QUIC", "IPFIX", "LOGSTREAM" ]
+    },
+    "delay" : {
+      "type" : "integer"
+    },
+    "graceful" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ]
+    },
+    "ipaddress" : {
+      "type" : "string"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "port" : {
+      "type" : "integer"
+    },
+    "servicegroupname" : {
+      "type" : "string"
+    },
+    "servicetype" : {
+      "type" : "string",
+      "enum" : [ "HTTP", "FTP", "TCP", "UDP", "SSL", "SSL_BRIDGE", "SSL_TCP", "DTLS", "NNTP", "DNS", "DHCPRA", "ANY", "SIP_UDP", "SIP_TCP", "SIP_SSL", "DNS_TCP", "RTSP", "PUSH", "SSL_PUSH", "RADIUS", "RDP", "MYSQL", "MSSQL", "DIAMETER", "SSL_DIAMETER", "TFTP", "ORACLE", "SMPP", "SYSLOGTCP", "SYSLOGUDP", "FIX", "SSL_FIX", "PROXY", "USER_TCP", "USER_SSL_TCP", "QUIC", "IPFIX", "LOGSTREAM" ]
+    },
+    "type" : {
+      "type" : "string",
+      "enum" : [ "autoscale", "stats" ]
+    },
+    "vservername" : {
+      "type" : "string"
+    },
+    "vsvrbindsvcport" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "cloudprofile",
+  "title" : "cloudprofile"
+}

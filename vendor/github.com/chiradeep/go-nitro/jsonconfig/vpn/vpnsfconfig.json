@@ -1,0 +1,15 @@
+{
+  "type" : "object",
+  "properties" : {
+    "filename" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "vserver" : {
+      "type" : "object"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "vpnsfconfig",
+  "title" : "vpnsfconfig"
+}

@@ -1,0 +1,14 @@
+{
+  "type" : "object",
+  "properties" : {
+    "groupname" : {
+      "type" : "string"
+    },
+    "ipsecalgprofile" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "lsngroup_ipsecalgprofile_binding",
+  "title" : "lsngroup_ipsecalgprofile_binding"
+}

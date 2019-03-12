@@ -1,17 +1,53 @@
 {
   "type" : "object",
   "properties" : {
+    "ackaggregation" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
     "ackonpush" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "applyadaptivetcp" : {
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
     },
     "buffersize" : {
       "type" : "integer"
     },
+    "builtin" : {
+      "type" : "object",
+      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE", "PARTITION_ALL" ],
+      "readonly" : true
+    },
+    "burstratecontrol" : {
+      "type" : "string",
+      "enum" : [ "DISABLED", "FIXED", "DYNAMIC" ]
+    },
     "delayedack" : {
       "type" : "integer"
     },
+    "dropestconnontimeout" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "drophalfclosedconnontimeout" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "dsack" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "dupackthresh" : {
+      "type" : "integer"
+    },
     "dynamicreceivebuffering" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "ecn" : {
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
     },
@@ -19,9 +55,21 @@
       "type" : "string",
       "enum" : [ "AUTOMATIC", "CONN_ESTABLISHED", "ON_FIRST_DATA" ]
     },
+    "fack" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
     "flavor" : {
       "type" : "string",
-      "enum" : [ "Default", "Westwood" ]
+      "enum" : [ "Default", "Westwood", "BIC", "CUBIC", "Nile" ]
+    },
+    "frto" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "hystart" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
     },
     "initialcwnd" : {
       "type" : "integer"
@@ -46,6 +94,9 @@
     "maxburst" : {
       "type" : "integer"
     },
+    "maxcwnd" : {
+      "type" : "integer"
+    },
     "maxpktpermss" : {
       "type" : "integer"
     },
@@ -55,6 +106,17 @@
     "mptcp" : {
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "mptcpdropdataonpreestsf" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "mptcpfastopen" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "mptcpsessiontimeout" : {
+      "type" : "integer"
     },
     "mss" : {
       "type" : "integer"
@@ -72,9 +134,20 @@
     "pktperretx" : {
       "type" : "integer"
     },
+    "rateqmax" : {
+      "type" : "integer"
+    },
     "refcnt" : {
       "type" : "integer",
       "readonly" : true
+    },
+    "rstmaxack" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "rstwindowattenuate" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
     },
     "sack" : {
       "type" : "string",
@@ -86,7 +159,33 @@
     "slowstartincr" : {
       "type" : "integer"
     },
+    "spoofsyndrop" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
     "syncookie" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "tcpfastopen" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "tcpfastopencookiesize" : {
+      "type" : "integer"
+    },
+    "tcpmode" : {
+      "type" : "string",
+      "enum" : [ "TRANSPARENT", "ENDPOINT" ]
+    },
+    "tcprate" : {
+      "type" : "integer"
+    },
+    "tcpsegoffload" : {
+      "type" : "string",
+      "enum" : [ "AUTOMATIC", "DISABLED" ]
+    },
+    "timestamp" : {
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
     },

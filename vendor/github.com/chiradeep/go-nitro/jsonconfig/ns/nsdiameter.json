@@ -4,6 +4,9 @@
     "identity" : {
       "type" : "string"
     },
+    "ownernode" : {
+      "type" : "integer"
+    },
     "realm" : {
       "type" : "string"
     },

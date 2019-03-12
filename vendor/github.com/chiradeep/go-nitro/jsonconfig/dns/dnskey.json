@@ -24,10 +24,16 @@
     "notificationperiod" : {
       "type" : "integer"
     },
+    "password" : {
+      "type" : "string"
+    },
     "privatekey" : {
       "type" : "string"
     },
     "publickey" : {
+      "type" : "string"
+    },
+    "src" : {
       "type" : "string"
     },
     "ttl" : {

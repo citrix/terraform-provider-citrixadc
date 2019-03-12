@@ -1,0 +1,14 @@
+{
+  "type" : "object",
+  "properties" : {
+    "groupname" : {
+      "type" : "string"
+    },
+    "pcpserver" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "lsngroup_pcpserver_binding",
+  "title" : "lsngroup_pcpserver_binding"
+}

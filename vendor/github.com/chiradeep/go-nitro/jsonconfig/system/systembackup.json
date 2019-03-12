@@ -27,6 +27,9 @@
       "type" : "integer",
       "readonly" : true
     },
+    "skipbackup" : {
+      "type" : "boolean"
+    },
     "version" : {
       "type" : "string",
       "readonly" : true

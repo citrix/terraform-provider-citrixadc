@@ -15,6 +15,15 @@
     },
     "port" : {
       "type" : "integer"
+    },
+    "state" : {
+      "type" : "string",
+      "enum" : [ "UP", "DOWN", "UNKNOWN", "BUSY", "OUT OF SERVICE", "GOING OUT OF SERVICE", "DOWN WHEN GOING OUT OF SERVICE", "NS_EMPTY_STR", "Unknown", "DISABLED" ],
+      "readonly" : true
+    },
+    "transport" : {
+      "type" : "string",
+      "enum" : [ "ipfix", "logstream", "rest" ]
     }
   },
   "$schema" : "http://json-schema.org/draft-04/schema#",

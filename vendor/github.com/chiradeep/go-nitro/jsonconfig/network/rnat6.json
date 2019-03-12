@@ -10,7 +10,17 @@
     "network" : {
       "type" : "string"
     },
+    "ownergroup" : {
+      "type" : "string"
+    },
     "redirectport" : {
+      "type" : "integer"
+    },
+    "srcippersistency" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "td" : {
       "type" : "integer"
     }
   },

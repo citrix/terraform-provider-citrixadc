@@ -8,7 +8,8 @@
       "type" : "string"
     },
     "failure" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
     },
     "name" : {
       "type" : "string"
@@ -20,7 +21,8 @@
       "type" : "string"
     },
     "success" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
     }
   },
   "$schema" : "http://json-schema.org/draft-04/schema#",

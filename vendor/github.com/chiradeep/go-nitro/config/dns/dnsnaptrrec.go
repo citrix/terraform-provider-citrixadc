@@ -3,7 +3,9 @@ package dns
 type Dnsnaptrrec struct {
 	Authtype    string `json:"authtype,omitempty"`
 	Domain      string `json:"domain,omitempty"`
+	Ecssubnet   string `json:"ecssubnet,omitempty"`
 	Flags       string `json:"flags,omitempty"`
+	Nodeid      int    `json:"nodeid,omitempty"`
 	Order       int    `json:"order,omitempty"`
 	Preference  int    `json:"preference,omitempty"`
 	Recordid    int    `json:"recordid,omitempty"`

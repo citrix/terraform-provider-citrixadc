@@ -1,0 +1,25 @@
+{
+  "type" : "object",
+  "properties" : {
+    "cacertgroupname" : {
+      "type" : "string"
+    },
+    "cacertgroupreferences" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "crlcheck" : {
+      "type" : "string",
+      "enum" : [ "Mandatory", "Optional" ],
+      "readonly" : true
+    },
+    "ocspcheck" : {
+      "type" : "string",
+      "enum" : [ "Mandatory", "Optional" ],
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "sslcacertgroup",
+  "title" : "sslcacertgroup"
+}

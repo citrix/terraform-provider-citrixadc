@@ -8,7 +8,7 @@
     },
     "actflowctl" : {
       "type" : "string",
-      "enum" : [ "OFF", "RX", "TX", "RXTX" ],
+      "enum" : [ "OFF", "RX", "TX", "RXTX", "ON" ],
       "readonly" : true
     },
     "actmedia" : {
@@ -18,10 +18,14 @@
     },
     "actspeed" : {
       "type" : "string",
-      "enum" : [ "AUTO", "10", "100", "1000", "10000" ],
+      "enum" : [ "AUTO", "10", "100", "1000", "10000", "25000", "40000", "50000", "100000" ],
       "readonly" : true
     },
     "actthroughput" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "actualmtu" : {
       "type" : "integer",
       "readonly" : true
     },
@@ -56,11 +60,6 @@
       "type" : "integer",
       "readonly" : true
     },
-    "conndistr" : {
-      "type" : "string",
-      "enum" : [ "DISABLED", "ENABLED" ],
-      "readonly" : true
-    },
     "description" : {
       "type" : "string",
       "readonly" : true
@@ -87,7 +86,11 @@
     },
     "flowctl" : {
       "type" : "string",
-      "enum" : [ "OFF", "RX", "TX", "RXTX" ]
+      "enum" : [ "OFF", "RX", "TX", "RXTX", "ON" ]
+    },
+    "haheartbeat" : {
+      "type" : "string",
+      "enum" : [ "OFF", "ON" ]
     },
     "hamonitor" : {
       "type" : "string",
@@ -125,7 +128,7 @@
     },
     "intftype" : {
       "type" : "string",
-      "enum" : [ "BROADCOM 5700/5701", "TIGON1/TIGON2", "INTEL 82546", "INTEL 8255X(PRO)", "Link Aggregate", "Loopback", "Intel 82541/47", "Broadcom 5704", "Chelsio 1G", "Intel 8247X", "Intel 82576 VF", "Xen Virtual", "Intel 10G", "Intel 82599 VF", "Hyper v", "Cluster LAG", "Intel 8247X SFP", "XEN Interface", "Chelsio 10G" ],
+      "enum" : [ "BROADCOM 5700/5701", "TIGON1/TIGON2", "INTEL 82546", "INTEL 8255X(PRO)", "Link Aggregate", "Loopback", "Intel 82541/47", "Broadcom 5704", "Chelsio 1G", "Intel 8247X", "Intel 82576 VF", "Xen Virtual", "Intel 10G", "Intel 82599 VF", "Mellanox 100G", "Mellanox 50G", "Mellanox 25G", "Intel FVL 40G", "Intel FVL 25G", "Intel FVL 10G", "Intel FVL 40G VF", "Mellanox VF", "Hyper v", "Cluster LAG", "Intel 8247X SFP", "XEN Interface", "Chelsio 10G", "KVM Virtio", "VMXNET3" ],
       "readonly" : true
     },
     "lacpactoraggregation" : {
@@ -148,12 +151,22 @@
       "enum" : [ "NS_EMPTY_STR", "SYNC" ],
       "readonly" : true
     },
+    "lacpactormode" : {
+      "type" : "string",
+      "enum" : [ "DISABLED", "ACTIVE", "PASSIVE" ],
+      "readonly" : true
+    },
     "lacpactorportno" : {
       "type" : "integer",
       "readonly" : true
     },
     "lacpactorpriority" : {
       "type" : "integer",
+      "readonly" : true
+    },
+    "lacpactortimeout" : {
+      "type" : "string",
+      "enum" : [ "LONG", "SHORT" ],
       "readonly" : true
     },
     "lacpkey" : {
@@ -249,17 +262,27 @@
       "type" : "string",
       "enum" : [ "NODE", "CLUSTER" ]
     },
+    "linkredundancy" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
     "linkstate" : {
       "type" : "integer",
       "readonly" : true
     },
-    "mac" : {
+    "lldpmode" : {
       "type" : "string",
+      "enum" : [ "NONE", "TRANSMITTER", "RECEIVER", "TRANSCEIVER" ]
+    },
+    "lractiveintf" : {
+      "type" : "boolean",
       "readonly" : true
     },
-    "macdistr" : {
+    "lrsetpriority" : {
+      "type" : "integer"
+    },
+    "mac" : {
       "type" : "string",
-      "enum" : [ "SOURCE", "DESTINATION", "BOTH" ],
       "readonly" : true
     },
     "mode" : {
@@ -268,8 +291,7 @@
       "readonly" : true
     },
     "mtu" : {
-      "type" : "integer",
-      "readonly" : true
+      "type" : "integer"
     },
     "outdisc" : {
       "type" : "integer",
@@ -282,7 +304,7 @@
     },
     "reqflowcontrol" : {
       "type" : "string",
-      "enum" : [ "OFF", "RX", "TX", "RXTX" ],
+      "enum" : [ "OFF", "RX", "TX", "RXTX", "ON" ],
       "readonly" : true
     },
     "reqmedia" : {
@@ -292,7 +314,7 @@
     },
     "reqspeed" : {
       "type" : "string",
-      "enum" : [ "AUTO", "10", "100", "1000", "10000" ],
+      "enum" : [ "AUTO", "10", "100", "1000", "10000", "25000", "40000", "50000", "100000" ],
       "readonly" : true
     },
     "reqthroughput" : {
@@ -345,7 +367,7 @@
     },
     "speed" : {
       "type" : "string",
-      "enum" : [ "AUTO", "10", "100", "1000", "10000" ]
+      "enum" : [ "AUTO", "10", "100", "1000", "10000", "25000", "40000", "50000", "100000" ]
     },
     "state" : {
       "type" : "string",
@@ -376,6 +398,13 @@
       "type" : "integer"
     },
     "trunk" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
+    "trunkallowedvlan" : {
+      "type" : "object"
+    },
+    "trunkmode" : {
       "type" : "string",
       "enum" : [ "ON", "OFF" ]
     },

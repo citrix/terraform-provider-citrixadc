@@ -11,6 +11,12 @@
     "rnatdstport" : {
       "type" : "integer"
     },
+    "rnatsecuredstport" : {
+      "type" : "integer"
+    },
+    "rnatsecuresrcport" : {
+      "type" : "integer"
+    },
     "rnatsrcport" : {
       "type" : "integer"
     },

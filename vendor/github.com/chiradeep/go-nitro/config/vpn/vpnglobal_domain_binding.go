@@ -1,5 +1,6 @@
 package vpn
 
 type Vpnglobaldomainbinding struct {
-	Intranetdomain string `json:"intranetdomain,omitempty"`
+	Gotopriorityexpression string `json:"gotopriorityexpression,omitempty"`
+	Intranetdomain         string `json:"intranetdomain,omitempty"`
 }

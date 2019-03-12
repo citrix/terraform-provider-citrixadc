@@ -23,9 +23,19 @@
       "type" : "string",
       "readonly" : true
     },
+    "operationalownernode" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "ownernode" : {
+      "type" : "integer"
+    },
     "preemption" : {
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "preemptiondelaytimer" : {
+      "type" : "integer"
     },
     "priority" : {
       "type" : "integer"
@@ -37,6 +47,9 @@
     "state" : {
       "type" : "integer",
       "readonly" : true
+    },
+    "trackifnumpriority" : {
+      "type" : "integer"
     },
     "tracking" : {
       "type" : "string",

@@ -4,11 +4,18 @@
     "name" : {
       "type" : "string"
     },
+    "nexthopfqdn" : {
+      "type" : "string"
+    },
     "nexthopip" : {
       "type" : "string"
     },
     "nexthopport" : {
       "type" : "integer"
+    },
+    "resaddresstype" : {
+      "type" : "string",
+      "enum" : [ "IPV4", "IPV6" ]
     },
     "secure" : {
       "type" : "string",

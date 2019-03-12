@@ -24,6 +24,17 @@
     "name" : {
       "type" : "string"
     },
+    "priority" : {
+      "type" : "integer"
+    },
+    "state" : {
+      "type" : "string",
+      "enum" : [ "ACTIVE", "SPARE", "PASSIVE" ]
+    },
+    "sticky" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ]
+    },
     "strict" : {
       "type" : "string",
       "enum" : [ "YES", "NO" ]

@@ -1,8 +1,12 @@
 package appfw
 
 type Appfwlearningsettings struct {
+	Contenttypeminthreshold            int    `json:"contenttypeminthreshold,omitempty"`
+	Contenttypepercentthreshold        int    `json:"contenttypepercentthreshold,omitempty"`
 	Cookieconsistencyminthreshold      int    `json:"cookieconsistencyminthreshold,omitempty"`
 	Cookieconsistencypercentthreshold  int    `json:"cookieconsistencypercentthreshold,omitempty"`
+	Creditcardnumberminthreshold       int    `json:"creditcardnumberminthreshold,omitempty"`
+	Creditcardnumberpercentthreshold   int    `json:"creditcardnumberpercentthreshold,omitempty"`
 	Crosssitescriptingminthreshold     int    `json:"crosssitescriptingminthreshold,omitempty"`
 	Crosssitescriptingpercentthreshold int    `json:"crosssitescriptingpercentthreshold,omitempty"`
 	Csrftagminthreshold                int    `json:"csrftagminthreshold,omitempty"`

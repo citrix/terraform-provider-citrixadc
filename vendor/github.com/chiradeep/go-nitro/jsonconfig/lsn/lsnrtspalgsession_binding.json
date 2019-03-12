@@ -1,0 +1,11 @@
+{
+  "type" : "object",
+  "properties" : {
+    "sessionid" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "lsnrtspalgsession_binding",
+  "title" : "lsnrtspalgsession_binding"
+}

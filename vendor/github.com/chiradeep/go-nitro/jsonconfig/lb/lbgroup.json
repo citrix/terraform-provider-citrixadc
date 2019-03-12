@@ -10,6 +10,9 @@
     "cookiename" : {
       "type" : "string"
     },
+    "mastervserver" : {
+      "type" : "string"
+    },
     "name" : {
       "type" : "string"
     },
@@ -36,6 +39,10 @@
     },
     "timeout" : {
       "type" : "integer"
+    },
+    "usevserverpersistency" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
     },
     "v6persistmasklen" : {
       "type" : "integer"

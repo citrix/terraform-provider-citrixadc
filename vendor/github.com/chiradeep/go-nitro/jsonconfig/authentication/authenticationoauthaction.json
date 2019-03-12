@@ -49,7 +49,16 @@
     "attribute9" : {
       "type" : "string"
     },
+    "audience" : {
+      "type" : "string"
+    },
     "authorizationendpoint" : {
+      "type" : "string"
+    },
+    "certendpoint" : {
+      "type" : "string"
+    },
+    "certfilepath" : {
       "type" : "string"
     },
     "clientid" : {
@@ -61,13 +70,47 @@
     "defaultauthenticationgroup" : {
       "type" : "string"
     },
+    "granttype" : {
+      "type" : "string",
+      "enum" : [ "CODE", "PASSWORD" ]
+    },
+    "graphendpoint" : {
+      "type" : "string"
+    },
     "idtokendecryptendpoint" : {
+      "type" : "string"
+    },
+    "issuer" : {
       "type" : "string"
     },
     "name" : {
       "type" : "string"
     },
+    "oauthstatus" : {
+      "type" : "string",
+      "enum" : [ "INIT", "CERTFETCH", "AADFORGRAPH", "GRAPH", "AADFORMDM", "MDMINFO", "COMPLETE" ],
+      "readonly" : true
+    },
+    "oauthtype" : {
+      "type" : "string",
+      "enum" : [ "GENERIC", "INTUNE" ]
+    },
+    "refreshinterval" : {
+      "type" : "integer"
+    },
+    "skewtime" : {
+      "type" : "integer"
+    },
+    "tenantid" : {
+      "type" : "string"
+    },
     "tokenendpoint" : {
+      "type" : "string"
+    },
+    "userinfourl" : {
+      "type" : "string"
+    },
+    "usernamefield" : {
       "type" : "string"
     }
   },

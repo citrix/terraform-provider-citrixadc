@@ -1,0 +1,14 @@
+{
+  "type" : "object",
+  "properties" : {
+    "partitionname" : {
+      "type" : "string"
+    },
+    "vxlan" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "nspartition_vxlan_binding",
+  "title" : "nspartition_vxlan_binding"
+}

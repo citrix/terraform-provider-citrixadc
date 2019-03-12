@@ -47,6 +47,9 @@
       "type" : "integer",
       "readonly" : true
     },
+    "iptunnel" : {
+      "type" : "string"
+    },
     "kernelstate" : {
       "type" : "string",
       "enum" : [ "APPLIED", "NOTAPPLIED", "RE-APPLY", "SFAPPLIED", "SFNOTAPPLIED" ],
@@ -87,6 +90,9 @@
     "nexthopvlan" : {
       "type" : "integer"
     },
+    "ownergroup" : {
+      "type" : "string"
+    },
     "priority" : {
       "type" : "integer"
     },
@@ -108,6 +114,9 @@
       "type" : "string"
     },
     "srcmac" : {
+      "type" : "string"
+    },
+    "srcmacmask" : {
       "type" : "string"
     },
     "srcport" : {
@@ -137,6 +146,12 @@
     },
     "vlan" : {
       "type" : "integer"
+    },
+    "vxlan" : {
+      "type" : "integer"
+    },
+    "vxlanvlanmap" : {
+      "type" : "string"
     }
   },
   "$schema" : "http://json-schema.org/draft-04/schema#",

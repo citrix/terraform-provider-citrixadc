@@ -13,6 +13,10 @@
     "countryname" : {
       "type" : "string"
     },
+    "digestmethod" : {
+      "type" : "string",
+      "enum" : [ "SHA1", "SHA256" ]
+    },
     "emailaddress" : {
       "type" : "string"
     },
@@ -42,6 +46,9 @@
       "type" : "string"
     },
     "statename" : {
+      "type" : "string"
+    },
+    "subjectaltname" : {
       "type" : "string"
     }
   },

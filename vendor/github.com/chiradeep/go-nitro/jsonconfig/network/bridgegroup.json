@@ -1,6 +1,10 @@
 {
   "type" : "object",
   "properties" : {
+    "dynamicrouting" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
     "flags" : {
       "type" : "boolean",
       "readonly" : true
@@ -15,6 +19,10 @@
     "ipv6dynamicrouting" : {
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "partitionname" : {
+      "type" : "string",
+      "readonly" : true
     },
     "portbitmap" : {
       "type" : "integer",

@@ -35,9 +35,17 @@
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
     },
+    "statechangetimesec" : {
+      "type" : "string",
+      "readonly" : true
+    },
     "svrstate" : {
       "type" : "string",
       "enum" : [ "UP", "DOWN", "UNKNOWN", "BUSY", "OUT OF SERVICE", "GOING OUT OF SERVICE", "DOWN WHEN GOING OUT OF SERVICE", "NS_EMPTY_STR", "Unknown", "DISABLED" ],
+      "readonly" : true
+    },
+    "tickssincelaststatechange" : {
+      "type" : "integer",
       "readonly" : true
     },
     "weight" : {

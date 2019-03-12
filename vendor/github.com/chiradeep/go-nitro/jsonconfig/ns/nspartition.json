@@ -14,13 +14,23 @@
       "type" : "integer"
     },
     "partitionid" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
+    },
+    "partitionmac" : {
+      "type" : "string"
     },
     "partitionname" : {
       "type" : "string"
     },
     "partitiontype" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "Default Partition", "Current Partition" ],
+      "readonly" : true
+    },
+    "pmacinternal" : {
+      "type" : "boolean",
+      "readonly" : true
     }
   },
   "$schema" : "http://json-schema.org/draft-04/schema#",

@@ -1,0 +1,18 @@
+{
+  "type" : "object",
+  "properties" : {
+    "acttype" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "portaltheme" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "authenticationvserver_vpnportaltheme_binding",
+  "title" : "authenticationvserver_vpnportaltheme_binding"
+}

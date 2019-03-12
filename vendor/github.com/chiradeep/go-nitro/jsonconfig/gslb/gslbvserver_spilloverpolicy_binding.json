@@ -15,8 +15,7 @@
     },
     "type" : {
       "type" : "string",
-      "enum" : [ "REQUEST", "RESPONSE" ],
-      "readonly" : true
+      "enum" : [ "REQUEST", "RESPONSE" ]
     }
   },
   "$schema" : "http://json-schema.org/draft-04/schema#",

@@ -2,40 +2,52 @@
   "type" : "object",
   "properties" : {
     "activeextensionfunction" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
     },
     "extensionfuncdescription" : {
-      "type" : "string"
+      "type" : "string",
+      "readonly" : true
     },
     "extensionfunctionallparams" : {
-      "type" : "object"
+      "type" : "object",
+      "readonly" : true
     },
     "extensionfunctionallparamscount" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
     },
     "extensionfunctionargcount" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
     },
     "extensionfunctionargtype" : {
-      "type" : "object"
+      "type" : "object",
+      "readonly" : true
     },
     "extensionfunctionclasses" : {
-      "type" : "object"
+      "type" : "object",
+      "readonly" : true
     },
     "extensionfunctionclassescount" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
     },
     "extensionfunctionclasstype" : {
-      "type" : "string"
+      "type" : "string",
+      "readonly" : true
     },
     "extensionfunctionlinenumber" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
     },
     "extensionfunctionname" : {
-      "type" : "string"
+      "type" : "string",
+      "readonly" : true
     },
     "extensionfunctionreturntype" : {
-      "type" : "string"
+      "type" : "string",
+      "readonly" : true
     },
     "name" : {
       "type" : "string"

@@ -24,6 +24,10 @@
     "priority" : {
       "type" : "integer"
     },
+    "type" : {
+      "type" : "string",
+      "enum" : [ "INTERCEPT_REQ", "REQUEST", "CLIENTHELLO_REQ" ]
+    },
     "vservername" : {
       "type" : "string"
     }

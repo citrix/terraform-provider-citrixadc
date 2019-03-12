@@ -8,4 +8,6 @@ type Appflowpolicy struct {
 	Name        string `json:"name,omitempty"`
 	Newname     string `json:"newname,omitempty"`
 	Rule        string `json:"rule,omitempty"`
+	Undefaction string `json:"undefaction,omitempty"`
+	Undefhits   int    `json:"undefhits,omitempty"`
 }

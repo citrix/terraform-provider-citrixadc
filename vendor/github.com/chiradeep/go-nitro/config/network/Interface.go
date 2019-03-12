@@ -6,6 +6,7 @@ type Interface struct {
 	Actmedia                  string      `json:"actmedia,omitempty"`
 	Actspeed                  string      `json:"actspeed,omitempty"`
 	Actthroughput             int         `json:"actthroughput,omitempty"`
+	Actualmtu                 int         `json:"actualmtu,omitempty"`
 	Autoneg                   string      `json:"autoneg,omitempty"`
 	Autonegresult             int         `json:"autonegresult,omitempty"`
 	Backplane                 string      `json:"backplane,omitempty"`
@@ -14,7 +15,6 @@ type Interface struct {
 	Bdgmacmoved               int         `json:"bdgmacmoved,omitempty"`
 	Bdgmuted                  int         `json:"bdgmuted,omitempty"`
 	Cleartime                 int         `json:"cleartime,omitempty"`
-	Conndistr                 string      `json:"conndistr,omitempty"`
 	Description               string      `json:"description,omitempty"`
 	Devicename                string      `json:"devicename,omitempty"`
 	Downtime                  int         `json:"downtime,omitempty"`
@@ -22,6 +22,7 @@ type Interface struct {
 	Fctls                     int         `json:"fctls,omitempty"`
 	Flags                     int         `json:"flags,omitempty"`
 	Flowctl                   string      `json:"flowctl,omitempty"`
+	Haheartbeat               string      `json:"haheartbeat,omitempty"`
 	Hamonitor                 string      `json:"hamonitor,omitempty"`
 	Hangdetect                int         `json:"hangdetect,omitempty"`
 	Hangreset                 int         `json:"hangreset,omitempty"`
@@ -36,8 +37,10 @@ type Interface struct {
 	Lacpactorcollecting       string      `json:"lacpactorcollecting,omitempty"`
 	Lacpactordistributing     string      `json:"lacpactordistributing,omitempty"`
 	Lacpactorinsync           string      `json:"lacpactorinsync,omitempty"`
+	Lacpactormode             string      `json:"lacpactormode,omitempty"`
 	Lacpactorportno           int         `json:"lacpactorportno,omitempty"`
 	Lacpactorpriority         int         `json:"lacpactorpriority,omitempty"`
+	Lacpactortimeout          string      `json:"lacpactortimeout,omitempty"`
 	Lacpkey                   int         `json:"lacpkey,omitempty"`
 	Lacpmode                  string      `json:"lacpmode,omitempty"`
 	Lacppartneraggregation    string      `json:"lacppartneraggregation,omitempty"`
@@ -59,9 +62,12 @@ type Interface struct {
 	Lacppriority              int         `json:"lacppriority,omitempty"`
 	Lacptimeout               string      `json:"lacptimeout,omitempty"`
 	Lagtype                   string      `json:"lagtype,omitempty"`
+	Linkredundancy            string      `json:"linkredundancy,omitempty"`
 	Linkstate                 int         `json:"linkstate,omitempty"`
+	Lldpmode                  string      `json:"lldpmode,omitempty"`
+	Lractiveintf              bool        `json:"lractiveintf,omitempty"`
+	Lrsetpriority             int         `json:"lrsetpriority,omitempty"`
 	Mac                       string      `json:"mac,omitempty"`
-	Macdistr                  string      `json:"macdistr,omitempty"`
 	Mode                      string      `json:"mode,omitempty"`
 	Mtu                       int         `json:"mtu,omitempty"`
 	Outdisc                   int         `json:"outdisc,omitempty"`
@@ -90,6 +96,8 @@ type Interface struct {
 	Taggedautolearn           int         `json:"taggedautolearn,omitempty"`
 	Throughput                int         `json:"throughput,omitempty"`
 	Trunk                     string      `json:"trunk,omitempty"`
+	Trunkallowedvlan          interface{} `json:"trunkallowedvlan,omitempty"`
+	Trunkmode                 string      `json:"trunkmode,omitempty"`
 	Txbytes                   int         `json:"txbytes,omitempty"`
 	Txdrops                   int         `json:"txdrops,omitempty"`
 	Txerrors                  int         `json:"txerrors,omitempty"`

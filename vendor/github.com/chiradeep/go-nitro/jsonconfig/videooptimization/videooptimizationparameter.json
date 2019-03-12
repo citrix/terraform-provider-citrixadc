@@ -1,0 +1,14 @@
+{
+  "type" : "object",
+  "properties" : {
+    "quicpacingrate" : {
+      "type" : "integer"
+    },
+    "randomsamplingpercentage" : {
+      "type" : "number"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "videooptimizationparameter",
+  "title" : "videooptimizationparameter"
+}

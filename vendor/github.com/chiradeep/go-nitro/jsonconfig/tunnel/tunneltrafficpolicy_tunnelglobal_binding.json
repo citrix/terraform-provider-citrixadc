@@ -8,6 +8,10 @@
     "boundto" : {
       "type" : "string"
     },
+    "gotopriorityexpression" : {
+      "type" : "string",
+      "readonly" : true
+    },
     "name" : {
       "type" : "string"
     },

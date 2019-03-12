@@ -1,5 +1,6 @@
 package vpn
 
 type Vpnglobalsharefileserverbinding struct {
-	Sharefile string `json:"sharefile,omitempty"`
+	Gotopriorityexpression string `json:"gotopriorityexpression,omitempty"`
+	Sharefile              string `json:"sharefile,omitempty"`
 }

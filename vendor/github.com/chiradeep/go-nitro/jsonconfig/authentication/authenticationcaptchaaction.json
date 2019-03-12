@@ -1,0 +1,23 @@
+{
+  "type" : "object",
+  "properties" : {
+    "defaultauthenticationgroup" : {
+      "type" : "string"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "secretkey" : {
+      "type" : "string"
+    },
+    "serverurl" : {
+      "type" : "string"
+    },
+    "sitekey" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "authenticationcaptchaaction",
+  "title" : "authenticationcaptchaaction"
+}

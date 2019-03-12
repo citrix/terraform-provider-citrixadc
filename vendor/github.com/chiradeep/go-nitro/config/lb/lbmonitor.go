@@ -40,6 +40,7 @@ type Lbmonitor struct {
 	Logonpointname                   string      `json:"logonpointname,omitempty"`
 	Lrtm                             string      `json:"lrtm,omitempty"`
 	Lrtmconf                         int         `json:"lrtmconf,omitempty"`
+	Lrtmconfstr                      string      `json:"lrtmconfstr,omitempty"`
 	Maxforwards                      int         `json:"maxforwards,omitempty"`
 	Metric                           string      `json:"metric,omitempty"`
 	Metrictable                      string      `json:"metrictable,omitempty"`
@@ -49,6 +50,7 @@ type Lbmonitor struct {
 	Mssqlprotocolversion             string      `json:"mssqlprotocolversion,omitempty"`
 	Multimetrictable                 interface{} `json:"multimetrictable,omitempty"`
 	Netprofile                       string      `json:"netprofile,omitempty"`
+	Oraclesid                        string      `json:"oraclesid,omitempty"`
 	Originhost                       string      `json:"originhost,omitempty"`
 	Originrealm                      string      `json:"originrealm,omitempty"`
 	Password                         string      `json:"password,omitempty"`
@@ -86,15 +88,19 @@ type Lbmonitor struct {
 	Snmpthreshold                    string      `json:"snmpthreshold,omitempty"`
 	Snmpversion                      string      `json:"snmpversion,omitempty"`
 	Sqlquery                         string      `json:"sqlquery,omitempty"`
+	Sslprofile                       string      `json:"sslprofile,omitempty"`
 	State                            string      `json:"state,omitempty"`
 	Storedb                          string      `json:"storedb,omitempty"`
 	Storefrontacctservice            string      `json:"storefrontacctservice,omitempty"`
+	Storefrontcheckbackendservices   string      `json:"storefrontcheckbackendservices,omitempty"`
 	Storename                        string      `json:"storename,omitempty"`
 	Successretries                   int         `json:"successretries,omitempty"`
 	Supportedvendorids               interface{} `json:"supportedvendorids,omitempty"`
 	Tos                              string      `json:"tos,omitempty"`
 	Tosid                            int         `json:"tosid,omitempty"`
 	Transparent                      string      `json:"transparent,omitempty"`
+	Trofscode                        int         `json:"trofscode,omitempty"`
+	Trofsstring                      string      `json:"trofsstring,omitempty"`
 	Type                             string      `json:"type,omitempty"`
 	Units1                           string      `json:"units1,omitempty"`
 	Units2                           string      `json:"units2,omitempty"`

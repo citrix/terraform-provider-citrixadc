@@ -9,6 +9,9 @@
       "type" : "integer",
       "readonly" : true
     },
+    "dnsprofilename" : {
+      "type" : "string"
+    },
     "dnsvservername" : {
       "type" : "string"
     },

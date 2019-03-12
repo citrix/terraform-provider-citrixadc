@@ -1,0 +1,22 @@
+{
+  "type" : "object",
+  "properties" : {
+    "identifier" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "meta" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "packagefile" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "xmpackage",
+  "title" : "xmpackage"
+}

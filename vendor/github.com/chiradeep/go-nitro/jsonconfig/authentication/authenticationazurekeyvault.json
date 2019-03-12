@@ -1,0 +1,42 @@
+{
+  "type" : "object",
+  "properties" : {
+    "clientid" : {
+      "type" : "string"
+    },
+    "clientsecret" : {
+      "type" : "string"
+    },
+    "defaultauthenticationgroup" : {
+      "type" : "string"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "pushservice" : {
+      "type" : "string"
+    },
+    "refreshinterval" : {
+      "type" : "integer"
+    },
+    "servicekeyname" : {
+      "type" : "string"
+    },
+    "signaturealg" : {
+      "type" : "string",
+      "enum" : [ "RS256" ]
+    },
+    "tenantid" : {
+      "type" : "string"
+    },
+    "tokenendpoint" : {
+      "type" : "string"
+    },
+    "vaultname" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "authenticationazurekeyvault",
+  "title" : "authenticationazurekeyvault"
+}

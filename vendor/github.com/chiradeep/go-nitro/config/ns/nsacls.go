@@ -1,3 +1,5 @@
 package ns
 
-type Nsacls struct{}
+type Nsacls struct {
+	Type string `json:"type,omitempty"`
+}

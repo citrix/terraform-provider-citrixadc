@@ -59,7 +59,8 @@
       "type" : "string"
     },
     "scheme" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "http", "https" ]
     },
     "serverip" : {
       "type" : "string"

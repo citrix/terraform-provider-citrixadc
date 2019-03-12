@@ -1,12 +1,14 @@
 package cs
 
 type Csvserver struct {
+	Analyticsprofile          string `json:"analyticsprofile,omitempty"`
 	Appflowlog                string `json:"appflowlog,omitempty"`
 	Authentication            string `json:"authentication,omitempty"`
 	Authenticationhost        string `json:"authenticationhost,omitempty"`
 	Authn401                  string `json:"authn401,omitempty"`
 	Authnprofile              string `json:"authnprofile,omitempty"`
 	Authnvsname               string `json:"authnvsname,omitempty"`
+	Backupip                  string `json:"backupip,omitempty"`
 	Backupvserver             string `json:"backupvserver,omitempty"`
 	Bindpoint                 string `json:"bindpoint,omitempty"`
 	Cacheable                 string `json:"cacheable,omitempty"`
@@ -15,11 +17,16 @@ type Csvserver struct {
 	Casesensitive             string `json:"casesensitive,omitempty"`
 	Clttimeout                int    `json:"clttimeout,omitempty"`
 	Comment                   string `json:"comment,omitempty"`
+	Cookiedomain              string `json:"cookiedomain,omitempty"`
+	Cookietimeout             int    `json:"cookietimeout,omitempty"`
 	Curstate                  string `json:"curstate,omitempty"`
 	Dbprofilename             string `json:"dbprofilename,omitempty"`
 	Disableprimaryondown      string `json:"disableprimaryondown,omitempty"`
+	Dnsprofilename            string `json:"dnsprofilename,omitempty"`
+	Dnsrecordtype             string `json:"dnsrecordtype,omitempty"`
 	Dnsvservername            string `json:"dnsvservername,omitempty"`
 	Domain                    string `json:"domain,omitempty"`
+	Domainname                string `json:"domainname,omitempty"`
 	Downstateflush            string `json:"downstateflush,omitempty"`
 	Gotopriorityexpression    string `json:"gotopriorityexpression,omitempty"`
 	Gt2gb                     string `json:"gt2gb,omitempty"`
@@ -31,6 +38,7 @@ type Csvserver struct {
 	Ip                        string `json:"ip,omitempty"`
 	Ipmask                    string `json:"ipmask,omitempty"`
 	Ippattern                 string `json:"ippattern,omitempty"`
+	Ipset                     string `json:"ipset,omitempty"`
 	Ipv46                     string `json:"ipv46,omitempty"`
 	L2conn                    string `json:"l2conn,omitempty"`
 	Labelname                 string `json:"labelname,omitempty"`
@@ -47,6 +55,9 @@ type Csvserver struct {
 	Netprofile                string `json:"netprofile,omitempty"`
 	Newname                   string `json:"newname,omitempty"`
 	Ngname                    string `json:"ngname,omitempty"`
+	Nodefaultbindings         string `json:"nodefaultbindings,omitempty"`
+	Oracleserverversion       string `json:"oracleserverversion,omitempty"`
+	Persistenceid             int    `json:"persistenceid,omitempty"`
 	Policyname                string `json:"policyname,omitempty"`
 	Port                      int    `json:"port,omitempty"`
 	Precedence                string `json:"precedence,omitempty"`
@@ -59,10 +70,13 @@ type Csvserver struct {
 	Redirect                  string `json:"redirect,omitempty"`
 	Redirectportrewrite       string `json:"redirectportrewrite,omitempty"`
 	Redirecturl               string `json:"redirecturl,omitempty"`
+	Rhistate                  string `json:"rhistate,omitempty"`
 	Rtspnat                   string `json:"rtspnat,omitempty"`
+	Ruletype                  int    `json:"ruletype,omitempty"`
 	Sc                        string `json:"sc,omitempty"`
 	Servicename               string `json:"servicename,omitempty"`
 	Servicetype               string `json:"servicetype,omitempty"`
+	Sitedomainttl             int    `json:"sitedomainttl,omitempty"`
 	Sobackupaction            string `json:"sobackupaction,omitempty"`
 	Somethod                  string `json:"somethod,omitempty"`
 	Sopersistence             string `json:"sopersistence,omitempty"`
@@ -74,10 +88,12 @@ type Csvserver struct {
 	Stateupdate               string `json:"stateupdate,omitempty"`
 	Status                    int    `json:"status,omitempty"`
 	Targetlbvserver           string `json:"targetlbvserver,omitempty"`
+	Targettype                string `json:"targettype,omitempty"`
 	Targetvserver             string `json:"targetvserver,omitempty"`
 	Tcpprofilename            string `json:"tcpprofilename,omitempty"`
 	Td                        int    `json:"td,omitempty"`
 	Tickssincelaststatechange int    `json:"tickssincelaststatechange,omitempty"`
+	Ttl                       int    `json:"ttl,omitempty"`
 	Type                      string `json:"type,omitempty"`
 	Url                       string `json:"url,omitempty"`
 	Value                     string `json:"value,omitempty"`

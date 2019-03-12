@@ -1,0 +1,17 @@
+{
+  "type" : "object",
+  "properties" : {
+    "cipherpriority" : {
+      "type" : "integer"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "sslicacertkey" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "sslprofile_sslcertkey_binding",
+  "title" : "sslprofile_sslcertkey_binding"
+}

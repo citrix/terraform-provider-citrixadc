@@ -2,7 +2,10 @@ package cluster
 
 type Clusternode struct {
 	Backplane                  string      `json:"backplane,omitempty"`
+	Cfgflags                   int         `json:"cfgflags,omitempty"`
+	Clearnodegroupconfig       string      `json:"clearnodegroupconfig,omitempty"`
 	Clusterhealth              string      `json:"clusterhealth,omitempty"`
+	Delay                      int         `json:"delay,omitempty"`
 	Disabledifaces             string      `json:"disabledifaces,omitempty"`
 	Effectivestate             string      `json:"effectivestate,omitempty"`
 	Enabledifaces              string      `json:"enabledifaces,omitempty"`
@@ -13,12 +16,19 @@ type Clusternode struct {
 	Isconfigurationcoordinator bool        `json:"isconfigurationcoordinator,omitempty"`
 	Islocalnode                bool        `json:"islocalnode,omitempty"`
 	Masterstate                string      `json:"masterstate,omitempty"`
+	Name                       string      `json:"name,omitempty"`
+	Netmask                    string      `json:"netmask,omitempty"`
+	Nodegroup                  string      `json:"nodegroup,omitempty"`
 	Nodeid                     int         `json:"nodeid,omitempty"`
+	Nodejumbonotsupported      bool        `json:"nodejumbonotsupported,omitempty"`
 	Nodelicensemismatch        bool        `json:"nodelicensemismatch,omitempty"`
 	Nodelist                   interface{} `json:"nodelist,omitempty"`
 	Nodersskeymismatch         bool        `json:"nodersskeymismatch,omitempty"`
 	Operationalsyncstate       string      `json:"operationalsyncstate,omitempty"`
 	Partialfailifaces          string      `json:"partialfailifaces,omitempty"`
 	Priority                   int         `json:"priority,omitempty"`
+	Routemonitor               string      `json:"routemonitor,omitempty"`
 	State                      string      `json:"state,omitempty"`
+	Syncstate                  string      `json:"syncstate,omitempty"`
+	Tunnelmode                 string      `json:"tunnelmode,omitempty"`
 }

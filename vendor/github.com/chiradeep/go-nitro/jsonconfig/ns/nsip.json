@@ -13,6 +13,10 @@
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
     },
+    "decrementttl" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
     "dynamicrouting" : {
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
@@ -57,7 +61,7 @@
     },
     "iptype" : {
       "type" : "object",
-      "enum" : [ "SNIP", "VIP", "MIP", "NSIP", "GSLBsiteIP", "CLIP" ],
+      "enum" : [ "SNIP", "VIP", "NSIP", "GSLBsiteIP", "CLIP" ],
       "readonly" : true
     },
     "metric" : {
@@ -69,6 +73,10 @@
     },
     "netmask" : {
       "type" : "string"
+    },
+    "networkroute" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
     },
     "ospf" : {
       "type" : "string",
@@ -85,6 +93,10 @@
       "type" : "string",
       "enum" : [ "TYPE1", "TYPE5" ]
     },
+    "ownerdownresponse" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ]
+    },
     "ownernode" : {
       "type" : "integer"
     },
@@ -95,6 +107,10 @@
     "rip" : {
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "riserhimsgcode" : {
+      "type" : "integer",
+      "readonly" : true
     },
     "snmp" : {
       "type" : "string",
@@ -108,6 +124,9 @@
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
     },
+    "tag" : {
+      "type" : "integer"
+    },
     "td" : {
       "type" : "integer"
     },
@@ -117,7 +136,7 @@
     },
     "type" : {
       "type" : "string",
-      "enum" : [ "SNIP", "VIP", "MIP", "NSIP", "GSLBsiteIP", "CLIP" ]
+      "enum" : [ "SNIP", "VIP", "NSIP", "GSLBsiteIP", "CLIP" ]
     },
     "viprtadv2bsd" : {
       "type" : "boolean",
@@ -131,6 +150,14 @@
       "type" : "integer",
       "readonly" : true
     },
+    "vipvsrvrrhiactivecount" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vipvsrvrrhiactiveupcount" : {
+      "type" : "integer",
+      "readonly" : true
+    },
     "vrid" : {
       "type" : "integer"
     },
@@ -140,7 +167,11 @@
     },
     "vserverrhilevel" : {
       "type" : "string",
-      "enum" : [ "ONE_VSERVER", "ALL_VSERVERS", "NONE" ]
+      "enum" : [ "ONE_VSERVER", "ALL_VSERVERS", "NONE", "VSVR_CNTRLD" ]
+    },
+    "vserverrhimode" : {
+      "type" : "string",
+      "enum" : [ "DYNAMIC_ROUTING", "RISE" ]
     }
   },
   "$schema" : "http://json-schema.org/draft-04/schema#",

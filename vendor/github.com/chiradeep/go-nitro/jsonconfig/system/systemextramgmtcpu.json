@@ -1,0 +1,21 @@
+{
+  "type" : "object",
+  "properties" : {
+    "configuredstate" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ],
+      "readonly" : true
+    },
+    "effectivestate" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ],
+      "readonly" : true
+    },
+    "nodeid" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "systemextramgmtcpu",
+  "title" : "systemextramgmtcpu"
+}

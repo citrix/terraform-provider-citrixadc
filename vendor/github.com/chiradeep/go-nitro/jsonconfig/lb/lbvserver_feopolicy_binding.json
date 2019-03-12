@@ -2,7 +2,8 @@
   "type" : "object",
   "properties" : {
     "bindpoint" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "REQUEST", "RESPONSE" ]
     },
     "gotopriorityexpression" : {
       "type" : "string"
@@ -14,7 +15,8 @@
       "type" : "string"
     },
     "labeltype" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "reqvserver", "resvserver", "policylabel" ]
     },
     "name" : {
       "type" : "string"

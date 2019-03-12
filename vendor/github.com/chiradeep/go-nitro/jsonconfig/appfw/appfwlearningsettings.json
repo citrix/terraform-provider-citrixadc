@@ -1,10 +1,22 @@
 {
   "type" : "object",
   "properties" : {
+    "contenttypeminthreshold" : {
+      "type" : "integer"
+    },
+    "contenttypepercentthreshold" : {
+      "type" : "integer"
+    },
     "cookieconsistencyminthreshold" : {
       "type" : "integer"
     },
     "cookieconsistencypercentthreshold" : {
+      "type" : "integer"
+    },
+    "creditcardnumberminthreshold" : {
+      "type" : "integer"
+    },
+    "creditcardnumberpercentthreshold" : {
       "type" : "integer"
     },
     "crosssitescriptingminthreshold" : {

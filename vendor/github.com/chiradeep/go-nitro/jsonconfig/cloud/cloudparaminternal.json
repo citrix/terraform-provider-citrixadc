@@ -1,0 +1,17 @@
+{
+  "type" : "object",
+  "properties" : {
+    "iamperm" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ],
+      "readonly" : true
+    },
+    "nonftumode" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ]
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "cloudparaminternal",
+  "title" : "cloudparaminternal"
+}

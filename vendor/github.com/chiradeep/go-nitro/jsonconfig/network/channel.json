@@ -3,15 +3,19 @@
   "properties" : {
     "actflowctl" : {
       "type" : "string",
-      "enum" : [ "OFF", "RX", "TX", "RXTX" ],
+      "enum" : [ "OFF", "RX", "TX", "RXTX", "ON" ],
       "readonly" : true
     },
     "actspeed" : {
       "type" : "string",
-      "enum" : [ "AUTO", "10", "100", "1000", "10000" ],
+      "enum" : [ "AUTO", "10", "100", "1000", "10000", "25000", "40000", "50000", "100000" ],
       "readonly" : true
     },
     "actthroughput" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "actualmtu" : {
       "type" : "integer",
       "readonly" : true
     },
@@ -73,7 +77,11 @@
     },
     "flowctl" : {
       "type" : "string",
-      "enum" : [ "OFF", "RX", "TX", "RXTX" ]
+      "enum" : [ "OFF", "RX", "TX", "RXTX", "ON" ]
+    },
+    "haheartbeat" : {
+      "type" : "string",
+      "enum" : [ "OFF", "ON" ]
     },
     "hamonitor" : {
       "type" : "string",
@@ -229,8 +237,17 @@
       "enum" : [ "MANUAL", "AUTO" ],
       "readonly" : true
     },
+    "linkredundancy" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
     "linkstate" : {
       "type" : "integer",
+      "readonly" : true
+    },
+    "lldpmode" : {
+      "type" : "string",
+      "enum" : [ "NONE", "TRANSMITTER", "RECEIVER", "TRANSCEIVER" ],
       "readonly" : true
     },
     "lrminthroughput" : {
@@ -254,8 +271,7 @@
       "enum" : [ "MANUAL", "AUTO" ]
     },
     "mtu" : {
-      "type" : "integer",
-      "readonly" : true
+      "type" : "integer"
     },
     "outdisc" : {
       "type" : "integer",
@@ -268,7 +284,7 @@
     },
     "reqflowcontrol" : {
       "type" : "string",
-      "enum" : [ "OFF", "RX", "TX", "RXTX" ],
+      "enum" : [ "OFF", "RX", "TX", "RXTX", "ON" ],
       "readonly" : true
     },
     "reqmedia" : {
@@ -278,7 +294,7 @@
     },
     "reqspeed" : {
       "type" : "string",
-      "enum" : [ "AUTO", "10", "100", "1000", "10000" ],
+      "enum" : [ "AUTO", "10", "100", "1000", "10000", "25000", "40000", "50000", "100000" ],
       "readonly" : true
     },
     "reqthroughput" : {
@@ -307,7 +323,7 @@
     },
     "speed" : {
       "type" : "string",
-      "enum" : [ "AUTO", "10", "100", "1000", "10000" ]
+      "enum" : [ "AUTO", "10", "100", "1000", "10000", "25000", "40000", "50000", "100000" ]
     },
     "state" : {
       "type" : "string",

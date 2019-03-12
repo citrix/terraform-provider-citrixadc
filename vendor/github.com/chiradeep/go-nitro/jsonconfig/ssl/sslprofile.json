@@ -2,7 +2,9 @@
   "type" : "object",
   "properties" : {
     "builtin" : {
-      "type" : "object"
+      "type" : "object",
+      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE", "PARTITION_ALL" ],
+      "readonly" : true
     },
     "ciphername" : {
       "type" : "string"
@@ -11,7 +13,8 @@
       "type" : "integer"
     },
     "cipherredirect" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
     },
     "cipherurl" : {
       "type" : "string"
@@ -20,67 +23,108 @@
       "type" : "integer"
     },
     "clientauth" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
     },
     "clientauthuseboundcachain" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
     },
     "clientcert" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "Mandatory", "Optional" ]
     },
     "commonname" : {
       "type" : "string"
     },
     "crlcheck" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "Mandatory", "Optional" ],
+      "readonly" : true
     },
     "denysslreneg" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "NO", "FRONTEND_CLIENT", "FRONTEND_CLIENTSERVER", "ALL", "NONSECURE" ]
     },
     "dh" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
     },
     "dhcount" : {
       "type" : "integer"
+    },
+    "dhekeyexchangewithpsk" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ]
     },
     "dhfile" : {
       "type" : "string"
     },
     "dhkeyexpsizelimit" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
     },
     "dropreqwithnohostheader" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "YES", "NO" ]
     },
     "encrypttriggerpktcount" : {
       "type" : "integer"
     },
     "ersa" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
     },
     "ersacount" : {
       "type" : "integer"
     },
+    "hsts" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "includesubdomains" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ]
+    },
     "insertionencoding" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "Unicode", "UTF-8" ]
     },
     "invoke" : {
-      "type" : "boolean"
+      "type" : "boolean",
+      "readonly" : true
     },
     "labeltype" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "vserver", "service", "policylabel" ],
+      "readonly" : true
+    },
+    "maxage" : {
+      "type" : "integer"
     },
     "name" : {
       "type" : "string"
     },
     "nonfipsciphers" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ],
+      "readonly" : true
     },
     "ocspcheck" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "Mandatory", "Optional" ],
+      "readonly" : true
+    },
+    "ocspstapling" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "prevsessionkeylifetime" : {
+      "type" : "integer"
     },
     "pushenctrigger" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "Always", "Merge", "Ignore", "Timer" ]
     },
     "pushenctriggertimeout" : {
       "type" : "integer"
@@ -89,58 +133,137 @@
       "type" : "integer"
     },
     "quantumsize" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "4096", "8192", "16384" ]
     },
     "redirectportrewrite" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
     },
     "sendclosenotify" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "YES", "NO" ]
     },
     "serverauth" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
     },
     "service" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "sessionkeylifetime" : {
+      "type" : "integer"
+    },
+    "sessionticket" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "sessionticketkeydata" : {
+      "type" : "string"
+    },
+    "sessionticketkeyrefresh" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "sessionticketlifetime" : {
       "type" : "integer"
     },
     "sessreuse" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
     },
     "sesstimeout" : {
       "type" : "integer"
     },
     "skipcaname" : {
-      "type" : "boolean"
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "skipclientcertpolicycheck" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
     },
     "snicert" : {
-      "type" : "boolean"
+      "type" : "boolean",
+      "readonly" : true
     },
     "snienable" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
     },
     "ssl3" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "sslimaxsessperserver" : {
+      "type" : "integer"
+    },
+    "sslinterception" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "ssliocspcheck" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "sslireneg" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "ssliverifyservercertforreuse" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ],
+      "readonly" : true
+    },
+    "ssllogprofile" : {
       "type" : "string"
+    },
+    "sslpfobjecttype" : {
+      "type" : "integer",
+      "readonly" : true
     },
     "sslprofiletype" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "BackEnd", "FrontEnd" ]
     },
     "sslredirect" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
     },
     "ssltriggertimeout" : {
       "type" : "integer"
     },
     "strictcachecks" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "YES", "NO" ]
+    },
+    "strictsigdigestcheck" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
     },
     "tls1" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
     },
     "tls11" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
     },
     "tls12" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "tls13" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "tls13sessionticketsperauthcontext" : {
+      "type" : "integer"
+    },
+    "zerorttearlydata" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
     }
   },
   "$schema" : "http://json-schema.org/draft-04/schema#",

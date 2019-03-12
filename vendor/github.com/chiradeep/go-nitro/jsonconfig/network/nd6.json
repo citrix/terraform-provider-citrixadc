@@ -5,6 +5,10 @@
       "type" : "integer",
       "readonly" : true
     },
+    "controlplane" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
     "flags" : {
       "type" : "integer",
       "readonly" : true
@@ -17,6 +21,9 @@
     },
     "neighbor" : {
       "type" : "string"
+    },
+    "nodeid" : {
+      "type" : "integer"
     },
     "state" : {
       "type" : "string",
@@ -31,6 +38,12 @@
       "readonly" : true
     },
     "vlan" : {
+      "type" : "integer"
+    },
+    "vtep" : {
+      "type" : "string"
+    },
+    "vxlan" : {
       "type" : "integer"
     }
   },

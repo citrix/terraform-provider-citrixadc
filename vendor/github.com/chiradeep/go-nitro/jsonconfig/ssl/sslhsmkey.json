@@ -4,7 +4,17 @@
     "hsmkeyname" : {
       "type" : "string"
     },
+    "hsmtype" : {
+      "type" : "string",
+      "enum" : [ "THALES", "SAFENET" ]
+    },
     "key" : {
+      "type" : "string"
+    },
+    "password" : {
+      "type" : "string"
+    },
+    "serialnum" : {
       "type" : "string"
     }
   },

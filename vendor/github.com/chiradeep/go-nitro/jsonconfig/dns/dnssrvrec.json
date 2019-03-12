@@ -9,6 +9,12 @@
     "domain" : {
       "type" : "string"
     },
+    "ecssubnet" : {
+      "type" : "string"
+    },
+    "nodeid" : {
+      "type" : "integer"
+    },
     "port" : {
       "type" : "integer"
     },

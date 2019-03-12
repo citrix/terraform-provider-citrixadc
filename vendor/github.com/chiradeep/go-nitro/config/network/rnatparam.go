@@ -1,5 +1,6 @@
 package network
 
 type Rnatparam struct {
-	Tcpproxy string `json:"tcpproxy,omitempty"`
+	Srcippersistency string `json:"srcippersistency,omitempty"`
+	Tcpproxy         string `json:"tcpproxy,omitempty"`
 }

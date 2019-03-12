@@ -2,49 +2,64 @@
   "type" : "object",
   "properties" : {
     "customheaders" : {
-      "type" : "string"
+      "type" : "string",
+      "readonly" : true
     },
     "httprequest" : {
-      "type" : "string"
+      "type" : "string",
+      "readonly" : true
     },
     "iptunnel" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "YES", "NO" ],
+      "readonly" : true
     },
     "lastresponse" : {
-      "type" : "string"
+      "type" : "string",
+      "readonly" : true
     },
     "monitorcurrentfailedprobes" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
     },
     "monitorname" : {
       "type" : "string"
     },
     "monitortotalfailedprobes" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
     },
     "monitortotalprobes" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
     },
     "monstatcode" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
     },
     "monstate" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "UP", "DOWN", "UNKNOWN", "BUSY", "OUT OF SERVICE", "GOING OUT OF SERVICE", "DOWN WHEN GOING OUT OF SERVICE", "NS_EMPTY_STR", "Unknown", "DISABLED" ],
+      "readonly" : true
     },
     "name" : {
       "type" : "string"
     },
     "respcode" : {
-      "type" : "string"
+      "type" : "string",
+      "readonly" : true
     },
     "responsetime" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
     },
     "servicename" : {
-      "type" : "string"
+      "type" : "string",
+      "readonly" : true
     },
     "vservername" : {
-      "type" : "string"
+      "type" : "string",
+      "readonly" : true
     }
   },
   "$schema" : "http://json-schema.org/draft-04/schema#",

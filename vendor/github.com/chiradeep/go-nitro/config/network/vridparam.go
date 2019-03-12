@@ -1,5 +1,7 @@
 package network
 
 type Vridparam struct {
-	Sendtomaster string `json:"sendtomaster,omitempty"`
+	Deadinterval  int    `json:"deadinterval,omitempty"`
+	Hellointerval int    `json:"hellointerval,omitempty"`
+	Sendtomaster  string `json:"sendtomaster,omitempty"`
 }

@@ -1,29 +1,44 @@
 {
   "type" : "object",
   "properties" : {
+    "cacheecsresponses" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
     "cachenegativeresponses" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
     },
     "cacherecords" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
     },
     "dnsanswerseclogging" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
     },
     "dnserrorlogging" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
     },
     "dnsextendedlogging" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
     },
     "dnsprofilename" : {
       "type" : "string"
     },
     "dnsquerylogging" : {
-      "type" : "string"
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "dropmultiqueryrequest" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
     },
     "referencecount" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
     }
   },
   "$schema" : "http://json-schema.org/draft-04/schema#",

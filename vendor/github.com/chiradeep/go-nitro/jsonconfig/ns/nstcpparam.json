@@ -5,9 +5,17 @@
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
     },
+    "autosyncookietimeout" : {
+      "type" : "integer"
+    },
+    "builtin" : {
+      "type" : "object",
+      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE", "PARTITION_ALL" ],
+      "readonly" : true
+    },
     "connflushifnomem" : {
       "type" : "string",
-      "enum" : [ "NONE", "HALFCLOSED_AND_IDLE", "FIFO" ]
+      "enum" : [ "NONE ", "HALFCLOSED_AND_IDLE", "FIFO" ]
     },
     "connflushthres" : {
       "type" : "integer"
@@ -59,6 +67,10 @@
       "type" : "integer"
     },
     "mptcpchecksum" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "mptcpclosemptcpsessiononlastsfclose" : {
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
     },
@@ -123,6 +135,9 @@
       "enum" : [ "ENABLED", "DISABLED" ]
     },
     "synholdfastgiveup" : {
+      "type" : "integer"
+    },
+    "tcpfastopencookietimeout" : {
       "type" : "integer"
     },
     "tcpmaxretries" : {

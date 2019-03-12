@@ -17,11 +17,24 @@ type Authenticationoauthaction struct {
 	Attribute7                 string `json:"attribute7,omitempty"`
 	Attribute8                 string `json:"attribute8,omitempty"`
 	Attribute9                 string `json:"attribute9,omitempty"`
+	Audience                   string `json:"audience,omitempty"`
 	Authorizationendpoint      string `json:"authorizationendpoint,omitempty"`
+	Certendpoint               string `json:"certendpoint,omitempty"`
+	Certfilepath               string `json:"certfilepath,omitempty"`
 	Clientid                   string `json:"clientid,omitempty"`
 	Clientsecret               string `json:"clientsecret,omitempty"`
 	Defaultauthenticationgroup string `json:"defaultauthenticationgroup,omitempty"`
+	Granttype                  string `json:"granttype,omitempty"`
+	Graphendpoint              string `json:"graphendpoint,omitempty"`
 	Idtokendecryptendpoint     string `json:"idtokendecryptendpoint,omitempty"`
+	Issuer                     string `json:"issuer,omitempty"`
 	Name                       string `json:"name,omitempty"`
+	Oauthstatus                string `json:"oauthstatus,omitempty"`
+	Oauthtype                  string `json:"oauthtype,omitempty"`
+	Refreshinterval            int    `json:"refreshinterval,omitempty"`
+	Skewtime                   int    `json:"skewtime,omitempty"`
+	Tenantid                   string `json:"tenantid,omitempty"`
 	Tokenendpoint              string `json:"tokenendpoint,omitempty"`
+	Userinfourl                string `json:"userinfourl,omitempty"`
+	Usernamefield              string `json:"usernamefield,omitempty"`
 }

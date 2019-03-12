@@ -1,6 +1,9 @@
 package vpn
 
 type Vpnglobalstaserverbinding struct {
-	Staauthid string `json:"staauthid,omitempty"`
-	Staserver string `json:"staserver,omitempty"`
+	Gotopriorityexpression string `json:"gotopriorityexpression,omitempty"`
+	Staaddresstype         string `json:"staaddresstype,omitempty"`
+	Staauthid              string `json:"staauthid,omitempty"`
+	Staserver              string `json:"staserver,omitempty"`
+	Stastate               string `json:"stastate,omitempty"`
 }

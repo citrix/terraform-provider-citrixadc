@@ -6,7 +6,7 @@
     },
     "nextrecs" : {
       "type" : "object",
-      "enum" : [ "A", "NS", "CNAME", "SOA", "MX", "AAAA", "SRV", "RRSIG", "NSEC", "DNSKEY", "PTR", "TXT" ],
+      "enum" : [ "A", "NS", "CNAME", "SOA", "MX", "AAAA", "SRV", "RRSIG", "NSEC", "DNSKEY", "PTR", "TXT", "NAPTR" ],
       "readonly" : true
     },
     "zonename" : {

@@ -12,6 +12,10 @@
       "enum" : [ "MANUAL", "AUTO" ],
       "readonly" : true
     },
+    "lractiveintf" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
     "slaveduplex" : {
       "type" : "integer",
       "readonly" : true

@@ -1,5 +1,6 @@
 package vpn
 
 type Vpnglobalvpnurlbinding struct {
-	Urlname string `json:"urlname,omitempty"`
+	Gotopriorityexpression string `json:"gotopriorityexpression,omitempty"`
+	Urlname                string `json:"urlname,omitempty"`
 }

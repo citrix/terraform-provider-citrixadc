@@ -3,6 +3,7 @@ package network
 type L2param struct {
 	Bdggrpproxyarp         string `json:"bdggrpproxyarp,omitempty"`
 	Bdgsetting             string `json:"bdgsetting,omitempty"`
+	Bridgeagetimeout       int    `json:"bridgeagetimeout,omitempty"`
 	Garponvridintf         string `json:"garponvridintf,omitempty"`
 	Garpreply              string `json:"garpreply,omitempty"`
 	Macmodefwdmypkt        string `json:"macmodefwdmypkt,omitempty"`
@@ -13,5 +14,6 @@ type L2param struct {
 	Returntoethernetsender string `json:"returntoethernetsender,omitempty"`
 	Rstintfonhafo          string `json:"rstintfonhafo,omitempty"`
 	Skipproxyingbsdtraffic string `json:"skipproxyingbsdtraffic,omitempty"`
+	Stopmacmoveupdate      string `json:"stopmacmoveupdate,omitempty"`
 	Usemymac               string `json:"usemymac,omitempty"`
 }

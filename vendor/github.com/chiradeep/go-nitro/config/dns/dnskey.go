@@ -8,8 +8,10 @@ type Dnskey struct {
 	Keysize            int    `json:"keysize,omitempty"`
 	Keytype            string `json:"keytype,omitempty"`
 	Notificationperiod int    `json:"notificationperiod,omitempty"`
+	Password           string `json:"password,omitempty"`
 	Privatekey         string `json:"privatekey,omitempty"`
 	Publickey          string `json:"publickey,omitempty"`
+	Src                string `json:"src,omitempty"`
 	Ttl                int    `json:"ttl,omitempty"`
 	Units1             string `json:"units1,omitempty"`
 	Units2             string `json:"units2,omitempty"`

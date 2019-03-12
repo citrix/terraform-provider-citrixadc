@@ -1,0 +1,14 @@
+{
+  "type" : "object",
+  "properties" : {
+    "analyticsprofile" : {
+      "type" : "string"
+    },
+    "name" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "appflowaction_analyticsprofile_binding",
+  "title" : "appflowaction_analyticsprofile_binding"
+}

@@ -1,9 +1,21 @@
 {
   "type" : "object",
   "properties" : {
+    "allowboundsvcremoval" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "builtin" : {
+      "type" : "object",
+      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE", "PARTITION_ALL" ],
+      "readonly" : true
+    },
     "consolidatedlconn" : {
       "type" : "string",
       "enum" : [ "YES", "NO" ]
+    },
+    "cookiepassphrase" : {
+      "type" : "string"
     },
     "httponlycookieflag" : {
       "type" : "string",
@@ -21,6 +33,10 @@
       "type" : "string",
       "enum" : [ "YES", "NO" ]
     },
+    "retainservicestate" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
     "sessionsthreshold" : {
       "type" : "integer",
       "readonly" : true
@@ -28,9 +44,17 @@
     "startuprrfactor" : {
       "type" : "integer"
     },
+    "useencryptedpersistencecookie" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
     "useportforhashlb" : {
       "type" : "string",
       "enum" : [ "YES", "NO" ]
+    },
+    "usesecuredpersistencecookie" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
     },
     "vserverspecificmac" : {
       "type" : "string",

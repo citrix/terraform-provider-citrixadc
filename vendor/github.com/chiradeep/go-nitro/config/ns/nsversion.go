@@ -1,6 +1,7 @@
 package ns
 
 type Nsversion struct {
-	Mode    int    `json:"mode,omitempty"`
-	Version string `json:"version,omitempty"`
+	Installedversion bool   `json:"installedversion,omitempty"`
+	Mode             int    `json:"mode,omitempty"`
+	Version          string `json:"version,omitempty"`
 }

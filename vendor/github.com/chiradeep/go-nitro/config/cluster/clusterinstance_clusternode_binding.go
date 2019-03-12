@@ -10,6 +10,7 @@ type Clusterinstanceclusternodebinding struct {
 	Islocalnode                bool   `json:"islocalnode,omitempty"`
 	Masterstate                string `json:"masterstate,omitempty"`
 	Nodeid                     int    `json:"nodeid,omitempty"`
+	Nodejumbonotsupported      bool   `json:"nodejumbonotsupported,omitempty"`
 	Nodelicensemismatch        bool   `json:"nodelicensemismatch,omitempty"`
 	Nodersskeymismatch         bool   `json:"nodersskeymismatch,omitempty"`
 	State                      string `json:"state,omitempty"`

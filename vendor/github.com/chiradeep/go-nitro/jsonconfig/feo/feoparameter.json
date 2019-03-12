@@ -1,0 +1,25 @@
+{
+  "type" : "object",
+  "properties" : {
+    "builtin" : {
+      "type" : "object",
+      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE", "PARTITION_ALL" ],
+      "readonly" : true
+    },
+    "cssinlinethressize" : {
+      "type" : "integer"
+    },
+    "imginlinethressize" : {
+      "type" : "integer"
+    },
+    "jpegqualitypercent" : {
+      "type" : "integer"
+    },
+    "jsinlinethressize" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "feoparameter",
+  "title" : "feoparameter"
+}

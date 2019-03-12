@@ -33,6 +33,7 @@ type Route struct {
 	Netmask           string      `json:"netmask,omitempty"`
 	Network           string      `json:"network,omitempty"`
 	Ospf              bool        `json:"ospf,omitempty"`
+	Ownergroup        string      `json:"ownergroup,omitempty"`
 	Permanent         bool        `json:"permanent,omitempty"`
 	Protocol          interface{} `json:"protocol,omitempty"`
 	Retain            int         `json:"retain,omitempty"`

@@ -4,10 +4,6 @@
     "action" : {
       "type" : "string"
     },
-    "activepolicy" : {
-      "type" : "integer",
-      "readonly" : true
-    },
     "comment" : {
       "type" : "string"
     },

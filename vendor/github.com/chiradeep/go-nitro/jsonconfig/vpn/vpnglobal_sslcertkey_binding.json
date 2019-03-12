@@ -1,0 +1,28 @@
+{
+  "type" : "object",
+  "properties" : {
+    "cacert" : {
+      "type" : "string"
+    },
+    "certkeyname" : {
+      "type" : "string"
+    },
+    "crlcheck" : {
+      "type" : "string",
+      "enum" : [ "Mandatory", "Optional" ]
+    },
+    "gotopriorityexpression" : {
+      "type" : "string"
+    },
+    "ocspcheck" : {
+      "type" : "string",
+      "enum" : [ "Mandatory", "Optional" ]
+    },
+    "userdataencryptionkey" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "vpnglobal_sslcertkey_binding",
+  "title" : "vpnglobal_sslcertkey_binding"
+}

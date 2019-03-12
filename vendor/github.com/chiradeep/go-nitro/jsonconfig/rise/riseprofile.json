@@ -1,0 +1,71 @@
+{
+  "type" : "object",
+  "properties" : {
+    "deviceid" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "ifnum" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "ipaddress" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "issu" : {
+      "type" : "string",
+      "enum" : [ "InProgress", "None" ],
+      "readonly" : true
+    },
+    "mode" : {
+      "type" : "string",
+      "enum" : [ "Direct", "Indirect", "vPC-Direct" ],
+      "readonly" : true
+    },
+    "profilename" : {
+      "type" : "string"
+    },
+    "servicename" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "slotid" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "slotno" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "status" : {
+      "type" : "string",
+      "enum" : [ "Active", "Inactive" ],
+      "readonly" : true
+    },
+    "vdcid" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vlan" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vlancfgstatus" : {
+      "type" : "string",
+      "enum" : [ "Ok", "Invalid" ],
+      "readonly" : true
+    },
+    "vlangroupid" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpcid" : {
+      "type" : "integer",
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "riseprofile",
+  "title" : "riseprofile"
+}

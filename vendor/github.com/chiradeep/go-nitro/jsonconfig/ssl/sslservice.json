@@ -1,9 +1,6 @@
 {
   "type" : "object",
   "properties" : {
-    "cipherdetails" : {
-      "type" : "boolean"
-    },
     "cipherredirect" : {
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
@@ -32,6 +29,10 @@
     "dhfile" : {
       "type" : "string"
     },
+    "dhkeyexpsizelimit" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
     "dtlsflag" : {
       "type" : "boolean",
       "readonly" : true
@@ -47,6 +48,11 @@
       "type" : "integer"
     },
     "nonfipsciphers" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ],
+      "readonly" : true
+    },
+    "ocspstapling" : {
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
     },
@@ -96,6 +102,9 @@
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
     },
+    "sslprofile" : {
+      "type" : "string"
+    },
     "sslredirect" : {
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
@@ -107,6 +116,10 @@
     "sslv2url" : {
       "type" : "string"
     },
+    "strictsigdigestcheck" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
     "tls1" : {
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
@@ -116,6 +129,10 @@
       "enum" : [ "ENABLED", "DISABLED" ]
     },
     "tls12" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "tls13" : {
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
     }

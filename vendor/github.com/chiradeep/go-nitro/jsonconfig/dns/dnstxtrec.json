@@ -12,6 +12,12 @@
     "domain" : {
       "type" : "string"
     },
+    "ecssubnet" : {
+      "type" : "string"
+    },
+    "nodeid" : {
+      "type" : "integer"
+    },
     "recordid" : {
       "type" : "integer"
     },

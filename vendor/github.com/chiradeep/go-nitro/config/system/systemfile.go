@@ -8,4 +8,5 @@ type Systemfile struct {
 	Filemode         interface{} `json:"filemode,omitempty"`
 	Filemodifiedtime string      `json:"filemodifiedtime,omitempty"`
 	Filename         string      `json:"filename,omitempty"`
+	Filesize         int         `json:"filesize,omitempty"`
 }

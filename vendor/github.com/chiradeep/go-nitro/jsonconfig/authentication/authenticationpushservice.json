@@ -1,0 +1,47 @@
+{
+  "type" : "object",
+  "properties" : {
+    "Namespace" : {
+      "type" : "string"
+    },
+    "certendpoint" : {
+      "type" : "string"
+    },
+    "clientid" : {
+      "type" : "string"
+    },
+    "clientsecret" : {
+      "type" : "string"
+    },
+    "customerid" : {
+      "type" : "string"
+    },
+    "hubname" : {
+      "type" : "string"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "pushservicestatus" : {
+      "type" : "string",
+      "enum" : [ "INIT", "CERTFETCH", "CCTOKEN", "COMPLETE" ],
+      "readonly" : true
+    },
+    "pushservicetype" : {
+      "type" : "string",
+      "enum" : [ "AZURE", "CITRIX" ]
+    },
+    "refreshinterval" : {
+      "type" : "integer"
+    },
+    "servicekey" : {
+      "type" : "string"
+    },
+    "servicekeyname" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "authenticationpushservice",
+  "title" : "authenticationpushservice"
+}

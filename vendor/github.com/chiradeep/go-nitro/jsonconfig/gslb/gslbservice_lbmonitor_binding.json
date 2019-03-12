@@ -5,6 +5,10 @@
       "type" : "integer",
       "readonly" : true
     },
+    "lastresponse" : {
+      "type" : "string",
+      "readonly" : true
+    },
     "monitor_name" : {
       "type" : "string"
     },

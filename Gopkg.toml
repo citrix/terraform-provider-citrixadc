@@ -23,7 +23,7 @@
 
 [[constraint]]
   name = "github.com/chiradeep/go-nitro"
-  branch = "master"
+  branch = "update_json"
 
 [[constraint]]
   name = "github.com/hashicorp/terraform"

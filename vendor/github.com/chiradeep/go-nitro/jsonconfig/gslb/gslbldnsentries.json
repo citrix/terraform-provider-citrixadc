@@ -9,6 +9,9 @@
       "type" : "string",
       "readonly" : true
     },
+    "nodeid" : {
+      "type" : "integer"
+    },
     "numsites" : {
       "type" : "integer",
       "readonly" : true

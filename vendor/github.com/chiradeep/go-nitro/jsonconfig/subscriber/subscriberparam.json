@@ -1,0 +1,31 @@
+{
+  "type" : "object",
+  "properties" : {
+    "builtin" : {
+      "type" : "object",
+      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE", "PARTITION_ALL" ],
+      "readonly" : true
+    },
+    "idleaction" : {
+      "type" : "string",
+      "enum" : [ "ccrTerminate", "delete", "ccrUpdate" ]
+    },
+    "idlettl" : {
+      "type" : "integer"
+    },
+    "interfacetype" : {
+      "type" : "string",
+      "enum" : [ "None", "RadiusOnly", "RadiusAndGx", "GxOnly" ]
+    },
+    "ipv6prefixlookuplist" : {
+      "type" : "object"
+    },
+    "keytype" : {
+      "type" : "string",
+      "enum" : [ "IP", "IPANDVLAN" ]
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "subscriberparam",
+  "title" : "subscriberparam"
+}

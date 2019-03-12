@@ -1,0 +1,47 @@
+{
+  "type" : "object",
+  "properties" : {
+    "audience" : {
+      "type" : "string"
+    },
+    "clientid" : {
+      "type" : "string"
+    },
+    "clientsecret" : {
+      "type" : "string"
+    },
+    "defaultauthenticationgroup" : {
+      "type" : "string"
+    },
+    "encrypttoken" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
+    "issuer" : {
+      "type" : "string"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "oauthstatus" : {
+      "type" : "string",
+      "enum" : [ "INIT", "CERTFETCH", "AADFORGRAPH", "GRAPH", "AADFORMDM", "MDMINFO", "COMPLETE" ],
+      "readonly" : true
+    },
+    "redirecturl" : {
+      "type" : "string"
+    },
+    "refreshinterval" : {
+      "type" : "integer"
+    },
+    "relyingpartymetadataurl" : {
+      "type" : "string"
+    },
+    "skewtime" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "authenticationoauthidpprofile",
+  "title" : "authenticationoauthidpprofile"
+}

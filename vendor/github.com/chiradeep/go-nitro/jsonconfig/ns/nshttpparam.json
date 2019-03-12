@@ -1,11 +1,20 @@
 {
   "type" : "object",
   "properties" : {
+    "builtin" : {
+      "type" : "object",
+      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE", "PARTITION_ALL" ],
+      "readonly" : true
+    },
     "conmultiplex" : {
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
     },
     "dropinvalreqs" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
+    "http2serverside" : {
       "type" : "string",
       "enum" : [ "ON", "OFF" ]
     },

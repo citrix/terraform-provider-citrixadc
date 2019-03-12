@@ -1,0 +1,14 @@
+{
+  "type" : "object",
+  "properties" : {
+    "nodeprefix" : {
+      "type" : "string"
+    },
+    "radkey" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "radiusnode",
+  "title" : "radiusnode"
+}

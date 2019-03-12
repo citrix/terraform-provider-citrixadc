@@ -13,6 +13,11 @@
     },
     "routemonitor" : {
       "type" : "string"
+    },
+    "routemonitorstate" : {
+      "type" : "string",
+      "enum" : [ "UP", "DOWN" ],
+      "readonly" : true
     }
   },
   "$schema" : "http://json-schema.org/draft-04/schema#",

@@ -2,7 +2,8 @@
   "type" : "object",
   "properties" : {
     "hits" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
     },
     "name" : {
       "type" : "string"

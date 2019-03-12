@@ -5,18 +5,26 @@
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
     },
+    "alg" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
     "appflowexport" : {
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
     },
     "builtin" : {
       "type" : "object",
-      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE" ],
+      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE", "PARTITION_ALL" ],
       "readonly" : true
     },
     "dateformat" : {
       "type" : "string",
       "enum" : [ "MMDDYYYY", "DDMMYYYY", "YYYYMMDD" ]
+    },
+    "dns" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
     },
     "logfacility" : {
       "type" : "string",
@@ -26,11 +34,23 @@
       "type" : "object",
       "enum" : [ "ALL", "EMERGENCY", "ALERT", "CRITICAL", "ERROR", "WARNING", "NOTICE", "INFORMATIONAL", "DEBUG", "NONE" ]
     },
+    "lsn" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
     "serverip" : {
       "type" : "string"
     },
     "serverport" : {
       "type" : "integer"
+    },
+    "sslinterception" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "subscriberlog" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
     },
     "tcp" : {
       "type" : "string",
@@ -39,6 +59,10 @@
     "timezone" : {
       "type" : "string",
       "enum" : [ "GMT_TIME", "LOCAL_TIME" ]
+    },
+    "urlfiltering" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
     },
     "userdefinedauditlog" : {
       "type" : "string",

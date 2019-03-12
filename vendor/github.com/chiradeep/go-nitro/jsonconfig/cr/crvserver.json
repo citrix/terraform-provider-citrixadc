@@ -21,6 +21,11 @@
     "backupvserver" : {
       "type" : "string"
     },
+    "bindpoint" : {
+      "type" : "string",
+      "enum" : [ "REQUEST", "RESPONSE", "ICA_REQUEST" ],
+      "readonly" : true
+    },
     "cachetype" : {
       "type" : "string",
       "enum" : [ "TRANSPARENT", "REVERSE", "FORWARD" ]
@@ -64,6 +69,10 @@
       "type" : "string",
       "enum" : [ "ON", "OFF" ]
     },
+    "gotopriorityexpression" : {
+      "type" : "string",
+      "readonly" : true
+    },
     "homepage" : {
       "type" : "string",
       "readonly" : true
@@ -75,9 +84,16 @@
       "type" : "string",
       "enum" : [ "PASSIVE", "ACTIVE" ]
     },
+    "invoke" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
     "ip" : {
       "type" : "string",
       "readonly" : true
+    },
+    "ipset" : {
+      "type" : "string"
     },
     "ipv46" : {
       "type" : "string"
@@ -85,6 +101,15 @@
     "l2conn" : {
       "type" : "string",
       "enum" : [ "ON", "OFF" ]
+    },
+    "labelname" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "labeltype" : {
+      "type" : "string",
+      "enum" : [ "reqvserver", "resvserver", "policylabel" ],
+      "readonly" : true
     },
     "lbvserver" : {
       "type" : "string",
@@ -113,6 +138,11 @@
       "type" : "string",
       "readonly" : true
     },
+    "nodefaultbindings" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ],
+      "readonly" : true
+    },
     "onpolicymatch" : {
       "type" : "string",
       "enum" : [ "CACHE", "ORIGIN" ]
@@ -120,6 +150,10 @@
     "originusip" : {
       "type" : "string",
       "enum" : [ "ON", "OFF" ]
+    },
+    "pipolicyhits" : {
+      "type" : "integer",
+      "readonly" : true
     },
     "policyname" : {
       "type" : "string",
@@ -150,8 +184,17 @@
       "type" : "string",
       "enum" : [ "ON", "OFF" ]
     },
+    "rhistate" : {
+      "type" : "string",
+      "enum" : [ "PASSIVE", "ACTIVE" ]
+    },
     "rule" : {
       "type" : "string",
+      "readonly" : true
+    },
+    "sc" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ],
       "readonly" : true
     },
     "servicename" : {
@@ -160,7 +203,7 @@
     },
     "servicetype" : {
       "type" : "string",
-      "enum" : [ "HTTP", "SSL", "NNTP" ]
+      "enum" : [ "HTTP", "SSL", "NNTP", "HDX" ]
     },
     "somethod" : {
       "type" : "string",

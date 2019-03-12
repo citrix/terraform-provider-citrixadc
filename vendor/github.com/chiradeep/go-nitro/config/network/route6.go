@@ -24,6 +24,7 @@ type Route6 struct {
 	Msr               string      `json:"msr,omitempty"`
 	Network           string      `json:"network,omitempty"`
 	Ospfv3            bool        `json:"ospfv3,omitempty"`
+	Ownergroup        string      `json:"ownergroup,omitempty"`
 	Permanent         bool        `json:"permanent,omitempty"`
 	Raroute           bool        `json:"raroute,omitempty"`
 	Retain            int         `json:"retain,omitempty"`
@@ -37,5 +38,6 @@ type Route6 struct {
 	Totalprobes       int         `json:"totalprobes,omitempty"`
 	Type              bool        `json:"type,omitempty"`
 	Vlan              int         `json:"vlan,omitempty"`
+	Vxlan             int         `json:"vxlan,omitempty"`
 	Weight            int         `json:"weight,omitempty"`
 }

@@ -6,6 +6,10 @@
       "enum" : [ "DISABLED", "ENABLED" ],
       "readonly" : true
     },
+    "decrementhoplimit" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
     "dynamicrouting" : {
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
@@ -31,7 +35,7 @@
     },
     "iptype" : {
       "type" : "object",
-      "enum" : [ "NSIP", "VIP", "SNIP", "GSLBsiteIP", "ADNSsvcIP", "CLIP" ],
+      "enum" : [ "NSIP", "VIP", "SNIP", "GSLBsiteIP", "ADNSsvcIP", "RADIUSListenersvcIP", "CLIP" ],
       "readonly" : true
     },
     "ipv6address" : {
@@ -51,12 +55,20 @@
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
     },
+    "networkroute" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
     "ospf6lsatype" : {
       "type" : "string",
       "enum" : [ "INTRA_AREA", "EXTERNAL" ]
     },
     "ospfarea" : {
       "type" : "integer"
+    },
+    "ownerdownresponse" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ]
     },
     "ownernode" : {
       "type" : "integer"
@@ -86,6 +98,9 @@
       "enum" : [ "Stand-alone", "HA", "Cluster" ],
       "readonly" : true
     },
+    "tag" : {
+      "type" : "integer"
+    },
     "td" : {
       "type" : "integer"
     },
@@ -95,7 +110,7 @@
     },
     "type" : {
       "type" : "string",
-      "enum" : [ "NSIP", "VIP", "SNIP", "GSLBsiteIP", "ADNSsvcIP", "CLIP" ]
+      "enum" : [ "NSIP", "VIP", "SNIP", "GSLBsiteIP", "ADNSsvcIP", "RADIUSListenersvcIP", "CLIP" ]
     },
     "viprtadv2bsd" : {
       "type" : "boolean",
@@ -112,13 +127,16 @@
     "vlan" : {
       "type" : "integer"
     },
+    "vrid6" : {
+      "type" : "integer"
+    },
     "vserver" : {
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
     },
     "vserverrhilevel" : {
       "type" : "string",
-      "enum" : [ "ONE_VSERVER", "ALL_VSERVERS", "NONE" ]
+      "enum" : [ "ONE_VSERVER", "ALL_VSERVERS", "NONE", "VSVR_CNTRLD" ]
     }
   },
   "$schema" : "http://json-schema.org/draft-04/schema#",

@@ -1,6 +1,10 @@
 {
   "type" : "object",
   "properties" : {
+    "ecssubnet" : {
+      "type" : "string",
+      "readonly" : true
+    },
     "hostname" : {
       "type" : "string"
     },
@@ -10,7 +14,11 @@
     },
     "nextrecs" : {
       "type" : "object",
-      "enum" : [ "A", "NS", "CNAME", "SOA", "MX", "AAAA", "SRV", "RRSIG", "NSEC", "DNSKEY", "PTR", "TXT" ],
+      "enum" : [ "A", "NS", "CNAME", "SOA", "MX", "AAAA", "SRV", "RRSIG", "NSEC", "DNSKEY", "PTR", "TXT", "NAPTR" ],
+      "readonly" : true
+    },
+    "ttl" : {
+      "type" : "integer",
       "readonly" : true
     },
     "type" : {

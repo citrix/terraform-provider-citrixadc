@@ -1,0 +1,17 @@
+{
+  "type" : "object",
+  "properties" : {
+    "logindomain" : {
+      "type" : "string"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "udpport" : {
+      "type" : "integer"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "vpnpcoipvserverprofile",
+  "title" : "vpnpcoipvserverprofile"
+}

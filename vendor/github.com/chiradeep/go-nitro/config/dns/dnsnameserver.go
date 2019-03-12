@@ -3,6 +3,7 @@ package dns
 type Dnsnameserver struct {
 	Clmonowner      int    `json:"clmonowner,omitempty"`
 	Clmonview       int    `json:"clmonview,omitempty"`
+	Dnsprofilename  string `json:"dnsprofilename,omitempty"`
 	Dnsvservername  string `json:"dnsvservername,omitempty"`
 	Ip              string `json:"ip,omitempty"`
 	Local           bool   `json:"local,omitempty"`

@@ -26,6 +26,7 @@ type Nspbr struct {
 	Name              string `json:"name,omitempty"`
 	Nexthop           bool   `json:"nexthop,omitempty"`
 	Nexthopval        string `json:"nexthopval,omitempty"`
+	Ownergroup        string `json:"ownergroup,omitempty"`
 	Priority          int    `json:"priority,omitempty"`
 	Protocol          string `json:"protocol,omitempty"`
 	Protocolnumber    int    `json:"protocolnumber,omitempty"`
@@ -33,6 +34,7 @@ type Nspbr struct {
 	Srcipop           string `json:"srcipop,omitempty"`
 	Srcipval          string `json:"srcipval,omitempty"`
 	Srcmac            string `json:"srcmac,omitempty"`
+	Srcmacmask        string `json:"srcmacmask,omitempty"`
 	Srcport           bool   `json:"srcport,omitempty"`
 	Srcportop         string `json:"srcportop,omitempty"`
 	Srcportval        string `json:"srcportval,omitempty"`
@@ -41,4 +43,6 @@ type Nspbr struct {
 	Totalfailedprobes int    `json:"totalfailedprobes,omitempty"`
 	Totalprobes       int    `json:"totalprobes,omitempty"`
 	Vlan              int    `json:"vlan,omitempty"`
+	Vxlan             int    `json:"vxlan,omitempty"`
+	Vxlanvlanmap      string `json:"vxlanvlanmap,omitempty"`
 }

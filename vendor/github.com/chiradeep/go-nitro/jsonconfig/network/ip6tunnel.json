@@ -11,6 +11,9 @@
     "name" : {
       "type" : "string"
     },
+    "ownergroup" : {
+      "type" : "string"
+    },
     "remote" : {
       "type" : "string"
     },

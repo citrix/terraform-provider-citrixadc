@@ -12,6 +12,14 @@
     "cipheader" : {
       "type" : "string"
     },
+    "clmonowner" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "clmonview" : {
+      "type" : "integer",
+      "readonly" : true
+    },
     "clttimeout" : {
       "type" : "integer"
     },
@@ -28,9 +36,17 @@
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
     },
+    "glsbsvchealthdescr" : {
+      "type" : "string",
+      "readonly" : true
+    },
     "gslb" : {
       "type" : "string",
       "enum" : [ "REMOTE", "LOCAL" ],
+      "readonly" : true
+    },
+    "gslbsvchealth" : {
+      "type" : "integer",
       "readonly" : true
     },
     "gslbsvcstats" : {
@@ -79,8 +95,28 @@
     "monthreshold" : {
       "type" : "integer"
     },
+    "naptrdomainttl" : {
+      "type" : "integer"
+    },
+    "naptrorder" : {
+      "type" : "integer"
+    },
+    "naptrpreference" : {
+      "type" : "integer"
+    },
+    "naptrreplacement" : {
+      "type" : "string"
+    },
+    "naptrservices" : {
+      "type" : "string"
+    },
     "newname" : {
       "type" : "string"
+    },
+    "nodefaultbindings" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ],
+      "readonly" : true
     },
     "port" : {
       "type" : "integer"
@@ -103,7 +139,7 @@
     },
     "servicetype" : {
       "type" : "string",
-      "enum" : [ "HTTP", "FTP", "TCP", "UDP", "SSL", "SSL_BRIDGE", "SSL_TCP", "NNTP", "ANY", "SIP_UDP", "RADIUS", "RDP", "RTSP", "MYSQL", "MSSQL" ]
+      "enum" : [ "HTTP", "FTP", "TCP", "UDP", "SSL", "SSL_BRIDGE", "SSL_TCP", "NNTP", "ANY", "SIP_UDP", "SIP_TCP", "SIP_SSL", "RADIUS", "RDP", "RTSP", "MYSQL", "MSSQL", "ORACLE" ]
     },
     "sitename" : {
       "type" : "string"
@@ -119,6 +155,10 @@
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
     },
+    "statechangetimesec" : {
+      "type" : "string",
+      "readonly" : true
+    },
     "svreffgslbstate" : {
       "type" : "string",
       "enum" : [ "UP", "DOWN", "UNKNOWN", "BUSY", "OUT OF SERVICE", "GOING OUT OF SERVICE", "DOWN WHEN GOING OUT OF SERVICE", "NS_EMPTY_STR", "Unknown", "DISABLED" ],
@@ -131,6 +171,15 @@
     },
     "svrtimeout" : {
       "type" : "integer"
+    },
+    "threshold" : {
+      "type" : "string",
+      "enum" : [ "ABOVE", "BELOW" ],
+      "readonly" : true
+    },
+    "tickssincelaststatechange" : {
+      "type" : "integer",
+      "readonly" : true
     },
     "viewip" : {
       "type" : "string"

@@ -1,0 +1,60 @@
+{
+  "type" : "object",
+  "properties" : {
+    "builtin" : {
+      "type" : "object",
+      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE", "PARTITION_ALL" ],
+      "readonly" : true
+    },
+    "clientaudioredirection" : {
+      "type" : "string",
+      "enum" : [ "DEFAULT", "DISABLED" ]
+    },
+    "clientclipboardredirection" : {
+      "type" : "string",
+      "enum" : [ "DEFAULT", "DISABLED" ]
+    },
+    "clientcomportredirection" : {
+      "type" : "string",
+      "enum" : [ "DEFAULT", "DISABLED" ]
+    },
+    "clientdriveredirection" : {
+      "type" : "string",
+      "enum" : [ "DEFAULT", "DISABLED" ]
+    },
+    "clientprinterredirection" : {
+      "type" : "string",
+      "enum" : [ "DEFAULT", "DISABLED" ]
+    },
+    "clientusbdriveredirection" : {
+      "type" : "string",
+      "enum" : [ "DEFAULT", "DISABLED" ]
+    },
+    "connectclientlptports" : {
+      "type" : "string",
+      "enum" : [ "DEFAULT", "DISABLED" ]
+    },
+    "isdefault" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "localremotedatasharing" : {
+      "type" : "string",
+      "enum" : [ "DEFAULT", "DISABLED" ]
+    },
+    "multistream" : {
+      "type" : "string",
+      "enum" : [ "DEFAULT", "DISABLED" ]
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "refcnt" : {
+      "type" : "integer",
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "icaaccessprofile",
+  "title" : "icaaccessprofile"
+}

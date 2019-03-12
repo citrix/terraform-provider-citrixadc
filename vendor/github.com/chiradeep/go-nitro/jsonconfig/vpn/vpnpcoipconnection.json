@@ -1,0 +1,37 @@
+{
+  "type" : "object",
+  "properties" : {
+    "all" : {
+      "type" : "boolean"
+    },
+    "destip" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "destport" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "nodeid" : {
+      "type" : "integer"
+    },
+    "peid" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "srcip" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "srcport" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "username" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "vpnpcoipconnection",
+  "title" : "vpnpcoipconnection"
+}

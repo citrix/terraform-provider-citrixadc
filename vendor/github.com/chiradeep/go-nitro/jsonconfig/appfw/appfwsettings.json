@@ -18,6 +18,10 @@
       "type" : "string",
       "enum" : [ "ON", "OFF" ]
     },
+    "geolocationlogging" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
+    },
     "importsizelimit" : {
       "type" : "integer"
     },
@@ -32,6 +36,9 @@
       "type" : "string"
     },
     "sessionlifetime" : {
+      "type" : "integer"
+    },
+    "sessionlimit" : {
       "type" : "integer"
     },
     "sessiontimeout" : {

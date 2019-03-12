@@ -1,0 +1,20 @@
+{
+  "type" : "object",
+  "properties" : {
+    "aclname" : {
+      "type" : "string"
+    },
+    "natip" : {
+      "type" : "string"
+    },
+    "netmask" : {
+      "type" : "string"
+    },
+    "network" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "rnatsession",
+  "title" : "rnatsession"
+}

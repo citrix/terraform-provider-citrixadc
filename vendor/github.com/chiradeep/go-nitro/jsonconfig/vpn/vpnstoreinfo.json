@@ -1,0 +1,35 @@
+{
+  "type" : "object",
+  "properties" : {
+    "storeapisupport" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ],
+      "readonly" : true
+    },
+    "storelist" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "storeserverissf" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ],
+      "readonly" : true
+    },
+    "storeserverstatus" : {
+      "type" : "string",
+      "enum" : [ "UP", "DOWN" ],
+      "readonly" : true
+    },
+    "storestatus" : {
+      "type" : "string",
+      "enum" : [ "UP", "DOWN" ],
+      "readonly" : true
+    },
+    "url" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "vpnstoreinfo",
+  "title" : "vpnstoreinfo"
+}

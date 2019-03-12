@@ -9,6 +9,10 @@
       "type" : "string",
       "readonly" : true
     },
+    "grepayload" : {
+      "type" : "string",
+      "enum" : [ "ETHERNETwithDOT1Q", "ETHERNET", "IP" ]
+    },
     "ipsecprofilename" : {
       "type" : "string"
     },
@@ -23,13 +27,16 @@
     "name" : {
       "type" : "string"
     },
-    "pbrname" : {
-      "type" : "string",
-      "readonly" : true
+    "ownergroup" : {
+      "type" : "string"
     },
     "protocol" : {
       "type" : "string",
       "enum" : [ "IPIP", "GRE", "IPSEC" ]
+    },
+    "refcnt" : {
+      "type" : "integer",
+      "readonly" : true
     },
     "remote" : {
       "type" : "string"
@@ -49,6 +56,9 @@
     "type" : {
       "type" : "integer",
       "readonly" : true
+    },
+    "vlan" : {
+      "type" : "integer"
     }
   },
   "$schema" : "http://json-schema.org/draft-04/schema#",

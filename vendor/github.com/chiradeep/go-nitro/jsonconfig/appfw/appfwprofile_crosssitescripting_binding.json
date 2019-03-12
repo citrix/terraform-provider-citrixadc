@@ -5,6 +5,13 @@
       "type" : "string",
       "enum" : [ "FORMFIELD", "HEADER", "COOKIE" ]
     },
+    "as_value_expr_xss" : {
+      "type" : "string"
+    },
+    "as_value_type_xss" : {
+      "type" : "string",
+      "enum" : [ "Tag", "Attribute", "Pattern" ]
+    },
     "comment" : {
       "type" : "string"
     },
@@ -15,6 +22,10 @@
       "type" : "string"
     },
     "isregex_xss" : {
+      "type" : "string",
+      "enum" : [ "REGEX", "NOTREGEX" ]
+    },
+    "isvalueregex_xss" : {
       "type" : "string",
       "enum" : [ "REGEX", "NOTREGEX" ]
     },

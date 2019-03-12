@@ -2,6 +2,7 @@ package transform
 
 type Transformglobaltransformpolicybinding struct {
 	Flowtype               int    `json:"flowtype,omitempty"`
+	Globalbindtype         string `json:"globalbindtype,omitempty"`
 	Gotopriorityexpression string `json:"gotopriorityexpression,omitempty"`
 	Invoke                 bool   `json:"invoke,omitempty"`
 	Labelname              string `json:"labelname,omitempty"`

@@ -5,7 +5,7 @@
       "type" : "integer",
       "readonly" : true
     },
-    "intranetapplication" : {
+    "gotopriorityexpression" : {
       "type" : "string"
     },
     "policy" : {
@@ -14,8 +14,9 @@
     "priority" : {
       "type" : "integer"
     },
-    "urlname" : {
-      "type" : "string"
+    "type" : {
+      "type" : "string",
+      "enum" : [ "REQUEST", "UDP_REQUEST", "DNS_REQUEST", "ICMP_REQUEST" ]
     },
     "username" : {
       "type" : "string"

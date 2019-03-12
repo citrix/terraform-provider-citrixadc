@@ -1,9 +1,22 @@
 {
   "type" : "object",
   "properties" : {
+    "backupparentlist" : {
+      "type" : "object"
+    },
+    "clip" : {
+      "type" : "string"
+    },
+    "curbackupparentip" : {
+      "type" : "string",
+      "readonly" : true
+    },
     "metricexchange" : {
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "naptrreplacementsuffix" : {
+      "type" : "string"
     },
     "nwmetricexchange" : {
       "type" : "string",
@@ -16,6 +29,9 @@
       "type" : "string",
       "enum" : [ "ACTIVE", "INACTIVE", "DOWN" ],
       "readonly" : true
+    },
+    "publicclip" : {
+      "type" : "string"
     },
     "publicip" : {
       "type" : "string"

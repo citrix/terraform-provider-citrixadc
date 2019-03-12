@@ -4,11 +4,19 @@
     "acllogtime" : {
       "type" : "integer"
     },
+    "allowclasseipv4" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
     "dropdfflag" : {
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
     },
     "dropipfragments" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "dynamicrouting" : {
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
     },
@@ -22,6 +30,14 @@
     },
     "icmpgenratethreshold" : {
       "type" : "integer"
+    },
+    "implicitaclallow" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "ipv6dynamicrouting" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
     },
     "miproundrobin" : {
       "type" : "string",

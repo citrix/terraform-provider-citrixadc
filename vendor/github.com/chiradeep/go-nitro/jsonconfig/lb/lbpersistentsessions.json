@@ -1,6 +1,10 @@
 {
   "type" : "object",
   "properties" : {
+    "cnamepersparam" : {
+      "type" : "string",
+      "readonly" : true
+    },
     "destip" : {
       "type" : "string",
       "readonly" : true
@@ -16,6 +20,9 @@
     "flags" : {
       "type" : "boolean",
       "readonly" : true
+    },
+    "nodeid" : {
+      "type" : "integer"
     },
     "persistenceparam" : {
       "type" : "string",
@@ -42,6 +49,10 @@
     },
     "type" : {
       "type" : "integer",
+      "readonly" : true
+    },
+    "typestring" : {
+      "type" : "string",
       "readonly" : true
     },
     "vserver" : {

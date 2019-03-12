@@ -3,6 +3,9 @@
   "properties" : {
     "eula" : {
       "type" : "string"
+    },
+    "gotopriorityexpression" : {
+      "type" : "string"
     }
   },
   "$schema" : "http://json-schema.org/draft-04/schema#",

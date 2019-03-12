@@ -1,0 +1,23 @@
+{
+  "type" : "object",
+  "properties" : {
+    "clientcontrol" : {
+      "type" : "string",
+      "enum" : [ "ALLOW", "DENY" ]
+    },
+    "locationbasedvpn" : {
+      "type" : "string",
+      "enum" : [ "Remote", "Everywhere" ]
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "networkaccessonvpnfailure" : {
+      "type" : "string",
+      "enum" : [ "onlyToGateway", "fullAccess" ]
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "vpnalwaysonprofile",
+  "title" : "vpnalwaysonprofile"
+}

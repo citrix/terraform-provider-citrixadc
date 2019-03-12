@@ -7,6 +7,7 @@ type Authenticationloginschema struct {
 	Name                    string      `json:"name,omitempty"`
 	Passwdexpression        string      `json:"passwdexpression,omitempty"`
 	Passwordcredentialindex int         `json:"passwordcredentialindex,omitempty"`
+	Ssocredentials          string      `json:"ssocredentials,omitempty"`
 	Usercredentialindex     int         `json:"usercredentialindex,omitempty"`
 	Userexpression          string      `json:"userexpression,omitempty"`
 }

@@ -11,10 +11,10 @@ type Cachecontentgroup struct {
 	Cachegroupincarnation  int         `json:"cachegroupincarnation,omitempty"`
 	Cachenon304hits        int         `json:"cachenon304hits,omitempty"`
 	Cachenuminvalpolicy    int         `json:"cachenuminvalpolicy,omitempty"`
+	Disklimit              int         `json:"disklimit,omitempty"`
 	Expireatlastbyte       string      `json:"expireatlastbyte,omitempty"`
 	Flags                  int         `json:"flags,omitempty"`
 	Flashcache             string      `json:"flashcache,omitempty"`
-	Force                  bool        `json:"force,omitempty"`
 	Heurexpiryparam        int         `json:"heurexpiryparam,omitempty"`
 	Hitparams              interface{} `json:"hitparams,omitempty"`
 	Hitselector            string      `json:"hitselector,omitempty"`
@@ -32,12 +32,14 @@ type Cachecontentgroup struct {
 	Markercells            int         `json:"markercells,omitempty"`
 	Matchcookies           string      `json:"matchcookies,omitempty"`
 	Maxressize             int         `json:"maxressize,omitempty"`
+	Memdusage              int         `json:"memdusage,omitempty"`
 	Memlimit               int         `json:"memlimit,omitempty"`
 	Memusage               int         `json:"memusage,omitempty"`
 	Minhits                int         `json:"minhits,omitempty"`
 	Minressize             int         `json:"minressize,omitempty"`
 	Name                   string      `json:"name,omitempty"`
 	Persist                string      `json:"persist,omitempty"`
+	Persistha              string      `json:"persistha,omitempty"`
 	Pinned                 string      `json:"pinned,omitempty"`
 	Policyname             interface{} `json:"policyname,omitempty"`
 	Polleverytime          string      `json:"polleverytime,omitempty"`
@@ -52,6 +54,7 @@ type Cachecontentgroup struct {
 	Relexpirymillisec      int         `json:"relexpirymillisec,omitempty"`
 	Removecookies          string      `json:"removecookies,omitempty"`
 	Selectorvalue          string      `json:"selectorvalue,omitempty"`
+	Tosecondary            string      `json:"tosecondary,omitempty"`
 	Type                   string      `json:"type,omitempty"`
 	Weaknegrelexpiry       int         `json:"weaknegrelexpiry,omitempty"`
 	Weakposrelexpiry       int         `json:"weakposrelexpiry,omitempty"`

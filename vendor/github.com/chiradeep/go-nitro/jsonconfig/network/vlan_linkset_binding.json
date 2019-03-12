@@ -7,6 +7,9 @@
     "ifnum" : {
       "type" : "string"
     },
+    "ownergroup" : {
+      "type" : "string"
+    },
     "tagged" : {
       "type" : "boolean"
     }

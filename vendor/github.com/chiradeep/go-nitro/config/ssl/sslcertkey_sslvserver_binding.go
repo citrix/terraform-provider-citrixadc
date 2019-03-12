@@ -3,7 +3,6 @@ package ssl
 type Sslcertkeysslvserverbinding struct {
 	Ca          bool   `json:"ca,omitempty"`
 	Certkey     string `json:"certkey,omitempty"`
-	Crlcheck    string `json:"crlcheck,omitempty"`
 	Data        int    `json:"data,omitempty"`
 	Servername  string `json:"servername,omitempty"`
 	Version     int    `json:"version,omitempty"`

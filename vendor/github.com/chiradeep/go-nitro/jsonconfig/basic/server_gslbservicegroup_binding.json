@@ -1,0 +1,100 @@
+{
+  "type" : "object",
+  "properties" : {
+    "appflowlog" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ],
+      "readonly" : true
+    },
+    "boundtd" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "cip" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ],
+      "readonly" : true
+    },
+    "cipheader" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "clttimeout" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "customserverid" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "downstateflush" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ],
+      "readonly" : true
+    },
+    "dup_port" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "dup_svctype" : {
+      "type" : "string",
+      "enum" : [ "HTTP", "FTP", "TCP", "UDP", "SSL", "SSL_BRIDGE", "SSL_TCP", "DTLS", "NNTP", "RPCSVR", "DNS", "ADNS", "SNMP", "RTSP", "DHCPRA", "ANY", "SIP_UDP", "SIP_TCP", "SIP_SSL", "DNS_TCP", "ADNS_TCP", "MYSQL", "MSSQL", "ORACLE", "RADIUS", "RADIUSListener", "RDP", "DIAMETER", "SSL_DIAMETER", "TFTP", "SMPP", "PPTP", "GRE", "SYSLOGTCP", "SYSLOGUDP", "FIX", "SSL_FIX", "USER_TCP", "USER_SSL_TCP", "QUIC", "IPFIX", "LOGSTREAM" ],
+      "readonly" : true
+    },
+    "maxbandwidth" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "maxclient" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "maxreq" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "monthreshold" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "port" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "servicegroupname" : {
+      "type" : "string"
+    },
+    "serviceipaddress" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "serviceipstr" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "svctype" : {
+      "type" : "string",
+      "enum" : [ "HTTP", "FTP", "TCP", "UDP", "SSL", "SSL_BRIDGE", "SSL_TCP", "DTLS", "NNTP", "RPCSVR", "DNS", "ADNS", "SNMP", "RTSP", "DHCPRA", "ANY", "SIP_UDP", "SIP_TCP", "SIP_SSL", "DNS_TCP", "ADNS_TCP", "MYSQL", "MSSQL", "ORACLE", "RADIUS", "RADIUSListener", "RDP", "DIAMETER", "SSL_DIAMETER", "TFTP", "SMPP", "PPTP", "GRE", "SYSLOGTCP", "SYSLOGUDP", "FIX", "SSL_FIX", "USER_TCP", "USER_SSL_TCP", "QUIC", "IPFIX", "LOGSTREAM" ],
+      "readonly" : true
+    },
+    "svrcfgflags" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "svrstate" : {
+      "type" : "string",
+      "enum" : [ "UP", "DOWN", "UNKNOWN", "BUSY", "OUT OF SERVICE", "GOING OUT OF SERVICE", "DOWN WHEN GOING OUT OF SERVICE", "NS_EMPTY_STR", "Unknown", "DISABLED" ],
+      "readonly" : true
+    },
+    "svrtimeout" : {
+      "type" : "integer",
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "server_gslbservicegroup_binding",
+  "title" : "server_gslbservicegroup_binding"
+}

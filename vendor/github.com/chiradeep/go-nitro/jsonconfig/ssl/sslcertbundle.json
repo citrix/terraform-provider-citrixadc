@@ -1,0 +1,19 @@
+{
+  "type" : "object",
+  "properties" : {
+    "inuse" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ],
+      "readonly" : true
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "src" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "sslcertbundle",
+  "title" : "sslcertbundle"
+}

@@ -8,9 +8,6 @@
     "id" : {
       "type" : "integer"
     },
-    "ifnum" : {
-      "type" : "string"
-    },
     "ipaddress" : {
       "type" : "string"
     }

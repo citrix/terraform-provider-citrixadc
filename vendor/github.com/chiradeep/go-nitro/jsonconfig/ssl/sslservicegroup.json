@@ -5,9 +5,6 @@
       "type" : "boolean",
       "readonly" : true
     },
-    "cipherdetails" : {
-      "type" : "boolean"
-    },
     "cipherredirect" : {
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ],
@@ -52,6 +49,11 @@
       "type" : "string",
       "readonly" : true
     },
+    "dhkeyexpsizelimit" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ],
+      "readonly" : true
+    },
     "ersa" : {
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ],
@@ -63,12 +65,17 @@
     },
     "nonfipsciphers" : {
       "type" : "string",
-      "enum" : [ "ENABLED", "DISABLED" ]
+      "enum" : [ "ENABLED", "DISABLED" ],
+      "readonly" : true
     },
     "ocspcheck" : {
       "type" : "string",
       "enum" : [ "Mandatory", "Optional" ],
       "readonly" : true
+    },
+    "ocspstapling" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
     },
     "redirectportrewrite" : {
       "type" : "string",
@@ -101,6 +108,10 @@
       "type" : "boolean",
       "readonly" : true
     },
+    "snienable" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
     "ssl2" : {
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ],
@@ -109,6 +120,9 @@
     "ssl3" : {
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "sslprofile" : {
+      "type" : "string"
     },
     "sslredirect" : {
       "type" : "string",
@@ -124,7 +138,23 @@
       "type" : "string",
       "readonly" : true
     },
+    "strictsigdigestcheck" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
     "tls1" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "tls11" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "tls12" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "tls13" : {
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
     }

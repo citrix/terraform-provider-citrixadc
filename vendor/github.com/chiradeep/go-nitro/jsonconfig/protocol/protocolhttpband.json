@@ -9,7 +9,15 @@
       "type" : "object",
       "readonly" : true
     },
+    "accessrationew" : {
+      "type" : "object",
+      "readonly" : true
+    },
     "avgbandsize" : {
+      "type" : "object",
+      "readonly" : true
+    },
+    "avgbandsizenew" : {
       "type" : "object",
       "readonly" : true
     },
@@ -17,7 +25,18 @@
       "type" : "object",
       "readonly" : true
     },
+    "banddatanew" : {
+      "type" : "object",
+      "readonly" : true
+    },
     "bandrange" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "nodeid" : {
+      "type" : "integer"
+    },
+    "numberofbands" : {
       "type" : "integer",
       "readonly" : true
     },
@@ -28,6 +47,10 @@
       "type" : "integer"
     },
     "totalbandsize" : {
+      "type" : "object",
+      "readonly" : true
+    },
+    "totals" : {
       "type" : "object",
       "readonly" : true
     },

@@ -5,4 +5,5 @@ type Lbroute struct {
 	Gatewayname string `json:"gatewayname,omitempty"`
 	Netmask     string `json:"netmask,omitempty"`
 	Network     string `json:"network,omitempty"`
+	Td          int    `json:"td,omitempty"`
 }

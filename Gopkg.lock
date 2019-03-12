@@ -94,8 +94,8 @@
   version = "v3.5.1"
 
 [[projects]]
-  branch = "master"
-  digest = "1:39e062e2a4d43fb87911a049bc0a6014b1b0b4ab24bcaa3b0b13036caead6c52"
+  branch = "update_json"
+  digest = "1:c084fa9562ce23eeaf7f7ce98dd0f96d41d5b2bda5e9cb2fd70c5d35519b971a"
   name = "github.com/chiradeep/go-nitro"
   packages = [
     "config/basic",
@@ -108,7 +108,7 @@
     "netscaler",
   ]
   pruneopts = ""
-  revision = "dc93fece3b47b128b55ff7a2665a38b91afebe3b"
+  revision = "82bb933547b7eb8ec2384bd07b2fb902469f6555"
 
 [[projects]]
   digest = "1:56c130d885a4aacae1dd9c7b71cfe39912c7ebc1ff7d2b46083c8812996dc43b"

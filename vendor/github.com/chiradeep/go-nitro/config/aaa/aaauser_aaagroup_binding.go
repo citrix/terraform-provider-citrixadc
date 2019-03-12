@@ -1,6 +1,7 @@
 package aaa
 
 type Aaauseraaagroupbinding struct {
-	Groupname string `json:"groupname,omitempty"`
-	Username  string `json:"username,omitempty"`
+	Gotopriorityexpression string `json:"gotopriorityexpression,omitempty"`
+	Groupname              string `json:"groupname,omitempty"`
+	Username               string `json:"username,omitempty"`
 }

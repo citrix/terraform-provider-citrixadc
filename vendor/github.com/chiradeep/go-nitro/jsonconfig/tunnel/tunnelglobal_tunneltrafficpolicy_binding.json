@@ -3,10 +3,26 @@
   "properties" : {
     "builtin" : {
       "type" : "object",
-      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE" ]
+      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE", "PARTITION_ALL" ]
+    },
+    "globalbindtype" : {
+      "type" : "string",
+      "enum" : [ "SYSTEM_GLOBAL", "VPN_GLOBAL", "RNAT_GLOBAL" ]
+    },
+    "gotopriorityexpression" : {
+      "type" : "string"
+    },
+    "numpol" : {
+      "type" : "integer",
+      "readonly" : true
     },
     "policyname" : {
       "type" : "string"
+    },
+    "policytype" : {
+      "type" : "string",
+      "enum" : [ "Classic Policy", "Advanced Policy" ],
+      "readonly" : true
     },
     "priority" : {
       "type" : "integer"
@@ -14,6 +30,10 @@
     "state" : {
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "type" : {
+      "type" : "string",
+      "enum" : [ "REQ_OVERRIDE", "REQ_DEFAULT", "RES_OVERRIDE", "RES_DEFAULT" ]
     }
   },
   "$schema" : "http://json-schema.org/draft-04/schema#",

@@ -6,11 +6,17 @@
       "enum" : [ "ALL", "ADNS", "PROXY" ],
       "readonly" : true
     },
+    "ecssubnet" : {
+      "type" : "string"
+    },
     "hostname" : {
       "type" : "string"
     },
     "ipv6address" : {
       "type" : "string"
+    },
+    "nodeid" : {
+      "type" : "integer"
     },
     "ttl" : {
       "type" : "integer"

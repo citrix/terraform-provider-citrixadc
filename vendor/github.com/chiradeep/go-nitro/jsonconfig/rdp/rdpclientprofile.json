@@ -1,0 +1,85 @@
+{
+  "type" : "object",
+  "properties" : {
+    "addusernameinrdpfile" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ]
+    },
+    "audiocapturemode" : {
+      "type" : "string",
+      "enum" : [ "ENABLE", "DISABLE" ]
+    },
+    "builtin" : {
+      "type" : "object",
+      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE", "PARTITION_ALL" ],
+      "readonly" : true
+    },
+    "keyboardhook" : {
+      "type" : "string",
+      "enum" : [ "OnLocal", "OnRemote", "InFullScreenMode" ]
+    },
+    "multimonitorsupport" : {
+      "type" : "string",
+      "enum" : [ "ENABLE", "DISABLE" ]
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "psk" : {
+      "type" : "string"
+    },
+    "randomizerdpfilename" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ]
+    },
+    "rdpcookievalidity" : {
+      "type" : "integer"
+    },
+    "rdpcustomparams" : {
+      "type" : "string"
+    },
+    "rdpfilename" : {
+      "type" : "string"
+    },
+    "rdphost" : {
+      "type" : "string"
+    },
+    "rdplinkattribute" : {
+      "type" : "string"
+    },
+    "rdplistener" : {
+      "type" : "string"
+    },
+    "rdpurloverride" : {
+      "type" : "string",
+      "enum" : [ "ENABLE", "DISABLE" ]
+    },
+    "redirectclipboard" : {
+      "type" : "string",
+      "enum" : [ "ENABLE", "DISABLE" ]
+    },
+    "redirectcomports" : {
+      "type" : "string",
+      "enum" : [ "ENABLE", "DISABLE" ]
+    },
+    "redirectdrives" : {
+      "type" : "string",
+      "enum" : [ "ENABLE", "DISABLE" ]
+    },
+    "redirectpnpdevices" : {
+      "type" : "string",
+      "enum" : [ "ENABLE", "DISABLE" ]
+    },
+    "redirectprinters" : {
+      "type" : "string",
+      "enum" : [ "ENABLE", "DISABLE" ]
+    },
+    "videoplaybackmode" : {
+      "type" : "string",
+      "enum" : [ "ENABLE", "DISABLE" ]
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "rdpclientprofile",
+  "title" : "rdpclientprofile"
+}

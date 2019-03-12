@@ -1,0 +1,27 @@
+{
+  "type" : "object",
+  "properties" : {
+    "callflags" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "callid" : {
+      "type" : "string"
+    },
+    "callrefcount" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "calltimer" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "xlatip" : {
+      "type" : "string",
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "lsnsipalgcall",
+  "title" : "lsnsipalgcall"
+}

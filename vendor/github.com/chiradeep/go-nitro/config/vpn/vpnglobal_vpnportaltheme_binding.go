@@ -1,5 +1,6 @@
 package vpn
 
 type Vpnglobalvpnportalthemebinding struct {
-	Portaltheme string `json:"portaltheme,omitempty"`
+	Gotopriorityexpression string `json:"gotopriorityexpression,omitempty"`
+	Portaltheme            string `json:"portaltheme,omitempty"`
 }

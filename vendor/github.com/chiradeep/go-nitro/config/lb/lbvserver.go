@@ -8,8 +8,10 @@ type Lbvserver struct {
 	Authn401                           string      `json:"authn401,omitempty"`
 	Authnprofile                       string      `json:"authnprofile,omitempty"`
 	Authnvsname                        string      `json:"authnvsname,omitempty"`
+	Backuplbmethod                     string      `json:"backuplbmethod,omitempty"`
 	Backuppersistencetimeout           int         `json:"backuppersistencetimeout,omitempty"`
 	Backupvserver                      string      `json:"backupvserver,omitempty"`
+	Backupvserverstatus                string      `json:"backupvserverstatus,omitempty"`
 	Bindpoint                          string      `json:"bindpoint,omitempty"`
 	Bypassaaaa                         string      `json:"bypassaaaa,omitempty"`
 	Cacheable                          string      `json:"cacheable,omitempty"`
@@ -28,6 +30,7 @@ type Lbvserver struct {
 	Dbslb                              string      `json:"dbslb,omitempty"`
 	Disableprimaryondown               string      `json:"disableprimaryondown,omitempty"`
 	Dns64                              string      `json:"dns64,omitempty"`
+	Dnsprofilename                     string      `json:"dnsprofilename,omitempty"`
 	Dnsvservername                     string      `json:"dnsvservername,omitempty"`
 	Domain                             string      `json:"domain,omitempty"`
 	Downstateflush                     string      `json:"downstateflush,omitempty"`
@@ -40,18 +43,21 @@ type Lbvserver struct {
 	Healththreshold                    int         `json:"healththreshold,omitempty"`
 	Homepage                           string      `json:"homepage,omitempty"`
 	Httpprofilename                    string      `json:"httpprofilename,omitempty"`
+	Httpsredirecturl                   string      `json:"httpsredirecturl,omitempty"`
 	Icmpvsrresponse                    string      `json:"icmpvsrresponse,omitempty"`
 	Insertvserveripport                string      `json:"insertvserveripport,omitempty"`
 	Invoke                             bool        `json:"invoke,omitempty"`
 	Ipmapping                          string      `json:"ipmapping,omitempty"`
 	Ipmask                             string      `json:"ipmask,omitempty"`
 	Ippattern                          string      `json:"ippattern,omitempty"`
+	Ipset                              string      `json:"ipset,omitempty"`
 	Ipv46                              string      `json:"ipv46,omitempty"`
 	Isgslb                             bool        `json:"isgslb,omitempty"`
 	L2conn                             string      `json:"l2conn,omitempty"`
 	Labelname                          string      `json:"labelname,omitempty"`
 	Labeltype                          string      `json:"labeltype,omitempty"`
 	Lbmethod                           string      `json:"lbmethod,omitempty"`
+	Lbprofilename                      string      `json:"lbprofilename,omitempty"`
 	Lbrrreason                         int         `json:"lbrrreason,omitempty"`
 	Listenpolicy                       string      `json:"listenpolicy,omitempty"`
 	Listenpriority                     int         `json:"listenpriority,omitempty"`
@@ -73,6 +79,8 @@ type Lbvserver struct {
 	Newservicerequestincrementinterval int         `json:"newservicerequestincrementinterval,omitempty"`
 	Newservicerequestunit              string      `json:"newservicerequestunit,omitempty"`
 	Ngname                             string      `json:"ngname,omitempty"`
+	Nodefaultbindings                  string      `json:"nodefaultbindings,omitempty"`
+	Oracleserverversion                string      `json:"oracleserverversion,omitempty"`
 	Persistavpno                       interface{} `json:"persistavpno,omitempty"`
 	Persistencebackup                  string      `json:"persistencebackup,omitempty"`
 	Persistencetype                    string      `json:"persistencetype,omitempty"`
@@ -81,6 +89,7 @@ type Lbvserver struct {
 	Port                               int         `json:"port,omitempty"`
 	Pq                                 string      `json:"pq,omitempty"`
 	Precedence                         string      `json:"precedence,omitempty"`
+	Processlocal                       string      `json:"processlocal,omitempty"`
 	Push                               string      `json:"push,omitempty"`
 	Pushlabel                          string      `json:"pushlabel,omitempty"`
 	Pushmulticlients                   string      `json:"pushmulticlients,omitempty"`
@@ -88,10 +97,13 @@ type Lbvserver struct {
 	Range                              int         `json:"range,omitempty"`
 	Recursionavailable                 string      `json:"recursionavailable,omitempty"`
 	Redirect                           string      `json:"redirect,omitempty"`
+	Redirectfromport                   int         `json:"redirectfromport,omitempty"`
 	Redirectportrewrite                string      `json:"redirectportrewrite,omitempty"`
 	Redirurl                           string      `json:"redirurl,omitempty"`
 	Redirurlflags                      bool        `json:"redirurlflags,omitempty"`
 	Resrule                            string      `json:"resrule,omitempty"`
+	Retainconnectionsoncluster         string      `json:"retainconnectionsoncluster,omitempty"`
+	Rhistate                           string      `json:"rhistate,omitempty"`
 	Rtspnat                            string      `json:"rtspnat,omitempty"`
 	Rule                               string      `json:"rule,omitempty"`
 	Ruletype                           int         `json:"ruletype,omitempty"`
@@ -117,11 +129,13 @@ type Lbvserver struct {
 	Timeout                            int         `json:"timeout,omitempty"`
 	Tosid                              int         `json:"tosid,omitempty"`
 	Totalservices                      int         `json:"totalservices,omitempty"`
+	Trofspersistence                   string      `json:"trofspersistence,omitempty"`
 	Type                               string      `json:"type,omitempty"`
 	V6netmasklen                       int         `json:"v6netmasklen,omitempty"`
 	V6persistmasklen                   int         `json:"v6persistmasklen,omitempty"`
 	Value                              string      `json:"value,omitempty"`
 	Version                            int         `json:"version,omitempty"`
 	Vipheader                          string      `json:"vipheader,omitempty"`
+	Vsvrdynconnsothreshold             int         `json:"vsvrdynconnsothreshold,omitempty"`
 	Weight                             int         `json:"weight,omitempty"`
 }

@@ -8,6 +8,15 @@
       "type" : "integer",
       "readonly" : true
     },
+    "expressiontype" : {
+      "type" : "string",
+      "enum" : [ "Classic Policy", "Advanced Policy" ],
+      "readonly" : true
+    },
+    "hits" : {
+      "type" : "integer",
+      "readonly" : true
+    },
     "name" : {
       "type" : "string"
     },

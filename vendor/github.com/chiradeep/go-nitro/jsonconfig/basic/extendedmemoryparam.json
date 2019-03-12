@@ -2,16 +2,19 @@
   "type" : "object",
   "properties" : {
     "maxmemlimit" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
     },
     "memlimit" : {
       "type" : "integer"
     },
     "memlimitactive" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
     },
     "minrequiredmemory" : {
-      "type" : "integer"
+      "type" : "integer",
+      "readonly" : true
     }
   },
   "$schema" : "http://json-schema.org/draft-04/schema#",

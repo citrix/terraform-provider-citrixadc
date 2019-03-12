@@ -1,6 +1,10 @@
 {
   "type" : "object",
   "properties" : {
+    "partitionnameintrap" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
     "snmpset" : {
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
@@ -8,6 +12,10 @@
     "snmptraplogging" : {
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
+    },
+    "snmptraplogginglevel" : {
+      "type" : "string",
+      "enum" : [ "EMERGENCY", "ALERT", "CRITICAL", "ERROR", "WARNING", "NOTICE", "INFORMATIONAL", "DEBUG" ]
     }
   },
   "$schema" : "http://json-schema.org/draft-04/schema#",

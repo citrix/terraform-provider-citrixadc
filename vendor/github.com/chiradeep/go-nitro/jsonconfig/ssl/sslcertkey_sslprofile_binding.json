@@ -1,0 +1,17 @@
+{
+  "type" : "object",
+  "properties" : {
+    "ca" : {
+      "type" : "boolean"
+    },
+    "certkey" : {
+      "type" : "string"
+    },
+    "sslprofile" : {
+      "type" : "string"
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "sslcertkey_sslprofile_binding",
+  "title" : "sslcertkey_sslprofile_binding"
+}

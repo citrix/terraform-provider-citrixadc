@@ -1,9 +1,20 @@
 {
   "type" : "object",
   "properties" : {
+    "action" : {
+      "type" : "string"
+    },
+    "activepolicy" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "bindhits" : {
+      "type" : "integer",
+      "readonly" : true
+    },
     "builtin" : {
       "type" : "object",
-      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE" ],
+      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE", "PARTITION_ALL" ],
       "readonly" : true
     },
     "cspolicytype" : {
@@ -15,8 +26,35 @@
       "type" : "string",
       "readonly" : true
     },
+    "hits" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "isdefault" : {
+      "type" : "boolean",
+      "readonly" : true
+    },
+    "labelname" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "labeltype" : {
+      "type" : "string",
+      "enum" : [ "reqvserver", "resvserver", "policylabel" ],
+      "readonly" : true
+    },
+    "logaction" : {
+      "type" : "string"
+    },
+    "newname" : {
+      "type" : "string"
+    },
     "policyname" : {
       "type" : "string"
+    },
+    "priority" : {
+      "type" : "integer",
+      "readonly" : true
     },
     "rule" : {
       "type" : "string"

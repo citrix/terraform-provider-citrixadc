@@ -5,6 +5,54 @@
       "type" : "string",
       "enum" : [ "ON", "OFF" ]
     },
+    "attribute1" : {
+      "type" : "string"
+    },
+    "attribute10" : {
+      "type" : "string"
+    },
+    "attribute11" : {
+      "type" : "string"
+    },
+    "attribute12" : {
+      "type" : "string"
+    },
+    "attribute13" : {
+      "type" : "string"
+    },
+    "attribute14" : {
+      "type" : "string"
+    },
+    "attribute15" : {
+      "type" : "string"
+    },
+    "attribute16" : {
+      "type" : "string"
+    },
+    "attribute2" : {
+      "type" : "string"
+    },
+    "attribute3" : {
+      "type" : "string"
+    },
+    "attribute4" : {
+      "type" : "string"
+    },
+    "attribute5" : {
+      "type" : "string"
+    },
+    "attribute6" : {
+      "type" : "string"
+    },
+    "attribute7" : {
+      "type" : "string"
+    },
+    "attribute8" : {
+      "type" : "string"
+    },
+    "attribute9" : {
+      "type" : "string"
+    },
     "auditfailedcmds" : {
       "type" : "string",
       "enum" : [ "ON", "OFF" ]
@@ -22,6 +70,9 @@
     "failure" : {
       "type" : "integer",
       "readonly" : true
+    },
+    "groupattrname" : {
+      "type" : "string"
     },
     "name" : {
       "type" : "string"

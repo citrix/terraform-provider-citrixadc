@@ -1,11 +1,23 @@
 {
   "type" : "object",
   "properties" : {
+    "mbf" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
     "name" : {
       "type" : "string"
     },
+    "overridelsn" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
     "srcip" : {
       "type" : "string"
+    },
+    "srcippersistency" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
     },
     "td" : {
       "type" : "integer"

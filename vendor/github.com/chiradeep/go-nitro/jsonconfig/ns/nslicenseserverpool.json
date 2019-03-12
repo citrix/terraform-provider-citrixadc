@@ -1,0 +1,480 @@
+{
+  "type" : "object",
+  "properties" : {
+    "cpxinstanceavailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "cpxinstancetotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "enterprisebandwidthavailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "enterprisebandwidthtotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "enterprisecpuavailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "enterprisecputotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "instanceavailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "instancetotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "platinumbandwidthavailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "platinumbandwidthtotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "platinumcpuavailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "platinumcputotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "standardbandwidthavailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "standardbandwidthtotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "standardcpuavailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "standardcputotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx100000eavailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx100000etotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx100000pavailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx100000ptotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx100000savailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx100000stotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx10000eavailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx10000etotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx10000pavailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx10000ptotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx10000savailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx10000stotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx1000eavailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx1000etotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx1000pavailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx1000ptotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx1000savailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx1000stotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx100eavailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx100etotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx100pavailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx100ptotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx100savailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx100stotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx10eavailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx10etotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx10pavailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx10ptotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx10savailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx10stotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx15000eavailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx15000etotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx15000pavailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx15000ptotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx15000savailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx15000stotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx1pavailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx1ptotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx1savailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx1stotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx2000pavailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx2000ptotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx200eavailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx200etotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx200pavailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx200ptotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx200savailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx200stotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx25000eavailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx25000etotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx25000pavailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx25000ptotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx25000savailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx25000stotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx25eavailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx25etotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx25pavailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx25ptotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx25savailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx25stotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx3000eavailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx3000etotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx3000pavailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx3000ptotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx3000savailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx3000stotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx40000eavailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx40000etotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx40000pavailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx40000ptotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx40000savailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx40000stotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx4000pavailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx4000ptotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx5000eavailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx5000etotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx5000pavailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx5000ptotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx5000savailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx5000stotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx500eavailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx500etotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx500pavailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx500ptotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx500savailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx500stotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx50eavailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx50etotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx50pavailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx50ptotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx50savailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx50stotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx5pavailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx5ptotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx5savailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx5stotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx8000eavailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx8000etotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx8000pavailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx8000ptotal" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx8000savailable" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "vpx8000stotal" : {
+      "type" : "integer",
+      "readonly" : true
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "nslicenseserverpool",
+  "title" : "nslicenseserverpool"
+}

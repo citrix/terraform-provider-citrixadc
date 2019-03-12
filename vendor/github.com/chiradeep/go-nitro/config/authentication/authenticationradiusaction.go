@@ -2,6 +2,8 @@ package authentication
 
 type Authenticationradiusaction struct {
 	Accounting                 string `json:"accounting,omitempty"`
+	Authentication             string `json:"authentication,omitempty"`
+	Authservretry              int    `json:"authservretry,omitempty"`
 	Authtimeout                int    `json:"authtimeout,omitempty"`
 	Callingstationid           string `json:"callingstationid,omitempty"`
 	Defaultauthenticationgroup string `json:"defaultauthenticationgroup,omitempty"`
@@ -21,6 +23,8 @@ type Authenticationradiusaction struct {
 	Radnasip                   string `json:"radnasip,omitempty"`
 	Radvendorid                int    `json:"radvendorid,omitempty"`
 	Serverip                   string `json:"serverip,omitempty"`
+	Servername                 string `json:"servername,omitempty"`
 	Serverport                 int    `json:"serverport,omitempty"`
 	Success                    int    `json:"success,omitempty"`
+	Tunnelendpointclientip     string `json:"tunnelendpointclientip,omitempty"`
 }

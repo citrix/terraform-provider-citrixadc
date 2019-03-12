@@ -4,8 +4,12 @@
     "commandstring" : {
       "type" : "string"
     },
+    "nodeid" : {
+      "type" : "integer"
+    },
     "output" : {
-      "type" : "string"
+      "type" : "string",
+      "readonly" : true
     }
   },
   "$schema" : "http://json-schema.org/draft-04/schema#",
