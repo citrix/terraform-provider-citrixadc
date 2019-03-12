@@ -479,6 +479,12 @@ func resourceNetScalerLbmonitor() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"respcode": &schema.Schema{
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Optional: true,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -590,6 +596,7 @@ func createLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 		Validatecred:           d.Get("validatecred").(string),
 		Vendorid:               d.Get("vendorid").(int),
 		Vendorspecificvendorid: d.Get("vendorspecificvendorid").(int),
+		Respcode:               d.Get("respcode").([]interface{}),
 	}
 
 	_, err := client.AddResource(netscaler.Lbmonitor.Type(), lbmonitorName, &lbmonitor)
@@ -711,6 +718,7 @@ func readLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("validatecred", data["validatecred"])
 	d.Set("vendorid", data["vendorid"])
 	d.Set("vendorspecificvendorid", data["vendorspecificvendorid"])
+	d.Set("respcode", data["respcode"])
 
 	return nil
 
@@ -1189,6 +1197,17 @@ func updateLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] netscaler-provider:  Vendorspecificvendorid has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Vendorspecificvendorid = d.Get("vendorspecificvendorid").(int)
 		hasChange = true
+	}
+
+	if d.HasChange("respcode") {
+		log.Printf("[DEBUG] netscaler-provider:  Respcode has changed for lbmonitor %s, starting update", lbmonitorName)
+		_, ok := d.GetOk("respcode")
+		respcode_val := d.Get("respcode").([]interface{})
+
+		if ok {
+			lbmonitor.Respcode = respcode_val
+			hasChange = true
+		}
 	}
 
 	if hasChange {
