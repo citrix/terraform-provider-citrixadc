@@ -64,6 +64,12 @@ func providerSchema() map[string]*schema.Schema {
 			Description: "Ignore validity of endpoint TLS certificate if true",
 			Default:     false,
 		},
+		"proxied_ns": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Target NS ip. When defined username, password and endpoint must refer to MAS.",
+			DefaultFunc: schema.EnvDefaultFunc("_MPS_API_PROXY_MANAGED_INSTANCE_IP", ""),
+		},
 	}
 }
 
@@ -97,6 +103,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		Url:       d.Get("endpoint").(string),
 		Username:  d.Get("username").(string),
 		Password:  d.Get("password").(string),
+		ProxiedNs: d.Get("proxied_ns").(string),
 		SslVerify: !d.Get("insecure_skip_verify").(bool),
 	}
 	client, err := netscaler.NewNitroClientFromParams(params)
