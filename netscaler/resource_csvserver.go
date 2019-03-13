@@ -50,6 +50,11 @@ func resourceNetScalerCsvserver() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"backupip": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"backupvserver": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -75,12 +80,37 @@ func resourceNetScalerCsvserver() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"cookiedomain": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"cookietimeout": &schema.Schema{
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
 			"dbprofilename": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
 			"disableprimaryondown": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"dnsprofilename": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"dnsrecordtype": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"domainname": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -111,6 +141,11 @@ func resourceNetScalerCsvserver() *schema.Resource {
 				Computed: true,
 			},
 			"ippattern": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"ipset": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -175,6 +210,16 @@ func resourceNetScalerCsvserver() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"oracleserverversion": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"persistenceid": &schema.Schema{
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
 			"port": &schema.Schema{
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -220,6 +265,11 @@ func resourceNetScalerCsvserver() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"rhistate": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"rtspnat": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -227,6 +277,11 @@ func resourceNetScalerCsvserver() *schema.Resource {
 			},
 			"servicetype": &schema.Schema{
 				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"sitedomainttl": &schema.Schema{
+				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
@@ -265,12 +320,22 @@ func resourceNetScalerCsvserver() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"targettype": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"tcpprofilename": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
 			"td": &schema.Schema{
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"ttl": &schema.Schema{
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -317,19 +382,26 @@ func createCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		Authn401:                d.Get("authn401").(string),
 		Authnprofile:            d.Get("authnprofile").(string),
 		Authnvsname:             d.Get("authnvsname").(string),
+		Backupip:                d.Get("backupip").(string),
 		Backupvserver:           d.Get("backupvserver").(string),
 		Cacheable:               d.Get("cacheable").(string),
 		Casesensitive:           d.Get("casesensitive").(string),
 		Clttimeout:              d.Get("clttimeout").(int),
 		Comment:                 d.Get("comment").(string),
+		Cookiedomain:            d.Get("cookiedomain").(string),
+		Cookietimeout:           d.Get("cookietimeout").(int),
 		Dbprofilename:           d.Get("dbprofilename").(string),
 		Disableprimaryondown:    d.Get("disableprimaryondown").(string),
+		Dnsprofilename:          d.Get("dnsprofilename").(string),
+		Dnsrecordtype:           d.Get("dnsrecordtype").(string),
+		Domainname:              d.Get("domainname").(string),
 		Downstateflush:          d.Get("downstateflush").(string),
 		Httpprofilename:         d.Get("httpprofilename").(string),
 		Icmpvsrresponse:         d.Get("icmpvsrresponse").(string),
 		Insertvserveripport:     d.Get("insertvserveripport").(string),
 		Ipmask:                  d.Get("ipmask").(string),
 		Ippattern:               d.Get("ippattern").(string),
+		Ipset:                   d.Get("ipset").(string),
 		Ipv46:                   d.Get("ipv46").(string),
 		L2conn:                  d.Get("l2conn").(string),
 		Listenpolicy:            d.Get("listenpolicy").(string),
@@ -341,6 +413,8 @@ func createCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		Mysqlserverversion:      d.Get("mysqlserverversion").(string),
 		Netprofile:              d.Get("netprofile").(string),
 		Newname:                 d.Get("newname").(string),
+		Oracleserverversion:     d.Get("oracleserverversion").(string),
+		Persistenceid:           d.Get("persistenceid").(int),
 		Port:                    d.Get("port").(int),
 		Precedence:              d.Get("precedence").(string),
 		Push:                    d.Get("push").(string),
@@ -350,8 +424,10 @@ func createCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		Range:                   d.Get("range").(int),
 		Redirectportrewrite:     d.Get("redirectportrewrite").(string),
 		Redirecturl:             d.Get("redirecturl").(string),
+		Rhistate:                d.Get("rhistate").(string),
 		Rtspnat:                 d.Get("rtspnat").(string),
 		Servicetype:             d.Get("servicetype").(string),
+		Sitedomainttl:           d.Get("sitedomainttl").(int),
 		Sobackupaction:          d.Get("sobackupaction").(string),
 		Somethod:                d.Get("somethod").(string),
 		Sopersistence:           d.Get("sopersistence").(string),
@@ -359,8 +435,10 @@ func createCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		Sothreshold:             d.Get("sothreshold").(int),
 		State:                   d.Get("state").(string),
 		Stateupdate:             d.Get("stateupdate").(string),
+		Targettype:              d.Get("targettype").(string),
 		Tcpprofilename:          d.Get("tcpprofilename").(string),
 		Td:                      d.Get("td").(int),
+		Ttl:                     d.Get("ttl").(int),
 		Vipheader:               d.Get("vipheader").(string),
 	}
 
@@ -434,19 +512,26 @@ func readCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("authn401", data["authn401"])
 	d.Set("authnprofile", data["authnprofile"])
 	d.Set("authnvsname", data["authnvsname"])
+	d.Set("backupip", data["backupip"])
 	d.Set("backupvserver", data["backupvserver"])
 	d.Set("cacheable", data["cacheable"])
 	d.Set("casesensitive", data["casesensitive"])
 	d.Set("clttimeout", data["clttimeout"])
 	d.Set("comment", data["comment"])
+	d.Set("cookiedomain", data["cookiedomain"])
+	d.Set("cookietimeout", data["cookietimeout"])
 	d.Set("dbprofilename", data["dbprofilename"])
 	d.Set("disableprimaryondown", data["disableprimaryondown"])
+	d.Set("dnsprofilename", data["dnsprofilename"])
+	d.Set("dnsrecordtype", data["dnsrecordtype"])
+	d.Set("domainname", data["domainname"])
 	d.Set("downstateflush", data["downstateflush"])
 	d.Set("httpprofilename", data["httpprofilename"])
 	d.Set("icmpvsrresponse", data["icmpvsrresponse"])
 	d.Set("insertvserveripport", data["insertvserveripport"])
 	d.Set("ipmask", data["ipmask"])
 	d.Set("ippattern", data["ippattern"])
+	d.Set("ipset", data["ipset"])
 	d.Set("ipv46", data["ipv46"])
 	d.Set("l2conn", data["l2conn"])
 	d.Set("listenpolicy", data["listenpolicy"])
@@ -459,6 +544,8 @@ func readCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", data["name"])
 	d.Set("netprofile", data["netprofile"])
 	d.Set("newname", data["newname"])
+	d.Set("oracleserverversion", data["oracleserverversion"])
+	d.Set("persistenceid", data["persistenceid"])
 	d.Set("port", data["port"])
 	d.Set("precedence", data["precedence"])
 	d.Set("push", data["push"])
@@ -468,8 +555,10 @@ func readCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("range", data["range"])
 	d.Set("redirectportrewrite", data["redirectportrewrite"])
 	d.Set("redirecturl", data["redirecturl"])
+	d.Set("rhistate", data["rhistate"])
 	d.Set("rtspnat", data["rtspnat"])
 	d.Set("servicetype", data["servicetype"])
+	d.Set("sitedomainttl", data["sitedomainttl"])
 	d.Set("sobackupaction", data["sobackupaction"])
 	d.Set("somethod", data["somethod"])
 	d.Set("sopersistence", data["sopersistence"])
@@ -477,8 +566,10 @@ func readCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("sothreshold", data["sothreshold"])
 	d.Set("state", data["state"])
 	d.Set("stateupdate", data["stateupdate"])
+	d.Set("targettype", data["targettype"])
 	d.Set("tcpprofilename", data["tcpprofilename"])
 	d.Set("td", data["td"])
+	d.Set("ttl", data["ttl"])
 	d.Set("vipheader", data["vipheader"])
 
 	bindings, err := client.FindAllBoundResources(netscaler.Sslvserver.Type(), csvserverName, netscaler.Sslcertkey.Type())
@@ -544,6 +635,11 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		csvserver.Authnvsname = d.Get("authnvsname").(string)
 		hasChange = true
 	}
+	if d.HasChange("backupip") {
+		log.Printf("[DEBUG]  netscaler-provider: Backupip has changed for csvserver %s, starting update", csvserverName)
+		csvserver.Backupip = d.Get("backupip").(string)
+		hasChange = true
+	}
 	if d.HasChange("backupvserver") {
 		log.Printf("[DEBUG] netscaler-provider:  Backupvserver has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Backupvserver = d.Get("backupvserver").(string)
@@ -569,6 +665,16 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		csvserver.Comment = d.Get("comment").(string)
 		hasChange = true
 	}
+	if d.HasChange("cookiedomain") {
+		log.Printf("[DEBUG]  netscaler-provider: Cookiedomain has changed for csvserver %s, starting update", csvserverName)
+		csvserver.Cookiedomain = d.Get("cookiedomain").(string)
+		hasChange = true
+	}
+	if d.HasChange("cookietimeout") {
+		log.Printf("[DEBUG]  netscaler-provider: Cookietimeout has changed for csvserver %s, starting update", csvserverName)
+		csvserver.Cookietimeout = d.Get("cookietimeout").(int)
+		hasChange = true
+	}
 	if d.HasChange("dbprofilename") {
 		log.Printf("[DEBUG] netscaler-provider:  Dbprofilename has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Dbprofilename = d.Get("dbprofilename").(string)
@@ -577,6 +683,21 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("disableprimaryondown") {
 		log.Printf("[DEBUG] netscaler-provider:  Disableprimaryondown has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Disableprimaryondown = d.Get("disableprimaryondown").(string)
+		hasChange = true
+	}
+	if d.HasChange("dnsprofilename") {
+		log.Printf("[DEBUG]  netscaler-provider: Dnsprofilename has changed for csvserver %s, starting update", csvserverName)
+		csvserver.Dnsprofilename = d.Get("dnsprofilename").(string)
+		hasChange = true
+	}
+	if d.HasChange("dnsrecordtype") {
+		log.Printf("[DEBUG]  netscaler-provider: Dnsrecordtype has changed for csvserver %s, starting update", csvserverName)
+		csvserver.Dnsrecordtype = d.Get("dnsrecordtype").(string)
+		hasChange = true
+	}
+	if d.HasChange("domainname") {
+		log.Printf("[DEBUG]  netscaler-provider: Domainname has changed for csvserver %s, starting update", csvserverName)
+		csvserver.Domainname = d.Get("domainname").(string)
 		hasChange = true
 	}
 	if d.HasChange("downstateflush") {
@@ -607,6 +728,11 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("ippattern") {
 		log.Printf("[DEBUG] netscaler-provider:  Ippattern has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Ippattern = d.Get("ippattern").(string)
+		hasChange = true
+	}
+	if d.HasChange("ipset") {
+		log.Printf("[DEBUG]  netscaler-provider: Ipset has changed for csvserver %s, starting update", csvserverName)
+		csvserver.Ipset = d.Get("ipset").(string)
 		hasChange = true
 	}
 	if d.HasChange("ipv46") {
@@ -669,6 +795,16 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		csvserver.Newname = d.Get("newname").(string)
 		hasChange = true
 	}
+	if d.HasChange("oracleserverversion") {
+		log.Printf("[DEBUG]  netscaler-provider: Oracleserverversion has changed for csvserver %s, starting update", csvserverName)
+		csvserver.Oracleserverversion = d.Get("oracleserverversion").(string)
+		hasChange = true
+	}
+	if d.HasChange("persistenceid") {
+		log.Printf("[DEBUG]  netscaler-provider: Persistenceid has changed for csvserver %s, starting update", csvserverName)
+		csvserver.Persistenceid = d.Get("persistenceid").(int)
+		hasChange = true
+	}
 	if d.HasChange("port") {
 		log.Printf("[DEBUG] netscaler-provider:  Port has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Port = d.Get("port").(int)
@@ -714,6 +850,11 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		csvserver.Redirecturl = d.Get("redirecturl").(string)
 		hasChange = true
 	}
+	if d.HasChange("rhistate") {
+		log.Printf("[DEBUG]  netscaler-provider: Rhistate has changed for csvserver %s, starting update", csvserverName)
+		csvserver.Rhistate = d.Get("rhistate").(string)
+		hasChange = true
+	}
 	if d.HasChange("rtspnat") {
 		log.Printf("[DEBUG] netscaler-provider:  Rtspnat has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Rtspnat = d.Get("rtspnat").(string)
@@ -722,6 +863,11 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("servicetype") {
 		log.Printf("[DEBUG] netscaler-provider:  Servicetype has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Servicetype = d.Get("servicetype").(string)
+		hasChange = true
+	}
+	if d.HasChange("sitedomainttl") {
+		log.Printf("[DEBUG]  netscaler-provider: Sitedomainttl has changed for csvserver %s, starting update", csvserverName)
+		csvserver.Sitedomainttl = d.Get("sitedomainttl").(int)
 		hasChange = true
 	}
 	if d.HasChange("sobackupaction") {
@@ -759,6 +905,11 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		csvserver.Stateupdate = d.Get("stateupdate").(string)
 		hasChange = true
 	}
+	if d.HasChange("targettype") {
+		log.Printf("[DEBUG]  netscaler-provider: Targettype has changed for csvserver %s, starting update", csvserverName)
+		csvserver.Targettype = d.Get("targettype").(string)
+		hasChange = true
+	}
 	if d.HasChange("tcpprofilename") {
 		log.Printf("[DEBUG] netscaler-provider:  Tcpprofilename has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Tcpprofilename = d.Get("tcpprofilename").(string)
@@ -767,6 +918,11 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("td") {
 		log.Printf("[DEBUG] netscaler-provider:  Td has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Td = d.Get("td").(int)
+		hasChange = true
+	}
+	if d.HasChange("ttl") {
+		log.Printf("[DEBUG]  netscaler-provider: Ttl has changed for csvserver %s, starting update", csvserverName)
+		csvserver.Ttl = d.Get("ttl").(int)
 		hasChange = true
 	}
 	if d.HasChange("vipheader") {
