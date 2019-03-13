@@ -1,10 +1,10 @@
 package netscaler
 
 import (
-        "github.com/chiradeep/go-nitro/config/{{.Package}}"
-        {{if neq .BindingPkg "" -}}
-        "github.com/chiradeep/go-nitro/config/{{.BindingPkg}}"
-        {{- end}}
+	"github.com/chiradeep/go-nitro/config/{{.Package}}"
+	{{if neq .BindingPkg "" -}}
+	"github.com/chiradeep/go-nitro/config/{{.BindingPkg}}"
+	{{- end}}
 	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -17,124 +17,124 @@ import (
 func resourceNetScaler{{.TfTitle}}() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-                Create:        create{{.TfTitle}}Func,
-                Read:          read{{.TfTitle}}Func,
-                Update:        update{{.TfTitle}}Func,
-                Delete:        delete{{.TfTitle}}Func,
+		Create:        create{{.TfTitle}}Func,
+		Read:          read{{.TfTitle}}Func,
+		Update:        update{{.TfTitle}}Func,
+		Delete:        delete{{.TfTitle}}Func,
 		Schema: map[string]*schema.Schema{
-                       {{ range $key, $value := .Fields -}}
-                               "{{$key}}": &schema.Schema{
-                               Type:     schema.Type{{$value}},
-			       Optional: true,
-                               Computed: true,
+			{{ range $key, $value := .Fields -}}
+				"{{$key}}": &schema.Schema{
+				Type:     schema.Type{{$value}},
+				Optional: true,
+				Computed: true,
 			},
-                        {{end}}
-                        {{if neq .BindingPkg "" -}}
-                        "{{.BindingName}}": &schema.Schema{
+			{{end}}
+			{{if neq .BindingPkg "" -}}
+			"{{.BindingName}}": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
 			},
-                        {{- end}}
+			{{- end}}
 		},
 	}
 }
 
 func create{{.TfTitle}}Func(d *schema.ResourceData, meta interface{}) error {
-        log.Printf("[DEBUG]  netscaler-provider: In create{{.TfTitle}}Func")
+	log.Printf("[DEBUG]  netscaler-provider: In create{{.TfTitle}}Func")
 	client := meta.(*NetScalerNitroClient).client
-        var {{.TfID}} string
-        if v, ok := d.GetOk("{{.NsID}}"); ok {
-             {{.TfID}} = v.(string)
+	var {{.TfID}} string
+	if v, ok := d.GetOk("{{.NsID}}"); ok {
+		{{.TfID}} = v.(string)
 	} else {
-             {{.TfID}}= resource.PrefixedUniqueId("tf-{{.TfName}}-")
-             d.Set("{{.NsID}}", {{.TfID}})
+		{{.TfID}}= resource.PrefixedUniqueId("tf-{{.TfName}}-")
+		d.Set("{{.NsID}}", {{.TfID}})
 	}
-        {{.TfName}} := {{.Package}}.{{.StructName}}{
-                {{ range $key, $value := .Fields -}}
-                {{if neq $key "{{.NsID}}" -}}
-                {{$key|title}}:           d.Get("{{$key}}").({{$value|lower}}),
-                {{end -}}
-                {{end}}
+	{{.TfName}} := {{.Package}}.{{.StructName}}{
+		{{ range $key, $value := .Fields -}}
+		{{if neq $key "{{.NsID}}" -}}
+		{{$key|title}}:           d.Get("{{$key}}").({{$value|lower}}),
+		{{end -}}
+		{{end}}
 	}
 
-        _, err := client.AddResource(netscaler.{{.StructName}}.Type(), {{.TfID}}, &{{.TfName}})
+	_, err := client.AddResource(netscaler.{{.StructName}}.Type(), {{.TfID}}, &{{.TfName}})
 	if err != nil {
 		return err
 	}
 
-        d.SetId({{.TfID}})
-        {{if neq .BindingPkg "" -}}
-        {{.BindingName}} := d.Get("{{.BindingName}}").(string)
+	d.SetId({{.TfID}})
+	{{if neq .BindingPkg "" -}}
+	{{.BindingName}} := d.Get("{{.BindingName}}").(string)
 
-        binding := {{.BindingPkg}}.{{.BindingType}}{
-                Name:        {{.BindingName}},
-                {{.TfTitle}}name: {{.TfID}},
+	binding := {{.BindingPkg}}.{{.BindingType}}{
+		Name:        {{.BindingName}},
+		{{.TfTitle}}name: {{.TfID}},
 	}
 
-        err = client.BindResource(netscaler.{{.BoundType}}.Type(), {{.BindingName}}, netscaler.{{.StructName}}.Type(), {{.TfID}}, &binding)
+	err = client.BindResource(netscaler.{{.BoundType}}.Type(), {{.BindingName}}, netscaler.{{.StructName}}.Type(), {{.TfID}}, &binding)
 	if err != nil {
 		return err
 	}
-        {{- end}}
-        err = read{{.TfTitle}}Func(d, meta)
+	{{- end}}
+	err = read{{.TfTitle}}Func(d, meta)
 	if err != nil {
-                log.Printf("[ERROR] netscaler-provider: ?? we just created this {{.TfName}} but we can't read it ?? %s", {{.TfID}})
+		log.Printf("[ERROR] netscaler-provider: ?? we just created this {{.TfName}} but we can't read it ?? %s", {{.TfID}})
 		return nil
 	}
 	return nil
 }
 
 func read{{.TfTitle}}Func(d *schema.ResourceData, meta interface{}) error {
-        log.Printf("[DEBUG] netscaler-provider:  In read{{.TfTitle}}Func")
+	log.Printf("[DEBUG] netscaler-provider:  In read{{.TfTitle}}Func")
 	client := meta.(*NetScalerNitroClient).client
-        {{.TfID}}:= d.Id()
-        log.Printf("[DEBUG] netscaler-provider: Reading {{.TfName}} state %s", {{.TfID}})
-        data, err := client.FindResource(netscaler.{{.StructName}}.Type(), {{.TfID}})
+	{{.TfID}}:= d.Id()
+	log.Printf("[DEBUG] netscaler-provider: Reading {{.TfName}} state %s", {{.TfID}})
+	data, err := client.FindResource(netscaler.{{.StructName}}.Type(), {{.TfID}})
 	if err != nil {
-        log.Printf("[WARN] netscaler-provider: Clearing {{.TfName}} state %s", {{.TfID}})
+	log.Printf("[WARN] netscaler-provider: Clearing {{.TfName}} state %s", {{.TfID}})
 		d.SetId("")
 		return nil
 	}
-        d.Set("{{.NsID}}", data["{{.NsID}}"])
-        {{ range $key, $value := .Fields -}}
-        d.Set("{{$key}}", data["{{$key}}"])
-        {{end}}
+	d.Set("{{.NsID}}", data["{{.NsID}}"])
+	{{ range $key, $value := .Fields -}}
+	d.Set("{{$key}}", data["{{$key}}"])
+	{{end}}
 
 	return nil
 
 }
 
 func update{{.TfTitle}}Func(d *schema.ResourceData, meta interface{}) error {
-        log.Printf("[DEBUG]  netscaler-provider: In update{{.TfTitle}}Func")
+	log.Printf("[DEBUG]  netscaler-provider: In update{{.TfTitle}}Func")
 	client := meta.(*NetScalerNitroClient).client
-        {{.TfID}} := d.Get("{{.NsID}}").(string)
+	{{.TfID}} := d.Get("{{.NsID}}").(string)
 
-        {{.TfName}} := {{.Package}}.{{.StructName}}{
-              {{.NsID | title}} : d.Get("{{.NsID}}").(string),
+	{{.TfName}} := {{.Package}}.{{.StructName}}{
+		{{.NsID | title}} : d.Get("{{.NsID}}").(string),
 	}
-        hasChange := false
-        {{range $key, $value := .Fields -}}
-        if d.HasChange("{{$key}}") {
-                log.Printf("[DEBUG]  netscaler-provider: {{$key|title}} has changed for {{$.TfName}} %s, starting update", {{$.TfID}})
-                {{$.TfName}}.{{$key|title}} = d.Get("{{$key}}").({{$value|lower}})
-                hasChange = true
+	hasChange := false
+	{{range $key, $value := .Fields -}}
+	if d.HasChange("{{$key}}") {
+		log.Printf("[DEBUG]  netscaler-provider: {{$key|title}} has changed for {{$.TfName}} %s, starting update", {{$.TfID}})
+		{{$.TfName}}.{{$key|title}} = d.Get("{{$key}}").({{$value|lower}})
+		hasChange = true
 	}
-        {{end}}
+	{{end}}
 
-        if hasChange {
-                _, err := client.UpdateResource(netscaler.{{.StructName}}.Type(), {{.TfID}}, &{{.TfName}})
-	        if err != nil {
-                        return fmt.Errorf("Error updating {{.TfName}} %s", {{.TfID}})
-	        }
-        }
-        return read{{.TfTitle}}Func(d, meta)
+	if hasChange {
+		_, err := client.UpdateResource(netscaler.{{.StructName}}.Type(), {{.TfID}}, &{{.TfName}})
+		if err != nil {
+			return fmt.Errorf("Error updating {{.TfName}} %s", {{.TfID}})
+		}
+	}
+	return read{{.TfTitle}}Func(d, meta)
 }
 
 func delete{{.TfTitle}}Func(d *schema.ResourceData, meta interface{}) error {
-        log.Printf("[DEBUG]  netscaler-provider: In delete{{.TfTitle}}Func")
+	log.Printf("[DEBUG]  netscaler-provider: In delete{{.TfTitle}}Func")
 	client := meta.(*NetScalerNitroClient).client
-        {{.TfID}} := d.Id()
-        err := client.DeleteResource(netscaler.{{.StructName}}.Type(), {{.TfID}})
+	{{.TfID}} := d.Id()
+	err := client.DeleteResource(netscaler.{{.StructName}}.Type(), {{.TfID}})
 	if err != nil {
 		return err
 	}
