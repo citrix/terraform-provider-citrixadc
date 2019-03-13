@@ -85,6 +85,16 @@ func resourceNetScalerGslbvserver() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"ecs": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"ecsaddrvalidation": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"edr": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -314,6 +324,8 @@ func createGslbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		Dnsrecordtype:          d.Get("dnsrecordtype").(string),
 		Domainname:             d.Get("domainname").(string),
 		Dynamicweight:          d.Get("dynamicweight").(string),
+		Ecs:                    d.Get("ecs").(string),
+		Ecsaddrvalidation:      d.Get("ecsaddrvalidation").(string),
 		Edr:                    d.Get("edr").(string),
 		Iptype:                 d.Get("iptype").(string),
 		Lbmethod:               d.Get("lbmethod").(string),
@@ -398,6 +410,8 @@ func readGslbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("dnsrecordtype", data["dnsrecordtype"])
 	d.Set("domainname", data["domainname"])
 	d.Set("dynamicweight", data["dynamicweight"])
+	d.Set("ecs", data["ecs"])
+	d.Set("ecsaddrvalidation", data["ecsaddrvalidation"])
 	d.Set("edr", data["edr"])
 	d.Set("iptype", data["iptype"])
 	d.Set("lbmethod", data["lbmethod"])
@@ -513,6 +527,16 @@ func updateGslbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("dynamicweight") {
 		log.Printf("[DEBUG]  netscaler-provider: Dynamicweight has changed for gslbvserver %s, starting update", gslbvserverName)
 		gslbvserver.Dynamicweight = d.Get("dynamicweight").(string)
+		hasChange = true
+	}
+	if d.HasChange("ecs") {
+		log.Printf("[DEBUG]  netscaler-provider: Ecs has changed for gslbvserver %s, starting update", gslbvserverName)
+		gslbvserver.Ecs = d.Get("ecs").(string)
+		hasChange = true
+	}
+	if d.HasChange("ecsaddrvalidation") {
+		log.Printf("[DEBUG]  netscaler-provider: Ecsaddrvalidation has changed for gslbvserver %s, starting update", gslbvserverName)
+		gslbvserver.Ecsaddrvalidation = d.Get("ecsaddrvalidation").(string)
 		hasChange = true
 	}
 	if d.HasChange("edr") {
