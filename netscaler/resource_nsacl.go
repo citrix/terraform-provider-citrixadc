@@ -49,6 +49,11 @@ func resourceNetScalerNsacl() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"dfdhash": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"established": &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -109,6 +114,11 @@ func resourceNetScalerNsacl() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"srcmacmask": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"srcportop": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -124,6 +134,11 @@ func resourceNetScalerNsacl() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"stateful": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"td": &schema.Schema{
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -135,6 +150,11 @@ func resourceNetScalerNsacl() *schema.Resource {
 				Computed: true,
 			},
 			"vlan": &schema.Schema{
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"vxlan": &schema.Schema{
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -192,6 +212,7 @@ func createNsaclFunc(d *schema.ResourceData, meta interface{}) error {
 		Destport:       destport,
 		Destportop:     d.Get("destportop").(string),
 		Destportval:    d.Get("destportval").(string),
+		Dfdhash:        d.Get("dfdhash").(string),
 		Established:    d.Get("established").(bool),
 		Icmpcode:       d.Get("icmpcode").(int),
 		Icmptype:       d.Get("icmptype").(int),
@@ -205,13 +226,16 @@ func createNsaclFunc(d *schema.ResourceData, meta interface{}) error {
 		Srcipop:        d.Get("srcipop").(string),
 		Srcipval:       d.Get("srcipval").(string),
 		Srcmac:         d.Get("srcmac").(string),
+		Srcmacmask:     d.Get("srcmacmask").(string),
 		Srcport:        srcport,
 		Srcportop:      d.Get("srcportop").(string),
 		Srcportval:     d.Get("srcportval").(string),
 		State:          d.Get("state").(string),
+		Stateful:       d.Get("stateful").(string),
 		Td:             d.Get("td").(int),
 		Ttl:            d.Get("ttl").(int),
 		Vlan:           d.Get("vlan").(int),
+		Vxlan:          d.Get("vxlan").(int),
 	}
 
 	_, err := client.AddResource(netscaler.Nsacl.Type(), nsaclName, &nsacl)
@@ -249,6 +273,7 @@ func readNsaclFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("destport", data["destport"])
 	d.Set("destportop", data["destportop"])
 	d.Set("destportval", data["destportval"])
+	d.Set("dfdhash", data["dfdhash"])
 	d.Set("established", data["established"])
 	d.Set("icmpcode", data["icmpcode"])
 	d.Set("icmptype", data["icmptype"])
@@ -262,13 +287,16 @@ func readNsaclFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("srcipop", data["srcipop"])
 	d.Set("srcipval", data["srcipval"])
 	d.Set("srcmac", data["srcmac"])
+	d.Set("srcmacmask", data["srcmacmask"])
 	d.Set("srcport", data["srcport"])
 	d.Set("srcportop", data["srcportop"])
 	d.Set("srcportval", data["srcportval"])
 	d.Set("state", data["state"])
+	d.Set("stateful", data["stateful"])
 	d.Set("td", data["td"])
 	d.Set("ttl", data["ttl"])
 	d.Set("vlan", data["vlan"])
+	d.Set("vxlan", data["vxlan"])
 
 	return nil
 
@@ -315,6 +343,11 @@ func updateNsaclFunc(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG]  netscaler-provider: Destportval has changed for nsacl %s, starting update", nsaclName)
 		nsacl.Destportval = d.Get("destportval").(string)
 		nsacl.Destport = true
+		hasChange = true
+	}
+	if d.HasChange("dfdhash") {
+		log.Printf("[DEBUG]  netscaler-provider: Dfdhash has changed for nsacl %s, starting update", nsaclName)
+		nsacl.Dfdhash = d.Get("dfdhash").(string)
 		hasChange = true
 	}
 	if d.HasChange("established") {
@@ -379,6 +412,11 @@ func updateNsaclFunc(d *schema.ResourceData, meta interface{}) error {
 		nsacl.Srcmac = d.Get("srcmac").(string)
 		hasChange = true
 	}
+	if d.HasChange("srcmacmask") {
+		log.Printf("[DEBUG]  netscaler-provider: Srcmacmask has changed for nsacl %s, starting update", nsaclName)
+		nsacl.Srcmacmask = d.Get("srcmacmask").(string)
+		hasChange = true
+	}
 	if d.HasChange("srcportop") {
 		log.Printf("[DEBUG]  netscaler-provider: Srcportop has changed for nsacl %s, starting update", nsaclName)
 		nsacl.Srcportop = d.Get("srcportop").(string)
@@ -396,6 +434,11 @@ func updateNsaclFunc(d *schema.ResourceData, meta interface{}) error {
 		nsacl.State = d.Get("state").(string)
 		hasChange = true
 	}
+	if d.HasChange("stateful") {
+		log.Printf("[DEBUG]  netscaler-provider: Stateful has changed for nsacl %s, starting update", nsaclName)
+		nsacl.Stateful = d.Get("stateful").(string)
+		hasChange = true
+	}
 	if d.HasChange("td") {
 		log.Printf("[DEBUG]  netscaler-provider: Td has changed for nsacl %s, starting update", nsaclName)
 		nsacl.Td = d.Get("td").(int)
@@ -409,6 +452,11 @@ func updateNsaclFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("vlan") {
 		log.Printf("[DEBUG]  netscaler-provider: Vlan has changed for nsacl %s, starting update", nsaclName)
 		nsacl.Vlan = d.Get("vlan").(int)
+		hasChange = true
+	}
+	if d.HasChange("vxlan") {
+		log.Printf("[DEBUG]  netscaler-provider: Vxlan has changed for nsacl %s, starting update", nsaclName)
+		nsacl.Vxlan = d.Get("vxlan").(int)
 		hasChange = true
 	}
 

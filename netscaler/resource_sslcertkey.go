@@ -44,6 +44,11 @@ func resourceNetScalerSslcertkey() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"hsmkey": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"inform": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -66,6 +71,11 @@ func resourceNetScalerSslcertkey() *schema.Resource {
 			},
 			"notificationperiod": &schema.Schema{
 				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"ocspstaplingcache": &schema.Schema{
+				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
@@ -99,11 +109,13 @@ func createSslcertkeyFunc(d *schema.ResourceData, meta interface{}) error {
 		Certkey:            d.Get("certkey").(string),
 		Expirymonitor:      d.Get("expirymonitor").(string),
 		Fipskey:            d.Get("fipskey").(string),
+		Hsmkey:             d.Get("hsmkey").(string),
 		Inform:             d.Get("inform").(string),
 		Key:                d.Get("key").(string),
 		Linkcertkeyname:    d.Get("linkcertkeyname").(string),
 		Nodomaincheck:      d.Get("nodomaincheck").(bool),
 		Notificationperiod: d.Get("notificationperiod").(int),
+		Ocspstaplingcache:  d.Get("ocspstaplingcache").(bool),
 		Passplain:          d.Get("passplain").(string),
 		Password:           d.Get("password").(bool),
 	}
@@ -140,11 +152,13 @@ func readSslcertkeyFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("certkey", data["certkey"])
 	d.Set("expirymonitor", data["expirymonitor"])
 	d.Set("fipskey", data["fipskey"])
+	d.Set("hsmkey", data["hsmkey"])
 	d.Set("inform", data["inform"])
 	d.Set("key", data["key"])
 	d.Set("linkcertkeyname", data["linkcertkeyname"])
 	d.Set("nodomaincheck", data["nodomaincheck"])
 	d.Set("notificationperiod", data["notificationperiod"])
+	d.Set("ocspstaplingcache", data["ocspstaplingcache"])
 	d.Set("passplain", data["passplain"])
 	d.Set("password", data["password"])
 
@@ -195,6 +209,11 @@ func updateSslcertkeyFunc(d *schema.ResourceData, meta interface{}) error {
 		sslcertkeyChange.Fipskey = d.Get("fipskey").(string)
 		hasChange = true
 	}
+	if d.HasChange("hsmkey") {
+		log.Printf("[DEBUG]  netscaler-provider: Hsmkey has changed for sslcertkey %s, starting update", sslcertkeyName)
+		sslcertkeyChange.Hsmkey = d.Get("hsmkey").(string)
+		hasChange = true
+	}
 	if d.HasChange("inform") {
 		log.Printf("[DEBUG] netscaler-provider:  inform has changed for sslcertkey %s, starting update", sslcertkeyName)
 		sslcertkeyChange.Inform = d.Get("inform").(string)
@@ -208,6 +227,11 @@ func updateSslcertkeyFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("nodomaincheck") {
 		log.Printf("[DEBUG] netscaler-provider:  nodomaincheck has changed for sslcertkey %s, starting update", sslcertkeyName)
 		sslcertkeyChange.Nodomaincheck = d.Get("nodomaincheck").(bool)
+		hasChange = true
+	}
+	if d.HasChange("ocspstaplingcache") {
+		log.Printf("[DEBUG]  netscaler-provider: Ocspstaplingcache has changed for sslcertkey %s, starting update", sslcertkeyName)
+		sslcertkeyChange.Ocspstaplingcache = d.Get("ocspstaplingcache").(bool)
 		hasChange = true
 	}
 

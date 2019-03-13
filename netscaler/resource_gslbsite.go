@@ -19,7 +19,17 @@ func resourceNetScalerGslbsite() *schema.Resource {
 		Update:        updateGslbsiteFunc,
 		Delete:        deleteGslbsiteFunc,
 		Schema: map[string]*schema.Schema{
+			"clip": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"metricexchange": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"naptrreplacementsuffix": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -30,6 +40,11 @@ func resourceNetScalerGslbsite() *schema.Resource {
 				Computed: true,
 			},
 			"parentsite": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"publicclip": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -79,15 +94,18 @@ func createGslbsiteFunc(d *schema.ResourceData, meta interface{}) error {
 		d.Set("sitename", gslbsiteName)
 	}
 	gslbsite := gslb.Gslbsite{
-		Metricexchange:   d.Get("metricexchange").(string),
-		Nwmetricexchange: d.Get("nwmetricexchange").(string),
-		Parentsite:       d.Get("parentsite").(string),
-		Publicip:         d.Get("publicip").(string),
-		Sessionexchange:  d.Get("sessionexchange").(string),
-		Siteipaddress:    d.Get("siteipaddress").(string),
-		Sitename:         d.Get("sitename").(string),
-		Sitetype:         d.Get("sitetype").(string),
-		Triggermonitor:   d.Get("triggermonitor").(string),
+		Clip:                   d.Get("clip").(string),
+		Metricexchange:         d.Get("metricexchange").(string),
+		Naptrreplacementsuffix: d.Get("naptrreplacementsuffix").(string),
+		Nwmetricexchange:       d.Get("nwmetricexchange").(string),
+		Parentsite:             d.Get("parentsite").(string),
+		Publicclip:             d.Get("publicclip").(string),
+		Publicip:               d.Get("publicip").(string),
+		Sessionexchange:        d.Get("sessionexchange").(string),
+		Siteipaddress:          d.Get("siteipaddress").(string),
+		Sitename:               d.Get("sitename").(string),
+		Sitetype:               d.Get("sitetype").(string),
+		Triggermonitor:         d.Get("triggermonitor").(string),
 	}
 
 	_, err := client.AddResource(netscaler.Gslbsite.Type(), gslbsiteName, &gslbsite)
@@ -117,9 +135,12 @@ func readGslbsiteFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	d.Set("sitename", data["sitename"])
+	d.Set("clip", data["clip"])
 	d.Set("metricexchange", data["metricexchange"])
+	d.Set("naptrreplacementsuffix", data["naptrreplacementsuffix"])
 	d.Set("nwmetricexchange", data["nwmetricexchange"])
 	d.Set("parentsite", data["parentsite"])
+	d.Set("publicclip", data["publicclip"])
 	d.Set("publicip", data["publicip"])
 	d.Set("sessionexchange", data["sessionexchange"])
 	d.Set("siteipaddress", data["siteipaddress"])
@@ -140,9 +161,19 @@ func updateGslbsiteFunc(d *schema.ResourceData, meta interface{}) error {
 		Sitename: d.Get("sitename").(string),
 	}
 	hasChange := false
+	if d.HasChange("clip") {
+		log.Printf("[DEBUG]  netscaler-provider: Clip has changed for gslbsite %s, starting update", gslbsiteName)
+		gslbsite.Clip = d.Get("clip").(string)
+		hasChange = true
+	}
 	if d.HasChange("metricexchange") {
 		log.Printf("[DEBUG]  netscaler-provider: Metricexchange has changed for gslbsite %s, starting update", gslbsiteName)
 		gslbsite.Metricexchange = d.Get("metricexchange").(string)
+		hasChange = true
+	}
+	if d.HasChange("naptrreplacementsuffix") {
+		log.Printf("[DEBUG]  netscaler-provider: Naptrreplacementsuffix has changed for gslbsite %s, starting update", gslbsiteName)
+		gslbsite.Naptrreplacementsuffix = d.Get("naptrreplacementsuffix").(string)
 		hasChange = true
 	}
 	if d.HasChange("nwmetricexchange") {
@@ -153,6 +184,11 @@ func updateGslbsiteFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("parentsite") {
 		log.Printf("[DEBUG]  netscaler-provider: Parentsite has changed for gslbsite %s, starting update", gslbsiteName)
 		gslbsite.Parentsite = d.Get("parentsite").(string)
+		hasChange = true
+	}
+	if d.HasChange("publicclip") {
+		log.Printf("[DEBUG]  netscaler-provider: Publicclip has changed for gslbsite %s, starting update", gslbsiteName)
+		gslbsite.Publicclip = d.Get("publicclip").(string)
 		hasChange = true
 	}
 	if d.HasChange("publicip") {

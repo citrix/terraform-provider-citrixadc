@@ -63,6 +63,11 @@ func resourceNetScalerInat() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"useproxyport": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"usip": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -88,17 +93,18 @@ func createInatFunc(d *schema.ResourceData, meta interface{}) error {
 		d.Set("name", inatName)
 	}
 	inat := network.Inat{
-		Ftp:       d.Get("ftp").(string),
-		Mode:      d.Get("mode").(string),
-		Name:      d.Get("name").(string),
-		Privateip: d.Get("privateip").(string),
-		Proxyip:   d.Get("proxyip").(string),
-		Publicip:  d.Get("publicip").(string),
-		Tcpproxy:  d.Get("tcpproxy").(string),
-		Td:        d.Get("td").(int),
-		Tftp:      d.Get("tftp").(string),
-		Usip:      d.Get("usip").(string),
-		Usnip:     d.Get("usnip").(string),
+		Ftp:          d.Get("ftp").(string),
+		Mode:         d.Get("mode").(string),
+		Name:         d.Get("name").(string),
+		Privateip:    d.Get("privateip").(string),
+		Proxyip:      d.Get("proxyip").(string),
+		Publicip:     d.Get("publicip").(string),
+		Tcpproxy:     d.Get("tcpproxy").(string),
+		Td:           d.Get("td").(int),
+		Tftp:         d.Get("tftp").(string),
+		Useproxyport: d.Get("useproxyport").(string),
+		Usip:         d.Get("usip").(string),
+		Usnip:        d.Get("usnip").(string),
 	}
 
 	_, err := client.AddResource(netscaler.Inat.Type(), inatName, &inat)
@@ -138,6 +144,7 @@ func readInatFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("tcpproxy", data["tcpproxy"])
 	d.Set("td", data["td"])
 	d.Set("tftp", data["tftp"])
+	d.Set("useproxyport", data["useproxyport"])
 	d.Set("usip", data["usip"])
 	d.Set("usnip", data["usnip"])
 
@@ -192,6 +199,11 @@ func updateInatFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tftp") {
 		log.Printf("[DEBUG]  netscaler-provider: Tftp has changed for inat %s, starting update", inatName)
 		inat.Tftp = d.Get("tftp").(string)
+		hasChange = true
+	}
+	if d.HasChange("useproxyport") {
+		log.Printf("[DEBUG]  netscaler-provider: Useproxyport has changed for inat %s, starting update", inatName)
+		inat.Useproxyport = d.Get("useproxyport").(string)
 		hasChange = true
 	}
 	if d.HasChange("usip") {

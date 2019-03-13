@@ -104,6 +104,31 @@ func resourceNetScalerGslbservice() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"naptrdomainttl": &schema.Schema{
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"naptrorder": &schema.Schema{
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"naptrpreference": &schema.Schema{
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"naptrreplacement": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"naptrservices": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"newname": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -194,38 +219,43 @@ func createGslbserviceFunc(d *schema.ResourceData, meta interface{}) error {
 		d.Set("servicename", gslbserviceName)
 	}
 	gslbservice := gslb.Gslbservice{
-		Appflowlog:      d.Get("appflowlog").(string),
-		Cip:             d.Get("cip").(string),
-		Cipheader:       d.Get("cipheader").(string),
-		Clttimeout:      d.Get("clttimeout").(int),
-		Cnameentry:      d.Get("cnameentry").(string),
-		Comment:         d.Get("comment").(string),
-		Cookietimeout:   d.Get("cookietimeout").(int),
-		Downstateflush:  d.Get("downstateflush").(string),
-		Hashid:          d.Get("hashid").(int),
-		Healthmonitor:   d.Get("healthmonitor").(string),
-		Ip:              d.Get("ip").(string),
-		Ipaddress:       d.Get("ipaddress").(string),
-		Maxaaausers:     d.Get("maxaaausers").(int),
-		Maxbandwidth:    d.Get("maxbandwidth").(int),
-		Maxclient:       d.Get("maxclient").(int),
-		Monitornamesvc:  d.Get("monitornamesvc").(string),
-		Monthreshold:    d.Get("monthreshold").(int),
-		Newname:         d.Get("newname").(string),
-		Port:            d.Get("port").(int),
-		Publicip:        d.Get("publicip").(string),
-		Publicport:      d.Get("publicport").(int),
-		Servername:      d.Get("servername").(string),
-		Servicename:     d.Get("servicename").(string),
-		Servicetype:     d.Get("servicetype").(string),
-		Sitename:        d.Get("sitename").(string),
-		Sitepersistence: d.Get("sitepersistence").(string),
-		Siteprefix:      d.Get("siteprefix").(string),
-		State:           d.Get("state").(string),
-		Svrtimeout:      d.Get("svrtimeout").(int),
-		Viewip:          d.Get("viewip").(string),
-		Viewname:        d.Get("viewname").(string),
-		Weight:          d.Get("weight").(int),
+		Appflowlog:       d.Get("appflowlog").(string),
+		Cip:              d.Get("cip").(string),
+		Cipheader:        d.Get("cipheader").(string),
+		Clttimeout:       d.Get("clttimeout").(int),
+		Cnameentry:       d.Get("cnameentry").(string),
+		Comment:          d.Get("comment").(string),
+		Cookietimeout:    d.Get("cookietimeout").(int),
+		Downstateflush:   d.Get("downstateflush").(string),
+		Hashid:           d.Get("hashid").(int),
+		Healthmonitor:    d.Get("healthmonitor").(string),
+		Ip:               d.Get("ip").(string),
+		Ipaddress:        d.Get("ipaddress").(string),
+		Maxaaausers:      d.Get("maxaaausers").(int),
+		Maxbandwidth:     d.Get("maxbandwidth").(int),
+		Maxclient:        d.Get("maxclient").(int),
+		Monitornamesvc:   d.Get("monitornamesvc").(string),
+		Monthreshold:     d.Get("monthreshold").(int),
+		Naptrdomainttl:   d.Get("naptrdomainttl").(int),
+		Naptrorder:       d.Get("naptrorder").(int),
+		Naptrpreference:  d.Get("naptrpreference").(int),
+		Naptrreplacement: d.Get("naptrreplacement").(string),
+		Naptrservices:    d.Get("naptrservices").(string),
+		Newname:          d.Get("newname").(string),
+		Port:             d.Get("port").(int),
+		Publicip:         d.Get("publicip").(string),
+		Publicport:       d.Get("publicport").(int),
+		Servername:       d.Get("servername").(string),
+		Servicename:      d.Get("servicename").(string),
+		Servicetype:      d.Get("servicetype").(string),
+		Sitename:         d.Get("sitename").(string),
+		Sitepersistence:  d.Get("sitepersistence").(string),
+		Siteprefix:       d.Get("siteprefix").(string),
+		State:            d.Get("state").(string),
+		Svrtimeout:       d.Get("svrtimeout").(int),
+		Viewip:           d.Get("viewip").(string),
+		Viewname:         d.Get("viewname").(string),
+		Weight:           d.Get("weight").(int),
 	}
 
 	_, err := client.AddResource(netscaler.Gslbservice.Type(), gslbserviceName, &gslbservice)
@@ -272,6 +302,11 @@ func readGslbserviceFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("maxclient", data["maxclient"])
 	d.Set("monitornamesvc", data["monitornamesvc"])
 	d.Set("monthreshold", data["monthreshold"])
+	d.Set("naptrdomainttl", data["naptrdomainttl"])
+	d.Set("naptrorder", data["naptrorder"])
+	d.Set("naptrpreference", data["naptrpreference"])
+	d.Set("naptrreplacement", data["naptrreplacement"])
+	d.Set("naptrservices", data["naptrservices"])
 	d.Set("newname", data["newname"])
 	d.Set("port", data["port"])
 	d.Set("publicip", data["publicip"])
@@ -384,6 +419,31 @@ func updateGslbserviceFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("monthreshold") {
 		log.Printf("[DEBUG]  netscaler-provider: Monthreshold has changed for gslbservice %s, starting update", gslbserviceName)
 		gslbservice.Monthreshold = d.Get("monthreshold").(int)
+		hasChange = true
+	}
+	if d.HasChange("naptrdomainttl") {
+		log.Printf("[DEBUG]  netscaler-provider: Naptrdomainttl has changed for gslbservice %s, starting update", gslbserviceName)
+		gslbservice.Naptrdomainttl = d.Get("naptrdomainttl").(int)
+		hasChange = true
+	}
+	if d.HasChange("naptrorder") {
+		log.Printf("[DEBUG]  netscaler-provider: Naptrorder has changed for gslbservice %s, starting update", gslbserviceName)
+		gslbservice.Naptrorder = d.Get("naptrorder").(int)
+		hasChange = true
+	}
+	if d.HasChange("naptrpreference") {
+		log.Printf("[DEBUG]  netscaler-provider: Naptrpreference has changed for gslbservice %s, starting update", gslbserviceName)
+		gslbservice.Naptrpreference = d.Get("naptrpreference").(int)
+		hasChange = true
+	}
+	if d.HasChange("naptrreplacement") {
+		log.Printf("[DEBUG]  netscaler-provider: Naptrreplacement has changed for gslbservice %s, starting update", gslbserviceName)
+		gslbservice.Naptrreplacement = d.Get("naptrreplacement").(string)
+		hasChange = true
+	}
+	if d.HasChange("naptrservices") {
+		log.Printf("[DEBUG]  netscaler-provider: Naptrservices has changed for gslbservice %s, starting update", gslbserviceName)
+		gslbservice.Naptrservices = d.Get("naptrservices").(string)
 		hasChange = true
 	}
 	if d.HasChange("newname") {

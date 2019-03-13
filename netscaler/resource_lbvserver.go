@@ -50,6 +50,11 @@ func resourceNetScalerLbvserver() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"backuplbmethod": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"backuppersistencetimeout": &schema.Schema{
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -120,6 +125,11 @@ func resourceNetScalerLbvserver() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"dnsprofilename": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"downstateflush": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -136,6 +146,11 @@ func resourceNetScalerLbvserver() *schema.Resource {
 				Computed: true,
 			},
 			"httpprofilename": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"httpsredirecturl": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -160,6 +175,11 @@ func resourceNetScalerLbvserver() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"ipset": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"ipv46": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -171,6 +191,11 @@ func resourceNetScalerLbvserver() *schema.Resource {
 				Computed: true,
 			},
 			"lbmethod": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"lbprofilename": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -265,6 +290,11 @@ func resourceNetScalerLbvserver() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"oracleserverversion": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"persistencebackup": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -286,6 +316,11 @@ func resourceNetScalerLbvserver() *schema.Resource {
 				Computed: true,
 			},
 			"pq": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"processlocal": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -320,6 +355,11 @@ func resourceNetScalerLbvserver() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"redirectfromport": &schema.Schema{
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
 			"redirectportrewrite": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -336,6 +376,16 @@ func resourceNetScalerLbvserver() *schema.Resource {
 				Computed: true,
 			},
 			"resrule": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"retainconnectionsoncluster": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"rhistate": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -425,6 +475,11 @@ func resourceNetScalerLbvserver() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"trofspersistence": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"v6netmasklen": &schema.Schema{
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -483,6 +538,7 @@ func createLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		Authn401:                           d.Get("authn401").(string),
 		Authnprofile:                       d.Get("authnprofile").(string),
 		Authnvsname:                        d.Get("authnvsname").(string),
+		Backuplbmethod:                     d.Get("backuplbmethod").(string),
 		Backuppersistencetimeout:           d.Get("backuppersistencetimeout").(int),
 		Backupvserver:                      d.Get("backupvserver").(string),
 		Bypassaaaa:                         d.Get("bypassaaaa").(string),
@@ -497,17 +553,21 @@ func createLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		Dbslb:                              d.Get("dbslb").(string),
 		Disableprimaryondown:               d.Get("disableprimaryondown").(string),
 		Dns64:                              d.Get("dns64").(string),
+		Dnsprofilename:                     d.Get("dnsprofilename").(string),
 		Downstateflush:                     d.Get("downstateflush").(string),
 		Hashlength:                         d.Get("hashlength").(int),
 		Healththreshold:                    d.Get("healththreshold").(int),
 		Httpprofilename:                    d.Get("httpprofilename").(string),
+		Httpsredirecturl:                   d.Get("httpsredirecturl").(string),
 		Icmpvsrresponse:                    d.Get("icmpvsrresponse").(string),
 		Insertvserveripport:                d.Get("insertvserveripport").(string),
 		Ipmask:                             d.Get("ipmask").(string),
 		Ippattern:                          d.Get("ippattern").(string),
+		Ipset:                              d.Get("ipset").(string),
 		Ipv46:                              d.Get("ipv46").(string),
 		L2conn:                             d.Get("l2conn").(string),
 		Lbmethod:                           d.Get("lbmethod").(string),
+		Lbprofilename:                      d.Get("lbprofilename").(string),
 		Listenpolicy:                       d.Get("listenpolicy").(string),
 		Listenpriority:                     d.Get("listenpriority").(int),
 		M:                                  d.Get("m").(string),
@@ -525,21 +585,26 @@ func createLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		Newservicerequest:                  d.Get("newservicerequest").(int),
 		Newservicerequestincrementinterval: d.Get("newservicerequestincrementinterval").(int),
 		Newservicerequestunit:              d.Get("newservicerequestunit").(string),
+		Oracleserverversion:                d.Get("oracleserverversion").(string),
 		Persistencebackup:                  d.Get("persistencebackup").(string),
 		Persistencetype:                    d.Get("persistencetype").(string),
 		Persistmask:                        d.Get("persistmask").(string),
 		Port:                               d.Get("port").(int),
 		Pq:                                 d.Get("pq").(string),
+		Processlocal:                       d.Get("processlocal").(string),
 		Push:                               d.Get("push").(string),
 		Pushlabel:                          d.Get("pushlabel").(string),
 		Pushmulticlients:                   d.Get("pushmulticlients").(string),
 		Pushvserver:                        d.Get("pushvserver").(string),
 		Range:                              d.Get("range").(int),
 		Recursionavailable:                 d.Get("recursionavailable").(string),
+		Redirectfromport:                   d.Get("redirectfromport").(int),
 		Redirectportrewrite:                d.Get("redirectportrewrite").(string),
 		Redirurl:                           d.Get("redirurl").(string),
 		Redirurlflags:                      d.Get("redirurlflags").(bool),
 		Resrule:                            d.Get("resrule").(string),
+		Retainconnectionsoncluster:         d.Get("retainconnectionsoncluster").(string),
+		Rhistate:                           d.Get("rhistate").(string),
 		Rtspnat:                            d.Get("rtspnat").(string),
 		Rule:                               d.Get("rule").(string),
 		Sc:                                 d.Get("sc").(string),
@@ -557,6 +622,7 @@ func createLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		Td:                                 d.Get("td").(int),
 		Timeout:                            d.Get("timeout").(int),
 		Tosid:                              d.Get("tosid").(int),
+		Trofspersistence:                   d.Get("trofspersistence").(string),
 		V6netmasklen:                       d.Get("v6netmasklen").(int),
 		V6persistmasklen:                   d.Get("v6persistmasklen").(int),
 		Vipheader:                          d.Get("vipheader").(string),
@@ -633,6 +699,7 @@ func readLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("authn401", data["authn401"])
 	d.Set("authnprofile", data["authnprofile"])
 	d.Set("authnvsname", data["authnvsname"])
+	d.Set("backuplbmethod", data["backuplbmethod"])
 	d.Set("backuppersistencetimeout", data["backuppersistencetimeout"])
 	d.Set("backupvserver", data["backupvserver"])
 	d.Set("bypassaaaa", data["bypassaaaa"])
@@ -647,17 +714,21 @@ func readLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("dbslb", data["dbslb"])
 	d.Set("disableprimaryondown", data["disableprimaryondown"])
 	d.Set("dns64", data["dns64"])
+	d.Set("dnsprofilename", data["dnsprofilename"])
 	d.Set("downstateflush", data["downstateflush"])
 	d.Set("hashlength", data["hashlength"])
 	d.Set("healththreshold", data["healththreshold"])
 	d.Set("httpprofilename", data["httpprofilename"])
+	d.Set("httpsredirecturl", data["httpsredirecturl"])
 	d.Set("icmpvsrresponse", data["icmpvsrresponse"])
 	d.Set("insertvserveripport", data["insertvserveripport"])
 	d.Set("ipmask", data["ipmask"])
 	d.Set("ippattern", data["ippattern"])
+	d.Set("ipset", data["ipset"])
 	d.Set("ipv46", data["ipv46"])
 	d.Set("l2conn", data["l2conn"])
 	d.Set("lbmethod", data["lbmethod"])
+	d.Set("lbprofilename", data["lbprofilename"])
 	d.Set("listenpolicy", data["listenpolicy"])
 	d.Set("listenpriority", data["listenpriority"])
 	d.Set("m", data["m"])
@@ -676,21 +747,26 @@ func readLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("newservicerequest", data["newservicerequest"])
 	d.Set("newservicerequestincrementinterval", data["newservicerequestincrementinterval"])
 	d.Set("newservicerequestunit", data["newservicerequestunit"])
+	d.Set("oracleserverversion", data["oracleserverversion"])
 	d.Set("persistencebackup", data["persistencebackup"])
 	d.Set("persistencetype", data["persistencetype"])
 	d.Set("persistmask", data["persistmask"])
 	d.Set("port", data["port"])
 	d.Set("pq", data["pq"])
+	d.Set("processlocal", data["processlocal"])
 	d.Set("push", data["push"])
 	d.Set("pushlabel", data["pushlabel"])
 	d.Set("pushmulticlients", data["pushmulticlients"])
 	d.Set("pushvserver", data["pushvserver"])
 	d.Set("range", data["range"])
 	d.Set("recursionavailable", data["recursionavailable"])
+	d.Set("redirectfromport", data["redirectfromport"])
 	d.Set("redirectportrewrite", data["redirectportrewrite"])
 	d.Set("redirurl", data["redirurl"])
 	d.Set("redirurlflags", data["redirurlflags"])
 	d.Set("resrule", data["resrule"])
+	d.Set("retainconnectionsoncluster", data["retainconnectionsoncluster"])
+	d.Set("rhistate", data["rhistate"])
 	d.Set("rtspnat", data["rtspnat"])
 	d.Set("rule", data["rule"])
 	d.Set("sc", data["sc"])
@@ -708,6 +784,7 @@ func readLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("td", data["td"])
 	d.Set("timeout", data["timeout"])
 	d.Set("tosid", data["tosid"])
+	d.Set("trofspersistence", data["trofspersistence"])
 	d.Set("v6netmasklen", data["v6netmasklen"])
 	d.Set("v6persistmasklen", data["v6persistmasklen"])
 	d.Set("vipheader", data["vipheader"])
@@ -774,6 +851,11 @@ func updateLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("authnvsname") {
 		log.Printf("[DEBUG] netscaler-provider:  Authnvsname has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Authnvsname = d.Get("authnvsname").(string)
+		hasChange = true
+	}
+	if d.HasChange("backuplbmethod") {
+		log.Printf("[DEBUG]  netscaler-provider: Backuplbmethod has changed for lbvserver %s, starting update", lbvserverName)
+		lbvserver.Backuplbmethod = d.Get("backuplbmethod").(string)
 		hasChange = true
 	}
 	if d.HasChange("backuppersistencetimeout") {
@@ -846,6 +928,11 @@ func updateLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		lbvserver.Dns64 = d.Get("dns64").(string)
 		hasChange = true
 	}
+	if d.HasChange("dnsprofilename") {
+		log.Printf("[DEBUG]  netscaler-provider: Dnsprofilename has changed for lbvserver %s, starting update", lbvserverName)
+		lbvserver.Dnsprofilename = d.Get("dnsprofilename").(string)
+		hasChange = true
+	}
 	if d.HasChange("downstateflush") {
 		log.Printf("[DEBUG] netscaler-provider:  Downstateflush has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Downstateflush = d.Get("downstateflush").(string)
@@ -864,6 +951,11 @@ func updateLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("httpprofilename") {
 		log.Printf("[DEBUG] netscaler-provider:  Httpprofilename has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Httpprofilename = d.Get("httpprofilename").(string)
+		hasChange = true
+	}
+	if d.HasChange("httpsredirecturl") {
+		log.Printf("[DEBUG]  netscaler-provider: Httpsredirecturl has changed for lbvserver %s, starting update", lbvserverName)
+		lbvserver.Httpsredirecturl = d.Get("httpsredirecturl").(string)
 		hasChange = true
 	}
 	if d.HasChange("icmpvsrresponse") {
@@ -886,6 +978,11 @@ func updateLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		lbvserver.Ippattern = d.Get("ippattern").(string)
 		hasChange = true
 	}
+	if d.HasChange("ipset") {
+		log.Printf("[DEBUG]  netscaler-provider: Ipset has changed for lbvserver %s, starting update", lbvserverName)
+		lbvserver.Ipset = d.Get("ipset").(string)
+		hasChange = true
+	}
 	if d.HasChange("ipv46") {
 		log.Printf("[DEBUG] netscaler-provider:  Ipv46 has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Ipv46 = d.Get("ipv46").(string)
@@ -899,6 +996,11 @@ func updateLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("lbmethod") {
 		log.Printf("[DEBUG] netscaler-provider:  Lbmethod has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Lbmethod = d.Get("lbmethod").(string)
+		hasChange = true
+	}
+	if d.HasChange("lbprofilename") {
+		log.Printf("[DEBUG]  netscaler-provider: Lbprofilename has changed for lbvserver %s, starting update", lbvserverName)
+		lbvserver.Lbprofilename = d.Get("lbprofilename").(string)
 		hasChange = true
 	}
 	if d.HasChange("listenpolicy") {
@@ -991,6 +1093,11 @@ func updateLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		lbvserver.Newservicerequestunit = d.Get("newservicerequestunit").(string)
 		hasChange = true
 	}
+	if d.HasChange("oracleserverversion") {
+		log.Printf("[DEBUG]  netscaler-provider: Oracleserverversion has changed for lbvserver %s, starting update", lbvserverName)
+		lbvserver.Oracleserverversion = d.Get("oracleserverversion").(string)
+		hasChange = true
+	}
 	if d.HasChange("persistencebackup") {
 		log.Printf("[DEBUG] netscaler-provider:  Persistencebackup has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Persistencebackup = d.Get("persistencebackup").(string)
@@ -1014,6 +1121,11 @@ func updateLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("pq") {
 		log.Printf("[DEBUG] netscaler-provider:  Pq has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Pq = d.Get("pq").(string)
+		hasChange = true
+	}
+	if d.HasChange("processlocal") {
+		log.Printf("[DEBUG]  netscaler-provider: Processlocal has changed for lbvserver %s, starting update", lbvserverName)
+		lbvserver.Processlocal = d.Get("processlocal").(string)
 		hasChange = true
 	}
 	if d.HasChange("push") {
@@ -1046,6 +1158,11 @@ func updateLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		lbvserver.Recursionavailable = d.Get("recursionavailable").(string)
 		hasChange = true
 	}
+	if d.HasChange("redirectfromport") {
+		log.Printf("[DEBUG]  netscaler-provider: Redirectfromport has changed for lbvserver %s, starting update", lbvserverName)
+		lbvserver.Redirectfromport = d.Get("redirectfromport").(int)
+		hasChange = true
+	}
 	if d.HasChange("redirectportrewrite") {
 		log.Printf("[DEBUG] netscaler-provider:  Redirectportrewrite has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Redirectportrewrite = d.Get("redirectportrewrite").(string)
@@ -1064,6 +1181,16 @@ func updateLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("resrule") {
 		log.Printf("[DEBUG] netscaler-provider:  Resrule has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Resrule = d.Get("resrule").(string)
+		hasChange = true
+	}
+	if d.HasChange("retainconnectionsoncluster") {
+		log.Printf("[DEBUG]  netscaler-provider: Retainconnectionsoncluster has changed for lbvserver %s, starting update", lbvserverName)
+		lbvserver.Retainconnectionsoncluster = d.Get("retainconnectionsoncluster").(string)
+		hasChange = true
+	}
+	if d.HasChange("rhistate") {
+		log.Printf("[DEBUG]  netscaler-provider: Rhistate has changed for lbvserver %s, starting update", lbvserverName)
+		lbvserver.Rhistate = d.Get("rhistate").(string)
 		hasChange = true
 	}
 	if d.HasChange("rtspnat") {
@@ -1149,6 +1276,11 @@ func updateLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tosid") {
 		log.Printf("[DEBUG] netscaler-provider:  Tosid has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Tosid = d.Get("tosid").(int)
+		hasChange = true
+	}
+	if d.HasChange("trofspersistence") {
+		log.Printf("[DEBUG]  netscaler-provider: Trofspersistence has changed for lbvserver %s, starting update", lbvserverName)
+		lbvserver.Trofspersistence = d.Get("trofspersistence").(string)
 		hasChange = true
 	}
 	if d.HasChange("v6netmasklen") {
