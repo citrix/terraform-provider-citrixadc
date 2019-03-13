@@ -26,6 +26,16 @@ func resourceNetScalerServicegroup() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"autodisabledelay": &schema.Schema{
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"autodisablegraceful": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"autoscale": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -136,6 +146,11 @@ func resourceNetScalerServicegroup() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"monconnectionclose": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"monitornamesvc": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -167,6 +182,11 @@ func resourceNetScalerServicegroup() *schema.Resource {
 				Computed: true,
 			},
 			"port": &schema.Schema{
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"riseapbrstatsmsgcode": &schema.Schema{
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -316,51 +336,55 @@ func createServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	servicegroup := basic.Servicegroup{
-		Appflowlog:         d.Get("appflowlog").(string),
-		Autoscale:          d.Get("autoscale").(string),
-		Cacheable:          d.Get("cacheable").(string),
-		Cachetype:          d.Get("cachetype").(string),
-		Cip:                d.Get("cip").(string),
-		Cipheader:          d.Get("cipheader").(string),
-		Cka:                d.Get("cka").(string),
-		Clttimeout:         d.Get("clttimeout").(int),
-		Cmp:                d.Get("cmp").(string),
-		Comment:            d.Get("comment").(string),
-		Customserverid:     d.Get("customserverid").(string),
-		Delay:              d.Get("delay").(int),
-		Downstateflush:     d.Get("downstateflush").(string),
-		Dupweight:          d.Get("dupweight").(int),
-		Graceful:           d.Get("graceful").(string),
-		Hashid:             d.Get("hashid").(int),
-		Healthmonitor:      d.Get("healthmonitor").(string),
-		Httpprofilename:    d.Get("httpprofilename").(string),
-		Includemembers:     d.Get("includemembers").(bool),
-		Maxbandwidth:       d.Get("maxbandwidth").(int),
-		Maxclient:          d.Get("maxclient").(int),
-		Maxreq:             d.Get("maxreq").(int),
-		Memberport:         d.Get("memberport").(int),
-		Monitornamesvc:     d.Get("monitornamesvc").(string),
-		Monthreshold:       d.Get("monthreshold").(int),
-		Netprofile:         d.Get("netprofile").(string),
-		Newname:            d.Get("newname").(string),
-		Pathmonitor:        d.Get("pathmonitor").(string),
-		Pathmonitorindv:    d.Get("pathmonitorindv").(string),
-		Port:               d.Get("port").(int),
-		Rtspsessionidremap: d.Get("rtspsessionidremap").(string),
-		Sc:                 d.Get("sc").(string),
-		Serverid:           d.Get("serverid").(int),
-		Servername:         d.Get("servername").(string),
-		Servicegroupname:   d.Get("servicegroupname").(string),
-		Servicetype:        d.Get("servicetype").(string),
-		Sp:                 d.Get("sp").(string),
-		State:              d.Get("state").(string),
-		Svrtimeout:         d.Get("svrtimeout").(int),
-		Tcpb:               d.Get("tcpb").(string),
-		Tcpprofilename:     d.Get("tcpprofilename").(string),
-		Td:                 d.Get("td").(int),
-		Useproxyport:       d.Get("useproxyport").(string),
-		Usip:               d.Get("usip").(string),
-		Weight:             d.Get("weight").(int),
+		Appflowlog:           d.Get("appflowlog").(string),
+		Autodisabledelay:     d.Get("autodisabledelay").(int),
+		Autodisablegraceful:  d.Get("autodisablegraceful").(string),
+		Autoscale:            d.Get("autoscale").(string),
+		Cacheable:            d.Get("cacheable").(string),
+		Cachetype:            d.Get("cachetype").(string),
+		Cip:                  d.Get("cip").(string),
+		Cipheader:            d.Get("cipheader").(string),
+		Cka:                  d.Get("cka").(string),
+		Clttimeout:           d.Get("clttimeout").(int),
+		Cmp:                  d.Get("cmp").(string),
+		Comment:              d.Get("comment").(string),
+		Customserverid:       d.Get("customserverid").(string),
+		Delay:                d.Get("delay").(int),
+		Downstateflush:       d.Get("downstateflush").(string),
+		Dupweight:            d.Get("dupweight").(int),
+		Graceful:             d.Get("graceful").(string),
+		Hashid:               d.Get("hashid").(int),
+		Healthmonitor:        d.Get("healthmonitor").(string),
+		Httpprofilename:      d.Get("httpprofilename").(string),
+		Includemembers:       d.Get("includemembers").(bool),
+		Maxbandwidth:         d.Get("maxbandwidth").(int),
+		Maxclient:            d.Get("maxclient").(int),
+		Maxreq:               d.Get("maxreq").(int),
+		Memberport:           d.Get("memberport").(int),
+		Monconnectionclose:   d.Get("monconnectionclose").(string),
+		Monitornamesvc:       d.Get("monitornamesvc").(string),
+		Monthreshold:         d.Get("monthreshold").(int),
+		Netprofile:           d.Get("netprofile").(string),
+		Newname:              d.Get("newname").(string),
+		Pathmonitor:          d.Get("pathmonitor").(string),
+		Pathmonitorindv:      d.Get("pathmonitorindv").(string),
+		Port:                 d.Get("port").(int),
+		Riseapbrstatsmsgcode: d.Get("riseapbrstatsmsgcode").(int),
+		Rtspsessionidremap:   d.Get("rtspsessionidremap").(string),
+		Sc:                   d.Get("sc").(string),
+		Serverid:             d.Get("serverid").(int),
+		Servername:           d.Get("servername").(string),
+		Servicegroupname:     d.Get("servicegroupname").(string),
+		Servicetype:          d.Get("servicetype").(string),
+		Sp:                   d.Get("sp").(string),
+		State:                d.Get("state").(string),
+		Svrtimeout:           d.Get("svrtimeout").(int),
+		Tcpb:                 d.Get("tcpb").(string),
+		Tcpprofilename:       d.Get("tcpprofilename").(string),
+		Td:                   d.Get("td").(int),
+		Useproxyport:         d.Get("useproxyport").(string),
+		Usip:                 d.Get("usip").(string),
+		Weight:               d.Get("weight").(int),
 	}
 
 	_, err := client.AddResource(netscaler.Servicegroup.Type(), servicegroupName, &servicegroup)
@@ -564,6 +588,8 @@ func readServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("servicegroupname", data["servicegroupname"])
 	d.Set("appflowlog", data["appflowlog"])
+	d.Set("autodisabledelay", data["autodisabledelay"])
+	d.Set("autodisablegraceful", data["autodisablegraceful"])
 	d.Set("autoscale", data["autoscale"])
 	d.Set("cacheable", data["cacheable"])
 	d.Set("cachetype", data["cachetype"])
@@ -586,6 +612,7 @@ func readServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("maxclient", data["maxclient"])
 	d.Set("maxreq", data["maxreq"])
 	d.Set("memberport", data["memberport"])
+	d.Set("monconnectionclose", data["monconnectionclose"])
 	d.Set("monitornamesvc", data["monitornamesvc"])
 	d.Set("monthreshold", data["monthreshold"])
 	d.Set("netprofile", data["netprofile"])
@@ -593,6 +620,7 @@ func readServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("pathmonitor", data["pathmonitor"])
 	d.Set("pathmonitorindv", data["pathmonitorindv"])
 	d.Set("port", data["port"])
+	d.Set("riseapbrstatsmsgcode", data["riseapbrstatsmsgcode"])
 	d.Set("rtspsessionidremap", data["rtspsessionidremap"])
 	d.Set("sc", data["sc"])
 	d.Set("serverid", data["serverid"])
@@ -674,6 +702,16 @@ func updateServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("appflowlog") {
 		log.Printf("[DEBUG]  netscaler-provider: Appflowlog has changed for servicegroup %s, starting update", servicegroupName)
 		servicegroup.Appflowlog = d.Get("appflowlog").(string)
+		hasChange = true
+	}
+	if d.HasChange("autodisabledelay") {
+		log.Printf("[DEBUG]  netscaler-provider: Autodisabledelay has changed for servicegroup %s, starting update", servicegroupName)
+		servicegroup.Autodisabledelay = d.Get("autodisabledelay").(int)
+		hasChange = true
+	}
+	if d.HasChange("autodisablegraceful") {
+		log.Printf("[DEBUG]  netscaler-provider: Autodisablegraceful has changed for servicegroup %s, starting update", servicegroupName)
+		servicegroup.Autodisablegraceful = d.Get("autodisablegraceful").(string)
 		hasChange = true
 	}
 	if d.HasChange("autoscale") {
@@ -786,6 +824,11 @@ func updateServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 		servicegroup.Memberport = d.Get("memberport").(int)
 		hasChange = true
 	}
+	if d.HasChange("monconnectionclose") {
+		log.Printf("[DEBUG]  netscaler-provider: Monconnectionclose has changed for servicegroup %s, starting update", servicegroupName)
+		servicegroup.Monconnectionclose = d.Get("monconnectionclose").(string)
+		hasChange = true
+	}
 	if d.HasChange("monitornamesvc") {
 		log.Printf("[DEBUG]  netscaler-provider: Monitornamesvc has changed for servicegroup %s, starting update", servicegroupName)
 		servicegroup.Monitornamesvc = d.Get("monitornamesvc").(string)
@@ -819,6 +862,11 @@ func updateServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("port") {
 		log.Printf("[DEBUG]  netscaler-provider: Port has changed for servicegroup %s, starting update", servicegroupName)
 		servicegroup.Port = d.Get("port").(int)
+		hasChange = true
+	}
+	if d.HasChange("riseapbrstatsmsgcode") {
+		log.Printf("[DEBUG]  netscaler-provider: Riseapbrstatsmsgcode has changed for servicegroup %s, starting update", servicegroupName)
+		servicegroup.Riseapbrstatsmsgcode = d.Get("riseapbrstatsmsgcode").(int)
 		hasChange = true
 	}
 	if d.HasChange("rtspsessionidremap") {
