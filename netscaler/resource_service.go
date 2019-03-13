@@ -79,6 +79,11 @@ func resourceNetScalerService() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"contentinspectionprofilename": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"customserverid": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -86,6 +91,11 @@ func resourceNetScalerService() *schema.Resource {
 			},
 			"delay": &schema.Schema{
 				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"dnsprofilename": &schema.Schema{
+				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
@@ -144,6 +154,11 @@ func resourceNetScalerService() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"monconnectionclose": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"monitornamesvc": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -181,6 +196,16 @@ func resourceNetScalerService() *schema.Resource {
 				Computed: true,
 			},
 			"port": &schema.Schema{
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"processlocal": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"riseapbrstatsmsgcode": &schema.Schema{
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -300,53 +325,58 @@ func createServiceFunc(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 	service := basic.Service{
-		Name:               serviceName,
-		Accessdown:         d.Get("accessdown").(string),
-		All:                d.Get("all").(bool),
-		Appflowlog:         d.Get("appflowlog").(string),
-		Cacheable:          d.Get("cacheable").(string),
-		Cachetype:          d.Get("cachetype").(string),
-		Cip:                d.Get("cip").(string),
-		Cipheader:          d.Get("cipheader").(string),
-		Cka:                d.Get("cka").(string),
-		Cleartextport:      d.Get("cleartextport").(int),
-		Clttimeout:         d.Get("clttimeout").(int),
-		Cmp:                d.Get("cmp").(string),
-		Comment:            d.Get("comment").(string),
-		Customserverid:     d.Get("customserverid").(string),
-		Delay:              d.Get("delay").(int),
-		Downstateflush:     d.Get("downstateflush").(string),
-		Graceful:           d.Get("graceful").(string),
-		Hashid:             d.Get("hashid").(int),
-		Healthmonitor:      d.Get("healthmonitor").(string),
-		Httpprofilename:    d.Get("httpprofilename").(string),
-		Internal:           d.Get("internal").(bool),
-		Ip:                 d.Get("ip").(string),
-		Ipaddress:          d.Get("ipaddress").(string),
-		Maxbandwidth:       d.Get("maxbandwidth").(int),
-		Maxclient:          d.Get("maxclient").(int),
-		Maxreq:             d.Get("maxreq").(int),
-		Monitornamesvc:     d.Get("monitornamesvc").(string),
-		Monthreshold:       d.Get("monthreshold").(int),
-		Netprofile:         d.Get("netprofile").(string),
-		Newname:            d.Get("newname").(string),
-		Pathmonitor:        d.Get("pathmonitor").(string),
-		Pathmonitorindv:    d.Get("pathmonitorindv").(string),
-		Port:               d.Get("port").(int),
-		Rtspsessionidremap: d.Get("rtspsessionidremap").(string),
-		Sc:                 d.Get("sc").(string),
-		Serverid:           d.Get("serverid").(int),
-		Servername:         d.Get("servername").(string),
-		Servicetype:        d.Get("servicetype").(string),
-		Sp:                 d.Get("sp").(string),
-		State:              d.Get("state").(string),
-		Svrtimeout:         d.Get("svrtimeout").(int),
-		Tcpb:               d.Get("tcpb").(string),
-		Tcpprofilename:     d.Get("tcpprofilename").(string),
-		Td:                 d.Get("td").(int),
-		Useproxyport:       d.Get("useproxyport").(string),
-		Usip:               d.Get("usip").(string),
-		Weight:             d.Get("weight").(int),
+		Name:                         serviceName,
+		Accessdown:                   d.Get("accessdown").(string),
+		All:                          d.Get("all").(bool),
+		Appflowlog:                   d.Get("appflowlog").(string),
+		Cacheable:                    d.Get("cacheable").(string),
+		Cachetype:                    d.Get("cachetype").(string),
+		Cip:                          d.Get("cip").(string),
+		Cipheader:                    d.Get("cipheader").(string),
+		Cka:                          d.Get("cka").(string),
+		Cleartextport:                d.Get("cleartextport").(int),
+		Clttimeout:                   d.Get("clttimeout").(int),
+		Cmp:                          d.Get("cmp").(string),
+		Comment:                      d.Get("comment").(string),
+		Contentinspectionprofilename: d.Get("contentinspectionprofilename").(string),
+		Customserverid:               d.Get("customserverid").(string),
+		Delay:                        d.Get("delay").(int),
+		Dnsprofilename:               d.Get("dnsprofilename").(string),
+		Downstateflush:               d.Get("downstateflush").(string),
+		Graceful:                     d.Get("graceful").(string),
+		Hashid:                       d.Get("hashid").(int),
+		Healthmonitor:                d.Get("healthmonitor").(string),
+		Httpprofilename:              d.Get("httpprofilename").(string),
+		Internal:                     d.Get("internal").(bool),
+		Ip:                           d.Get("ip").(string),
+		Ipaddress:                    d.Get("ipaddress").(string),
+		Maxbandwidth:                 d.Get("maxbandwidth").(int),
+		Maxclient:                    d.Get("maxclient").(int),
+		Maxreq:                       d.Get("maxreq").(int),
+		Monconnectionclose:           d.Get("monconnectionclose").(string),
+		Monitornamesvc:               d.Get("monitornamesvc").(string),
+		Monthreshold:                 d.Get("monthreshold").(int),
+		Netprofile:                   d.Get("netprofile").(string),
+		Newname:                      d.Get("newname").(string),
+		Pathmonitor:                  d.Get("pathmonitor").(string),
+		Pathmonitorindv:              d.Get("pathmonitorindv").(string),
+		Port:                         d.Get("port").(int),
+		Processlocal:                 d.Get("processlocal").(string),
+		Riseapbrstatsmsgcode:         d.Get("riseapbrstatsmsgcode").(int),
+		Rtspsessionidremap:           d.Get("rtspsessionidremap").(string),
+		Sc:                           d.Get("sc").(string),
+		Serverid:                     d.Get("serverid").(int),
+		Servername:                   d.Get("servername").(string),
+		Servicetype:                  d.Get("servicetype").(string),
+		Sp:                           d.Get("sp").(string),
+		State:                        d.Get("state").(string),
+		Svrtimeout:                   d.Get("svrtimeout").(int),
+		Tcpb:                         d.Get("tcpb").(string),
+		Tcpprofilename:               d.Get("tcpprofilename").(string),
+		Td:                           d.Get("td").(int),
+		Useproxyport:                 d.Get("useproxyport").(string),
+		Usip:                         d.Get("usip").(string),
+		Weight:                       d.Get("weight").(int),
 	}
 
 	_, err := client.AddResource(netscaler.Service.Type(), serviceName, &service)
@@ -441,8 +471,10 @@ func readServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("clttimeout", data["clttimeout"])
 	d.Set("cmp", data["cmp"])
 	d.Set("comment", data["comment"])
+	d.Set("contentinspectionprofilename", data["contentinspectionprofilename"])
 	d.Set("customserverid", data["customserverid"])
 	d.Set("delay", data["delay"])
+	d.Set("dnsprofilename", data["dnsprofilename"])
 	d.Set("downstateflush", data["downstateflush"])
 	d.Set("graceful", data["graceful"])
 	d.Set("hashid", data["hashid"])
@@ -457,6 +489,7 @@ func readServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("maxbandwidth", data["maxbandwidth"])
 	d.Set("maxclient", data["maxclient"])
 	d.Set("maxreq", data["maxreq"])
+	d.Set("monconnectionclose", data["monconnectionclose"])
 	d.Set("monitornamesvc", data["monitornamesvc"])
 	d.Set("monthreshold", data["monthreshold"])
 	d.Set("name", data["name"])
@@ -465,6 +498,8 @@ func readServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("pathmonitor", data["pathmonitor"])
 	d.Set("pathmonitorindv", data["pathmonitorindv"])
 	d.Set("port", data["port"])
+	d.Set("processlocal", data["processlocal"])
+	d.Set("riseapbrstatsmsgcode", data["riseapbrstatsmsgcode"])
 	d.Set("rtspsessionidremap", data["rtspsessionidremap"])
 	d.Set("sc", data["sc"])
 	d.Set("serverid", data["serverid"])
@@ -580,6 +615,11 @@ func updateServiceFunc(d *schema.ResourceData, meta interface{}) error {
 		service.Comment = d.Get("comment").(string)
 		hasChange = true
 	}
+	if d.HasChange("contentinspectionprofilename") {
+		log.Printf("[DEBUG]  netscaler-provider: Contentinspectionprofilename has changed for service %s, starting update", serviceName)
+		service.Contentinspectionprofilename = d.Get("contentinspectionprofilename").(string)
+		hasChange = true
+	}
 	if d.HasChange("customserverid") {
 		log.Printf("[DEBUG] netscaler-provider:  Customserverid has changed for service %s, starting update", serviceName)
 		service.Customserverid = d.Get("customserverid").(string)
@@ -588,6 +628,11 @@ func updateServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("delay") {
 		log.Printf("[DEBUG] netscaler-provider:  Delay has changed for service %s, starting update", serviceName)
 		service.Delay = d.Get("delay").(int)
+		hasChange = true
+	}
+	if d.HasChange("dnsprofilename") {
+		log.Printf("[DEBUG]  netscaler-provider: Dnsprofilename has changed for service %s, starting update", serviceName)
+		service.Dnsprofilename = d.Get("dnsprofilename").(string)
 		hasChange = true
 	}
 	if d.HasChange("downstateflush") {
@@ -645,6 +690,11 @@ func updateServiceFunc(d *schema.ResourceData, meta interface{}) error {
 		service.Maxreq = d.Get("maxreq").(int)
 		hasChange = true
 	}
+	if d.HasChange("monconnectionclose") {
+		log.Printf("[DEBUG]  netscaler-provider: Monconnectionclose has changed for service %s, starting update", serviceName)
+		service.Monconnectionclose = d.Get("monconnectionclose").(string)
+		hasChange = true
+	}
 	if d.HasChange("monitornamesvc") {
 		log.Printf("[DEBUG] netscaler-provider:  Monitornamesvc has changed for service %s, starting update", serviceName)
 		service.Monitornamesvc = d.Get("monitornamesvc").(string)
@@ -683,6 +733,16 @@ func updateServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("port") {
 		log.Printf("[DEBUG] netscaler-provider:  Port has changed for service %s, starting update", serviceName)
 		service.Port = d.Get("port").(int)
+		hasChange = true
+	}
+	if d.HasChange("processlocal") {
+		log.Printf("[DEBUG]  netscaler-provider: Processlocal has changed for service %s, starting update", serviceName)
+		service.Processlocal = d.Get("processlocal").(string)
+		hasChange = true
+	}
+	if d.HasChange("riseapbrstatsmsgcode") {
+		log.Printf("[DEBUG]  netscaler-provider: Riseapbrstatsmsgcode has changed for service %s, starting update", serviceName)
+		service.Riseapbrstatsmsgcode = d.Get("riseapbrstatsmsgcode").(int)
 		hasChange = true
 	}
 	if d.HasChange("rtspsessionidremap") {
