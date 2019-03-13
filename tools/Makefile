@@ -14,10 +14,13 @@
 
 GENERATED_PKGS=$(shell go list ./... )
 
+JSON_DIR = ../vendor/github.com/chiradeep/go-nitro/jsonconfig
+SCHEMA_EXEC = generate_schema
+
 default: build 
 
 build:
-	go build -o generate_schema  .
+	go build -o $(SCHEMA_EXEC)  .
 
 generate-test-build:
 	go build ${GENERATED_PKGS}
@@ -27,3 +30,20 @@ clean:
 
 fmt:
 	go fmt ${GENERATED_PKGS}
+
+schema_only:
+	./$(SCHEMA_EXEC) -i $(JSON_DIR)/cs/cspolicy.json -b $(JSON_DIR)/cs/csvserver_cspolicy_binding.json
+	./$(SCHEMA_EXEC) -i $(JSON_DIR)/cs/csvserver.json
+	./$(SCHEMA_EXEC) -i $(JSON_DIR)/lb/lbmonitor.json -d monitorname
+	./$(SCHEMA_EXEC) -i $(JSON_DIR)/lb/lbvserver.json
+	./$(SCHEMA_EXEC) -i $(JSON_DIR)/ns/nsacl.json -d aclname
+	./$(SCHEMA_EXEC) -i $(JSON_DIR)/ns/nsacls.json
+	./$(SCHEMA_EXEC) -i $(JSON_DIR)/gslb/gslbservice.json -d servicename
+	./$(SCHEMA_EXEC) -i $(JSON_DIR)/gslb/gslbsite.json -d sitename
+	./$(SCHEMA_EXEC) -i $(JSON_DIR)/gslb/gslbvserver.json -b $(JSON_DIR)/gslb/gslbvserver_domain_binding.json
+	./$(SCHEMA_EXEC) -i $(JSON_DIR)/network/inat.json
+	./$(SCHEMA_EXEC) -i $(JSON_DIR)/basic/service.json
+	./$(SCHEMA_EXEC) -i $(JSON_DIR)/basic/servicegroup.json
+	./$(SCHEMA_EXEC) -i $(JSON_DIR)/ssl/sslcertkey.json -d certkey
+
+schema: schema_only fmt
