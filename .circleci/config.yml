@@ -25,7 +25,6 @@ jobs:
      - run:
         name: Prepare Netscaler
         command: |
-           echo $DOCKERPWD|docker login -u $DOCKERUSER --password-stdin
            docker run --rm --name netscaler -p 80:80 --env EULA=yes --detach --cap-add=NET_ADMIN store/citrix/netscalercpx:$NETSCALER_VERSION
            sleep 30s
            docker exec netscaler /var/netscaler/bins/cli_script.sh "save ns conf"
@@ -41,6 +40,12 @@ jobs:
         name: Verify plan
         command: |
            ./terraform plan
+
+     - run:
+        name: Run acceptance tests
+        command: |
+           make -C .. fmt
+           NS_URL="http://localhost" make -C .. testacc
 
      - run:
         name: Cleanup
