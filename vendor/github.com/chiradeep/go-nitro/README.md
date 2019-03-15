@@ -1,7 +1,7 @@
-# An incomplete but mostly useful Go client for configuring Citrix NetScaler
+# Go client for configuring Citrix ADC
 
 ## About
-The [NITRO](https://docs.citrix.com/en-us/netscaler/11-1/nitro-api/nitro-rest.html) API is the REST-like API to the Citrix NetScaler. This project provides a Golang SDK that can be used to make configuration API calls to a Citrix NetScaler.
+The [NITRO](https://developer-docs.citrix.com/projects/netscaler-nitro-api/en/12.0/) API is the REST-like API to the Citrix ADC (aka NetScaler). This project provides a Golang SDK that can be used to make configuration API calls to a Citrix ADC.
 
 ## Usage
 Import the SDK from github.com/chiradeep/go-nitro/netscaler. Config objects are available at github.com/chiradeep/go-nitro/config.
@@ -53,16 +53,15 @@ The unit tests are invoked with `make unit`. Note that they are actually functio
 If you specify `https` in the URL then the client will use HTTPS. By default it will verify the presented certificate. If you want to use the default or self-signed certificates without verification, specify `sslVerify=false` in the constructor `NewNitroClientFromParams` or set the environment variable `NS_SSLVERIFY` to `false` and use the `NewNitroClientFromEnv` constructor
 
 ## TODO
-Some REST operations are not yet supported:
+Some [REST operations](https://developer-docs.citrix.com/projects/netscaler-nitro-api/en/12.0/performing-netscaler-resource-operations/) are not yet supported:
 
-* [Pagination & filtering] (https://docs.citrix.com/en-us/netscaler/11-1/nitro-api/nitro-rest/nitro-rest-general/nitro-rest-retrieve-resource-details.html)
-* [Count] (https://docs.citrix.com/en-us/netscaler/11-1/nitro-api/nitro-rest/nitro-rest-general/nitro-rest-resource-count.html)
-* [Unset] (https://docs.citrix.com/en-us/netscaler/11-1/nitro-api/nitro-rest/nitro-rest-general/nitro-rest-resetting-resource-properties.html)
-* [Rename] (https://docs.citrix.com/en-us/netscaler/11-1/nitro-api/nitro-rest/nitro-rest-general/nitro-rest-rename-resource.html)
-* [Idempotent Add/Update] (https://docs.citrix.com/en-us/netscaler/11-1/nitro-api/nitro-rest/nitro-rest-usage-scenarios/management-operations-idempotentAPI.html)
-* [Link/Unlink](https://docs.citrix.com/en-us/netscaler/11-1/nitro-api/nitro-rest/api-reference/configuration/ssl/sslcertkey.html#link)
-* [Import] (https://docs.citrix.com/en-us/netscaler/11-1/nitro-api/nitro-rest/api-reference/configuration/ssl/sslcertfile.html#import)
+* Pagination & filtering
+* Count 
+* Unset
+* Rename
+* Idempotent Add/Update
+* SSL Certificate operations:
+  * Link/Unlink
+  * Import 
 
-## Stats
-No plan to support the stats API (`http://<netscaler-ip-address>/nitro/v1/stat/<resource-type>`)
 `
