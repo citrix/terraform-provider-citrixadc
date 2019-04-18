@@ -45,5 +45,6 @@ schema_only:
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/basic/service.json
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/basic/servicegroup.json
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/ssl/sslcertkey.json -d certkey
+	./$(SCHEMA_EXEC) -i $(JSON_DIR)/basic/server.json
 
 schema: schema_only fmt

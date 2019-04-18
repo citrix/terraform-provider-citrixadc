@@ -23,23 +23,23 @@ import (
 	"testing"
 )
 
-func TestAccRnat_basic(t *testing.T) {
+func TestAccServer_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRnatDestroy,
+		CheckDestroy: testAccCheckServerDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccRnat_basic,
+				Config: testAccServer_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRnatExist("netscaler_rnat.foo", nil),
+					testAccCheckServerExist("netscaler_server.foo", nil),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckRnatExist(n string, id *string) resource.TestCheckFunc {
+func testAccCheckServerExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -47,7 +47,7 @@ func testAccCheckRnatExist(n string, id *string) resource.TestCheckFunc {
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No rnat name is set")
+			return fmt.Errorf("No server name is set")
 		}
 
 		if id != nil {
@@ -59,25 +59,25 @@ func testAccCheckRnatExist(n string, id *string) resource.TestCheckFunc {
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		d, err := nsClient.FindFilteredResourceArray(netscaler.Rnat.Type(), map[string]string{"network": "192.168.96.0", "netmask": "255.255.240.0", "natip": "*"})
+		data, err := nsClient.FindResource(netscaler.Server.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if len(d) != 1 {
-			return fmt.Errorf("Rnat rule %s not found", n)
+		if data == nil {
+			return fmt.Errorf("server %s not found", n)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckRnatDestroy(s *terraform.State) error {
+func testAccCheckServerDestroy(s *terraform.State) error {
 	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "netscaler_rnat" {
+		if rs.Type != "netscaler_server" {
 			continue
 		}
 
@@ -85,9 +85,9 @@ func testAccCheckRnatDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindFilteredResourceArray(netscaler.Rnat.Type(), map[string]string{"network": "192.168.96.0", "netmask": "255.255.240.0", "natip": "*"})
+		_, err := nsClient.FindResource(netscaler.Server.Type(), rs.Primary.ID)
 		if err == nil {
-			return fmt.Errorf("Rnat rule %s still exists", rs.Primary.ID)
+			return fmt.Errorf("server %s still exists", rs.Primary.ID)
 		}
 
 	}
@@ -95,14 +95,11 @@ func testAccCheckRnatDestroy(s *terraform.State) error {
 	return nil
 }
 
-const testAccRnat_basic = `
+const testAccServer_basic = `
 
 
-resource "netscaler_rnat" "foo" {
-	rnatsname = "foo"
-	rnat {
-           network = "192.168.96.0"
-           netmask = "255.255.240.0"
-         }
+resource "netscaler_server" "foo" {
+	name = "test_server"
+	ipaddress = "192.168.11.13"
 }
 `
