@@ -68,6 +68,7 @@ func resourceNetScalerServer() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"newname": &schema.Schema{
 				Type:     schema.TypeString,
