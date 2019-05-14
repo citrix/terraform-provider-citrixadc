@@ -18,6 +18,7 @@ func resourceNetScalerSslcertkey() *schema.Resource {
 		Read:          readSslcertkeyFunc,
 		Update:        updateSslcertkeyFunc,
 		Delete:        deleteSslcertkeyFunc,
+		CustomizeDiff: customizeDiff,
 		Schema: map[string]*schema.Schema{
 			"bundle": &schema.Schema{
 				Type:     schema.TypeString,
@@ -104,16 +105,19 @@ func createSslcertkeyFunc(d *schema.ResourceData, meta interface{}) error {
 		d.Set("certkey", sslcertkeyName)
 	}
 	sslcertkey := ssl.Sslcertkey{
-		Bundle:             d.Get("bundle").(string),
-		Cert:               d.Get("cert").(string),
-		Certkey:            d.Get("certkey").(string),
-		Expirymonitor:      d.Get("expirymonitor").(string),
-		Fipskey:            d.Get("fipskey").(string),
-		Hsmkey:             d.Get("hsmkey").(string),
-		Inform:             d.Get("inform").(string),
-		Key:                d.Get("key").(string),
-		Linkcertkeyname:    d.Get("linkcertkeyname").(string),
-		Nodomaincheck:      d.Get("nodomaincheck").(bool),
+		Bundle:          d.Get("bundle").(string),
+		Cert:            d.Get("cert").(string),
+		Certkey:         d.Get("certkey").(string),
+		Expirymonitor:   d.Get("expirymonitor").(string),
+		Fipskey:         d.Get("fipskey").(string),
+		Hsmkey:          d.Get("hsmkey").(string),
+		Inform:          d.Get("inform").(string),
+		Key:             d.Get("key").(string),
+		Linkcertkeyname: d.Get("linkcertkeyname").(string),
+		// This is always set to false on creation which effectively excludes it from the request JSON
+		// Nodomaincheck is not an object attribute but a flag for the change operation
+		// of the resource
+		Nodomaincheck:      false,
 		Notificationperiod: d.Get("notificationperiod").(int),
 		Ocspstaplingcache:  d.Get("ocspstaplingcache").(bool),
 		Passplain:          d.Get("passplain").(string),
@@ -224,11 +228,6 @@ func updateSslcertkeyFunc(d *schema.ResourceData, meta interface{}) error {
 		sslcertkeyChange.Passplain = d.Get("passplain").(string)
 		hasChange = true
 	}
-	if d.HasChange("nodomaincheck") {
-		log.Printf("[DEBUG] netscaler-provider:  nodomaincheck has changed for sslcertkey %s, starting update", sslcertkeyName)
-		sslcertkeyChange.Nodomaincheck = d.Get("nodomaincheck").(bool)
-		hasChange = true
-	}
 	if d.HasChange("ocspstaplingcache") {
 		log.Printf("[DEBUG]  netscaler-provider: Ocspstaplingcache has changed for sslcertkey %s, starting update", sslcertkeyName)
 		sslcertkeyChange.Ocspstaplingcache = d.Get("ocspstaplingcache").(bool)
@@ -242,7 +241,11 @@ func updateSslcertkeyFunc(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("Error updating sslcertkey %s", sslcertkeyName)
 		}
 	}
+	// nodomaincheck is a flag for the change operation
+	// therefore its value is always used for the operation
+	sslcertkeyChange.Nodomaincheck = d.Get("nodomaincheck").(bool)
 	if hasChange {
+
 		_, err := client.ChangeResource(netscaler.Sslcertkey.Type(), sslcertkeyName, &sslcertkeyChange)
 		if err != nil {
 			return fmt.Errorf("Error changing sslcertkey %s", sslcertkeyName)
@@ -262,5 +265,16 @@ func deleteSslcertkeyFunc(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId("")
 
+	return nil
+}
+
+func customizeDiff(diff *schema.ResourceDiff, meta interface{}) error {
+	log.Printf("[DEBUG] netscaler-provider:  In customizeDiff")
+	o := diff.GetChangedKeysPrefix("")
+
+	if len(o) == 1 && o[0] == "nodomaincheck" {
+		log.Printf("Only nodomaincheck in diff")
+		diff.Clear("nodomaincheck")
+	}
 	return nil
 }
