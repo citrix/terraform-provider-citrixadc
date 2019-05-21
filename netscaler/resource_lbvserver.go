@@ -508,6 +508,11 @@ func resourceNetScalerLbvserver() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"sslsni":     &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 		},
 	}
 }
@@ -638,6 +643,7 @@ func createLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		binding := ssl.Sslvserversslcertkeybinding{
 			Vservername: lbvserverName,
 			Certkeyname: sslcertkey.(string),
+			Snicert: d.Get("sslsni").(bool),
 		}
 		log.Printf("[INFO] netscaler-provider:  Binding ssl cert %s to lbvserver %s", sslcertkey, lbvserverName)
 		err = client.BindResource(netscaler.Sslvserver.Type(), lbvserverName, netscaler.Sslcertkey.Type(), sslcertkey.(string), &binding)
