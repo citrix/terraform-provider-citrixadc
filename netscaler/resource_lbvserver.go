@@ -504,14 +504,14 @@ func resourceNetScalerLbvserver() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"sslcertkeys": &schema.Schema{
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Optional: true,
+			},
 			"sslprofile": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
-			},
-			"sslsni": &schema.Schema{
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
 			},
 		},
 	}
@@ -533,6 +533,18 @@ func createLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		if !exists {
 			return fmt.Errorf("[ERROR] netscaler-provider: Specified ssl cert key does not exist on netscaler!")
 		}
+	}
+	sslcertkeys := []interface{}{sslcertkey}
+
+	keys, ssok := d.GetOk("sslcertkeys")
+	if ssok {
+		for _, sslkey := range keys.([]string) {
+			exists := client.ResourceExists(netscaler.Sslcertkey.Type(), sslkey)
+			if !exists {
+				return fmt.Errorf("[ERROR] netscaler-provider: Specified ssl cert key does not exist on netscaler!")
+			}
+		}
+		sslcertkeys = append(sslcertkeys, keys)
 	}
 
 	lbvserver := lb.Lbvserver{
@@ -639,22 +651,24 @@ func createLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[ERROR] netscaler-provider: could not add resource %s of type %s", netscaler.Lbvserver.Type(), lbvserverName)
 		return err
 	}
-	if sok { //ssl cert is specified
-		binding := ssl.Sslvserversslcertkeybinding{
-			Vservername: lbvserverName,
-			Certkeyname: sslcertkey.(string),
-			Snicert:     d.Get("sslsni").(bool),
-		}
-		log.Printf("[INFO] netscaler-provider:  Binding ssl cert %s to lbvserver %s", sslcertkey, lbvserverName)
-		err = client.BindResource(netscaler.Sslvserver.Type(), lbvserverName, netscaler.Sslcertkey.Type(), sslcertkey.(string), &binding)
-		if err != nil {
-			log.Printf("[ERROR] netscaler-provider:  Failed to bind ssl cert %s to lbvserver %s", sslcertkey, lbvserverName)
-			err2 := client.DeleteResource(netscaler.Lbvserver.Type(), lbvserverName)
-			if err2 != nil {
-				log.Printf("[ERROR] netscaler-provider:  Failed to delete lbvserver %s after bind to ssl cert failed", lbvserverName)
-				return fmt.Errorf("[ERROR] netscaler-provider:  Failed to delete lbvserver %s after bind to ssl cert failed", lbvserverName)
+	if ssok { //ssl cert is specified
+		for _, sslkey := range sslcertkeys {
+			binding := ssl.Sslvserversslcertkeybinding{
+				Vservername: lbvserverName,
+				Certkeyname: sslkey.(string),
+				Snicert:     true,
 			}
-			return fmt.Errorf("[ERROR] netscaler-provider:  Failed to bind ssl cert %s to lbvserver %s", sslcertkey, lbvserverName)
+			log.Printf("[INFO] netscaler-provider:  Binding ssl cert %s to lbvserver %s", sslkey, lbvserverName)
+			err = client.BindResource(netscaler.Sslvserver.Type(), lbvserverName, netscaler.Sslcertkey.Type(), sslkey.(string), &binding)
+			if err != nil {
+				log.Printf("[ERROR] netscaler-provider:  Failed to bind ssl cert %s to lbvserver %s", sslkey, lbvserverName)
+				err2 := client.DeleteResource(netscaler.Lbvserver.Type(), lbvserverName)
+				if err2 != nil {
+					log.Printf("[ERROR] netscaler-provider:  Failed to delete lbvserver %s after bind to ssl cert failed", lbvserverName)
+					return fmt.Errorf("[ERROR] netscaler-provider:  Failed to delete lbvserver %s after bind to ssl cert failed", lbvserverName)
+				}
+				return fmt.Errorf("[ERROR] netscaler-provider:  Failed to bind ssl cert %s to lbvserver %s", sslkey, lbvserverName)
+			}
 		}
 	}
 
