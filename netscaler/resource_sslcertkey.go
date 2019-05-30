@@ -34,6 +34,7 @@ func resourceNetScalerSslcertkey() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"expirymonitor": &schema.Schema{
 				Type:     schema.TypeString,
