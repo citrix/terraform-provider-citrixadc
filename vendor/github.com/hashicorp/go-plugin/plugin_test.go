@@ -15,7 +15,7 @@ import (
 	"time"
 
 	hclog "github.com/hashicorp/go-hclog"
-	"github.com/hashicorp/go-plugin/test/grpc"
+	grpctest "github.com/hashicorp/go-plugin/test/grpc"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
@@ -23,9 +23,13 @@ import (
 // Test that NetRPCUnsupportedPlugin implements the correct interfaces.
 var _ Plugin = new(NetRPCUnsupportedPlugin)
 
-// testAPIVersion is the ProtocolVersion we use for testing.
 var testHandshake = HandshakeConfig{
 	ProtocolVersion:  1,
+	MagicCookieKey:   "TEST_MAGIC_COOKIE",
+	MagicCookieValue: "test",
+}
+
+var testVersionedHandshake = HandshakeConfig{
 	MagicCookieKey:   "TEST_MAGIC_COOKIE",
 	MagicCookieValue: "test",
 }
@@ -56,16 +60,43 @@ func (p *testInterfacePlugin) Client(b *MuxBroker, c *rpc.Client) (interface{}, 
 	return &testInterfaceClient{Client: c}, nil
 }
 
-func (p *testInterfacePlugin) GRPCServer(b *GRPCBroker, s *grpc.Server) error {
+func (p *testInterfacePlugin) impl() testInterface {
+	if p.Impl != nil {
+		return p.Impl
+	}
+
+	return &testInterfaceImpl{
+		logger: hclog.New(&hclog.LoggerOptions{
+			Level:      hclog.Trace,
+			Output:     os.Stderr,
+			JSONFormat: true,
+		}),
+	}
+}
+
+// testGRPCInterfacePlugin is a test implementation of the GRPCPlugin interface
+type testGRPCInterfacePlugin struct {
+	Impl testInterface
+}
+
+func (p *testGRPCInterfacePlugin) Server(b *MuxBroker) (interface{}, error) {
+	return &testInterfaceServer{Impl: p.impl()}, nil
+}
+
+func (p *testGRPCInterfacePlugin) Client(b *MuxBroker, c *rpc.Client) (interface{}, error) {
+	return &testInterfaceClient{Client: c}, nil
+}
+
+func (p *testGRPCInterfacePlugin) GRPCServer(b *GRPCBroker, s *grpc.Server) error {
 	grpctest.RegisterTestServer(s, &testGRPCServer{broker: b, Impl: p.impl()})
 	return nil
 }
 
-func (p *testInterfacePlugin) GRPCClient(doneCtx context.Context, b *GRPCBroker, c *grpc.ClientConn) (interface{}, error) {
+func (p *testGRPCInterfacePlugin) GRPCClient(doneCtx context.Context, b *GRPCBroker, c *grpc.ClientConn) (interface{}, error) {
 	return &testGRPCClient{broker: b, Client: grpctest.NewTestClient(c)}, nil
 }
 
-func (p *testInterfacePlugin) impl() testInterface {
+func (p *testGRPCInterfacePlugin) impl() testInterface {
 	if p.Impl != nil {
 		return p.Impl
 	}
@@ -142,6 +173,11 @@ func (s *testInterfaceServer) PrintKV(args map[string]interface{}, _ *struct{}) 
 // testPluginMap can be used for tests as a plugin map
 var testPluginMap = map[string]Plugin{
 	"test": new(testInterfacePlugin),
+}
+
+// testGRPCPluginMap can be used for tests as that need a GRPC plugin
+var testGRPCPluginMap = map[string]Plugin{
+	"test": new(testGRPCInterfacePlugin),
 }
 
 // testGRPCServer is the implementation of our GRPC service.
@@ -315,7 +351,7 @@ func (impl *testGRPCClient) Stream(start, stop int32) ([]int32, error) {
 
 	var resp []int32
 	for i := start; i < stop; i++ {
-		if err := streamClient.Send(&grpctest.TestRequest{i}); err != nil {
+		if err := streamClient.Send(&grpctest.TestRequest{Input: i}); err != nil {
 			return resp, err
 		}
 
@@ -337,8 +373,6 @@ func helperProcess(s ...string) *exec.Cmd {
 	cs = append(cs, s...)
 	env := []string{
 		"GO_WANT_HELPER_PROCESS=1",
-		"PLUGIN_MIN_PORT=10000",
-		"PLUGIN_MAX_PORT=25000",
 	}
 
 	cmd := exec.Command(os.Args[0], cs...)
@@ -386,6 +420,10 @@ func TestHelperProcess(*testing.T) {
 		"test": &testInterfacePlugin{Impl: testPlugin},
 	}
 
+	testGRPCPluginMap := map[string]Plugin{
+		"test": &testGRPCInterfacePlugin{Impl: testPlugin},
+	}
+
 	cmd, args := args[0], args[1:]
 	switch cmd {
 	case "bad-version":
@@ -417,6 +455,7 @@ func TestHelperProcess(*testing.T) {
 		fmt.Printf("%d|%d|tcp|:1234\n", CoreProtocolVersion, testHandshake.ProtocolVersion)
 		os.Stderr.WriteString("[\"HELLO\"]\n")
 		os.Stderr.WriteString("12345\n")
+		os.Stderr.WriteString("{\"a\":1}\n")
 	case "stdin":
 		fmt.Printf("%d|%d|tcp|:1234\n", CoreProtocolVersion, testHandshake.ProtocolVersion)
 		data := make([]byte, 5)
@@ -451,7 +490,7 @@ func TestHelperProcess(*testing.T) {
 	case "test-grpc":
 		Serve(&ServeConfig{
 			HandshakeConfig: testHandshake,
-			Plugins:         testPluginMap,
+			Plugins:         testGRPCPluginMap,
 			GRPCServer:      DefaultGRPCServer,
 		})
 
@@ -461,7 +500,7 @@ func TestHelperProcess(*testing.T) {
 		// Serve!
 		Serve(&ServeConfig{
 			HandshakeConfig: testHandshake,
-			Plugins:         testPluginMap,
+			Plugins:         testGRPCPluginMap,
 			GRPCServer:      DefaultGRPCServer,
 			TLSProvider:     helperTLSProvider,
 		})
@@ -506,6 +545,75 @@ func TestHelperProcess(*testing.T) {
 			HandshakeConfig: testHandshake,
 			Plugins:         testPluginMap,
 			TLSProvider:     helperTLSProvider,
+		})
+
+		// Shouldn't reach here but make sure we exit anyways
+		os.Exit(0)
+
+	case "test-interface-mtls":
+		// Serve!
+		Serve(&ServeConfig{
+			HandshakeConfig: testVersionedHandshake,
+			Plugins:         testPluginMap,
+		})
+
+		// Shouldn't reach here but make sure we exit anyways
+		os.Exit(0)
+
+	case "test-versioned-plugins":
+		// Serve!
+		Serve(&ServeConfig{
+			HandshakeConfig: testVersionedHandshake,
+			VersionedPlugins: map[int]PluginSet{
+				2: testGRPCPluginMap,
+			},
+			GRPCServer:  DefaultGRPCServer,
+			TLSProvider: helperTLSProvider,
+		})
+
+		// Shouldn't reach here but make sure we exit anyways
+		os.Exit(0)
+	case "test-proto-upgraded-plugin":
+		// Serve 2 plugins over different protocols
+		Serve(&ServeConfig{
+			HandshakeConfig: testVersionedHandshake,
+			VersionedPlugins: map[int]PluginSet{
+				1: PluginSet{
+					"old": &testInterfacePlugin{Impl: testPlugin},
+				},
+				2: testGRPCPluginMap,
+			},
+			GRPCServer:  DefaultGRPCServer,
+			TLSProvider: helperTLSProvider,
+		})
+
+		// Shouldn't reach here but make sure we exit anyways
+		os.Exit(0)
+	case "test-proto-upgraded-client":
+		// Serve 2 plugins over different protocols
+		Serve(&ServeConfig{
+			HandshakeConfig: HandshakeConfig{
+				ProtocolVersion:  2,
+				MagicCookieKey:   "TEST_MAGIC_COOKIE",
+				MagicCookieValue: "test",
+			},
+			Plugins:     testGRPCPluginMap,
+			GRPCServer:  DefaultGRPCServer,
+			TLSProvider: helperTLSProvider,
+		})
+
+		// Shouldn't reach here but make sure we exit anyways
+		os.Exit(0)
+	case "test-mtls":
+		// Serve 2 plugins over different protocols
+		Serve(&ServeConfig{
+			HandshakeConfig: HandshakeConfig{
+				ProtocolVersion:  2,
+				MagicCookieKey:   "TEST_MAGIC_COOKIE",
+				MagicCookieValue: "test",
+			},
+			Plugins:    testGRPCPluginMap,
+			GRPCServer: DefaultGRPCServer,
 		})
 
 		// Shouldn't reach here but make sure we exit anyways

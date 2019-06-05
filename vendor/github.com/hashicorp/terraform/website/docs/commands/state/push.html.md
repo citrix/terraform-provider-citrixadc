@@ -1,9 +1,9 @@
 ---
 layout: "commands-state"
 page_title: "Command: state push"
-sidebar_current: "docs-state-sub-push"
+sidebar_current: "docs-commands-state-sub-push"
 description: |-
-  The `terraform state rm` command removes items from the Terraform state.
+  The `terraform state push` command pushes items to the Terraform state.
 ---
 
 # Command: state push

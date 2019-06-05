@@ -17,30 +17,19 @@ and are tested by HashiCorp.
 
 ---
 
-[Atlas](/docs/providers/terraform-enterprise/index.html)
-
-[Chef](/docs/providers/chef/index.html)
-
-[Consul](/docs/providers/consul/index.html)
-
-[Docker](/docs/providers/docker/index.html)
-
-[Kubernetes](/docs/providers/kubernetes/index.html)
-
-[Mailgun](/docs/providers/mailgun/index.html)
-
-[Nomad](/docs/providers/nomad/index.html)
-
-[RabbitMQ](/docs/providers/rabbitmq/index.html)
-
-[Rancher](/docs/providers/rancher/index.html)
-
-[Rundeck](/docs/providers/rundeck/index.html)
-
-[Spotinst](/docs/providers/spotinst/index.html)
-
-[Terraform](/docs/providers/terraform/index.html)
-
-[Terraform Enterprise](/docs/providers/tfe/index.html)
-
-[Vault](/docs/providers/vault/index.html)
+- [Chef](/docs/providers/chef/index.html)
+- [Consul](/docs/providers/consul/index.html)
+- [Docker](/docs/providers/docker/index.html)
+- [Helm](/docs/providers/helm/index.html)
+- [Kubernetes](/docs/providers/kubernetes/index.html)
+- [Mailgun](/docs/providers/mailgun/index.html)
+- [Nomad](/docs/providers/nomad/index.html)
+- [RabbitMQ](/docs/providers/rabbitmq/index.html)
+- [Rancher](/docs/providers/rancher/index.html)
+- [Rancher2](/docs/providers/rancher2/index.html)
+- [RightScale](/docs/providers/rightscale/index.html)
+- [Rundeck](/docs/providers/rundeck/index.html)
+- [Spotinst](/docs/providers/spotinst/index.html)
+- [Terraform](/docs/providers/terraform/index.html)
+- [Terraform Enterprise](/docs/providers/tfe/index.html)
+- [Vault](/docs/providers/vault/index.html)

@@ -10,64 +10,93 @@ description: |-
 
 **Kind: Enhanced**
 
-The remote backend stores state and runs operations remotely. In order
-use this backend you need a Terraform Enterprise account or have Private
-Terraform Enterprise running on-premises.
+-> **Note:** We recommend using Terraform v0.11.13 or newer with this
+backend. This backend requires either a Terraform Enterprise account on
+[app.terraform.io](https://app.terraform.io) or a private instance of
+Terraform Enterprise (version v201809-1 or newer).
 
-### Commands
+The remote backend stores state and runs operations in Terraform Enterprise.
+
+When used with a Pro or Premium tier Terraform Enterprise account, operations
+like `terraform plan` or `terraform apply` are executed in Terraform
+Enterprise's run environment, with log output streaming to the local terminal.
+Remote plans and applies use variable values from the associated Terraform
+Enterprise workspace.
+
+When used with a free Terraform Enterprise account, operations are executed on
+the local machine and state is stored in Terraform Enterprise.
+
+## Command Support
 
 Currently the remote backend supports the following Terraform commands:
 
- 1.  fmt
- 2.  get
- 3.  init
- 4.  output
- 5.  plan
- 6.  providers
- 7.  show
- 8.  taint
- 9.  untaint
- 10. validate
- 11. version
- 11. workspace
+- `apply`
+- `console` (supported in Terraform >= v0.11.12)
+- `destroy` (requires manually setting `CONFIRM_DESTROY=1` on the workspace)
+- `fmt`
+- `get`
+- `graph` (supported in Terraform >= v0.11.12)
+- `import` (supported in Terraform >= v0.11.12)
+- `init`
+- `output`
+- `plan`
+- `providers`
+- `show`
+- `taint`
+- `untaint`
+- `validate`
+- `version`
+- `workspace`
 
-### Workspaces
-To work with remote workspaces we need either a name or a prefix. You will
-get a configuration error when neither or both options are configured.
+## Workspaces
 
-#### Name
-When a name is provided, that name is used to make a one-to-one mapping
-between your local “default” workspace and a named remote workspace. This
-option assumes you are not using workspaces when working with TF, so it
-will act as a backend that does not support names states.
+The remote backend can work with either a single remote workspace, or with
+multiple similarly-named remote workspaces (like `networking-dev` and
+`networking-prod`). The `workspaces` block of the backend configuration
+determines which mode it uses:
 
-#### Prefix
-When a prefix is provided it will be used to filter and map workspaces that
-can be used with a single configuration. This allows you to dynamically
-filter and map all remote workspaces with a matching prefix.
+- To use a single workspace, set `workspaces.name` to the remote workspace's
+  full name (like `networking`).
 
-The prefix is added when making calls to the remote backend and stripped
-again when receiving the responses. This way any locally used workspace
-names will remain the same short names (e.g. “tst”, “acc”) while the remote
-names will be mapped by adding the prefix.
+- To use multiple workspaces, set `workspaces.prefix` to a prefix used in
+  all of the desired remote workspace names. For example, set
+  `prefix = "networking-"` to use a group of workspaces with names like
+  `networking-dev` and `networking-prod`.
 
-It is assumed that you are only using named workspaces when working with
-Terraform and so the “default” workspace is ignored in this case. If there
-is a state file for the “default” config, this will give an error during
-`terraform init`. If the default workspace is selected when running the
-`init` command, the `init` process will succeed but will end with a message
-that tells you how to select an existing workspace or create a new one.
+  When interacting with workspaces on the command line, Terraform uses
+  shortened names without the common prefix. For example, if
+  `prefix = "networking-"`, use `terraform workspace select prod` to switch to
+  the `networking-prod` workspace.
+
+The backend configuration requires either `name` or `prefix`. Omitting both or
+setting both results in a configuration error.
+
+If previous state is present when you run `terraform init` and the corresponding
+remote workspaces are empty or absent, Terraform will create workspaces and/or
+update the remote state accordingly.
 
 ## Example Configuration
 
 ```hcl
+# Using a single workspace:
 terraform {
   backend "remote" {
     hostname = "app.terraform.io"
     organization = "company"
 
     workspaces {
-      name = "workspace"
+      name = "my-app-prod"
+    }
+  }
+}
+
+# Using multiple workspaces:
+terraform {
+  backend "remote" {
+    hostname = "app.terraform.io"
+    organization = "company"
+
+    workspaces {
       prefix = "my-app-"
     }
   }
@@ -80,7 +109,7 @@ terraform {
 data "terraform_remote_state" "foo" {
   backend = "remote"
 
-  config {
+  config = {
     organization = "company"
 
     workspaces {
@@ -99,16 +128,16 @@ The following configuration options are supported:
 * `organization` - (Required) The name of the organization containing the
   targeted workspace(s).
 * `token` - (Optional) The token used to authenticate with the remote backend.
-	We recommend omitting the token which can be set as `credentials` in the
+  We recommend omitting the token from the configuration, and instead setting it
+  as `credentials` in the
   [CLI config file](/docs/commands/cli-config.html#credentials).
-* `workspaces` - (Required) Workspaces contains arguments used to filter down
-  to a set of workspaces to work on. Parameters defined below.
+* `workspaces` - (Required) A block specifying which remote workspace(s) to use.
+  The `workspaces` block supports the following keys:
 
-The `workspaces` block supports the following keys:
-* `name` - (Optional) A workspace name used to map the default workspace to a
-  named remote workspace. When configured only the default workspace can be
-  used. This option conflicts with `prefix`.
-* `prefix` - (Optional) A prefix used to filter workspaces using a single
-  configuration. New workspaces will automatically be prefixed with this
-  prefix. If omitted only the default workspace can be used. This option
-  conflicts with `name`.
+  * `name` - (Optional) The full name of one remote workspace. When configured,
+    only the default workspace can be used. This option conflicts with `prefix`.
+  * `prefix` - (Optional) A prefix used in the names of one or more remote
+    workspaces, all of which can be used with this configuration. The full
+    workspace names are used in Terraform Enterprise, and the short names
+    (minus the prefix) are used on the command line. If omitted, only the
+    default workspace can be used. This option conflicts with `name`.
