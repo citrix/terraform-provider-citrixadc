@@ -16,11 +16,19 @@ limitations under the License.
 package netscaler
 
 import (
+	"encoding/base64"
 	"fmt"
+	"github.com/chiradeep/go-nitro/config/system"
 	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+	"io/ioutil"
+	"log"
+	"path"
+	"runtime"
+	"strings"
 	"testing"
+	"time"
 )
 
 func TestAccLbvserver_basic(t *testing.T) {
@@ -52,8 +60,49 @@ func TestAccLbvserver_basic(t *testing.T) {
 	})
 }
 
+func TestAccLbvserver_snicerts(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { doPreChecks(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLbvserverDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testSslcertificateBindingsConfig("", "cert2-cert3"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserverExist("netscaler_lbvserver.lbsni", nil),
+				),
+			},
+			resource.TestStep{
+				Config: testSslcertificateBindingsConfig("", "cert2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserverExist("netscaler_lbvserver.lbsni", nil),
+				),
+			},
+			resource.TestStep{
+				Config: testSslcertificateBindingsConfig("cert3", "cert2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserverExist("netscaler_lbvserver.lbsni", nil),
+				),
+			},
+			resource.TestStep{
+				Config: testSslcertificateBindingsConfig("cert3", ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserverExist("netscaler_lbvserver.lbsni", nil),
+				),
+			},
+			resource.TestStep{
+				Config: testSslcertificateBindingsConfig("cert2", "cert3-cert2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserverExist("netscaler_lbvserver.lbsni", nil),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckLbvserverExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
+		time.Sleep(5000 * time.Millisecond)
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
@@ -108,6 +157,51 @@ func testAccCheckLbvserverDestroy(s *terraform.State) error {
 	return nil
 }
 
+func doPreChecks(t *testing.T) {
+	testAccPreCheck(t)
+
+	uploads := []string{"certificate2.pem", "key2.pem", "certificate3.pem", "key3.pem"}
+
+	for _, filename := range uploads {
+		err := uploadTestdataFile(t, filename, "/var/tmp")
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+	}
+
+}
+
+func uploadTestdataFile(t *testing.T, filename, targetDir string) error {
+	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+
+	// Get here path
+	_, here_filename, _, _ := runtime.Caller(1)
+	b, err := ioutil.ReadFile(path.Join(path.Dir(here_filename), "testdata", filename))
+
+	if err != nil {
+		return err
+	}
+
+	sf := system.Systemfile{
+		Filename:     filename,
+		Filecontent:  base64.StdEncoding.EncodeToString(b),
+		Filelocation: targetDir,
+	}
+	_, err = nsClient.AddResource(netscaler.Systemfile.Type(), filename, &sf)
+	if err != nil && strings.Contains(err.Error(), "File already exists") {
+		args := map[string]string{"filelocation": "%2Fvar%2Ftmp"}
+		err := nsClient.DeleteResourceWithArgsMap(netscaler.Systemfile.Type(), filename, args)
+		if err != nil {
+			return err
+		}
+		_, err = nsClient.AddResource(netscaler.Systemfile.Type(), filename, &sf)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 const testAccLbvserver_basic = `
 
 resource "netscaler_lbvserver" "foo" {
@@ -120,3 +214,50 @@ resource "netscaler_lbvserver" "foo" {
   servicetype = "SSL"
 }
 `
+
+func testSslcertificateBindingsConfig(sslcertkey string, snicertskeys string) string {
+	sslcertkeyReplacement := ""
+	snisslcertkeysReplacement := "snisslcertkeys = []"
+	if sslcertkey != "" {
+		sslcertkeyReplacement = fmt.Sprintf("sslcertkey = \"${netscaler_sslcertkey.%v.certkey}\"\n", sslcertkey)
+	}
+	snicerts := strings.Split(snicertskeys, "-")
+	log.Printf("len of snicerts %v", len(snicerts))
+	if snicertskeys != "" && len(snicerts) > 0 {
+		snisslcertkeysReplacement = "\nsnisslcertkeys = [\n"
+		for _, certkey := range snicerts {
+
+			line := fmt.Sprintf("\"${netscaler_sslcertkey.%v.certkey}\",\n", certkey)
+			snisslcertkeysReplacement += line
+		}
+		snisslcertkeysReplacement += "]\n"
+	}
+	log.Printf("sslcertkeyReplacement \"%v\"", sslcertkeyReplacement)
+	log.Printf("snisslcertkeysReplacement \"%v\"", snisslcertkeysReplacement)
+	return fmt.Sprintf(`
+	resource "netscaler_sslcertkey" "cert2" {
+	  certkey = "cert2"
+	  cert = "/var/tmp/certificate2.pem"
+	  key = "/var/tmp/key2.pem"
+	  expirymonitor = "DISABLED"
+	}
+
+	resource "netscaler_sslcertkey" "cert3" {
+	  certkey = "cert3"
+	  cert = "/var/tmp/certificate3.pem"
+	  key = "/var/tmp/key3.pem"
+	  expirymonitor = "DISABLED"
+	}
+
+	resource "netscaler_lbvserver" "lbsni" {
+	  ipv46 = "10.202.11.11"
+	  lbmethod = "ROUNDROBIN"
+	  name = "terraform-lb"
+	  persistencetype = "COOKIEINSERT"
+	  port = 443
+	  servicetype = "SSL"
+	  %v
+	  %v
+	}
+	`, sslcertkeyReplacement, snisslcertkeysReplacement)
+}
