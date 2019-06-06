@@ -232,7 +232,7 @@ const testAccNsacls_basic = `
 
 
 resource "netscaler_nsacls" "foo" {
- "acl"  {
+ acl  {
   	aclname = "restricttcp2"
   	protocol = "TCP"
   	aclaction = "DENY"
@@ -241,7 +241,7 @@ resource "netscaler_nsacls" "foo" {
 	priority = "25"
   }
 	
-  "acl"  {
+  acl  {
   	aclname = "allowudp"
   	protocol = "UDP"
   	aclaction = "ALLOW"
@@ -250,7 +250,7 @@ resource "netscaler_nsacls" "foo" {
         priority = "100"
   }
 	
-  "acl"  {
+  acl  {
   	aclname = "restrictvlan"
   	aclaction = "DENY"
   	vlan = "2000"
@@ -264,7 +264,7 @@ const testAccNsacls_update = `
 
 
 resource "netscaler_nsacls" "foo" {
- "acl"  {
+ acl  {
   	aclname = "restricttcp2"
   	protocol = "TCP"
   	aclaction = "DENY"
@@ -274,7 +274,7 @@ resource "netscaler_nsacls" "foo" {
   }
 	
 	
-  "acl"  {
+  acl  {
   	aclname = "restrictvlan"
   	aclaction = "DENY"
   	vlan = "2000"
