@@ -3,7 +3,7 @@ jobs:
  build:
    working_directory: /home/circleci/.go_workspace/src/github.com/citrix/terraform-provider-netscaler/tests
    machine:
-      image: circleci/golang:1.12
+      image: ubuntu-1604:201903-01
    environment:
       NETSCALER_VERSION: 12.0-56.20 
       TERRAFORM_VERSION: 0.12.1
