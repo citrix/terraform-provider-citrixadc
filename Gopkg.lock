@@ -105,6 +105,7 @@
     "config/network",
     "config/ns",
     "config/ssl",
+    "config/system",
     "netscaler",
   ]
   pruneopts = ""
@@ -676,6 +677,7 @@
     "github.com/chiradeep/go-nitro/config/network",
     "github.com/chiradeep/go-nitro/config/ns",
     "github.com/chiradeep/go-nitro/config/ssl",
+    "github.com/chiradeep/go-nitro/config/system",
     "github.com/chiradeep/go-nitro/netscaler",
     "github.com/hashicorp/terraform/helper/resource",
     "github.com/hashicorp/terraform/helper/schema",
