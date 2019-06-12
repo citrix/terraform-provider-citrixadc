@@ -111,11 +111,57 @@ func TestConvert(t *testing.T) {
 			}),
 		},
 		{
+			Value: cty.ListVal([]cty.Value{
+				cty.NumberIntVal(5),
+				cty.NumberIntVal(10),
+			}),
+			Type: cty.List(cty.DynamicPseudoType),
+			Want: cty.ListVal([]cty.Value{
+				cty.NumberIntVal(5),
+				cty.NumberIntVal(10),
+			}),
+		},
+		{
+			Value: cty.TupleVal([]cty.Value{
+				cty.ObjectVal(map[string]cty.Value{
+					"type":        cty.StringVal("ingress"),
+					"from_port":   cty.NumberIntVal(-1),
+					"to_port":     cty.NumberIntVal(-1),
+					"protocol":    cty.StringVal("icmp"),
+					"description": cty.StringVal("ICMP in"),
+					"cidr":        cty.TupleVal([]cty.Value{cty.StringVal("0.0.0.0/0")}),
+				}),
+				cty.ObjectVal(map[string]cty.Value{
+					"type":        cty.StringVal("ingress"),
+					"from_port":   cty.NumberIntVal(22),
+					"to_port":     cty.NumberIntVal(22),
+					"protocol":    cty.StringVal("tcp"),
+					"description": cty.StringVal("SSH from Bastion"),
+					"source_sg":   cty.StringVal("sg-abc123"),
+				}),
+			}),
+			Type:      cty.List(cty.DynamicPseudoType),
+			WantError: true, // there is no type that both tuple elements can unify to for conversion to list
+		},
+		{
 			Value: cty.SetVal([]cty.Value{
 				cty.StringVal("5"),
 				cty.StringVal("10"),
 			}),
 			Type: cty.List(cty.String),
+			Want: cty.ListVal([]cty.Value{
+				// NOTE: This results depends on the traversal order of the
+				// set, which may change if the set implementation changes.
+				cty.StringVal("10"),
+				cty.StringVal("5"),
+			}),
+		},
+		{
+			Value: cty.SetVal([]cty.Value{
+				cty.StringVal("5"),
+				cty.StringVal("10"),
+			}),
+			Type: cty.List(cty.DynamicPseudoType),
 			Want: cty.ListVal([]cty.Value{
 				// NOTE: This results depends on the traversal order of the
 				// set, which may change if the set implementation changes.
@@ -193,6 +239,17 @@ func TestConvert(t *testing.T) {
 			}),
 		},
 		{
+			Value: cty.TupleVal([]cty.Value{
+				cty.NumberIntVal(5),
+				cty.StringVal("hello"),
+			}),
+			Type: cty.Set(cty.DynamicPseudoType),
+			Want: cty.SetVal([]cty.Value{
+				cty.StringVal("5"),
+				cty.StringVal("hello"),
+			}),
+		},
+		{
 			Value: cty.ObjectVal(map[string]cty.Value{
 				"num": cty.NumberIntVal(5),
 				"str": cty.StringVal("hello"),
@@ -265,6 +322,181 @@ func TestConvert(t *testing.T) {
 			}),
 			Type:      cty.Map(cty.DynamicPseudoType),
 			WantError: true, // no common base type to unify to
+		},
+		{
+			Value: cty.MapVal(map[string]cty.Value{
+				"greeting": cty.StringVal("Hello"),
+				"name":     cty.StringVal("John"),
+			}),
+			Type: cty.Map(cty.DynamicPseudoType),
+			Want: cty.MapVal(map[string]cty.Value{
+				"greeting": cty.StringVal("Hello"),
+				"name":     cty.StringVal("John"),
+			}),
+		},
+		{
+			Value: cty.MapVal(map[string]cty.Value{
+				"a": cty.NumberIntVal(2),
+				"b": cty.NumberIntVal(5),
+			}),
+			Type: cty.Map(cty.String),
+			Want: cty.MapVal(map[string]cty.Value{
+				"a": cty.StringVal("2"),
+				"b": cty.StringVal("5"),
+			}),
+		},
+		{
+			Value: cty.ObjectVal(map[string]cty.Value{
+				"foo": cty.StringVal("foo value"),
+				"bar": cty.StringVal("bar value"),
+			}),
+			Type: cty.Object(map[string]cty.Type{
+				"foo": cty.String,
+			}),
+			Want: cty.ObjectVal(map[string]cty.Value{
+				"foo": cty.StringVal("foo value"),
+			}),
+		},
+		{
+			Value: cty.ObjectVal(map[string]cty.Value{
+				"foo": cty.True,
+			}),
+			Type: cty.Object(map[string]cty.Type{
+				"foo": cty.String,
+			}),
+			Want: cty.ObjectVal(map[string]cty.Value{
+				"foo": cty.StringVal("true"),
+			}),
+		},
+		{
+			Value: cty.ObjectVal(map[string]cty.Value{
+				"foo": cty.DynamicVal,
+			}),
+			Type: cty.Object(map[string]cty.Type{
+				"foo": cty.String,
+			}),
+			Want: cty.ObjectVal(map[string]cty.Value{
+				"foo": cty.UnknownVal(cty.String),
+			}),
+		},
+		{
+			Value: cty.ObjectVal(map[string]cty.Value{
+				"foo": cty.NullVal(cty.String),
+			}),
+			Type: cty.Object(map[string]cty.Type{
+				"foo": cty.String,
+			}),
+			Want: cty.ObjectVal(map[string]cty.Value{
+				"foo": cty.NullVal(cty.String),
+			}),
+		},
+		{
+			Value: cty.ObjectVal(map[string]cty.Value{
+				"foo": cty.True,
+			}),
+			Type: cty.Object(map[string]cty.Type{
+				"foo": cty.DynamicPseudoType,
+			}),
+			Want: cty.ObjectVal(map[string]cty.Value{
+				"foo": cty.True,
+			}),
+		},
+		{
+			Value: cty.ObjectVal(map[string]cty.Value{
+				"bar": cty.StringVal("bar value"),
+			}),
+			Type: cty.Object(map[string]cty.Type{
+				"foo": cty.String,
+			}),
+			WantError: true, // given value must have superset object type
+		},
+		{
+			Value: cty.ObjectVal(map[string]cty.Value{
+				"bar": cty.StringVal("bar value"),
+			}),
+			Type: cty.Object(map[string]cty.Type{
+				"foo": cty.String,
+				"baz": cty.String,
+			}),
+			WantError: true, // given value must have superset object type
+		},
+		{
+			Value: cty.EmptyObjectVal,
+			Type: cty.Object(map[string]cty.Type{
+				"foo": cty.String,
+				"bar": cty.String,
+				"baz": cty.String,
+			}),
+			WantError: true, // given value must have superset object type
+		},
+		{
+			Value: cty.ObjectVal(map[string]cty.Value{
+				"foo": cty.True,
+			}),
+			Type: cty.Object(map[string]cty.Type{
+				"foo": cty.Number,
+			}),
+			WantError: true, // recursive conversion from bool to number is impossible
+		},
+		{
+			Value: cty.ObjectVal(map[string]cty.Value{
+				"foo": cty.UnknownVal(cty.Bool),
+			}),
+			Type: cty.Object(map[string]cty.Type{
+				"foo": cty.Number,
+			}),
+			WantError: true, // recursive conversion from bool to number is impossible
+		},
+		{
+			Value: cty.NullVal(cty.String),
+			Type:  cty.DynamicPseudoType,
+			Want:  cty.NullVal(cty.String),
+		},
+		{
+			Value: cty.UnknownVal(cty.String),
+			Type:  cty.DynamicPseudoType,
+			Want:  cty.UnknownVal(cty.String),
+		},
+		{
+			Value: cty.TupleVal([]cty.Value{
+				cty.StringVal("hello"),
+			}),
+			Type: cty.Tuple([]cty.Type{
+				cty.String,
+			}),
+			Want: cty.TupleVal([]cty.Value{
+				cty.StringVal("hello"),
+			}),
+		},
+		{
+			Value: cty.TupleVal([]cty.Value{
+				cty.True,
+			}),
+			Type: cty.Tuple([]cty.Type{
+				cty.String,
+			}),
+			Want: cty.TupleVal([]cty.Value{
+				cty.StringVal("true"),
+			}),
+		},
+		{
+			Value: cty.TupleVal([]cty.Value{
+				cty.True,
+			}),
+			Type:      cty.EmptyTuple,
+			WantError: true,
+		},
+		{
+			Value: cty.EmptyTupleVal,
+			Type: cty.Tuple([]cty.Type{
+				cty.String,
+			}),
+			WantError: true,
+		},
+		{
+			Value: cty.EmptyTupleVal,
+			Type:  cty.Set(cty.String),
+			Want:  cty.SetValEmpty(cty.String),
 		},
 	}
 

@@ -23,4 +23,8 @@
 
 [[constraint]]
   name = "github.com/hashicorp/terraform"
-  version = "0.11.8"
+  version = "0.12.1"
+
+[[override]]
+  name = "github.com/hashicorp/go-plugin"
+  version = "1.0.0"

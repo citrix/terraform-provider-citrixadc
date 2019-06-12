@@ -28,6 +28,18 @@ func TestFormat(t *testing.T) {
 			`a = b.c`,
 		},
 		{
+			`a=b[c]`,
+			`a = b[c]`,
+		},
+		{
+			`a=b()[c]`,
+			`a = b()[c]`,
+		},
+		{
+			`a=["hello"][0]`,
+			`a = ["hello"][0]`,
+		},
+		{
 			`( a+2 )`,
 			`(a + 2)`,
 		},
@@ -52,12 +64,20 @@ func TestFormat(t *testing.T) {
 			`foo(1, -2, a * b, b, c)`,
 		},
 		{
+			`foo(a,b...)`,
+			`foo(a, b...)`,
+		},
+		{
 			`a="hello ${ name }"`,
 			`a = "hello ${name}"`,
 		},
 		{
 			`a="hello ${~ name ~}"`,
 			`a = "hello ${~name~}"`,
+		},
+		{
+			`a="${b}${c}${ d } ${e}"`,
+			`a = "${b}${c}${d} ${e}"`,
 		},
 		{
 			`b{}`,
@@ -96,8 +116,20 @@ foo(
 `,
 		},
 		{
+			`a?b:c`,
+			`a ? b : c`,
+		},
+		{
 			`[ [ ] ]`,
 			`[[]]`,
+		},
+		{
+			`[for x in y : x]`,
+			`[for x in y : x]`,
+		},
+		{
+			`[for x in [y] : x]`,
+			`[for x in [y] : x]`,
 		},
 		{
 			`
@@ -170,6 +202,14 @@ a = 1
 b {
   a = 1
 }
+`,
+		},
+		{
+			`
+b {a = 1}
+`,
+			`
+b { a = 1 }
 `,
 		},
 		{
@@ -292,6 +332,222 @@ zebra = "striped" # baz
 𝒜      = 1         # foo
 bungle = "🇬🇧"       # baz
 zebra  = "striped" # baz
+`,
+		},
+		{
+			`
+foo {
+# ...
+}
+`,
+			`
+foo {
+  # ...
+}
+`,
+		},
+		{
+			`
+foo = {
+# ...
+}
+`,
+			`
+foo = {
+  # ...
+}
+`,
+		},
+		{
+			`
+foo = [
+# ...
+]
+`,
+			`
+foo = [
+  # ...
+]
+`,
+		},
+		{
+			`
+foo = [{
+# ...
+}]
+`,
+			`
+foo = [{
+  # ...
+}]
+`,
+		},
+		{
+			`
+foo {
+bar {
+# ...
+}
+}
+`,
+			`
+foo {
+  bar {
+    # ...
+  }
+}
+`,
+		},
+		{
+			`
+foo {
+bar = {
+# ...
+}
+}
+`,
+			`
+foo {
+  bar = {
+    # ...
+  }
+}
+`,
+		},
+		{
+			`
+foo {
+bar = [
+# ...
+]
+}
+`,
+			`
+foo {
+  bar = [
+    # ...
+  ]
+}
+`,
+		},
+		{
+			`
+foo {
+bar = <<EOT
+Foo bar baz
+EOT
+}
+`,
+			`
+foo {
+  bar = <<EOT
+Foo bar baz
+EOT
+}
+`,
+		},
+		{
+			`
+foo {
+bar = <<-EOT
+Foo bar baz
+EOT
+}
+`,
+			`
+foo {
+  bar = <<-EOT
+Foo bar baz
+EOT
+}
+`,
+		},
+		{
+			`
+foo {
+bar = <<-EOT
+  Foo bar baz
+EOT
+}
+`,
+			`
+foo {
+  bar = <<-EOT
+  Foo bar baz
+EOT
+}
+`,
+		},
+		{
+			`
+foo {
+bar = <<-EOT
+  blahblahblah = x
+EOT
+}
+`,
+			`
+foo {
+  bar = <<-EOT
+  blahblahblah = x
+EOT
+}
+`,
+		},
+		{
+			`
+foo {
+bar = <<-EOT
+  ${{ blahblahblah = x }}
+EOT
+}
+`,
+			`
+foo {
+  bar = <<-EOT
+  ${ { blahblahblah = x } }
+EOT
+}
+`,
+		},
+		{
+			`
+foo {
+  bar = <<-EOT
+  ${a}${b}${ c } ${d}
+EOT
+}
+`,
+			`
+foo {
+  bar = <<-EOT
+  ${a}${b}${c} ${d}
+EOT
+}
+`,
+		},
+		{
+			`
+foo {
+bar = <<EOT
+Foo bar baz
+EOT
+}
+
+baz {
+default="string"
+}
+`,
+			`
+foo {
+  bar = <<EOT
+Foo bar baz
+EOT
+}
+
+baz {
+  default = "string"
+}
 `,
 		},
 	}
