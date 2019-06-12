@@ -29,8 +29,8 @@ func uploadTestdataFile(t *testing.T, filename, targetDir string) error {
 	}
 	_, err = nsClient.AddResource(netscaler.Systemfile.Type(), filename, &sf)
 	if err != nil && strings.Contains(err.Error(), "File already exists") {
-		args := map[string]string{"filelocation": "%2Fvar%2Ftmp"}
-		err := nsClient.DeleteResourceWithArgsMap(netscaler.Systemfile.Type(), filename, args)
+		url_args := map[string]string{"filelocation": strings.Replace(targetDir, "/", "%2F", -1)}
+		err := nsClient.DeleteResourceWithArgsMap(netscaler.Systemfile.Type(), filename, url_args)
 		if err != nil {
 			return err
 		}
