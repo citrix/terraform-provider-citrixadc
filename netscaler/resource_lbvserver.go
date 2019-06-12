@@ -825,7 +825,6 @@ func readLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("Reading ssl binding snicert %v, %v", snicert, ok2)
 		if ok && ok2 && snicert == false {
 			boundCert = cert.(string)
-			break
 		} else if ok && ok2 && snicert == true {
 			snicerts = append(snicerts, cert.(string))
 		}
@@ -1510,7 +1509,9 @@ func syncSnisslcert(d *schema.ResourceData, meta interface{}, lbvserverName stri
 
 	// Do the unbindings first
 	for _, snisslcertkey := range todelete {
-		err := client.UnbindResource(netscaler.Sslvserver.Type(), lbvserverName, netscaler.Sslcertkey.Type(), snisslcertkey, "certkeyname")
+
+		args := map[string]string{"certkeyname": snisslcertkey, "snicert": "true"}
+		err := client.DeleteResourceWithArgsMap(netscaler.Sslvserver_sslcertkey_binding.Type(), lbvserverName, args)
 		if err != nil {
 			return fmt.Errorf("[ERROR] netscaler-provider: Error unbinding sni sslcertkey from lbvserver %s", snisslcertkey)
 		}

@@ -20,16 +20,12 @@ import (
 	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"os"
 	"testing"
 )
 
 func TestAccSslcertkey_basic(t *testing.T) {
-	if os.Getenv("TF_TEST_SSLCERTKEY") == "" {
-		t.Skip("skipping test; $TF_TEST_SSLCERTKEY not set")
-	}
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { doSslcertkeyPreChecks(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSslcertkeyDestroy,
 		Steps: []resource.TestStep{
@@ -39,11 +35,11 @@ func TestAccSslcertkey_basic(t *testing.T) {
 					testAccCheckSslcertkeyExist("netscaler_sslcertkey.foo", nil),
 
 					resource.TestCheckResourceAttr(
-						"netscaler_sslcertkey.foo", "cert", "/var/certs/server.crt"),
+						"netscaler_sslcertkey.foo", "cert", "/var/tmp/server.crt"),
 					resource.TestCheckResourceAttr(
 						"netscaler_sslcertkey.foo", "certkey", "sample_ssl_cert"),
 					resource.TestCheckResourceAttr(
-						"netscaler_sslcertkey.foo", "key", "/var/certs/server.key"),
+						"netscaler_sslcertkey.foo", "key", "/var/tmp/server.key"),
 				),
 			},
 		},
@@ -106,13 +102,26 @@ func testAccCheckSslcertkeyDestroy(s *terraform.State) error {
 	return nil
 }
 
+func doSslcertkeyPreChecks(t *testing.T) {
+	testAccPreCheck(t)
+
+	uploads := []string{"server.crt", "server.key"}
+
+	for _, filename := range uploads {
+		err := uploadTestdataFile(t, filename, "/var/tmp")
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+	}
+}
+
 const testAccSslcertkey_basic = `
 
 
 resource "netscaler_sslcertkey" "foo" {
   certkey = "sample_ssl_cert"
-  cert = "/var/certs/server.crt"
-  key = "/var/certs/server.key"
+  cert = "/var/tmp/server.crt"
+  key = "/var/tmp/server.key"
   notificationperiod = 40
   expirymonitor = "ENABLED"
 }
