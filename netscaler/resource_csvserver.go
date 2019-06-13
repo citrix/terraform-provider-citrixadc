@@ -353,6 +353,11 @@ func resourceNetScalerCsvserver() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"ciphers": &schema.Schema{
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 		},
 	}
 }
@@ -462,6 +467,12 @@ func createCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 				return fmt.Errorf("[ERROR] netscaler-provider:  Failed to delete csvserver %s after bind to ssl cert failed", csvserverName)
 			}
 			return fmt.Errorf("[ERROR] netscaler-provider:  Failed to bind ssl cert %s to csvserver %s", sslcertkey, csvserverName)
+		}
+	}
+
+	if _, ok := d.GetOk("ciphers"); ok {
+		if err := syncCiphers(d, meta, csvserverName); err != nil {
+			return err
 		}
 	}
 
@@ -590,6 +601,8 @@ func readCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	dataSsl, _ := client.FindResource(netscaler.Sslvserver.Type(), csvserverName)
 	d.Set("sslprofile", dataSsl["sslprofile"])
 
+	setCipherData(d, meta, csvserverName)
+
 	return nil
 
 }
@@ -605,6 +618,7 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	hasChange := false
 	sslcertkeyChanged := false
 	sslprofileChanged := false
+	ciphersChanged := false
 	if d.HasChange("appflowlog") {
 		log.Printf("[DEBUG] netscaler-provider:  Appflowlog has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Appflowlog = d.Get("appflowlog").(string)
@@ -938,6 +952,10 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] netscaler-provider:  ssl profile has changed for csvserver %s, starting update", csvserverName)
 		sslprofileChanged = true
 	}
+	if d.HasChange("ciphers") {
+		log.Printf("[DEBUG] netscaler-provider:  ciphers have changed %s, starting update", csvserverName)
+		ciphersChanged = true
+	}
 
 	sslcertkey := d.Get("sslcertkey")
 	sslcertkeyName := sslcertkey.(string)
@@ -1004,6 +1022,12 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 				return fmt.Errorf("[ERROR] netscaler-provider:  Failed to bind ssl profile %s to csvserver %s", sslprofileName, csvserverName)
 			}
 			log.Printf("[DEBUG] netscaler-provider: new ssl profile has been bound to csvserver  sslprofile %s csvserver %s", sslprofileName, csvserverName)
+		}
+	}
+
+	if ciphersChanged {
+		if err := syncCiphers(d, meta, csvserverName); err != nil {
+			return err
 		}
 	}
 

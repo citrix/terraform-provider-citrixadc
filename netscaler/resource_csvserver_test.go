@@ -39,14 +39,60 @@ func TestAccCsvserver_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"netscaler_csvserver.foo", "name", "terraform-cs"),
 					resource.TestCheckResourceAttr(
-						"netscaler_csvserver.foo", "port", "443"),
+						"netscaler_csvserver.foo", "port", "8080"),
 					resource.TestCheckResourceAttr(
-						"netscaler_csvserver.foo", "servicetype", "SSL"),
+						"netscaler_csvserver.foo", "servicetype", "HTTP"),
 				),
 			},
 		},
 	})
 }
+
+func TestAccCsvserver_ciphers(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			// Initial
+			resource.TestStep{
+				Config: testCiphersConfig(templateCsvserverCiphersConfig, []string{"HIGH", "TLS1.2-DHE-RSA-CHACHA20-POLY1305"}),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckCiphersEqualToActual([]string{"HIGH", "TLS1.2-DHE-RSA-CHACHA20-POLY1305"}, "tf-acc-ciphers-test"),
+					testCheckCiphersConfiguredExpected("netscaler_csvserver.ciphers", []string{"HIGH", "TLS1.2-DHE-RSA-CHACHA20-POLY1305"}),
+				),
+			},
+			// Transpose
+			resource.TestStep{
+				Config: testCiphersConfig(templateCsvserverCiphersConfig, []string{"TLS1.2-DHE-RSA-CHACHA20-POLY1305", "HIGH"}),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckCiphersEqualToActual([]string{"TLS1.2-DHE-RSA-CHACHA20-POLY1305", "HIGH"}, "tf-acc-ciphers-test"),
+					testCheckCiphersConfiguredExpected("netscaler_csvserver.ciphers", []string{"TLS1.2-DHE-RSA-CHACHA20-POLY1305", "HIGH"}),
+				),
+			},
+			// Empty list
+			resource.TestStep{
+				Config: testCiphersConfig(templateCsvserverCiphersConfig, nil),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckCiphersEqualToActual([]string{}, "tf-acc-ciphers-test"),
+					testCheckCiphersConfiguredExpected("netscaler_csvserver.ciphers", []string{}),
+				),
+			},
+		},
+	})
+}
+
+const templateCsvserverCiphersConfig = `
+
+resource "netscaler_csvserver" "ciphers" {
+  
+  ipv46 = "10.202.11.11"
+  name = "tf-acc-ciphers-test"
+  port = 443
+  servicetype = "SSL"
+  %v
+}
+
+`
 
 func testAccCheckCsvserverExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -111,8 +157,8 @@ resource "netscaler_csvserver" "foo" {
   
   ipv46 = "10.202.11.11"
   name = "terraform-cs"
-  port = 443
-  servicetype = "SSL"
+  port = 8080
+  servicetype = "HTTP"
 
 }
 `
