@@ -513,6 +513,11 @@ func resourceNetScalerLbvserver() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"ciphers": &schema.Schema{
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 		},
 	}
 }
@@ -669,6 +674,12 @@ func createLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	if sniok {
 		err := syncSnisslcert(d, meta, lbvserverName)
 		if err != nil {
+			return err
+		}
+	}
+
+	if _, ok := d.GetOk("ciphers"); ok {
+		if err := syncCiphers(d, meta, lbvserverName); err != nil {
 			return err
 		}
 	}
@@ -835,6 +846,8 @@ func readLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	dataSsl, _ := client.FindResource(netscaler.Sslvserver.Type(), lbvserverName)
 	d.Set("sslprofile", dataSsl["sslprofile"])
 
+	setCipherData(d, meta, lbvserverName)
+
 	return nil
 
 }
@@ -851,6 +864,7 @@ func updateLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	sslcertkeyChanged := false
 	sslprofileChanged := false
 	snisslcertkeysChanged := false
+	ciphersChanged := false
 	if d.HasChange("appflowlog") {
 		log.Printf("[DEBUG] netscaler-provider:  Appflowlog has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Appflowlog = d.Get("appflowlog").(string)
@@ -1343,6 +1357,10 @@ func updateLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] netscaler-provider:  ssl profile has changed for lbvserver %s, starting update", lbvserverName)
 		sslprofileChanged = true
 	}
+	if d.HasChange("ciphers") {
+		log.Printf("[DEBUG] netscaler-provider:  ciphers have changed %s, starting update", lbvserverName)
+		ciphersChanged = true
+	}
 
 	sslcertkey := d.Get("sslcertkey")
 	sslcertkeyName := sslcertkey.(string)
@@ -1387,6 +1405,12 @@ func updateLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	if snisslcertkeysChanged {
 		err := syncSnisslcert(d, meta, lbvserverName)
 		if err != nil {
+			return err
+		}
+	}
+
+	if ciphersChanged {
+		if err := syncCiphers(d, meta, lbvserverName); err != nil {
 			return err
 		}
 	}

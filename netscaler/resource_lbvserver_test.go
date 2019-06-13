@@ -46,9 +46,9 @@ func TestAccLbvserver_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"netscaler_lbvserver.foo", "persistencetype", "COOKIEINSERT"),
 					resource.TestCheckResourceAttr(
-						"netscaler_lbvserver.foo", "port", "443"),
+						"netscaler_lbvserver.foo", "port", "80"),
 					resource.TestCheckResourceAttr(
-						"netscaler_lbvserver.foo", "servicetype", "SSL"),
+						"netscaler_lbvserver.foo", "servicetype", "HTTP"),
 				),
 			},
 		},
@@ -89,6 +89,40 @@ func TestAccLbvserver_snicerts(t *testing.T) {
 				Config: testSslcertificateBindingsConfig("cert2", "cert3-cert2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLbvserverExist("netscaler_lbvserver.lbsni", nil),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLbvserver_ciphers(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLbvserverDestroy,
+		Steps: []resource.TestStep{
+			// Initial
+			resource.TestStep{
+				Config: testCiphersConfig(templateCiphersConfig, []string{"HIGH", "TLS1.2-DHE-RSA-CHACHA20-POLY1305"}),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckCiphersEqualToActual([]string{"HIGH", "TLS1.2-DHE-RSA-CHACHA20-POLY1305"}, "tf-acc-ciphers-test"),
+					testCheckCiphersConfiguredExpected("netscaler_lbvserver.ciphers", []string{"HIGH", "TLS1.2-DHE-RSA-CHACHA20-POLY1305"}),
+				),
+			},
+			// Transpose
+			resource.TestStep{
+				Config: testCiphersConfig(templateCiphersConfig, []string{"TLS1.2-DHE-RSA-CHACHA20-POLY1305", "HIGH"}),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckCiphersEqualToActual([]string{"TLS1.2-DHE-RSA-CHACHA20-POLY1305", "HIGH"}, "tf-acc-ciphers-test"),
+					testCheckCiphersConfiguredExpected("netscaler_lbvserver.ciphers", []string{"TLS1.2-DHE-RSA-CHACHA20-POLY1305", "HIGH"}),
+				),
+			},
+			// Empty list
+			resource.TestStep{
+				Config: testCiphersConfig(templateCiphersConfig, nil),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckCiphersEqualToActual([]string{}, "tf-acc-ciphers-test"),
+					testCheckCiphersConfiguredExpected("netscaler_lbvserver.ciphers", []string{}),
 				),
 			},
 		},
@@ -166,6 +200,21 @@ func doPreChecks(t *testing.T) {
 
 }
 
+const templateCiphersConfig = `
+
+resource "netscaler_lbvserver" "ciphers" {
+
+  ipv46 = "10.202.11.11"
+  lbmethod = "ROUNDROBIN"
+  name = "tf-acc-ciphers-test"
+  persistencetype = "COOKIEINSERT"
+  port = 443
+  servicetype = "SSL"
+  %v
+}
+
+`
+
 const testAccLbvserver_basic = `
 
 resource "netscaler_lbvserver" "foo" {
@@ -174,8 +223,8 @@ resource "netscaler_lbvserver" "foo" {
   lbmethod = "ROUNDROBIN"
   name = "terraform-lb"
   persistencetype = "COOKIEINSERT"
-  port = 443
-  servicetype = "SSL"
+  port = 80
+  servicetype = "HTTP"
 }
 `
 
@@ -220,6 +269,7 @@ func testSslcertificateBindingsConfig(sslcertkey string, snicertskeys string) st
 	  persistencetype = "COOKIEINSERT"
 	  port = 443
 	  servicetype = "SSL"
+	  ciphers = ["DEFAULT"]
 	  %v
 	  %v
 	}
