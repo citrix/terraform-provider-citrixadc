@@ -110,8 +110,8 @@ resource "netscaler_csvserver" "foo_cspolicy" {
   
   ipv46 = "10.202.11.11"
   name = "tst_policy_cs"
-  port = 443
-  servicetype = "SSL"
+  port = 8080
+  servicetype = "HTTP"
 }
 
 resource "netscaler_lbvserver" "foo_cspolicy" {
