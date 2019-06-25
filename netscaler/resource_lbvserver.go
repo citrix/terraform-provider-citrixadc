@@ -259,6 +259,7 @@ func resourceNetScalerLbvserver() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"netmask": &schema.Schema{
 				Type:     schema.TypeString,
@@ -314,6 +315,7 @@ func resourceNetScalerLbvserver() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"pq": &schema.Schema{
 				Type:     schema.TypeString,
@@ -349,6 +351,7 @@ func resourceNetScalerLbvserver() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"recursionavailable": &schema.Schema{
 				Type:     schema.TypeString,
@@ -374,6 +377,7 @@ func resourceNetScalerLbvserver() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"resrule": &schema.Schema{
 				Type:     schema.TypeString,
@@ -414,6 +418,7 @@ func resourceNetScalerLbvserver() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"sessionless": &schema.Schema{
 				Type:     schema.TypeString,
@@ -464,6 +469,7 @@ func resourceNetScalerLbvserver() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"timeout": &schema.Schema{
 				Type:     schema.TypeInt,

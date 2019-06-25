@@ -17,10 +17,12 @@ package netscaler
 
 import (
 	"fmt"
+	"github.com/chiradeep/go-nitro/config/lb"
 	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 	"log"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -191,8 +193,9 @@ func doPreChecks(t *testing.T) {
 
 	uploads := []string{"certificate2.pem", "key2.pem", "certificate3.pem", "key3.pem"}
 
+	c := testAccProvider.Meta().(*NetScalerNitroClient)
 	for _, filename := range uploads {
-		err := uploadTestdataFile(t, filename, "/var/tmp")
+		err := uploadTestdataFile(c, t, filename, "/var/tmp")
 		if err != nil {
 			t.Errorf(err.Error())
 		}
@@ -274,4 +277,61 @@ func testSslcertificateBindingsConfig(sslcertkey string, snicertskeys string) st
 	  %v
 	}
 	`, sslcertkeyReplacement, snisslcertkeysReplacement)
+}
+
+func TestAccLBvserverAssertNonUpdateableAttributes(t *testing.T) {
+
+	if tfAcc := os.Getenv("TF_ACC"); tfAcc == "" {
+		t.Skip("TF_ACC not set. Skipping acceptance test.")
+	}
+
+	c, err := testHelperInstantiateClient("", "", "", false)
+	if err != nil {
+		t.Fatalf("Failed to instantiate client. %v\n", err)
+	}
+
+	// Create resource
+	vserverName := "tf-acc-lb-vserver-name"
+	vserverType := netscaler.Lbvserver.Type()
+
+	// Defer deletion of actual resource
+	defer testHelperEnsureResourceDeletion(c, t, vserverType, vserverName, nil)
+
+	vserverInstance := lb.Lbvserver{
+		Ipv46:       "192.23.23.23",
+		Name:        vserverName,
+		Servicetype: "HTTP",
+		Port:        80,
+	}
+
+	if _, err := c.client.AddResource(vserverType, vserverName, vserverInstance); err != nil {
+		t.Logf("Error while creating resource")
+		t.Fatal(err)
+	}
+
+	//port
+	vserverInstance.Port = 80
+	testHelperVerifyImmutabilityFunc(c, t, vserverType, vserverName, vserverInstance, "port")
+	vserverInstance.Port = 0
+
+	//servicetype
+	vserverInstance.Servicetype = "TCP"
+	testHelperVerifyImmutabilityFunc(c, t, vserverType, vserverName, vserverInstance, "servicetype")
+	vserverInstance.Servicetype = "HTTP"
+
+	//range
+	vserverInstance.Range = 10
+	testHelperVerifyImmutabilityFunc(c, t, vserverType, vserverName, vserverInstance, "range")
+	vserverInstance.Range = 0
+
+	//td
+	vserverInstance.Td = 1
+	vserverInstance.Servicetype = ""
+	testHelperVerifyImmutabilityFunc(c, t, vserverType, vserverName, vserverInstance, "td")
+	vserverInstance.Td = 0
+
+	//redirurlflags
+	vserverInstance.Redirurlflags = true
+	testHelperVerifyImmutabilityFunc(c, t, vserverType, vserverName, vserverInstance, "redirurlflags")
+	vserverInstance.Redirurlflags = false
 }
