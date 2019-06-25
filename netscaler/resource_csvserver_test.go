@@ -17,9 +17,11 @@ package netscaler
 
 import (
 	"fmt"
+	"github.com/chiradeep/go-nitro/config/cs"
 	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+	"os"
 	"testing"
 )
 
@@ -162,3 +164,63 @@ resource "netscaler_csvserver" "foo" {
 
 }
 `
+
+func TestAccCsvserverAssertNonUpdateableAttributes(t *testing.T) {
+
+	if tfAcc := os.Getenv("TF_ACC"); tfAcc == "" {
+		t.Skip("TF_ACC not set. Skipping acceptance test.")
+	}
+
+	c, err := testHelperInstantiateClient("", "", "", false)
+	if err != nil {
+		t.Fatalf("Failed to instantiate client. %v\n", err)
+	}
+
+	// Create resource
+	vserverName := "tf-acc-cs-vserver-name"
+	vserverType := netscaler.Csvserver.Type()
+
+	// Defer deletion of actual resource
+	defer testHelperEnsureResourceDeletion(c, t, vserverType, vserverName, nil)
+
+	vserverInstance := cs.Csvserver{
+		Ipv46:       "192.23.23.23",
+		Name:        vserverName,
+		Servicetype: "HTTP",
+		Port:        80,
+	}
+
+	if _, err := c.client.AddResource(vserverType, vserverName, vserverInstance); err != nil {
+		t.Logf("Error while creating resource")
+		t.Fatal(err)
+	}
+
+	// Set to zero values all immutables already defined
+	vserverInstance.Port = 0
+	vserverInstance.Servicetype = ""
+
+	//port
+	vserverInstance.Port = 88
+	testHelperVerifyImmutabilityFunc(c, t, vserverType, vserverName, vserverInstance, "port")
+	vserverInstance.Port = 0
+
+	//td
+	vserverInstance.Td = 1
+	testHelperVerifyImmutabilityFunc(c, t, vserverType, vserverName, vserverInstance, "td")
+	vserverInstance.Td = 0
+
+	//servicetype
+	vserverInstance.Servicetype = "TCP"
+	testHelperVerifyImmutabilityFunc(c, t, vserverType, vserverName, vserverInstance, "servicetype")
+	vserverInstance.Servicetype = ""
+
+	//targettype
+	vserverInstance.Targettype = "GSLB"
+	testHelperVerifyImmutabilityFunc(c, t, vserverType, vserverName, vserverInstance, "targettype")
+	vserverInstance.Targettype = ""
+
+	//range
+	vserverInstance.Range = 1
+	testHelperVerifyImmutabilityFunc(c, t, vserverType, vserverName, vserverInstance, "range")
+	vserverInstance.Range = 0
+}

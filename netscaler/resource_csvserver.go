@@ -199,6 +199,7 @@ func resourceNetScalerCsvserver() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"netprofile": &schema.Schema{
 				Type:     schema.TypeString,
@@ -224,6 +225,7 @@ func resourceNetScalerCsvserver() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"precedence": &schema.Schema{
 				Type:     schema.TypeString,
@@ -254,6 +256,7 @@ func resourceNetScalerCsvserver() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"redirectportrewrite": &schema.Schema{
 				Type:     schema.TypeString,
@@ -279,6 +282,7 @@ func resourceNetScalerCsvserver() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"sitedomainttl": &schema.Schema{
 				Type:     schema.TypeInt,
@@ -324,6 +328,7 @@ func resourceNetScalerCsvserver() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"tcpprofilename": &schema.Schema{
 				Type:     schema.TypeString,
@@ -334,6 +339,7 @@ func resourceNetScalerCsvserver() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"ttl": &schema.Schema{
 				Type:     schema.TypeInt,
