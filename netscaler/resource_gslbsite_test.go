@@ -17,9 +17,11 @@ package netscaler
 
 import (
 	"fmt"
+	"github.com/chiradeep/go-nitro/config/gslb"
 	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+	"os"
 	"testing"
 )
 
@@ -110,3 +112,64 @@ resource "netscaler_gslbsite" "foo" {
 
 }
 `
+
+func TestAccGslbsiteAssertNonUpdateableAttributes(t *testing.T) {
+
+	if tfAcc := os.Getenv("TF_ACC"); tfAcc == "" {
+		t.Skip("TF_ACC not set. Skipping acceptance test.")
+	}
+
+	c, err := testHelperInstantiateClient("", "", "", false)
+	if err != nil {
+		t.Fatalf("Failed to instantiate client. %v\n", err)
+	}
+
+	// Create resource
+	siteName := "tf-acc-glsb-site-test"
+	siteType := netscaler.Gslbsite.Type()
+
+	// Defer deletion of actual resource
+	defer testHelperEnsureResourceDeletion(c, t, siteType, siteName, nil)
+
+	siteInstance := gslb.Gslbsite{
+		Sitename:      siteName,
+		Siteipaddress: "12.12.12.12",
+	}
+
+	if _, err := c.client.AddResource(siteType, siteName, siteInstance); err != nil {
+		t.Logf("Error while creating resource")
+		t.Fatal(err)
+	}
+	// Zero out fields of created instance
+	siteInstance.Siteipaddress = ""
+
+	// sitetype
+	siteInstance.Sitetype = "HTTP"
+	testHelperVerifyImmutabilityFunc(c, t, siteType, siteName, siteInstance, "sitetype")
+	siteInstance.Sitetype = ""
+
+	// siteipaddress
+	siteInstance.Siteipaddress = "12.22.22.22"
+	testHelperVerifyImmutabilityFunc(c, t, siteType, siteName, siteInstance, "siteipaddress")
+	siteInstance.Siteipaddress = ""
+
+	// publicip
+	siteInstance.Publicip = "1.2.3.4"
+	testHelperVerifyImmutabilityFunc(c, t, siteType, siteName, siteInstance, "publicip")
+	siteInstance.Publicip = ""
+
+	// parentsite
+	siteInstance.Parentsite = "some_site"
+	testHelperVerifyImmutabilityFunc(c, t, siteType, siteName, siteInstance, "parentsite")
+	siteInstance.Parentsite = ""
+
+	// clip
+	siteInstance.Clip = "some_clip"
+	testHelperVerifyImmutabilityFunc(c, t, siteType, siteName, siteInstance, "clip")
+	siteInstance.Clip = ""
+
+	// publicclip
+	siteInstance.Publicclip = "some_clip"
+	testHelperVerifyImmutabilityFunc(c, t, siteType, siteName, siteInstance, "publicclip")
+	siteInstance.Publicclip = ""
+}
