@@ -32,6 +32,7 @@ func resourceNetScalerInat() *schema.Resource {
 			"name": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"privateip": &schema.Schema{
 				Type:     schema.TypeString,
@@ -47,6 +48,7 @@ func resourceNetScalerInat() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"tcpproxy": &schema.Schema{
 				Type:     schema.TypeString,
@@ -57,6 +59,7 @@ func resourceNetScalerInat() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"tftp": &schema.Schema{
 				Type:     schema.TypeString,
