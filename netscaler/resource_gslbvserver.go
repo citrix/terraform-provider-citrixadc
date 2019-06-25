@@ -119,6 +119,7 @@ func resourceNetScalerGslbvserver() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"netmask": &schema.Schema{
 				Type:     schema.TypeString,
@@ -154,6 +155,7 @@ func resourceNetScalerGslbvserver() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"sitedomainttl": &schema.Schema{
 				Type:     schema.TypeInt,
