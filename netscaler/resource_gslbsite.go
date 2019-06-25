@@ -23,6 +23,7 @@ func resourceNetScalerGslbsite() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"metricexchange": &schema.Schema{
 				Type:     schema.TypeString,
@@ -43,16 +44,19 @@ func resourceNetScalerGslbsite() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"publicclip": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"publicip": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"sessionexchange": &schema.Schema{
 				Type:     schema.TypeString,
@@ -63,6 +67,7 @@ func resourceNetScalerGslbsite() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"sitename": &schema.Schema{
 				Type:     schema.TypeString,
@@ -73,6 +78,7 @@ func resourceNetScalerGslbsite() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"triggermonitor": &schema.Schema{
 				Type:     schema.TypeString,

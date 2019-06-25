@@ -203,6 +203,7 @@ func resourceNetScalerLbmonitor() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"mssqlprotocolversion": &schema.Schema{
 				Type:     schema.TypeString,
@@ -348,11 +349,13 @@ func resourceNetScalerLbmonitor() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"servicename": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"sipmethod": &schema.Schema{
 				Type:     schema.TypeString,

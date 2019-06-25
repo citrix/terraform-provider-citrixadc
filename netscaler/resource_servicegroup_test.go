@@ -17,9 +17,11 @@ package netscaler
 
 import (
 	"fmt"
+	"github.com/chiradeep/go-nitro/config/basic"
 	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+	"os"
 	"testing"
 )
 
@@ -129,3 +131,68 @@ resource "netscaler_servicegroup" "foo" {
   depends_on = ["netscaler_lbvserver.foo1", "netscaler_lbvserver.foo2"]
 }
 `
+
+func TestAccServicegroupAssertNonUpdateableAttributes(t *testing.T) {
+
+	if tfAcc := os.Getenv("TF_ACC"); tfAcc == "" {
+		t.Skip("TF_ACC not set. Skipping acceptance test.")
+	}
+
+	c, err := testHelperInstantiateClient("", "", "", false)
+	if err != nil {
+		t.Fatalf("Failed to instantiate client. %v\n", err)
+	}
+
+	// Create resource
+	servicegroupName := "tf-acc-servicegroup-test"
+	servicegroupType := netscaler.Servicegroup.Type()
+
+	// Defer deletion of actual resource
+	defer testHelperEnsureResourceDeletion(c, t, servicegroupType, servicegroupName, nil)
+
+	servicegroupInstance := basic.Servicegroup{
+		Servicegroupname: servicegroupName,
+		Servicetype:      "HTTP",
+	}
+
+	if _, err := c.client.AddResource(servicegroupType, servicegroupName, servicegroupInstance); err != nil {
+		t.Logf("Error while creating resource")
+		t.Fatal(err)
+	}
+
+	//servicetype
+	servicegroupInstance.Servicetype = "HTTP"
+	testHelperVerifyImmutabilityFunc(c, t, servicegroupType, servicegroupName, servicegroupInstance, "servicetype")
+	servicegroupInstance.Servicetype = ""
+
+	//cachetype
+	servicegroupInstance.Cachetype = "TRANSPARENT"
+	testHelperVerifyImmutabilityFunc(c, t, servicegroupType, servicegroupName, servicegroupInstance, "cachetype")
+	servicegroupInstance.Cachetype = ""
+
+	//td
+	servicegroupInstance.Td = 2
+	testHelperVerifyImmutabilityFunc(c, t, servicegroupType, servicegroupName, servicegroupInstance, "td")
+	servicegroupInstance.Td = 0
+
+	//autoscale
+	servicegroupInstance.Autoscale = "ENABLED"
+	testHelperVerifyImmutabilityFunc(c, t, servicegroupType, servicegroupName, servicegroupInstance, "autoscale")
+	servicegroupInstance.Autoscale = ""
+
+	//memberport
+	servicegroupInstance.Memberport = 80
+	testHelperVerifyImmutabilityFunc(c, t, servicegroupType, servicegroupName, servicegroupInstance, "memberport")
+	servicegroupInstance.Memberport = 0
+
+	//riseapbrstatsmsgcode
+	servicegroupInstance.Riseapbrstatsmsgcode = 10
+	testHelperVerifyImmutabilityFunc(c, t, servicegroupType, servicegroupName, servicegroupInstance, "riseapbrstatsmsgcode")
+	servicegroupInstance.Riseapbrstatsmsgcode = 0
+
+	//includemembers
+	servicegroupInstance.Includemembers = true
+	testHelperVerifyImmutabilityFunc(c, t, servicegroupType, servicegroupName, servicegroupInstance, "includemembers")
+	servicegroupInstance.Includemembers = false
+
+}

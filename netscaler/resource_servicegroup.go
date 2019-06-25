@@ -40,6 +40,7 @@ func resourceNetScalerServicegroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"cacheable": &schema.Schema{
 				Type:     schema.TypeString,
@@ -50,6 +51,7 @@ func resourceNetScalerServicegroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"cip": &schema.Schema{
 				Type:     schema.TypeString,
@@ -125,6 +127,7 @@ func resourceNetScalerServicegroup() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"maxbandwidth": &schema.Schema{
 				Type:     schema.TypeInt,
@@ -145,6 +148,7 @@ func resourceNetScalerServicegroup() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"monconnectionclose": &schema.Schema{
 				Type:     schema.TypeString,
@@ -190,6 +194,7 @@ func resourceNetScalerServicegroup() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"rtspsessionidremap": &schema.Schema{
 				Type:     schema.TypeString,
@@ -215,11 +220,13 @@ func resourceNetScalerServicegroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"servicetype": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"sp": &schema.Schema{
 				Type:     schema.TypeString,
@@ -250,6 +257,7 @@ func resourceNetScalerServicegroup() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"useproxyport": &schema.Schema{
 				Type:     schema.TypeString,

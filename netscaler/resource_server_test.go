@@ -17,10 +17,13 @@ package netscaler
 
 import (
 	"fmt"
+	"os"
+	"testing"
+
+	"github.com/chiradeep/go-nitro/config/basic"
 	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"testing"
 )
 
 func TestAccServer_basic(t *testing.T) {
@@ -103,3 +106,55 @@ resource "netscaler_server" "foo" {
 	ipaddress = "192.168.11.13"
 }
 `
+
+// Test for immutability of attributes
+// This is to catch any attibute having ForceNew: true while not actually needed
+func TestAccServerAssertNonUpdateableAttributes(t *testing.T) {
+
+	if tfAcc := os.Getenv("TF_ACC"); tfAcc == "" {
+		t.Skip("TF_ACC not set. Skipping acceptance test.")
+	}
+
+	c, err := testHelperInstantiateClient("", "", "", false)
+	if err != nil {
+		t.Fatalf("Failed to instantiate client. %v\n", err)
+	}
+
+	// Create resource
+	serverName := "tf-acc-server-name"
+	serverType := netscaler.Server.Type()
+
+	// Defer deletion of actual resource
+	defer testHelperEnsureResourceDeletion(c, t, serverType, serverName, nil)
+
+	serverInstance := basic.Server{
+		Domain:      "tfacc.domain.com",
+		Ipv6address: "YES",
+		Name:        serverName,
+		Td:          0,
+	}
+
+	if _, err := c.client.AddResource(serverType, serverName, serverInstance); err != nil {
+		t.Logf("Error while creating resource")
+		t.Fatal(err)
+	}
+
+	// Verify immutability of argument td
+	serverInstance.Domain = ""
+	serverInstance.Ipv6address = ""
+	serverInstance.Td = 10
+	testHelperVerifyImmutabilityFunc(c, t, serverType, serverName, serverInstance, "td")
+	serverInstance.Td = 0
+
+	// Verify immutability of argument domain
+	serverInstance.Domain = "newdomain.com"
+	serverInstance.Ipv6address = ""
+	testHelperVerifyImmutabilityFunc(c, t, serverType, serverName, serverInstance, "domain")
+	serverInstance.Domain = ""
+
+	// Verify immutability of argument ipv6address
+	serverInstance.Ipv6address = "YES"
+	serverInstance.Td = 0
+	testHelperVerifyImmutabilityFunc(c, t, serverType, serverName, serverInstance, "ipv6address")
+	serverInstance.Ipv6address = ""
+}

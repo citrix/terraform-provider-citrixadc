@@ -17,9 +17,11 @@ package netscaler
 
 import (
 	"fmt"
+	"github.com/chiradeep/go-nitro/config/ssl"
 	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+	"os"
 	"testing"
 )
 
@@ -107,8 +109,14 @@ func doSslcertkeyPreChecks(t *testing.T) {
 
 	uploads := []string{"server.crt", "server.key"}
 
+	c, err := testHelperInstantiateClient("", "", "", false)
+	if err != nil {
+		t.Fatalf("Failed to instantiate client. %v\n", err)
+	}
+
+	//c := testAccProvider.Meta().(*NetScalerNitroClient)
 	for _, filename := range uploads {
-		err := uploadTestdataFile(t, filename, "/var/tmp")
+		err := uploadTestdataFile(c, t, filename, "/var/tmp")
 		if err != nil {
 			t.Errorf(err.Error())
 		}
@@ -126,3 +134,101 @@ resource "netscaler_sslcertkey" "foo" {
   expirymonitor = "ENABLED"
 }
 `
+
+func TestAccSslcertkeyAssertNonUpdateableAttributes(t *testing.T) {
+
+	if tfAcc := os.Getenv("TF_ACC"); tfAcc == "" {
+		t.Skip("TF_ACC not set. Skipping acceptance test.")
+	}
+
+	c, err := testHelperInstantiateClient("", "", "", false)
+	if err != nil {
+		t.Fatalf("Failed to instantiate client. %v\n", err)
+	}
+
+	uploads := []string{"server.crt", "server.key"}
+
+	for _, filename := range uploads {
+		err := uploadTestdataFile(c, t, filename, "/var/tmp")
+		if err != nil {
+			t.Fatalf(err.Error())
+		}
+	}
+
+	// Create resource
+	certkeyName := "tf-acc-certkey-test"
+	certkeyType := netscaler.Sslcertkey.Type()
+
+	// Defer deletion of actual resource
+	defer testHelperEnsureResourceDeletion(c, t, certkeyType, certkeyName, nil)
+
+	certkeyInstance := ssl.Sslcertkey{
+		Certkey: certkeyName,
+		Cert:    "/var/tmp/server.crt",
+		Key:     "/var/tmp/server.key",
+	}
+
+	if _, err := c.client.AddResource(certkeyType, certkeyName, certkeyInstance); err != nil {
+		t.Logf("Error while creating resource")
+		t.Fatal(err)
+	}
+
+	// Zero out immutable members
+	certkeyInstance.Cert = ""
+	certkeyInstance.Key = ""
+
+	//cert
+	certkeyInstance.Cert = "/var/tmp/new/crt"
+	testHelperVerifyImmutabilityFunc(c, t, certkeyType, certkeyName, certkeyInstance, "cert")
+	certkeyInstance.Cert = ""
+
+	//key
+	certkeyInstance.Key = "/var/tmp/new/key"
+	testHelperVerifyImmutabilityFunc(c, t, certkeyType, certkeyName, certkeyInstance, "key")
+	certkeyInstance.Key = ""
+
+	//password
+	certkeyInstance.Password = true
+	testHelperVerifyImmutabilityFunc(c, t, certkeyType, certkeyName, certkeyInstance, "password")
+	certkeyInstance.Password = false
+
+	//fipskey
+	certkeyInstance.Fipskey = "newfips"
+	testHelperVerifyImmutabilityFunc(c, t, certkeyType, certkeyName, certkeyInstance, "fipskey")
+	certkeyInstance.Fipskey = ""
+
+	//hsmkey
+	certkeyInstance.Hsmkey = "newhsm"
+	testHelperVerifyImmutabilityFunc(c, t, certkeyType, certkeyName, certkeyInstance, "hsmkey")
+	certkeyInstance.Hsmkey = ""
+
+	//inform
+	certkeyInstance.Inform = "PEM"
+	testHelperVerifyImmutabilityFunc(c, t, certkeyType, certkeyName, certkeyInstance, "inform")
+	certkeyInstance.Inform = ""
+
+	//passplain
+	certkeyInstance.Passplain = "passwordnew"
+	testHelperVerifyImmutabilityFunc(c, t, certkeyType, certkeyName, certkeyInstance, "passplain")
+	certkeyInstance.Passplain = ""
+
+	//bundle
+	certkeyInstance.Bundle = "YES"
+	testHelperVerifyImmutabilityFunc(c, t, certkeyType, certkeyName, certkeyInstance, "bundle")
+	certkeyInstance.Bundle = ""
+
+	//linkcertkeyname
+	certkeyInstance.Linkcertkeyname = "certkeyname"
+	testHelperVerifyImmutabilityFunc(c, t, certkeyType, certkeyName, certkeyInstance, "linkcertkeyname")
+	certkeyInstance.Linkcertkeyname = ""
+
+	//nodomaincheck
+	certkeyInstance.Nodomaincheck = true
+	testHelperVerifyImmutabilityFunc(c, t, certkeyType, certkeyName, certkeyInstance, "nodomaincheck")
+	certkeyInstance.Nodomaincheck = false
+
+	//ocspstaplingcache
+	certkeyInstance.Ocspstaplingcache = true
+	testHelperVerifyImmutabilityFunc(c, t, certkeyType, certkeyName, certkeyInstance, "ocspstaplingcache")
+	certkeyInstance.Ocspstaplingcache = false
+}

@@ -17,9 +17,11 @@ package netscaler
 
 import (
 	"fmt"
+	"github.com/chiradeep/go-nitro/config/basic"
 	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+	"os"
 	"testing"
 )
 
@@ -124,3 +126,80 @@ resource "netscaler_service" "foo" {
 
 }
 `
+
+func TestAccServiceAssertNonUpdateableAttributes(t *testing.T) {
+
+	if tfAcc := os.Getenv("TF_ACC"); tfAcc == "" {
+		t.Skip("TF_ACC not set. Skipping acceptance test.")
+	}
+
+	c, err := testHelperInstantiateClient("", "", "", false)
+	if err != nil {
+		t.Fatalf("Failed to instantiate client. %v\n", err)
+	}
+
+	// Create resource
+	serviceName := "tf-acc-service-test"
+	serviceType := netscaler.Service.Type()
+
+	// Defer deletion of actual resource
+	defer testHelperEnsureResourceDeletion(c, t, serviceType, serviceName, nil)
+
+	serviceInstance := basic.Service{
+		Name:        serviceName,
+		Port:        80,
+		Ip:          "10.202.22.12",
+		Servicetype: "HTTP",
+	}
+
+	if _, err := c.client.AddResource(serviceType, serviceName, serviceInstance); err != nil {
+		t.Logf("Error while creating resource")
+		t.Fatal(err)
+	}
+
+	// Zero out immutable members
+	serviceInstance.Port = 0
+	serviceInstance.Ip = ""
+	serviceInstance.Servicetype = ""
+
+	//ip
+	serviceInstance.Ip = "1.1.1.1"
+	testHelperVerifyImmutabilityFunc(c, t, serviceType, serviceName, serviceInstance, "ip")
+	serviceInstance.Ip = ""
+
+	//servername
+	serviceInstance.Servername = "server1"
+	testHelperVerifyImmutabilityFunc(c, t, serviceType, serviceName, serviceInstance, "servername")
+	serviceInstance.Servername = ""
+
+	//servicetype
+	serviceInstance.Servicetype = "HTTP"
+	testHelperVerifyImmutabilityFunc(c, t, serviceType, serviceName, serviceInstance, "servicetype")
+	serviceInstance.Servicetype = ""
+
+	//port
+	serviceInstance.Port = 88
+	testHelperVerifyImmutabilityFunc(c, t, serviceType, serviceName, serviceInstance, "port")
+	serviceInstance.Port = 0
+
+	//cleartextport
+	serviceInstance.Cleartextport = 98
+	testHelperVerifyImmutabilityFunc(c, t, serviceType, serviceName, serviceInstance, "cleartextport")
+	serviceInstance.Cleartextport = 0
+
+	//cachetype
+	serviceInstance.Cachetype = "TRANSPARENT"
+	testHelperVerifyImmutabilityFunc(c, t, serviceType, serviceName, serviceInstance, "cachetype")
+	serviceInstance.Cachetype = ""
+
+	//td
+	serviceInstance.Td = 2
+	testHelperVerifyImmutabilityFunc(c, t, serviceType, serviceName, serviceInstance, "td")
+	serviceInstance.Td = 0
+
+	//riseapbrstatsmsgcode
+	serviceInstance.Riseapbrstatsmsgcode = 2
+	testHelperVerifyImmutabilityFunc(c, t, serviceType, serviceName, serviceInstance, "riseapbrstatsmsgcode")
+	serviceInstance.Riseapbrstatsmsgcode = 0
+
+}

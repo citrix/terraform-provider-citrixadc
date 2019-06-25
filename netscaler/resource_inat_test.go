@@ -17,10 +17,14 @@ package netscaler
 
 import (
 	"fmt"
+	"os"
+	"regexp"
+	"testing"
+
+	"github.com/chiradeep/go-nitro/config/network"
 	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"testing"
 )
 
 func TestAccInat_basic(t *testing.T) {
@@ -119,3 +123,56 @@ resource "netscaler_inat" "foo" {
 
 }
 `
+
+func TestAccInatAssertNonUpdateableAttributes(t *testing.T) {
+
+	if tfAcc := os.Getenv("TF_ACC"); tfAcc == "" {
+		t.Skip("TF_ACC not set. Skipping acceptance test.")
+	}
+
+	c, err := testHelperInstantiateClient("", "", "", false)
+	if err != nil {
+		t.Fatalf("Failed to instantiate client. %v\n", err)
+	}
+
+	// Create resource
+	inatName := "tf-acc-inat-test"
+	inatType := netscaler.Inat.Type()
+
+	// Defer deletion of actual resource
+	defer testHelperEnsureResourceDeletion(c, t, inatType, inatName, nil)
+
+	inatInstance := network.Inat{
+		Name:      inatName,
+		Privateip: "192.168.1.1",
+		Publicip:  "172.16.1.2",
+	}
+
+	if _, err := c.client.AddResource(inatType, inatName, inatInstance); err != nil {
+		t.Logf("Error while creating resource")
+		t.Fatal(err)
+	}
+
+	// publicip
+	inatInstance.Publicip = "172.16.1.3"
+	testHelperVerifyImmutabilityFunc(c, t, inatType, inatName, inatInstance, "publicip")
+	inatInstance.Publicip = ""
+
+	// td
+	inatInstance.Td = 1
+	testHelperVerifyImmutabilityFunc(c, t, inatType, inatName, inatInstance, "td")
+	inatInstance.Td = 0
+
+	// name
+	newName := "inat-new-name"
+	inatInstance.Name = newName
+	if _, err := c.client.UpdateResource(inatType, inatName, inatInstance); err != nil {
+		r := regexp.MustCompile(fmt.Sprintf("errorcode.*258.*No such resource \\[name, %s\\]", newName))
+		if r.Match([]byte(err.Error())) {
+			t.Logf("Succesfully verified immutability of attribute name")
+		} else {
+			t.Errorf("Error while assesing immutability of attribute name")
+			t.Fatal(err)
+		}
+	}
+}

@@ -17,8 +17,10 @@ package netscaler
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
+	"github.com/chiradeep/go-nitro/config/gslb"
 	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
@@ -121,3 +123,36 @@ resource "netscaler_gslbvserver" "foo" {
   }
 }
 `
+
+func TestAccGslbvserverAssertNonUpdateableAttributes(t *testing.T) {
+
+	if tfAcc := os.Getenv("TF_ACC"); tfAcc == "" {
+		t.Skip("TF_ACC not set. Skipping acceptance test.")
+	}
+
+	c, err := testHelperInstantiateClient("", "", "", false)
+	if err != nil {
+		t.Fatalf("Failed to instantiate client. %v\n", err)
+	}
+
+	// Create resource
+	serverName := "tf-acc-glsb-vserver-test"
+	serverType := netscaler.Gslbvserver.Type()
+
+	// Defer deletion of actual resource
+	defer testHelperEnsureResourceDeletion(c, t, serverType, serverName, nil)
+
+	serverInstance := gslb.Gslbvserver{
+		Name:        serverName,
+		Servicetype: "HTTP",
+	}
+
+	if _, err := c.client.AddResource(serverType, serverName, serverInstance); err != nil {
+		t.Logf("Error while creating resource")
+		t.Fatal(err)
+	}
+
+	// servicetype
+	serverInstance.Servicetype = "SSL"
+	testHelperVerifyImmutabilityFunc(c, t, serverType, serverName, serverInstance, "servicetype")
+}
