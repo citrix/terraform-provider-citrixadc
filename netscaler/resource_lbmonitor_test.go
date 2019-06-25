@@ -17,10 +17,13 @@ package netscaler
 
 import (
 	"fmt"
+	"os"
+	"testing"
+
+	"github.com/chiradeep/go-nitro/config/lb"
 	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"testing"
 )
 
 func TestAccLbmonitor_basic(t *testing.T) {
@@ -108,3 +111,44 @@ resource "netscaler_lbmonitor" "foo" {
   type = "HTTP"
 }
 `
+
+func TestAccLbmonitorAssertNonUpdateableAttributes(t *testing.T) {
+
+	if tfAcc := os.Getenv("TF_ACC"); tfAcc == "" {
+		t.Skip("TF_ACC not set. Skipping acceptance test.")
+	}
+
+	c, err := testHelperInstantiateClient("", "", "", false)
+	if err != nil {
+		t.Fatalf("Failed to instantiate client. %v\n", err)
+	}
+
+	// Create resource
+	monitorName := "tf-acc-lbmonitor-test"
+	monitorType := netscaler.Lbmonitor.Type()
+
+	// Defer deletion of actual resource
+	deleteArgsMap := make(map[string]string)
+	deleteArgsMap["type"] = "HTTP"
+	defer testHelperEnsureResourceDeletion(c, t, monitorType, monitorName, deleteArgsMap)
+
+	monitorInstance := lb.Lbmonitor{
+		Monitorname: monitorName,
+		Type:        "HTTP",
+	}
+
+	if _, err := c.client.AddResource(monitorType, monitorName, monitorInstance); err != nil {
+		t.Logf("Error while creating resource")
+		t.Fatal(err)
+	}
+
+	//servicename
+	monitorInstance.Servicename = "foo"
+	testHelperVerifyImmutabilityFunc(c, t, monitorType, monitorName, monitorInstance, "servicename")
+	monitorInstance.Servicename = ""
+
+	//servicegroupname
+	monitorInstance.Servicegroupname = "foo"
+	testHelperVerifyImmutabilityFunc(c, t, monitorType, monitorName, monitorInstance, "servicegroupname")
+	monitorInstance.Servicegroupname = ""
+}
