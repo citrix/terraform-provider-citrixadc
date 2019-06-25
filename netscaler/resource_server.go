@@ -33,6 +33,7 @@ func resourceNetScalerServer() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"domainresolvenow": &schema.Schema{
 				Type:     schema.TypeBool,
@@ -63,6 +64,7 @@ func resourceNetScalerServer() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"name": &schema.Schema{
 				Type:     schema.TypeString,
@@ -84,6 +86,7 @@ func resourceNetScalerServer() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"translationip": &schema.Schema{
 				Type:     schema.TypeString,
