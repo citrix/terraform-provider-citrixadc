@@ -38,11 +38,13 @@ func resourceNetScalerGslbservice() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"cnameentry": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"comment": &schema.Schema{
 				Type:     schema.TypeString,
@@ -53,6 +55,7 @@ func resourceNetScalerGslbservice() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"downstateflush": &schema.Schema{
 				Type:     schema.TypeString,
@@ -73,6 +76,7 @@ func resourceNetScalerGslbservice() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"ipaddress": &schema.Schema{
 				Type:     schema.TypeString,
@@ -138,6 +142,7 @@ func resourceNetScalerGslbservice() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"publicip": &schema.Schema{
 				Type:     schema.TypeString,
@@ -153,21 +158,25 @@ func resourceNetScalerGslbservice() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"servicename": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"servicetype": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"sitename": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"sitepersistence": &schema.Schema{
 				Type:     schema.TypeString,
@@ -188,6 +197,7 @@ func resourceNetScalerGslbservice() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"viewip": &schema.Schema{
 				Type:     schema.TypeString,
