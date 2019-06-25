@@ -43,6 +43,7 @@ func resourceNetScalerService() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"cip": &schema.Schema{
 				Type:     schema.TypeString,
@@ -63,6 +64,7 @@ func resourceNetScalerService() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"clttimeout": &schema.Schema{
 				Type:     schema.TypeInt,
@@ -133,6 +135,7 @@ func resourceNetScalerService() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"ipaddress": &schema.Schema{
 				Type:     schema.TypeString,
@@ -199,6 +202,7 @@ func resourceNetScalerService() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"processlocal": &schema.Schema{
 				Type:     schema.TypeString,
@@ -209,6 +213,7 @@ func resourceNetScalerService() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"rtspsessionidremap": &schema.Schema{
 				Type:     schema.TypeString,
@@ -229,11 +234,13 @@ func resourceNetScalerService() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"servicetype": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"sp": &schema.Schema{
 				Type:     schema.TypeString,
@@ -264,6 +271,7 @@ func resourceNetScalerService() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"useproxyport": &schema.Schema{
 				Type:     schema.TypeString,
