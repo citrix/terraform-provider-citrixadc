@@ -86,7 +86,7 @@ func createCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	if lbok && rok && !pok {
 		return fmt.Errorf("[ERROR] netscaler-provider: Priority needs to be specified if target lb vserver and rule is specified")
 	}
-	if !lbok && pok {
+	if !lbok && !pok {
 		return fmt.Errorf("[ERROR] netscaler-provider: Priority needs to be specified if target lb vserver is not specified")
 	}
 	if !lbok && !aok {
@@ -146,6 +146,7 @@ func createCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 		binding = cs.Csvservercspolicybinding{
 			Name:       csvserver,
 			Policyname: cspolicyName,
+			Priority:   priority.(int),
 		}
 	}
 
