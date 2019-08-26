@@ -247,3 +247,75 @@ func TestAccGslbserviceAssertNonUpdateableAttributes(t *testing.T) {
 	testHelperVerifyImmutabilityFunc(c, t, serviceType, serviceName, serviceInstance, "svrtimeout")
 	serviceInstance.Svrtimeout = 0
 }
+
+const testAccGslbserviceEnableDisable_enabled = `
+resource "netscaler_gslbsite" "tf_test_acc_gslbsite" {
+  sitename = "tf_test_acc_gslbsite"
+  siteipaddress = "192.168.22.33"
+  sessionexchange = "DISABLED"
+}
+
+resource "netscaler_gslbservice" "tf_test_acc_gslbservice" {
+  ip = "192.168.11.66"
+  port = "80"
+  servicename = "tf_test_acc_gslbservice"
+  servicetype = "HTTP"
+  sitename = "${netscaler_gslbsite.tf_test_acc_gslbsite.sitename}"
+  comment = "enabled state comment"
+  state = "ENABLED"
+  delay = 60
+}
+`
+
+const testAccGslbserviceEnableDisable_disabled = `
+resource "netscaler_gslbsite" "tf_test_acc_gslbsite" {
+  sitename = "tf_test_acc_gslbsite"
+  siteipaddress = "192.168.22.33"
+  sessionexchange = "DISABLED"
+}
+
+resource "netscaler_gslbservice" "tf_test_acc_gslbservice" {
+  ip = "192.168.11.66"
+  port = "80"
+  servicename = "tf_test_acc_gslbservice"
+  servicetype = "HTTP"
+  sitename = "${netscaler_gslbsite.tf_test_acc_gslbsite.sitename}"
+  comment = "disabled state comment"
+  state = "DISABLED"
+  delay = 60
+}
+`
+
+func TestAccGsblservice_enable_disable(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckGslbserviceDestroy,
+		Steps: []resource.TestStep{
+			// Create enabled
+			resource.TestStep{
+				Config: testAccGslbserviceEnableDisable_enabled,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbserviceExist("netscaler_gslbservice.tf_test_acc_gslbservice", nil),
+					resource.TestCheckResourceAttr("netscaler_gslbservice.tf_test_acc_gslbservice", "state", "ENABLED"),
+				),
+			},
+			// Disable
+			resource.TestStep{
+				Config: testAccGslbserviceEnableDisable_disabled,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbserviceExist("netscaler_gslbservice.tf_test_acc_gslbservice", nil),
+					resource.TestCheckResourceAttr("netscaler_gslbservice.tf_test_acc_gslbservice", "state", "DISABLED"),
+				),
+			},
+			// Re enable
+			resource.TestStep{
+				Config: testAccGslbserviceEnableDisable_enabled,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbserviceExist("netscaler_gslbservice.tf_test_acc_gslbservice", nil),
+					resource.TestCheckResourceAttr("netscaler_gslbservice.tf_test_acc_gslbservice", "state", "ENABLED"),
+				),
+			},
+		},
+	})
+}
