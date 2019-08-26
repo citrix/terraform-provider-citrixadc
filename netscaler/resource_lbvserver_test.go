@@ -335,3 +335,59 @@ func TestAccLBvserverAssertNonUpdateableAttributes(t *testing.T) {
 	testHelperVerifyImmutabilityFunc(c, t, vserverType, vserverName, vserverInstance, "redirurlflags")
 	vserverInstance.Redirurlflags = false
 }
+
+const testAccLbvserverEnableDisable_enabled = `
+resource "netscaler_lbvserver" "tf_acc_lb_vserver" {
+  name = "tf_acc_lb_vserver"
+  ipv46 = "192.168.12.67"
+  port = "80"
+  servicetype = "HTTP"
+  comment = "enabled state comment"
+  state = "ENABLED"
+}
+`
+
+const testAccLbvserverEnableDisable_disabled = `
+resource "netscaler_lbvserver" "tf_acc_lb_vserver" {
+  name = "tf_acc_lb_vserver"
+  ipv46 = "192.168.12.67"
+  port = "80"
+  servicetype = "HTTP"
+  comment = "disabled state comment"
+  state = "DISABLED"
+}
+`
+
+func TestAccLbvserver_enable_disable(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLbvserverDestroy,
+		Steps: []resource.TestStep{
+			// Create enabled
+			resource.TestStep{
+				Config: testAccLbvserverEnableDisable_enabled,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserverExist("netscaler_lbvserver.tf_acc_lb_vserver", nil),
+					resource.TestCheckResourceAttr("netscaler_lbvserver.tf_acc_lb_vserver", "state", "ENABLED"),
+				),
+			},
+			// Disable
+			resource.TestStep{
+				Config: testAccLbvserverEnableDisable_disabled,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserverExist("netscaler_lbvserver.tf_acc_lb_vserver", nil),
+					resource.TestCheckResourceAttr("netscaler_lbvserver.tf_acc_lb_vserver", "state", "DISABLED"),
+				),
+			},
+			// Re enable
+			resource.TestStep{
+				Config: testAccLbvserverEnableDisable_enabled,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserverExist("netscaler_lbvserver.tf_acc_lb_vserver", nil),
+					resource.TestCheckResourceAttr("netscaler_lbvserver.tf_acc_lb_vserver", "state", "ENABLED"),
+				),
+			},
+		},
+	})
+}

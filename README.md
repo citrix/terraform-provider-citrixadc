@@ -93,6 +93,10 @@ resource "netscaler_lbvserver" "foo" {
 ##### Argument Reference
 See <https://developer-docs.citrix.com/projects/netscaler-nitro-api/en/12.0/configuration/load-balancing/lbvserver/lbvserver/> for possible values for these arguments and for an exhaustive list of arguments. Additionally, you can specify the SSL `certkey` to be bound to this `lbvserver` using the `sslcertkey` parameter
 
+##### Note
+Note that the attribute `state` is not synced with the remote object.
+If the state of the lb vserver is out of sync with the terraform configuration you will need to manually taint the resource and apply the configuration again.
+
 #### `netscaler_service`
 
 ```

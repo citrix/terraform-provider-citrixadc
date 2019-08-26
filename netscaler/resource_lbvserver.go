@@ -817,7 +817,6 @@ func readLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("sopersistence", data["sopersistence"])
 	d.Set("sopersistencetimeout", data["sopersistencetimeout"])
 	d.Set("sothreshold", data["sothreshold"])
-	d.Set("state", data["state"])
 	d.Set("tcpprofilename", data["tcpprofilename"])
 	d.Set("td", data["td"])
 	d.Set("timeout", data["timeout"])
@@ -866,6 +865,7 @@ func updateLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	lbvserver := lb.Lbvserver{
 		Name: d.Get("name").(string),
 	}
+	stateChange := false
 	hasChange := false
 	sslcertkeyChanged := false
 	sslprofileChanged := false
@@ -1303,8 +1303,7 @@ func updateLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("state") {
 		log.Printf("[DEBUG] netscaler-provider:  State has changed for lbvserver %s, starting update", lbvserverName)
-		lbvserver.State = d.Get("state").(string)
-		hasChange = true
+		stateChange = true
 	}
 	if d.HasChange("tcpprofilename") {
 		log.Printf("[DEBUG] netscaler-provider:  Tcpprofilename has changed for lbvserver %s, starting update", lbvserverName)
@@ -1448,6 +1447,12 @@ func updateLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 			log.Printf("[DEBUG] netscaler-provider: new ssl profile has been bound to lbvserver  sslprofile %s lbvserver %s", sslprofileName, lbvserverName)
 		}
 	}
+	if stateChange {
+		err := doLbvserverStateChange(d, client)
+		if err != nil {
+			return fmt.Errorf("Error enabling/disabling lbvserver %s", lbvserverName)
+		}
+	}
 	return readLbvserverFunc(d, meta)
 }
 
@@ -1566,6 +1571,36 @@ func syncSnisslcert(d *schema.ResourceData, meta interface{}, lbvserverName stri
 			}
 			return fmt.Errorf("[ERROR] netscaler-provider:  Failed to bind sni ssl cert %s to lbvserver %s", snisslcertkey, lbvserverName)
 		}
+	}
+
+	return nil
+}
+
+func doLbvserverStateChange(d *schema.ResourceData, client *netscaler.NitroClient) error {
+	log.Printf("[DEBUG]  netscaler-provider: In doLbvserverStateChange")
+
+	// We need a new instance of the struct since
+	// ActOnResource will fail if we put in superfluous attributes
+	lbvserver := lb.Lbvserver{
+		Name: d.Get("name").(string),
+	}
+
+	newstate := d.Get("state")
+
+	// Enable action
+	if newstate == "ENABLED" {
+		err := client.ActOnResource(netscaler.Lbvserver.Type(), lbvserver, "enable")
+		if err != nil {
+			return err
+		}
+	} else if newstate == "DISABLED" {
+		// Add attributes relevant to the disable operation
+		err := client.ActOnResource(netscaler.Lbvserver.Type(), lbvserver, "disable")
+		if err != nil {
+			return err
+		}
+	} else {
+		return fmt.Errorf("\"%s\" is not a valid state. Use (\"ENABLED\", \"DISABLED\").", newstate)
 	}
 
 	return nil
