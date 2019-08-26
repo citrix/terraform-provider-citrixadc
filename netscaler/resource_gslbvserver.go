@@ -465,6 +465,7 @@ func updateGslbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	gslbvserver := gslb.Gslbvserver{
 		Name: d.Get("name").(string),
 	}
+	stateChange := false
 	hasChange := false
 	if d.HasChange("appflowlog") {
 		log.Printf("[DEBUG]  netscaler-provider: Appflowlog has changed for gslbvserver %s, starting update", gslbvserverName)
@@ -633,8 +634,7 @@ func updateGslbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("state") {
 		log.Printf("[DEBUG]  netscaler-provider: State has changed for gslbvserver %s, starting update", gslbvserverName)
-		gslbvserver.State = d.Get("state").(string)
-		hasChange = true
+		stateChange = true
 	}
 	if d.HasChange("timeout") {
 		log.Printf("[DEBUG]  netscaler-provider: Timeout has changed for gslbvserver %s, starting update", gslbvserverName)
@@ -749,6 +749,12 @@ func updateGslbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		}
 
 	}
+	if stateChange {
+		err := doGslbvserverStateChange(d, client)
+		if err != nil {
+			return fmt.Errorf("Error enabling/disabling gslb vserver %s", gslbvserverName)
+		}
+	}
 
 	return readGslbvserverFunc(d, meta)
 }
@@ -811,4 +817,32 @@ func unbindGslbService(gslbvserverName string, service map[string]interface{}, m
 	args := map[string]string{"servicename": servicename}
 	log.Printf("[INFO] netscaler-provider:  Deleting binding of service %s to gslb vserver %s", servicename, gslbvserverName)
 	return client.DeleteResourceWithArgsMap(netscaler.Gslbvserver_gslbservice_binding.Type(), gslbvserverName, args)
+}
+
+func doGslbvserverStateChange(d *schema.ResourceData, client *netscaler.NitroClient) error {
+	log.Printf("[DEBUG]  netscaler-provider: In doServerStateChange")
+
+	// We need a new instance of the struct since
+	// ActOnResource will fail if we put in superfluous attributes
+	gslbvserver := gslb.Gslbvserver{
+		Name: d.Get("name").(string),
+	}
+
+	newstate := d.Get("state")
+
+	if newstate == "ENABLED" {
+		err := client.ActOnResource(netscaler.Gslbvserver.Type(), gslbvserver, "enable")
+		if err != nil {
+			return err
+		}
+	} else if newstate == "DISABLED" {
+		err := client.ActOnResource(netscaler.Gslbvserver.Type(), gslbvserver, "disable")
+		if err != nil {
+			return err
+		}
+	} else {
+		return fmt.Errorf("\"%s\" is not a valid state. Use (\"ENABLED\", \"DISABLED\").", newstate)
+	}
+
+	return nil
 }

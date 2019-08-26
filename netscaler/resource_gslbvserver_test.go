@@ -156,3 +156,57 @@ func TestAccGslbvserverAssertNonUpdateableAttributes(t *testing.T) {
 	serverInstance.Servicetype = "SSL"
 	testHelperVerifyImmutabilityFunc(c, t, serverType, serverName, serverInstance, "servicetype")
 }
+
+const testAccGslbvserverEnableDisable_enabled = `
+resource "netscaler_gslbvserver" "tf_test_acc_gslbvsever" {
+	dnsrecordtype = "A"
+	name = "tf_test_acc_gslbvsever"
+	servicetype = "HTTP"
+	state = "ENABLED"
+	comment = "enabled state comment"
+}
+`
+
+const testAccGslbvserverEnableDisable_disabled = `
+resource "netscaler_gslbvserver" "tf_test_acc_gslbvsever" {
+	dnsrecordtype = "A"
+	name = "tf_test_acc_gslbvsever"
+	servicetype = "HTTP"
+	state = "DISABLED"
+	comment = "disabled state comment"
+}
+`
+
+func TestAccGslbvserver_enable_disable(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckGslbvserverDestroy,
+		Steps: []resource.TestStep{
+			// Create enabled
+			resource.TestStep{
+				Config: testAccGslbvserverEnableDisable_enabled,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbvserverExist("netscaler_gslbvserver.tf_test_acc_gslbvsever", nil),
+					resource.TestCheckResourceAttr("netscaler_gslbvserver.tf_test_acc_gslbvsever", "state", "ENABLED"),
+				),
+			},
+			// Disable
+			resource.TestStep{
+				Config: testAccGslbvserverEnableDisable_disabled,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbvserverExist("netscaler_gslbvserver.tf_test_acc_gslbvsever", nil),
+					resource.TestCheckResourceAttr("netscaler_gslbvserver.tf_test_acc_gslbvsever", "state", "DISABLED"),
+				),
+			},
+			// Re enable
+			resource.TestStep{
+				Config: testAccGslbvserverEnableDisable_enabled,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbvserverExist("netscaler_gslbvserver.tf_test_acc_gslbvsever", nil),
+					resource.TestCheckResourceAttr("netscaler_gslbvserver.tf_test_acc_gslbvsever", "state", "ENABLED"),
+				),
+			},
+		},
+	})
+}
