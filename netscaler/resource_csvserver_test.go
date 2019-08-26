@@ -224,3 +224,58 @@ func TestAccCsvserverAssertNonUpdateableAttributes(t *testing.T) {
 	testHelperVerifyImmutabilityFunc(c, t, vserverType, vserverName, vserverInstance, "range")
 	vserverInstance.Range = 0
 }
+
+const testAccCsvserverEnableDisable_enabled = `
+resource "netscaler_csvserver" "tf_test_acc_csvserver" {
+  name        = "tf_test_acc_csvserver"
+  ipv46       = "192.168.33.22"
+  port        = 80
+  servicetype = "HTTP"
+  comment = "enabled state comment"
+  state       = "ENABLED"
+}
+`
+const testAccCsvserverEnableDisable_disabled = `
+resource "netscaler_csvserver" "tf_test_acc_csvserver" {
+  name        = "tf_test_acc_csvserver"
+  ipv46       = "192.168.33.22"
+  port        = 80
+  servicetype = "HTTP"
+  comment = "disabled state comment"
+  state       = "DISABLED"
+}
+`
+
+func TestAccCsvserver_enable_disable(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCsvserverDestroy,
+		Steps: []resource.TestStep{
+			// Create enabled
+			resource.TestStep{
+				Config: testAccCsvserverEnableDisable_enabled,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserverExist("netscaler_csvserver.tf_test_acc_csvserver", nil),
+					resource.TestCheckResourceAttr("netscaler_csvserver.tf_test_acc_csvserver", "state", "ENABLED"),
+				),
+			},
+			// Disable
+			resource.TestStep{
+				Config: testAccCsvserverEnableDisable_disabled,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserverExist("netscaler_csvserver.tf_test_acc_csvserver", nil),
+					resource.TestCheckResourceAttr("netscaler_csvserver.tf_test_acc_csvserver", "state", "DISABLED"),
+				),
+			},
+			// Re enable
+			resource.TestStep{
+				Config: testAccCsvserverEnableDisable_enabled,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserverExist("netscaler_csvserver.tf_test_acc_csvserver", nil),
+					resource.TestCheckResourceAttr("netscaler_csvserver.tf_test_acc_csvserver", "state", "ENABLED"),
+				),
+			},
+		},
+	})
+}

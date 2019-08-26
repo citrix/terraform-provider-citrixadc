@@ -581,7 +581,6 @@ func readCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("sopersistence", data["sopersistence"])
 	d.Set("sopersistencetimeout", data["sopersistencetimeout"])
 	d.Set("sothreshold", data["sothreshold"])
-	d.Set("state", data["state"])
 	d.Set("stateupdate", data["stateupdate"])
 	d.Set("targettype", data["targettype"])
 	d.Set("tcpprofilename", data["tcpprofilename"])
@@ -621,6 +620,7 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	csvserver := cs.Csvserver{
 		Name: d.Get("name").(string),
 	}
+	stateChange := false
 	hasChange := false
 	sslcertkeyChanged := false
 	sslprofileChanged := false
@@ -917,8 +917,7 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("state") {
 		log.Printf("[DEBUG] netscaler-provider:  State has changed for csvserver %s, starting update", csvserverName)
-		csvserver.State = d.Get("state").(string)
-		hasChange = true
+		stateChange = true
 	}
 	if d.HasChange("stateupdate") {
 		log.Printf("[DEBUG] netscaler-provider:  Stateupdate has changed for csvserver %s, starting update", csvserverName)
@@ -1037,6 +1036,13 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	if stateChange {
+		err := doCsvserverStateChange(d, client)
+		if err != nil {
+			return fmt.Errorf("Error enabling/disabling cs vserver %s", csvserverName)
+		}
+	}
+
 	return readCsvserverFunc(d, meta)
 }
 
@@ -1050,6 +1056,36 @@ func deleteCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId("")
+
+	return nil
+}
+
+func doCsvserverStateChange(d *schema.ResourceData, client *netscaler.NitroClient) error {
+	log.Printf("[DEBUG]  netscaler-provider: In doLbvserverStateChange")
+
+	// We need a new instance of the struct since
+	// ActOnResource will fail if we put in superfluous attributes
+	csvserver := cs.Csvserver{
+		Name: d.Get("name").(string),
+	}
+
+	newstate := d.Get("state")
+
+	// Enable action
+	if newstate == "ENABLED" {
+		err := client.ActOnResource(netscaler.Csvserver.Type(), csvserver, "enable")
+		if err != nil {
+			return err
+		}
+	} else if newstate == "DISABLED" {
+		// Add attributes relevant to the disable operation
+		err := client.ActOnResource(netscaler.Csvserver.Type(), csvserver, "disable")
+		if err != nil {
+			return err
+		}
+	} else {
+		return fmt.Errorf("\"%s\" is not a valid state. Use (\"ENABLED\", \"DISABLED\").", newstate)
+	}
 
 	return nil
 }
