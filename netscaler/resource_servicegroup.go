@@ -357,10 +357,8 @@ func createServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 		Cmp:                  d.Get("cmp").(string),
 		Comment:              d.Get("comment").(string),
 		Customserverid:       d.Get("customserverid").(string),
-		Delay:                d.Get("delay").(int),
 		Downstateflush:       d.Get("downstateflush").(string),
 		Dupweight:            d.Get("dupweight").(int),
-		Graceful:             d.Get("graceful").(string),
 		Hashid:               d.Get("hashid").(int),
 		Healthmonitor:        d.Get("healthmonitor").(string),
 		Httpprofilename:      d.Get("httpprofilename").(string),
@@ -608,10 +606,8 @@ func readServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("cmp", data["cmp"])
 	d.Set("comment", data["comment"])
 	d.Set("customserverid", data["customserverid"])
-	d.Set("delay", data["delay"])
 	d.Set("downstateflush", data["downstateflush"])
 	d.Set("dupweight", data["dupweight"])
-	d.Set("graceful", data["graceful"])
 	d.Set("hashid", data["hashid"])
 	d.Set("healthmonitor", data["healthmonitor"])
 	d.Set("httpprofilename", data["httpprofilename"])
@@ -701,6 +697,7 @@ func updateServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 		Servicegroupname: d.Get("servicegroupname").(string),
 	}
 
+	stateChange := false
 	hasChange := false
 	lbvserversChanged := false
 	lbmonitorChanged := false
@@ -772,11 +769,6 @@ func updateServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 		servicegroup.Customserverid = d.Get("customserverid").(string)
 		hasChange = true
 	}
-	if d.HasChange("delay") {
-		log.Printf("[DEBUG]  netscaler-provider: Delay has changed for servicegroup %s, starting update", servicegroupName)
-		servicegroup.Delay = d.Get("delay").(int)
-		hasChange = true
-	}
 	if d.HasChange("downstateflush") {
 		log.Printf("[DEBUG]  netscaler-provider: Downstateflush has changed for servicegroup %s, starting update", servicegroupName)
 		servicegroup.Downstateflush = d.Get("downstateflush").(string)
@@ -785,11 +777,6 @@ func updateServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("dupweight") {
 		log.Printf("[DEBUG]  netscaler-provider: Dupweight has changed for servicegroup %s, starting update", servicegroupName)
 		servicegroup.Dupweight = d.Get("dupweight").(int)
-		hasChange = true
-	}
-	if d.HasChange("graceful") {
-		log.Printf("[DEBUG]  netscaler-provider: Graceful has changed for servicegroup %s, starting update", servicegroupName)
-		servicegroup.Graceful = d.Get("graceful").(string)
 		hasChange = true
 	}
 	if d.HasChange("hashid") {
@@ -914,8 +901,7 @@ func updateServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("state") {
 		log.Printf("[DEBUG]  netscaler-provider: State has changed for servicegroup %s, starting update", servicegroupName)
-		servicegroup.State = d.Get("state").(string)
-		hasChange = true
+		stateChange = true
 	}
 	if d.HasChange("svrtimeout") {
 		log.Printf("[DEBUG]  netscaler-provider: Svrtimeout has changed for servicegroup %s, starting update", servicegroupName)
@@ -1067,6 +1053,13 @@ func updateServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 
 	}
 
+	if stateChange {
+		err := doServicegroupStateChange(d, client)
+		if err != nil {
+			return fmt.Errorf("Error enabling/disabling servicegroup %s", servicegroupName)
+		}
+	}
+
 	return readServicegroupFunc(d, meta)
 }
 
@@ -1092,4 +1085,38 @@ func expandStringList(configured []interface{}) []string {
 		vs = append(vs, v.(string))
 	}
 	return vs
+}
+
+func doServicegroupStateChange(d *schema.ResourceData, client *netscaler.NitroClient) error {
+	log.Printf("[DEBUG]  netscaler-provider: In doServicegroupStateChange")
+
+	// We need a new instance of the struct since
+	// ActOnResource will fail if we put in superfluous attributes
+	serviceGroup := basic.Servicegroup{
+		Servicegroupname: d.Get("servicegroupname").(string),
+		Servername:       d.Get("servername").(string),
+		Port:             d.Get("port").(int),
+	}
+
+	newstate := d.Get("state")
+
+	// Enable action
+	if newstate == "ENABLED" {
+		err := client.ActOnResource(netscaler.Servicegroup.Type(), serviceGroup, "enable")
+		if err != nil {
+			return err
+		}
+	} else if newstate == "DISABLED" {
+		// Add attributes relevant to the disable operation
+		serviceGroup.Delay = d.Get("delay").(int)
+		serviceGroup.Graceful = d.Get("graceful").(string)
+		err := client.ActOnResource(netscaler.Servicegroup.Type(), serviceGroup, "disable")
+		if err != nil {
+			return err
+		}
+	} else {
+		return fmt.Errorf("\"%s\" is not a valid state. Use (\"ENABLED\", \"DISABLED\").", newstate)
+	}
+
+	return nil
 }
