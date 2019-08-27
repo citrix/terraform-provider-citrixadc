@@ -158,3 +158,59 @@ func TestAccServerAssertNonUpdateableAttributes(t *testing.T) {
 	testHelperVerifyImmutabilityFunc(c, t, serverType, serverName, serverInstance, "ipv6address")
 	serverInstance.Ipv6address = ""
 }
+
+const testAccServerEnableDisable_enabled = `
+resource "netscaler_server" "tf_enable_disable_test_svr" {
+	name = "tf_enable_disable_test_svr"
+	ipaddress = "192.168.43.33"
+	comment = "enabled state comment"
+	state = "ENABLED"
+	graceful = "YES"
+	delay = 60
+}
+`
+
+const testAccServerEnableDisable_disabled = `
+resource "netscaler_server" "tf_enable_disable_test_svr" {
+	name = "tf_enable_disable_test_svr"
+	ipaddress = "192.168.43.33"
+	comment = "disabled state comment"
+	state = "DISABLED"
+	graceful = "YES"
+	delay = 60
+}
+`
+
+func TestAccServer_enable_disable(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServerDestroy,
+		Steps: []resource.TestStep{
+			// Create enabled
+			resource.TestStep{
+				Config: testAccServerEnableDisable_enabled,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServerExist("netscaler_server.tf_enable_disable_test_svr", nil),
+					resource.TestCheckResourceAttr("netscaler_server.tf_enable_disable_test_svr", "state", "ENABLED"),
+				),
+			},
+			// Disable
+			resource.TestStep{
+				Config: testAccServerEnableDisable_disabled,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServerExist("netscaler_server.tf_enable_disable_test_svr", nil),
+					resource.TestCheckResourceAttr("netscaler_server.tf_enable_disable_test_svr", "state", "DISABLED"),
+				),
+			},
+			// Re enable
+			resource.TestStep{
+				Config: testAccServerEnableDisable_enabled,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServerExist("netscaler_server.tf_enable_disable_test_svr", nil),
+					resource.TestCheckResourceAttr("netscaler_server.tf_enable_disable_test_svr", "state", "ENABLED"),
+				),
+			},
+		},
+	})
+}

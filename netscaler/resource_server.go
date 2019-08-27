@@ -114,11 +114,9 @@ func createServerFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	server := basic.Server{
 		Comment:            d.Get("comment").(string),
-		Delay:              d.Get("delay").(int),
 		Domain:             d.Get("domain").(string),
 		Domainresolvenow:   d.Get("domainresolvenow").(bool),
 		Domainresolveretry: d.Get("domainresolveretry").(int),
-		Graceful:           d.Get("graceful").(string),
 		Internal:           d.Get("internal").(bool),
 		Ipaddress:          d.Get("ipaddress").(string),
 		Ipv6address:        d.Get("ipv6address").(string),
@@ -158,11 +156,9 @@ func readServerFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("name", data["name"])
 	d.Set("comment", data["comment"])
-	d.Set("delay", data["delay"])
 	d.Set("domain", data["domain"])
 	d.Set("domainresolvenow", data["domainresolvenow"])
 	d.Set("domainresolveretry", data["domainresolveretry"])
-	d.Set("graceful", data["graceful"])
 	d.Set("internal", data["internal"])
 	d.Set("ipaddress", data["ipaddress"])
 	d.Set("ipv6address", data["ipv6address"])
@@ -185,15 +181,14 @@ func updateServerFunc(d *schema.ResourceData, meta interface{}) error {
 	server := basic.Server{
 		Name: d.Get("name").(string),
 	}
+
+	stateChange := false
+
 	hasChange := false
+
 	if d.HasChange("comment") {
 		log.Printf("[DEBUG]  netscaler-provider: Comment has changed for server %s, starting update", serverName)
 		server.Comment = d.Get("comment").(string)
-		hasChange = true
-	}
-	if d.HasChange("delay") {
-		log.Printf("[DEBUG]  netscaler-provider: Delay has changed for server %s, starting update", serverName)
-		server.Delay = d.Get("delay").(int)
 		hasChange = true
 	}
 	if d.HasChange("domain") {
@@ -209,11 +204,6 @@ func updateServerFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("domainresolveretry") {
 		log.Printf("[DEBUG]  netscaler-provider: Domainresolveretry has changed for server %s, starting update", serverName)
 		server.Domainresolveretry = d.Get("domainresolveretry").(int)
-		hasChange = true
-	}
-	if d.HasChange("graceful") {
-		log.Printf("[DEBUG]  netscaler-provider: Graceful has changed for server %s, starting update", serverName)
-		server.Graceful = d.Get("graceful").(string)
 		hasChange = true
 	}
 	if d.HasChange("internal") {
@@ -243,8 +233,7 @@ func updateServerFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("state") {
 		log.Printf("[DEBUG]  netscaler-provider: State has changed for server %s, starting update", serverName)
-		server.State = d.Get("state").(string)
-		hasChange = true
+		stateChange = true
 	}
 	if d.HasChange("td") {
 		log.Printf("[DEBUG]  netscaler-provider: Td has changed for server %s, starting update", serverName)
@@ -268,6 +257,12 @@ func updateServerFunc(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("Error updating server %s", serverName)
 		}
 	}
+	if stateChange {
+		err := doServerStateChange(d, client)
+		if err != nil {
+			return fmt.Errorf("Error enabling/disabling server %s", serverName)
+		}
+	}
 	return readServerFunc(d, meta)
 }
 
@@ -281,6 +276,38 @@ func deleteServerFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId("")
+
+	return nil
+}
+
+func doServerStateChange(d *schema.ResourceData, client *netscaler.NitroClient) error {
+	log.Printf("[DEBUG]  netscaler-provider: In doServerStateChange")
+
+	// We need a new instance of the struct since
+	// ActOnResource will fail if we put in superfluous attributes
+	server := basic.Server{
+		Name: d.Get("name").(string),
+	}
+
+	newstate := d.Get("state")
+
+	// Enable action
+	if newstate == "ENABLED" {
+		err := client.ActOnResource(netscaler.Server.Type(), server, "enable")
+		if err != nil {
+			return err
+		}
+	} else if newstate == "DISABLED" {
+		// Add attributes relevant to the disable operation
+		server.Delay = d.Get("delay").(int)
+		server.Graceful = d.Get("graceful").(string)
+		err := client.ActOnResource(netscaler.Server.Type(), server, "disable")
+		if err != nil {
+			return err
+		}
+	} else {
+		return fmt.Errorf("\"%s\" is not a valid state. Use (\"ENABLED\", \"DISABLED\").", newstate)
+	}
 
 	return nil
 }

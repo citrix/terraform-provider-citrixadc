@@ -348,10 +348,8 @@ func createServiceFunc(d *schema.ResourceData, meta interface{}) error {
 		Comment:                      d.Get("comment").(string),
 		Contentinspectionprofilename: d.Get("contentinspectionprofilename").(string),
 		Customserverid:               d.Get("customserverid").(string),
-		Delay:                        d.Get("delay").(int),
 		Dnsprofilename:               d.Get("dnsprofilename").(string),
 		Downstateflush:               d.Get("downstateflush").(string),
-		Graceful:                     d.Get("graceful").(string),
 		Hashid:                       d.Get("hashid").(int),
 		Healthmonitor:                d.Get("healthmonitor").(string),
 		Httpprofilename:              d.Get("httpprofilename").(string),
@@ -481,10 +479,8 @@ func readServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("comment", data["comment"])
 	d.Set("contentinspectionprofilename", data["contentinspectionprofilename"])
 	d.Set("customserverid", data["customserverid"])
-	d.Set("delay", data["delay"])
 	d.Set("dnsprofilename", data["dnsprofilename"])
 	d.Set("downstateflush", data["downstateflush"])
-	d.Set("graceful", data["graceful"])
 	d.Set("hashid", data["hashid"])
 	d.Set("healthmonitor", data["healthmonitor"])
 	d.Set("httpprofilename", data["httpprofilename"])
@@ -514,7 +510,6 @@ func readServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("servername", data["servername"])
 	d.Set("servicetype", data["servicetype"])
 	d.Set("sp", data["sp"])
-	d.Set("state", data["state"])
 	d.Set("svrtimeout", data["svrtimeout"])
 	d.Set("tcpb", data["tcpb"])
 	d.Set("tcpprofilename", data["tcpprofilename"])
@@ -557,6 +552,7 @@ func updateServiceFunc(d *schema.ResourceData, meta interface{}) error {
 
 	serviceName := d.Get("name").(string)
 
+	stateChange := false
 	hasChange := false
 	lbvserverChanged := false
 	lbmonitorChanged := false
@@ -633,11 +629,6 @@ func updateServiceFunc(d *schema.ResourceData, meta interface{}) error {
 		service.Customserverid = d.Get("customserverid").(string)
 		hasChange = true
 	}
-	if d.HasChange("delay") {
-		log.Printf("[DEBUG] netscaler-provider:  Delay has changed for service %s, starting update", serviceName)
-		service.Delay = d.Get("delay").(int)
-		hasChange = true
-	}
 	if d.HasChange("dnsprofilename") {
 		log.Printf("[DEBUG]  netscaler-provider: Dnsprofilename has changed for service %s, starting update", serviceName)
 		service.Dnsprofilename = d.Get("dnsprofilename").(string)
@@ -646,11 +637,6 @@ func updateServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("downstateflush") {
 		log.Printf("[DEBUG] netscaler-provider:  Downstateflush has changed for service %s, starting update", serviceName)
 		service.Downstateflush = d.Get("downstateflush").(string)
-		hasChange = true
-	}
-	if d.HasChange("graceful") {
-		log.Printf("[DEBUG] netscaler-provider:  Graceful has changed for service %s, starting update", serviceName)
-		service.Graceful = d.Get("graceful").(string)
 		hasChange = true
 	}
 	if d.HasChange("hashid") {
@@ -785,8 +771,7 @@ func updateServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("state") {
 		log.Printf("[DEBUG] netscaler-provider:  State has changed for service %s, starting update", serviceName)
-		service.State = d.Get("state").(string)
-		hasChange = true
+		stateChange = true
 	}
 	if d.HasChange("svrtimeout") {
 		log.Printf("[DEBUG] netscaler-provider:  Svrtimeout has changed for service %s, starting update", serviceName)
@@ -901,6 +886,13 @@ func updateServiceFunc(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] netscaler-provider: new lbvserver has been bound to service  lbvserver %s service %s", lbvserverName, serviceName)
 	}
 
+	if stateChange {
+		err := doServiceStateChange(d, client)
+		if err != nil {
+			return fmt.Errorf("Error enabling/disabling service %s", serviceName)
+		}
+	}
+
 	return readServiceFunc(d, meta)
 }
 
@@ -918,6 +910,38 @@ func deleteServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId("")
+
+	return nil
+}
+
+func doServiceStateChange(d *schema.ResourceData, client *netscaler.NitroClient) error {
+	log.Printf("[DEBUG]  netscaler-provider: In doServiceStateChange")
+
+	// We need a new instance of the struct since
+	// ActOnResource will fail if we put in superfluous attributes
+	service := basic.Service{
+		Name: d.Get("name").(string),
+	}
+
+	newstate := d.Get("state")
+
+	// Enable action
+	if newstate == "ENABLED" {
+		err := client.ActOnResource(netscaler.Service.Type(), service, "enable")
+		if err != nil {
+			return err
+		}
+	} else if newstate == "DISABLED" {
+		// Add attributes relevant to the disable operation
+		service.Delay = d.Get("delay").(int)
+		service.Graceful = d.Get("graceful").(string)
+		err := client.ActOnResource(netscaler.Service.Type(), service, "disable")
+		if err != nil {
+			return err
+		}
+	} else {
+		return fmt.Errorf("\"%s\" is not a valid state. Use (\"ENABLED\", \"DISABLED\").", newstate)
+	}
 
 	return nil
 }

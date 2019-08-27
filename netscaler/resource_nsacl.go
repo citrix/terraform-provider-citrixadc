@@ -310,6 +310,7 @@ func updateNsaclFunc(d *schema.ResourceData, meta interface{}) error {
 	nsacl := ns.Nsacl{
 		Aclname: d.Get("aclname").(string),
 	}
+	stateChange := false
 	hasChange := false
 	if d.HasChange("aclaction") {
 		log.Printf("[DEBUG]  netscaler-provider: Aclaction has changed for nsacl %s, starting update", nsaclName)
@@ -431,8 +432,7 @@ func updateNsaclFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("state") {
 		log.Printf("[DEBUG]  netscaler-provider: State has changed for nsacl %s, starting update", nsaclName)
-		nsacl.State = d.Get("state").(string)
-		hasChange = true
+		stateChange = true
 	}
 	if d.HasChange("stateful") {
 		log.Printf("[DEBUG]  netscaler-provider: Stateful has changed for nsacl %s, starting update", nsaclName)
@@ -466,6 +466,13 @@ func updateNsaclFunc(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("Error updating nsacl %s", nsaclName)
 		}
 	}
+
+	if stateChange {
+		err := doNsaclStateChange(d, client)
+		if err != nil {
+			return fmt.Errorf("Error enabling/disabling nsacl %s", nsaclName)
+		}
+	}
 	return readNsaclFunc(d, meta)
 }
 
@@ -479,6 +486,34 @@ func deleteNsaclFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId("")
+
+	return nil
+}
+
+func doNsaclStateChange(d *schema.ResourceData, client *netscaler.NitroClient) error {
+	log.Printf("[DEBUG]  netscaler-provider: In doServerStateChange")
+
+	// We need a new instance of the struct since
+	// ActOnResource will fail if we put in superfluous attributes
+	nsacl := ns.Nsacl{
+		Aclname: d.Get("aclname").(string),
+	}
+
+	newstate := d.Get("state")
+
+	if newstate == "ENABLED" {
+		err := client.ActOnResource(netscaler.Nsacl.Type(), nsacl, "enable")
+		if err != nil {
+			return err
+		}
+	} else if newstate == "DISABLED" {
+		err := client.ActOnResource(netscaler.Nsacl.Type(), nsacl, "disable")
+		if err != nil {
+			return err
+		}
+	} else {
+		return fmt.Errorf("\"%s\" is not a valid state. Use (\"ENABLED\", \"DISABLED\").", newstate)
+	}
 
 	return nil
 }

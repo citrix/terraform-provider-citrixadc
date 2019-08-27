@@ -106,7 +106,7 @@ func testAccCheckServiceDestroy(s *terraform.State) error {
 const testAccService_basic = `
 
 resource "netscaler_lbvserver" "foo" {
-  
+
   ipv46 = "10.202.11.11"
   name = "foo_lb"
   port = 80
@@ -115,7 +115,7 @@ resource "netscaler_lbvserver" "foo" {
 
 
 resource "netscaler_service" "foo" {
-  
+
   lbvserver = "foo_lb"
   name = "foo_svc"
   port = 80
@@ -202,4 +202,87 @@ func TestAccServiceAssertNonUpdateableAttributes(t *testing.T) {
 	testHelperVerifyImmutabilityFunc(c, t, serviceType, serviceName, serviceInstance, "riseapbrstatsmsgcode")
 	serviceInstance.Riseapbrstatsmsgcode = 0
 
+}
+
+const testAccServiceEnableDisable_enabled = `
+
+resource "netscaler_lbvserver" "tf_acc_lbvsrv" {
+
+  ipv46 = "10.202.11.11"
+  name = "tf_acc_lbvsrv"
+  port = 80
+  servicetype = "HTTP"
+}
+
+
+resource "netscaler_service" "tf_acc_service" {
+
+  lbvserver = netscaler_lbvserver.tf_acc_lbvsrv.name
+  name = "tf_acc_service"
+  port = 80
+  ip = "10.202.22.12"
+  servicetype = "HTTP"
+  comment = "enabled state comment"
+
+  state = "ENABLED"
+  graceful = "YES"
+  delay = 60
+}
+`
+
+const testAccServiceEnableDisable_disabled = `
+
+resource "netscaler_lbvserver" "tf_acc_lbvsrv" {
+
+  ipv46 = "10.202.11.11"
+  name = "tf_acc_lbvsrv"
+  port = 80
+  servicetype = "HTTP"
+}
+
+
+resource "netscaler_service" "tf_acc_service" {
+
+  lbvserver = netscaler_lbvserver.tf_acc_lbvsrv.name
+  name = "tf_acc_service"
+  port = 80
+  ip = "10.202.22.12"
+  servicetype = "HTTP"
+  comment = "disabled state comment"
+
+  state = "DISABLED"
+  graceful = "YES"
+  delay = 60
+}
+`
+
+func TestAccService_enable_disable(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServiceDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccServiceEnableDisable_enabled,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExist("netscaler_service.tf_acc_service", nil),
+					resource.TestCheckResourceAttr("netscaler_service.tf_acc_service", "state", "ENABLED"),
+				),
+			},
+			resource.TestStep{
+				Config: testAccServiceEnableDisable_disabled,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExist("netscaler_service.tf_acc_service", nil),
+					resource.TestCheckResourceAttr("netscaler_service.tf_acc_service", "state", "DISABLED"),
+				),
+			},
+			resource.TestStep{
+				Config: testAccServiceEnableDisable_enabled,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExist("netscaler_service.tf_acc_service", nil),
+					resource.TestCheckResourceAttr("netscaler_service.tf_acc_service", "state", "ENABLED"),
+				),
+			},
+		},
+	})
 }

@@ -196,3 +196,61 @@ func TestAccServicegroupAssertNonUpdateableAttributes(t *testing.T) {
 	servicegroupInstance.Includemembers = false
 
 }
+
+const testAccServicegroupEnableDisable_enabled = `
+resource "netscaler_servicegroup" "tf_enable_disable_test_svcgroup" {
+	servicegroupname = "tf_enable_disable_test_svcgroup"
+    servicetype = "HTTP"
+	servicegroupmembers = []
+	comment = "enabled state comment"
+	state = "ENABLED"
+	graceful = "YES"
+	delay = 60
+}
+`
+
+const testAccServicegroupEnableDisable_disabled = `
+resource "netscaler_servicegroup" "tf_enable_disable_test_svcgroup" {
+	servicegroupname = "tf_enable_disable_test_svcgroup"
+    servicetype = "HTTP"
+	servicegroupmembers = []
+	comment = "disabled state comment"
+	state = "DISABLED"
+	graceful = "YES"
+	delay = 60
+}
+`
+
+func TestAccServicegroup_enable_disable(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServicegroupDestroy,
+		Steps: []resource.TestStep{
+			// Create enabled
+			resource.TestStep{
+				Config: testAccServicegroupEnableDisable_enabled,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServicegroupExist("netscaler_servicegroup.tf_enable_disable_test_svcgroup", nil),
+					resource.TestCheckResourceAttr("netscaler_servicegroup.tf_enable_disable_test_svcgroup", "state", "ENABLED"),
+				),
+			},
+			// Disable
+			resource.TestStep{
+				Config: testAccServicegroupEnableDisable_disabled,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServicegroupExist("netscaler_servicegroup.tf_enable_disable_test_svcgroup", nil),
+					resource.TestCheckResourceAttr("netscaler_servicegroup.tf_enable_disable_test_svcgroup", "state", "DISABLED"),
+				),
+			},
+			// Re enable
+			resource.TestStep{
+				Config: testAccServicegroupEnableDisable_enabled,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServicegroupExist("netscaler_servicegroup.tf_enable_disable_test_svcgroup", nil),
+					resource.TestCheckResourceAttr("netscaler_servicegroup.tf_enable_disable_test_svcgroup", "state", "ENABLED"),
+				),
+			},
+		},
+	})
+}

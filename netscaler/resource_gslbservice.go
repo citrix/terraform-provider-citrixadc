@@ -1,8 +1,8 @@
 package netscaler
 
 import (
+	"github.com/chiradeep/go-nitro/config/basic"
 	"github.com/chiradeep/go-nitro/config/gslb"
-
 	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -214,6 +214,11 @@ func resourceNetScalerGslbservice() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"delay": &schema.Schema{
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -345,6 +350,7 @@ func updateGslbserviceFunc(d *schema.ResourceData, meta interface{}) error {
 	gslbservice := gslb.Gslbservice{
 		Servicename: d.Get("servicename").(string),
 	}
+	stateChange := false
 	hasChange := false
 	if d.HasChange("appflowlog") {
 		log.Printf("[DEBUG]  netscaler-provider: Appflowlog has changed for gslbservice %s, starting update", gslbserviceName)
@@ -508,8 +514,7 @@ func updateGslbserviceFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("state") {
 		log.Printf("[DEBUG]  netscaler-provider: State has changed for gslbservice %s, starting update", gslbserviceName)
-		gslbservice.State = d.Get("state").(string)
-		hasChange = true
+		stateChange = true
 	}
 	if d.HasChange("svrtimeout") {
 		log.Printf("[DEBUG]  netscaler-provider: Svrtimeout has changed for gslbservice %s, starting update", gslbserviceName)
@@ -538,6 +543,14 @@ func updateGslbserviceFunc(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("Error updating gslbservice %s", gslbserviceName)
 		}
 	}
+
+	if stateChange {
+		err := doGslbServiceStateChange(d, client)
+		if err != nil {
+			return fmt.Errorf("Error enabling/disabling glsb service %s", gslbserviceName)
+		}
+	}
+
 	return readGslbserviceFunc(d, meta)
 }
 
@@ -551,6 +564,37 @@ func deleteGslbserviceFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId("")
+
+	return nil
+}
+
+func doGslbServiceStateChange(d *schema.ResourceData, client *netscaler.NitroClient) error {
+	log.Printf("[DEBUG]  netscaler-provider: In doGslbServiceStateChange")
+
+	// We need a new instance of the struct since
+	// ActOnResource will fail if we put in superfluous attributes
+	gslbService := basic.Service{
+		Name: d.Get("servicename").(string),
+	}
+
+	newstate := d.Get("state")
+
+	// Enable action
+	if newstate == "ENABLED" {
+		err := client.ActOnResource(netscaler.Service.Type(), gslbService, "enable")
+		if err != nil {
+			return err
+		}
+	} else if newstate == "DISABLED" {
+		// Add attributes relevant to the disable operation
+		gslbService.Delay = d.Get("delay").(int)
+		err := client.ActOnResource(netscaler.Service.Type(), gslbService, "disable")
+		if err != nil {
+			return err
+		}
+	} else {
+		return fmt.Errorf("\"%s\" is not a valid state. Use (\"ENABLED\", \"DISABLED\").", newstate)
+	}
 
 	return nil
 }
