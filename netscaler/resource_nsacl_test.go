@@ -120,3 +120,59 @@ resource "netscaler_nsacl" "foo" {
 
 }
 `
+
+const testAccNsaclEnableDisable_enabled = `
+resource "netscaler_nsacl" "tf_test_acc_nsacl" {
+    aclname = "tf_test_acc_nsacl"
+    aclaction = "ALLOW"
+    priority = "100"
+    srcipval = "192.168.10.22"
+    destipval = "172.17.0.20"
+    state = "ENABLED"
+}
+`
+
+const testAccNsaclEnableDisable_disabled = `
+resource "netscaler_nsacl" "tf_test_acc_nsacl" {
+    aclname = "tf_test_acc_nsacl"
+    aclaction = "ALLOW"
+    priority = "99"
+    srcipval = "192.168.10.22"
+    destipval = "172.17.0.20"
+    state = "DISABLED"
+}
+`
+
+func TestAccNsacl_enable_disable(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNsaclDestroy,
+		Steps: []resource.TestStep{
+			// Create enabled
+			resource.TestStep{
+				Config: testAccNsaclEnableDisable_enabled,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNsaclExist("netscaler_nsacl.tf_test_acc_nsacl", nil),
+					resource.TestCheckResourceAttr("netscaler_nsacl.tf_test_acc_nsacl", "state", "ENABLED"),
+				),
+			},
+			// Disable
+			resource.TestStep{
+				Config: testAccNsaclEnableDisable_disabled,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNsaclExist("netscaler_nsacl.tf_test_acc_nsacl", nil),
+					resource.TestCheckResourceAttr("netscaler_nsacl.tf_test_acc_nsacl", "state", "DISABLED"),
+				),
+			},
+			// Re enable
+			resource.TestStep{
+				Config: testAccNsaclEnableDisable_enabled,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNsaclExist("netscaler_nsacl.tf_test_acc_nsacl", nil),
+					resource.TestCheckResourceAttr("netscaler_nsacl.tf_test_acc_nsacl", "state", "ENABLED"),
+				),
+			},
+		},
+	})
+}
