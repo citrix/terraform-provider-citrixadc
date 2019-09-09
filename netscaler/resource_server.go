@@ -77,6 +77,11 @@ func resourceNetScalerServer() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"querytype": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"state": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
