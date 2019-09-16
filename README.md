@@ -1,4 +1,4 @@
-[![CircleCI](https://circleci.com/gh/citrix/terraform-provider-netscaler/tree/master.svg?style=shield)](https://circleci.com/gh/citrix/terraform-provider-netscaler/tree/master)
+[![CircleCI](https://circleci.com/gh/citrix/terraform-provider-citrixadc/tree/master.svg?style=shield)](https://circleci.com/gh/citrix/terraform-provider-citrixadc/tree/master)
 # terraform-provider-citrixadc
 
 [Terraform](https://www.terraform.io) Provider for [Citrix
