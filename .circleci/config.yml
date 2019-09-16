@@ -1,7 +1,7 @@
 version: 2
 jobs:
  build:
-   working_directory: /home/circleci/.go_workspace/src/github.com/citrix/terraform-provider-netscaler/tests
+   working_directory: /home/circleci/.go_workspace/src/github.com/citrix/terraform-provider-citrixadc/tests
    machine:
       image: ubuntu-1604:201903-01
    environment:
@@ -9,12 +9,12 @@ jobs:
       TERRAFORM_VERSION: 0.12.1
    steps:
      - checkout:
-         path: /home/circleci/.go_workspace/src/github.com/citrix/terraform-provider-netscaler/
+         path: /home/circleci/.go_workspace/src/github.com/citrix/terraform-provider-citrixadc/
 
      - run:
          name: Build
          command: |
-           go build -o terraform-provider-netscaler ../main.go
+           go build -o terraform-provider-citrixadc ../main.go
 
      - run:
          name: Install Terraform

@@ -3,8 +3,8 @@ vip_config = {
 }
 
 backend_service_config = {
-   clttimeout = 40
-   backend_port = 80
+  clttimeout   = 40
+  backend_port = 80
 }
 
 backend_services = [

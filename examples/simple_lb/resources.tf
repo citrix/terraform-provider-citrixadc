@@ -1,16 +1,19 @@
-
-resource "netscaler_lbvserver" "production_lb" {
-  name = "productionLB"
-  ipv46 = "${lookup(var.vip_config, "vip")}"
-  port = "80"
+resource "citrixadc_lbvserver" "production_lb" {
+  name        = "productionLB"
+  ipv46       = var.vip_config["vip"]
+  port        = "80"
   servicetype = "HTTP"
 }
 
-resource "netscaler_servicegroup" "backend" {
+resource "citrixadc_servicegroup" "backend" {
   servicegroupname = "productionBackend"
-  lbvservers = ["${netscaler_lbvserver.production_lb.name}"]
-  servicetype = "HTTP"
-  clttimeout = "${lookup(var.backend_service_config, "clttimeout")}"
-  servicegroupmembers = "${formatlist("%s:%s", var.backend_services, var.backend_service_config["backend_port"])}"
+  lbvservers       = [citrixadc_lbvserver.production_lb.name]
+  servicetype      = "HTTP"
+  clttimeout       = var.backend_service_config["clttimeout"]
+  servicegroupmembers = formatlist(
+    "%s:%s",
+    var.backend_services,
+    var.backend_service_config["backend_port"],
+  )
 }
 

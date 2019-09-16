@@ -1,4 +1,3 @@
-provider "netscaler" {
-    version = "0.11.10"
-    endpoint = "http://10.78.60.209"
+provider "citrixadc" {
+  endpoint = "http://localhost:8080"
 }

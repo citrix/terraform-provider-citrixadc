@@ -1,3 +1,3 @@
-provider "netscaler" {
-    endpoint = "http://localhost:32769/"
+provider "citrixadc" {
+  endpoint = "http://localhost:8080"
 }

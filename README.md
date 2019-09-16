@@ -1,14 +1,14 @@
-[![CircleCI](https://circleci.com/gh/citrix/terraform-provider-netscaler/tree/master.svg?style=shield)](https://circleci.com/gh/citrix/terraform-provider-netscaler/tree/master)
-# terraform-provider-netscaler
+[![CircleCI](https://circleci.com/gh/citrix/terraform-provider-citrixadc/tree/master.svg?style=shield)](https://circleci.com/gh/citrix/terraform-provider-citrixadc/tree/master)
+# terraform-provider-citrixadc
 
 [Terraform](https://www.terraform.io) Provider for [Citrix
-NetScaler](https://www.citrix.com/products/netscaler-adc/)
+ADC](https://www.citrix.com/products/netscaler-adc/)
 
 ## Description
 
-This project is a terraform custom provider for Citrix NetScaler. It uses the [Nitro API](https://developer-docs.citrix.com/projects/netscaler-nitro-api/en/12.0/) to create/configure LB configurations. 
+This project is a terraform custom provider for Citrix ADC. It uses the [Nitro API](https://developer-docs.citrix.com/projects/netscaler-nitro-api/en/12.0/) to create/configure LB configurations.
 
-**Important note: The provider will not commit the config changes to NetScaler's persistent
+**Important note: The provider will not commit the config changes to Citrix ADC's persistent
 store.**
 
 ## Requirement
@@ -20,15 +20,15 @@ store.**
 
 ### Running
 1. Copy the binary (either from the [build](#building) or from the
-   [releases](https://github.com/citrix/terraform-provider-netscaler/releases) page)
-   `terraform-provider-netscaler` to an appropriate location.
+   [releases](https://github.com/citrix/terraform-provider-citrixadc/releases) page)
+   `terraform-provider-citrixadc` to an appropriate location.
 
    [Configure](https://www.terraform.io/docs/plugins/basics.html) `.terraformrc` to use the
-   `netscaler` provider. An example `.terraformrc`:
+   `citrixadc` provider. An example `.terraformrc`:
 
 ```
 providers {
-    netscaler = "<path-to-custom-providers>/terraform-provider-netscaler"
+    citrixadc = "<path-to-custom-providers>/terraform-provider-citrixadc"
 }
 ```
 
@@ -38,7 +38,7 @@ providers {
 terraform plan
 terraform apply
 ```
-3. The provider will not commit the config changes to NetScaler's persistent store. To do this, run the shell script `ns_commit.sh`:
+3. The provider will not commit the config changes to Citrix ADC's persistent store. To do this, run the shell script `ns_commit.sh`:
 
 ```
 export NS_URL=http://<host>:<port>/
@@ -52,40 +52,40 @@ To ensure that the config is saved on every run, we can use something like `terr
 ### Provider Configuration
 
 ```
-provider "netscaler" {
+provider "citrixadc" {
     username = "${var.ns_user}"
     password = "${var.ns_password}"
     endpoint = "http://10.71.136.250/"
 }
 ```
 
-We can use a `https` URL and accept the untrusted authority certificate on the NetScaler by specifying `insecure_skip_verify = true`
+We can use a `https` URL and accept the untrusted authority certificate on the Citrix ADC by specifying `insecure_skip_verify = true`
 
 ##### Argument Reference
 
 The following arguments are supported.
 
-* `username` - This is the user name to access to NetScaler. Defaults to `nsroot` unless environment variable `NS_LOGIN` has been set
-* `password` - This is the password to access to NetScaler. Defaults to `nsroot` unless environment variable `NS_PASSWORD` has been set
+* `username` - This is the user name to access to Citrix ADC. Defaults to `nsroot` unless environment variable `NS_LOGIN` has been set
+* `password` - This is the password to access to Citrix ADC. Defaults to `nsroot` unless environment variable `NS_PASSWORD` has been set
 * `endpoint` - (Required) Nitro API endpoint in the form `http://<NS_IP>/` or `http://<NS_IP>:<PORT>/`. Can be specified in environment variable `NS_URL`
-* `insecure_skip_verify` - (Optional, true/false) Whether to accept the untrusted certificate on the NetScaler when the NetScaler endpoint is `https`
-* `proxied_ns` - (Optional, NSIP) The target Netscaler NSIP for MAS proxied calls. When this option is defined, `username`, `password` and `endpoint` must refer to the MAS proxy.
+* `insecure_skip_verify` - (Optional, true/false) Whether to accept the untrusted certificate on the Citrix ADC when the Citrix ADC endpoint is `https`
+* `proxied_ns` - (Optional, NSIP) The target Citrix ADC NSIP for MAS proxied calls. When this option is defined, `username`, `password` and `endpoint` must refer to the MAS proxy.
 
 The username, password and endpoint can be provided in environment variables `NS_LOGIN`, `NS_PASSWORD` and `NS_URL`. 
 
 ### Resource Configuration
 
-#### `netscaler_lbvserver`
+#### `citrixadc_lbvserver`
 
 ```
-resource "netscaler_lbvserver" "foo" {
+resource "citrixadc_lbvserver" "foo" {
   name = "sample_lb"
   ipv46 = "10.71.136.150"
   port = 443
   servicetype = "SSL"
   lbmethod = "ROUNDROBIN"
   persistencetype = "COOKIEINSERT"
-  sslcertkey = "${netscaler_sslcertkey.foo.certkey}"
+  sslcertkey = "${citrixadc_sslcertkey.foo.certkey}"
   sslprofile = "ns_default_ssl_profile_secure_frontend"
 }
 ```
@@ -97,15 +97,15 @@ See <https://developer-docs.citrix.com/projects/netscaler-nitro-api/en/12.0/conf
 Note that the attribute `state` is not synced with the remote object.
 If the state of the lb vserver is out of sync with the terraform configuration you will need to manually taint the resource and apply the configuration again.
 
-#### `netscaler_service`
+#### `citrixadc_service`
 
 ```
-resource "netscaler_service" "backend_1" {
+resource "citrixadc_service" "backend_1" {
   ip = "10.33.44.55"
   port = 80
   servicetype = "HTTP"
-  lbvserver = "${netscaler_lbvserver.foo.name}"
-  lbmonitor = "${netscaler_lbmonitor.foo.name}"
+  lbvserver = "${citrixadc_lbvserver.foo.name}"
+  lbmonitor = "${citrixadc_lbmonitor.foo.name}"
 }
 ```
 
@@ -116,14 +116,14 @@ See <https://developer-docs.citrix.com/projects/netscaler-nitro-api/en/12.0/conf
 Note that the attribute `state` is not synced with the remote object.
 If the state of the service is out of sync with the terraform configuration you will need to manually taint the resource and apply the configuration again.
 
-#### `netscaler_servicegroup`
+#### `citrixadc_servicegroup`
 
 ```
-resource "netscaler_servicegroup" "backend_1" {
+resource "citrixadc_servicegroup" "backend_1" {
   servicegroupname = "backend_group_1"
   servicetype = "HTTP"
-  lbvservers = ["${netscaler_lbvserver.foo.name}]"
-  lbmonitor = "${netscaler_lbmonitor.foo.name}"
+  lbvservers = ["${citrixadc_lbvserver.foo.name}]"
+  lbmonitor = "${citrixadc_lbmonitor.foo.name}"
   servicegroupmembers = ["172.20.0.20:200:50","172.20.0.101:80:10",  "172.20.0.10:80:40"]
   servicegroupmembers_by_servername = ["server_1:200:50","server_2:80:10",  "server_3:80:40"]
 
@@ -133,12 +133,12 @@ resource "netscaler_servicegroup" "backend_1" {
 ##### Argument Reference
 See <https://developer-docs.citrix.com/projects/netscaler-nitro-api/en/12.0/configuration/basic/servicegroup/servicegroup/> for possible values for these arguments and for an exhaustive list of arguments. Additionally, you can specify the LB vservers  to be bound to this service using the `lbvservers` parameter. The `lbmonitor` parameter specifies the LB monitor to be bound.
 
-`servicegroupmembers_by_servername` gives the ability to define servicegroup members by providing the server name. The heuristic rule for assigning members to either `servicegroupmembers_by_servername` or `servicegroupmembers` is whether the `servername` and `ip` property of the binding as read from the Netscaler configuration have idetical values. When the values are identical the member is classified as a `servicegroupmembers`. When they differ the member is classified as `servicegroupmembers_by_servername`.
+`servicegroupmembers_by_servername` gives the ability to define servicegroup members by providing the server name. The heuristic rule for assigning members to either `servicegroupmembers_by_servername` or `servicegroupmembers` is whether the `servername` and `ip` property of the binding as read from the Citrix Adc configuration have idetical values. When the values are identical the member is classified as a `servicegroupmembers`. When they differ the member is classified as `servicegroupmembers_by_servername`.
 
-#### `netscaler_csvserver`
+#### `citrixadc_csvserver`
 
 ```
-resource "netscaler_csvserver" "foo" {
+resource "citrixadc_csvserver" "foo" {
   name = "sample_cs"
   ipv46 = "10.71.139.151"
   servicetype = "SSL"
@@ -154,10 +154,10 @@ See <https://developer-docs.citrix.com/projects/netscaler-nitro-api/en/12.0/conf
 Note that the attribute `state` is not synced with the remote object.
 If the state of the cs vserver is out of sync with the terraform configuration you will need to manually taint the resource and apply the configuration again.
 
-#### `netscaler_sslcertkey`
+#### `citrixadc_sslcertkey`
 
 ```
-resource "netscaler_sslcertkey" "foo" {
+resource "citrixadc_sslcertkey" "foo" {
   certkey = "sample_ssl_cert"
   cert = "/var/certs/server.crt"
   key = "/var/certs/server.key"
@@ -170,14 +170,14 @@ resource "netscaler_sslcertkey" "foo" {
 See <https://developer-docs.citrix.com/projects/netscaler-nitro-api/en/12.0/configuration/ssl/sslcertkey/sslcertkey/> for possible values for these arguments and for an exhaustive list of arguments. 
 
 
-#### `netscaler_cspolicy`
+#### `citrixadc_cspolicy`
 
 ```
-resource "netscaler_cspolicy" "foo" {
+resource "citrixadc_cspolicy" "foo" {
   policyname = "sample_cspolicy"
   url = "/cart/*"
-  csvserver = "${netscaler_csvserver.foo.name}"
-  targetlbvserver = "${netscaler_lbvserver.foo.name}"
+  csvserver = "${citrixadc_csvserver.foo.name}"
+  targetlbvserver = "${citrixadc_lbvserver.foo.name}"
 }
 ```
 
@@ -185,10 +185,10 @@ resource "netscaler_cspolicy" "foo" {
 See <https://developer-docs.citrix.com/projects/netscaler-nitro-api/en/12.0/configuration/content-switching/cspolicy/cspolicy/> for possible values for these arguments and for an exhaustive list of arguments. 
 
 
-#### `netscaler_lbmonitor`
+#### `citrixadc_lbmonitor`
 
 ```
-resource "netscaler_lbmonitor" "foo" {
+resource "citrixadc_lbmonitor" "foo" {
   monitorname = "sample_lb_monitor"
   type = "HTTP"
   interval = 350
@@ -199,10 +199,10 @@ resource "netscaler_lbmonitor" "foo" {
 ##### Argument Reference
 See <https://developer-docs.citrix.com/projects/netscaler-nitro-api/en/12.0/configuration/load-balancing/lbmonitor/lbmonitor/> for possible values for these arguments and for an exhaustive list of arguments. 
 
-#### `netscaler_gslbvserver`
+#### `citrixadc_gslbvserver`
 
 ```
-resource "netscaler_gslbvserver" "foo" {
+resource "citrixadc_gslbvserver" "foo" {
   
   dnsrecordtype = "A"
   name = "GSLB-East-Coast-Vserver"
@@ -225,16 +225,16 @@ resource "netscaler_gslbvserver" "foo" {
 ##### Argument Reference
 See <https://developer-docs.citrix.com/projects/netscaler-nitro-api/en/12.0/configuration/global-server-load-balancing/gslbvserver/gslbvserverl> for possible values for these arguments and for an exhaustive list of arguments. Additionally, you can specify the GSLB services  to be bound to this service using the `service` parameter. 
 
-#### `netscaler_gslbservice`
+#### `citrixadc_gslbservice`
 
 ```
-resource "netscaler_gslbservice" "foo" {
+resource "citrixadc_gslbservice" "foo" {
   
   ip = "172.16.1.101"
   port = "80"
   servicename = "gslb1vservice"
   servicetype = "HTTP"
-  sitename = "${netscaler_gslbsite.foo.sitename}"
+  sitename = "${citrixadc_gslbsite.foo.sitename}"
 
 }
 ```
@@ -243,10 +243,10 @@ resource "netscaler_gslbservice" "foo" {
 See <https://developer-docs.citrix.com/projects/netscaler-nitro-api/en/12.0/configuration/global-server-load-balancing/gslbservice/gslbservice/> for possible values for these arguments and for an exhaustive list of arguments. 
 
 
-#### `netscaler_gslbsite`
+#### `citrixadc_gslbsite`
 
 ```
-resource "netscaler_gslbsite" "foo" {
+resource "citrixadc_gslbsite" "foo" {
   
   siteipaddress = "172.31.11.20"
   sitename = "Site-GSLB-East-Coast"
@@ -257,10 +257,10 @@ resource "netscaler_gslbsite" "foo" {
 ##### Argument Reference
 See <https://developer-docs.citrix.com/projects/netscaler-nitro-api/en/12.0/configuration/global-server-load-balancing/gslbsite/gslbsite/> for possible values for these arguments and for an exhaustive list of arguments. 
 
-#### `netscaler_nsacls`
+#### `citrixadc_nsacls`
 
 ```
-resource "netscaler_nsacls" "allacls" {
+resource "citrixadc_nsacls" "allacls" {
   aclsname = "foo"
   "acl" {
   	aclname = "restrict"
@@ -281,14 +281,14 @@ resource "netscaler_nsacls" "allacls" {
 ```
 
 ##### Argument Reference
-You can have only one element of type `netscaler_nsacls`. Encapsulating every `nsacl` inside the `netscaler_nsacls` resource so that Terraform will automatically call `apply` on the `nsacls`.
+You can have only one element of type `citrixadc_nsacls`. Encapsulating every `nsacl` inside the `citrixadc_nsacls` resource so that Terraform will automatically call `apply` on the `nsacls`.
 
 See <https://developer-docs.citrix.com/projects/netscaler-nitro-api/en/12.0/configuration/ns/nsacl/nsacl/#nsacl> for possible values for these arguments and for an exhaustive list of arguments. 
 
-#### `netscaler_inat`
+#### `citrixadc_inat`
 
 ```
-resource "netscaler_inat" "foo" {
+resource "citrixadc_inat" "foo" {
   
   name = "ip4ip4"
   privateip = "192.168.2.5"
@@ -298,11 +298,11 @@ resource "netscaler_inat" "foo" {
 ```
 See <https://developer-docs.citrix.com/projects/netscaler-nitro-api/en/12.0/configuration/network/inat/inat/#inat> for possible values for these arguments and for an exhaustive list of arguments. 
 
-#### `netscaler_rnat`
+#### `citrixadc_rnat`
 
 ```
-resource "netscaler_rnat" "allrnat" {
-  depends_on = ["netscaler_nsacls.allacls"]
+resource "citrixadc_rnat" "allrnat" {
+  depends_on = ["citrixadc_nsacls.allacls"]
 
   rnatsname = "rnatsall"
 
@@ -320,7 +320,7 @@ resource "netscaler_rnat" "allrnat" {
 ```
 
 ##### Argument Reference
-You can have only one element of type `netscaler_rnat`. Encapsulate every `rnat` inside the `netscaler_rnat` resource.
+You can have only one element of type `citrixadc_rnat`. Encapsulate every `rnat` inside the `citrixadc_rnat` resource.
 
 See <https://developer-docs.citrix.com/projects/netscaler-nitro-api/en/12.0/configuration/network/rnat/rnat/#rnat> for possible values for these arguments and for an exhaustive list of arguments. 
 

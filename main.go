@@ -16,13 +16,13 @@ limitations under the License.
 package main
 
 import (
-	"github.com/citrix/terraform-provider-netscaler/netscaler"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc"
 	"github.com/hashicorp/terraform/plugin"
 )
 
 func main() {
 	opts := plugin.ServeOpts{
-		ProviderFunc: netscaler.Provider,
+		ProviderFunc: citrixadc.Provider,
 	}
 	plugin.Serve(&opts)
 }
