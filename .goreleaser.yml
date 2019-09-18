@@ -1,7 +1,7 @@
 # .goreleaser.yml
 # Build customization
 builds:
-  - binary: terraform-provider-netscaler
+  - binary: terraform-provider-citrixadc
     goos:
       - windows
       - darwin
