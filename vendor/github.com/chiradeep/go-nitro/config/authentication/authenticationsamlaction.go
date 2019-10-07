@@ -45,4 +45,5 @@ type Authenticationsamlaction struct {
 	Sendthumbprint                 string      `json:"sendthumbprint,omitempty"`
 	Signaturealg                   string      `json:"signaturealg,omitempty"`
 	Skewtime                       int         `json:"skewtime,omitempty"`
+	Storesamlresponse              string      `json:"storesamlresponse,omitempty"`
 }

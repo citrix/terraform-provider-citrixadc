@@ -11,4 +11,5 @@ type Channelinterfacebinding struct {
 	Slavespeed   int         `json:"slavespeed,omitempty"`
 	Slavestate   int         `json:"slavestate,omitempty"`
 	Slavetime    int         `json:"slavetime,omitempty"`
+	Svmcmd       int         `json:"svmcmd,omitempty"`
 }

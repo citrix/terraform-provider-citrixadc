@@ -39,6 +39,15 @@
     },
     "ssodomain" : {
       "type" : "string"
+    },
+    "tmsessionpolicybindtype" : {
+      "type" : "string",
+      "enum" : [ "Classic Policy", "Advanced Policy" ],
+      "readonly" : true
+    },
+    "tmsessionpolicycount" : {
+      "type" : "integer",
+      "readonly" : true
     }
   },
   "$schema" : "http://json-schema.org/draft-04/schema#",

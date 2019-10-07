@@ -1,6 +1,7 @@
 package ns
 
 type Nsconfig struct {
+	All                     bool        `json:"all,omitempty"`
 	Cip                     string      `json:"cip,omitempty"`
 	Cipheader               string      `json:"cipheader,omitempty"`
 	Config                  string      `json:"config,omitempty"`

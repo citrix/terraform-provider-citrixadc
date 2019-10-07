@@ -378,6 +378,10 @@
       "type" : "integer",
       "readonly" : true
     },
+    "svmcmd" : {
+      "type" : "integer",
+      "readonly" : true
+    },
     "tagall" : {
       "type" : "string",
       "enum" : [ "ON", "OFF" ]

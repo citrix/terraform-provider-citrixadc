@@ -39,6 +39,9 @@
     "slavetime" : {
       "type" : "integer",
       "readonly" : true
+    },
+    "svmcmd" : {
+      "type" : "integer"
     }
   },
   "$schema" : "http://json-schema.org/draft-04/schema#",

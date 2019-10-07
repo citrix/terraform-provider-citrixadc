@@ -5,6 +5,11 @@
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
     },
+    "builtin" : {
+      "type" : "object",
+      "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE", "PARTITION_ALL" ],
+      "readonly" : true
+    },
     "dropldnsreq" : {
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]

@@ -80,6 +80,10 @@
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
     },
+    "clientcertverification" : {
+      "type" : "string",
+      "enum" : [ "Mandatory", "Optional" ]
+    },
     "description" : {
       "type" : "string",
       "readonly" : true

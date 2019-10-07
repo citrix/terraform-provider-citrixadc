@@ -1,6 +1,9 @@
 {
   "type" : "object",
   "properties" : {
+    "cerrequesttimeout" : {
+      "type" : "integer"
+    },
     "gxreportingavp1" : {
       "type" : "object",
       "readonly" : true
@@ -66,6 +69,13 @@
       "type" : "integer",
       "readonly" : true
     },
+    "healthcheck" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ]
+    },
+    "healthcheckttl" : {
+      "type" : "integer"
+    },
     "holdonsubscriberabsence" : {
       "type" : "string",
       "enum" : [ "YES", "NO" ]
@@ -89,6 +99,10 @@
     },
     "pcrfrealm" : {
       "type" : "string"
+    },
+    "purgesdbongxfailure" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ]
     },
     "realm" : {
       "type" : "string",

@@ -25,4 +25,6 @@ lint:  build
 generate:
 	@echo "Generate go schema from json schema"
 	(cd tools; ./generate.sh)
+	@echo "Building config packages for sanity check"
+	(cd tools; ./buildpackages.sh)
 

@@ -177,6 +177,9 @@
     "postbodylimit" : {
       "type" : "integer"
     },
+    "postbodylimitsignature" : {
+      "type" : "integer"
+    },
     "refererheadercheck" : {
       "type" : "string",
       "enum" : [ "OFF", "if_present", "AlwaysExceptStartURLs", "AlwaysExceptFirstRequest" ]

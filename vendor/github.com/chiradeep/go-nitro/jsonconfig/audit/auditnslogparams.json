@@ -18,6 +18,10 @@
       "enum" : [ "MODIFIABLE", "DELETABLE", "IMMUTABLE", "PARTITION_ALL" ],
       "readonly" : true
     },
+    "contentinspectionlog" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
     "dateformat" : {
       "type" : "string",
       "enum" : [ "MMDDYYYY", "DDMMYYYY", "YYYYMMDD" ]

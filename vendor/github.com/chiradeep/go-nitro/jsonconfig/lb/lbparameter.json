@@ -17,6 +17,9 @@
     "cookiepassphrase" : {
       "type" : "string"
     },
+    "dbsttl" : {
+      "type" : "integer"
+    },
     "httponlycookieflag" : {
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]

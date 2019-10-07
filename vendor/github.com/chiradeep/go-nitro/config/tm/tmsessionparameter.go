@@ -12,4 +12,6 @@ type Tmsessionparameter struct {
 	Sso                        string `json:"sso,omitempty"`
 	Ssocredential              string `json:"ssocredential,omitempty"`
 	Ssodomain                  string `json:"ssodomain,omitempty"`
+	Tmsessionpolicybindtype    string `json:"tmsessionpolicybindtype,omitempty"`
+	Tmsessionpolicycount       int    `json:"tmsessionpolicycount,omitempty"`
 }

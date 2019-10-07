@@ -13,10 +13,6 @@
     "ingressvlan" : {
       "type" : "integer"
     },
-    "mode" : {
-      "type" : "object",
-      "enum" : [ "RX", "TX", "RxLink", "TxLink" ]
-    },
     "name" : {
       "type" : "string"
     },

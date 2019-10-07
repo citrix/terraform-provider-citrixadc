@@ -1,6 +1,9 @@
 {
   "type" : "object",
   "properties" : {
+    "attributes" : {
+      "type" : "string"
+    },
     "audience" : {
       "type" : "string"
     },
@@ -36,6 +39,10 @@
     },
     "relyingpartymetadataurl" : {
       "type" : "string"
+    },
+    "sendpassword" : {
+      "type" : "string",
+      "enum" : [ "ON", "OFF" ]
     },
     "skewtime" : {
       "type" : "integer"

@@ -4,6 +4,9 @@
     "customserverid" : {
       "type" : "string"
     },
+    "dbsttl" : {
+      "type" : "integer"
+    },
     "delay" : {
       "type" : "integer",
       "readonly" : true
@@ -17,6 +20,9 @@
       "type" : "integer"
     },
     "ip" : {
+      "type" : "string"
+    },
+    "nameserver" : {
       "type" : "string"
     },
     "port" : {
@@ -37,6 +43,10 @@
     },
     "statechangetimesec" : {
       "type" : "string",
+      "readonly" : true
+    },
+    "svcitmpriority" : {
+      "type" : "integer",
       "readonly" : true
     },
     "svrstate" : {

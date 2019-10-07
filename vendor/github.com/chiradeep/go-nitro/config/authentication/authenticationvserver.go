@@ -7,6 +7,7 @@ type Authenticationvserver struct {
 	Backupvserver        string `json:"backupvserver,omitempty"`
 	Cachetype            string `json:"cachetype,omitempty"`
 	Cachevserver         string `json:"cachevserver,omitempty"`
+	Certkeynames         string `json:"certkeynames,omitempty"`
 	Clttimeout           int    `json:"clttimeout,omitempty"`
 	Comment              string `json:"comment,omitempty"`
 	Curaaausers          int    `json:"curaaausers,omitempty"`

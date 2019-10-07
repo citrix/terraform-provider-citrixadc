@@ -95,7 +95,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:870f2b62ae6170aba63e2a359770d9c0d3a3c75a2c1f71b9d3ab4bc5fb76bfac"
+  digest = "1:fcca2c3091dfb36e0e9eae0d7ce7b2e1679d0afbbcfd69f98183099663926a8a"
   name = "github.com/chiradeep/go-nitro"
   packages = [
     "config/basic",
@@ -109,7 +109,7 @@
     "netscaler",
   ]
   pruneopts = ""
-  revision = "a932247d99eac203c300499379dffc8026902fd7"
+  revision = "d5ca1a5c914520439adbc69e5b82b2fbb96b7714"
 
 [[projects]]
   digest = "1:56c130d885a4aacae1dd9c7b71cfe39912c7ebc1ff7d2b46083c8812996dc43b"

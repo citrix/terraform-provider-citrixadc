@@ -5,7 +5,8 @@
       "type" : "string"
     },
     "certendpoint" : {
-      "type" : "string"
+      "type" : "string",
+      "readonly" : true
     },
     "clientid" : {
       "type" : "string"
@@ -17,28 +18,36 @@
       "type" : "string"
     },
     "hubname" : {
-      "type" : "string"
+      "type" : "string",
+      "readonly" : true
     },
     "name" : {
       "type" : "string"
+    },
+    "pushcloudserverstatus" : {
+      "type" : "string",
+      "enum" : [ "UP", "DOWN" ],
+      "readonly" : true
     },
     "pushservicestatus" : {
       "type" : "string",
       "enum" : [ "INIT", "CERTFETCH", "CCTOKEN", "COMPLETE" ],
       "readonly" : true
     },
-    "pushservicetype" : {
-      "type" : "string",
-      "enum" : [ "AZURE", "CITRIX" ]
-    },
     "refreshinterval" : {
       "type" : "integer"
     },
     "servicekey" : {
-      "type" : "string"
+      "type" : "string",
+      "readonly" : true
     },
     "servicekeyname" : {
-      "type" : "string"
+      "type" : "string",
+      "readonly" : true
+    },
+    "trustservice" : {
+      "type" : "string",
+      "readonly" : true
     }
   },
   "$schema" : "http://json-schema.org/draft-04/schema#",

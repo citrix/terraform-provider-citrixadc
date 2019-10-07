@@ -84,6 +84,10 @@
       "enum" : [ "ON", "OFF" ],
       "readonly" : true
     },
+    "servicegroupentname2" : {
+      "type" : "string",
+      "readonly" : true
+    },
     "servicegroupname" : {
       "type" : "string"
     },
@@ -98,6 +102,18 @@
     "sp" : {
       "type" : "string",
       "enum" : [ "ON", "OFF" ],
+      "readonly" : true
+    },
+    "svcitmactsvcs" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "svcitmboundsvcs" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "svcitmpriority" : {
+      "type" : "integer",
       "readonly" : true
     },
     "svctype" : {
@@ -126,6 +142,10 @@
     "usip" : {
       "type" : "string",
       "enum" : [ "YES", "NO" ],
+      "readonly" : true
+    },
+    "weight" : {
+      "type" : "integer",
       "readonly" : true
     }
   },

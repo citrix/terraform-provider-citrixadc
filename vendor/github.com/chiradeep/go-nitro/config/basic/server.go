@@ -16,6 +16,7 @@ type Server struct {
 	Ipv6address               string `json:"ipv6address,omitempty"`
 	Name                      string `json:"name,omitempty"`
 	Newname                   string `json:"newname,omitempty"`
+	Querytype                 string `json:"querytype,omitempty"`
 	Sc                        string `json:"sc,omitempty"`
 	Sp                        string `json:"sp,omitempty"`
 	State                     string `json:"state,omitempty"`

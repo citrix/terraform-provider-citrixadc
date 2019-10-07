@@ -56,6 +56,9 @@
     "customserverid" : {
       "type" : "string"
     },
+    "dbsttl" : {
+      "type" : "integer"
+    },
     "delay" : {
       "type" : "integer"
     },
@@ -128,6 +131,9 @@
     },
     "monthreshold" : {
       "type" : "integer"
+    },
+    "nameserver" : {
+      "type" : "string"
     },
     "netprofile" : {
       "type" : "string"
@@ -209,6 +215,14 @@
       "readonly" : true
     },
     "stateupdatereason" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "svcitmactsvcs" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "svcitmboundsvcs" : {
       "type" : "integer",
       "readonly" : true
     },

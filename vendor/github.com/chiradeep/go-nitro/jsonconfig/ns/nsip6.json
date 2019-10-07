@@ -1,6 +1,10 @@
 {
   "type" : "object",
   "properties" : {
+    "advertiseondefaultpartition" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
     "curstate" : {
       "type" : "string",
       "enum" : [ "DISABLED", "ENABLED" ],

@@ -49,6 +49,7 @@ type Appfwprofile struct {
 	Optimizepartialreqs                        string      `json:"optimizepartialreqs,omitempty"`
 	Percentdecoderecursively                   string      `json:"percentdecoderecursively,omitempty"`
 	Postbodylimit                              int         `json:"postbodylimit,omitempty"`
+	Postbodylimitsignature                     int         `json:"postbodylimitsignature,omitempty"`
 	Refererheadercheck                         string      `json:"refererheadercheck,omitempty"`
 	Requestcontenttype                         string      `json:"requestcontenttype,omitempty"`
 	Responsecontenttype                        string      `json:"responsecontenttype,omitempty"`
