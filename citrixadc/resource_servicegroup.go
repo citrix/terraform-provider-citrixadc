@@ -88,6 +88,11 @@ func resourceCitrixAdcServicegroup() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"dbsttl": &schema.Schema{
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
 			"delay": &schema.Schema{
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -162,6 +167,11 @@ func resourceCitrixAdcServicegroup() *schema.Resource {
 			},
 			"monthreshold": &schema.Schema{
 				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"nameserver": &schema.Schema{
+				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
@@ -357,6 +367,7 @@ func createServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 		Cmp:                  d.Get("cmp").(string),
 		Comment:              d.Get("comment").(string),
 		Customserverid:       d.Get("customserverid").(string),
+		Dbsttl:               d.Get("dbsttl").(int),
 		Downstateflush:       d.Get("downstateflush").(string),
 		Dupweight:            d.Get("dupweight").(int),
 		Hashid:               d.Get("hashid").(int),
@@ -370,6 +381,7 @@ func createServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 		Monconnectionclose:   d.Get("monconnectionclose").(string),
 		Monitornamesvc:       d.Get("monitornamesvc").(string),
 		Monthreshold:         d.Get("monthreshold").(int),
+		Nameserver:           d.Get("nameserver").(string),
 		Netprofile:           d.Get("netprofile").(string),
 		Newname:              d.Get("newname").(string),
 		Pathmonitor:          d.Get("pathmonitor").(string),
@@ -606,6 +618,7 @@ func readServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("cmp", data["cmp"])
 	d.Set("comment", data["comment"])
 	d.Set("customserverid", data["customserverid"])
+	d.Set("dbsttl", data["dbsttl"])
 	d.Set("downstateflush", data["downstateflush"])
 	d.Set("dupweight", data["dupweight"])
 	d.Set("hashid", data["hashid"])
@@ -619,6 +632,7 @@ func readServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("monconnectionclose", data["monconnectionclose"])
 	d.Set("monitornamesvc", data["monitornamesvc"])
 	d.Set("monthreshold", data["monthreshold"])
+	d.Set("nameserver", data["nameserver"])
 	d.Set("netprofile", data["netprofile"])
 	d.Set("newname", data["newname"])
 	d.Set("pathmonitor", data["pathmonitor"])
@@ -769,6 +783,11 @@ func updateServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 		servicegroup.Customserverid = d.Get("customserverid").(string)
 		hasChange = true
 	}
+	if d.HasChange("dbsttl") {
+		log.Printf("[DEBUG]  netscaler-provider: Dbsttl has changed for servicegroup %s, starting update", servicegroupName)
+		servicegroup.Dbsttl = d.Get("dbsttl").(int)
+		hasChange = true
+	}
 	if d.HasChange("downstateflush") {
 		log.Printf("[DEBUG]  netscaler-provider: Downstateflush has changed for servicegroup %s, starting update", servicegroupName)
 		servicegroup.Downstateflush = d.Get("downstateflush").(string)
@@ -832,6 +851,11 @@ func updateServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("monthreshold") {
 		log.Printf("[DEBUG]  netscaler-provider: Monthreshold has changed for servicegroup %s, starting update", servicegroupName)
 		servicegroup.Monthreshold = d.Get("monthreshold").(int)
+		hasChange = true
+	}
+	if d.HasChange("nameserver") {
+		log.Printf("[DEBUG]  netscaler-provider: Nameserver has changed for servicegroup %s, starting update", servicegroupName)
+		servicegroup.Nameserver = d.Get("nameserver").(string)
 		hasChange = true
 	}
 	if d.HasChange("netprofile") {
