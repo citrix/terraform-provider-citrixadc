@@ -26,11 +26,11 @@ import (
 
 // https://stackoverflow.com/questions/28595664/how-to-stop-json-marshal-from-escaping-and/28596225#28596225
 func JSONMarshal(t interface{}) ([]byte, error) {
-    buffer := &bytes.Buffer{}
-    encoder := json.NewEncoder(buffer)
-    encoder.SetEscapeHTML(false)
-    err := encoder.Encode(t)
-    return buffer.Bytes(), err
+	buffer := &bytes.Buffer{}
+	encoder := json.NewEncoder(buffer)
+	encoder.SetEscapeHTML(false)
+	err := encoder.Encode(t)
+	return buffer.Bytes(), err
 }
 
 //AddResource adds a resource of supplied type and name
@@ -41,8 +41,9 @@ func (c *NitroClient) AddResource(resourceType string, name string, resourceStru
 
 	resourceJSON, err := JSONMarshal(nsResource)
 
-	log.Printf("[TRACE] go-nitro: Resourcejson is " + string(resourceJSON))
-
+	if !strings.EqualFold(resourceType, "systemfile") {
+		log.Printf("[TRACE] go-nitro: Resourcejson is " + string(resourceJSON))
+	}
 	body, err := c.createResource(resourceType, resourceJSON)
 	if err != nil {
 		return "", fmt.Errorf("[ERROR] go-nitro: Failed to create resource of type %s, name=%s, err=%s", resourceType, name, err)
@@ -321,9 +322,16 @@ func (c *NitroClient) FindResource(resourceType string, resourceName string) (ma
 		log.Printf("[WARN] go-nitro: FindResource No %s type with name %s found", resourceType, resourceName)
 		return nil, fmt.Errorf("[INFO] go-nitro: FindResource: No resource %s of type %s found", resourceName, resourceType)
 	}
-	resource := data[resourceType].([]interface{})[0] //only one resource obviously
 
-	return resource.(map[string]interface{}), nil
+	switch result := data[resourceType].(type) {
+	case map[string]interface{}:
+		return result, nil
+	case []interface{}:
+		return result[0].(map[string]interface{}), nil
+	default:
+		log.Printf("[WARN] go-nitro: FindResource Unable to determine type of response")
+		return nil, fmt.Errorf("[INFO] go-nitro: FindResource: Unable to determine type of response")
+	}
 }
 
 //FindAllResources finds all config objects of the supplied resource type and returns them in an array

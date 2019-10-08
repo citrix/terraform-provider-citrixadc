@@ -56,6 +56,10 @@
     "newname" : {
       "type" : "string"
     },
+    "querytype" : {
+      "type" : "string",
+      "enum" : [ "A", "AAAA", "SRV" ]
+    },
     "sc" : {
       "type" : "string",
       "enum" : [ "ON", "OFF" ],

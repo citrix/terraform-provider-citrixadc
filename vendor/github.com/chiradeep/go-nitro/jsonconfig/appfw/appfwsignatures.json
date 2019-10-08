@@ -16,6 +16,9 @@
     "overwrite" : {
       "type" : "boolean"
     },
+    "preservedefactions" : {
+      "type" : "boolean"
+    },
     "response" : {
       "type" : "string",
       "readonly" : true

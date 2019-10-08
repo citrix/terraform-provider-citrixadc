@@ -23,6 +23,7 @@ type Sslvserver struct {
 	Nonfipsciphers                    string `json:"nonfipsciphers,omitempty"`
 	Ocspcheck                         string `json:"ocspcheck,omitempty"`
 	Ocspstapling                      string `json:"ocspstapling,omitempty"`
+	Preload                           string `json:"preload,omitempty"`
 	Pushenctrigger                    string `json:"pushenctrigger,omitempty"`
 	Redirectportrewrite               string `json:"redirectportrewrite,omitempty"`
 	Sendclosenotify                   string `json:"sendclosenotify,omitempty"`

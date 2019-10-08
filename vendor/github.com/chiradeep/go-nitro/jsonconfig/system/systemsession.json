@@ -21,7 +21,15 @@
       "type" : "string",
       "readonly" : true
     },
+    "lastactivitytimelocal" : {
+      "type" : "string",
+      "readonly" : true
+    },
     "logintime" : {
+      "type" : "string",
+      "readonly" : true
+    },
+    "logintimelocal" : {
       "type" : "string",
       "readonly" : true
     },

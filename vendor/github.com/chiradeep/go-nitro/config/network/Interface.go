@@ -90,6 +90,7 @@ type Interface struct {
 	Speed                     string      `json:"speed,omitempty"`
 	State                     string      `json:"state,omitempty"`
 	Stsstalls                 int         `json:"stsstalls,omitempty"`
+	Svmcmd                    int         `json:"svmcmd,omitempty"`
 	Tagall                    string      `json:"tagall,omitempty"`
 	Tagged                    int         `json:"tagged,omitempty"`
 	Taggedany                 int         `json:"taggedany,omitempty"`

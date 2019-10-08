@@ -48,6 +48,10 @@
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
     },
+    "hasyncfailurereason" : {
+      "type" : "string",
+      "readonly" : true
+    },
     "hellointerval" : {
       "type" : "integer"
     },

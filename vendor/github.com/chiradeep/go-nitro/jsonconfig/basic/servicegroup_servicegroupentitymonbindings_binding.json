@@ -4,6 +4,9 @@
     "customserverid" : {
       "type" : "string"
     },
+    "dbsttl" : {
+      "type" : "integer"
+    },
     "hashid" : {
       "type" : "integer"
     },
@@ -30,6 +33,9 @@
     "monitortotalprobes" : {
       "type" : "integer",
       "readonly" : true
+    },
+    "nameserver" : {
+      "type" : "string"
     },
     "passive" : {
       "type" : "boolean"

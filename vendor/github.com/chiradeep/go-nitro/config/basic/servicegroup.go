@@ -16,6 +16,7 @@ type Servicegroup struct {
 	Cmp                        string `json:"cmp,omitempty"`
 	Comment                    string `json:"comment,omitempty"`
 	Customserverid             string `json:"customserverid,omitempty"`
+	Dbsttl                     int    `json:"dbsttl,omitempty"`
 	Delay                      int    `json:"delay,omitempty"`
 	Downstateflush             string `json:"downstateflush,omitempty"`
 	Dupweight                  int    `json:"dup_weight,omitempty"`
@@ -37,6 +38,7 @@ type Servicegroup struct {
 	Monstatparam2              int    `json:"monstatparam2,omitempty"`
 	Monstatparam3              int    `json:"monstatparam3,omitempty"`
 	Monthreshold               int    `json:"monthreshold,omitempty"`
+	Nameserver                 string `json:"nameserver,omitempty"`
 	Netprofile                 string `json:"netprofile,omitempty"`
 	Newname                    string `json:"newname,omitempty"`
 	Nodefaultbindings          string `json:"nodefaultbindings,omitempty"`
@@ -59,6 +61,8 @@ type Servicegroup struct {
 	State                      string `json:"state,omitempty"`
 	Statechangetimemsec        int    `json:"statechangetimemsec,omitempty"`
 	Stateupdatereason          int    `json:"stateupdatereason,omitempty"`
+	Svcitmactsvcs              int    `json:"svcitmactsvcs,omitempty"`
+	Svcitmboundsvcs            int    `json:"svcitmboundsvcs,omitempty"`
 	Svrstate                   string `json:"svrstate,omitempty"`
 	Svrtimeout                 int    `json:"svrtimeout,omitempty"`
 	Tcpb                       string `json:"tcpb,omitempty"`

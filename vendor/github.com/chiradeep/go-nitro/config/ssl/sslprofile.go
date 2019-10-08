@@ -32,6 +32,7 @@ type Sslprofile struct {
 	Nonfipsciphers                    string      `json:"nonfipsciphers,omitempty"`
 	Ocspcheck                         string      `json:"ocspcheck,omitempty"`
 	Ocspstapling                      string      `json:"ocspstapling,omitempty"`
+	Preload                           string      `json:"preload,omitempty"`
 	Prevsessionkeylifetime            int         `json:"prevsessionkeylifetime,omitempty"`
 	Pushenctrigger                    string      `json:"pushenctrigger,omitempty"`
 	Pushenctriggertimeout             int         `json:"pushenctriggertimeout,omitempty"`

@@ -91,6 +91,9 @@ type Nsconnectiontable struct {
 	Nsbtcpwaitq            int         `json:"nsbtcpwaitq,omitempty"`
 	Nswsvalue              int         `json:"nswsvalue,omitempty"`
 	Optionflags            interface{} `json:"optionflags,omitempty"`
+	Outoforderblocks       int         `json:"outoforderblocks,omitempty"`
+	Outoforderbytes        int         `json:"outoforderbytes,omitempty"`
+	Outoforderflushedcount int         `json:"outoforderflushedcount,omitempty"`
 	Outoforderpkts         int         `json:"outoforderpkts,omitempty"`
 	Peerwsvalue            int         `json:"peerwsvalue,omitempty"`
 	Priority               string      `json:"priority,omitempty"`

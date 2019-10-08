@@ -25,6 +25,9 @@
       "type" : "string",
       "readonly" : true
     },
+    "certkeynames" : {
+      "type" : "string"
+    },
     "clttimeout" : {
       "type" : "integer",
       "readonly" : true

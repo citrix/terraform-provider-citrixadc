@@ -85,6 +85,10 @@
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
     },
+    "preload" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ]
+    },
     "pushenctrigger" : {
       "type" : "string",
       "enum" : [ "Always", "Merge", "Ignore", "Timer" ]

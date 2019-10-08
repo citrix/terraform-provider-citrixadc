@@ -4,6 +4,9 @@
     "customserverid" : {
       "type" : "string"
     },
+    "dbsttl" : {
+      "type" : "integer"
+    },
     "hashid" : {
       "type" : "integer"
     },
@@ -17,6 +20,9 @@
     "monweight" : {
       "type" : "integer",
       "readonly" : true
+    },
+    "nameserver" : {
+      "type" : "string"
     },
     "passive" : {
       "type" : "boolean"

@@ -1,6 +1,7 @@
 package authentication
 
 type Authenticationoauthidpprofile struct {
+	Attributes                 string `json:"attributes,omitempty"`
 	Audience                   string `json:"audience,omitempty"`
 	Clientid                   string `json:"clientid,omitempty"`
 	Clientsecret               string `json:"clientsecret,omitempty"`
@@ -12,5 +13,6 @@ type Authenticationoauthidpprofile struct {
 	Redirecturl                string `json:"redirecturl,omitempty"`
 	Refreshinterval            int    `json:"refreshinterval,omitempty"`
 	Relyingpartymetadataurl    string `json:"relyingpartymetadataurl,omitempty"`
+	Sendpassword               string `json:"sendpassword,omitempty"`
 	Skewtime                   int    `json:"skewtime,omitempty"`
 }

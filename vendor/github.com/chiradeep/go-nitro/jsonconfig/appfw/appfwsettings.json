@@ -32,6 +32,10 @@
       "type" : "string",
       "enum" : [ "ON", "OFF" ]
     },
+    "malformedreqaction" : {
+      "type" : "object",
+      "enum" : [ "none", "block", "learn", "log", "stats" ]
+    },
     "sessioncookiename" : {
       "type" : "string"
     },

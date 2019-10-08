@@ -119,6 +119,10 @@
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]
     },
+    "preload" : {
+      "type" : "string",
+      "enum" : [ "YES", "NO" ]
+    },
     "prevsessionkeylifetime" : {
       "type" : "integer"
     },

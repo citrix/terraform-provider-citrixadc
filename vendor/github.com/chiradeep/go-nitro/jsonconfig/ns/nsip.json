@@ -1,6 +1,10 @@
 {
   "type" : "object",
   "properties" : {
+    "advertiseondefaultpartition" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
     "arp" : {
       "type" : "string",
       "enum" : [ "ENABLED", "DISABLED" ]

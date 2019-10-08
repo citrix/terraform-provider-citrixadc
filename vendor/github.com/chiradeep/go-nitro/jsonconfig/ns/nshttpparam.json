@@ -18,6 +18,10 @@
       "type" : "string",
       "enum" : [ "ON", "OFF" ]
     },
+    "ignoreconnectcodingscheme" : {
+      "type" : "string",
+      "enum" : [ "ENABLED", "DISABLED" ]
+    },
     "insnssrvrhdr" : {
       "type" : "string",
       "enum" : [ "ON", "OFF" ]

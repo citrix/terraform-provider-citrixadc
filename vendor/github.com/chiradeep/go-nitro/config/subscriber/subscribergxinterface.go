@@ -1,6 +1,7 @@
 package subscriber
 
 type Subscribergxinterface struct {
+	Cerrequesttimeout         int         `json:"cerrequesttimeout,omitempty"`
 	Gxreportingavp1           interface{} `json:"gxreportingavp1,omitempty"`
 	Gxreportingavp1type       string      `json:"gxreportingavp1type,omitempty"`
 	Gxreportingavp1vendorid   int         `json:"gxreportingavp1vendorid,omitempty"`
@@ -16,6 +17,8 @@ type Subscribergxinterface struct {
 	Gxreportingavp5           interface{} `json:"gxreportingavp5,omitempty"`
 	Gxreportingavp5type       string      `json:"gxreportingavp5type,omitempty"`
 	Gxreportingavp5vendorid   int         `json:"gxreportingavp5vendorid,omitempty"`
+	Healthcheck               string      `json:"healthcheck,omitempty"`
+	Healthcheckttl            int         `json:"healthcheckttl,omitempty"`
 	Holdonsubscriberabsence   string      `json:"holdonsubscriberabsence,omitempty"`
 	Identity                  string      `json:"identity,omitempty"`
 	Idlettl                   int         `json:"idlettl,omitempty"`
@@ -23,6 +26,7 @@ type Subscribergxinterface struct {
 	Negativettllimitedsuccess string      `json:"negativettllimitedsuccess,omitempty"`
 	Nodeid                    int         `json:"nodeid,omitempty"`
 	Pcrfrealm                 string      `json:"pcrfrealm,omitempty"`
+	Purgesdbongxfailure       string      `json:"purgesdbongxfailure,omitempty"`
 	Realm                     string      `json:"realm,omitempty"`
 	Requestretryattempts      int         `json:"requestretryattempts,omitempty"`
 	Requesttimeout            int         `json:"requesttimeout,omitempty"`

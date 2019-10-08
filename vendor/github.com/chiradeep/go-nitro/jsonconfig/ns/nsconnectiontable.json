@@ -371,6 +371,18 @@
       "enum" : [ "sack", "timstmp", "ws" ],
       "readonly" : true
     },
+    "outoforderblocks" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "outoforderbytes" : {
+      "type" : "integer",
+      "readonly" : true
+    },
+    "outoforderflushedcount" : {
+      "type" : "integer",
+      "readonly" : true
+    },
     "outoforderpkts" : {
       "type" : "integer",
       "readonly" : true

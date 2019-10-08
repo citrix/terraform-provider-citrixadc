@@ -23,6 +23,7 @@ type Sslaction struct {
 	Clientcertnotbefore    string      `json:"clientcertnotbefore,omitempty"`
 	Clientcertserialnumber string      `json:"clientcertserialnumber,omitempty"`
 	Clientcertsubject      string      `json:"clientcertsubject,omitempty"`
+	Clientcertverification string      `json:"clientcertverification,omitempty"`
 	Description            string      `json:"description,omitempty"`
 	Forward                string      `json:"forward,omitempty"`
 	Hits                   int         `json:"hits,omitempty"`
