@@ -37,11 +37,11 @@ func TestAccSslcertkey_basic(t *testing.T) {
 					testAccCheckSslcertkeyExist("citrixadc_sslcertkey.foo", nil),
 
 					resource.TestCheckResourceAttr(
-						"citrixadc_sslcertkey.foo", "cert", "/var/tmp/server.crt"),
+						"citrixadc_sslcertkey.foo", "cert", "/var/tmp/certificate1.crt"),
 					resource.TestCheckResourceAttr(
 						"citrixadc_sslcertkey.foo", "certkey", "sample_ssl_cert"),
 					resource.TestCheckResourceAttr(
-						"citrixadc_sslcertkey.foo", "key", "/var/tmp/server.key"),
+						"citrixadc_sslcertkey.foo", "key", "/var/tmp/key1.pem"),
 				),
 			},
 		},
@@ -107,7 +107,16 @@ func testAccCheckSslcertkeyDestroy(s *terraform.State) error {
 func doSslcertkeyPreChecks(t *testing.T) {
 	testAccPreCheck(t)
 
-	uploads := []string{"server.crt", "server.key"}
+	uploads := []string{
+		"ca.crt",
+		"intermediate.crt",
+		"certificate1.crt",
+		"certificate2.crt",
+		"certificate3.crt",
+		"key1.pem",
+		"key2.pem",
+		"key3.pem",
+	}
 
 	c, err := testHelperInstantiateClient("", "", "", false)
 	if err != nil {
@@ -128,11 +137,86 @@ const testAccSslcertkey_basic = `
 
 resource "citrixadc_sslcertkey" "foo" {
   certkey = "sample_ssl_cert"
-  cert = "/var/tmp/server.crt"
-  key = "/var/tmp/server.key"
+  cert = "/var/tmp/certificate1.crt"
+  key = "/var/tmp/key1.pem"
   notificationperiod = 40
   expirymonitor = "ENABLED"
 }
+`
+
+func TestAccSslcertkey_linkcert(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { doSslcertkeyPreChecks(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckSslcertkeyDestroy,
+		Steps: []resource.TestStep{
+
+			resource.TestStep{
+				Config: testAccSslcertkey_linkcert_linked,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslcertkeyExist("citrixadc_sslcertkey.client", nil),
+					testAccCheckSslcertkeyExist("citrixadc_sslcertkey.intermediate", nil),
+
+					resource.TestCheckResourceAttr(
+						"citrixadc_sslcertkey.client", "linkcertkeyname", "intermediate"),
+				),
+			},
+
+			resource.TestStep{
+				Config: testAccSslcertkey_linkcert_nolink,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslcertkeyExist("citrixadc_sslcertkey.client", nil),
+					testAccCheckSslcertkeyExist("citrixadc_sslcertkey.intermediate", nil),
+
+					resource.TestCheckResourceAttr(
+						"citrixadc_sslcertkey.client", "linkcertkeyname", ""),
+				),
+			},
+
+			resource.TestStep{
+				Config: testAccSslcertkey_linkcert_linked,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslcertkeyExist("citrixadc_sslcertkey.client", nil),
+					testAccCheckSslcertkeyExist("citrixadc_sslcertkey.intermediate", nil),
+
+					resource.TestCheckResourceAttr(
+						"citrixadc_sslcertkey.client", "linkcertkeyname", "intermediate"),
+				),
+			},
+		},
+	})
+}
+
+const testAccSslcertkey_linkcert_nolink = `
+
+resource "citrixadc_sslcertkey" "client" {
+    cert = "/var/tmp/certificate1.crt"
+    key = "/var/tmp/key1.pem"
+    certkey = "client"
+}
+
+resource "citrixadc_sslcertkey" "intermediate" {
+    cert = "/var/tmp/intermediate.crt"
+    certkey = "intermediate"
+}
+
+`
+
+// TODO Add use case with cross signed certificate to do a link-unlink operation in one pass
+const testAccSslcertkey_linkcert_linked = `
+
+resource "citrixadc_sslcertkey" "client" {
+    cert = "/var/tmp/certificate1.crt"
+    key = "/var/tmp/key1.pem"
+    certkey = "client"
+    linkcertkeyname = citrixadc_sslcertkey.intermediate.certkey
+}
+
+resource "citrixadc_sslcertkey" "intermediate" {
+    cert = "/var/tmp/intermediate.crt"
+    certkey = "intermediate"
+}
+
 `
 
 func TestAccSslcertkeyAssertNonUpdateableAttributes(t *testing.T) {
@@ -146,15 +230,6 @@ func TestAccSslcertkeyAssertNonUpdateableAttributes(t *testing.T) {
 		t.Fatalf("Failed to instantiate client. %v\n", err)
 	}
 
-	uploads := []string{"server.crt", "server.key"}
-
-	for _, filename := range uploads {
-		err := uploadTestdataFile(c, t, filename, "/var/tmp")
-		if err != nil {
-			t.Fatalf(err.Error())
-		}
-	}
-
 	// Create resource
 	certkeyName := "tf-acc-certkey-test"
 	certkeyType := netscaler.Sslcertkey.Type()
@@ -164,8 +239,8 @@ func TestAccSslcertkeyAssertNonUpdateableAttributes(t *testing.T) {
 
 	certkeyInstance := ssl.Sslcertkey{
 		Certkey: certkeyName,
-		Cert:    "/var/tmp/server.crt",
-		Key:     "/var/tmp/server.key",
+		Cert:    "/var/tmp/certificate1.crt",
+		Key:     "/var/tmp/key1.pem",
 	}
 
 	if _, err := c.client.AddResource(certkeyType, certkeyName, certkeyInstance); err != nil {
