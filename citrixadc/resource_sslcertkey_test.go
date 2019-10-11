@@ -37,11 +37,11 @@ func TestAccSslcertkey_basic(t *testing.T) {
 					testAccCheckSslcertkeyExist("citrixadc_sslcertkey.foo", nil),
 
 					resource.TestCheckResourceAttr(
-						"citrixadc_sslcertkey.foo", "cert", "/var/tmp/server.crt"),
+						"citrixadc_sslcertkey.foo", "cert", "/var/tmp/certificate1.crt"),
 					resource.TestCheckResourceAttr(
 						"citrixadc_sslcertkey.foo", "certkey", "sample_ssl_cert"),
 					resource.TestCheckResourceAttr(
-						"citrixadc_sslcertkey.foo", "key", "/var/tmp/server.key"),
+						"citrixadc_sslcertkey.foo", "key", "/var/tmp/key1.pem"),
 				),
 			},
 		},
@@ -107,7 +107,16 @@ func testAccCheckSslcertkeyDestroy(s *terraform.State) error {
 func doSslcertkeyPreChecks(t *testing.T) {
 	testAccPreCheck(t)
 
-	uploads := []string{"server.crt", "server.key"}
+	uploads := []string{
+		"ca.crt",
+		"intermediate.crt",
+		"certificate1.crt",
+		"certificate2.crt",
+		"certificate3.crt",
+		"key1.pem",
+		"key2.pem",
+		"key3.pem",
+	}
 
 	c, err := testHelperInstantiateClient("", "", "", false)
 	if err != nil {
@@ -128,8 +137,8 @@ const testAccSslcertkey_basic = `
 
 resource "citrixadc_sslcertkey" "foo" {
   certkey = "sample_ssl_cert"
-  cert = "/var/tmp/server.crt"
-  key = "/var/tmp/server.key"
+  cert = "/var/tmp/certificate1.crt"
+  key = "/var/tmp/key1.pem"
   notificationperiod = 40
   expirymonitor = "ENABLED"
 }
@@ -146,15 +155,6 @@ func TestAccSslcertkeyAssertNonUpdateableAttributes(t *testing.T) {
 		t.Fatalf("Failed to instantiate client. %v\n", err)
 	}
 
-	uploads := []string{"server.crt", "server.key"}
-
-	for _, filename := range uploads {
-		err := uploadTestdataFile(c, t, filename, "/var/tmp")
-		if err != nil {
-			t.Fatalf(err.Error())
-		}
-	}
-
 	// Create resource
 	certkeyName := "tf-acc-certkey-test"
 	certkeyType := netscaler.Sslcertkey.Type()
@@ -164,8 +164,8 @@ func TestAccSslcertkeyAssertNonUpdateableAttributes(t *testing.T) {
 
 	certkeyInstance := ssl.Sslcertkey{
 		Certkey: certkeyName,
-		Cert:    "/var/tmp/server.crt",
-		Key:     "/var/tmp/server.key",
+		Cert:    "/var/tmp/certificate1.crt",
+		Key:     "/var/tmp/key1.pem",
 	}
 
 	if _, err := c.client.AddResource(certkeyType, certkeyName, certkeyInstance); err != nil {
