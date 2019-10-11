@@ -70,8 +70,7 @@ func resourceCitrixAdcSslcertkey() *schema.Resource {
 			"linkcertkeyname": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
-				ForceNew: true,
+				Computed: false,
 			},
 			"nodomaincheck": &schema.Schema{
 				Type:     schema.TypeBool,
@@ -117,15 +116,14 @@ func createSslcertkeyFunc(d *schema.ResourceData, meta interface{}) error {
 		d.Set("certkey", sslcertkeyName)
 	}
 	sslcertkey := ssl.Sslcertkey{
-		Bundle:          d.Get("bundle").(string),
-		Cert:            d.Get("cert").(string),
-		Certkey:         d.Get("certkey").(string),
-		Expirymonitor:   d.Get("expirymonitor").(string),
-		Fipskey:         d.Get("fipskey").(string),
-		Hsmkey:          d.Get("hsmkey").(string),
-		Inform:          d.Get("inform").(string),
-		Key:             d.Get("key").(string),
-		Linkcertkeyname: d.Get("linkcertkeyname").(string),
+		Bundle:        d.Get("bundle").(string),
+		Cert:          d.Get("cert").(string),
+		Certkey:       d.Get("certkey").(string),
+		Expirymonitor: d.Get("expirymonitor").(string),
+		Fipskey:       d.Get("fipskey").(string),
+		Hsmkey:        d.Get("hsmkey").(string),
+		Inform:        d.Get("inform").(string),
+		Key:           d.Get("key").(string),
 		// This is always set to false on creation which effectively excludes it from the request JSON
 		// Nodomaincheck is not an object attribute but a flag for the change operation
 		// of the resource
@@ -138,6 +136,11 @@ func createSslcertkeyFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(netscaler.Sslcertkey.Type(), sslcertkeyName, &sslcertkey)
 	if err != nil {
+		return err
+	}
+
+	if err := handleLinkedCertificate(d, client); err != nil {
+		log.Printf("Error linking certificate during creation\n")
 		return err
 	}
 
@@ -263,7 +266,67 @@ func updateSslcertkeyFunc(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("Error changing sslcertkey %s", sslcertkeyName)
 		}
 	}
+
+	if err := handleLinkedCertificate(d, client); err != nil {
+		log.Printf("Error linking certificate during update\n")
+		return err
+	}
+
 	return readSslcertkeyFunc(d, meta)
+}
+
+func handleLinkedCertificate(d *schema.ResourceData, client *netscaler.NitroClient) error {
+	log.Printf("[DEBUG] netscaler-provider:  In handleLinkedCertificate")
+	sslcertkeyName := d.Get("certkey").(string)
+	data, err := client.FindResource(netscaler.Sslcertkey.Type(), sslcertkeyName)
+	if err != nil {
+		log.Printf("[ERROR] netscaler-provider: Clearing sslcertkey state %s", sslcertkeyName)
+		d.SetId("")
+		return err
+	}
+	actualLinkedCertKeyname := data["linkcertkeyname"]
+	configuredLinkedCertKeyname := d.Get("linkcertkeyname")
+
+	// Check for noop conditions
+	if actualLinkedCertKeyname == configuredLinkedCertKeyname {
+		log.Printf("[DEBUG] netscaler-provider: actual and configured linked certificates identical \"%s\"", actualLinkedCertKeyname)
+		return nil
+	}
+
+	if actualLinkedCertKeyname == nil && configuredLinkedCertKeyname == "" {
+		log.Printf("[DEBUG] netscaler-provider: actual and configured linked certificates both empty ")
+		return nil
+	}
+
+	// Fallthrough to rest of execution
+	if actualLinkedCertKeyname != nil {
+		log.Printf("[DEBUG] netscaler-provider: Unlinking certkey \"%s\"", actualLinkedCertKeyname)
+
+		sslCertkey := ssl.Sslcertkey{
+			Certkey: data["certkey"].(string),
+		}
+		if err := client.ActOnResource(netscaler.Sslcertkey.Type(), &sslCertkey, "unlink"); err != nil {
+			log.Printf("[ERROR] netscaler-provider: Error unlinking certificate \"%v\"", err)
+			return err
+		}
+	} else {
+		log.Printf("[DEBUG] netscaler-provider: actual linked certkey is nil, nothing to do")
+	}
+
+	if configuredLinkedCertKeyname != "" {
+		log.Printf("[DEBUG] netscaler-provider: Linking certkey \"%s\"", configuredLinkedCertKeyname)
+		sslCertkey := ssl.Sslcertkey{
+			Certkey:         data["certkey"].(string),
+			Linkcertkeyname: configuredLinkedCertKeyname.(string),
+		}
+		if err := client.ActOnResource(netscaler.Sslcertkey.Type(), &sslCertkey, "link"); err != nil {
+			log.Printf("[ERROR] netscaler-provider: Error linking certificate \"%v\"", err)
+			return err
+		}
+	} else {
+		log.Printf("[DEBUG] netscaler-provider: configured linked certkey is empty, nothing to do")
+	}
+	return nil
 }
 
 func deleteSslcertkeyFunc(d *schema.ResourceData, meta interface{}) error {

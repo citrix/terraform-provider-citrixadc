@@ -144,6 +144,81 @@ resource "citrixadc_sslcertkey" "foo" {
 }
 `
 
+func TestAccSslcertkey_linkcert(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { doSslcertkeyPreChecks(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckSslcertkeyDestroy,
+		Steps: []resource.TestStep{
+
+			resource.TestStep{
+				Config: testAccSslcertkey_linkcert_linked,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslcertkeyExist("citrixadc_sslcertkey.client", nil),
+					testAccCheckSslcertkeyExist("citrixadc_sslcertkey.intermediate", nil),
+
+					resource.TestCheckResourceAttr(
+						"citrixadc_sslcertkey.client", "linkcertkeyname", "intermediate"),
+				),
+			},
+
+			resource.TestStep{
+				Config: testAccSslcertkey_linkcert_nolink,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslcertkeyExist("citrixadc_sslcertkey.client", nil),
+					testAccCheckSslcertkeyExist("citrixadc_sslcertkey.intermediate", nil),
+
+					resource.TestCheckResourceAttr(
+						"citrixadc_sslcertkey.client", "linkcertkeyname", ""),
+				),
+			},
+
+			resource.TestStep{
+				Config: testAccSslcertkey_linkcert_linked,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslcertkeyExist("citrixadc_sslcertkey.client", nil),
+					testAccCheckSslcertkeyExist("citrixadc_sslcertkey.intermediate", nil),
+
+					resource.TestCheckResourceAttr(
+						"citrixadc_sslcertkey.client", "linkcertkeyname", "intermediate"),
+				),
+			},
+		},
+	})
+}
+
+const testAccSslcertkey_linkcert_nolink = `
+
+resource "citrixadc_sslcertkey" "client" {
+    cert = "/var/tmp/certificate1.crt"
+    key = "/var/tmp/key1.pem"
+    certkey = "client"
+}
+
+resource "citrixadc_sslcertkey" "intermediate" {
+    cert = "/var/tmp/intermediate.crt"
+    certkey = "intermediate"
+}
+
+`
+
+// TODO Add use case with cross signed certificate to do a link-unlink operation in one pass
+const testAccSslcertkey_linkcert_linked = `
+
+resource "citrixadc_sslcertkey" "client" {
+    cert = "/var/tmp/certificate1.crt"
+    key = "/var/tmp/key1.pem"
+    certkey = "client"
+    linkcertkeyname = citrixadc_sslcertkey.intermediate.certkey
+}
+
+resource "citrixadc_sslcertkey" "intermediate" {
+    cert = "/var/tmp/intermediate.crt"
+    certkey = "intermediate"
+}
+
+`
+
 func TestAccSslcertkeyAssertNonUpdateableAttributes(t *testing.T) {
 
 	if tfAcc := os.Getenv("TF_ACC"); tfAcc == "" {
