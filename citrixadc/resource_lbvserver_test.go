@@ -191,7 +191,7 @@ func testAccCheckLbvserverDestroy(s *terraform.State) error {
 func doPreChecks(t *testing.T) {
 	testAccPreCheck(t)
 
-	uploads := []string{"certificate2.pem", "key2.pem", "certificate3.pem", "key3.pem"}
+	uploads := []string{"certificate2.crt", "key2.pem", "certificate3.crt", "key3.pem"}
 
 	c := testAccProvider.Meta().(*NetScalerNitroClient)
 	for _, filename := range uploads {
@@ -253,14 +253,14 @@ func testSslcertificateBindingsConfig(sslcertkey string, snicertskeys string) st
 	return fmt.Sprintf(`
 	resource "citrixadc_sslcertkey" "cert2" {
 	  certkey = "cert2"
-	  cert = "/var/tmp/certificate2.pem"
+	  cert = "/var/tmp/certificate2.crt"
 	  key = "/var/tmp/key2.pem"
 	  expirymonitor = "DISABLED"
 	}
 
 	resource "citrixadc_sslcertkey" "cert3" {
 	  certkey = "cert3"
-	  cert = "/var/tmp/certificate3.pem"
+	  cert = "/var/tmp/certificate3.crt"
 	  key = "/var/tmp/key3.pem"
 	  expirymonitor = "DISABLED"
 	}
