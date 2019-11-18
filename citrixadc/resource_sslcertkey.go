@@ -299,18 +299,8 @@ func handleLinkedCertificate(d *schema.ResourceData, client *netscaler.NitroClie
 	}
 
 	// Fallthrough to rest of execution
-	if actualLinkedCertKeyname != nil {
-		log.Printf("[DEBUG] netscaler-provider: Unlinking certkey \"%s\"", actualLinkedCertKeyname)
-
-		sslCertkey := ssl.Sslcertkey{
-			Certkey: data["certkey"].(string),
-		}
-		if err := client.ActOnResource(netscaler.Sslcertkey.Type(), &sslCertkey, "unlink"); err != nil {
-			log.Printf("[ERROR] netscaler-provider: Error unlinking certificate \"%v\"", err)
-			return err
-		}
-	} else {
-		log.Printf("[DEBUG] netscaler-provider: actual linked certkey is nil, nothing to do")
+	if err := unlinkCertificate(d, client); err != nil {
+		return err
 	}
 
 	if configuredLinkedCertKeyname != "" {
@@ -329,9 +319,40 @@ func handleLinkedCertificate(d *schema.ResourceData, client *netscaler.NitroClie
 	return nil
 }
 
+func unlinkCertificate(d *schema.ResourceData, client *netscaler.NitroClient) error {
+	sslcertkeyName := d.Get("certkey").(string)
+	data, err := client.FindResource(netscaler.Sslcertkey.Type(), sslcertkeyName)
+	if err != nil {
+		log.Printf("[ERROR] netscaler-provider: Clearing sslcertkey state %s", sslcertkeyName)
+		d.SetId("")
+		return err
+	}
+
+	actualLinkedCertKeyname := data["linkcertkeyname"]
+
+	if actualLinkedCertKeyname != nil {
+		log.Printf("[DEBUG] netscaler-provider: Unlinking certkey \"%s\"", actualLinkedCertKeyname)
+
+		sslCertkey := ssl.Sslcertkey{
+			Certkey: data["certkey"].(string),
+		}
+		if err := client.ActOnResource(netscaler.Sslcertkey.Type(), &sslCertkey, "unlink"); err != nil {
+			log.Printf("[ERROR] netscaler-provider: Error unlinking certificate \"%v\"", err)
+			return err
+		}
+	} else {
+		log.Printf("[DEBUG] netscaler-provider: actual linked certkey is nil, nothing to do")
+	}
+	return nil
+}
+
 func deleteSslcertkeyFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] netscaler-provider:  In deleteSslcertkeyFunc")
 	client := meta.(*NetScalerNitroClient).client
+
+	if err := unlinkCertificate(d, client); err != nil {
+		return err
+	}
 	sslcertkeyName := d.Id()
 	err := client.DeleteResource(netscaler.Sslcertkey.Type(), sslcertkeyName)
 	if err != nil {
