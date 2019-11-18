@@ -151,6 +151,7 @@ func TestAccSslcertkey_linkcert(t *testing.T) {
 		CheckDestroy: testAccCheckSslcertkeyDestroy,
 		Steps: []resource.TestStep{
 
+			// Check initial link
 			resource.TestStep{
 				Config: testAccSslcertkey_linkcert_linked,
 				Check: resource.ComposeTestCheckFunc(
@@ -162,6 +163,7 @@ func TestAccSslcertkey_linkcert(t *testing.T) {
 				),
 			},
 
+			// Check unlink
 			resource.TestStep{
 				Config: testAccSslcertkey_linkcert_nolink,
 				Check: resource.ComposeTestCheckFunc(
@@ -173,6 +175,47 @@ func TestAccSslcertkey_linkcert(t *testing.T) {
 				),
 			},
 
+			// Check relink
+			resource.TestStep{
+				Config: testAccSslcertkey_linkcert_linked,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslcertkeyExist("citrixadc_sslcertkey.client", nil),
+					testAccCheckSslcertkeyExist("citrixadc_sslcertkey.intermediate", nil),
+
+					resource.TestCheckResourceAttr(
+						"citrixadc_sslcertkey.client", "linkcertkeyname", "intermediate"),
+				),
+			},
+
+			// Check removal of linked key
+			resource.TestStep{
+				Config: testAccSslcertkey_linkcert_client_key_removed,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslcertkeyExist("citrixadc_sslcertkey.intermediate", nil),
+				),
+			},
+
+			// Recreate unlinked to check subsequent removal
+			resource.TestStep{
+				Config: testAccSslcertkey_linkcert_nolink,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslcertkeyExist("citrixadc_sslcertkey.client", nil),
+					testAccCheckSslcertkeyExist("citrixadc_sslcertkey.intermediate", nil),
+
+					resource.TestCheckResourceAttr(
+						"citrixadc_sslcertkey.client", "linkcertkeyname", ""),
+				),
+			},
+
+			// Check removal of unlinked key
+			resource.TestStep{
+				Config: testAccSslcertkey_linkcert_client_key_removed,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslcertkeyExist("citrixadc_sslcertkey.intermediate", nil),
+				),
+			},
+
+			// Relink to test removal of both entries by end of test
 			resource.TestStep{
 				Config: testAccSslcertkey_linkcert_linked,
 				Check: resource.ComposeTestCheckFunc(
@@ -211,6 +254,15 @@ resource "citrixadc_sslcertkey" "client" {
     certkey = "client"
     linkcertkeyname = citrixadc_sslcertkey.intermediate.certkey
 }
+
+resource "citrixadc_sslcertkey" "intermediate" {
+    cert = "/var/tmp/intermediate.crt"
+    certkey = "intermediate"
+}
+
+`
+
+const testAccSslcertkey_linkcert_client_key_removed = `
 
 resource "citrixadc_sslcertkey" "intermediate" {
     cert = "/var/tmp/intermediate.crt"
