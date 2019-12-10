@@ -1,4 +1,5 @@
-/* this template assumes a NetScaler CPX. You should not need the cli_script.sh for other NetScalers */
+/* this template assumes a NetScaler CPX. */
+/* For other ADCs this will not work. Using a combination of NITRO API calls and local-exec is recommended */
 data "template_file" "rnat_cmd" {
   count = "${length(var.rnat_config)}"
   template = "/var/netscaler/bins/cli_script.sh 'set rnat $${network} $${netmask} $${acl} $${nat} $${natip}'"
