@@ -20,7 +20,7 @@ SCHEMA_EXEC = generate_schema
 default: build 
 
 build:
-	go build -o $(SCHEMA_EXEC)  .
+	go build -v -o $(SCHEMA_EXEC)  .
 
 generate-test-build:
 	go build ${GENERATED_PKGS}
@@ -46,5 +46,20 @@ schema_only:
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/basic/servicegroup.json
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/ssl/sslcertkey.json -d certkey
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/basic/server.json
+	@# Responder stuff
+	./$(SCHEMA_EXEC) -i $(JSON_DIR)/responder/responderpolicy.json
+	./$(SCHEMA_EXEC) -i $(JSON_DIR)/responder/responderaction.json
+	./$(SCHEMA_EXEC) -i $(JSON_DIR)/responder/responderglobal_responderpolicy_binding.json
+	./$(SCHEMA_EXEC) -i $(JSON_DIR)/responder/responderpolicylabel.json
+	./$(SCHEMA_EXEC) -i $(JSON_DIR)/cs/csvserver_responderpolicy_binding.json
+	./$(SCHEMA_EXEC) -i $(JSON_DIR)/lb/lbvserver_responderpolicy_binding.json
+	@# Rewrite stuff
+	./$(SCHEMA_EXEC) -i $(JSON_DIR)/rewrite/rewriteaction.json
+	./$(SCHEMA_EXEC) -i $(JSON_DIR)/rewrite/rewritepolicy.json
+	./$(SCHEMA_EXEC) -i $(JSON_DIR)/rewrite/rewriteglobal_rewritepolicy_binding.json
+	./$(SCHEMA_EXEC) -i $(JSON_DIR)/rewrite/rewritepolicylabel.json
+	./$(SCHEMA_EXEC) -i $(JSON_DIR)/cs/csvserver_rewritepolicy_binding.json
+	./$(SCHEMA_EXEC) -i $(JSON_DIR)/lb/lbvserver_rewritepolicy_binding.json
+
 
 schema: schema_only fmt

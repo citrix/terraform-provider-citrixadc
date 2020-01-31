@@ -23,27 +23,23 @@ import (
 	"testing"
 )
 
-func TestAcc{{.TfTitle}}_basic(t *testing.T) {
+func TestAccResponderpolicy_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-                CheckDestroy: testAccCheck{{.TfTitle}}Destroy,
+		CheckDestroy: testAccCheckResponderpolicyDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-                                Config: testAcc{{.TfTitle}}_basic,
+				Config: testAccResponderpolicy_basic,
 				Check: resource.ComposeTestCheckFunc(
-                                        testAccCheck{{.TfTitle}}Exist("citrixadc_{{.TfName}}.foo", nil),
-                                        {{range $key, $value := .KeyFields }}
-					resource.TestCheckResourceAttr(
-                                                 "citrixadc_{{$.TfName}}.foo", "{{$key}}", "{{$value}}"),
-                                        {{- end}}
+					testAccCheckResponderpolicyExist("citrixadc_responderpolicy.foo", nil),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheck{{.TfTitle}}Exist(n string, id *string) resource.TestCheckFunc {
+func testAccCheckResponderpolicyExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -63,7 +59,7 @@ func testAccCheck{{.TfTitle}}Exist(n string, id *string) resource.TestCheckFunc 
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-                data, err := nsClient.FindResource(netscaler.{{.TfTitle}}.Type(), rs.Primary.ID)
+		data, err := nsClient.FindResource(netscaler.Responderpolicy.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -77,11 +73,11 @@ func testAccCheck{{.TfTitle}}Exist(n string, id *string) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheck{{.TfTitle}}Destroy(s *terraform.State) error {
+func testAccCheckResponderpolicyDestroy(s *terraform.State) error {
 	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
 
 	for _, rs := range s.RootModule().Resources {
-                if rs.Type != "citrixadc_{{.TfName}}" {
+		if rs.Type != "citrixadc_responderpolicy" {
 			continue
 		}
 
@@ -89,7 +85,7 @@ func testAccCheck{{.TfTitle}}Destroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-                _, err := nsClient.FindResource(netscaler.{{.TfTitle}}.Type(), rs.Primary.ID)
+		_, err := nsClient.FindResource(netscaler.Responderpolicy.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("LB vserver %s still exists", rs.Primary.ID)
 		}
@@ -99,29 +95,11 @@ func testAccCheck{{.TfTitle}}Destroy(s *terraform.State) error {
 	return nil
 }
 
-const testAcc{{.TfTitle}}_basic = `
-{{if isPresent .KeyFieldsBound }}
-resource "citrixadc_{{$.BoundType|lower}}" "foo" {
-  {{range $key, $value := .KeyFieldsBound -}}
-  {{if isInt $value  }}
-  {{$key}} = {{$value}}
-  {{- else}}
-  {{$key}} = "{{$value}}"
-  {{- end}}
-  {{- end}}
-}
-{{end}}
+const testAccResponderpolicy_basic = `
 
-resource "citrixadc_{{.TfName}}" "foo" {
-  {{range $key, $value := .KeyFields -}}
-  {{if isInt $value  }}
-  {{$key}} = {{$value}}
-  {{- else}}
-  {{$key}} = "{{$value}}"
-  {{- end}}
-  {{- end}}
-{{if isPresent .KeyFieldsBound }}
-  depends_on = ["citrixadc_{{$.BoundType|lower}}.foo"]
-{{end}}
+
+resource "citrixadc_responderpolicy" "foo" {
+  
+
 }
 `
