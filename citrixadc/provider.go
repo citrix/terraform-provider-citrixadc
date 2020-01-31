@@ -19,6 +19,8 @@ import (
 	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform/version"
+	"log"
 	"sync"
 )
 
@@ -75,21 +77,27 @@ func providerSchema() map[string]*schema.Schema {
 
 func providerResources() map[string]*schema.Resource {
 	return map[string]*schema.Resource{
-		"citrixadc_lbvserver":    resourceCitrixAdcLbvserver(),
-		"citrixadc_service":      resourceCitrixAdcService(),
-		"citrixadc_csvserver":    resourceCitrixAdcCsvserver(),
-		"citrixadc_cspolicy":     resourceCitrixAdcCspolicy(),
-		"citrixadc_sslcertkey":   resourceCitrixAdcSslcertkey(),
-		"citrixadc_lbmonitor":    resourceCitrixAdcLbmonitor(),
-		"citrixadc_servicegroup": resourceCitrixAdcServicegroup(),
-		"citrixadc_nsacl":        resourceCitrixAdcNsacl(),
-		"citrixadc_nsacls":       resourceCitrixAdcNsacls(),
-		"citrixadc_inat":         resourceCitrixAdcInat(),
-		"citrixadc_rnat":         resourceCitrixAdcRnats(),
-		"citrixadc_gslbsite":     resourceCitrixAdcGslbsite(),
-		"citrixadc_gslbvserver":  resourceCitrixAdcGslbvserver(),
-		"citrixadc_gslbservice":  resourceCitrixAdcGslbservice(),
-		"citrixadc_server":       resourceCitrixAdcServer(),
+		"citrixadc_lbvserver":            resourceCitrixAdcLbvserver(),
+		"citrixadc_service":              resourceCitrixAdcService(),
+		"citrixadc_csvserver":            resourceCitrixAdcCsvserver(),
+		"citrixadc_cspolicy":             resourceCitrixAdcCspolicy(),
+		"citrixadc_sslcertkey":           resourceCitrixAdcSslcertkey(),
+		"citrixadc_lbmonitor":            resourceCitrixAdcLbmonitor(),
+		"citrixadc_servicegroup":         resourceCitrixAdcServicegroup(),
+		"citrixadc_nsacl":                resourceCitrixAdcNsacl(),
+		"citrixadc_nsacls":               resourceCitrixAdcNsacls(),
+		"citrixadc_inat":                 resourceCitrixAdcInat(),
+		"citrixadc_rnat":                 resourceCitrixAdcRnats(),
+		"citrixadc_gslbsite":             resourceCitrixAdcGslbsite(),
+		"citrixadc_gslbvserver":          resourceCitrixAdcGslbvserver(),
+		"citrixadc_gslbservice":          resourceCitrixAdcGslbservice(),
+		"citrixadc_server":               resourceCitrixAdcServer(),
+		"citrixadc_responderaction":      resourceCitrixAdcResponderaction(),
+		"citrixadc_responderpolicy":      resourceCitrixAdcResponderpolicy(),
+		"citrixadc_responderpolicylabel": resourceCitrixAdcResponderpolicylabel(),
+		"citrixadc_rewriteaction":        resourceCitrixAdcRewriteaction(),
+		"citrixadc_rewritepolicy":        resourceCitrixAdcRewritepolicy(),
+		"citrixadc_rewritepolicylabel":   resourceCitrixAdcRewritepolicylabel(),
 	}
 }
 
@@ -113,6 +121,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	}
 
 	c.client = client
+	log.Printf("[DEBUG] citrixadc-provider: Terraform version imported: %s\n", version.Version)
 
 	return &c, nil
 }
