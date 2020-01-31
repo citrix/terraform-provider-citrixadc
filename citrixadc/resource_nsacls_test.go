@@ -16,7 +16,10 @@ limitations under the License.
 package citrixadc
 
 import (
+	"bytes"
+	"errors"
 	"fmt"
+	"log"
 	"reflect"
 	"testing"
 
@@ -148,8 +151,23 @@ func testAccCheckNsaclsDestroy(s *terraform.State) error {
 	if err != nil {
 		return err
 	}
-	if len(deviceAcls) > 0 {
-		return fmt.Errorf("netscaler-provider testAccCheckNsaclsDestroy: there are non-zero acls remaining")
+
+	messageBuffer := bytes.NewBuffer(make([]byte, 0, 0))
+
+	foundDanglingAcl := false
+	for _, acl := range deviceAcls {
+		log.Printf("acl found %v\n", acl)
+		for _, aclname := range []string{"restricttcp2", "restrictvlan", "allowudp"} {
+			if acl["aclname"] == aclname {
+				foundDanglingAcl = true
+				if _, err := messageBuffer.WriteString(fmt.Sprintf("Dangling acl %s\n", aclname)); err != nil {
+					return errors.New("Error appending acl name to message buffer")
+				}
+			}
+		}
+	}
+	if foundDanglingAcl {
+		return fmt.Errorf("citrixadc-provider testAccCheckNsaclsDestroy: %s", messageBuffer.String())
 	}
 
 	return nil
@@ -195,9 +213,6 @@ func testAccCheckNsaclsUpdateExist(n string, id *string) resource.TestCheckFunc 
 			"priority":  "250",
 		}
 
-		if len(deviceAcls) != 2 {
-			return fmt.Errorf("netscaler-provider testUpdateNsAcls incorrect number of acls %d expected %d", len(deviceAcls), 2)
-		}
 		found1, found2 := false, false
 		for _, acl := range deviceAcls {
 			if testMapEquals(acl1, acl) {
