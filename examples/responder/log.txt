@@ -1,0 +1,1022 @@
+2020/01/22 15:57:26 [WARN] Invalid log level: "1". Defaulting to level: TRACE. Valid levels are: [TRACE DEBUG INFO WARN ERROR]
+2020/01/22 15:57:26 [INFO] Terraform version: 0.12.5  
+2020/01/22 15:57:26 [INFO] Go runtime version: go1.12.4
+2020/01/22 15:57:26 [INFO] CLI args: []string{"/usr/local/bin/terraform", "apply"}
+2020/01/22 15:57:26 [DEBUG] Attempting to open CLI config file: /home/georgen/.terraformrc
+2020/01/22 15:57:26 Loading CLI configuration from /home/georgen/.terraformrc
+2020/01/22 15:57:26 [INFO] CLI command args: []string{"apply"}
+2020/01/22 15:57:26 [TRACE] Meta.Backend: no config given or present on disk, so returning nil config
+2020/01/22 15:57:26 [TRACE] Meta.Backend: backend has not previously been initialized in this working directory
+2020/01/22 15:57:26 [DEBUG] New state was assigned lineage "b8835303-4801-d919-de7b-ee27291a844c"
+2020/01/22 15:57:26 [TRACE] Meta.Backend: using default local state only (no backend configuration, and no existing initialized backend)
+2020/01/22 15:57:26 [TRACE] Meta.Backend: instantiated backend of type <nil>
+2020/01/22 15:57:26 [DEBUG] checking for provider in "."
+2020/01/22 15:57:26 [DEBUG] checking for provider in "/usr/local/bin"
+2020/01/22 15:57:26 [DEBUG] checking for provider in ".terraform/plugins/linux_amd64"
+2020/01/22 15:57:26 [DEBUG] checking for provider in "/home/georgen/.terraform.d/plugins"
+2020/01/22 15:57:26 [DEBUG] found provider "terraform-provider-citrixadc_v0.12.8"
+2020/01/22 15:57:26 [DEBUG] checking for provider in "/home/georgen/.terraform.d/plugins/linux_amd64"
+2020/01/22 15:57:26 [DEBUG] found provider "terraform-provider-aws_v2.1.0_x4"
+2020/01/22 15:57:26 [DEBUG] found provider "terraform-provider-aws_v2.13.0_x4"
+2020/01/22 15:57:26 [DEBUG] found provider "terraform-provider-azurerm_v1.22.1_x4"
+2020/01/22 15:57:26 [DEBUG] found provider "terraform-provider-null_v2.1.0_x4"
+2020/01/22 15:57:26 [DEBUG] found provider "terraform-provider-random_v2.0.0_x4"
+2020/01/22 15:57:26 [DEBUG] found provider "terraform-provider-template_v2.1.2_x4"
+2020/01/22 15:57:26 [DEBUG] found valid plugin: "aws", "2.1.0", "/home/georgen/.terraform.d/plugins/linux_amd64/terraform-provider-aws_v2.1.0_x4"
+2020/01/22 15:57:26 [DEBUG] found valid plugin: "aws", "2.13.0", "/home/georgen/.terraform.d/plugins/linux_amd64/terraform-provider-aws_v2.13.0_x4"
+2020/01/22 15:57:26 [DEBUG] found valid plugin: "azurerm", "1.22.1", "/home/georgen/.terraform.d/plugins/linux_amd64/terraform-provider-azurerm_v1.22.1_x4"
+2020/01/22 15:57:26 [DEBUG] found valid plugin: "null", "2.1.0", "/home/georgen/.terraform.d/plugins/linux_amd64/terraform-provider-null_v2.1.0_x4"
+2020/01/22 15:57:26 [DEBUG] found valid plugin: "random", "2.0.0", "/home/georgen/.terraform.d/plugins/linux_amd64/terraform-provider-random_v2.0.0_x4"
+2020/01/22 15:57:26 [DEBUG] found valid plugin: "template", "2.1.2", "/home/georgen/.terraform.d/plugins/linux_amd64/terraform-provider-template_v2.1.2_x4"
+2020/01/22 15:57:26 [DEBUG] found valid plugin: "citrixadc", "0.12.8", "/home/georgen/.terraform.d/plugins/terraform-provider-citrixadc_v0.12.8"
+2020/01/22 15:57:26 [DEBUG] checking for provisioner in "."
+2020/01/22 15:57:26 [DEBUG] checking for provisioner in "/usr/local/bin"
+2020/01/22 15:57:26 [DEBUG] checking for provisioner in ".terraform/plugins/linux_amd64"
+2020/01/22 15:57:26 [DEBUG] checking for provisioner in "/home/georgen/.terraform.d/plugins"
+2020/01/22 15:57:26 [DEBUG] checking for provisioner in "/home/georgen/.terraform.d/plugins/linux_amd64"
+2020/01/22 15:57:26 [TRACE] Meta.Backend: backend <nil> does not support operations, so wrapping it in a local backend
+2020/01/22 15:57:26 [INFO] backend/local: starting Apply operation
+2020/01/22 15:57:26 [TRACE] backend/local: requesting state manager for workspace "default"
+2020/01/22 15:57:26 [TRACE] backend/local: state manager for workspace "default" will:
+ - read initial snapshot from terraform.tfstate
+ - write new snapshots to terraform.tfstate
+ - create any backup at terraform.tfstate.backup
+2020/01/22 15:57:26 [TRACE] backend/local: requesting state lock for workspace "default"
+2020/01/22 15:57:26 [TRACE] statemgr.Filesystem: preparing to manage state snapshots at terraform.tfstate
+2020/01/22 15:57:26 [TRACE] statemgr.Filesystem: existing snapshot has lineage "9710c4de-01b2-2b61-1565-598577cfa495" serial 46
+2020/01/22 15:57:26 [TRACE] statemgr.Filesystem: locking terraform.tfstate using fcntl flock
+2020/01/22 15:57:26 [TRACE] statemgr.Filesystem: writing lock metadata to .terraform.tfstate.lock.info
+2020/01/22 15:57:26 [TRACE] backend/local: reading remote state for workspace "default"
+2020/01/22 15:57:26 [TRACE] statemgr.Filesystem: reading latest snapshot from terraform.tfstate
+2020/01/22 15:57:26 [TRACE] statemgr.Filesystem: read snapshot with lineage "9710c4de-01b2-2b61-1565-598577cfa495" serial 46
+2020/01/22 15:57:26 [TRACE] backend/local: retrieving local state snapshot for workspace "default"
+2020/01/22 15:57:26 [TRACE] backend/local: building context for current working directory
+2020/01/22 15:57:26 [TRACE] terraform.NewContext: starting
+2020/01/22 15:57:26 [TRACE] terraform.NewContext: resolving provider version selections
+2020/01/22 15:57:26 [TRACE] terraform.NewContext: loading provider schemas
+2020/01/22 15:57:26 [TRACE] LoadSchemas: retrieving schema for provider type "citrixadc"
+2020-01-22T15:57:26.741+0200 [INFO]  plugin: configuring client automatic mTLS
+2020-01-22T15:57:26.775+0200 [DEBUG] plugin: starting plugin: path=/home/georgen/.terraform.d/plugins/terraform-provider-citrixadc_v0.12.8 args=[/home/georgen/.terraform.d/plugins/terraform-provider-citrixadc_v0.12.8]
+2020-01-22T15:57:26.775+0200 [DEBUG] plugin: plugin started: path=/home/georgen/.terraform.d/plugins/terraform-provider-citrixadc_v0.12.8 pid=22183
+2020-01-22T15:57:26.775+0200 [DEBUG] plugin: waiting for RPC address: path=/home/georgen/.terraform.d/plugins/terraform-provider-citrixadc_v0.12.8
+2020-01-22T15:57:26.785+0200 [INFO]  plugin.terraform-provider-citrixadc_v0.12.8: configuring server automatic mTLS: timestamp=2020-01-22T15:57:26.785+0200
+2020-01-22T15:57:26.819+0200 [DEBUG] plugin: using plugin: version=5
+2020-01-22T15:57:26.819+0200 [DEBUG] plugin.terraform-provider-citrixadc_v0.12.8: plugin address: address=/tmp/plugin199795171 network=unix timestamp=2020-01-22T15:57:26.819+0200
+2020/01/22 15:57:26 [TRACE] GRPCProvider: GetSchema
+2020/01/22 15:57:26 [TRACE] GRPCProvider: Close
+2020-01-22T15:57:26.907+0200 [DEBUG] plugin: plugin process exited: path=/home/georgen/.terraform.d/plugins/terraform-provider-citrixadc_v0.12.8 pid=22183
+2020-01-22T15:57:26.907+0200 [DEBUG] plugin: plugin exited
+2020/01/22 15:57:26 [TRACE] terraform.NewContext: complete
+2020/01/22 15:57:26 [TRACE] backend/local: finished building terraform.Context
+2020/01/22 15:57:26 [TRACE] backend/local: requesting interactive input, if necessary
+2020/01/22 15:57:26 [TRACE] Context.Input: Prompting for variables
+2020/01/22 15:57:26 [TRACE] Context.Input: Prompting for provider arguments
+2020/01/22 15:57:26 [TRACE] Context.Input: Provider provider.citrixadc declared at provider.tf:1,1-21
+2020/01/22 15:57:26 [TRACE] Context.Input: Input for provider.citrixadc: map[string]cty.Value{}
+2020/01/22 15:57:26 [TRACE] backend/local: running validation operation
+2020/01/22 15:57:26 [INFO] terraform: building graph: GraphTypeValidate
+2020/01/22 15:57:26 [TRACE] Executing graph transform *terraform.ConfigTransformer
+2020/01/22 15:57:26 [TRACE] ConfigTransformer: Starting for path: 
+2020/01/22 15:57:26 [TRACE] Completed graph transform *terraform.ConfigTransformer with new graph:
+citrixadc_responderaction.responder_action - *terraform.NodeValidatableResource
+------
+2020/01/22 15:57:26 [TRACE] Executing graph transform *terraform.LocalTransformer
+2020/01/22 15:57:26 [TRACE] Completed graph transform *terraform.LocalTransformer (no changes)
+2020/01/22 15:57:26 [TRACE] Executing graph transform *terraform.OutputTransformer
+2020/01/22 15:57:26 [TRACE] Completed graph transform *terraform.OutputTransformer (no changes)
+2020/01/22 15:57:26 [TRACE] Executing graph transform *terraform.OrphanResourceInstanceTransformer
+2020/01/22 15:57:26 [TRACE] Completed graph transform *terraform.OrphanResourceInstanceTransformer (no changes)
+2020/01/22 15:57:26 [TRACE] Executing graph transform *terraform.StateTransformer
+2020/01/22 15:57:26 [TRACE] StateTransformer: creating nodes for deposed instance objects only
+2020/01/22 15:57:26 [TRACE] Completed graph transform *terraform.StateTransformer (no changes)
+2020/01/22 15:57:26 [TRACE] Executing graph transform *terraform.OrphanOutputTransformer
+2020/01/22 15:57:26 [TRACE] Completed graph transform *terraform.OrphanOutputTransformer (no changes)
+2020/01/22 15:57:26 [TRACE] Executing graph transform *terraform.AttachResourceConfigTransformer
+2020/01/22 15:57:26 [TRACE] AttachResourceConfigTransformer: attaching to "citrixadc_responderaction.responder_action" (*terraform.NodeValidatableResource) config from resources.tf:1,1-56
+2020/01/22 15:57:26 [TRACE] Completed graph transform *terraform.AttachResourceConfigTransformer (no changes)
+2020/01/22 15:57:26 [TRACE] Executing graph transform *terraform.AttachStateTransformer
+2020/01/22 15:57:26 [TRACE] Completed graph transform *terraform.AttachStateTransformer (no changes)
+2020/01/22 15:57:26 [TRACE] Executing graph transform *terraform.RootVariableTransformer
+2020/01/22 15:57:26 [TRACE] Completed graph transform *terraform.RootVariableTransformer (no changes)
+2020/01/22 15:57:26 [TRACE] Executing graph transform *terraform.MissingProvisionerTransformer
+2020/01/22 15:57:26 [TRACE] Completed graph transform *terraform.MissingProvisionerTransformer (no changes)
+2020/01/22 15:57:26 [TRACE] Executing graph transform *terraform.ProvisionerTransformer
+2020/01/22 15:57:26 [TRACE] Completed graph transform *terraform.ProvisionerTransformer (no changes)
+2020/01/22 15:57:26 [TRACE] Executing graph transform *terraform.ModuleVariableTransformer
+2020/01/22 15:57:26 [TRACE] Completed graph transform *terraform.ModuleVariableTransformer (no changes)
+2020/01/22 15:57:26 [TRACE] Executing graph transform *terraform.graphTransformerMulti
+2020/01/22 15:57:26 [TRACE] (graphTransformerMulti) Executing graph transform *terraform.ProviderConfigTransformer
+2020/01/22 15:57:26 [TRACE] ProviderConfigTransformer: attaching to "provider.citrixadc" provider configuration from provider.tf:1,1-21
+2020/01/22 15:57:26 [TRACE] (graphTransformerMulti) Completed graph transform *terraform.ProviderConfigTransformer with new graph:
+citrixadc_responderaction.responder_action - *terraform.NodeValidatableResource
+provider.citrixadc - *terraform.NodeApplyableProvider
+------
+2020/01/22 15:57:26 [TRACE] (graphTransformerMulti) Executing graph transform *terraform.MissingProviderTransformer
+2020/01/22 15:57:26 [TRACE] (graphTransformerMulti) Completed graph transform *terraform.MissingProviderTransformer (no changes)
+2020/01/22 15:57:26 [TRACE] (graphTransformerMulti) Executing graph transform *terraform.ProviderTransformer
+2020/01/22 15:57:26 [TRACE] ProviderTransformer: citrixadc_responderaction.responder_action is provided by provider.citrixadc or inherited equivalent
+2020/01/22 15:57:26 [TRACE] ProviderTransformer: exact match for provider.citrixadc serving citrixadc_responderaction.responder_action
+2020/01/22 15:57:26 [DEBUG] ProviderTransformer: "citrixadc_responderaction.responder_action" (*terraform.NodeValidatableResource) needs provider.citrixadc
+2020/01/22 15:57:26 [TRACE] (graphTransformerMulti) Completed graph transform *terraform.ProviderTransformer with new graph:
+citrixadc_responderaction.responder_action - *terraform.NodeValidatableResource
+  provider.citrixadc - *terraform.NodeApplyableProvider
+provider.citrixadc - *terraform.NodeApplyableProvider
+------
+2020/01/22 15:57:26 [TRACE] (graphTransformerMulti) Executing graph transform *terraform.PruneProviderTransformer
+2020/01/22 15:57:26 [TRACE] (graphTransformerMulti) Completed graph transform *terraform.PruneProviderTransformer (no changes)
+2020/01/22 15:57:26 [TRACE] (graphTransformerMulti) Executing graph transform *terraform.ParentProviderTransformer
+2020/01/22 15:57:26 [TRACE] (graphTransformerMulti) Completed graph transform *terraform.ParentProviderTransformer (no changes)
+2020/01/22 15:57:26 [TRACE] Completed graph transform *terraform.graphTransformerMulti with new graph:
+citrixadc_responderaction.responder_action - *terraform.NodeValidatableResource
+  provider.citrixadc - *terraform.NodeApplyableProvider
+provider.citrixadc - *terraform.NodeApplyableProvider
+------
+2020/01/22 15:57:26 [TRACE] Executing graph transform *terraform.RemovedModuleTransformer
+2020/01/22 15:57:26 [TRACE] Completed graph transform *terraform.RemovedModuleTransformer (no changes)
+2020/01/22 15:57:26 [TRACE] Executing graph transform *terraform.AttachSchemaTransformer
+2020/01/22 15:57:26 [TRACE] AttachSchemaTransformer: attaching provider config schema to provider.citrixadc
+2020/01/22 15:57:26 [TRACE] AttachSchemaTransformer: attaching resource schema to citrixadc_responderaction.responder_action
+2020/01/22 15:57:26 [TRACE] Completed graph transform *terraform.AttachSchemaTransformer (no changes)
+2020/01/22 15:57:26 [TRACE] Executing graph transform *terraform.ReferenceTransformer
+2020/01/22 15:57:26 [DEBUG] ReferenceTransformer: "citrixadc_responderaction.responder_action" references: []
+2020/01/22 15:57:26 [DEBUG] ReferenceTransformer: "provider.citrixadc" references: []
+2020/01/22 15:57:26 [TRACE] Completed graph transform *terraform.ReferenceTransformer (no changes)
+2020/01/22 15:57:26 [TRACE] Executing graph transform *terraform.CountBoundaryTransformer
+2020/01/22 15:57:26 [TRACE] Completed graph transform *terraform.CountBoundaryTransformer with new graph:
+citrixadc_responderaction.responder_action - *terraform.NodeValidatableResource
+  provider.citrixadc - *terraform.NodeApplyableProvider
+meta.count-boundary (EachMode fixup) - *terraform.NodeCountBoundary
+  citrixadc_responderaction.responder_action - *terraform.NodeValidatableResource
+  provider.citrixadc - *terraform.NodeApplyableProvider
+provider.citrixadc - *terraform.NodeApplyableProvider
+------
+2020/01/22 15:57:26 [TRACE] Executing graph transform *terraform.TargetsTransformer
+2020/01/22 15:57:26 [TRACE] Completed graph transform *terraform.TargetsTransformer (no changes)
+2020/01/22 15:57:26 [TRACE] Executing graph transform *terraform.ForcedCBDTransformer
+2020/01/22 15:57:26 [TRACE] Completed graph transform *terraform.ForcedCBDTransformer (no changes)
+2020/01/22 15:57:26 [TRACE] Executing graph transform *terraform.CloseProviderTransformer
+2020/01/22 15:57:26 [TRACE] Completed graph transform *terraform.CloseProviderTransformer with new graph:
+citrixadc_responderaction.responder_action - *terraform.NodeValidatableResource
+  provider.citrixadc - *terraform.NodeApplyableProvider
+meta.count-boundary (EachMode fixup) - *terraform.NodeCountBoundary
+  citrixadc_responderaction.responder_action - *terraform.NodeValidatableResource
+  provider.citrixadc - *terraform.NodeApplyableProvider
+provider.citrixadc - *terraform.NodeApplyableProvider
+provider.citrixadc (close) - *terraform.graphNodeCloseProvider
+  citrixadc_responderaction.responder_action - *terraform.NodeValidatableResource
+  provider.citrixadc - *terraform.NodeApplyableProvider
+------
+2020/01/22 15:57:26 [TRACE] Executing graph transform *terraform.CloseProvisionerTransformer
+2020/01/22 15:57:26 [TRACE] Completed graph transform *terraform.CloseProvisionerTransformer (no changes)
+2020/01/22 15:57:26 [TRACE] Executing graph transform *terraform.RootTransformer
+2020/01/22 15:57:26 [TRACE] Completed graph transform *terraform.RootTransformer with new graph:
+citrixadc_responderaction.responder_action - *terraform.NodeValidatableResource
+  provider.citrixadc - *terraform.NodeApplyableProvider
+meta.count-boundary (EachMode fixup) - *terraform.NodeCountBoundary
+  citrixadc_responderaction.responder_action - *terraform.NodeValidatableResource
+  provider.citrixadc - *terraform.NodeApplyableProvider
+provider.citrixadc - *terraform.NodeApplyableProvider
+provider.citrixadc (close) - *terraform.graphNodeCloseProvider
+  citrixadc_responderaction.responder_action - *terraform.NodeValidatableResource
+  provider.citrixadc - *terraform.NodeApplyableProvider
+root - terraform.graphNodeRoot
+  meta.count-boundary (EachMode fixup) - *terraform.NodeCountBoundary
+  provider.citrixadc (close) - *terraform.graphNodeCloseProvider
+------
+2020/01/22 15:57:26 [TRACE] Executing graph transform *terraform.TransitiveReductionTransformer
+2020/01/22 15:57:26 [TRACE] Completed graph transform *terraform.TransitiveReductionTransformer with new graph:
+citrixadc_responderaction.responder_action - *terraform.NodeValidatableResource
+  provider.citrixadc - *terraform.NodeApplyableProvider
+meta.count-boundary (EachMode fixup) - *terraform.NodeCountBoundary
+  citrixadc_responderaction.responder_action - *terraform.NodeValidatableResource
+provider.citrixadc - *terraform.NodeApplyableProvider
+provider.citrixadc (close) - *terraform.graphNodeCloseProvider
+  citrixadc_responderaction.responder_action - *terraform.NodeValidatableResource
+root - terraform.graphNodeRoot
+  meta.count-boundary (EachMode fixup) - *terraform.NodeCountBoundary
+  provider.citrixadc (close) - *terraform.graphNodeCloseProvider
+------
+2020/01/22 15:57:26 [DEBUG] Starting graph walk: walkValidate
+2020/01/22 15:57:26 [TRACE] dag/walk: updating graph
+2020/01/22 15:57:26 [TRACE] dag/walk: added new vertex: "provider.citrixadc (close)"
+2020/01/22 15:57:26 [TRACE] dag/walk: added new vertex: "root"
+2020/01/22 15:57:26 [TRACE] dag/walk: added new vertex: "citrixadc_responderaction.responder_action"
+2020/01/22 15:57:26 [TRACE] dag/walk: added new vertex: "provider.citrixadc"
+2020/01/22 15:57:26 [TRACE] dag/walk: added new vertex: "meta.count-boundary (EachMode fixup)"
+2020/01/22 15:57:26 [TRACE] dag/walk: added edge: "root" waiting on "meta.count-boundary (EachMode fixup)"
+2020/01/22 15:57:26 [TRACE] dag/walk: added edge: "citrixadc_responderaction.responder_action" waiting on "provider.citrixadc"
+2020/01/22 15:57:26 [TRACE] dag/walk: added edge: "meta.count-boundary (EachMode fixup)" waiting on "citrixadc_responderaction.responder_action"
+2020/01/22 15:57:26 [TRACE] dag/walk: added edge: "provider.citrixadc (close)" waiting on "citrixadc_responderaction.responder_action"
+2020/01/22 15:57:26 [TRACE] dag/walk: added edge: "root" waiting on "provider.citrixadc (close)"
+2020/01/22 15:57:26 [TRACE] dag/walk: dependencies changed for "root", sending new deps
+2020/01/22 15:57:26 [TRACE] dag/walk: dependencies changed for "citrixadc_responderaction.responder_action", sending new deps
+2020/01/22 15:57:26 [TRACE] dag/walk: dependencies changed for "meta.count-boundary (EachMode fixup)", sending new deps
+2020/01/22 15:57:26 [TRACE] dag/walk: dependencies changed for "provider.citrixadc (close)", sending new deps
+2020/01/22 15:57:26 [TRACE] dag/walk: visiting "provider.citrixadc"
+2020/01/22 15:57:26 [TRACE] vertex "provider.citrixadc": starting visit (*terraform.NodeApplyableProvider)
+2020/01/22 15:57:26 [TRACE] vertex "provider.citrixadc": evaluating
+2020/01/22 15:57:26 [TRACE] [walkValidate] Entering eval tree: provider.citrixadc
+2020/01/22 15:57:26 [TRACE] <root>: eval: *terraform.EvalSequence
+2020/01/22 15:57:26 [TRACE] <root>: eval: *terraform.EvalInitProvider
+2020-01-22T15:57:26.908+0200 [INFO]  plugin: configuring client automatic mTLS
+2020-01-22T15:57:26.950+0200 [DEBUG] plugin: starting plugin: path=/home/georgen/.terraform.d/plugins/terraform-provider-citrixadc_v0.12.8 args=[/home/georgen/.terraform.d/plugins/terraform-provider-citrixadc_v0.12.8]
+2020-01-22T15:57:26.950+0200 [DEBUG] plugin: plugin started: path=/home/georgen/.terraform.d/plugins/terraform-provider-citrixadc_v0.12.8 pid=22200
+2020-01-22T15:57:26.950+0200 [DEBUG] plugin: waiting for RPC address: path=/home/georgen/.terraform.d/plugins/terraform-provider-citrixadc_v0.12.8
+2020-01-22T15:57:26.959+0200 [INFO]  plugin.terraform-provider-citrixadc_v0.12.8: configuring server automatic mTLS: timestamp=2020-01-22T15:57:26.959+0200
+2020-01-22T15:57:26.998+0200 [DEBUG] plugin: using plugin: version=5
+2020-01-22T15:57:26.998+0200 [DEBUG] plugin.terraform-provider-citrixadc_v0.12.8: plugin address: address=/tmp/plugin221577480 network=unix timestamp=2020-01-22T15:57:26.998+0200
+2020/01/22 15:57:26 [TRACE] BuiltinEvalContext: Initialized "citrixadc" provider for provider.citrixadc
+2020/01/22 15:57:26 [TRACE] <root>: eval: terraform.EvalNoop
+2020/01/22 15:57:26 [TRACE] <root>: eval: *terraform.EvalOpFilter
+2020/01/22 15:57:26 [TRACE] <root>: eval: *terraform.EvalSequence
+2020/01/22 15:57:26 [TRACE] <root>: eval: *terraform.EvalGetProvider
+2020/01/22 15:57:26 [TRACE] <root>: eval: *terraform.EvalValidateProvider
+2020/01/22 15:57:26 [TRACE] buildProviderConfig for provider.citrixadc: using explicit config only
+2020/01/22 15:57:26 [TRACE] GRPCProvider: GetSchema
+2020/01/22 15:57:27 [TRACE] GRPCProvider: PrepareProviderConfig
+2020/01/22 15:57:27 [TRACE] <root>: eval: terraform.EvalNoop
+2020/01/22 15:57:27 [TRACE] <root>: eval: terraform.EvalNoop
+2020/01/22 15:57:27 [TRACE] [walkValidate] Exiting eval tree: provider.citrixadc
+2020/01/22 15:57:27 [TRACE] vertex "provider.citrixadc": visit complete
+2020/01/22 15:57:27 [TRACE] dag/walk: visiting "citrixadc_responderaction.responder_action"
+2020/01/22 15:57:27 [TRACE] vertex "citrixadc_responderaction.responder_action": starting visit (*terraform.NodeValidatableResource)
+2020/01/22 15:57:27 [TRACE] vertex "citrixadc_responderaction.responder_action": evaluating
+2020/01/22 15:57:27 [TRACE] [walkValidate] Entering eval tree: citrixadc_responderaction.responder_action
+2020/01/22 15:57:27 [TRACE] <root>: eval: *terraform.EvalSequence
+2020/01/22 15:57:27 [TRACE] <root>: eval: *terraform.EvalGetProvider
+2020/01/22 15:57:27 [TRACE] <root>: eval: *terraform.EvalValidateResource
+2020/01/22 15:57:27 [TRACE] GRPCProvider: ValidateResourceTypeConfig
+2020/01/22 15:57:27 [TRACE] [walkValidate] Exiting eval tree: citrixadc_responderaction.responder_action
+2020/01/22 15:57:27 [TRACE] vertex "citrixadc_responderaction.responder_action": visit complete
+2020/01/22 15:57:27 [TRACE] dag/walk: visiting "meta.count-boundary (EachMode fixup)"
+2020/01/22 15:57:27 [TRACE] vertex "meta.count-boundary (EachMode fixup)": starting visit (*terraform.NodeCountBoundary)
+2020/01/22 15:57:27 [TRACE] dag/walk: visiting "provider.citrixadc (close)"
+2020/01/22 15:57:27 [TRACE] vertex "meta.count-boundary (EachMode fixup)": evaluating
+2020/01/22 15:57:27 [TRACE] [walkValidate] Entering eval tree: meta.count-boundary (EachMode fixup)
+2020/01/22 15:57:27 [TRACE] vertex "provider.citrixadc (close)": starting visit (*terraform.graphNodeCloseProvider)
+2020/01/22 15:57:27 [TRACE] vertex "provider.citrixadc (close)": evaluating
+2020/01/22 15:57:27 [TRACE] [walkValidate] Entering eval tree: provider.citrixadc (close)
+2020/01/22 15:57:27 [TRACE] <root>: eval: *terraform.EvalCloseProvider
+2020/01/22 15:57:27 [TRACE] GRPCProvider: Close
+2020/01/22 15:57:27 [TRACE] <root>: eval: *terraform.EvalCountFixZeroOneBoundaryGlobal
+2020/01/22 15:57:27 [TRACE] [walkValidate] Exiting eval tree: meta.count-boundary (EachMode fixup)
+2020/01/22 15:57:27 [TRACE] vertex "meta.count-boundary (EachMode fixup)": visit complete
+2020-01-22T15:57:27.110+0200 [DEBUG] plugin: plugin process exited: path=/home/georgen/.terraform.d/plugins/terraform-provider-citrixadc_v0.12.8 pid=22200
+2020-01-22T15:57:27.110+0200 [DEBUG] plugin: plugin exited
+2020/01/22 15:57:27 [TRACE] [walkValidate] Exiting eval tree: provider.citrixadc (close)
+2020/01/22 15:57:27 [TRACE] vertex "provider.citrixadc (close)": visit complete
+2020/01/22 15:57:27 [TRACE] dag/walk: visiting "root"
+2020/01/22 15:57:27 [TRACE] vertex "root": starting visit (terraform.graphNodeRoot)
+2020/01/22 15:57:27 [TRACE] vertex "root": visit complete
+2020/01/22 15:57:27 [INFO] backend/local: apply calling Refresh
+2020/01/22 15:57:27 [INFO] terraform: building graph: GraphTypeRefresh
+2020/01/22 15:57:27 [TRACE] Executing graph transform *terraform.ConfigTransformer
+2020/01/22 15:57:27 [TRACE] ConfigTransformer: Starting for path: 
+2020/01/22 15:57:27 [TRACE] Completed graph transform *terraform.ConfigTransformer with new graph:
+citrixadc_responderaction.responder_action - *terraform.NodeRefreshableManagedResource
+------
+2020/01/22 15:57:27 [TRACE] Executing graph transform *terraform.ConfigTransformer
+2020/01/22 15:57:27 [TRACE] ConfigTransformer: Starting for path: 
+2020/01/22 15:57:27 [TRACE] Completed graph transform *terraform.ConfigTransformer (no changes)
+2020/01/22 15:57:27 [TRACE] Executing graph transform *terraform.OrphanResourceInstanceTransformer
+2020/01/22 15:57:27 [TRACE] Completed graph transform *terraform.OrphanResourceInstanceTransformer (no changes)
+2020/01/22 15:57:27 [TRACE] Executing graph transform *terraform.StateTransformer
+2020/01/22 15:57:27 [TRACE] StateTransformer: creating nodes for deposed instance objects only
+2020/01/22 15:57:27 [TRACE] Completed graph transform *terraform.StateTransformer (no changes)
+2020/01/22 15:57:27 [TRACE] Executing graph transform *terraform.AttachStateTransformer
+2020/01/22 15:57:27 [TRACE] Completed graph transform *terraform.AttachStateTransformer (no changes)
+2020/01/22 15:57:27 [TRACE] Executing graph transform *terraform.AttachResourceConfigTransformer
+2020/01/22 15:57:27 [TRACE] AttachResourceConfigTransformer: attaching to "citrixadc_responderaction.responder_action" (*terraform.NodeRefreshableManagedResource) config from resources.tf:1,1-56
+2020/01/22 15:57:27 [TRACE] Completed graph transform *terraform.AttachResourceConfigTransformer (no changes)
+2020/01/22 15:57:27 [TRACE] Executing graph transform *terraform.RootVariableTransformer
+2020/01/22 15:57:27 [TRACE] Completed graph transform *terraform.RootVariableTransformer (no changes)
+2020/01/22 15:57:27 [TRACE] Executing graph transform *terraform.LocalTransformer
+2020/01/22 15:57:27 [TRACE] Completed graph transform *terraform.LocalTransformer (no changes)
+2020/01/22 15:57:27 [TRACE] Executing graph transform *terraform.OutputTransformer
+2020/01/22 15:57:27 [TRACE] Completed graph transform *terraform.OutputTransformer (no changes)
+2020/01/22 15:57:27 [TRACE] Executing graph transform *terraform.ModuleVariableTransformer
+2020/01/22 15:57:27 [TRACE] Completed graph transform *terraform.ModuleVariableTransformer (no changes)
+2020/01/22 15:57:27 [TRACE] Executing graph transform *terraform.graphTransformerMulti
+2020/01/22 15:57:27 [TRACE] (graphTransformerMulti) Executing graph transform *terraform.ProviderConfigTransformer
+2020/01/22 15:57:27 [TRACE] ProviderConfigTransformer: attaching to "provider.citrixadc" provider configuration from provider.tf:1,1-21
+2020/01/22 15:57:27 [TRACE] (graphTransformerMulti) Completed graph transform *terraform.ProviderConfigTransformer with new graph:
+citrixadc_responderaction.responder_action - *terraform.NodeRefreshableManagedResource
+provider.citrixadc - *terraform.NodeApplyableProvider
+------
+2020/01/22 15:57:27 [TRACE] (graphTransformerMulti) Executing graph transform *terraform.MissingProviderTransformer
+2020/01/22 15:57:27 [TRACE] (graphTransformerMulti) Completed graph transform *terraform.MissingProviderTransformer (no changes)
+2020/01/22 15:57:27 [TRACE] (graphTransformerMulti) Executing graph transform *terraform.ProviderTransformer
+2020/01/22 15:57:27 [TRACE] ProviderTransformer: citrixadc_responderaction.responder_action is provided by provider.citrixadc or inherited equivalent
+2020/01/22 15:57:27 [TRACE] ProviderTransformer: exact match for provider.citrixadc serving citrixadc_responderaction.responder_action
+2020/01/22 15:57:27 [DEBUG] ProviderTransformer: "citrixadc_responderaction.responder_action" (*terraform.NodeRefreshableManagedResource) needs provider.citrixadc
+2020/01/22 15:57:27 [TRACE] (graphTransformerMulti) Completed graph transform *terraform.ProviderTransformer with new graph:
+citrixadc_responderaction.responder_action - *terraform.NodeRefreshableManagedResource
+  provider.citrixadc - *terraform.NodeApplyableProvider
+provider.citrixadc - *terraform.NodeApplyableProvider
+------
+2020/01/22 15:57:27 [TRACE] (graphTransformerMulti) Executing graph transform *terraform.PruneProviderTransformer
+2020/01/22 15:57:27 [TRACE] (graphTransformerMulti) Completed graph transform *terraform.PruneProviderTransformer (no changes)
+2020/01/22 15:57:27 [TRACE] (graphTransformerMulti) Executing graph transform *terraform.ParentProviderTransformer
+2020/01/22 15:57:27 [TRACE] (graphTransformerMulti) Completed graph transform *terraform.ParentProviderTransformer (no changes)
+2020/01/22 15:57:27 [TRACE] Completed graph transform *terraform.graphTransformerMulti with new graph:
+citrixadc_responderaction.responder_action - *terraform.NodeRefreshableManagedResource
+  provider.citrixadc - *terraform.NodeApplyableProvider
+provider.citrixadc - *terraform.NodeApplyableProvider
+------
+2020/01/22 15:57:27 [TRACE] Executing graph transform *terraform.AttachSchemaTransformer
+2020/01/22 15:57:27 [TRACE] AttachSchemaTransformer: attaching resource schema to citrixadc_responderaction.responder_action
+2020/01/22 15:57:27 [TRACE] AttachSchemaTransformer: attaching provider config schema to provider.citrixadc
+2020/01/22 15:57:27 [TRACE] Completed graph transform *terraform.AttachSchemaTransformer (no changes)
+2020/01/22 15:57:27 [TRACE] Executing graph transform *terraform.ReferenceTransformer
+2020/01/22 15:57:27 [DEBUG] ReferenceTransformer: "citrixadc_responderaction.responder_action" references: []
+2020/01/22 15:57:27 [DEBUG] ReferenceTransformer: "provider.citrixadc" references: []
+2020/01/22 15:57:27 [TRACE] Completed graph transform *terraform.ReferenceTransformer (no changes)
+2020/01/22 15:57:27 [TRACE] Executing graph transform *terraform.TargetsTransformer
+2020/01/22 15:57:27 [TRACE] Completed graph transform *terraform.TargetsTransformer (no changes)
+2020/01/22 15:57:27 [TRACE] Executing graph transform *terraform.CloseProviderTransformer
+2020/01/22 15:57:27 [TRACE] Completed graph transform *terraform.CloseProviderTransformer with new graph:
+citrixadc_responderaction.responder_action - *terraform.NodeRefreshableManagedResource
+  provider.citrixadc - *terraform.NodeApplyableProvider
+provider.citrixadc - *terraform.NodeApplyableProvider
+provider.citrixadc (close) - *terraform.graphNodeCloseProvider
+  citrixadc_responderaction.responder_action - *terraform.NodeRefreshableManagedResource
+  provider.citrixadc - *terraform.NodeApplyableProvider
+------
+2020/01/22 15:57:27 [TRACE] Executing graph transform *terraform.RootTransformer
+2020/01/22 15:57:27 [TRACE] Completed graph transform *terraform.RootTransformer (no changes)
+2020/01/22 15:57:27 [TRACE] Executing graph transform *terraform.TransitiveReductionTransformer
+2020/01/22 15:57:27 [TRACE] Completed graph transform *terraform.TransitiveReductionTransformer with new graph:
+citrixadc_responderaction.responder_action - *terraform.NodeRefreshableManagedResource
+  provider.citrixadc - *terraform.NodeApplyableProvider
+provider.citrixadc - *terraform.NodeApplyableProvider
+provider.citrixadc (close) - *terraform.graphNodeCloseProvider
+  citrixadc_responderaction.responder_action - *terraform.NodeRefreshableManagedResource
+------
+2020/01/22 15:57:27 [DEBUG] Starting graph walk: walkRefresh
+2020/01/22 15:57:27 [TRACE] dag/walk: updating graph
+2020/01/22 15:57:27 [TRACE] dag/walk: added new vertex: "provider.citrixadc (close)"
+2020/01/22 15:57:27 [TRACE] dag/walk: added new vertex: "citrixadc_responderaction.responder_action"
+2020/01/22 15:57:27 [TRACE] dag/walk: added new vertex: "provider.citrixadc"
+2020/01/22 15:57:27 [TRACE] dag/walk: added edge: "citrixadc_responderaction.responder_action" waiting on "provider.citrixadc"
+2020/01/22 15:57:27 [TRACE] dag/walk: added edge: "provider.citrixadc (close)" waiting on "citrixadc_responderaction.responder_action"
+2020/01/22 15:57:27 [TRACE] dag/walk: dependencies changed for "citrixadc_responderaction.responder_action", sending new deps
+2020/01/22 15:57:27 [TRACE] dag/walk: dependencies changed for "provider.citrixadc (close)", sending new deps
+2020/01/22 15:57:27 [TRACE] dag/walk: visiting "provider.citrixadc"
+2020/01/22 15:57:27 [TRACE] vertex "provider.citrixadc": starting visit (*terraform.NodeApplyableProvider)
+2020/01/22 15:57:27 [TRACE] vertex "provider.citrixadc": evaluating
+2020/01/22 15:57:27 [TRACE] [walkRefresh] Entering eval tree: provider.citrixadc
+2020/01/22 15:57:27 [TRACE] <root>: eval: *terraform.EvalSequence
+2020/01/22 15:57:27 [TRACE] <root>: eval: *terraform.EvalInitProvider
+2020-01-22T15:57:27.111+0200 [INFO]  plugin: configuring client automatic mTLS
+2020-01-22T15:57:27.150+0200 [DEBUG] plugin: starting plugin: path=/home/georgen/.terraform.d/plugins/terraform-provider-citrixadc_v0.12.8 args=[/home/georgen/.terraform.d/plugins/terraform-provider-citrixadc_v0.12.8]
+2020-01-22T15:57:27.151+0200 [DEBUG] plugin: plugin started: path=/home/georgen/.terraform.d/plugins/terraform-provider-citrixadc_v0.12.8 pid=22215
+2020-01-22T15:57:27.151+0200 [DEBUG] plugin: waiting for RPC address: path=/home/georgen/.terraform.d/plugins/terraform-provider-citrixadc_v0.12.8
+2020-01-22T15:57:27.160+0200 [INFO]  plugin.terraform-provider-citrixadc_v0.12.8: configuring server automatic mTLS: timestamp=2020-01-22T15:57:27.159+0200
+2020-01-22T15:57:27.196+0200 [DEBUG] plugin: using plugin: version=5
+2020-01-22T15:57:27.196+0200 [DEBUG] plugin.terraform-provider-citrixadc_v0.12.8: plugin address: address=/tmp/plugin763266828 network=unix timestamp=2020-01-22T15:57:27.196+0200
+2020/01/22 15:57:27 [TRACE] BuiltinEvalContext: Initialized "citrixadc" provider for provider.citrixadc
+2020/01/22 15:57:27 [TRACE] <root>: eval: terraform.EvalNoop
+2020/01/22 15:57:27 [TRACE] <root>: eval: terraform.EvalNoop
+2020/01/22 15:57:27 [TRACE] <root>: eval: *terraform.EvalOpFilter
+2020/01/22 15:57:27 [TRACE] <root>: eval: *terraform.EvalSequence
+2020/01/22 15:57:27 [TRACE] <root>: eval: *terraform.EvalGetProvider
+2020/01/22 15:57:27 [TRACE] <root>: eval: *terraform.EvalOpFilter
+2020/01/22 15:57:27 [TRACE] <root>: eval: *terraform.EvalSequence
+2020/01/22 15:57:27 [TRACE] <root>: eval: *terraform.EvalConfigProvider
+2020/01/22 15:57:27 [TRACE] buildProviderConfig for provider.citrixadc: using explicit config only
+2020/01/22 15:57:27 [TRACE] GRPCProvider: GetSchema
+2020/01/22 15:57:27 [TRACE] GRPCProvider: Configure
+2020/01/22 15:57:27 [TRACE] [walkRefresh] Exiting eval tree: provider.citrixadc
+2020/01/22 15:57:27 [TRACE] vertex "provider.citrixadc": visit complete
+2020/01/22 15:57:27 [TRACE] dag/walk: visiting "citrixadc_responderaction.responder_action"
+2020/01/22 15:57:27 [TRACE] vertex "citrixadc_responderaction.responder_action": starting visit (*terraform.NodeRefreshableManagedResource)
+2020/01/22 15:57:27 [TRACE] vertex "citrixadc_responderaction.responder_action": expanding dynamic subgraph
+2020/01/22 15:57:27 [TRACE] Executing graph transform *terraform.ResourceCountTransformer
+2020/01/22 15:57:27 [TRACE] Completed graph transform *terraform.ResourceCountTransformer with new graph:
+citrixadc_responderaction.responder_action - *terraform.NodeRefreshableManagedResourceInstance
+------
+2020/01/22 15:57:27 [TRACE] Executing graph transform *terraform.OrphanResourceCountTransformer
+2020/01/22 15:57:27 [TRACE] Completed graph transform *terraform.OrphanResourceCountTransformer (no changes)
+2020/01/22 15:57:27 [TRACE] Executing graph transform *terraform.AttachStateTransformer
+2020/01/22 15:57:27 [TRACE] Completed graph transform *terraform.AttachStateTransformer (no changes)
+2020/01/22 15:57:27 [TRACE] Executing graph transform *terraform.TargetsTransformer
+2020/01/22 15:57:27 [TRACE] Completed graph transform *terraform.TargetsTransformer (no changes)
+2020/01/22 15:57:27 [TRACE] Executing graph transform *terraform.ReferenceTransformer
+2020/01/22 15:57:27 [DEBUG] ReferenceTransformer: "citrixadc_responderaction.responder_action" references: []
+2020/01/22 15:57:27 [TRACE] Completed graph transform *terraform.ReferenceTransformer (no changes)
+2020/01/22 15:57:27 [TRACE] Executing graph transform *terraform.RootTransformer
+2020/01/22 15:57:27 [TRACE] Completed graph transform *terraform.RootTransformer (no changes)
+2020/01/22 15:57:27 [TRACE] vertex "citrixadc_responderaction.responder_action": entering dynamic subgraph
+2020/01/22 15:57:27 [TRACE] dag/walk: updating graph
+2020/01/22 15:57:27 [TRACE] dag/walk: added new vertex: "citrixadc_responderaction.responder_action"
+2020/01/22 15:57:27 [TRACE] dag/walk: visiting "citrixadc_responderaction.responder_action"
+2020/01/22 15:57:27 [TRACE] vertex "citrixadc_responderaction.responder_action": starting visit (*terraform.NodeRefreshableManagedResourceInstance)
+2020/01/22 15:57:27 [TRACE] NodeRefreshableManagedResourceInstance: citrixadc_responderaction.responder_action will be refreshed
+2020/01/22 15:57:27 [TRACE] vertex "citrixadc_responderaction.responder_action": evaluating
+2020/01/22 15:57:27 [TRACE] [walkRefresh] Entering eval tree: citrixadc_responderaction.responder_action
+2020/01/22 15:57:27 [TRACE] <root>: eval: *terraform.EvalSequence
+2020/01/22 15:57:27 [TRACE] <root>: eval: *terraform.EvalGetProvider
+2020/01/22 15:57:27 [TRACE] <root>: eval: *terraform.EvalReadState
+2020/01/22 15:57:27 [TRACE] EvalReadState: reading state for citrixadc_responderaction.responder_action
+2020/01/22 15:57:27 [TRACE] UpgradeResourceState: schema version of citrixadc_responderaction.responder_action is still 1; calling provider "citrixadc" for any other minor fixups
+2020/01/22 15:57:27 [TRACE] GRPCProvider: UpgradeResourceState
+2020/01/22 15:57:27 [TRACE] <root>: eval: *terraform.EvalRefresh
+2020/01/22 15:57:27 [TRACE] GRPCProvider: ReadResource
+[0m[1mcitrixadc_responderaction.responder_action: Refreshing state... [id=test_action_2][0m
+2020-01-22T15:57:27.288+0200 [DEBUG] plugin.terraform-provider-citrixadc_v0.12.8: 2020/01/22 15:57:27 [DEBUG] citrixadc-provider:  In readResponderactionFunc
+2020-01-22T15:57:27.288+0200 [DEBUG] plugin.terraform-provider-citrixadc_v0.12.8: 2020/01/22 15:57:27 [DEBUG] citrixadc-provider: Reading responderaction state test_action_2
+2020-01-22T15:57:27.288+0200 [DEBUG] plugin.terraform-provider-citrixadc_v0.12.8: 2020/01/22 15:57:27 [DEBUG] go-nitro: listing resource of type  responderaction , name:  test_action_2
+2020-01-22T15:57:27.288+0200 [DEBUG] plugin.terraform-provider-citrixadc_v0.12.8: 2020/01/22 15:57:27 [TRACE] go-nitro: url is  http://10.78.60.201/nitro/v1/config/responderaction/test_action_2
+2020-01-22T15:57:27.303+0200 [DEBUG] plugin.terraform-provider-citrixadc_v0.12.8: 2020/01/22 15:57:27 [DEBUG] go-nitro: response Status: 200 OK
+2020/01/22 15:57:27 [TRACE] <root>: eval: *terraform.EvalWriteState
+2020/01/22 15:57:27 [TRACE] EvalWriteState: writing current state object for citrixadc_responderaction.responder_action
+2020/01/22 15:57:27 [TRACE] [walkRefresh] Exiting eval tree: citrixadc_responderaction.responder_action
+2020/01/22 15:57:27 [TRACE] vertex "citrixadc_responderaction.responder_action": visit complete
+2020/01/22 15:57:27 [TRACE] vertex "citrixadc_responderaction.responder_action": dynamic subgraph completed successfully
+2020/01/22 15:57:27 [TRACE] vertex "citrixadc_responderaction.responder_action": visit complete
+2020/01/22 15:57:27 [TRACE] dag/walk: visiting "provider.citrixadc (close)"
+2020/01/22 15:57:27 [TRACE] vertex "provider.citrixadc (close)": starting visit (*terraform.graphNodeCloseProvider)
+2020/01/22 15:57:27 [TRACE] vertex "provider.citrixadc (close)": evaluating
+2020/01/22 15:57:27 [TRACE] [walkRefresh] Entering eval tree: provider.citrixadc (close)
+2020/01/22 15:57:27 [TRACE] <root>: eval: *terraform.EvalCloseProvider
+2020/01/22 15:57:27 [TRACE] GRPCProvider: Close
+2020-01-22T15:57:27.306+0200 [DEBUG] plugin: plugin process exited: path=/home/georgen/.terraform.d/plugins/terraform-provider-citrixadc_v0.12.8 pid=22215
+2020-01-22T15:57:27.306+0200 [DEBUG] plugin: plugin exited
+2020/01/22 15:57:27 [TRACE] [walkRefresh] Exiting eval tree: provider.citrixadc (close)
+2020/01/22 15:57:27 [TRACE] vertex "provider.citrixadc (close)": visit complete
+2020/01/22 15:57:27 [INFO] backend/local: apply calling Plan
+2020/01/22 15:57:27 [INFO] terraform: building graph: GraphTypePlan
+2020/01/22 15:57:27 [TRACE] Executing graph transform *terraform.ConfigTransformer
+2020/01/22 15:57:27 [TRACE] ConfigTransformer: Starting for path: 
+2020/01/22 15:57:27 [TRACE] Completed graph transform *terraform.ConfigTransformer with new graph:
+citrixadc_responderaction.responder_action - *terraform.NodePlannableResource
+------
+2020/01/22 15:57:27 [TRACE] Executing graph transform *terraform.LocalTransformer
+2020/01/22 15:57:27 [TRACE] Completed graph transform *terraform.LocalTransformer (no changes)
+2020/01/22 15:57:27 [TRACE] Executing graph transform *terraform.OutputTransformer
+2020/01/22 15:57:27 [TRACE] Completed graph transform *terraform.OutputTransformer (no changes)
+2020/01/22 15:57:27 [TRACE] Executing graph transform *terraform.OrphanResourceInstanceTransformer
+2020/01/22 15:57:27 [TRACE] Completed graph transform *terraform.OrphanResourceInstanceTransformer (no changes)
+2020/01/22 15:57:27 [TRACE] Executing graph transform *terraform.StateTransformer
+2020/01/22 15:57:27 [TRACE] StateTransformer: creating nodes for deposed instance objects only
+2020/01/22 15:57:27 [TRACE] Completed graph transform *terraform.StateTransformer (no changes)
+2020/01/22 15:57:27 [TRACE] Executing graph transform *terraform.OrphanOutputTransformer
+2020/01/22 15:57:27 [TRACE] Completed graph transform *terraform.OrphanOutputTransformer (no changes)
+2020/01/22 15:57:27 [TRACE] Executing graph transform *terraform.AttachResourceConfigTransformer
+2020/01/22 15:57:27 [TRACE] AttachResourceConfigTransformer: attaching to "citrixadc_responderaction.responder_action" (*terraform.NodePlannableResource) config from resources.tf:1,1-56
+2020/01/22 15:57:27 [TRACE] Completed graph transform *terraform.AttachResourceConfigTransformer (no changes)
+2020/01/22 15:57:27 [TRACE] Executing graph transform *terraform.AttachStateTransformer
+2020/01/22 15:57:27 [TRACE] Completed graph transform *terraform.AttachStateTransformer (no changes)
+2020/01/22 15:57:27 [TRACE] Executing graph transform *terraform.RootVariableTransformer
+2020/01/22 15:57:27 [TRACE] Completed graph transform *terraform.RootVariableTransformer (no changes)
+2020/01/22 15:57:27 [TRACE] Executing graph transform *terraform.MissingProvisionerTransformer
+2020/01/22 15:57:27 [TRACE] Completed graph transform *terraform.MissingProvisionerTransformer (no changes)
+2020/01/22 15:57:27 [TRACE] Executing graph transform *terraform.ProvisionerTransformer
+2020/01/22 15:57:27 [TRACE] Completed graph transform *terraform.ProvisionerTransformer (no changes)
+2020/01/22 15:57:27 [TRACE] Executing graph transform *terraform.ModuleVariableTransformer
+2020/01/22 15:57:27 [TRACE] Completed graph transform *terraform.ModuleVariableTransformer (no changes)
+2020/01/22 15:57:27 [TRACE] Executing graph transform *terraform.graphTransformerMulti
+2020/01/22 15:57:27 [TRACE] (graphTransformerMulti) Executing graph transform *terraform.ProviderConfigTransformer
+2020/01/22 15:57:27 [TRACE] ProviderConfigTransformer: attaching to "provider.citrixadc" provider configuration from provider.tf:1,1-21
+2020/01/22 15:57:27 [TRACE] (graphTransformerMulti) Completed graph transform *terraform.ProviderConfigTransformer with new graph:
+citrixadc_responderaction.responder_action - *terraform.NodePlannableResource
+provider.citrixadc - *terraform.NodeApplyableProvider
+------
+2020/01/22 15:57:27 [TRACE] (graphTransformerMulti) Executing graph transform *terraform.MissingProviderTransformer
+2020/01/22 15:57:27 [TRACE] (graphTransformerMulti) Completed graph transform *terraform.MissingProviderTransformer (no changes)
+2020/01/22 15:57:27 [TRACE] (graphTransformerMulti) Executing graph transform *terraform.ProviderTransformer
+2020/01/22 15:57:27 [TRACE] ProviderTransformer: citrixadc_responderaction.responder_action is provided by provider.citrixadc or inherited equivalent
+2020/01/22 15:57:27 [TRACE] ProviderTransformer: exact match for provider.citrixadc serving citrixadc_responderaction.responder_action
+2020/01/22 15:57:27 [DEBUG] ProviderTransformer: "citrixadc_responderaction.responder_action" (*terraform.NodePlannableResource) needs provider.citrixadc
+2020/01/22 15:57:27 [TRACE] (graphTransformerMulti) Completed graph transform *terraform.ProviderTransformer with new graph:
+citrixadc_responderaction.responder_action - *terraform.NodePlannableResource
+  provider.citrixadc - *terraform.NodeApplyableProvider
+provider.citrixadc - *terraform.NodeApplyableProvider
+------
+2020/01/22 15:57:27 [TRACE] (graphTransformerMulti) Executing graph transform *terraform.PruneProviderTransformer
+2020/01/22 15:57:27 [TRACE] (graphTransformerMulti) Completed graph transform *terraform.PruneProviderTransformer (no changes)
+2020/01/22 15:57:27 [TRACE] (graphTransformerMulti) Executing graph transform *terraform.ParentProviderTransformer
+2020/01/22 15:57:27 [TRACE] (graphTransformerMulti) Completed graph transform *terraform.ParentProviderTransformer (no changes)
+2020/01/22 15:57:27 [TRACE] Completed graph transform *terraform.graphTransformerMulti with new graph:
+citrixadc_responderaction.responder_action - *terraform.NodePlannableResource
+  provider.citrixadc - *terraform.NodeApplyableProvider
+provider.citrixadc - *terraform.NodeApplyableProvider
+------
+2020/01/22 15:57:27 [TRACE] Executing graph transform *terraform.RemovedModuleTransformer
+2020/01/22 15:57:27 [TRACE] Completed graph transform *terraform.RemovedModuleTransformer (no changes)
+2020/01/22 15:57:27 [TRACE] Executing graph transform *terraform.AttachSchemaTransformer
+2020/01/22 15:57:27 [TRACE] AttachSchemaTransformer: attaching resource schema to citrixadc_responderaction.responder_action
+2020/01/22 15:57:27 [TRACE] AttachSchemaTransformer: attaching provider config schema to provider.citrixadc
+2020/01/22 15:57:27 [TRACE] Completed graph transform *terraform.AttachSchemaTransformer (no changes)
+2020/01/22 15:57:27 [TRACE] Executing graph transform *terraform.ReferenceTransformer
+2020/01/22 15:57:27 [DEBUG] ReferenceTransformer: "citrixadc_responderaction.responder_action" references: []
+2020/01/22 15:57:27 [DEBUG] ReferenceTransformer: "provider.citrixadc" references: []
+2020/01/22 15:57:27 [TRACE] Completed graph transform *terraform.ReferenceTransformer (no changes)
+2020/01/22 15:57:27 [TRACE] Executing graph transform *terraform.CountBoundaryTransformer
+2020/01/22 15:57:27 [TRACE] Completed graph transform *terraform.CountBoundaryTransformer with new graph:
+citrixadc_responderaction.responder_action - *terraform.NodePlannableResource
+  provider.citrixadc - *terraform.NodeApplyableProvider
+meta.count-boundary (EachMode fixup) - *terraform.NodeCountBoundary
+  citrixadc_responderaction.responder_action - *terraform.NodePlannableResource
+  provider.citrixadc - *terraform.NodeApplyableProvider
+provider.citrixadc - *terraform.NodeApplyableProvider
+------
+2020/01/22 15:57:27 [TRACE] Executing graph transform *terraform.TargetsTransformer
+2020/01/22 15:57:27 [TRACE] Completed graph transform *terraform.TargetsTransformer (no changes)
+2020/01/22 15:57:27 [TRACE] Executing graph transform *terraform.ForcedCBDTransformer
+2020/01/22 15:57:27 [TRACE] ForcedCBDTransformer: "citrixadc_responderaction.responder_action" (*terraform.NodePlannableResource) has no CBD descendent, so skipping
+2020/01/22 15:57:27 [TRACE] Completed graph transform *terraform.ForcedCBDTransformer (no changes)
+2020/01/22 15:57:27 [TRACE] Executing graph transform *terraform.CloseProviderTransformer
+2020/01/22 15:57:27 [TRACE] Completed graph transform *terraform.CloseProviderTransformer with new graph:
+citrixadc_responderaction.responder_action - *terraform.NodePlannableResource
+  provider.citrixadc - *terraform.NodeApplyableProvider
+meta.count-boundary (EachMode fixup) - *terraform.NodeCountBoundary
+  citrixadc_responderaction.responder_action - *terraform.NodePlannableResource
+  provider.citrixadc - *terraform.NodeApplyableProvider
+provider.citrixadc - *terraform.NodeApplyableProvider
+provider.citrixadc (close) - *terraform.graphNodeCloseProvider
+  citrixadc_responderaction.responder_action - *terraform.NodePlannableResource
+  provider.citrixadc - *terraform.NodeApplyableProvider
+------
+2020/01/22 15:57:27 [TRACE] Executing graph transform *terraform.CloseProvisionerTransformer
+2020/01/22 15:57:27 [TRACE] Completed graph transform *terraform.CloseProvisionerTransformer (no changes)
+2020/01/22 15:57:27 [TRACE] Executing graph transform *terraform.RootTransformer
+2020/01/22 15:57:27 [TRACE] Completed graph transform *terraform.RootTransformer with new graph:
+citrixadc_responderaction.responder_action - *terraform.NodePlannableResource
+  provider.citrixadc - *terraform.NodeApplyableProvider
+meta.count-boundary (EachMode fixup) - *terraform.NodeCountBoundary
+  citrixadc_responderaction.responder_action - *terraform.NodePlannableResource
+  provider.citrixadc - *terraform.NodeApplyableProvider
+provider.citrixadc - *terraform.NodeApplyableProvider
+provider.citrixadc (close) - *terraform.graphNodeCloseProvider
+  citrixadc_responderaction.responder_action - *terraform.NodePlannableResource
+  provider.citrixadc - *terraform.NodeApplyableProvider
+root - terraform.graphNodeRoot
+  meta.count-boundary (EachMode fixup) - *terraform.NodeCountBoundary
+  provider.citrixadc (close) - *terraform.graphNodeCloseProvider
+------
+2020/01/22 15:57:27 [TRACE] Executing graph transform *terraform.TransitiveReductionTransformer
+2020/01/22 15:57:27 [TRACE] Completed graph transform *terraform.TransitiveReductionTransformer with new graph:
+citrixadc_responderaction.responder_action - *terraform.NodePlannableResource
+  provider.citrixadc - *terraform.NodeApplyableProvider
+meta.count-boundary (EachMode fixup) - *terraform.NodeCountBoundary
+  citrixadc_responderaction.responder_action - *terraform.NodePlannableResource
+provider.citrixadc - *terraform.NodeApplyableProvider
+provider.citrixadc (close) - *terraform.graphNodeCloseProvider
+  citrixadc_responderaction.responder_action - *terraform.NodePlannableResource
+root - terraform.graphNodeRoot
+  meta.count-boundary (EachMode fixup) - *terraform.NodeCountBoundary
+  provider.citrixadc (close) - *terraform.graphNodeCloseProvider
+------
+2020/01/22 15:57:27 [DEBUG] Starting graph walk: walkPlan
+2020/01/22 15:57:27 [TRACE] dag/walk: updating graph
+2020/01/22 15:57:27 [TRACE] dag/walk: added new vertex: "citrixadc_responderaction.responder_action"
+2020/01/22 15:57:27 [TRACE] dag/walk: added new vertex: "provider.citrixadc"
+2020/01/22 15:57:27 [TRACE] dag/walk: added new vertex: "meta.count-boundary (EachMode fixup)"
+2020/01/22 15:57:27 [TRACE] dag/walk: added new vertex: "provider.citrixadc (close)"
+2020/01/22 15:57:27 [TRACE] dag/walk: added new vertex: "root"
+2020/01/22 15:57:27 [TRACE] dag/walk: added edge: "meta.count-boundary (EachMode fixup)" waiting on "citrixadc_responderaction.responder_action"
+2020/01/22 15:57:27 [TRACE] dag/walk: added edge: "provider.citrixadc (close)" waiting on "citrixadc_responderaction.responder_action"
+2020/01/22 15:57:27 [TRACE] dag/walk: added edge: "root" waiting on "meta.count-boundary (EachMode fixup)"
+2020/01/22 15:57:27 [TRACE] dag/walk: added edge: "root" waiting on "provider.citrixadc (close)"
+2020/01/22 15:57:27 [TRACE] dag/walk: added edge: "citrixadc_responderaction.responder_action" waiting on "provider.citrixadc"
+2020/01/22 15:57:27 [TRACE] dag/walk: dependencies changed for "meta.count-boundary (EachMode fixup)", sending new deps
+2020/01/22 15:57:27 [TRACE] dag/walk: dependencies changed for "provider.citrixadc (close)", sending new deps
+2020/01/22 15:57:27 [TRACE] dag/walk: dependencies changed for "root", sending new deps
+2020/01/22 15:57:27 [TRACE] dag/walk: dependencies changed for "citrixadc_responderaction.responder_action", sending new deps
+2020/01/22 15:57:27 [TRACE] dag/walk: visiting "provider.citrixadc"
+2020/01/22 15:57:27 [TRACE] vertex "provider.citrixadc": starting visit (*terraform.NodeApplyableProvider)
+2020/01/22 15:57:27 [TRACE] vertex "provider.citrixadc": evaluating
+2020/01/22 15:57:27 [TRACE] [walkPlan] Entering eval tree: provider.citrixadc
+2020/01/22 15:57:27 [TRACE] <root>: eval: *terraform.EvalSequence
+2020/01/22 15:57:27 [TRACE] <root>: eval: *terraform.EvalInitProvider
+2020-01-22T15:57:27.307+0200 [INFO]  plugin: configuring client automatic mTLS
+2020-01-22T15:57:27.344+0200 [DEBUG] plugin: starting plugin: path=/home/georgen/.terraform.d/plugins/terraform-provider-citrixadc_v0.12.8 args=[/home/georgen/.terraform.d/plugins/terraform-provider-citrixadc_v0.12.8]
+2020-01-22T15:57:27.344+0200 [DEBUG] plugin: plugin started: path=/home/georgen/.terraform.d/plugins/terraform-provider-citrixadc_v0.12.8 pid=22232
+2020-01-22T15:57:27.344+0200 [DEBUG] plugin: waiting for RPC address: path=/home/georgen/.terraform.d/plugins/terraform-provider-citrixadc_v0.12.8
+2020-01-22T15:57:27.353+0200 [INFO]  plugin.terraform-provider-citrixadc_v0.12.8: configuring server automatic mTLS: timestamp=2020-01-22T15:57:27.353+0200
+2020-01-22T15:57:27.390+0200 [DEBUG] plugin.terraform-provider-citrixadc_v0.12.8: plugin address: address=/tmp/plugin513207701 network=unix timestamp=2020-01-22T15:57:27.390+0200
+2020-01-22T15:57:27.390+0200 [DEBUG] plugin: using plugin: version=5
+2020/01/22 15:57:27 [TRACE] BuiltinEvalContext: Initialized "citrixadc" provider for provider.citrixadc
+2020/01/22 15:57:27 [TRACE] <root>: eval: terraform.EvalNoop
+2020/01/22 15:57:27 [TRACE] <root>: eval: terraform.EvalNoop
+2020/01/22 15:57:27 [TRACE] <root>: eval: *terraform.EvalOpFilter
+2020/01/22 15:57:27 [TRACE] <root>: eval: *terraform.EvalSequence
+2020/01/22 15:57:27 [TRACE] <root>: eval: *terraform.EvalGetProvider
+2020/01/22 15:57:27 [TRACE] <root>: eval: *terraform.EvalOpFilter
+2020/01/22 15:57:27 [TRACE] <root>: eval: *terraform.EvalSequence
+2020/01/22 15:57:27 [TRACE] <root>: eval: *terraform.EvalConfigProvider
+2020/01/22 15:57:27 [TRACE] buildProviderConfig for provider.citrixadc: using explicit config only
+2020/01/22 15:57:27 [TRACE] GRPCProvider: GetSchema
+2020/01/22 15:57:27 [TRACE] GRPCProvider: Configure
+2020/01/22 15:57:27 [TRACE] [walkPlan] Exiting eval tree: provider.citrixadc
+2020/01/22 15:57:27 [TRACE] vertex "provider.citrixadc": visit complete
+2020/01/22 15:57:27 [TRACE] dag/walk: visiting "citrixadc_responderaction.responder_action"
+2020/01/22 15:57:27 [TRACE] vertex "citrixadc_responderaction.responder_action": starting visit (*terraform.NodePlannableResource)
+2020/01/22 15:57:27 [TRACE] vertex "citrixadc_responderaction.responder_action": evaluating
+2020/01/22 15:57:27 [TRACE] [walkPlan] Entering eval tree: citrixadc_responderaction.responder_action
+2020/01/22 15:57:27 [TRACE] <root>: eval: *terraform.EvalWriteResourceState
+2020/01/22 15:57:27 [TRACE] [walkPlan] Exiting eval tree: citrixadc_responderaction.responder_action
+2020/01/22 15:57:27 [TRACE] vertex "citrixadc_responderaction.responder_action": expanding dynamic subgraph
+2020/01/22 15:57:27 [TRACE] Executing graph transform *terraform.ResourceCountTransformer
+2020/01/22 15:57:27 [TRACE] Completed graph transform *terraform.ResourceCountTransformer with new graph:
+citrixadc_responderaction.responder_action - *terraform.NodePlannableResourceInstance
+------
+2020/01/22 15:57:27 [TRACE] Executing graph transform *terraform.OrphanResourceCountTransformer
+2020/01/22 15:57:27 [TRACE] Completed graph transform *terraform.OrphanResourceCountTransformer (no changes)
+2020/01/22 15:57:27 [TRACE] Executing graph transform *terraform.AttachStateTransformer
+2020/01/22 15:57:27 [TRACE] Completed graph transform *terraform.AttachStateTransformer (no changes)
+2020/01/22 15:57:27 [TRACE] Executing graph transform *terraform.TargetsTransformer
+2020/01/22 15:57:27 [TRACE] Completed graph transform *terraform.TargetsTransformer (no changes)
+2020/01/22 15:57:27 [TRACE] Executing graph transform *terraform.ReferenceTransformer
+2020/01/22 15:57:27 [DEBUG] ReferenceTransformer: "citrixadc_responderaction.responder_action" references: []
+2020/01/22 15:57:27 [TRACE] Completed graph transform *terraform.ReferenceTransformer (no changes)
+2020/01/22 15:57:27 [TRACE] Executing graph transform *terraform.RootTransformer
+2020/01/22 15:57:27 [TRACE] Completed graph transform *terraform.RootTransformer (no changes)
+2020/01/22 15:57:27 [TRACE] vertex "citrixadc_responderaction.responder_action": entering dynamic subgraph
+2020/01/22 15:57:27 [TRACE] dag/walk: updating graph
+2020/01/22 15:57:27 [TRACE] dag/walk: added new vertex: "citrixadc_responderaction.responder_action"
+2020/01/22 15:57:27 [TRACE] dag/walk: visiting "citrixadc_responderaction.responder_action"
+2020/01/22 15:57:27 [TRACE] vertex "citrixadc_responderaction.responder_action": starting visit (*terraform.NodePlannableResourceInstance)
+2020/01/22 15:57:27 [TRACE] vertex "citrixadc_responderaction.responder_action": evaluating
+2020/01/22 15:57:27 [TRACE] [walkPlan] Entering eval tree: citrixadc_responderaction.responder_action
+2020/01/22 15:57:27 [TRACE] <root>: eval: *terraform.EvalSequence
+2020/01/22 15:57:27 [TRACE] <root>: eval: *terraform.EvalGetProvider
+2020/01/22 15:57:27 [TRACE] <root>: eval: *terraform.EvalReadState
+2020/01/22 15:57:27 [TRACE] EvalReadState: reading state for citrixadc_responderaction.responder_action
+2020/01/22 15:57:27 [TRACE] UpgradeResourceState: schema version of citrixadc_responderaction.responder_action is still 1; calling provider "citrixadc" for any other minor fixups
+2020/01/22 15:57:27 [TRACE] GRPCProvider: UpgradeResourceState
+2020/01/22 15:57:27 [TRACE] <root>: eval: *terraform.EvalValidateSelfRef
+2020/01/22 15:57:27 [TRACE] <root>: eval: *terraform.EvalDiff
+2020/01/22 15:57:27 [TRACE] Re-validating config for "citrixadc_responderaction.responder_action"
+2020/01/22 15:57:27 [TRACE] GRPCProvider: ValidateResourceTypeConfig
+2020/01/22 15:57:27 [TRACE] GRPCProvider: PlanResourceChange
+2020-01-22T15:57:27.491+0200 [DEBUG] plugin.terraform-provider-citrixadc_v0.12.8: 2020/01/22 15:57:27 [DEBUG] citrixadc-provider:  In customizeDiff
+2020/01/22 15:57:27 [TRACE] <root>: eval: *terraform.EvalCheckPreventDestroy
+2020/01/22 15:57:27 [TRACE] <root>: eval: *terraform.EvalWriteState
+2020/01/22 15:57:27 [TRACE] EvalWriteState: writing current state object for citrixadc_responderaction.responder_action
+2020/01/22 15:57:27 [TRACE] <root>: eval: *terraform.EvalWriteDiff
+2020/01/22 15:57:27 [TRACE] EvalWriteDiff: recorded Update change for citrixadc_responderaction.responder_action
+2020/01/22 15:57:27 [TRACE] [walkPlan] Exiting eval tree: citrixadc_responderaction.responder_action
+2020/01/22 15:57:27 [TRACE] vertex "citrixadc_responderaction.responder_action": visit complete
+2020/01/22 15:57:27 [TRACE] vertex "citrixadc_responderaction.responder_action": dynamic subgraph completed successfully
+2020/01/22 15:57:27 [TRACE] vertex "citrixadc_responderaction.responder_action": visit complete
+2020/01/22 15:57:27 [TRACE] dag/walk: visiting "meta.count-boundary (EachMode fixup)"
+2020/01/22 15:57:27 [TRACE] dag/walk: visiting "provider.citrixadc (close)"
+2020/01/22 15:57:27 [TRACE] vertex "meta.count-boundary (EachMode fixup)": starting visit (*terraform.NodeCountBoundary)
+2020/01/22 15:57:27 [TRACE] vertex "provider.citrixadc (close)": starting visit (*terraform.graphNodeCloseProvider)
+2020/01/22 15:57:27 [TRACE] vertex "meta.count-boundary (EachMode fixup)": evaluating
+2020/01/22 15:57:27 [TRACE] vertex "provider.citrixadc (close)": evaluating
+2020/01/22 15:57:27 [TRACE] [walkPlan] Entering eval tree: meta.count-boundary (EachMode fixup)
+2020/01/22 15:57:27 [TRACE] [walkPlan] Entering eval tree: provider.citrixadc (close)
+2020/01/22 15:57:27 [TRACE] <root>: eval: *terraform.EvalCountFixZeroOneBoundaryGlobal
+2020/01/22 15:57:27 [TRACE] <root>: eval: *terraform.EvalCloseProvider
+2020/01/22 15:57:27 [TRACE] GRPCProvider: Close
+2020/01/22 15:57:27 [TRACE] [walkPlan] Exiting eval tree: meta.count-boundary (EachMode fixup)
+2020/01/22 15:57:27 [TRACE] vertex "meta.count-boundary (EachMode fixup)": visit complete
+2020-01-22T15:57:27.494+0200 [DEBUG] plugin: plugin process exited: path=/home/georgen/.terraform.d/plugins/terraform-provider-citrixadc_v0.12.8 pid=22232
+2020-01-22T15:57:27.494+0200 [DEBUG] plugin: plugin exited
+2020/01/22 15:57:27 [TRACE] [walkPlan] Exiting eval tree: provider.citrixadc (close)
+2020/01/22 15:57:27 [TRACE] vertex "provider.citrixadc (close)": visit complete
+2020/01/22 15:57:27 [TRACE] dag/walk: visiting "root"
+2020/01/22 15:57:27 [TRACE] vertex "root": starting visit (terraform.graphNodeRoot)
+2020/01/22 15:57:27 [TRACE] vertex "root": visit complete
+
+An execution plan has been generated and is shown below.
+Resource actions are indicated with the following symbols:
+  [33m~[0m update in-place
+[0m
+Terraform will perform the following actions:
+
+2020/01/22 15:57:27 [DEBUG] command: asking for input: "Do you want to perform these actions?"
+[1m  # citrixadc_responderaction.responder_action[0m will be updated in-place[0m[0m
+[0m[33m  ~[0m [0mresource "citrixadc_responderaction" "responder_action" {
+        [1m[0mcomment[0m[0m            = "other comment"
+        [1m[0mhtmlpage[0m[0m           = "test-html-page"
+        [1m[0mid[0m[0m                 = "test_action_2"
+        [1m[0mname[0m[0m               = "test_action_2"
+        [1m[0mreasonphrase[0m[0m       = "HTTP.REQ.URL"
+      [33m~[0m [0m[1m[0mresponsestatuscode[0m[0m = 201 [33m->[0m [0m202
+        [1m[0mtype[0m[0m               = "respondwithhtmlpage"
+    }
+
+[0m[1mPlan:[0m 0 to add, 1 to change, 0 to destroy.[0m
+
+[0m[1mDo you want to perform these actions?[0m
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  [1mEnter a value:[0m [0m
+2020/01/22 15:57:28 [INFO] backend/local: apply calling Apply
+2020/01/22 15:57:28 [INFO] terraform: building graph: GraphTypeApply
+2020/01/22 15:57:28 [TRACE] Executing graph transform *terraform.ConfigTransformer
+2020/01/22 15:57:28 [TRACE] ConfigTransformer: Starting for path: 
+2020/01/22 15:57:28 [TRACE] Completed graph transform *terraform.ConfigTransformer with new graph:
+citrixadc_responderaction.responder_action (prepare state) - *terraform.NodeApplyableResource
+------
+2020/01/22 15:57:28 [TRACE] Executing graph transform *terraform.DiffTransformer
+2020/01/22 15:57:28 [TRACE] DiffTransformer starting
+2020/01/22 15:57:28 [TRACE] DiffTransformer: found Update change for citrixadc_responderaction.responder_action 
+2020/01/22 15:57:28 [TRACE] DiffTransformer: citrixadc_responderaction.responder_action will be represented by citrixadc_responderaction.responder_action
+2020/01/22 15:57:28 [TRACE] DiffTransformer complete
+2020/01/22 15:57:28 [TRACE] Completed graph transform *terraform.DiffTransformer with new graph:
+citrixadc_responderaction.responder_action - *terraform.NodeApplyableResourceInstance
+  citrixadc_responderaction.responder_action (prepare state) - *terraform.NodeApplyableResource
+citrixadc_responderaction.responder_action (prepare state) - *terraform.NodeApplyableResource
+------
+2020/01/22 15:57:28 [TRACE] Executing graph transform *terraform.OrphanResourceTransformer
+2020/01/22 15:57:28 [TRACE] Completed graph transform *terraform.OrphanResourceTransformer (no changes)
+2020/01/22 15:57:28 [TRACE] Executing graph transform *terraform.OrphanOutputTransformer
+2020/01/22 15:57:28 [TRACE] Completed graph transform *terraform.OrphanOutputTransformer (no changes)
+2020/01/22 15:57:28 [TRACE] Executing graph transform *terraform.AttachResourceConfigTransformer
+2020/01/22 15:57:28 [TRACE] AttachResourceConfigTransformer: attaching to "citrixadc_responderaction.responder_action" (*terraform.NodeApplyableResourceInstance) config from resources.tf:1,1-56
+2020/01/22 15:57:28 [TRACE] AttachResourceConfigTransformer: attaching to "citrixadc_responderaction.responder_action (prepare state)" (*terraform.NodeApplyableResource) config from resources.tf:1,1-56
+2020/01/22 15:57:28 [TRACE] Completed graph transform *terraform.AttachResourceConfigTransformer (no changes)
+2020/01/22 15:57:28 [TRACE] Executing graph transform *terraform.AttachStateTransformer
+2020/01/22 15:57:28 [TRACE] Completed graph transform *terraform.AttachStateTransformer (no changes)
+2020/01/22 15:57:28 [TRACE] Executing graph transform *terraform.DestroyEdgeTransformer
+2020/01/22 15:57:28 [TRACE] Completed graph transform *terraform.DestroyEdgeTransformer (no changes)
+2020/01/22 15:57:28 [TRACE] Executing graph transform *terraform.CBDEdgeTransformer
+2020/01/22 15:57:28 [TRACE] Completed graph transform *terraform.CBDEdgeTransformer (no changes)
+2020/01/22 15:57:28 [TRACE] Executing graph transform *terraform.MissingProvisionerTransformer
+2020/01/22 15:57:28 [TRACE] Completed graph transform *terraform.MissingProvisionerTransformer (no changes)
+2020/01/22 15:57:28 [TRACE] Executing graph transform *terraform.ProvisionerTransformer
+2020/01/22 15:57:28 [TRACE] Completed graph transform *terraform.ProvisionerTransformer (no changes)
+2020/01/22 15:57:28 [TRACE] Executing graph transform *terraform.RootVariableTransformer
+2020/01/22 15:57:28 [TRACE] Completed graph transform *terraform.RootVariableTransformer (no changes)
+2020/01/22 15:57:28 [TRACE] Executing graph transform *terraform.LocalTransformer
+2020/01/22 15:57:28 [TRACE] Completed graph transform *terraform.LocalTransformer (no changes)
+2020/01/22 15:57:28 [TRACE] Executing graph transform *terraform.OutputTransformer
+2020/01/22 15:57:28 [TRACE] Completed graph transform *terraform.OutputTransformer (no changes)
+2020/01/22 15:57:28 [TRACE] Executing graph transform *terraform.ModuleVariableTransformer
+2020/01/22 15:57:28 [TRACE] Completed graph transform *terraform.ModuleVariableTransformer (no changes)
+2020/01/22 15:57:28 [TRACE] Executing graph transform *terraform.graphTransformerMulti
+2020/01/22 15:57:28 [TRACE] (graphTransformerMulti) Executing graph transform *terraform.ProviderConfigTransformer
+2020/01/22 15:57:28 [TRACE] ProviderConfigTransformer: attaching to "provider.citrixadc" provider configuration from provider.tf:1,1-21
+2020/01/22 15:57:28 [TRACE] (graphTransformerMulti) Completed graph transform *terraform.ProviderConfigTransformer with new graph:
+citrixadc_responderaction.responder_action - *terraform.NodeApplyableResourceInstance
+  citrixadc_responderaction.responder_action (prepare state) - *terraform.NodeApplyableResource
+citrixadc_responderaction.responder_action (prepare state) - *terraform.NodeApplyableResource
+provider.citrixadc - *terraform.NodeApplyableProvider
+------
+2020/01/22 15:57:28 [TRACE] (graphTransformerMulti) Executing graph transform *terraform.MissingProviderTransformer
+2020/01/22 15:57:28 [TRACE] (graphTransformerMulti) Completed graph transform *terraform.MissingProviderTransformer (no changes)
+2020/01/22 15:57:28 [TRACE] (graphTransformerMulti) Executing graph transform *terraform.ProviderTransformer
+2020/01/22 15:57:28 [TRACE] ProviderTransformer: citrixadc_responderaction.responder_action (prepare state) is provided by provider.citrixadc or inherited equivalent
+2020/01/22 15:57:28 [TRACE] ProviderTransformer: citrixadc_responderaction.responder_action is provided by provider.citrixadc or inherited equivalent
+2020/01/22 15:57:28 [TRACE] ProviderTransformer: exact match for provider.citrixadc serving citrixadc_responderaction.responder_action (prepare state)
+2020/01/22 15:57:28 [DEBUG] ProviderTransformer: "citrixadc_responderaction.responder_action (prepare state)" (*terraform.NodeApplyableResource) needs provider.citrixadc
+2020/01/22 15:57:28 [TRACE] ProviderTransformer: exact match for provider.citrixadc serving citrixadc_responderaction.responder_action
+2020/01/22 15:57:28 [DEBUG] ProviderTransformer: "citrixadc_responderaction.responder_action" (*terraform.NodeApplyableResourceInstance) needs provider.citrixadc
+2020/01/22 15:57:28 [TRACE] (graphTransformerMulti) Completed graph transform *terraform.ProviderTransformer with new graph:
+citrixadc_responderaction.responder_action - *terraform.NodeApplyableResourceInstance
+  citrixadc_responderaction.responder_action (prepare state) - *terraform.NodeApplyableResource
+  provider.citrixadc - *terraform.NodeApplyableProvider
+citrixadc_responderaction.responder_action (prepare state) - *terraform.NodeApplyableResource
+  provider.citrixadc - *terraform.NodeApplyableProvider
+provider.citrixadc - *terraform.NodeApplyableProvider
+------
+2020/01/22 15:57:28 [TRACE] (graphTransformerMulti) Executing graph transform *terraform.PruneProviderTransformer
+2020/01/22 15:57:28 [TRACE] (graphTransformerMulti) Completed graph transform *terraform.PruneProviderTransformer (no changes)
+2020/01/22 15:57:28 [TRACE] (graphTransformerMulti) Executing graph transform *terraform.ParentProviderTransformer
+2020/01/22 15:57:28 [TRACE] (graphTransformerMulti) Completed graph transform *terraform.ParentProviderTransformer (no changes)
+2020/01/22 15:57:28 [TRACE] Completed graph transform *terraform.graphTransformerMulti with new graph:
+citrixadc_responderaction.responder_action - *terraform.NodeApplyableResourceInstance
+  citrixadc_responderaction.responder_action (prepare state) - *terraform.NodeApplyableResource
+  provider.citrixadc - *terraform.NodeApplyableProvider
+citrixadc_responderaction.responder_action (prepare state) - *terraform.NodeApplyableResource
+  provider.citrixadc - *terraform.NodeApplyableProvider
+provider.citrixadc - *terraform.NodeApplyableProvider
+------
+2020/01/22 15:57:28 [TRACE] Executing graph transform *terraform.RemovedModuleTransformer
+2020/01/22 15:57:28 [TRACE] Completed graph transform *terraform.RemovedModuleTransformer (no changes)
+2020/01/22 15:57:28 [TRACE] Executing graph transform *terraform.AttachSchemaTransformer
+2020/01/22 15:57:28 [TRACE] AttachSchemaTransformer: attaching resource schema to citrixadc_responderaction.responder_action (prepare state)
+2020/01/22 15:57:28 [TRACE] AttachSchemaTransformer: attaching resource schema to citrixadc_responderaction.responder_action
+2020/01/22 15:57:28 [TRACE] AttachSchemaTransformer: attaching provider config schema to provider.citrixadc
+2020/01/22 15:57:28 [TRACE] Completed graph transform *terraform.AttachSchemaTransformer (no changes)
+2020/01/22 15:57:28 [TRACE] Executing graph transform *terraform.ReferenceTransformer
+2020/01/22 15:57:28 [DEBUG] ReferenceTransformer: "citrixadc_responderaction.responder_action (prepare state)" references: []
+2020/01/22 15:57:28 [DEBUG] ReferenceTransformer: "citrixadc_responderaction.responder_action" references: []
+2020/01/22 15:57:28 [DEBUG] ReferenceTransformer: "provider.citrixadc" references: []
+2020/01/22 15:57:28 [TRACE] Completed graph transform *terraform.ReferenceTransformer (no changes)
+2020/01/22 15:57:28 [TRACE] Executing graph transform *terraform.CountBoundaryTransformer
+2020/01/22 15:57:28 [TRACE] Completed graph transform *terraform.CountBoundaryTransformer with new graph:
+citrixadc_responderaction.responder_action - *terraform.NodeApplyableResourceInstance
+  citrixadc_responderaction.responder_action (prepare state) - *terraform.NodeApplyableResource
+  provider.citrixadc - *terraform.NodeApplyableProvider
+citrixadc_responderaction.responder_action (prepare state) - *terraform.NodeApplyableResource
+  provider.citrixadc - *terraform.NodeApplyableProvider
+meta.count-boundary (EachMode fixup) - *terraform.NodeCountBoundary
+  citrixadc_responderaction.responder_action - *terraform.NodeApplyableResourceInstance
+  citrixadc_responderaction.responder_action (prepare state) - *terraform.NodeApplyableResource
+  provider.citrixadc - *terraform.NodeApplyableProvider
+provider.citrixadc - *terraform.NodeApplyableProvider
+------
+2020/01/22 15:57:28 [TRACE] Executing graph transform *terraform.TargetsTransformer
+2020/01/22 15:57:28 [TRACE] Completed graph transform *terraform.TargetsTransformer (no changes)
+2020/01/22 15:57:28 [TRACE] Executing graph transform *terraform.CloseProviderTransformer
+2020/01/22 15:57:28 [TRACE] Completed graph transform *terraform.CloseProviderTransformer with new graph:
+citrixadc_responderaction.responder_action - *terraform.NodeApplyableResourceInstance
+  citrixadc_responderaction.responder_action (prepare state) - *terraform.NodeApplyableResource
+  provider.citrixadc - *terraform.NodeApplyableProvider
+citrixadc_responderaction.responder_action (prepare state) - *terraform.NodeApplyableResource
+  provider.citrixadc - *terraform.NodeApplyableProvider
+meta.count-boundary (EachMode fixup) - *terraform.NodeCountBoundary
+  citrixadc_responderaction.responder_action - *terraform.NodeApplyableResourceInstance
+  citrixadc_responderaction.responder_action (prepare state) - *terraform.NodeApplyableResource
+  provider.citrixadc - *terraform.NodeApplyableProvider
+provider.citrixadc - *terraform.NodeApplyableProvider
+provider.citrixadc (close) - *terraform.graphNodeCloseProvider
+  citrixadc_responderaction.responder_action - *terraform.NodeApplyableResourceInstance
+  citrixadc_responderaction.responder_action (prepare state) - *terraform.NodeApplyableResource
+  provider.citrixadc - *terraform.NodeApplyableProvider
+------
+2020/01/22 15:57:28 [TRACE] Executing graph transform *terraform.CloseProvisionerTransformer
+2020/01/22 15:57:28 [TRACE] Completed graph transform *terraform.CloseProvisionerTransformer (no changes)
+2020/01/22 15:57:28 [TRACE] Executing graph transform *terraform.RootTransformer
+2020/01/22 15:57:28 [TRACE] Completed graph transform *terraform.RootTransformer with new graph:
+citrixadc_responderaction.responder_action - *terraform.NodeApplyableResourceInstance
+  citrixadc_responderaction.responder_action (prepare state) - *terraform.NodeApplyableResource
+  provider.citrixadc - *terraform.NodeApplyableProvider
+citrixadc_responderaction.responder_action (prepare state) - *terraform.NodeApplyableResource
+  provider.citrixadc - *terraform.NodeApplyableProvider
+meta.count-boundary (EachMode fixup) - *terraform.NodeCountBoundary
+  citrixadc_responderaction.responder_action - *terraform.NodeApplyableResourceInstance
+  citrixadc_responderaction.responder_action (prepare state) - *terraform.NodeApplyableResource
+  provider.citrixadc - *terraform.NodeApplyableProvider
+provider.citrixadc - *terraform.NodeApplyableProvider
+provider.citrixadc (close) - *terraform.graphNodeCloseProvider
+  citrixadc_responderaction.responder_action - *terraform.NodeApplyableResourceInstance
+  citrixadc_responderaction.responder_action (prepare state) - *terraform.NodeApplyableResource
+  provider.citrixadc - *terraform.NodeApplyableProvider
+root - terraform.graphNodeRoot
+  meta.count-boundary (EachMode fixup) - *terraform.NodeCountBoundary
+  provider.citrixadc (close) - *terraform.graphNodeCloseProvider
+------
+2020/01/22 15:57:28 [TRACE] Executing graph transform *terraform.TransitiveReductionTransformer
+2020/01/22 15:57:28 [TRACE] Completed graph transform *terraform.TransitiveReductionTransformer with new graph:
+citrixadc_responderaction.responder_action - *terraform.NodeApplyableResourceInstance
+  citrixadc_responderaction.responder_action (prepare state) - *terraform.NodeApplyableResource
+citrixadc_responderaction.responder_action (prepare state) - *terraform.NodeApplyableResource
+  provider.citrixadc - *terraform.NodeApplyableProvider
+meta.count-boundary (EachMode fixup) - *terraform.NodeCountBoundary
+  citrixadc_responderaction.responder_action - *terraform.NodeApplyableResourceInstance
+provider.citrixadc - *terraform.NodeApplyableProvider
+provider.citrixadc (close) - *terraform.graphNodeCloseProvider
+  citrixadc_responderaction.responder_action - *terraform.NodeApplyableResourceInstance
+root - terraform.graphNodeRoot
+  meta.count-boundary (EachMode fixup) - *terraform.NodeCountBoundary
+  provider.citrixadc (close) - *terraform.graphNodeCloseProvider
+------
+2020/01/22 15:57:28 [DEBUG] Starting graph walk: walkApply
+2020/01/22 15:57:28 [TRACE] dag/walk: updating graph
+2020/01/22 15:57:28 [TRACE] dag/walk: added new vertex: "root"
+2020/01/22 15:57:28 [TRACE] dag/walk: added new vertex: "citrixadc_responderaction.responder_action (prepare state)"
+2020/01/22 15:57:28 [TRACE] dag/walk: added new vertex: "citrixadc_responderaction.responder_action"
+2020/01/22 15:57:28 [TRACE] dag/walk: added new vertex: "provider.citrixadc"
+2020/01/22 15:57:28 [TRACE] dag/walk: added new vertex: "meta.count-boundary (EachMode fixup)"
+2020/01/22 15:57:28 [TRACE] dag/walk: added new vertex: "provider.citrixadc (close)"
+2020/01/22 15:57:28 [TRACE] dag/walk: added edge: "provider.citrixadc (close)" waiting on "citrixadc_responderaction.responder_action"
+2020/01/22 15:57:28 [TRACE] dag/walk: added edge: "root" waiting on "provider.citrixadc (close)"
+2020/01/22 15:57:28 [TRACE] dag/walk: added edge: "meta.count-boundary (EachMode fixup)" waiting on "citrixadc_responderaction.responder_action"
+2020/01/22 15:57:28 [TRACE] dag/walk: added edge: "root" waiting on "meta.count-boundary (EachMode fixup)"
+2020/01/22 15:57:28 [TRACE] dag/walk: added edge: "citrixadc_responderaction.responder_action" waiting on "citrixadc_responderaction.responder_action (prepare state)"
+2020/01/22 15:57:28 [TRACE] dag/walk: added edge: "citrixadc_responderaction.responder_action (prepare state)" waiting on "provider.citrixadc"
+2020/01/22 15:57:28 [TRACE] dag/walk: dependencies changed for "provider.citrixadc (close)", sending new deps
+2020/01/22 15:57:28 [TRACE] dag/walk: dependencies changed for "root", sending new deps
+2020/01/22 15:57:28 [TRACE] dag/walk: dependencies changed for "meta.count-boundary (EachMode fixup)", sending new deps
+2020/01/22 15:57:28 [TRACE] dag/walk: dependencies changed for "citrixadc_responderaction.responder_action", sending new deps
+2020/01/22 15:57:28 [TRACE] dag/walk: dependencies changed for "citrixadc_responderaction.responder_action (prepare state)", sending new deps
+2020/01/22 15:57:28 [TRACE] dag/walk: visiting "provider.citrixadc"
+2020/01/22 15:57:28 [TRACE] vertex "provider.citrixadc": starting visit (*terraform.NodeApplyableProvider)
+2020/01/22 15:57:28 [TRACE] vertex "provider.citrixadc": evaluating
+2020/01/22 15:57:28 [TRACE] [walkApply] Entering eval tree: provider.citrixadc
+2020/01/22 15:57:28 [TRACE] <root>: eval: *terraform.EvalSequence
+2020/01/22 15:57:28 [TRACE] <root>: eval: *terraform.EvalInitProvider
+2020-01-22T15:57:28.667+0200 [INFO]  plugin: configuring client automatic mTLS
+2020-01-22T15:57:28.710+0200 [DEBUG] plugin: starting plugin: path=/home/georgen/.terraform.d/plugins/terraform-provider-citrixadc_v0.12.8 args=[/home/georgen/.terraform.d/plugins/terraform-provider-citrixadc_v0.12.8]
+2020-01-22T15:57:28.711+0200 [DEBUG] plugin: plugin started: path=/home/georgen/.terraform.d/plugins/terraform-provider-citrixadc_v0.12.8 pid=22248
+2020-01-22T15:57:28.711+0200 [DEBUG] plugin: waiting for RPC address: path=/home/georgen/.terraform.d/plugins/terraform-provider-citrixadc_v0.12.8
+2020-01-22T15:57:28.720+0200 [INFO]  plugin.terraform-provider-citrixadc_v0.12.8: configuring server automatic mTLS: timestamp=2020-01-22T15:57:28.720+0200
+2020-01-22T15:57:28.760+0200 [DEBUG] plugin.terraform-provider-citrixadc_v0.12.8: plugin address: address=/tmp/plugin514686700 network=unix timestamp=2020-01-22T15:57:28.760+0200
+2020-01-22T15:57:28.760+0200 [DEBUG] plugin: using plugin: version=5
+2020/01/22 15:57:28 [TRACE] BuiltinEvalContext: Initialized "citrixadc" provider for provider.citrixadc
+2020/01/22 15:57:28 [TRACE] <root>: eval: terraform.EvalNoop
+2020/01/22 15:57:28 [TRACE] <root>: eval: terraform.EvalNoop
+2020/01/22 15:57:28 [TRACE] <root>: eval: *terraform.EvalOpFilter
+2020/01/22 15:57:28 [TRACE] <root>: eval: *terraform.EvalSequence
+2020/01/22 15:57:28 [TRACE] <root>: eval: *terraform.EvalGetProvider
+2020/01/22 15:57:28 [TRACE] <root>: eval: *terraform.EvalOpFilter
+2020/01/22 15:57:28 [TRACE] <root>: eval: *terraform.EvalSequence
+2020/01/22 15:57:28 [TRACE] <root>: eval: *terraform.EvalConfigProvider
+2020/01/22 15:57:28 [TRACE] buildProviderConfig for provider.citrixadc: using explicit config only
+2020/01/22 15:57:28 [TRACE] GRPCProvider: GetSchema
+2020/01/22 15:57:28 [TRACE] GRPCProvider: Configure
+2020/01/22 15:57:28 [TRACE] [walkApply] Exiting eval tree: provider.citrixadc
+2020/01/22 15:57:28 [TRACE] vertex "provider.citrixadc": visit complete
+2020/01/22 15:57:28 [TRACE] dag/walk: visiting "citrixadc_responderaction.responder_action (prepare state)"
+2020/01/22 15:57:28 [TRACE] vertex "citrixadc_responderaction.responder_action (prepare state)": starting visit (*terraform.NodeApplyableResource)
+2020/01/22 15:57:28 [TRACE] vertex "citrixadc_responderaction.responder_action (prepare state)": evaluating
+2020/01/22 15:57:28 [TRACE] [walkApply] Entering eval tree: citrixadc_responderaction.responder_action (prepare state)
+2020/01/22 15:57:28 [TRACE] <root>: eval: *terraform.EvalWriteResourceState
+2020/01/22 15:57:28 [TRACE] [walkApply] Exiting eval tree: citrixadc_responderaction.responder_action (prepare state)
+2020/01/22 15:57:28 [TRACE] vertex "citrixadc_responderaction.responder_action (prepare state)": visit complete
+2020/01/22 15:57:28 [TRACE] dag/walk: visiting "citrixadc_responderaction.responder_action"
+2020/01/22 15:57:28 [TRACE] vertex "citrixadc_responderaction.responder_action": starting visit (*terraform.NodeApplyableResourceInstance)
+2020/01/22 15:57:28 [TRACE] vertex "citrixadc_responderaction.responder_action": evaluating
+2020/01/22 15:57:28 [TRACE] [walkApply] Entering eval tree: citrixadc_responderaction.responder_action
+2020/01/22 15:57:28 [TRACE] <root>: eval: *terraform.EvalSequence
+2020/01/22 15:57:28 [TRACE] <root>: eval: *terraform.EvalGetProvider
+2020/01/22 15:57:28 [TRACE] <root>: eval: *terraform.EvalReadDiff
+2020/01/22 15:57:28 [TRACE] EvalReadDiff: Read Update change from plan for citrixadc_responderaction.responder_action
+2020/01/22 15:57:28 [TRACE] <root>: eval: *terraform.EvalIf
+2020/01/22 15:57:28 [TRACE] <root>: eval: terraform.EvalNoop
+2020/01/22 15:57:28 [TRACE] <root>: eval: *terraform.EvalIf
+2020/01/22 15:57:28 [TRACE] <root>: eval: *terraform.EvalReadState
+2020/01/22 15:57:28 [TRACE] EvalReadState: reading state for citrixadc_responderaction.responder_action
+2020/01/22 15:57:28 [TRACE] UpgradeResourceState: schema version of citrixadc_responderaction.responder_action is still 1; calling provider "citrixadc" for any other minor fixups
+2020/01/22 15:57:28 [TRACE] GRPCProvider: UpgradeResourceState
+2020/01/22 15:57:28 [TRACE] <root>: eval: *terraform.EvalReadDiff
+2020/01/22 15:57:28 [TRACE] EvalReadDiff: Read Update change from plan for citrixadc_responderaction.responder_action
+2020/01/22 15:57:28 [TRACE] <root>: eval: *terraform.EvalDiff
+2020/01/22 15:57:28 [TRACE] Re-validating config for "citrixadc_responderaction.responder_action"
+2020/01/22 15:57:28 [TRACE] GRPCProvider: ValidateResourceTypeConfig
+2020/01/22 15:57:28 [TRACE] GRPCProvider: PlanResourceChange
+2020-01-22T15:57:28.857+0200 [DEBUG] plugin.terraform-provider-citrixadc_v0.12.8: 2020/01/22 15:57:28 [DEBUG] citrixadc-provider:  In customizeDiff
+2020/01/22 15:57:28 [TRACE] <root>: eval: *terraform.EvalCheckPlannedChange
+2020/01/22 15:57:28 [TRACE] EvalCheckPlannedChange: Verifying that actual change (action Update) matches planned change (action Update)
+2020/01/22 15:57:28 [TRACE] <root>: eval: *terraform.EvalGetProvider
+2020/01/22 15:57:28 [TRACE] <root>: eval: *terraform.EvalReadState
+2020/01/22 15:57:28 [TRACE] EvalReadState: reading state for citrixadc_responderaction.responder_action
+2020/01/22 15:57:28 [TRACE] UpgradeResourceState: schema version of citrixadc_responderaction.responder_action is still 1; calling provider "citrixadc" for any other minor fixups
+2020/01/22 15:57:28 [TRACE] GRPCProvider: UpgradeResourceState
+2020/01/22 15:57:28 [TRACE] <root>: eval: *terraform.EvalReduceDiff
+2020/01/22 15:57:28 [TRACE] <root>: eval: *terraform.EvalIf
+2020/01/22 15:57:28 [TRACE] <root>: eval: terraform.EvalNoop
+2020/01/22 15:57:28 [TRACE] <root>: eval: *terraform.EvalApplyPre
+2020/01/22 15:57:28 [TRACE] <root>: eval: *terraform.EvalApply
+[0m[1mcitrixadc_responderaction.responder_action: Modifying... [id=test_action_2][0m[0m
+2020/01/22 15:57:28 [DEBUG] citrixadc_responderaction.responder_action: applying the planned Update change
+2020/01/22 15:57:28 [TRACE] GRPCProvider: ApplyResourceChange
+2020-01-22T15:57:28.859+0200 [DEBUG] plugin.terraform-provider-citrixadc_v0.12.8: 2020/01/22 15:57:28 [DEBUG]  citrixadc-provider: In updateResponderactionFunc
+2020-01-22T15:57:28.859+0200 [DEBUG] plugin.terraform-provider-citrixadc_v0.12.8: 2020/01/22 15:57:28 [DEBUG]  citrixadc-provider: Responsestatuscode has changed for responderaction test_action_2, starting update
+2020-01-22T15:57:28.859+0200 [DEBUG] plugin.terraform-provider-citrixadc_v0.12.8: 2020/01/22 15:57:28 [DEBUG] go-nitro: listing resource of type  responderaction , name:  test_action_2
+2020-01-22T15:57:28.859+0200 [DEBUG] plugin.terraform-provider-citrixadc_v0.12.8: 2020/01/22 15:57:28 [TRACE] go-nitro: url is  http://10.78.60.201/nitro/v1/config/responderaction/test_action_2
+2020-01-22T15:57:28.874+0200 [DEBUG] plugin.terraform-provider-citrixadc_v0.12.8: 2020/01/22 15:57:28 [DEBUG] go-nitro: response Status: 200 OK
+2020-01-22T15:57:28.875+0200 [DEBUG] plugin.terraform-provider-citrixadc_v0.12.8: 2020/01/22 15:57:28 [INFO] go-nitro: responderaction test_action_2 is already present
+2020-01-22T15:57:28.875+0200 [DEBUG] plugin.terraform-provider-citrixadc_v0.12.8: 2020/01/22 15:57:28 [DEBUG] go-nitro: UpdateResource: Resourcejson is {"responderaction":{"name":"test_action_2","responsestatuscode":202}}
+2020-01-22T15:57:28.875+0200 [DEBUG] plugin.terraform-provider-citrixadc_v0.12.8: 2020/01/22 15:57:28 [DEBUG] go-nitro: Updating resource of type  responderaction
+2020-01-22T15:57:28.875+0200 [DEBUG] plugin.terraform-provider-citrixadc_v0.12.8: 2020/01/22 15:57:28 [TRACE] go-nitro: url is  http://10.78.60.201/nitro/v1/config/responderaction/test_action_2
+2020-01-22T15:57:28.888+0200 [DEBUG] plugin.terraform-provider-citrixadc_v0.12.8: 2020/01/22 15:57:28 [DEBUG] go-nitro: response Status: 200 OK
+2020-01-22T15:57:28.888+0200 [DEBUG] plugin.terraform-provider-citrixadc_v0.12.8: 2020/01/22 15:57:28 [DEBUG] citrixadc-provider:  In readResponderactionFunc
+2020-01-22T15:57:28.888+0200 [DEBUG] plugin.terraform-provider-citrixadc_v0.12.8: 2020/01/22 15:57:28 [DEBUG] citrixadc-provider: Reading responderaction state test_action_2
+2020-01-22T15:57:28.888+0200 [DEBUG] plugin.terraform-provider-citrixadc_v0.12.8: 2020/01/22 15:57:28 [DEBUG] go-nitro: listing resource of type  responderaction , name:  test_action_2
+2020-01-22T15:57:28.888+0200 [DEBUG] plugin.terraform-provider-citrixadc_v0.12.8: 2020/01/22 15:57:28 [TRACE] go-nitro: url is  http://10.78.60.201/nitro/v1/config/responderaction/test_action_2
+2020-01-22T15:57:28.900+0200 [DEBUG] plugin.terraform-provider-citrixadc_v0.12.8: 2020/01/22 15:57:28 [DEBUG] go-nitro: response Status: 200 OK
+2020/01/22 15:57:28 [TRACE] <root>: eval: *terraform.EvalMaybeTainted
+2020/01/22 15:57:28 [TRACE] <root>: eval: *terraform.EvalWriteState
+2020/01/22 15:57:28 [TRACE] EvalWriteState: writing current state object for citrixadc_responderaction.responder_action
+2020/01/22 15:57:28 [TRACE] <root>: eval: *terraform.EvalApplyProvisioners
+2020/01/22 15:57:28 [TRACE] EvalApplyProvisioners: citrixadc_responderaction.responder_action is not freshly-created, so no provisioning is required
+2020/01/22 15:57:28 [TRACE] <root>: eval: *terraform.EvalMaybeTainted
+2020/01/22 15:57:28 [TRACE] <root>: eval: *terraform.EvalWriteState
+2020/01/22 15:57:28 [TRACE] EvalWriteState: writing current state object for citrixadc_responderaction.responder_action
+2020/01/22 15:57:28 [TRACE] <root>: eval: *terraform.EvalIf
+2020/01/22 15:57:28 [TRACE] <root>: eval: *terraform.EvalIf
+2020/01/22 15:57:28 [TRACE] <root>: eval: *terraform.EvalWriteDiff
+2020/01/22 15:57:28 [TRACE] <root>: eval: *terraform.EvalApplyPost
+2020/01/22 15:57:28 [TRACE] <root>: eval: *terraform.EvalUpdateStateHook
+2020/01/22 15:57:28 [TRACE] statemgr.Filesystem: creating backup snapshot at terraform.tfstate.backup
+[0m[1mcitrixadc_responderaction.responder_action: Modifications complete after 0s [id=test_action_2][0m[0m
+2020/01/22 15:57:28 [TRACE] statemgr.Filesystem: state has changed since last snapshot, so incrementing serial to 47
+2020/01/22 15:57:28 [TRACE] statemgr.Filesystem: writing snapshot at terraform.tfstate
+2020/01/22 15:57:28 [TRACE] [walkApply] Exiting eval tree: citrixadc_responderaction.responder_action
+2020/01/22 15:57:28 [TRACE] vertex "citrixadc_responderaction.responder_action": visit complete
+2020/01/22 15:57:28 [TRACE] dag/walk: visiting "provider.citrixadc (close)"
+2020/01/22 15:57:28 [TRACE] vertex "provider.citrixadc (close)": starting visit (*terraform.graphNodeCloseProvider)
+2020/01/22 15:57:28 [TRACE] vertex "provider.citrixadc (close)": evaluating
+2020/01/22 15:57:28 [TRACE] [walkApply] Entering eval tree: provider.citrixadc (close)
+2020/01/22 15:57:28 [TRACE] <root>: eval: *terraform.EvalCloseProvider
+2020/01/22 15:57:28 [TRACE] GRPCProvider: Close
+2020/01/22 15:57:28 [TRACE] dag/walk: visiting "meta.count-boundary (EachMode fixup)"
+2020/01/22 15:57:28 [TRACE] vertex "meta.count-boundary (EachMode fixup)": starting visit (*terraform.NodeCountBoundary)
+2020/01/22 15:57:28 [TRACE] vertex "meta.count-boundary (EachMode fixup)": evaluating
+2020/01/22 15:57:28 [TRACE] [walkApply] Entering eval tree: meta.count-boundary (EachMode fixup)
+2020/01/22 15:57:28 [TRACE] <root>: eval: *terraform.EvalCountFixZeroOneBoundaryGlobal
+2020/01/22 15:57:28 [TRACE] [walkApply] Exiting eval tree: meta.count-boundary (EachMode fixup)
+2020/01/22 15:57:28 [TRACE] vertex "meta.count-boundary (EachMode fixup)": visit complete
+2020-01-22T15:57:28.905+0200 [DEBUG] plugin: plugin process exited: path=/home/georgen/.terraform.d/plugins/terraform-provider-citrixadc_v0.12.8 pid=22248
+2020-01-22T15:57:28.905+0200 [DEBUG] plugin: plugin exited
+2020/01/22 15:57:28 [TRACE] [walkApply] Exiting eval tree: provider.citrixadc (close)
+2020/01/22 15:57:28 [TRACE] vertex "provider.citrixadc (close)": visit complete
+2020/01/22 15:57:28 [TRACE] dag/walk: visiting "root"
+2020/01/22 15:57:28 [TRACE] vertex "root": starting visit (terraform.graphNodeRoot)
+2020/01/22 15:57:28 [TRACE] vertex "root": visit complete
+2020/01/22 15:57:28 [TRACE] statemgr.Filesystem: have already backed up original terraform.tfstate to terraform.tfstate.backup on a previous write
+2020/01/22 15:57:28 [TRACE] statemgr.Filesystem: state has changed since last snapshot, so incrementing serial to 48
+2020/01/22 15:57:28 [TRACE] statemgr.Filesystem: writing snapshot at terraform.tfstate
+[0m[1m[32m
+2020/01/22 15:57:28 [TRACE] statemgr.Filesystem: removing lock metadata file .terraform.tfstate.lock.info
+Apply complete! Resources: 0 added, 1 changed, 0 destroyed.[0m
+2020/01/22 15:57:28 [TRACE] statemgr.Filesystem: unlocking terraform.tfstate using fcntl flock
