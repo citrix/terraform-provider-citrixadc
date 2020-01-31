@@ -63,13 +63,13 @@ func testHelperInstantiateClient(nsUrl, username, password string, sslVerify boo
 	}
 
 	if username == "" {
-		if username = os.Getenv("NS_USER"); username == "" {
+		if username = os.Getenv("NS_LOGIN"); username == "" {
 			username = "nsroot"
 		}
 	}
 
 	if password == "" {
-		if password = os.Getenv("NS_PASS"); password == "" {
+		if password = os.Getenv("NS_PASSWORD"); password == "" {
 			password = "nsroot"
 		}
 	}

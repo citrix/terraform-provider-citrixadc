@@ -1,4 +1,4 @@
-package netscaler
+package citrixadc
 
 import (
 	"github.com/chiradeep/go-nitro/config/{{.Package}}"
@@ -14,7 +14,7 @@ import (
 )
 
 
-func resourceNetScaler{{.TfTitle}}() *schema.Resource {
+func resourceCitrixAdc{{.TfTitle}}() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
 		Create:        create{{.TfTitle}}Func,
@@ -40,7 +40,7 @@ func resourceNetScaler{{.TfTitle}}() *schema.Resource {
 }
 
 func create{{.TfTitle}}Func(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[DEBUG]  netscaler-provider: In create{{.TfTitle}}Func")
+	log.Printf("[DEBUG]  citrixadc-provider: In create{{.TfTitle}}Func")
 	client := meta.(*NetScalerNitroClient).client
 	var {{.TfID}} string
 	if v, ok := d.GetOk("{{.NsID}}"); ok {
@@ -85,13 +85,13 @@ func create{{.TfTitle}}Func(d *schema.ResourceData, meta interface{}) error {
 }
 
 func read{{.TfTitle}}Func(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[DEBUG] netscaler-provider:  In read{{.TfTitle}}Func")
+	log.Printf("[DEBUG] citrixadc-provider:  In read{{.TfTitle}}Func")
 	client := meta.(*NetScalerNitroClient).client
 	{{.TfID}}:= d.Id()
-	log.Printf("[DEBUG] netscaler-provider: Reading {{.TfName}} state %s", {{.TfID}})
+	log.Printf("[DEBUG] citrixadc-provider: Reading {{.TfName}} state %s", {{.TfID}})
 	data, err := client.FindResource(netscaler.{{.StructName}}.Type(), {{.TfID}})
 	if err != nil {
-	log.Printf("[WARN] netscaler-provider: Clearing {{.TfName}} state %s", {{.TfID}})
+	log.Printf("[WARN] citrixadc-provider: Clearing {{.TfName}} state %s", {{.TfID}})
 		d.SetId("")
 		return nil
 	}
@@ -105,7 +105,7 @@ func read{{.TfTitle}}Func(d *schema.ResourceData, meta interface{}) error {
 }
 
 func update{{.TfTitle}}Func(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[DEBUG]  netscaler-provider: In update{{.TfTitle}}Func")
+	log.Printf("[DEBUG]  citrixadc-provider: In update{{.TfTitle}}Func")
 	client := meta.(*NetScalerNitroClient).client
 	{{.TfID}} := d.Get("{{.NsID}}").(string)
 
@@ -115,7 +115,7 @@ func update{{.TfTitle}}Func(d *schema.ResourceData, meta interface{}) error {
 	hasChange := false
 	{{range $key, $value := .Fields -}}
 	if d.HasChange("{{$key}}") {
-		log.Printf("[DEBUG]  netscaler-provider: {{$key|title}} has changed for {{$.TfName}} %s, starting update", {{$.TfID}})
+		log.Printf("[DEBUG]  citrixadc-provider: {{$key|title}} has changed for {{$.TfName}} %s, starting update", {{$.TfID}})
 		{{$.TfName}}.{{$key|title}} = d.Get("{{$key}}").({{$value|lower}})
 		hasChange = true
 	}
@@ -131,7 +131,7 @@ func update{{.TfTitle}}Func(d *schema.ResourceData, meta interface{}) error {
 }
 
 func delete{{.TfTitle}}Func(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[DEBUG]  netscaler-provider: In delete{{.TfTitle}}Func")
+	log.Printf("[DEBUG]  citrixadc-provider: In delete{{.TfTitle}}Func")
 	client := meta.(*NetScalerNitroClient).client
 	{{.TfID}} := d.Id()
 	err := client.DeleteResource(netscaler.{{.StructName}}.Type(), {{.TfID}})

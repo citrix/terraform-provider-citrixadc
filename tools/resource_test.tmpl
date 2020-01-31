@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package netscaler
+package citrixadc
 
 import (
 	"fmt"
@@ -32,10 +32,10 @@ func TestAcc{{.TfTitle}}_basic(t *testing.T) {
 			resource.TestStep{
                                 Config: testAcc{{.TfTitle}}_basic,
 				Check: resource.ComposeTestCheckFunc(
-                                        testAccCheck{{.TfTitle}}Exist("netscaler_{{.TfName}}.foo", nil),
+                                        testAccCheck{{.TfTitle}}Exist("citrixadc_{{.TfName}}.foo", nil),
                                         {{range $key, $value := .KeyFields }}
 					resource.TestCheckResourceAttr(
-                                                 "netscaler_{{$.TfName}}.foo", "{{$key}}", "{{$value}}"),
+                                                 "citrixadc_{{$.TfName}}.foo", "{{$key}}", "{{$value}}"),
                                         {{- end}}
 				),
 			},
@@ -81,7 +81,7 @@ func testAccCheck{{.TfTitle}}Destroy(s *terraform.State) error {
 	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
 
 	for _, rs := range s.RootModule().Resources {
-                if rs.Type != "netscaler_{{.TfName}}" {
+                if rs.Type != "citrixadc_{{.TfName}}" {
 			continue
 		}
 
@@ -101,7 +101,7 @@ func testAccCheck{{.TfTitle}}Destroy(s *terraform.State) error {
 
 const testAcc{{.TfTitle}}_basic = `
 {{if isPresent .KeyFieldsBound }}
-resource "netscaler_{{$.BoundType|lower}}" "foo" {
+resource "citrixadc_{{$.BoundType|lower}}" "foo" {
   {{range $key, $value := .KeyFieldsBound -}}
   {{if isInt $value  }}
   {{$key}} = {{$value}}
@@ -112,7 +112,7 @@ resource "netscaler_{{$.BoundType|lower}}" "foo" {
 }
 {{end}}
 
-resource "netscaler_{{.TfName}}" "foo" {
+resource "citrixadc_{{.TfName}}" "foo" {
   {{range $key, $value := .KeyFields -}}
   {{if isInt $value  }}
   {{$key}} = {{$value}}
@@ -121,7 +121,7 @@ resource "netscaler_{{.TfName}}" "foo" {
   {{- end}}
   {{- end}}
 {{if isPresent .KeyFieldsBound }}
-  depends_on = ["netscaler_{{$.BoundType|lower}}.foo"]
+  depends_on = ["citrixadc_{{$.BoundType|lower}}.foo"]
 {{end}}
 }
 `
