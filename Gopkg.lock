@@ -104,6 +104,8 @@
     "config/lb",
     "config/network",
     "config/ns",
+    "config/responder",
+    "config/rewrite",
     "config/ssl",
     "config/system",
     "netscaler",
@@ -360,6 +362,14 @@
   packages = ["tfconfig"]
   pruneopts = ""
   revision = "e2ee25ba1e5e57c8d6481aa83e1ca7ebd3bf3742"
+
+[[projects]]
+  digest = "1:4142bda8d8966ab74dfc737ad0240a67c5e8b56555b1c489ce072fe1ebb3905e"
+  name = "github.com/hashicorp/terraform-plugin-sdk"
+  packages = ["helper/hashcode"]
+  pruneopts = ""
+  revision = "7f53d13be6bdb4b24d447c26d66bcf8888c5be90"
+  version = "v1.6.0"
 
 [[projects]]
   branch = "master"
@@ -676,13 +686,17 @@
     "github.com/chiradeep/go-nitro/config/lb",
     "github.com/chiradeep/go-nitro/config/network",
     "github.com/chiradeep/go-nitro/config/ns",
+    "github.com/chiradeep/go-nitro/config/responder",
+    "github.com/chiradeep/go-nitro/config/rewrite",
     "github.com/chiradeep/go-nitro/config/ssl",
     "github.com/chiradeep/go-nitro/config/system",
     "github.com/chiradeep/go-nitro/netscaler",
+    "github.com/hashicorp/terraform-plugin-sdk/helper/hashcode",
     "github.com/hashicorp/terraform/helper/resource",
     "github.com/hashicorp/terraform/helper/schema",
     "github.com/hashicorp/terraform/plugin",
     "github.com/hashicorp/terraform/terraform",
+    "github.com/hashicorp/terraform/version",
     "github.com/mitchellh/mapstructure",
   ]
   solver-name = "gps-cdcl"
