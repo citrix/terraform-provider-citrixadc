@@ -4,11 +4,14 @@ import (
 	"github.com/chiradeep/go-nitro/config/basic"
 	"github.com/chiradeep/go-nitro/config/gslb"
 	"github.com/chiradeep/go-nitro/netscaler"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 
+	"bytes"
 	"fmt"
 	"log"
+	"strconv"
 )
 
 func resourceCitrixAdcGslbservice() *schema.Resource {
@@ -219,6 +222,31 @@ func resourceCitrixAdcGslbservice() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"lbmonitorbinding": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: false,
+				Set:      lbmonitorMappingHash,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"weight": &schema.Schema{
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
+						},
+						"monitor_name": &schema.Schema{
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"monstate": &schema.Schema{
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -275,6 +303,10 @@ func createGslbserviceFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(netscaler.Gslbservice.Type(), gslbserviceName, &gslbservice)
 	if err != nil {
+		return err
+	}
+
+	if err := updateLbmonitorBindinds(d, meta); err != nil {
 		return err
 	}
 
@@ -337,6 +369,10 @@ func readGslbserviceFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("viewip", data["viewip"])
 	d.Set("viewname", data["viewname"])
 	d.Set("weight", data["weight"])
+
+	if err := readLbmonitorBindinds(d, meta); err != nil {
+		return err
+	}
 
 	return nil
 
@@ -551,6 +587,13 @@ func updateGslbserviceFunc(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	if d.HasChange("lbmonitorbinding") {
+		if err := updateLbmonitorBindinds(d, meta); err != nil {
+			return err
+		}
+
+	}
+
 	return readGslbserviceFunc(d, meta)
 }
 
@@ -560,6 +603,10 @@ func deleteGslbserviceFunc(d *schema.ResourceData, meta interface{}) error {
 	gslbserviceName := d.Id()
 	err := client.DeleteResource(netscaler.Gslbservice.Type(), gslbserviceName)
 	if err != nil {
+		return err
+	}
+
+	if err := deleteLbmonitorBindinds(d, meta); err != nil {
 		return err
 	}
 
@@ -597,4 +644,143 @@ func doGslbServiceStateChange(d *schema.ResourceData, client *netscaler.NitroCli
 	}
 
 	return nil
+}
+
+func readLbmonitorBindinds(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[DEBUG]  citrixadc-provider: In readLbmonitorBindinds")
+
+	client := meta.(*NetScalerNitroClient).client
+	servicename := d.Get("servicename").(string)
+	lbmonitorBindings, _ := client.FindResourceArray("gslbservice_lbmonitor_binding", servicename)
+	log.Printf("lbmonitorBindings %v\n", lbmonitorBindings)
+
+	processedBindings := make([]interface{}, len(lbmonitorBindings))
+
+	for i, m := range lbmonitorBindings {
+		processedBindings[i] = make(map[string]interface{})
+		if d, ok := m["weight"]; ok {
+			if intval, err := strconv.Atoi(d.(string)); err != nil {
+				processedBindings[i].(map[string]interface{})["weight"] = intval
+			} else {
+				return err
+			}
+		}
+		if d, ok := m["monitor_name"]; ok {
+			processedBindings[i].(map[string]interface{})["monitor_name"] = d.(string)
+		}
+		if d, ok := m["monstate"]; ok {
+			processedBindings[i].(map[string]interface{})["monstate"] = d.(string)
+		}
+	}
+
+	updatedSet := schema.NewSet(lbmonitorMappingHash, processedBindings)
+	log.Printf("updatedSet %v\n", updatedSet)
+	if err := d.Set("lbmonitorbinding", updatedSet); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func updateLbmonitorBindinds(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[DEBUG]  citrixadc-provider: In readLbmonitorBindinds")
+
+	oldSet, newSet := d.GetChange("lbmonitorbinding")
+	log.Printf("[DEBUG]  citrixadc-provider: oldSet %v\n", oldSet)
+	log.Printf("[DEBUG]  citrixadc-provider: newSet %v\n", newSet)
+	remove := oldSet.(*schema.Set).Difference(newSet.(*schema.Set))
+	add := newSet.(*schema.Set).Difference(oldSet.(*schema.Set))
+	for _, binding := range remove.List() {
+		if err := deleteSingleLbmonitorBinding(d, meta, binding.(map[string]interface{})); err != nil {
+			return err
+		}
+	}
+
+	for _, binding := range add.List() {
+		if err := addSingleLbmonitorBinding(d, meta, binding.(map[string]interface{})); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func deleteLbmonitorBindinds(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[DEBUG]  citrixadc-provider: In updateLbmonitorBindinds")
+	if bindings, ok := d.GetOk("lbmonitorbinding"); ok {
+		for _, binding := range bindings.(*schema.Set).List() {
+			if err := deleteSingleLbmonitorBinding(d, meta, binding.(map[string]interface{})); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func addSingleLbmonitorBinding(d *schema.ResourceData, meta interface{}, binding map[string]interface{}) error {
+	log.Printf("[DEBUG]  citrixadc-provider: In addSingleLbmonitorBinding")
+
+	client := meta.(*NetScalerNitroClient).client
+
+	bindingStruct := gslb.Gslbservicelbmonitorbinding{}
+	servicename := d.Get("servicename").(string)
+	bindingStruct.Servicename = servicename
+
+	if d, ok := binding["weight"]; ok {
+		bindingStruct.Weight = d.(int)
+	}
+
+	if d, ok := binding["monitor_name"]; ok {
+		bindingStruct.Monitorname = d.(string)
+	}
+
+	if d, ok := binding["monstate"]; ok {
+		bindingStruct.Monstate = d.(string)
+	}
+
+	if _, err := client.UpdateResource("gslbservice_lbmonitor_binding", servicename, bindingStruct); err != nil {
+		return err
+	}
+	return nil
+}
+
+func deleteSingleLbmonitorBinding(d *schema.ResourceData, meta interface{}, binding map[string]interface{}) error {
+	log.Printf("[DEBUG]  citrixadc-provider: In addSingleLbmonitorBinding")
+	client := meta.(*NetScalerNitroClient).client
+
+	// Construct args from binding data
+	args := make([]string, 0, 1)
+
+	if d, ok := binding["monitor_name"]; ok {
+		s := fmt.Sprintf("monitor_name:%s", d.(string))
+		args = append(args, s)
+	}
+
+	servicename := d.Get("servicename").(string)
+
+	if err := client.DeleteResourceWithArgs("gslbservice_lbmonitor_binding", servicename, args); err != nil {
+		log.Printf("[DEBUG]  citrixadc-provider: Error deleting lb monitor binding %v\n", binding)
+		return err
+	}
+
+	return nil
+}
+
+func lbmonitorMappingHash(v interface{}) int {
+	log.Printf("[DEBUG]  citrixadc-provider: In lbmonitorMappingHash")
+	var buf bytes.Buffer
+
+	// All keys added in alphabetical order.
+	m := v.(map[string]interface{})
+	if d, ok := m["weight"]; ok {
+		buf.WriteString(fmt.Sprintf("%d-", d.(int)))
+	}
+
+	if d, ok := m["monitor_name"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", d.(string)))
+	}
+
+	if d, ok := m["monstate"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", d.(string)))
+	}
+	return hashcode.String(buf.String())
 }

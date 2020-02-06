@@ -319,3 +319,158 @@ func TestAccGsblservice_enable_disable(t *testing.T) {
 		},
 	})
 }
+
+func TestAccGsblservice_lbmonitorbinding(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckGslbserviceDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccGslbservicelbmonitor_two,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbserviceExist("citrixadc_gslbservice.tf_test_gslbservice", nil),
+					verifyLbmonitorbindingExists("tf_test_gslbservice", "tf_test_monitor1", false),
+					verifyLbmonitorbindingExists("tf_test_gslbservice", "tf_test_monitor2", false),
+				),
+			},
+			resource.TestStep{
+				Config: testAccGslbservicelbmonitor_none,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbserviceExist("citrixadc_gslbservice.tf_test_gslbservice", nil),
+					verifyLbmonitorbindingExists("tf_test_gslbservice", "tf_test_monitor1", true),
+					verifyLbmonitorbindingExists("tf_test_gslbservice", "tf_test_monitor2", true),
+				),
+			},
+			resource.TestStep{
+				Config: testAccGslbservicelbmonitor_one,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbserviceExist("citrixadc_gslbservice.tf_test_gslbservice", nil),
+					verifyLbmonitorbindingExists("tf_test_gslbservice", "tf_test_monitor1", true),
+					verifyLbmonitorbindingExists("tf_test_gslbservice", "tf_test_monitor2", false),
+				),
+			},
+		},
+	})
+}
+
+func verifyLbmonitorbindingExists(servicename, monitor_name string, inverse bool) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		bindFound := false
+		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		lbmonitorBindings, _ := client.FindResourceArray("gslbservice_lbmonitor_binding", servicename)
+		for _, val := range lbmonitorBindings {
+			if val["monitor_name"].(string) == monitor_name {
+				bindFound = true
+				break
+			}
+		}
+
+		if !inverse {
+			if bindFound {
+				return nil
+			} else {
+				return fmt.Errorf("Verify error cannot find bind for monitor %v for gslb service %v\n", monitor_name, servicename)
+			}
+		} else {
+			if bindFound {
+				return fmt.Errorf("Verify error found exessive bind for monitor %v for gslb service %v\n", monitor_name, servicename)
+			} else {
+				return nil
+			}
+		}
+	}
+}
+
+const testAccGslbservicelbmonitor_two = `
+resource "citrixadc_lbmonitor" "tf_test_monitor1" {
+  monitorname = "tf_test_monitor1"
+  type        = "HTTP"
+}
+
+resource "citrixadc_lbmonitor" "tf_test_monitor2" {
+  monitorname = "tf_test_monitor2"
+  type        = "PING"
+}
+
+resource "citrixadc_gslbsite" "tf_test_site" {
+  sitename        = "tf_test_site"
+  siteipaddress   = "192.168.22.19"
+  sessionexchange = "DISABLED"
+}
+
+resource "citrixadc_gslbservice" "tf_test_gslbservice" {
+  ip          = "192.168.18.81"
+  port        = "80"
+  servicename = "tf_test_gslbservice"
+  servicetype = "HTTP"
+  sitename = citrixadc_gslbsite.tf_test_site.sitename
+
+  lbmonitorbinding {
+      monitor_name = citrixadc_lbmonitor.tf_test_monitor1.monitorname
+      weight = 80
+  }
+
+  lbmonitorbinding {
+      monitor_name = citrixadc_lbmonitor.tf_test_monitor2.monitorname
+      weight = 20
+  }
+}
+`
+const testAccGslbservicelbmonitor_one = `
+resource "citrixadc_lbmonitor" "tf_test_monitor1" {
+  monitorname = "tf_test_monitor1"
+  type        = "HTTP"
+}
+
+resource "citrixadc_lbmonitor" "tf_test_monitor2" {
+  monitorname = "tf_test_monitor2"
+  type        = "PING"
+}
+
+resource "citrixadc_gslbsite" "tf_test_site" {
+  sitename        = "tf_test_site"
+  siteipaddress   = "192.168.22.19"
+  sessionexchange = "DISABLED"
+}
+
+resource "citrixadc_gslbservice" "tf_test_gslbservice" {
+  ip          = "192.168.18.81"
+  port        = "80"
+  servicename = "tf_test_gslbservice"
+  servicetype = "HTTP"
+  sitename = citrixadc_gslbsite.tf_test_site.sitename
+
+  lbmonitorbinding {
+      monitor_name = citrixadc_lbmonitor.tf_test_monitor2.monitorname
+      weight = 20
+  }
+}
+`
+
+const testAccGslbservicelbmonitor_none = `
+resource "citrixadc_lbmonitor" "tf_test_monitor1" {
+  monitorname = "tf_test_monitor1"
+  type        = "HTTP"
+}
+
+resource "citrixadc_lbmonitor" "tf_test_monitor2" {
+  monitorname = "tf_test_monitor2"
+  type        = "PING"
+}
+
+resource "citrixadc_gslbsite" "tf_test_site" {
+  sitename        = "tf_test_site"
+  siteipaddress   = "192.168.22.19"
+  sessionexchange = "DISABLED"
+}
+
+resource "citrixadc_gslbservice" "tf_test_gslbservice" {
+  ip          = "192.168.18.81"
+  port        = "80"
+  servicename = "tf_test_gslbservice"
+  servicetype = "HTTP"
+  sitename = citrixadc_gslbsite.tf_test_site.sitename
+
+}
+`
