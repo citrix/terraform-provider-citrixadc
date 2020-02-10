@@ -98,6 +98,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_rewriteaction":        resourceCitrixAdcRewriteaction(),
 		"citrixadc_rewritepolicy":        resourceCitrixAdcRewritepolicy(),
 		"citrixadc_rewritepolicylabel":   resourceCitrixAdcRewritepolicylabel(),
+		"citrixadc_nsip":                 resourceCitrixAdcNsip(),
 	}
 }
 
