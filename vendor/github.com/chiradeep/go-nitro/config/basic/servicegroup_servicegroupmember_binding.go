@@ -17,5 +17,6 @@ type Servicegroupservicegroupmemberbinding struct {
 	Svcitmpriority            int    `json:"svcitmpriority,omitempty"`
 	Svrstate                  string `json:"svrstate,omitempty"`
 	Tickssincelaststatechange int    `json:"tickssincelaststatechange,omitempty"`
+	Trofsreason               string `json:"trofsreason,omitempty"`
 	Weight                    int    `json:"weight,omitempty"`
 }

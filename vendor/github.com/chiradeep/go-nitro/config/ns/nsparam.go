@@ -1,6 +1,7 @@
 package ns
 
 type Nsparam struct {
+	Advancedanalyticsstats    string      `json:"advancedanalyticsstats,omitempty"`
 	Aftpallowrandomsourceport string      `json:"aftpallowrandomsourceport,omitempty"`
 	Cip                       string      `json:"cip,omitempty"`
 	Cipheader                 string      `json:"cipheader,omitempty"`
@@ -20,6 +21,7 @@ type Nsparam struct {
 	Mgmthttpsport             int         `json:"mgmthttpsport,omitempty"`
 	Pmtumin                   int         `json:"pmtumin,omitempty"`
 	Pmtutimeout               int         `json:"pmtutimeout,omitempty"`
+	Proxyprotocol             string      `json:"proxyprotocol,omitempty"`
 	Securecookie              string      `json:"securecookie,omitempty"`
 	Secureicaports            interface{} `json:"secureicaports,omitempty"`
 	Servicepathingressvlan    int         `json:"servicepathingressvlan,omitempty"`

@@ -1,5 +1,7 @@
 package cs
 
 type Csparameter struct {
-	Stateupdate string `json:"stateupdate,omitempty"`
+	Builtin     interface{} `json:"builtin,omitempty"`
+	Feature     string      `json:"feature,omitempty"`
+	Stateupdate string      `json:"stateupdate,omitempty"`
 }

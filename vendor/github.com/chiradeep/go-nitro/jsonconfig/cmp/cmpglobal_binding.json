@@ -1,6 +1,0 @@
-{
-  "type" : "object",
-  "$schema" : "http://json-schema.org/draft-04/schema#",
-  "id" : "cmpglobal_binding",
-  "title" : "cmpglobal_binding"
-}

@@ -2,6 +2,7 @@ package lb
 
 type Lbvserver struct {
 	Activeservices                     int         `json:"activeservices,omitempty"`
+	Adfsproxyprofile                   string      `json:"adfsproxyprofile,omitempty"`
 	Appflowlog                         string      `json:"appflowlog,omitempty"`
 	Authentication                     string      `json:"authentication,omitempty"`
 	Authenticationhost                 string      `json:"authenticationhost,omitempty"`
@@ -35,7 +36,6 @@ type Lbvserver struct {
 	Domain                             string      `json:"domain,omitempty"`
 	Downstateflush                     string      `json:"downstateflush,omitempty"`
 	Effectivestate                     string      `json:"effectivestate,omitempty"`
-	Gotopriorityexpression             string      `json:"gotopriorityexpression,omitempty"`
 	Groupname                          string      `json:"groupname,omitempty"`
 	Gt2gb                              string      `json:"gt2gb,omitempty"`
 	Hashlength                         int         `json:"hashlength,omitempty"`
@@ -46,7 +46,6 @@ type Lbvserver struct {
 	Httpsredirecturl                   string      `json:"httpsredirecturl,omitempty"`
 	Icmpvsrresponse                    string      `json:"icmpvsrresponse,omitempty"`
 	Insertvserveripport                string      `json:"insertvserveripport,omitempty"`
-	Invoke                             bool        `json:"invoke,omitempty"`
 	Ipmapping                          string      `json:"ipmapping,omitempty"`
 	Ipmask                             string      `json:"ipmask,omitempty"`
 	Ippattern                          string      `json:"ippattern,omitempty"`
@@ -54,8 +53,6 @@ type Lbvserver struct {
 	Ipv46                              string      `json:"ipv46,omitempty"`
 	Isgslb                             bool        `json:"isgslb,omitempty"`
 	L2conn                             string      `json:"l2conn,omitempty"`
-	Labelname                          string      `json:"labelname,omitempty"`
-	Labeltype                          string      `json:"labeltype,omitempty"`
 	Lbmethod                           string      `json:"lbmethod,omitempty"`
 	Lbprofilename                      string      `json:"lbprofilename,omitempty"`
 	Lbrrreason                         int         `json:"lbrrreason,omitempty"`
@@ -85,7 +82,6 @@ type Lbvserver struct {
 	Persistencebackup                  string      `json:"persistencebackup,omitempty"`
 	Persistencetype                    string      `json:"persistencetype,omitempty"`
 	Persistmask                        string      `json:"persistmask,omitempty"`
-	Policyname                         string      `json:"policyname,omitempty"`
 	Port                               int         `json:"port,omitempty"`
 	Pq                                 string      `json:"pq,omitempty"`
 	Precedence                         string      `json:"precedence,omitempty"`

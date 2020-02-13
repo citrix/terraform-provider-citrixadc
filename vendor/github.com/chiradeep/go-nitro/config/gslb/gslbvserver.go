@@ -35,6 +35,7 @@ type Gslbvserver struct {
 	Persistmask               string `json:"persistmask,omitempty"`
 	Policyname                string `json:"policyname,omitempty"`
 	Priority                  int    `json:"priority,omitempty"`
+	Rule                      string `json:"rule,omitempty"`
 	Servername                string `json:"servername,omitempty"`
 	Servicename               string `json:"servicename,omitempty"`
 	Servicetype               string `json:"servicetype,omitempty"`

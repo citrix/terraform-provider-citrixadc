@@ -3,6 +3,7 @@ package ns
 type Nsip struct {
 	Advertiseondefaultpartition string      `json:"advertiseondefaultpartition,omitempty"`
 	Arp                         string      `json:"arp,omitempty"`
+	Arpowner                    int         `json:"arpowner,omitempty"`
 	Arpresponse                 string      `json:"arpresponse,omitempty"`
 	Bgp                         string      `json:"bgp,omitempty"`
 	Decrementttl                string      `json:"decrementttl,omitempty"`
@@ -22,6 +23,7 @@ type Nsip struct {
 	Mgmtaccess                  string      `json:"mgmtaccess,omitempty"`
 	Netmask                     string      `json:"netmask,omitempty"`
 	Networkroute                string      `json:"networkroute,omitempty"`
+	Operationalarpowner         int         `json:"operationalarpowner,omitempty"`
 	Ospf                        string      `json:"ospf,omitempty"`
 	Ospfarea                    int         `json:"ospfarea,omitempty"`
 	Ospfareaval                 int         `json:"ospfareaval,omitempty"`

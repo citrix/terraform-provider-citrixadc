@@ -13,6 +13,8 @@ type Sslvserver struct {
 	Dhekeyexchangewithpsk             string `json:"dhekeyexchangewithpsk,omitempty"`
 	Dhfile                            string `json:"dhfile,omitempty"`
 	Dhkeyexpsizelimit                 string `json:"dhkeyexpsizelimit,omitempty"`
+	Dtls1                             string `json:"dtls1,omitempty"`
+	Dtls12                            string `json:"dtls12,omitempty"`
 	Dtlsflag                          bool   `json:"dtlsflag,omitempty"`
 	Dtlsprofilename                   string `json:"dtlsprofilename,omitempty"`
 	Ersa                              string `json:"ersa,omitempty"`

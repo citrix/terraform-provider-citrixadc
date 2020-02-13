@@ -2,6 +2,7 @@ package ssl
 
 type Ssldtlsprofile struct {
 	Builtin            interface{} `json:"builtin,omitempty"`
+	Feature            string      `json:"feature,omitempty"`
 	Helloverifyrequest string      `json:"helloverifyrequest,omitempty"`
 	Maxpacketsize      int         `json:"maxpacketsize,omitempty"`
 	Maxrecordsize      int         `json:"maxrecordsize,omitempty"`

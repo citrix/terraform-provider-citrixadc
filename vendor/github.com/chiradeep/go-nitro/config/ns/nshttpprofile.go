@@ -12,6 +12,7 @@ type Nshttpprofile struct {
 	Dropextracrlf             string      `json:"dropextracrlf,omitempty"`
 	Dropextradata             string      `json:"dropextradata,omitempty"`
 	Dropinvalreqs             string      `json:"dropinvalreqs,omitempty"`
+	Feature                   string      `json:"feature,omitempty"`
 	Http2                     string      `json:"http2,omitempty"`
 	Http2direct               string      `json:"http2direct,omitempty"`
 	Http2headertablesize      int         `json:"http2headertablesize,omitempty"`
@@ -20,9 +21,11 @@ type Nshttpprofile struct {
 	Http2maxframesize         int         `json:"http2maxframesize,omitempty"`
 	Http2maxheaderlistsize    int         `json:"http2maxheaderlistsize,omitempty"`
 	Http2minseverconn         int         `json:"http2minseverconn,omitempty"`
+	Http2strictcipher         string      `json:"http2strictcipher,omitempty"`
 	Incomphdrdelay            int         `json:"incomphdrdelay,omitempty"`
 	Markconnreqinval          string      `json:"markconnreqinval,omitempty"`
 	Markhttp09inval           string      `json:"markhttp09inval,omitempty"`
+	Marktracereqinval         string      `json:"marktracereqinval,omitempty"`
 	Maxheaderlen              int         `json:"maxheaderlen,omitempty"`
 	Maxreq                    int         `json:"maxreq,omitempty"`
 	Maxreusepool              int         `json:"maxreusepool,omitempty"`

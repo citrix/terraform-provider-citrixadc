@@ -7,6 +7,8 @@ type Nstcpprofile struct {
 	Buffersize                  int         `json:"buffersize,omitempty"`
 	Builtin                     interface{} `json:"builtin,omitempty"`
 	Burstratecontrol            string      `json:"burstratecontrol,omitempty"`
+	Clientiptcpoption           string      `json:"clientiptcpoption,omitempty"`
+	Clientiptcpoptionnumber     int         `json:"clientiptcpoptionnumber,omitempty"`
 	Delayedack                  int         `json:"delayedack,omitempty"`
 	Dropestconnontimeout        string      `json:"dropestconnontimeout,omitempty"`
 	Drophalfclosedconnontimeout string      `json:"drophalfclosedconnontimeout,omitempty"`
@@ -16,6 +18,7 @@ type Nstcpprofile struct {
 	Ecn                         string      `json:"ecn,omitempty"`
 	Establishclientconn         string      `json:"establishclientconn,omitempty"`
 	Fack                        string      `json:"fack,omitempty"`
+	Feature                     string      `json:"feature,omitempty"`
 	Flavor                      string      `json:"flavor,omitempty"`
 	Frto                        string      `json:"frto,omitempty"`
 	Hystart                     string      `json:"hystart,omitempty"`
@@ -47,6 +50,7 @@ type Nstcpprofile struct {
 	Slowstartincr               int         `json:"slowstartincr,omitempty"`
 	Spoofsyndrop                string      `json:"spoofsyndrop,omitempty"`
 	Syncookie                   string      `json:"syncookie,omitempty"`
+	Taillossprobe               string      `json:"taillossprobe,omitempty"`
 	Tcpfastopen                 string      `json:"tcpfastopen,omitempty"`
 	Tcpfastopencookiesize       int         `json:"tcpfastopencookiesize,omitempty"`
 	Tcpmode                     string      `json:"tcpmode,omitempty"`

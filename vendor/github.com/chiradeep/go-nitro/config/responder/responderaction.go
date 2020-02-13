@@ -4,6 +4,8 @@ type Responderaction struct {
 	Builtin            interface{} `json:"builtin,omitempty"`
 	Bypasssafetycheck  string      `json:"bypasssafetycheck,omitempty"`
 	Comment            string      `json:"comment,omitempty"`
+	Feature            string      `json:"feature,omitempty"`
+	Headers            interface{} `json:"headers,omitempty"`
 	Hits               int         `json:"hits,omitempty"`
 	Htmlpage           string      `json:"htmlpage,omitempty"`
 	Name               string      `json:"name,omitempty"`

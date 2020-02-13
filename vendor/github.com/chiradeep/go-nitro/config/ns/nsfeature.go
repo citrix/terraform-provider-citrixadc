@@ -7,6 +7,7 @@ type Nsfeature struct {
 	Appfw              bool        `json:"appfw,omitempty"`
 	Appqoe             bool        `json:"appqoe,omitempty"`
 	Bgp                bool        `json:"bgp,omitempty"`
+	Bot                bool        `json:"bot,omitempty"`
 	Cf                 bool        `json:"cf,omitempty"`
 	Ch                 bool        `json:"ch,omitempty"`
 	Ci                 bool        `json:"ci,omitempty"`

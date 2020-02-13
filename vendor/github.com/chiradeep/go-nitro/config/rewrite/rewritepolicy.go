@@ -5,6 +5,7 @@ type Rewritepolicy struct {
 	Builtin     interface{} `json:"builtin,omitempty"`
 	Comment     string      `json:"comment,omitempty"`
 	Description string      `json:"description,omitempty"`
+	Feature     string      `json:"feature,omitempty"`
 	Hits        int         `json:"hits,omitempty"`
 	Isdefault   bool        `json:"isdefault,omitempty"`
 	Logaction   string      `json:"logaction,omitempty"`

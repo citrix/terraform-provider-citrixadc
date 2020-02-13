@@ -7,6 +7,7 @@ type Interface struct {
 	Actspeed                  string      `json:"actspeed,omitempty"`
 	Actthroughput             int         `json:"actthroughput,omitempty"`
 	Actualmtu                 int         `json:"actualmtu,omitempty"`
+	Actualringsize            int         `json:"actualringsize,omitempty"`
 	Autoneg                   string      `json:"autoneg,omitempty"`
 	Autonegresult             int         `json:"autonegresult,omitempty"`
 	Backplane                 string      `json:"backplane,omitempty"`
@@ -76,6 +77,8 @@ type Interface struct {
 	Reqmedia                  string      `json:"reqmedia,omitempty"`
 	Reqspeed                  string      `json:"reqspeed,omitempty"`
 	Reqthroughput             int         `json:"reqthroughput,omitempty"`
+	Ringsize                  int         `json:"ringsize,omitempty"`
+	Ringtype                  string      `json:"ringtype,omitempty"`
 	Rxbytes                   int         `json:"rxbytes,omitempty"`
 	Rxdrops                   int         `json:"rxdrops,omitempty"`
 	Rxerrors                  int         `json:"rxerrors,omitempty"`

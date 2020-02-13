@@ -22,6 +22,7 @@ type Sslprofile struct {
 	Encrypttriggerpktcount            int         `json:"encrypttriggerpktcount,omitempty"`
 	Ersa                              string      `json:"ersa,omitempty"`
 	Ersacount                         int         `json:"ersacount,omitempty"`
+	Feature                           string      `json:"feature,omitempty"`
 	Hsts                              string      `json:"hsts,omitempty"`
 	Includesubdomains                 string      `json:"includesubdomains,omitempty"`
 	Insertionencoding                 string      `json:"insertionencoding,omitempty"`
@@ -53,6 +54,7 @@ type Sslprofile struct {
 	Skipclientcertpolicycheck         string      `json:"skipclientcertpolicycheck,omitempty"`
 	Snicert                           bool        `json:"snicert,omitempty"`
 	Snienable                         string      `json:"snienable,omitempty"`
+	Snihttphostmatch                  string      `json:"snihttphostmatch,omitempty"`
 	Ssl3                              string      `json:"ssl3,omitempty"`
 	Sslimaxsessperserver              int         `json:"sslimaxsessperserver,omitempty"`
 	Sslinterception                   string      `json:"sslinterception,omitempty"`

@@ -314,6 +314,7 @@ const (
 	Servicegroup_lbmonitor_binding
 	Servicegroup_servicegroupentitymonbindings_binding
 	Servicegroup_servicegroupmember_binding
+	Servicegroup_servicegroupmemberlist_binding
 	Servicegroupbindings
 	Svcbindings
 	Vserver
@@ -1344,6 +1345,7 @@ var resources = []string{
 	"servicegroup_lbmonitor_binding",
 	"servicegroup_servicegroupentitymonbindings_binding",
 	"servicegroup_servicegroupmember_binding",
+	"servicegroup_servicegroupmemberlist_binding",
 	"servicegroupbindings",
 	"svcbindings",
 	"vserver",

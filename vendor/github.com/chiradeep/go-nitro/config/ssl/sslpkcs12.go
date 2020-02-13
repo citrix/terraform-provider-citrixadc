@@ -1,6 +1,7 @@
 package ssl
 
 type Sslpkcs12 struct {
+	Aes256        bool   `json:"aes256,omitempty"`
 	Certfile      string `json:"certfile,omitempty"`
 	Des           bool   `json:"des,omitempty"`
 	Des3          bool   `json:"des3,omitempty"`

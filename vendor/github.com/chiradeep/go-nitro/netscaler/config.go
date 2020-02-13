@@ -463,6 +463,32 @@ func (c *NitroClient) EnableFeatures(featureNames []string) error {
 	return nil
 }
 
+func (c *NitroClient) DisableFeatures(featureNames []string) error {
+	/* construct this:
+	{
+	        "nsfeature":
+		{
+		    "feature": [ "LB", ]
+		}
+	}
+	*/
+	featureStruct := make(map[string]map[string][]string)
+	featureStruct["nsfeature"] = make(map[string][]string)
+	featureStruct["nsfeature"]["feature"] = featureNames
+
+	featureJSON, err := JSONMarshal(featureStruct)
+	if err != nil {
+		log.Printf("[ERROR] go-nitro: DisableFeatures: Failed to marshal features to JSON")
+		return fmt.Errorf("[ERROR] go-nitro: Failed to marshal features to JSON")
+	}
+
+	_, err = c.disableFeatures(featureJSON)
+	if err != nil {
+		return fmt.Errorf("[ERROR] go-nitro: Failed to disable feature %v", err)
+	}
+	return nil
+}
+
 //ListEnabledFeatures returns a string array of the list of features enabled on the NetScaler appliance
 func (c *NitroClient) ListEnabledFeatures() ([]string, error) {
 
@@ -493,6 +519,65 @@ func (c *NitroClient) ListEnabledFeatures() ([]string, error) {
 	flist := strings.Split(result, " ")
 	log.Println("result: ", result, "flist: ", flist)
 	return flist, nil
+}
+
+//EnableModes enables the provided list of Citrix ADC modes.
+func (c *NitroClient) EnableModes(modeNames []string) error {
+	/* construct this:
+	{
+	        "nsmode":
+		{
+		    "mode": [ "USNIP", "L3", "LSN", ]
+		}
+	}
+	*/
+	modeStruct := make(map[string]map[string][]string)
+	modeStruct["nsmode"] = make(map[string][]string)
+	modeStruct["nsmode"]["mode"] = modeNames
+
+	modeJSON, err := JSONMarshal(modeStruct)
+	if err != nil {
+		log.Printf("[ERROR] go-nitro: EnableModes: Failed to marshal modes to JSON")
+		return fmt.Errorf("[ERROR] go-nitro: Failed to marshal modes to JSON")
+	}
+
+	_, err = c.enableModes(modeJSON)
+	if err != nil {
+		return fmt.Errorf("[ERROR] go-nitro: Failed to enable mode %v", err)
+	}
+	return nil
+}
+
+//ListEnabledModes returns a string array of the list of modes enabled on the Citrix ADC appliance
+func (c *NitroClient) ListEnabledModes() ([]string, error) {
+
+	bytes, err := c.listEnabledModes()
+	if err != nil {
+		return []string{}, fmt.Errorf("[ERROR] go-nitro: Failed to list modes %v", err)
+	}
+	var data map[string]interface{}
+	if err = json.Unmarshal(bytes, &data); err != nil {
+		log.Printf("[ERROR] go-nitro: ListEnabledModes: Failed to unmarshal Netscaler Response!")
+		return []string{}, fmt.Errorf("[ERROR] go-nitro: Failed to unmarshal Netscaler Response to list Modes")
+	}
+	mode, ok := data["nsmode"]
+	if !ok || mode == nil {
+		log.Printf("No modes found")
+		return []string{}, fmt.Errorf("[ERROR] go-nitro: No modes found")
+	}
+
+	modes := data["nsmode"].(map[string]interface{})
+	// since the returned JSON map mixes boolean and array values, the unmarshal fails to figure out there
+	// is an array. So we have to convert it to a string and then parse it.
+	// this doesn't work: return modes["mode"].([]string), nil
+	// convert to string: [USNIP L3 LSN] (note: no commas)
+
+	result := fmt.Sprintf("%v", modes["mode"])
+	result = strings.TrimPrefix(result, "[")
+	result = strings.TrimSuffix(result, "]")
+	mlist := strings.Split(result, " ")
+	log.Println("result: ", result, "mlist: ", mlist)
+	return mlist, nil
 }
 
 //SaveConfig persists the config on the NetScaler to the NetScaler's persistent storage. This could take a few seconds

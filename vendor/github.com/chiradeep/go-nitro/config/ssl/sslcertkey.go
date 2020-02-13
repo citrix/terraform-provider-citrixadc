@@ -1,6 +1,7 @@
 package ssl
 
 type Sslcertkey struct {
+	Builtin             interface{} `json:"builtin,omitempty"`
 	Bundle              string      `json:"bundle,omitempty"`
 	Cert                string      `json:"cert,omitempty"`
 	Certificatetype     interface{} `json:"certificatetype,omitempty"`
@@ -9,7 +10,9 @@ type Sslcertkey struct {
 	Clientcertnotbefore string      `json:"clientcertnotbefore,omitempty"`
 	Data                int         `json:"data,omitempty"`
 	Daystoexpiration    int         `json:"daystoexpiration,omitempty"`
+	Deletefromdevice    bool        `json:"deletefromdevice,omitempty"`
 	Expirymonitor       string      `json:"expirymonitor,omitempty"`
+	Feature             string      `json:"feature,omitempty"`
 	Fipskey             string      `json:"fipskey,omitempty"`
 	Hsmkey              string      `json:"hsmkey,omitempty"`
 	Inform              string      `json:"inform,omitempty"`
