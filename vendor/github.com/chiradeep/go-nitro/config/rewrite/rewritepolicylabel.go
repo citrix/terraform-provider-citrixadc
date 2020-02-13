@@ -4,6 +4,7 @@ type Rewritepolicylabel struct {
 	Builtin                interface{} `json:"builtin,omitempty"`
 	Comment                string      `json:"comment,omitempty"`
 	Description            string      `json:"description,omitempty"`
+	Feature                string      `json:"feature,omitempty"`
 	Flowtype               int         `json:"flowtype,omitempty"`
 	Gotopriorityexpression string      `json:"gotopriorityexpression,omitempty"`
 	Hits                   int         `json:"hits,omitempty"`

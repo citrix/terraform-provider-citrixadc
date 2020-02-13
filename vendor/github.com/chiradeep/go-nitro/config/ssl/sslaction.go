@@ -25,6 +25,7 @@ type Sslaction struct {
 	Clientcertsubject      string      `json:"clientcertsubject,omitempty"`
 	Clientcertverification string      `json:"clientcertverification,omitempty"`
 	Description            string      `json:"description,omitempty"`
+	Feature                string      `json:"feature,omitempty"`
 	Forward                string      `json:"forward,omitempty"`
 	Hits                   int         `json:"hits,omitempty"`
 	Name                   string      `json:"name,omitempty"`

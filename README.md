@@ -42,7 +42,7 @@ terraform apply
 
 ```
 export NS_URL=http://<host>:<port>/
-export NS_USER=nsroot
+export NS_LOGIN=nsroot
 export NS_PASSWORD=nsroot
 ./ns_commit.sh
 ```

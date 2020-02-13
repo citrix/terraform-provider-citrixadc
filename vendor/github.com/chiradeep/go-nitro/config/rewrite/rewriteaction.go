@@ -5,6 +5,7 @@ type Rewriteaction struct {
 	Bypasssafetycheck string      `json:"bypasssafetycheck,omitempty"`
 	Comment           string      `json:"comment,omitempty"`
 	Description       string      `json:"description,omitempty"`
+	Feature           string      `json:"feature,omitempty"`
 	Hits              int         `json:"hits,omitempty"`
 	Isdefault         bool        `json:"isdefault,omitempty"`
 	Name              string      `json:"name,omitempty"`

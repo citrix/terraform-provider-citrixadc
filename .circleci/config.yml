@@ -6,7 +6,7 @@ jobs:
       image: ubuntu-1604:201903-01
    environment:
       NETSCALER_VERSION: 12.0-56.20 
-      TERRAFORM_VERSION: 0.12.1
+      TERRAFORM_VERSION: 0.12.20
    steps:
      - checkout:
          path: /home/circleci/.go_workspace/src/github.com/citrix/terraform-provider-citrixadc/
@@ -14,6 +14,7 @@ jobs:
      - run:
          name: Build
          command: |
+           go version
            go build -o terraform-provider-citrixadc ../main.go
 
      - run:

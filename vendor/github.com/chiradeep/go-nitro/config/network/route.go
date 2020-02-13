@@ -47,5 +47,6 @@ type Route struct {
 	Totalprobes       int         `json:"totalprobes,omitempty"`
 	Tunnel            bool        `json:"tunnel,omitempty"`
 	Type              bool        `json:"type,omitempty"`
+	Vlan              int         `json:"vlan,omitempty"`
 	Weight            int         `json:"weight,omitempty"`
 }

@@ -8,6 +8,7 @@ type Nstcpparam struct {
 	Connflushthres                      int         `json:"connflushthres,omitempty"`
 	Delayedack                          int         `json:"delayedack,omitempty"`
 	Downstaterst                        string      `json:"downstaterst,omitempty"`
+	Feature                             string      `json:"feature,omitempty"`
 	Initialcwnd                         int         `json:"initialcwnd,omitempty"`
 	Kaprobeupdatelastactivity           string      `json:"kaprobeupdatelastactivity,omitempty"`
 	Learnvsvrmss                        string      `json:"learnvsvrmss,omitempty"`
@@ -42,6 +43,7 @@ type Nstcpparam struct {
 	Synattackdetection                  string      `json:"synattackdetection,omitempty"`
 	Synholdfastgiveup                   int         `json:"synholdfastgiveup,omitempty"`
 	Tcpfastopencookietimeout            int         `json:"tcpfastopencookietimeout,omitempty"`
+	Tcpfintimeout                       int         `json:"tcpfintimeout,omitempty"`
 	Tcpmaxretries                       int         `json:"tcpmaxretries,omitempty"`
 	Ws                                  string      `json:"ws,omitempty"`
 	Wsval                               int         `json:"wsval,omitempty"`

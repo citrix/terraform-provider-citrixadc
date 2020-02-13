@@ -325,9 +325,33 @@ func (c *NitroClient) enableFeatures(featureJSON []byte) ([]byte, error) {
 
 }
 
+func (c *NitroClient) disableFeatures(featureJSON []byte) ([]byte, error) {
+	log.Println("[DEBUG] go-nitro Disabling features")
+	url := c.url + "nsfeature?action=disable"
+
+	return c.doHTTPRequest("POST", url, bytes.NewBuffer(featureJSON), createResponseHandler)
+
+}
+
 func (c *NitroClient) listEnabledFeatures() ([]byte, error) {
 	log.Println("[DEBUG] go-nitro: listing features")
 	url := c.url + "nsfeature"
+
+	return c.doHTTPRequest("GET", url, bytes.NewBuffer([]byte{}), readResponseHandler)
+
+}
+
+func (c *NitroClient) enableModes(modeJSON []byte) ([]byte, error) {
+	log.Println("[DEBUG] go-nitro Enabling modes")
+	url := c.url + "nsmode?action=enable"
+
+	return c.doHTTPRequest("POST", url, bytes.NewBuffer(modeJSON), createResponseHandler)
+
+}
+
+func (c *NitroClient) listEnabledModes() ([]byte, error) {
+	log.Println("[DEBUG] go-nitro: listing modes")
+	url := c.url + "nsmode"
 
 	return c.doHTTPRequest("GET", url, bytes.NewBuffer([]byte{}), readResponseHandler)
 

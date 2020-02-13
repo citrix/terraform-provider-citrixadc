@@ -13,6 +13,7 @@ type Servicegroupservicegroupentitymonbindingsbinding struct {
 	Nameserver                 string `json:"nameserver,omitempty"`
 	Passive                    bool   `json:"passive,omitempty"`
 	Port                       int    `json:"port,omitempty"`
+	Responsetime               int    `json:"responsetime,omitempty"`
 	Serverid                   int    `json:"serverid,omitempty"`
 	Servicegroupentname2       string `json:"servicegroupentname2,omitempty"`
 	Servicegroupname           string `json:"servicegroupname,omitempty"`

@@ -4,6 +4,7 @@ type Nshttpparam struct {
 	Builtin                   interface{} `json:"builtin,omitempty"`
 	Conmultiplex              string      `json:"conmultiplex,omitempty"`
 	Dropinvalreqs             string      `json:"dropinvalreqs,omitempty"`
+	Feature                   string      `json:"feature,omitempty"`
 	Http2serverside           string      `json:"http2serverside,omitempty"`
 	Ignoreconnectcodingscheme string      `json:"ignoreconnectcodingscheme,omitempty"`
 	Insnssrvrhdr              string      `json:"insnssrvrhdr,omitempty"`
