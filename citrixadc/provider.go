@@ -104,6 +104,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_systemuser":           resourceCitrixAdcSystemuser(),
 		"citrixadc_systemgroup":          resourceCitrixAdcSystemgroup(),
 		"citrixadc_systemcmdpolicy":      resourceCitrixAdcSystemcmdpolicy(),
+		"citrixadc_interface":            resourceCitrixAdcInterface(),
 	}
 }
 
