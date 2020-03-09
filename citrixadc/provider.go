@@ -81,6 +81,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_service":              resourceCitrixAdcService(),
 		"citrixadc_csvserver":            resourceCitrixAdcCsvserver(),
 		"citrixadc_cspolicy":             resourceCitrixAdcCspolicy(),
+		"citrixadc_csaction":             resourceCitrixAdcCsaction(),
 		"citrixadc_sslcertkey":           resourceCitrixAdcSslcertkey(),
 		"citrixadc_lbmonitor":            resourceCitrixAdcLbmonitor(),
 		"citrixadc_servicegroup":         resourceCitrixAdcServicegroup(),

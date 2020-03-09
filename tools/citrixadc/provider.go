@@ -61,7 +61,7 @@ func providerSchema() map[string]*schema.Schema {
 
 func providerResources() map[string]*schema.Resource {
 	return map[string]*schema.Resource{
-		"netscaler_lbvserver_rewritepolicy_binding": resourceNetScalerLbvserver_rewritepolicy_binding(),
+               "netscaler_csaction": resourceNetScalerCsaction(),
 	}
 }
 

@@ -34,6 +34,7 @@ fmt:
 schema_only:
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/cs/cspolicy.json -b $(JSON_DIR)/cs/csvserver_cspolicy_binding.json
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/cs/csvserver.json
+	./$(SCHEMA_EXEC) -i $(JSON_DIR)/cs/csaction.json
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/lb/lbmonitor.json -d monitorname
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/lb/lbvserver.json
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/ns/nsacl.json -d aclname
