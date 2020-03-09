@@ -89,7 +89,6 @@ func readCsactionFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("name", data["name"])
 	d.Set("comment", data["comment"])
-	d.Set("name", data["name"])
 	d.Set("targetlbvserver", data["targetlbvserver"])
 	d.Set("targetvserver", data["targetvserver"])
 	d.Set("targetvserverexpr", data["targetvserverexpr"])
