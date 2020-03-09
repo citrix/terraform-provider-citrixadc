@@ -71,7 +71,24 @@ resource "citrixadc_lbvserver" "tf_video_lb" {
 }
 
 `
-func TestAccCsaction_basic(t *testing.T) {
+
+const testAccCsaction_update_name = `
+
+resource "citrixadc_csaction" "foo" {
+  name            = "tf_test_csaction_newname"
+  targetlbvserver = citrixadc_lbvserver.tf_image_lb.name
+  comment         = "Forwards video requests to the image_lb"
+}
+
+resource "citrixadc_lbvserver" "tf_image_lb" {
+  name        = "image_lb"
+  ipv46       = "10.0.2.5"
+  port        = "80"
+  servicetype = "HTTP"
+}
+
+`
+func TestAccCsaction_create_update(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -91,6 +108,32 @@ func TestAccCsaction_basic(t *testing.T) {
 					testAccCheckCsactionExist("citrixadc_csaction.foo", nil),
 					resource.TestCheckResourceAttr("citrixadc_csaction.foo", "name", "tf_test_csaction"),
 					resource.TestCheckResourceAttr("citrixadc_csaction.foo", "targetlbvserver", "video_lb"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCsaction_create_update_name(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCsactionDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccCsaction_create,
+				Check:  resource.ComposeTestCheckFunc(
+					testAccCheckCsactionExist("citrixadc_csaction.foo", nil),
+					resource.TestCheckResourceAttr("citrixadc_csaction.foo", "name", "tf_test_csaction"),
+					resource.TestCheckResourceAttr("citrixadc_csaction.foo", "targetlbvserver", "image_lb"),
+				),
+			},
+			resource.TestStep{
+				Config: testAccCsaction_update_name,
+				Check:  resource.ComposeTestCheckFunc(
+					testAccCheckCsactionExist("citrixadc_csaction.foo", nil),
+					resource.TestCheckResourceAttr("citrixadc_csaction.foo", "name", "tf_test_csaction_newname"),
+					resource.TestCheckResourceAttr("citrixadc_csaction.foo", "targetlbvserver", "image_lb"),
 				),
 			},
 		},
