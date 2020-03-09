@@ -33,6 +33,90 @@ func JSONMarshal(t interface{}) ([]byte, error) {
 	return buffer.Bytes(), err
 }
 
+type login struct {
+	Username string `json:"username,omitempty"`
+	Password string `json:"password,omitempty"`
+	Timeout  int    `json:"timeout,omitempty"`
+}
+
+type logout struct {
+}
+
+func (c *NitroClient) updateSessionid(sessionid string) {
+	c.sessionidMux.Lock()
+	c.sessionid = sessionid
+	c.sessionidMux.Unlock()
+}
+
+func (c *NitroClient) clearSessionid() {
+	c.updateSessionid("")
+}
+
+func (c *NitroClient) getSessionid() string {
+	c.sessionidMux.RLock()
+	defer c.sessionidMux.RUnlock()
+	return c.sessionid
+}
+
+// IsLoggedIn tells if user is already logged in
+func (c *NitroClient) IsLoggedIn() bool {
+	if len(c.getSessionid()) > 0 {
+		return true
+	}
+	return false
+}
+
+// Login to netscaler and store the session
+func (c *NitroClient) Login() error {
+	// Check if login is already done
+	if c.IsLoggedIn() {
+		return nil
+	}
+	loginObj := login{
+		Username: c.username,
+		Password: c.password,
+		Timeout:  c.timeout,
+	}
+	body, err := c.AddResourceReturnBody(Login.Type(), "login", loginObj)
+	if err != nil {
+		return err
+	}
+	// Read sessionid from response body
+	var data map[string]interface{}
+	err = json.Unmarshal(body, &data)
+	if err == nil {
+		c.updateSessionid(data["sessionid"].(string))
+	}
+	return err
+}
+
+// Logout from netscaler and clear the session
+func (c *NitroClient) Logout() error {
+	logoutObj := logout{}
+	_, err := c.AddResource(Logout.Type(), "logout", logoutObj)
+	c.clearSessionid()
+	return err
+}
+
+//AddResourceReturnBody adds a resource of supplied type and name and returns http response body
+func (c *NitroClient) AddResourceReturnBody(resourceType string, name string, resourceStruct interface{}) ([]byte, error) {
+
+	nsResource := make(map[string]interface{})
+	nsResource[resourceType] = resourceStruct
+
+	resourceJSON, err := JSONMarshal(nsResource)
+
+	var doNotPrintResources = []string{"systemfile", "login", "logout"}
+	if !contains(doNotPrintResources, resourceType) {
+		log.Printf("[TRACE] go-nitro: Resourcejson is " + string(resourceJSON))
+	}
+	body, err := c.createResource(resourceType, resourceJSON)
+	if err != nil {
+		return body, fmt.Errorf("[ERROR] go-nitro: Failed to create resource of type %s, name=%s, err=%s", resourceType, name, err)
+	}
+	return body, nil
+}
+
 //AddResource adds a resource of supplied type and name
 func (c *NitroClient) AddResource(resourceType string, name string, resourceStruct interface{}) (string, error) {
 
@@ -41,7 +125,8 @@ func (c *NitroClient) AddResource(resourceType string, name string, resourceStru
 
 	resourceJSON, err := JSONMarshal(nsResource)
 
-	if !strings.EqualFold(resourceType, "systemfile") {
+	var doNotPrintResources = []string{"systemfile", "login", "logout"}
+	if !contains(doNotPrintResources, resourceType) {
 		log.Printf("[TRACE] go-nitro: Resourcejson is " + string(resourceJSON))
 	}
 	body, err := c.createResource(resourceType, resourceJSON)

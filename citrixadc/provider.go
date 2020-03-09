@@ -110,6 +110,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_interface":            resourceCitrixAdcInterface(),
 		"citrixadc_nstcpprofile":         resourceCitrixAdcNstcpprofile(),
 		"citrixadc_nslicense":            resourceCitrixAdcNslicense(),
+		"citrixadc_cluster":              resourceCitrixAdcCluster(),
 	}
 }
 
