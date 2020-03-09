@@ -1,7 +1,7 @@
 resource "citrixadc_csaction" "tf_csaction" {
-  name            = "tf_test_csaction"
-  targetlbvserver = citrixadc_lbvserver.tf_image_lb2.name
-  comment         = "Forwards image requests to the image_lb2"
+  name            = "tf_test_csaction2"
+  targetlbvserver = citrixadc_lbvserver.tf_image_lb.name
+  comment         = "Forwards image requests to the image_lb"
 }
 
 resource "citrixadc_lbvserver" "tf_image_lb" {
@@ -11,6 +11,7 @@ resource "citrixadc_lbvserver" "tf_image_lb" {
   servicetype = "HTTP"
 }
 
+# For update, change the `targetlbvserser` accordingly
 resource "citrixadc_lbvserver" "tf_image_lb2" {
   name        = "image_lb2"
   ipv46       = "10.0.2.6"
