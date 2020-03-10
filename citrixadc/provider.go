@@ -87,6 +87,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_nsacl":                resourceCitrixAdcNsacl(),
 		"citrixadc_nsacls":               resourceCitrixAdcNsacls(),
 		"citrixadc_inat":                 resourceCitrixAdcInat(),
+		"citrixadc_ipset":                resourceCitrixAdcIpset(),
 		"citrixadc_rnat":                 resourceCitrixAdcRnats(),
 		"citrixadc_gslbsite":             resourceCitrixAdcGslbsite(),
 		"citrixadc_gslbvserver":          resourceCitrixAdcGslbvserver(),

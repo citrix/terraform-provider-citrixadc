@@ -17,23 +17,108 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"testing"
 )
 
-func TestAccIpset_basic(t *testing.T) {
+const testAccIpset_no_bindings = `
+	resource "citrixadc_ipset" "foo" {
+		name = "tf_test_ipset"
+	}
+`
+
+const testAccIpset_single_binding = `
+	resource "citrixadc_ipset" "foo" {
+		name = "tf_test_ipset"
+		nsipbinding = [
+			citrixadc_nsip.nsip1.ipaddress,
+		]
+	}
+
+	resource "citrixadc_nsip" "nsip1" {
+		ipaddress = "1.1.1.1"
+		type      = "VIP"
+		netmask   = "255.255.255.0"
+	}
+`
+
+const testAccIpset_2nd_binding_added = `
+	resource "citrixadc_ipset" "foo" {
+		name = "tf_test_ipset"
+		nsipbinding = [
+			citrixadc_nsip.nsip1.ipaddress,
+			citrixadc_nsip.nsip2.ipaddress,
+		]
+	}
+
+	resource "citrixadc_nsip" "nsip1" {
+		ipaddress = "1.1.1.1"
+		type      = "VIP"
+		netmask   = "255.255.255.0"
+	}
+	resource "citrixadc_nsip" "nsip2" {
+		ipaddress = "2.2.2.2"
+		type      = "SNIP"
+		netmask   = "255.255.255.0"
+	}
+`
+
+const testAccIpset_name_changed = `
+	resource "citrixadc_ipset" "foo" {
+		name = "tf_test_ipset_newname"
+	}
+`
+
+func TestAccIpset_no_bindings(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-                CheckDestroy: testAccCheckIpsetDestroy,
+		CheckDestroy: testAccCheckIpsetDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-                                Config: testAccIpset_basic,
-				Check: resource.ComposeTestCheckFunc(
-                                        testAccCheckIpsetExist("citrixadc_ipset.foo", nil),
-                                        
+				Config: testAccIpset_no_bindings,
+				Check: resource.ComposeTestCheckFunc(testAccCheckIpsetExist("citrixadc_ipset.foo", nil),
+					resource.TestCheckResourceAttr("citrixadc_ipset.foo", "name", "tf_test_ipset"),
+				),
+			},
+			resource.TestStep{
+				Config: testAccIpset_name_changed,
+				Check: resource.ComposeTestCheckFunc(testAccCheckIpsetExist("citrixadc_ipset.foo", nil),
+					resource.TestCheckResourceAttr("citrixadc_ipset.foo", "name", "tf_test_ipset_newname"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccIpset_with_bindings(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckIpsetDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccIpset_no_bindings,
+				Check: resource.ComposeTestCheckFunc(testAccCheckIpsetExist("citrixadc_ipset.foo", nil),
+					resource.TestCheckResourceAttr("citrixadc_ipset.foo", "name", "tf_test_ipset"),
+				),
+			},
+			resource.TestStep{
+				Config: testAccIpset_single_binding,
+				Check: resource.ComposeTestCheckFunc(testAccCheckIpsetExist("citrixadc_ipset.foo", nil),
+					resource.TestCheckResourceAttr("citrixadc_ipset.foo", "name", "tf_test_ipset"),
+					// TODO: add TechCheckResourceAttr() for checking bindings
+					// resource.TestCheckResourceAttr("citrixadc_ipset.foo", "ipaddress", "1.1.1.1"),
+				),
+			},
+			resource.TestStep{
+				Config: testAccIpset_2nd_binding_added,
+				Check: resource.ComposeTestCheckFunc(testAccCheckIpsetExist("citrixadc_ipset.foo", nil),
+					// resource.TestCheckResourceAttr("citrixadc_ipset.foo", "name", "tf_test_ipset"),
+					// resource.TestCheckResourceAttr("citrixadc_ipset.foo", "ipaddress", "[\"1.1.1.1\", \"2.2.2.2\"]"), // list order may vary
 				),
 			},
 		},
@@ -60,7 +145,7 @@ func testAccCheckIpsetExist(n string, id *string) resource.TestCheckFunc {
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-                data, err := nsClient.FindResource(netscaler.Ipset.Type(), rs.Primary.ID)
+		data, err := nsClient.FindResource(netscaler.Ipset.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -78,7 +163,7 @@ func testAccCheckIpsetDestroy(s *terraform.State) error {
 	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
 
 	for _, rs := range s.RootModule().Resources {
-                if rs.Type != "citrixadc_ipset" {
+		if rs.Type != "citrixadc_ipset" {
 			continue
 		}
 
@@ -86,7 +171,7 @@ func testAccCheckIpsetDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-                _, err := nsClient.FindResource(netscaler.Ipset.Type(), rs.Primary.ID)
+		_, err := nsClient.FindResource(netscaler.Ipset.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("LB vserver %s still exists", rs.Primary.ID)
 		}
@@ -95,12 +180,3 @@ func testAccCheckIpsetDestroy(s *terraform.State) error {
 
 	return nil
 }
-
-const testAccIpset_basic = `
-
-
-resource "citrixadc_ipset" "foo" {
-  
-
-}
-`

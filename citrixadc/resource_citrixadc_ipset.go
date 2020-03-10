@@ -2,36 +2,37 @@ package citrixadc
 
 import (
 	"github.com/chiradeep/go-nitro/config/network"
-	
+
 	"github.com/chiradeep/go-nitro/netscaler"
-	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"fmt"
 	"log"
 )
 
-
 func resourceCitrixAdcIpset() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
 		Create:        createIpsetFunc,
 		Read:          readIpsetFunc,
-		Update:        updateIpsetFunc,
 		Delete:        deleteIpsetFunc,
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
 				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Required: true,
+				ForceNew: true,
 			},
 			"td": &schema.Schema{
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			
-			
+			"nsipbinding": &schema.Schema{
+				Type:     schema.TypeSet,
+				Optional: true,
+				ForceNew: true, // to avoid this error: https://github.com/hashicorp/terraform/blob/master/helper/schema/resource.go#L635
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 		},
 	}
 }
@@ -39,17 +40,11 @@ func resourceCitrixAdcIpset() *schema.Resource {
 func createIpsetFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createIpsetFunc")
 	client := meta.(*NetScalerNitroClient).client
-	var ipsetName string
-	if v, ok := d.GetOk("name"); ok {
-		ipsetName = v.(string)
-	} else {
-		ipsetName= resource.PrefixedUniqueId("tf-ipset-")
-		d.Set("name", ipsetName)
-	}
+	ipsetName := d.Get("name").(string)
+
 	ipset := network.Ipset{
-		Name:           d.Get("name").(string),
-		Td:           d.Get("td").(int),
-		
+		Name: d.Get("name").(string),
+		Td:   d.Get("td").(int),
 	}
 
 	_, err := client.AddResource(netscaler.Ipset.Type(), ipsetName, &ipset)
@@ -58,7 +53,12 @@ func createIpsetFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(ipsetName)
-	
+
+	err = updateIpsetNsipBindings(d, meta)
+	if err != nil {
+		return err
+	}
+
 	err = readIpsetFunc(d, meta)
 	if err != nil {
 		log.Printf("[ERROR] netscaler-provider: ?? we just created this ipset but we can't read it ?? %s", ipsetName)
@@ -70,51 +70,25 @@ func createIpsetFunc(d *schema.ResourceData, meta interface{}) error {
 func readIpsetFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] citrixadc-provider:  In readIpsetFunc")
 	client := meta.(*NetScalerNitroClient).client
-	ipsetName:= d.Id()
+	ipsetName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading ipset state %s", ipsetName)
 	data, err := client.FindResource(netscaler.Ipset.Type(), ipsetName)
 	if err != nil {
-	log.Printf("[WARN] citrixadc-provider: Clearing ipset state %s", ipsetName)
+		log.Printf("[WARN] citrixadc-provider: Clearing ipset state %s", ipsetName)
 		d.SetId("")
 		return nil
 	}
-	d.Set("name", data["name"])
+
+	err = readIpsetNsipBindings(d, meta)
+	if err != nil {
+		return err
+	}
+
 	d.Set("name", data["name"])
 	d.Set("td", data["td"])
-	
 
 	return nil
 
-}
-
-func updateIpsetFunc(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[DEBUG]  citrixadc-provider: In updateIpsetFunc")
-	client := meta.(*NetScalerNitroClient).client
-	ipsetName := d.Get("name").(string)
-
-	ipset := network.Ipset{
-		Name : d.Get("name").(string),
-	}
-	hasChange := false
-	if d.HasChange("name") {
-		log.Printf("[DEBUG]  citrixadc-provider: Name has changed for ipset %s, starting update", ipsetName)
-		ipset.Name = d.Get("name").(string)
-		hasChange = true
-	}
-	if d.HasChange("td") {
-		log.Printf("[DEBUG]  citrixadc-provider: Td has changed for ipset %s, starting update", ipsetName)
-		ipset.Td = d.Get("td").(int)
-		hasChange = true
-	}
-	
-
-	if hasChange {
-		_, err := client.UpdateResource(netscaler.Ipset.Type(), ipsetName, &ipset)
-		if err != nil {
-			return fmt.Errorf("Error updating ipset %s", ipsetName)
-		}
-	}
-	return readIpsetFunc(d, meta)
 }
 
 func deleteIpsetFunc(d *schema.ResourceData, meta interface{}) error {
@@ -128,5 +102,81 @@ func deleteIpsetFunc(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId("")
 
+	return nil
+}
+
+func deleteSingleIpsetNsipBinding(d *schema.ResourceData, meta interface{}, nsip string) error {
+	log.Printf("[DEBUG]  citrixadc-provider: In deleteSingleIpsetNsipBinding")
+	client := meta.(*NetScalerNitroClient).client
+
+	name := d.Get("name").(string)
+	args := make([]string, 0, 1)
+
+	s := fmt.Sprintf("ipaddress:%s", nsip)
+	args = append(args, s)
+
+	log.Printf("args is %v", args)
+
+	if err := client.DeleteResourceWithArgs("ipset_nsip_binding", name, args); err != nil {
+		log.Printf("[DEBUG]  citrixadc-provider: Error deleting nsip binding %v\n", nsip)
+		return err
+	}
+
+	return nil
+}
+
+func addSingleIpsetNsipBinding(d *schema.ResourceData, meta interface{}, nsip string) error {
+	log.Printf("[DEBUG]  citrixadc-provider: In addSingleIpsetNsipBinding")
+	client := meta.(*NetScalerNitroClient).client
+
+	bindingStruct := network.Ipsetnsipbinding{}
+	bindingStruct.Name = d.Get("name").(string)
+	bindingStruct.Ipaddress = nsip
+
+	// We need to do a HTTP PUT hence the UpdateResource
+	if _, err := client.UpdateResource("ipset_nsip_binding", bindingStruct.Name, bindingStruct); err != nil {
+		return err
+	}
+	return nil
+}
+
+func updateIpsetNsipBindings(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[DEBUG]  citrixadc-provider: In updateIpsetNsipBindings")
+	oldSet, newSet := d.GetChange("nsipbinding")
+	log.Printf("[DEBUG]  citrixadc-provider: oldSet %v\n", oldSet)
+	log.Printf("[DEBUG]  citrixadc-provider: newSet %v\n", newSet)
+	remove := oldSet.(*schema.Set).Difference(newSet.(*schema.Set))
+	add := newSet.(*schema.Set).Difference(oldSet.(*schema.Set))
+	for _, nsip := range remove.List() {
+		if err := deleteSingleIpsetNsipBinding(d, meta, nsip.(string)); err != nil {
+			return err
+		}
+	}
+
+	for _, nsip := range add.List() {
+		if err := addSingleIpsetNsipBinding(d, meta, nsip.(string)); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func readIpsetNsipBindings(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[DEBUG]  citrixadc-provider: In readIpsetNsipBindings")
+	client := meta.(*NetScalerNitroClient).client
+	name := d.Get("name").(string)
+	bindings, _ := client.FindResourceArray("ipset_nsip_binding", name)
+	log.Printf("bindings %v\n", bindings)
+
+	processedBindings := make([]interface{}, len(bindings))
+	for i, val := range bindings {
+		processedBindings[i] = val["ipaddress"].(string)
+	}
+
+	updatedSet := processedBindings
+	log.Printf("updatedSet %v\n", updatedSet)
+	if err := d.Set("nsipbinding", updatedSet); err != nil {
+		return err
+	}
 	return nil
 }
