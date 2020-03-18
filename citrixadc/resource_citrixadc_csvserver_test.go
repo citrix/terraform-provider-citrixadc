@@ -17,12 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
+	"os"
+	"testing"
+
 	"github.com/chiradeep/go-nitro/config/cs"
 	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"os"
-	"testing"
 )
 
 func TestAccCsvserver_basic(t *testing.T) {
@@ -275,6 +276,69 @@ func TestAccCsvserver_enable_disable(t *testing.T) {
 					testAccCheckCsvserverExist("citrixadc_csvserver.tf_test_acc_csvserver", nil),
 					resource.TestCheckResourceAttr("citrixadc_csvserver.tf_test_acc_csvserver", "state", "ENABLED"),
 				),
+			},
+		},
+	})
+}
+
+const testAccCsvserver_binding_add = `
+	resource "citrixadc_csvserver" "testbindingfoo" {
+		ipv46       = "10.10.10.22"
+		name        = "testAccCsVserver"
+		port        = 80
+		servicetype = "HTTP"
+
+		lbvserverbinding = citrixadc_lbvserver.test_lbvserver_old.name
+	}
+	resource "citrixadc_lbvserver" "test_lbvserver_old" {
+		ipv46       = "10.10.10.33"
+		name        = "testAccLbVserver_old"
+		port        = 80
+		servicetype = "HTTP"
+	}
+	resource "citrixadc_lbvserver" "test_lbvserver_new" {
+		ipv46       = "10.10.10.44"
+		name        = "testAccLbVserver_new"
+		port        = 80
+		servicetype = "HTTP"
+	  }
+`
+const testAccCsvserver_binding_update = `
+	resource "citrixadc_csvserver" "testbindingfoo" {
+		ipv46       = "10.10.10.22"
+		name        = "testAccCsVserver"
+		port        = 80
+		servicetype = "HTTP"
+
+		lbvserverbinding = citrixadc_lbvserver.test_lbvserver_new.name
+	}
+	resource "citrixadc_lbvserver" "test_lbvserver_old" {
+		ipv46       = "10.10.10.33"
+		name        = "testAccLbVserver_old"
+		port        = 80
+		servicetype = "HTTP"
+	}
+	resource "citrixadc_lbvserver" "test_lbvserver_new" {
+		ipv46       = "10.10.10.44"
+		name        = "testAccLbVserver_new"
+		port        = 80
+		servicetype = "HTTP"
+	  }
+`
+
+func TestAccCsvserver_lbvserverbinding(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCsvserverDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccCsvserver_binding_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCsvserverExist("citrixadc_csvserver.testbindingfoo", nil)),
+			},
+			resource.TestStep{
+				Config: testAccCsvserver_binding_update,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCsvserverExist("citrixadc_csvserver.testbindingfoo", nil)),
 			},
 		},
 	})

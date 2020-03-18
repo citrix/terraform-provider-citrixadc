@@ -364,6 +364,10 @@ func resourceCitrixAdcCsvserver() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"lbvserverbinding": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -501,6 +505,25 @@ func createCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	lbVserver, lbok := d.GetOk("lbvserverbinding")
+	if lbok { //LBvserver binding is specified
+		lbVserverName := lbVserver.(string)
+		log.Printf("Adding binding to lbvserver %s", lbVserverName)
+
+		bindingStruct := cs.Csvserverlbvserverbinding{
+			Name:      d.Get("name").(string),
+			Lbvserver: lbVserverName,
+		}
+		log.Printf("[INFO] netscaler-provider:  Binding lbvserver %s to csvserver %s", lbVserverName, csvserverName)
+
+		err := client.BindResource(netscaler.Csvserver.Type(), csvserverName, netscaler.Lbvserver.Type(), lbVserverName, &bindingStruct)
+		if err != nil {
+			log.Printf("[ERROR] netscaler-provider:  Failed to bind lbvserver %s to csvserver %s", lbVserverName, csvserverName)
+			return fmt.Errorf("[ERROR] netscaler-provider:  Failed to bind lbvserver %s to csvserver %s", lbVserverName, csvserverName)
+		}
+		log.Printf("[DEBUG] netscaler-provider: lbvserver %s has been bound to csvserver %s", lbVserverName, csvserverName)
+	}
+
 	d.SetId(csvserverName)
 
 	err = readCsvserverFunc(d, meta)
@@ -608,6 +631,11 @@ func readCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 
 	setCipherData(d, meta, csvserverName)
 
+	// Read Lbvserver binding
+	lbbinding, _ := client.FindResource("csvserver_lbvserver_binding", csvserverName)
+	log.Printf("binding %v\n", lbbinding)
+	d.Set("lbvserverbinding", lbbinding["lbvserver"])
+
 	return nil
 
 }
@@ -625,6 +653,8 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	sslcertkeyChanged := false
 	sslprofileChanged := false
 	ciphersChanged := false
+	lbvserverbindingChanged := false
+
 	if d.HasChange("appflowlog") {
 		log.Printf("[DEBUG] netscaler-provider:  Appflowlog has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Appflowlog = d.Get("appflowlog").(string)
@@ -961,6 +991,10 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] netscaler-provider:  ciphers have changed %s, starting update", csvserverName)
 		ciphersChanged = true
 	}
+	if d.HasChange("lbvserverbinding") {
+		log.Printf("[DEBUG] netscaler-provider:  LB Vserver binding has changed for csvserver %s, starting update", csvserverName)
+		lbvserverbindingChanged = true
+	}
 
 	sslcertkey := d.Get("sslcertkey")
 	sslcertkeyName := sslcertkey.(string)
@@ -977,7 +1011,20 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 			log.Printf("[DEBUG] netscaler-provider: sslcertkey has been unbound from csvserver for sslcertkey %s ", oldSslcertkeyName)
 		}
 	}
+	if lbvserverbindingChanged {
+		// Binding need to be updated
+		// first unbind old lbvserver from csvserver
+		oldLbVserver, _ := d.GetChange("lbvserverbinding")
+		oldLbVserverName := oldLbVserver.(string)
 
+		if oldLbVserverName != "" {
+			err := client.UnbindResource(netscaler.Csvserver.Type(), csvserverName, netscaler.Lbvserver.Type(), oldLbVserverName, "lbvserver")
+			if err != nil {
+				return fmt.Errorf("[ERROR] netscaler-provider: Error unbinding lbvserver %s from csvserver %s", oldLbVserverName, csvserverName)
+			}
+			log.Printf("[DEBUG] netscaler-provider: lbvserver %s has been unbound from csvserver %s ", oldLbVserverName, csvserverName)
+		}
+	}
 	if hasChange {
 		_, err := client.UpdateResource(netscaler.Csvserver.Type(), csvserverName, &csvserver)
 		if err != nil {
@@ -1001,7 +1048,23 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		}
 		log.Printf("[DEBUG] netscaler-provider: new ssl cert has been bound to csvserver  sslcertkey %s csvserver %s", sslcertkeyName, csvserverName)
 	}
-
+	newLbvserver := d.Get("lbvserverbinding")
+	newLbvserverName := newLbvserver.(string)
+	if lbvserverbindingChanged && newLbvserverName != "" {
+		//Binding has to be updated
+		//rebind
+		bindingStruct := cs.Csvserverlbvserverbinding{
+			Name:      csvserverName,
+			Lbvserver: newLbvserverName,
+		}
+		log.Printf("[INFO] netscaler-provider:  Binding lbvserver %s to csvserver %s", newLbvserverName, csvserverName)
+		err := client.BindResource(netscaler.Csvserver.Type(), csvserverName, netscaler.Lbvserver.Type(), newLbvserverName, &bindingStruct)
+		if err != nil {
+			log.Printf("[ERROR] netscaler-provider:  Failed to bind lbvserver %s to csvserver %s", newLbvserverName, csvserverName)
+			return fmt.Errorf("[ERROR] netscaler-provider:  Failed to bind lbvserver %s to csvserver %s", newLbvserverName, csvserverName)
+		}
+		log.Printf("[DEBUG] netscaler-provider: new lbvserver %s has been bound to csvserver %s", newLbvserverName, csvserverName)
+	}
 	sslprofile := d.Get("sslprofile")
 	if sslprofileChanged {
 		sslprofileName := sslprofile.(string)
