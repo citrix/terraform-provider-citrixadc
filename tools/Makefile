@@ -14,7 +14,7 @@
 
 GENERATED_PKGS=$(shell go list ./... )
 
-JSON_DIR = ../vendor/github.com/chiradeep/go-nitro/jsonconfig
+JSON_DIR = ../../../chiradeep/go-nitro/jsonconfig
 SCHEMA_EXEC = generate_schema
 
 default: build 
@@ -63,6 +63,12 @@ schema_only:
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/rewrite/rewritepolicylabel.json
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/cs/csvserver_rewritepolicy_binding.json
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/lb/lbvserver_rewritepolicy_binding.json
+	@# Cluster
+	./$(SCHEMA_EXEC) -i $(JSON_DIR)/cluster/clusterinstance.json
+	./$(SCHEMA_EXEC) -i $(JSON_DIR)/cluster/clusternode.json
+	./$(SCHEMA_EXEC) -i $(JSON_DIR)/cluster/cluster.json
+	./$(SCHEMA_EXEC) -i $(JSON_DIR)/cluster/clusterfiles.json
+	
 
 
 schema: schema_only fmt

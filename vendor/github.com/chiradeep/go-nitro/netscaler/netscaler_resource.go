@@ -18,13 +18,32 @@ package netscaler
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"strings"
 )
+
+// Idempotent flag can't be added for these resources
+var idempotentInvalidResources = []string{"login", "logout", "reboot", "shutdown", "ping", "ping6", "traceroute", "traceroute6", "install"}
+
+const (
+	nsErrSessionExpired = 444
+	nsErrAuthTimeout    = 1027
+)
+
+func contains(slice []string, val string) bool {
+	for _, item := range slice {
+		if strings.EqualFold(item, val) {
+			return true
+		}
+	}
+	return false
+}
 
 type responseHandlerFunc func(resp *http.Response) ([]byte, error)
 
@@ -96,16 +115,30 @@ func readResponseHandler(resp *http.Response) ([]byte, error) {
 	}
 }
 
-func (c *NitroClient) createHTTPRequest(method string, url string, buff *bytes.Buffer) (*http.Request, error) {
-	req, err := http.NewRequest(method, url, buff)
+func (c *NitroClient) createHTTPRequest(method string, urlstr string, buff *bytes.Buffer) (*http.Request, error) {
+	req, err := http.NewRequest(method, urlstr, buff)
 	if err != nil {
 		return nil, err
 	}
+	// Get resourceType from url
+	u, err := url.Parse(urlstr)
+	if err != nil {
+		return nil, err
+	}
+	splitStrings := strings.Split(u.Path, "/")
+	resourceType := splitStrings[len(splitStrings)-1]
+
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Content-Type", "application/json")
 	if c.proxiedNs == "" {
-		req.Header.Set("X-NITRO-USER", c.username)
-		req.Header.Set("X-NITRO-PASS", c.password)
+		if c.IsLoggedIn() {
+			req.Header.Set("Set-Cookie", "NITRO_AUTH_TOKEN="+c.getSessionid())
+		} else {
+			if resourceType != "login" {
+				req.Header.Set("X-NITRO-USER", c.username)
+				req.Header.Set("X-NITRO-PASS", c.password)
+			}
+		}
 	} else {
 		req.SetBasicAuth(c.username, c.password)
 		req.Header.Set("_MPS_API_PROXY_MANAGED_INSTANCE_IP", c.proxiedNs)
@@ -113,8 +146,8 @@ func (c *NitroClient) createHTTPRequest(method string, url string, buff *bytes.B
 	return req, nil
 }
 
-func (c *NitroClient) doHTTPRequest(method string, url string, bytes *bytes.Buffer, respHandler responseHandlerFunc) ([]byte, error) {
-	req, err := c.createHTTPRequest(method, url, bytes)
+func (c *NitroClient) doHTTPRequest(method string, urlstr string, bytes *bytes.Buffer, respHandler responseHandlerFunc) ([]byte, error) {
+	req, err := c.createHTTPRequest(method, urlstr, bytes)
 
 	resp, err := c.client.Do(req)
 	if resp != nil {
@@ -124,7 +157,22 @@ func (c *NitroClient) doHTTPRequest(method string, url string, bytes *bytes.Buff
 		return []byte{}, err
 	}
 	log.Println("[DEBUG] go-nitro: response Status:", resp.Status)
-	return respHandler(resp)
+	body, err := respHandler(resp)
+	// Clear sessionid in case of session-expiry
+	if resp.Status == "401 Unauthorized" {
+		var data map[string]interface{}
+		err2 := json.Unmarshal(body, &data)
+		if err2 == nil {
+			errorcode, ok := data["errorcode"]
+			if ok {
+				errorcode = int(errorcode.(float64))
+				if errorcode == nsErrSessionExpired || errorcode == nsErrAuthTimeout {
+					c.clearSessionid()
+				}
+			}
+		}
+	}
+	return body, err
 }
 
 func (c *NitroClient) createResource(resourceType string, resourceJSON []byte) ([]byte, error) {
@@ -132,7 +180,7 @@ func (c *NitroClient) createResource(resourceType string, resourceJSON []byte) (
 
 	url := c.url + resourceType
 
-	if !strings.HasSuffix(resourceType, "_binding") {
+	if !strings.HasSuffix(resourceType, "_binding") && !contains(idempotentInvalidResources, resourceType) {
 		url = url + "?idempotent=yes"
 	}
 	log.Println("[TRACE] go-nitro: url is ", url)

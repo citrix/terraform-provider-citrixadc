@@ -24,6 +24,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 //NitroParams encapsulates options to create a NitroClient
@@ -33,17 +34,21 @@ type NitroParams struct {
 	Password  string
 	ProxiedNs string
 	SslVerify bool
+	Timeout   int
 }
 
 //NitroClient has methods to configure the NetScaler
 //It abstracts the REST operations of the NITRO API
 type NitroClient struct {
-	url       string
-	statsURL  string
-	username  string
-	password  string
-	proxiedNs string
-	client    *http.Client
+	url          string
+	statsURL     string
+	username     string
+	password     string
+	proxiedNs    string
+	client       *http.Client
+	sessionidMux sync.RWMutex
+	sessionid    string
+	timeout      int
 }
 
 //NewNitroClient returns a usable NitroClient. Does not check validity of supplied parameters
@@ -56,6 +61,8 @@ func NewNitroClient(url string, username string, password string) *NitroClient {
 	c.username = username
 	c.password = password
 	c.client = &http.Client{}
+	c.sessionid = ""
+	c.timeout = 0
 	return c
 }
 
@@ -74,6 +81,8 @@ func NewNitroClientFromParams(params NitroParams) (*NitroClient, error) {
 	c.username = params.Username
 	c.password = params.Password
 	c.proxiedNs = params.ProxiedNs
+	c.sessionid = ""
+	c.timeout = params.Timeout
 	if params.SslVerify {
 		c.client = &http.Client{}
 	} else {
@@ -105,12 +114,22 @@ func NewNitroClientFromEnv() (*NitroClient, error) {
 			return nil, fmt.Errorf("Could not parse env variable NS_SSLVERIFY: valid values are true and false")
 		}
 	}
+	timeoutStr := os.Getenv("NS_TIMEOUT")
+	timeout := 0
+	if timeoutStr != "" {
+		var err error
+		timeout, err = strconv.Atoi(timeoutStr)
+		if err != nil {
+			return nil, fmt.Errorf("Could not parse env variable NS_TIMEOUT: integer value is expected")
+		}
+	}
 	nitroParams := NitroParams{
 		Url:       url,
 		Username:  username,
 		Password:  password,
 		ProxiedNs: proxiedNs,
 		SslVerify: sslVerify,
+		Timeout:   timeout,
 	}
 	return NewNitroClientFromParams(nitroParams)
 }

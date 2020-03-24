@@ -604,6 +604,8 @@ const (
 	Linkset_binding
 	Linkset_channel_binding
 	Linkset_interface_binding
+	Login
+	Logout
 	Nat64
 	Nd6
 	Nd6ravariables
@@ -1635,6 +1637,8 @@ var resources = []string{
 	"linkset_binding",
 	"linkset_channel_binding",
 	"linkset_interface_binding",
+	"login",
+	"logout",
 	"nat64",
 	"nd6",
 	"nd6ravariables",
