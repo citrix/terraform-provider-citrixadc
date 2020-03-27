@@ -27,13 +27,12 @@ func TestAccCsaction_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-                CheckDestroy: testAccCheckCsactionDestroy,
+		CheckDestroy: testAccCheckCsactionDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-                                Config: testAccCsaction_basic,
+				Config: testAccCsaction_basic,
 				Check: resource.ComposeTestCheckFunc(
-                                        testAccCheckCsactionExist("citrixadc_csaction.foo", nil),
-                                        
+					testAccCheckCsactionExist("citrixadc_csaction.foo", nil),
 				),
 			},
 		},
@@ -60,7 +59,7 @@ func testAccCheckCsactionExist(n string, id *string) resource.TestCheckFunc {
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-                data, err := nsClient.FindResource(netscaler.Csaction.Type(), rs.Primary.ID)
+		data, err := nsClient.FindResource(netscaler.Csaction.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -78,7 +77,7 @@ func testAccCheckCsactionDestroy(s *terraform.State) error {
 	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
 
 	for _, rs := range s.RootModule().Resources {
-                if rs.Type != "citrixadc_csaction" {
+		if rs.Type != "citrixadc_csaction" {
 			continue
 		}
 
@@ -86,7 +85,7 @@ func testAccCheckCsactionDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-                _, err := nsClient.FindResource(netscaler.Csaction.Type(), rs.Primary.ID)
+		_, err := nsClient.FindResource(netscaler.Csaction.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("LB vserver %s still exists", rs.Primary.ID)
 		}

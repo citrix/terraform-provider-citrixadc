@@ -12,6 +12,13 @@ jobs:
          path: /home/circleci/.go_workspace/src/github.com/citrix/terraform-provider-citrixadc/
 
      - run:
+         name: Golang update
+         command: |
+           curl https://dl.google.com/go/go1.14.1.linux-amd64.tar.gz -o /var/tmp/golang.tar.gz
+           sudo rm -rf /usr/local/go
+           sudo tar -C /usr/local -xzf /var/tmp/golang.tar.gz
+
+     - run:
          name: Build
          command: |
            go version

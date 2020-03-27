@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"sort"
 	"strings"
 )
 
@@ -31,6 +32,15 @@ func JSONMarshal(t interface{}) ([]byte, error) {
 	encoder.SetEscapeHTML(false)
 	err := encoder.Encode(t)
 	return buffer.Bytes(), err
+}
+
+type FindParams struct {
+	ArgsMap                  map[string]string
+	FilterMap                map[string]string
+	AttrsMap                 map[string]string
+	ResourceType             string
+	ResourceName             string
+	ResourceMissingErrorCode int
 }
 
 type login struct {
@@ -56,6 +66,73 @@ func (c *NitroClient) getSessionid() string {
 	c.sessionidMux.RLock()
 	defer c.sessionidMux.RUnlock()
 	return c.sessionid
+}
+
+func constructQueryString(findParams *FindParams) string {
+	// Query string parameters
+	var queryBuilder strings.Builder
+	concatQueryString(&queryBuilder, constructQueryMapString("args=", findParams.ArgsMap))
+	concatQueryString(&queryBuilder, constructQueryMapString("filter=", findParams.FilterMap))
+	concatQueryString(&queryBuilder, constructQueryMapString("attrs=", findParams.AttrsMap))
+
+	return queryBuilder.String()
+}
+
+func constructQueryMapString(prefix string, queryMap map[string]string) string {
+	// Early retrun for empty map
+	if len(queryMap) == 0 {
+		return ""
+	}
+	var queryBuilder strings.Builder
+	queryBuilder.WriteString(prefix)
+	keys := make([]string, 0, len(queryMap))
+	for k, _ := range queryMap {
+		keys = append(keys, k)
+	}
+	// Make it deterministic for testing's sake
+	sort.Strings(keys)
+	lastIndex := len(keys) - 1
+	log.Printf("[DEBUG] lastindex %v", lastIndex)
+
+	for i, k := range keys {
+		v := queryMap[k]
+		log.Printf("i %v", i)
+		if i < lastIndex {
+			queryBuilder.WriteString(fmt.Sprintf("%s:%s,", k, v))
+		} else {
+			queryBuilder.WriteString(fmt.Sprintf("%s:%s", k, v))
+		}
+	}
+
+	return queryBuilder.String()
+}
+
+func concatQueryString(b *strings.Builder, queryString string) {
+	// Early return for empty query string
+	if len(queryString) == 0 {
+		return
+	}
+
+	// Fallthrough to processing
+
+	if b.Len() == 0 {
+		b.WriteString("?")
+	} else {
+		b.WriteString("&")
+	}
+	b.WriteString(queryString)
+}
+
+func constructUrlPathString(findParams *FindParams) string {
+	var urlBuilder strings.Builder
+	urlBuilder.WriteString(findParams.ResourceType)
+	if findParams.ResourceName != "" {
+		if urlBuilder.Len() > 0 {
+			urlBuilder.WriteString("/")
+		}
+		urlBuilder.WriteString(findParams.ResourceName)
+	}
+	return urlBuilder.String()
 }
 
 // IsLoggedIn tells if user is already logged in
@@ -417,6 +494,116 @@ func (c *NitroClient) FindResource(resourceType string, resourceName string) (ma
 		log.Printf("[WARN] go-nitro: FindResource Unable to determine type of response")
 		return nil, fmt.Errorf("[INFO] go-nitro: FindResource: Unable to determine type of response")
 	}
+}
+
+// This is meant to be a generic and extendable function to implement all the possible GET methods NITRO will allow.
+// Extensibility comes from the use of the FindParams
+// Adding fields and handling them inside this function should suffice for any future need.
+// When no error is returned the result will always be an array
+// An empty array means the resource does not exist
+// A single element array means there was only one result
+// Multiple elements array means NITRO returned multiple results
+// It is left to the user to determine the sanity of the return value
+func (c *NitroClient) FindResourceArrayWithParams(findParams FindParams) ([]map[string]interface{}, error) {
+
+	// Construct the url
+	var urlBuilder strings.Builder
+
+	// Prefix from nitro client
+	urlBuilder.WriteString(c.url)
+
+	// Path from params
+	pathStr := constructUrlPathString(&findParams)
+	urlBuilder.WriteString(pathStr)
+
+	// Query string from params
+	queryStr := constructQueryString(&findParams)
+	urlBuilder.WriteString(queryStr)
+
+	url := urlBuilder.String()
+
+	log.Printf("[TRACE] go-nitro: url is %s", url)
+	result, httpErr := c.doHTTPRequest("GET", url, bytes.NewBuffer([]byte{}), readResponseHandler)
+	log.Printf("result %v", string(result))
+
+	// Ignore 404.
+	// We need to parse the NITRO errorcode value to determine if this is an actual error
+	if httpErr != nil {
+		if !strings.Contains(httpErr.Error(), "404") {
+			return nil, httpErr
+		} else {
+			log.Printf("[DEBUG] go-nitro: FindResource: Ignoring 404 http status. %s", httpErr.Error())
+		}
+	}
+
+	var jsonData interface{}
+
+	err := json.Unmarshal(result, &jsonData)
+	if err != nil {
+		return nil, fmt.Errorf("[ERROR] go-nitro: FindResourceWithParams: JSON unmarshal error: %s", err.Error())
+	}
+
+	nitroData, ok := jsonData.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("[ERROR] go-nitro: FindResourceWithParams: Type assertion map[string]interface{} does not hold. Actual type %T", jsonData)
+	}
+
+	// Get error code from nitro resource
+	errorcode, errok := nitroData["errorcode"]
+	if !errok {
+		return nil, fmt.Errorf("[ERROR] go-nitro: FindResourceWithParams: there is no error code in nitro response")
+	}
+
+	errorcode = int(errorcode.(float64))
+
+	emptyRetval := make([]map[string]interface{}, 0)
+
+	// Resource missing errorcode returned
+	missingErrcode := findParams.ResourceMissingErrorCode
+	if missingErrcode != 0 && missingErrcode == errorcode {
+		log.Printf("[DEBUG] go-nitro: FindResourceArrayWithParams: resource missing error code returned %d", errorcode)
+		return emptyRetval, nil
+	}
+	// Fallthrough
+
+	if errorcode != 0 {
+		return nil, fmt.Errorf("[ERROR] go-nitro: FindResourceWithParams: non zero errorcode %d", errorcode)
+	}
+	// Fallthrough
+
+	// Check if resource type key exists
+	resourceData, ok := nitroData[findParams.ResourceType]
+	if !ok {
+		// Since errorcode is 0 we persume this is the expected behavior for a missing resource
+		log.Printf("[DEBUG] go-nitro: FindResourceArrayWithParams: resource key missing %s.", findParams.ResourceType)
+		return emptyRetval, nil
+	}
+	// Falthrough
+
+	log.Printf("[DEBUG] go-nitro: FindResourceWithParams: retrieved NITRO object: %v", resourceData)
+
+	// resource data assertion
+	resourceArray, arrayOk := resourceData.([]interface{})
+	resourceMap, mapOk := resourceData.(map[string]interface{})
+
+	if arrayOk {
+		retVal := make([]map[string]interface{}, 0, len(resourceArray))
+		for _, v := range resourceArray {
+			val := v.(map[string]interface{})
+			retVal = append(retVal, val)
+		}
+		return retVal, nil
+	}
+
+	if mapOk {
+		retVal := make([]map[string]interface{}, 0, 1)
+		retVal = append(retVal, resourceMap)
+		return retVal, nil
+
+	}
+	// Fallthrough to error condition
+	return nil, fmt.Errorf("[ERROR] go-nitro: FindResourceWithParams: Cannot handle returned NITRO resource data type %T", resourceData)
+
 }
 
 //FindAllResources finds all config objects of the supplied resource type and returns them in an array

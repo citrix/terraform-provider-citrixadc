@@ -68,6 +68,8 @@ schema_only:
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/cluster/clusternode.json
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/cluster/cluster.json
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/cluster/clusterfiles.json
+	@# system
+	./$(SCHEMA_EXEC) -i $(JSON_DIR)/system/systemfile.json
 	
 
 

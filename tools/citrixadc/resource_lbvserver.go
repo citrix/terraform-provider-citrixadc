@@ -19,6 +19,11 @@ func resourceCitrixAdcLbvserver() *schema.Resource {
 		Update:        updateLbvserverFunc,
 		Delete:        deleteLbvserverFunc,
 		Schema: map[string]*schema.Schema{
+			"adfsproxyprofile": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"appflowlog": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -514,6 +519,7 @@ func createLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		d.Set("name", lbvserverName)
 	}
 	lbvserver := lb.Lbvserver{
+		Adfsproxyprofile:                   d.Get("adfsproxyprofile").(string),
 		Appflowlog:                         d.Get("appflowlog").(string),
 		Authentication:                     d.Get("authentication").(string),
 		Authenticationhost:                 d.Get("authenticationhost").(string),
@@ -639,6 +645,7 @@ func readLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	d.Set("name", data["name"])
+	d.Set("adfsproxyprofile", data["adfsproxyprofile"])
 	d.Set("appflowlog", data["appflowlog"])
 	d.Set("authentication", data["authentication"])
 	d.Set("authenticationhost", data["authenticationhost"])
@@ -749,6 +756,11 @@ func updateLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		Name: d.Get("name").(string),
 	}
 	hasChange := false
+	if d.HasChange("adfsproxyprofile") {
+		log.Printf("[DEBUG]  citrixadc-provider: Adfsproxyprofile has changed for lbvserver %s, starting update", lbvserverName)
+		lbvserver.Adfsproxyprofile = d.Get("adfsproxyprofile").(string)
+		hasChange = true
+	}
 	if d.HasChange("appflowlog") {
 		log.Printf("[DEBUG]  citrixadc-provider: Appflowlog has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Appflowlog = d.Get("appflowlog").(string)
