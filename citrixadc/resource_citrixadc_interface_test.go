@@ -24,6 +24,9 @@ import (
 )
 
 func TestAccInterface_basic(t *testing.T) {
+	if isCpxRun {
+		t.Skip("skipping test CPX has different interface numbering")
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,

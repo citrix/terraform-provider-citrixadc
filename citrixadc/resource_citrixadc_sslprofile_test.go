@@ -76,6 +76,9 @@ const testAccSslprofile_ecccurvebinding_unbind = `
 `
 
 func TestAccSslprofile_ecccurve_binding(t *testing.T) {
+	if isCpxRun {
+		t.Skip("Operation not permitted under CPX")
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -117,6 +120,11 @@ const testAccSslprofile_cipherbinding_unbind = `
 `
 
 func TestAccSslprofile_cipher_binding(t *testing.T) {
+
+	if isCpxRun {
+		t.Skip("Operation not permitted under CPX")
+	}
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,

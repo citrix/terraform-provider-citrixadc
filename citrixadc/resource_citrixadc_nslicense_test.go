@@ -23,6 +23,9 @@ import (
 )
 
 func TestAccNslicense_basic(t *testing.T) {
+	if isCpxRun {
+		t.Skip("ssh does not work correctly with CPX")
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
