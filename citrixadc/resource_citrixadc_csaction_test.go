@@ -88,6 +88,7 @@ resource "citrixadc_lbvserver" "tf_image_lb" {
 }
 
 `
+
 func TestAccCsaction_create_update(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -96,7 +97,7 @@ func TestAccCsaction_create_update(t *testing.T) {
 		Steps: []resource.TestStep{
 			resource.TestStep{
 				Config: testAccCsaction_create,
-				Check:  resource.ComposeTestCheckFunc(
+				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCsactionExist("citrixadc_csaction.foo", nil),
 					resource.TestCheckResourceAttr("citrixadc_csaction.foo", "name", "tf_test_csaction"),
 					resource.TestCheckResourceAttr("citrixadc_csaction.foo", "targetlbvserver", "image_lb"),
@@ -104,7 +105,7 @@ func TestAccCsaction_create_update(t *testing.T) {
 			},
 			resource.TestStep{
 				Config: testAccCsaction_update,
-				Check:  resource.ComposeTestCheckFunc(
+				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCsactionExist("citrixadc_csaction.foo", nil),
 					resource.TestCheckResourceAttr("citrixadc_csaction.foo", "name", "tf_test_csaction"),
 					resource.TestCheckResourceAttr("citrixadc_csaction.foo", "targetlbvserver", "video_lb"),
@@ -122,7 +123,7 @@ func TestAccCsaction_create_update_name(t *testing.T) {
 		Steps: []resource.TestStep{
 			resource.TestStep{
 				Config: testAccCsaction_create,
-				Check:  resource.ComposeTestCheckFunc(
+				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCsactionExist("citrixadc_csaction.foo", nil),
 					resource.TestCheckResourceAttr("citrixadc_csaction.foo", "name", "tf_test_csaction"),
 					resource.TestCheckResourceAttr("citrixadc_csaction.foo", "targetlbvserver", "image_lb"),
@@ -130,7 +131,7 @@ func TestAccCsaction_create_update_name(t *testing.T) {
 			},
 			resource.TestStep{
 				Config: testAccCsaction_update_name,
-				Check:  resource.ComposeTestCheckFunc(
+				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCsactionExist("citrixadc_csaction.foo", nil),
 					resource.TestCheckResourceAttr("citrixadc_csaction.foo", "name", "tf_test_csaction_newname"),
 					resource.TestCheckResourceAttr("citrixadc_csaction.foo", "targetlbvserver", "image_lb"),

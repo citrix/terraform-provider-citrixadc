@@ -23,6 +23,9 @@ import (
 )
 
 func TestAccClusterfilessyncer_basic(t *testing.T) {
+	if isCpxRun {
+		t.Skip("clustering not supported in CPX")
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,

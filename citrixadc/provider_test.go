@@ -2,6 +2,7 @@ package citrixadc
 
 import (
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/schema"
@@ -11,11 +12,16 @@ import (
 var testAccProviders map[string]terraform.ResourceProvider
 var testAccProvider *schema.Provider
 
+var isCpxRun bool
+
 func init() {
 	testAccProvider = Provider().(*schema.Provider)
 	testAccProviders = map[string]terraform.ResourceProvider{
 		"citrixadc": testAccProvider,
 	}
+
+	nsUrl := os.Getenv("NS_URL")
+	isCpxRun = strings.Contains(nsUrl, "localhost")
 }
 
 func TestProvider(t *testing.T) {

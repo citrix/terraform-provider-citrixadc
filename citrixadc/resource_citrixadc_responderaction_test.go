@@ -21,7 +21,6 @@ import (
 	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"os"
 	"strings"
 	"testing"
 )
@@ -56,8 +55,7 @@ func TestAccResponderaction_basic(t *testing.T) {
 
 func TestAccResponderaction_html(t *testing.T) {
 
-	nsUrl := os.Getenv("NS_URL")
-	if strings.Contains(nsUrl, "localhost") {
+	if isCpxRun {
 		t.Skip("Skipping responder action html test because CPX cannot import responder html page")
 	}
 	resource.Test(t, resource.TestCase{

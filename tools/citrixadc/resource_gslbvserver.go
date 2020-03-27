@@ -144,6 +144,11 @@ func resourceCitrixAdcGslbvserver() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"rule": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"servicename": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -259,6 +264,7 @@ func createGslbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		Persistenceid:          d.Get("persistenceid").(int),
 		Persistencetype:        d.Get("persistencetype").(string),
 		Persistmask:            d.Get("persistmask").(string),
+		Rule:                   d.Get("rule").(string),
 		Servicename:            d.Get("servicename").(string),
 		Servicetype:            d.Get("servicetype").(string),
 		Sitedomainttl:          d.Get("sitedomainttl").(int),
@@ -328,6 +334,7 @@ func readGslbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("persistenceid", data["persistenceid"])
 	d.Set("persistencetype", data["persistencetype"])
 	d.Set("persistmask", data["persistmask"])
+	d.Set("rule", data["rule"])
 	d.Set("servicename", data["servicename"])
 	d.Set("servicetype", data["servicetype"])
 	d.Set("sitedomainttl", data["sitedomainttl"])
@@ -480,6 +487,11 @@ func updateGslbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("persistmask") {
 		log.Printf("[DEBUG]  citrixadc-provider: Persistmask has changed for gslbvserver %s, starting update", gslbvserverName)
 		gslbvserver.Persistmask = d.Get("persistmask").(string)
+		hasChange = true
+	}
+	if d.HasChange("rule") {
+		log.Printf("[DEBUG]  citrixadc-provider: Rule has changed for gslbvserver %s, starting update", gslbvserverName)
+		gslbvserver.Rule = d.Get("rule").(string)
 		hasChange = true
 	}
 	if d.HasChange("servicename") {

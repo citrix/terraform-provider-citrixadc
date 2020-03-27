@@ -82,6 +82,8 @@ github.com/chiradeep/go-nitro v0.0.0-20200317153706-6538481c13af h1:nRP6KQcGu36z
 github.com/chiradeep/go-nitro v0.0.0-20200317153706-6538481c13af/go.mod h1:RIyfAubyIck4tVaQrEiNGW4Y1e6CcTONDnYSX8VktH8=
 github.com/chiradeep/go-nitro v0.0.0-20200324092225-eba9d7e6c0fb h1:VVqxihRFHQ3cTfUL4fx0ZTXkHDZU4HilYnl94oBOGTk=
 github.com/chiradeep/go-nitro v0.0.0-20200324092225-eba9d7e6c0fb/go.mod h1:RIyfAubyIck4tVaQrEiNGW4Y1e6CcTONDnYSX8VktH8=
+github.com/chiradeep/go-nitro v0.0.0-20200327130037-3cdbcde3cf54 h1:nv/gX5nVToTGUrMimI0r5aOwjRRV/QO0uj4IJx6MdGg=
+github.com/chiradeep/go-nitro v0.0.0-20200327130037-3cdbcde3cf54/go.mod h1:RIyfAubyIck4tVaQrEiNGW4Y1e6CcTONDnYSX8VktH8=
 github.com/chzyer/logex v1.1.10/go.mod h1:+Ywpsq7O8HXn0nuIou7OrIPyXbp3wmkHB+jjWRnGsAI=
 github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e/go.mod h1:nSuG5e5PlCu98SY8svDHJxuZscDgtXS6KTTbou5AhLI=
 github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1/go.mod h1:Q3SI9o4m/ZMnBNeIyt5eFwwo7qiLfzFZmjNmxjkiQlU=

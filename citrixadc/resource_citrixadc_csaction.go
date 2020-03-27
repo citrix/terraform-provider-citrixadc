@@ -54,8 +54,8 @@ func createCsactionFunc(d *schema.ResourceData, meta interface{}) error {
 	csactionName := d.Get("name").(string)
 
 	csaction := cs.Csaction{
-		Comment: d.Get("comment").(string),
-		Name:    d.Get("name").(string),
+		Comment:           d.Get("comment").(string),
+		Name:              d.Get("name").(string),
 		Targetlbvserver:   d.Get("targetlbvserver").(string),
 		Targetvserver:     d.Get("targetvserver").(string),
 		Targetvserverexpr: d.Get("targetvserverexpr").(string),

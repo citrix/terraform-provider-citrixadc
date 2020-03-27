@@ -20,26 +20,33 @@ import (
 	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+	"net/url"
 	"testing"
 )
 
-func TestAccCsaction_basic(t *testing.T) {
+func TestAccSystemfile_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckCsactionDestroy,
+		CheckDestroy: testAccCheckSystemfileDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccCsaction_basic,
+				Config: testAccSystemfile_basic_step1,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCsactionExist("citrixadc_csaction.foo", nil),
+					testAccCheckSystemfileExist("citrixadc_systemfile.tf_file", nil, []string{"/var/tmp", "hello.txt"}),
+				),
+			},
+			resource.TestStep{
+				Config: testAccSystemfile_basic_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSystemfileExist("citrixadc_systemfile.tf_file", nil, []string{"/tmp", "helloandbye.txt"}),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckCsactionExist(n string, id *string) resource.TestCheckFunc {
+func testAccCheckSystemfileExist(n string, id *string, pathData []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -58,26 +65,33 @@ func testAccCheckCsactionExist(n string, id *string) resource.TestCheckFunc {
 			*id = rs.Primary.ID
 		}
 
+		argsMap := make(map[string]string)
+		argsMap["filelocation"] = url.QueryEscape(pathData[0])
+		argsMap["filename"] = url.QueryEscape(pathData[1])
+		findParams := netscaler.FindParams{
+			ResourceType: "systemfile",
+			ArgsMap:      argsMap,
+		}
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(netscaler.Csaction.Type(), rs.Primary.ID)
+		dataArray, err := nsClient.FindResourceArrayWithParams(findParams)
 
 		if err != nil {
 			return err
 		}
 
-		if data == nil {
-			return fmt.Errorf("LB vserver %s not found", n)
+		if len(dataArray) == 0 {
+			return fmt.Errorf("systemfile %s not found", n)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckCsactionDestroy(s *terraform.State) error {
+func testAccCheckSystemfileDestroy(s *terraform.State) error {
 	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "citrixadc_csaction" {
+		if rs.Type != "citrixadc_systemfile" {
 			continue
 		}
 
@@ -85,7 +99,7 @@ func testAccCheckCsactionDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(netscaler.Csaction.Type(), rs.Primary.ID)
+		_, err := nsClient.FindResource(netscaler.Systemfile.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("LB vserver %s still exists", rs.Primary.ID)
 		}
@@ -95,11 +109,20 @@ func testAccCheckCsactionDestroy(s *terraform.State) error {
 	return nil
 }
 
-const testAccCsaction_basic = `
+const testAccSystemfile_basic_step1 = `
 
+resource "citrixadc_systemfile" "tf_file" {
+    filename = "hello.txt"
+    filelocation = "/var/tmp"
+    filecontent = "hello"
+}
+`
 
-resource "citrixadc_csaction" "foo" {
-  
+const testAccSystemfile_basic_step2 = `
 
+resource "citrixadc_systemfile" "tf_file" {
+    filename = "helloandbye.txt"
+    filelocation = "/tmp"
+    filecontent = "hello and goodbye"
 }
 `

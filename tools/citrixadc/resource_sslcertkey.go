@@ -34,6 +34,11 @@ func resourceCitrixAdcSslcertkey() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"deletefromdevice": &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
 			"expirymonitor": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -107,6 +112,7 @@ func createSslcertkeyFunc(d *schema.ResourceData, meta interface{}) error {
 		Bundle:             d.Get("bundle").(string),
 		Cert:               d.Get("cert").(string),
 		Certkey:            d.Get("certkey").(string),
+		Deletefromdevice:   d.Get("deletefromdevice").(bool),
 		Expirymonitor:      d.Get("expirymonitor").(string),
 		Fipskey:            d.Get("fipskey").(string),
 		Hsmkey:             d.Get("hsmkey").(string),
@@ -150,6 +156,7 @@ func readSslcertkeyFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("bundle", data["bundle"])
 	d.Set("cert", data["cert"])
 	d.Set("certkey", data["certkey"])
+	d.Set("deletefromdevice", data["deletefromdevice"])
 	d.Set("expirymonitor", data["expirymonitor"])
 	d.Set("fipskey", data["fipskey"])
 	d.Set("hsmkey", data["hsmkey"])
@@ -188,6 +195,11 @@ func updateSslcertkeyFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("certkey") {
 		log.Printf("[DEBUG]  citrixadc-provider: Certkey has changed for sslcertkey %s, starting update", sslcertkeyName)
 		sslcertkey.Certkey = d.Get("certkey").(string)
+		hasChange = true
+	}
+	if d.HasChange("deletefromdevice") {
+		log.Printf("[DEBUG]  citrixadc-provider: Deletefromdevice has changed for sslcertkey %s, starting update", sslcertkeyName)
+		sslcertkey.Deletefromdevice = d.Get("deletefromdevice").(bool)
 		hasChange = true
 	}
 	if d.HasChange("expirymonitor") {
