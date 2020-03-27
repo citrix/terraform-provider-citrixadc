@@ -36,6 +36,7 @@ const testAccSslprofile_update = `
 		ecccurvebindings = []
 	}
 `
+
 func TestAccSslprofile_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -73,6 +74,7 @@ const testAccSslprofile_ecccurvebinding_unbind = `
 		ecccurvebindings = []
 	}
 `
+
 func TestAccSslprofile_ecccurve_binding(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -113,6 +115,7 @@ const testAccSslprofile_cipherbinding_unbind = `
 		ecccurvebindings = []
 	}
 `
+
 func TestAccSslprofile_cipher_binding(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },

@@ -116,10 +116,9 @@ func TestAccIpset_with_bindings(t *testing.T) {
 			},
 			resource.TestStep{
 				Config: testAccIpset_2nd_binding_added,
-				Check: resource.ComposeTestCheckFunc(testAccCheckIpsetExist("citrixadc_ipset.foo", nil),
-					// resource.TestCheckResourceAttr("citrixadc_ipset.foo", "name", "tf_test_ipset"),
-					// resource.TestCheckResourceAttr("citrixadc_ipset.foo", "ipaddress", "[\"1.1.1.1\", \"2.2.2.2\"]"), // list order may vary
-				),
+				Check:  resource.ComposeTestCheckFunc(testAccCheckIpsetExist("citrixadc_ipset.foo", nil)),// resource.TestCheckResourceAttr("citrixadc_ipset.foo", "name", "tf_test_ipset"),
+				// resource.TestCheckResourceAttr("citrixadc_ipset.foo", "ipaddress", "[\"1.1.1.1\", \"2.2.2.2\"]"), // list order may vary
+
 			},
 		},
 	})
