@@ -402,7 +402,7 @@ resource "citrixadc_rewritepolicy" "tf_rewrite_policy" {
 
 	lbvserverbinding {
         name = citrixadc_lbvserver.tf_lbvserver1.name
-        bindpoint = "REQUEST"
+        bindpoint = "RESPONSE"
         priority = 114
         gotopriorityexpression = "END"
 	}
@@ -442,7 +442,7 @@ resource "citrixadc_rewritepolicy" "tf_rewrite_policy" {
 
 	csvserverbinding {
         name = citrixadc_csvserver.tf_csvserver1.name
-        bindpoint = "REQUEST"
+        bindpoint = "RESPONSE"
         priority = 114
         gotopriorityexpression = "END"
 	}
