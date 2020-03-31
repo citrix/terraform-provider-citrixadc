@@ -517,6 +517,10 @@ func readGlobalBinding(d *schema.ResourceData, meta interface{}) error {
 			// Need to convert values to corresponding responderglobal_responderpolicy_binding values
 			log.Printf("labeltype read %v\n", v)
 			if v == "reqvserver" || v == "resvserver" {
+				// Standalone
+				processedBindings[i].(map[string]interface{})["labeltype"] = "vserver"
+			} else if v == "" {
+				// Cluster
 				processedBindings[i].(map[string]interface{})["labeltype"] = "vserver"
 			} else {
 				processedBindings[i].(map[string]interface{})["labeltype"] = v
