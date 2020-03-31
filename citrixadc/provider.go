@@ -16,12 +16,13 @@ limitations under the License.
 package citrixadc
 
 import (
+	"log"
+	"sync"
+
 	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
 	"github.com/hashicorp/terraform/version"
-	"log"
-	"sync"
 )
 
 type NetScalerNitroClient struct {
@@ -84,6 +85,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_csaction":             resourceCitrixAdcCsaction(),
 		"citrixadc_sslcertkey":           resourceCitrixAdcSslcertkey(),
 		"citrixadc_sslprofile":           resourceCitrixAdcSslprofile(),
+		"citrixadc_sslparameter":         resourceCitrixAdcSslparameter(),
 		"citrixadc_lbmonitor":            resourceCitrixAdcLbmonitor(),
 		"citrixadc_servicegroup":         resourceCitrixAdcServicegroup(),
 		"citrixadc_nsacl":                resourceCitrixAdcNsacl(),

@@ -48,6 +48,7 @@ schema_only:
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/basic/servicegroup.json
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/ssl/sslcertkey.json -d certkey
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/ssl/sslprofile.json
+	./$(SCHEMA_EXEC) -i $(JSON_DIR)/ssl/sslparameter.json
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/basic/server.json
 	@# Responder stuff
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/responder/responderpolicy.json
