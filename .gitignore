@@ -9,3 +9,4 @@ tools/tools
 crash.log
 .DS_Store
 dist/
+.vscode/
