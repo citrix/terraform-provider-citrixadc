@@ -1,6 +1,7 @@
 package citrixadc
 
 import (
+	"log"
 	"os"
 	"strings"
 	"testing"
@@ -13,8 +14,10 @@ var testAccProviders map[string]terraform.ResourceProvider
 var testAccProvider *schema.Provider
 
 var isCpxRun bool
+var isCluster bool
 
 func init() {
+	log.Printf("[DEBUG]  citrixadc-provider-test: In init")
 	testAccProvider = Provider().(*schema.Provider)
 	testAccProviders = map[string]terraform.ResourceProvider{
 		"citrixadc": testAccProvider,
@@ -22,6 +25,8 @@ func init() {
 
 	nsUrl := os.Getenv("NS_URL")
 	isCpxRun = strings.Contains(nsUrl, "localhost")
+
+	isCluster = testIsTargetAdcCluster()
 }
 
 func TestProvider(t *testing.T) {
