@@ -364,6 +364,11 @@ func resourceCitrixAdcCsvserver() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"ciphersuites": &schema.Schema{
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"lbvserverbinding": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -480,10 +485,15 @@ func createCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if _, ok := d.GetOk("ciphers"); ok {
+	// Ignore for standalone
+	if isTargetAdcCluster(client) {
 		if err := syncCiphers(d, meta, csvserverName); err != nil {
 			return err
 		}
+	}
+
+	if err := syncCiphersuites(d, meta, csvserverName); err != nil {
+		return err
 	}
 
 	sslprofile, spok := d.GetOk("sslprofile")
@@ -629,7 +639,12 @@ func readCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	dataSsl, _ := client.FindResource(netscaler.Sslvserver.Type(), csvserverName)
 	d.Set("sslprofile", dataSsl["sslprofile"])
 
-	setCipherData(d, meta, csvserverName)
+	// Avoid duplicate listing of ciphersuites in standalone
+	if isTargetAdcCluster(client) {
+		setCipherData(d, meta, csvserverName)
+	}
+
+	setCiphersuiteData(d, meta, csvserverName)
 
 	// Read Lbvserver binding
 	lbbinding, _ := client.FindResource("csvserver_lbvserver_binding", csvserverName)
@@ -653,6 +668,7 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	sslcertkeyChanged := false
 	sslprofileChanged := false
 	ciphersChanged := false
+	ciphersuitesChanged := false
 	lbvserverbindingChanged := false
 
 	if d.HasChange("appflowlog") {
@@ -991,6 +1007,10 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] netscaler-provider:  ciphers have changed %s, starting update", csvserverName)
 		ciphersChanged = true
 	}
+	if d.HasChange("ciphersuites") {
+		log.Printf("[DEBUG] netscaler-provider:  ciphersuites have changed %s, starting update", csvserverName)
+		ciphersuitesChanged = true
+	}
 	if d.HasChange("lbvserverbinding") {
 		log.Printf("[DEBUG] netscaler-provider:  LB Vserver binding has changed for csvserver %s, starting update", csvserverName)
 		lbvserverbindingChanged = true
@@ -1093,8 +1113,15 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if ciphersChanged {
+	// Ignore for standalone
+	if ciphersChanged && isTargetAdcCluster(client) {
 		if err := syncCiphers(d, meta, csvserverName); err != nil {
+			return err
+		}
+	}
+
+	if ciphersuitesChanged {
+		if err := syncCiphersuites(d, meta, csvserverName); err != nil {
 			return err
 		}
 	}

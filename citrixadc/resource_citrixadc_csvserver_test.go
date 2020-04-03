@@ -51,25 +51,99 @@ func TestAccCsvserver_basic(t *testing.T) {
 	})
 }
 
-func TestAccCsvserver_ciphers(t *testing.T) {
+func TestAccCsvserver_standalone_ciphersuites_mixed(t *testing.T) {
+	if isCluster {
+		t.Skip("cluster ADC deployment")
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			// Initial
 			resource.TestStep{
-				Config: testCiphersConfig(templateCsvserverCiphersConfig, []string{"HIGH", "TLS1.2-DHE-RSA-CHACHA20-POLY1305"}),
+				Config: testCiphersuitesConfig(templateCsvserverCiphersConfig, []string{"HIGH", "TLS1.2-DHE-RSA-CHACHA20-POLY1305"}),
 				Check: resource.ComposeTestCheckFunc(
-					testCheckCiphersEqualToActual([]string{"HIGH", "TLS1.2-DHE-RSA-CHACHA20-POLY1305"}, "tf-acc-ciphers-test"),
-					testCheckCiphersConfiguredExpected("citrixadc_csvserver.ciphers", []string{"HIGH", "TLS1.2-DHE-RSA-CHACHA20-POLY1305"}),
+					testCheckCiphersuitesEqualToActual([]string{"HIGH", "TLS1.2-DHE-RSA-CHACHA20-POLY1305"}, "tf-acc-ciphers-test"),
+					testCheckCiphersuitesConfiguredExpected("citrixadc_csvserver.ciphers", []string{"HIGH", "TLS1.2-DHE-RSA-CHACHA20-POLY1305"}),
 				),
 			},
 			// Transpose
 			resource.TestStep{
-				Config: testCiphersConfig(templateCsvserverCiphersConfig, []string{"TLS1.2-DHE-RSA-CHACHA20-POLY1305", "HIGH"}),
+				Config: testCiphersuitesConfig(templateCsvserverCiphersConfig, []string{"TLS1.2-DHE-RSA-CHACHA20-POLY1305", "HIGH"}),
 				Check: resource.ComposeTestCheckFunc(
-					testCheckCiphersEqualToActual([]string{"TLS1.2-DHE-RSA-CHACHA20-POLY1305", "HIGH"}, "tf-acc-ciphers-test"),
-					testCheckCiphersConfiguredExpected("citrixadc_csvserver.ciphers", []string{"TLS1.2-DHE-RSA-CHACHA20-POLY1305", "HIGH"}),
+					testCheckCiphersuitesEqualToActual([]string{"TLS1.2-DHE-RSA-CHACHA20-POLY1305", "HIGH"}, "tf-acc-ciphers-test"),
+					testCheckCiphersuitesConfiguredExpected("citrixadc_csvserver.ciphers", []string{"TLS1.2-DHE-RSA-CHACHA20-POLY1305", "HIGH"}),
+				),
+			},
+			// Empty list
+			resource.TestStep{
+				Config: testCiphersuitesConfig(templateCsvserverCiphersConfig, nil),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckCiphersuitesEqualToActual([]string{}, "tf-acc-ciphers-test"),
+					testCheckCiphersuitesConfiguredExpected("citrixadc_csvserver.ciphers", []string{}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCsvserver_cluster_ciphersuites(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLbvserverDestroy,
+		Steps: []resource.TestStep{
+			// Initial
+			resource.TestStep{
+				Config: testCiphersuitesConfig(templateCsvserverCiphersConfig, []string{"SSL3-EXP-ADH-RC4-MD5", "TLS1.2-DHE-RSA-CHACHA20-POLY1305"}),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckCiphersuitesEqualToActual([]string{"SSL3-EXP-ADH-RC4-MD5", "TLS1.2-DHE-RSA-CHACHA20-POLY1305"}, "tf-acc-ciphers-test"),
+					testCheckCiphersuitesConfiguredExpected("citrixadc_csvserver.ciphers", []string{"SSL3-EXP-ADH-RC4-MD5", "TLS1.2-DHE-RSA-CHACHA20-POLY1305"}),
+				),
+			},
+			// Transpose
+			resource.TestStep{
+				Config: testCiphersuitesConfig(templateCsvserverCiphersConfig, []string{"TLS1.2-DHE-RSA-CHACHA20-POLY1305", "SSL3-EXP-ADH-RC4-MD5"}),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckCiphersuitesEqualToActual([]string{"TLS1.2-DHE-RSA-CHACHA20-POLY1305", "SSL3-EXP-ADH-RC4-MD5"}, "tf-acc-ciphers-test"),
+					testCheckCiphersuitesConfiguredExpected("citrixadc_csvserver.ciphers", []string{"TLS1.2-DHE-RSA-CHACHA20-POLY1305", "SSL3-EXP-ADH-RC4-MD5"}),
+				),
+			},
+			// Empty list
+			resource.TestStep{
+				Config: testCiphersuitesConfig(templateCsvserverCiphersConfig, nil),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckCiphersuitesEqualToActual([]string{}, "tf-acc-ciphers-test"),
+					testCheckCiphersuitesConfiguredExpected("citrixadc_csvserver.ciphers", []string{}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCsvserver_cluster_ciphers(t *testing.T) {
+	if !isCluster {
+		t.Skip("standalone ADC deployment")
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLbvserverDestroy,
+		Steps: []resource.TestStep{
+			// Initial
+			resource.TestStep{
+				Config: testCiphersConfig(templateCsvserverCiphersConfig, []string{"HIGH", "MEDIUM"}),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckCiphersEqualToActual([]string{"HIGH", "MEDIUM"}, "tf-acc-ciphers-test"),
+					testCheckCiphersConfiguredExpected("citrixadc_csvserver.ciphers", []string{"HIGH", "MEDIUM"}),
+				),
+			},
+			// Transpose
+			resource.TestStep{
+				Config: testCiphersConfig(templateCsvserverCiphersConfig, []string{"MEDIUM", "HIGH"}),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckCiphersEqualToActual([]string{"MEDIUM", "HIGH"}, "tf-acc-ciphers-test"),
+					testCheckCiphersConfiguredExpected("citrixadc_csvserver.ciphers", []string{"MEDIUM", "HIGH"}),
 				),
 			},
 			// Empty list

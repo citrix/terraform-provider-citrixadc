@@ -517,6 +517,10 @@ func readGlobalBinding(d *schema.ResourceData, meta interface{}) error {
 			// Need to convert values to corresponding responderglobal_responderpolicy_binding values
 			log.Printf("labeltype read %v\n", v)
 			if v == "reqvserver" || v == "resvserver" {
+				// Standalone
+				processedBindings[i].(map[string]interface{})["labeltype"] = "vserver"
+			} else if v == "" {
+				// Cluster
 				processedBindings[i].(map[string]interface{})["labeltype"] = "vserver"
 			} else {
 				processedBindings[i].(map[string]interface{})["labeltype"] = v
@@ -640,8 +644,16 @@ func readLbvserverBindings(d *schema.ResourceData, meta interface{}) error {
 		boundtoSlice := strings.Split(a["boundto"].(string), " ")
 		log.Printf("boundtoSlice %v\n", boundtoSlice)
 		if boundtoSlice[0] == "REQ" {
+			// Standalone
+			processedBindings[i].(map[string]interface{})["bindpoint"] = "REQUEST"
+		} else if boundtoSlice[0] == "REQUEST" {
+			// Cluster
 			processedBindings[i].(map[string]interface{})["bindpoint"] = "REQUEST"
 		} else if boundtoSlice[0] == "RES" {
+			// Standalone
+			processedBindings[i].(map[string]interface{})["bindpoint"] = "RESPONSE"
+		} else if boundtoSlice[0] == "RESPONSE" {
+			// Cluster
 			processedBindings[i].(map[string]interface{})["bindpoint"] = "RESPONSE"
 		} else {
 			return fmt.Errorf("Unexpected bindpoint string \"%v\"", boundtoSlice[0])
@@ -818,8 +830,16 @@ func readCsvserverBindings(d *schema.ResourceData, meta interface{}) error {
 		boundtoSlice := strings.Split(a["boundto"].(string), " ")
 		log.Printf("boundtoSlice %v\n", boundtoSlice)
 		if boundtoSlice[0] == "REQ" {
+			// Standalone
+			processedBindings[i].(map[string]interface{})["bindpoint"] = "REQUEST"
+		} else if boundtoSlice[0] == "REQUEST" {
+			// Cluster
 			processedBindings[i].(map[string]interface{})["bindpoint"] = "REQUEST"
 		} else if boundtoSlice[0] == "RES" {
+			// Standalone
+			processedBindings[i].(map[string]interface{})["bindpoint"] = "RESPONSE"
+		} else if boundtoSlice[0] == "RESPONSE" {
+			// Cluster
 			processedBindings[i].(map[string]interface{})["bindpoint"] = "RESPONSE"
 		} else {
 			return fmt.Errorf("Unexpected bindpoint string \"%v\"", boundtoSlice[0])

@@ -524,6 +524,11 @@ func resourceCitrixAdcLbvserver() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"ciphersuites": &schema.Schema{
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 		},
 	}
 }
@@ -684,10 +689,15 @@ func createLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if _, ok := d.GetOk("ciphers"); ok {
+	// Ignore for standalone
+	if isTargetAdcCluster(client) {
 		if err := syncCiphers(d, meta, lbvserverName); err != nil {
 			return err
 		}
+	}
+
+	if err := syncCiphersuites(d, meta, lbvserverName); err != nil {
+		return err
 	}
 
 	sslprofile, spok := d.GetOk("sslprofile")
@@ -851,7 +861,11 @@ func readLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	dataSsl, _ := client.FindResource(netscaler.Sslvserver.Type(), lbvserverName)
 	d.Set("sslprofile", dataSsl["sslprofile"])
 
-	setCipherData(d, meta, lbvserverName)
+	// Avoid duplicate listing of ciphersuites in standalone
+	if isTargetAdcCluster(client) {
+		setCipherData(d, meta, lbvserverName)
+	}
+	setCiphersuiteData(d, meta, lbvserverName)
 
 	return nil
 
@@ -871,6 +885,7 @@ func updateLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	sslprofileChanged := false
 	snisslcertkeysChanged := false
 	ciphersChanged := false
+	ciphersuitesChanged := false
 	if d.HasChange("appflowlog") {
 		log.Printf("[DEBUG] netscaler-provider:  Appflowlog has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Appflowlog = d.Get("appflowlog").(string)
@@ -1367,6 +1382,11 @@ func updateLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		ciphersChanged = true
 	}
 
+	if d.HasChange("ciphersuites") {
+		log.Printf("[DEBUG] netscaler-provider:  ciphers have changed %s, starting update", lbvserverName)
+		ciphersuitesChanged = true
+	}
+
 	sslcertkey := d.Get("sslcertkey")
 	sslcertkeyName := sslcertkey.(string)
 	if sslcertkeyChanged {
@@ -1414,8 +1434,15 @@ func updateLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if ciphersChanged {
+	// Ignore for standalone
+	if ciphersChanged && isTargetAdcCluster(client) {
 		if err := syncCiphers(d, meta, lbvserverName); err != nil {
+			return err
+		}
+	}
+
+	if ciphersuitesChanged {
+		if err := syncCiphersuites(d, meta, lbvserverName); err != nil {
 			return err
 		}
 	}

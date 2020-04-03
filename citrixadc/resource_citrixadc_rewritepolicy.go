@@ -624,8 +624,16 @@ func readRewriteLbvserverBindings(d *schema.ResourceData, meta interface{}) erro
 		boundtoSlice := strings.Split(a["boundto"].(string), " ")
 		log.Printf("boundtoSlice %v\n", boundtoSlice)
 		if boundtoSlice[0] == "REQ" {
+			// Standalone
+			processedBindings[i].(map[string]interface{})["bindpoint"] = "REQUEST"
+		} else if boundtoSlice[0] == "REQUEST" {
+			// Cluster
 			processedBindings[i].(map[string]interface{})["bindpoint"] = "REQUEST"
 		} else if boundtoSlice[0] == "RES" {
+			// Standalone
+			processedBindings[i].(map[string]interface{})["bindpoint"] = "RESPONSE"
+		} else if boundtoSlice[0] == "RESPONSE" {
+			// Cluster
 			processedBindings[i].(map[string]interface{})["bindpoint"] = "RESPONSE"
 		} else {
 			return fmt.Errorf("Unexpected bindpoint string \"%v\"", boundtoSlice[0])
@@ -802,8 +810,16 @@ func readRewriteCsvserverBindings(d *schema.ResourceData, meta interface{}) erro
 		boundtoSlice := strings.Split(a["boundto"].(string), " ")
 		log.Printf("boundtoSlice %v\n", boundtoSlice)
 		if boundtoSlice[0] == "REQ" {
+			// Standalone
+			processedBindings[i].(map[string]interface{})["bindpoint"] = "REQUEST"
+		} else if boundtoSlice[0] == "REQUEST" {
+			// Cluster
 			processedBindings[i].(map[string]interface{})["bindpoint"] = "REQUEST"
 		} else if boundtoSlice[0] == "RES" {
+			// Standalone
+			processedBindings[i].(map[string]interface{})["bindpoint"] = "RESPONSE"
+		} else if boundtoSlice[0] == "RESPONSE" {
+			// Cluster
 			processedBindings[i].(map[string]interface{})["bindpoint"] = "RESPONSE"
 		} else {
 			return fmt.Errorf("Unexpected bindpoint string \"%v\"", boundtoSlice[0])
