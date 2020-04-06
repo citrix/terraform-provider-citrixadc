@@ -121,6 +121,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_clusterfiles_syncer":  resourceCitrixAdcClusterfilesSyncer(),
 		"citrixadc_systemfile":           resourceCitrixAdcSystemfile(),
 		"citrixadc_auditmessageaction":   resourceCitrixAdcAuditmessageaction(),
+		"citrixadc_auditsyslogaction":    resourceCitrixAdcAuditsyslogaction(),
 	}
 }
 
