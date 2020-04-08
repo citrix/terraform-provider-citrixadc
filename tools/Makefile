@@ -76,6 +76,10 @@ schema_only:
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/cluster/clusterfiles.json
 	@# system
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/system/systemfile.json
+	./$(SCHEMA_EXEC) -i $(JSON_DIR)/system/systemglobal_auditsyslogpolicy_binding.json
+	./$(SCHEMA_EXEC) -i $(JSON_DIR)/audit/auditmessageaction.json
+	./$(SCHEMA_EXEC) -i $(JSON_DIR)/audit/auditsyslogaction.json
+	./$(SCHEMA_EXEC) -i $(JSON_DIR)/audit/auditsyslogpolicy.json
 	
 
 
