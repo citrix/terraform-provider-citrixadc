@@ -55,6 +55,7 @@ schema_only:
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/ssl/sslprofile.json
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/ssl/sslparameter.json
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/ssl/ssldhparam.json
+	./$(SCHEMA_EXEC) -i $(JSON_DIR)/ssl/sslcipher.json
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/basic/server.json
 	@# Responder stuff
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/responder/responderpolicy.json
