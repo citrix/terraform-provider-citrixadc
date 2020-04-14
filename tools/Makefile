@@ -40,6 +40,7 @@ schema_only:
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/ns/nsacl.json -d aclname
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/ns/nsacls.json
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/ns/nshttpprofile.json
+	./$(SCHEMA_EXEC) -i $(JSON_DIR)/ns/nsconfig.json
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/gslb/gslbservice.json -d servicename
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/gslb/gslbsite.json -d sitename
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/gslb/gslbvserver.json -b $(JSON_DIR)/gslb/gslbvserver_domain_binding.json
