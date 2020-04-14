@@ -47,6 +47,7 @@ schema_only:
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/network/inat.json
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/network/ipset.json
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/network/route.json
+	./$(SCHEMA_EXEC) -i $(JSON_DIR)/network/linkset.json
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/basic/service.json
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/basic/servicegroup.json
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/ssl/sslaction.json

@@ -113,6 +113,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_nsconfig_update":      resourceCitrixAdcNsconfigUpdate(),
 		"citrixadc_ipset":                resourceCitrixAdcIpset(),
 		"citrixadc_route":                resourceCitrixAdcRoute(),
+		"citrixadc_linkset":              resourceCitrixAdcLinkset(),
 		"citrixadc_nsfeature":            resourceCitrixAdcNsfeature(),
 		"citrixadc_systemuser":           resourceCitrixAdcSystemuser(),
 		"citrixadc_systemgroup":          resourceCitrixAdcSystemgroup(),
