@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+// TODO: add ipset_nsip6_binding testcase
 const testAccIpset_no_bindings = `
 	resource "citrixadc_ipset" "foo" {
 		name = "tf_test_ipset"
