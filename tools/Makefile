@@ -40,12 +40,14 @@ schema_only:
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/ns/nsacl.json -d aclname
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/ns/nsacls.json
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/ns/nshttpprofile.json
+	./$(SCHEMA_EXEC) -i $(JSON_DIR)/ns/nsconfig.json
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/gslb/gslbservice.json -d servicename
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/gslb/gslbsite.json -d sitename
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/gslb/gslbvserver.json -b $(JSON_DIR)/gslb/gslbvserver_domain_binding.json
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/network/inat.json
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/network/ipset.json
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/network/route.json
+	./$(SCHEMA_EXEC) -i $(JSON_DIR)/network/linkset.json
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/basic/service.json
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/basic/servicegroup.json
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/ssl/sslaction.json
@@ -54,6 +56,7 @@ schema_only:
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/ssl/sslprofile.json
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/ssl/sslparameter.json
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/ssl/ssldhparam.json
+	./$(SCHEMA_EXEC) -i $(JSON_DIR)/ssl/sslcipher.json
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/basic/server.json
 	@# Responder stuff
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/responder/responderpolicy.json
