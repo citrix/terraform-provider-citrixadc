@@ -104,8 +104,9 @@ func syncCiphers(d *schema.ResourceData, meta interface{}, vserverName string) e
 	}
 
 	findParams := netscaler.FindParams{
-		ResourceType: "sslvserver_sslcipher_binding",
-		ResourceName: vserverName,
+		ResourceType:             "sslvserver_sslcipher_binding",
+		ResourceName:             vserverName,
+		ResourceMissingErrorCode: 258,
 	}
 	cipherBindings, err = client.FindResourceArrayWithParams(findParams)
 
