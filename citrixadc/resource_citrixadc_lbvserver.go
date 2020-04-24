@@ -837,26 +837,9 @@ func readLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("vipheader", data["vipheader"])
 	d.Set("weight", data["weight"])
 
-	bindings, err := client.FindAllBoundResources(netscaler.Sslvserver.Type(), lbvserverName, netscaler.Sslcertkey.Type())
-	if err != nil {
-		log.Printf("[WARN] netscaler-provider: lbvserver binding to ssl error %s", lbvserverName)
-		return nil
+	if err := readSslcerts(d, meta, lbvserverName); err != nil {
+		return err
 	}
-	var boundCert string
-	snicerts := make([]string, 0, len(bindings))
-	for _, binding := range bindings {
-		cert, ok := binding["certkeyname"]
-		snicert, ok2 := binding["snicert"]
-		log.Printf("Reading ssl binding certkeyname %v, %v", cert, ok)
-		log.Printf("Reading ssl binding snicert %v, %v", snicert, ok2)
-		if ok && ok2 && snicert == false {
-			boundCert = cert.(string)
-		} else if ok && ok2 && snicert == true {
-			snicerts = append(snicerts, cert.(string))
-		}
-	}
-	d.Set("sslcertkey", boundCert)
-	d.Set("snisslcertkeys", snicerts)
 
 	dataSsl, _ := client.FindResource(netscaler.Sslvserver.Type(), lbvserverName)
 	d.Set("sslprofile", dataSsl["sslprofile"])
@@ -1493,112 +1476,6 @@ func deleteLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId("")
-
-	return nil
-}
-
-func snisslcertkeysExist(snisslcertkeys, meta interface{}) error {
-	log.Printf("[DEBUG] In snisslcertkeysExist")
-	client := meta.(*NetScalerNitroClient).client
-	allkeys := snisslcertkeys.(*schema.Set).List()
-	missingKeys := make([]string, 0, len(allkeys))
-	for _, certkey := range allkeys {
-		log.Printf("[DEBUG] checking existence of sslcertkey %v", certkey)
-		exists := client.ResourceExists(netscaler.Sslcertkey.Type(), certkey.(string))
-		if !exists {
-			missingKeys = append(missingKeys, certkey.(string))
-		}
-	}
-	if len(missingKeys) > 0 {
-		return fmt.Errorf("The following ssl certificate keys do not exist on netscaler %v", missingKeys)
-	} else {
-		return nil
-	}
-}
-
-func syncSnisslcert(d *schema.ResourceData, meta interface{}, lbvserverName string) error {
-	client := meta.(*NetScalerNitroClient).client
-	log.Printf("[DEBUG] In syncSnisslcert")
-	old, new := d.GetChange("snisslcertkeys")
-
-	var oldlist, newlist []interface{}
-	if old == nil {
-		oldlist = make([]interface{}, 0)
-	} else {
-		oldlist = old.(*schema.Set).List()
-	}
-
-	newlist = new.(*schema.Set).List()
-
-	var toadd, todelete []string
-	toadd = make([]string, 0, len(newlist))
-
-	if old == nil {
-		todelete = make([]string, 0)
-	} else {
-		todelete = make([]string, 0, len(oldlist))
-	}
-
-	// certificate key bindings that exist only in the old data will be deleted
-	for _, oldcertkey := range oldlist {
-		exists := false
-		for _, newcertkey := range newlist {
-			if oldcertkey.(string) == newcertkey.(string) {
-				exists = true
-				break
-			}
-		}
-		if !exists {
-			todelete = append(todelete, oldcertkey.(string))
-		}
-	}
-	log.Printf("[DEBUG] The following sni certificate key bindings are marked for deletion %v", todelete)
-
-	// certificate key bindings that exist only in the new data will be created
-	for _, newcertkey := range newlist {
-		exists := false
-		for _, oldcertkey := range oldlist {
-			if oldcertkey.(string) == newcertkey.(string) {
-				exists = true
-				break
-			}
-		}
-		if !exists {
-			toadd = append(toadd, newcertkey.(string))
-		}
-	}
-	log.Printf("[DEBUG] The following sni certificate key bindings are marked for addition %v", toadd)
-
-	// Do the unbindings first
-	for _, snisslcertkey := range todelete {
-
-		args := map[string]string{"certkeyname": snisslcertkey, "snicert": "true"}
-		err := client.DeleteResourceWithArgsMap(netscaler.Sslvserver_sslcertkey_binding.Type(), lbvserverName, args)
-		if err != nil {
-			return fmt.Errorf("[ERROR] netscaler-provider: Error unbinding sni sslcertkey from lbvserver %s", snisslcertkey)
-		}
-		log.Printf("[DEBUG] netscaler-provider: sni sslcertkey has been unbound from lbvserver for sslcertkey %s ", snisslcertkey)
-	}
-
-	// Do the bindings
-	for _, snisslcertkey := range toadd {
-		binding := ssl.Sslvserversslcertkeybinding{
-			Vservername: lbvserverName,
-			Certkeyname: snisslcertkey,
-			Snicert:     true,
-		}
-		log.Printf("[INFO] netscaler-provider:  Binding sni ssl cert %s to lbvserver %s", snisslcertkey, lbvserverName)
-		err := client.BindResource(netscaler.Sslvserver.Type(), lbvserverName, netscaler.Sslcertkey.Type(), snisslcertkey, &binding)
-		if err != nil {
-			log.Printf("[ERROR] netscaler-provider:  Failed to bind sni ssl cert %s to lbvserver %s", snisslcertkey, lbvserverName)
-			err2 := client.DeleteResource(netscaler.Lbvserver.Type(), lbvserverName)
-			if err2 != nil {
-				log.Printf("[ERROR] netscaler-provider:  Failed to delete lbvserver %s after bind to sni ssl cert failed", lbvserverName)
-				return fmt.Errorf("[ERROR] netscaler-provider:  Failed to delete lbvserver %s after bind to sni ssl cert failed", lbvserverName)
-			}
-			return fmt.Errorf("[ERROR] netscaler-provider:  Failed to bind sni ssl cert %s to lbvserver %s", snisslcertkey, lbvserverName)
-		}
-	}
 
 	return nil
 }

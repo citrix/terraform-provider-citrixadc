@@ -417,3 +417,69 @@ func TestAccCsvserver_lbvserverbinding(t *testing.T) {
 		},
 	})
 }
+
+func TestAccCsvserver_snicerts(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { doPreChecks(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLbvserverDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testSslcertificateBindingsConfig(sniCertsCsvserverTemplateConfig, "", "cert2-cert3"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserverExist("citrixadc_csvserver.cssni", nil),
+				),
+			},
+			resource.TestStep{
+				Config: testSslcertificateBindingsConfig(sniCertsCsvserverTemplateConfig, "", "cert2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserverExist("citrixadc_csvserver.cssni", nil),
+				),
+			},
+			resource.TestStep{
+				Config: testSslcertificateBindingsConfig(sniCertsCsvserverTemplateConfig, "cert3", "cert2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserverExist("citrixadc_csvserver.cssni", nil),
+				),
+			},
+			resource.TestStep{
+				Config: testSslcertificateBindingsConfig(sniCertsCsvserverTemplateConfig, "cert3", ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserverExist("citrixadc_csvserver.cssni", nil),
+				),
+			},
+			resource.TestStep{
+				Config: testSslcertificateBindingsConfig(sniCertsCsvserverTemplateConfig, "cert2", "cert3-cert2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserverExist("citrixadc_csvserver.cssni", nil),
+				),
+			},
+		},
+	})
+}
+
+const sniCertsCsvserverTemplateConfig = `
+	resource "citrixadc_sslcertkey" "cert2" {
+	  certkey = "cert2"
+	  cert = "/var/tmp/certificate2.crt"
+	  key = "/var/tmp/key2.pem"
+	  expirymonitor = "DISABLED"
+	}
+
+	resource "citrixadc_sslcertkey" "cert3" {
+	  certkey = "cert3"
+	  cert = "/var/tmp/certificate3.crt"
+	  key = "/var/tmp/key3.pem"
+	  expirymonitor = "DISABLED"
+	}
+
+	resource "citrixadc_csvserver" "cssni" {
+	  ipv46 = "10.202.11.11"
+	  name = "terraform-cs"
+	  port = 443
+	  servicetype = "SSL"
+	  ciphers = ["DEFAULT"]
+	  %v
+	  %v
+	}
+`

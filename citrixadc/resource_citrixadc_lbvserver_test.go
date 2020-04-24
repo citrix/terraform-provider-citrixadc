@@ -64,31 +64,31 @@ func TestAccLbvserver_snicerts(t *testing.T) {
 		CheckDestroy: testAccCheckLbvserverDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testSslcertificateBindingsConfig("", "cert2-cert3"),
+				Config: testSslcertificateBindingsConfig(sniCertsTemplateConfig, "", "cert2-cert3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLbvserverExist("citrixadc_lbvserver.lbsni", nil),
 				),
 			},
 			resource.TestStep{
-				Config: testSslcertificateBindingsConfig("", "cert2"),
+				Config: testSslcertificateBindingsConfig(sniCertsTemplateConfig, "", "cert2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLbvserverExist("citrixadc_lbvserver.lbsni", nil),
 				),
 			},
 			resource.TestStep{
-				Config: testSslcertificateBindingsConfig("cert3", "cert2"),
+				Config: testSslcertificateBindingsConfig(sniCertsTemplateConfig, "cert3", "cert2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLbvserverExist("citrixadc_lbvserver.lbsni", nil),
 				),
 			},
 			resource.TestStep{
-				Config: testSslcertificateBindingsConfig("cert3", ""),
+				Config: testSslcertificateBindingsConfig(sniCertsTemplateConfig, "cert3", ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLbvserverExist("citrixadc_lbvserver.lbsni", nil),
 				),
 			},
 			resource.TestStep{
-				Config: testSslcertificateBindingsConfig("cert2", "cert3-cert2"),
+				Config: testSslcertificateBindingsConfig(sniCertsTemplateConfig, "cert2", "cert3-cert2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLbvserverExist("citrixadc_lbvserver.lbsni", nil),
 				),
@@ -267,7 +267,11 @@ func doPreChecks(t *testing.T) {
 
 	uploads := []string{"certificate2.crt", "key2.pem", "certificate3.crt", "key3.pem"}
 
-	c := testAccProvider.Meta().(*NetScalerNitroClient)
+	//c := testAccProvider.Meta().(*NetScalerNitroClient)
+	c, err := testHelperInstantiateClient("", "", "", false)
+	if err != nil {
+		t.Fatalf("Error instantiating helper NITRO client: %s", err.Error())
+	}
 	for _, filename := range uploads {
 		err := uploadTestdataFile(c, t, filename, "/var/tmp")
 		if err != nil {
@@ -305,26 +309,7 @@ resource "citrixadc_lbvserver" "foo" {
 }
 `
 
-func testSslcertificateBindingsConfig(sslcertkey string, snicertskeys string) string {
-	sslcertkeyReplacement := ""
-	snisslcertkeysReplacement := "snisslcertkeys = []"
-	if sslcertkey != "" {
-		sslcertkeyReplacement = fmt.Sprintf("sslcertkey = \"${citrixadc_sslcertkey.%v.certkey}\"\n", sslcertkey)
-	}
-	snicerts := strings.Split(snicertskeys, "-")
-	log.Printf("len of snicerts %v", len(snicerts))
-	if snicertskeys != "" && len(snicerts) > 0 {
-		snisslcertkeysReplacement = "\nsnisslcertkeys = [\n"
-		for _, certkey := range snicerts {
-
-			line := fmt.Sprintf("\"${citrixadc_sslcertkey.%v.certkey}\",\n", certkey)
-			snisslcertkeysReplacement += line
-		}
-		snisslcertkeysReplacement += "]\n"
-	}
-	log.Printf("sslcertkeyReplacement \"%v\"", sslcertkeyReplacement)
-	log.Printf("snisslcertkeysReplacement \"%v\"", snisslcertkeysReplacement)
-	return fmt.Sprintf(`
+const sniCertsTemplateConfig = `
 	resource "citrixadc_sslcertkey" "cert2" {
 	  certkey = "cert2"
 	  cert = "/var/tmp/certificate2.crt"
@@ -350,7 +335,30 @@ func testSslcertificateBindingsConfig(sslcertkey string, snicertskeys string) st
 	  %v
 	  %v
 	}
-	`, sslcertkeyReplacement, snisslcertkeysReplacement)
+`
+
+func testSslcertificateBindingsConfig(template string, sslcertkey string, snicertskeys string) string {
+	sslcertkeyReplacement := ""
+	snisslcertkeysReplacement := "snisslcertkeys = []"
+	if sslcertkey != "" {
+		sslcertkeyReplacement = fmt.Sprintf("sslcertkey = \"${citrixadc_sslcertkey.%v.certkey}\"\n", sslcertkey)
+	}
+	snicerts := strings.Split(snicertskeys, "-")
+	log.Printf("len of snicerts %v", len(snicerts))
+	if snicertskeys != "" && len(snicerts) > 0 {
+		snisslcertkeysReplacement = "\nsnisslcertkeys = [\n"
+		for _, certkey := range snicerts {
+
+			line := fmt.Sprintf("\"${citrixadc_sslcertkey.%v.certkey}\",\n", certkey)
+			snisslcertkeysReplacement += line
+		}
+		snisslcertkeysReplacement += "]\n"
+	}
+	log.Printf("sslcertkeyReplacement \"%v\"", sslcertkeyReplacement)
+	log.Printf("snisslcertkeysReplacement \"%v\"", snisslcertkeysReplacement)
+	retval := fmt.Sprintf(template, sslcertkeyReplacement, snisslcertkeysReplacement)
+	log.Printf(fmt.Sprintf("Full config:\n`\n%s\n`", retval))
+	return retval
 }
 
 func TestAccLBvserverAssertNonUpdateableAttributes(t *testing.T) {
