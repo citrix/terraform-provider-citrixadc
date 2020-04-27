@@ -529,6 +529,51 @@ func resourceCitrixAdcLbvserver() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"sslpolicybinding": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: false,
+				Set:      sslpolicybindingMappingHash,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"gotopriorityexpression": &schema.Schema{
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"invoke": &schema.Schema{
+							Type:     schema.TypeBool,
+							Optional: true,
+							Computed: true,
+						},
+						"labelname": &schema.Schema{
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"labeltype": &schema.Schema{
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"policyname": &schema.Schema{
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"priority": &schema.Schema{
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
+						},
+						"type": &schema.Schema{
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -719,6 +764,11 @@ func createLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	// update sslpolicy bindings
+	if err := updateSslpolicyBindings(d, meta, lbvserverName); err != nil {
+		return err
+	}
+
 	d.SetId(lbvserverName)
 
 	err = readLbvserverFunc(d, meta)
@@ -838,6 +888,10 @@ func readLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("weight", data["weight"])
 
 	if err := readSslcerts(d, meta, lbvserverName); err != nil {
+		return err
+	}
+
+	if err := readSslpolicyBindings(d, meta, lbvserverName); err != nil {
 		return err
 	}
 
@@ -1457,6 +1511,13 @@ func updateLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 			log.Printf("[DEBUG] netscaler-provider: new ssl profile has been bound to lbvserver  sslprofile %s lbvserver %s", sslprofileName, lbvserverName)
 		}
 	}
+
+	if d.HasChange("sslpolicybinding") {
+		if err := updateSslpolicyBindings(d, meta, lbvserverName); err != nil {
+			return err
+		}
+	}
+
 	if stateChange {
 		err := doLbvserverStateChange(d, client)
 		if err != nil {
