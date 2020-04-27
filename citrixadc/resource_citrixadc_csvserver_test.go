@@ -417,3 +417,459 @@ func TestAccCsvserver_lbvserverbinding(t *testing.T) {
 		},
 	})
 }
+
+func TestAccCsvserver_snicerts(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { doPreChecks(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLbvserverDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testSslcertificateBindingsConfig(sniCertsCsvserverTemplateConfig, "", "cert2-cert3"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserverExist("citrixadc_csvserver.cssni", nil),
+				),
+			},
+			resource.TestStep{
+				Config: testSslcertificateBindingsConfig(sniCertsCsvserverTemplateConfig, "", "cert2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserverExist("citrixadc_csvserver.cssni", nil),
+				),
+			},
+			resource.TestStep{
+				Config: testSslcertificateBindingsConfig(sniCertsCsvserverTemplateConfig, "cert3", "cert2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserverExist("citrixadc_csvserver.cssni", nil),
+				),
+			},
+			resource.TestStep{
+				Config: testSslcertificateBindingsConfig(sniCertsCsvserverTemplateConfig, "cert3", ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserverExist("citrixadc_csvserver.cssni", nil),
+				),
+			},
+			resource.TestStep{
+				Config: testSslcertificateBindingsConfig(sniCertsCsvserverTemplateConfig, "cert2", "cert3-cert2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserverExist("citrixadc_csvserver.cssni", nil),
+				),
+			},
+		},
+	})
+}
+
+const sniCertsCsvserverTemplateConfig = `
+	resource "citrixadc_sslcertkey" "cert2" {
+	  certkey = "cert2"
+	  cert = "/var/tmp/certificate2.crt"
+	  key = "/var/tmp/key2.pem"
+	  expirymonitor = "DISABLED"
+	}
+
+	resource "citrixadc_sslcertkey" "cert3" {
+	  certkey = "cert3"
+	  cert = "/var/tmp/certificate3.crt"
+	  key = "/var/tmp/key3.pem"
+	  expirymonitor = "DISABLED"
+	}
+
+	resource "citrixadc_csvserver" "cssni" {
+	  ipv46 = "10.202.11.11"
+	  name = "terraform-cs"
+	  port = 443
+	  servicetype = "SSL"
+	  ciphers = ["DEFAULT"]
+	  %v
+	  %v
+	}
+`
+
+func TestAccCsvserver_sslpolicy(t *testing.T) {
+	if isCluster {
+		t.Skip("cluster ADC deployment")
+	}
+	if isCpxRun {
+		t.Skip("TODO fix sslaction for CPX")
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { doPreChecks(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLbvserverDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: sslpolicy_config_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserverExist("citrixadc_csvserver.tf_csvserver", nil),
+				),
+			},
+			resource.TestStep{
+				Config: sslpolicy_config_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserverExist("citrixadc_csvserver.tf_csvserver", nil),
+				),
+			},
+			resource.TestStep{
+				Config: sslpolicy_config_step3,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserverExist("citrixadc_csvserver.tf_csvserver", nil),
+				),
+			},
+			resource.TestStep{
+				Config: sslpolicy_config_step4,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserverExist("citrixadc_csvserver.tf_csvserver", nil),
+				),
+			},
+		},
+	})
+}
+
+const sslpolicy_config_step1 = `
+resource "citrixadc_sslaction" "tf_sslaction" {
+  name                   = "tf_sslaction"
+  clientauth             = "DOCLIENTAUTH"
+  clientcertverification = "Mandatory"
+}
+
+resource "citrixadc_sslpolicy" "tf_sslpolicy" {
+  name   = "tf_policy"
+  rule   = "true"
+  action = citrixadc_sslaction.tf_sslaction.name
+}
+
+resource "citrixadc_sslpolicy" "tf_sslpolicy2" {
+  name   = "tf_policy2"
+  rule   = "true"
+  action = citrixadc_sslaction.tf_sslaction.name
+}
+
+resource "citrixadc_csvserver" "tf_csvserver" {
+  ipv46       = "10.10.10.22"
+  name        = "tf_csvserver"
+  port        = 443
+  servicetype = "SSL"
+
+  sslpolicybinding {
+     policyname = citrixadc_sslpolicy.tf_sslpolicy.name
+     priority = 100
+	 gotopriorityexpression = "END"
+  }
+  sslpolicybinding {
+     policyname = citrixadc_sslpolicy.tf_sslpolicy2.name
+     priority = 200
+	 gotopriorityexpression = "END"
+  }
+
+}
+`
+
+const sslpolicy_config_step2 = `
+resource "citrixadc_sslaction" "tf_sslaction" {
+  name                   = "tf_sslaction"
+  clientauth             = "DOCLIENTAUTH"
+  clientcertverification = "Mandatory"
+}
+
+resource "citrixadc_sslpolicy" "tf_sslpolicy" {
+  name   = "tf_policy"
+  rule   = "true"
+  action = citrixadc_sslaction.tf_sslaction.name
+}
+
+resource "citrixadc_sslpolicy" "tf_sslpolicy2" {
+  name   = "tf_policy2"
+  rule   = "true"
+  action = citrixadc_sslaction.tf_sslaction.name
+}
+
+resource "citrixadc_csvserver" "tf_csvserver" {
+  ipv46       = "10.10.10.22"
+  name        = "tf_csvserver"
+  port        = 443
+  servicetype = "SSL"
+
+  sslpolicybinding {
+     policyname = citrixadc_sslpolicy.tf_sslpolicy.name
+     priority = 300
+	 gotopriorityexpression = "END"
+  }
+  sslpolicybinding {
+     policyname = citrixadc_sslpolicy.tf_sslpolicy2.name
+     priority = 100
+	 gotopriorityexpression = "END"
+  }
+
+}
+`
+
+const sslpolicy_config_step3 = `
+resource "citrixadc_sslaction" "tf_sslaction" {
+  name                   = "tf_sslaction"
+  clientauth             = "DOCLIENTAUTH"
+  clientcertverification = "Mandatory"
+}
+
+resource "citrixadc_sslpolicy" "tf_sslpolicy" {
+  name   = "tf_policy"
+  rule   = "true"
+  action = citrixadc_sslaction.tf_sslaction.name
+}
+
+resource "citrixadc_sslpolicy" "tf_sslpolicy2" {
+  name   = "tf_policy2"
+  rule   = "true"
+  action = citrixadc_sslaction.tf_sslaction.name
+}
+
+resource "citrixadc_csvserver" "tf_csvserver" {
+  ipv46       = "10.10.10.22"
+  name        = "tf_csvserver"
+  port        = 443
+  servicetype = "SSL"
+
+  sslpolicybinding {
+     policyname = citrixadc_sslpolicy.tf_sslpolicy2.name
+     priority = 100
+	 gotopriorityexpression = "END"
+  }
+
+}
+`
+
+const sslpolicy_config_step4 = `
+resource "citrixadc_sslaction" "tf_sslaction" {
+  name                   = "tf_sslaction"
+  clientauth             = "DOCLIENTAUTH"
+  clientcertverification = "Mandatory"
+}
+
+resource "citrixadc_sslpolicy" "tf_sslpolicy" {
+  name   = "tf_policy"
+  rule   = "true"
+  action = citrixadc_sslaction.tf_sslaction.name
+}
+
+resource "citrixadc_sslpolicy" "tf_sslpolicy2" {
+  name   = "tf_policy2"
+  rule   = "true"
+  action = citrixadc_sslaction.tf_sslaction.name
+}
+
+resource "citrixadc_csvserver" "tf_csvserver" {
+  ipv46       = "10.10.10.22"
+  name        = "tf_csvserver"
+  port        = 443
+  servicetype = "SSL"
+
+  sslpolicybinding {
+     policyname = citrixadc_sslpolicy.tf_sslpolicy.name
+     priority = 300
+	 gotopriorityexpression = "END"
+  }
+  sslpolicybinding {
+     policyname = citrixadc_sslpolicy.tf_sslpolicy2.name
+     priority = 100
+	 gotopriorityexpression = "END"
+  }
+
+}
+`
+
+func TestAccCsvserver_sslpolicy_cluster(t *testing.T) {
+	if !isCluster {
+		t.Skip("standalone ADC deployment")
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { doPreChecks(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLbvserverDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: sslpolicy_config_cluster_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserverExist("citrixadc_csvserver.tf_csvserver", nil),
+				),
+			},
+			resource.TestStep{
+				Config: sslpolicy_config_cluster_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserverExist("citrixadc_csvserver.tf_csvserver", nil),
+				),
+			},
+			resource.TestStep{
+				Config: sslpolicy_config_cluster_step3,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserverExist("citrixadc_csvserver.tf_csvserver", nil),
+				),
+			},
+			resource.TestStep{
+				Config: sslpolicy_config_cluster_step4,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserverExist("citrixadc_csvserver.tf_csvserver", nil),
+				),
+			},
+		},
+	})
+}
+
+const sslpolicy_config_cluster_step1 = `
+resource "citrixadc_sslaction" "tf_sslaction" {
+  name                   = "tf_sslaction"
+  clientauth             = "DOCLIENTAUTH"
+  clientcertverification = "Mandatory"
+}
+
+resource "citrixadc_sslpolicy" "tf_sslpolicy" {
+  name   = "tf_policy"
+  rule   = "true"
+  action = citrixadc_sslaction.tf_sslaction.name
+}
+
+resource "citrixadc_sslpolicy" "tf_sslpolicy2" {
+  name   = "tf_policy2"
+  rule   = "true"
+  action = citrixadc_sslaction.tf_sslaction.name
+}
+
+resource "citrixadc_csvserver" "tf_csvserver" {
+  ipv46       = "10.10.10.22"
+  name        = "tf_csvserver"
+  port        = 443
+  servicetype = "SSL"
+  sslprofile = "ns_default_ssl_profile_frontend"
+
+  sslpolicybinding {
+     policyname = citrixadc_sslpolicy.tf_sslpolicy.name
+     priority = 100
+	 gotopriorityexpression = "END"
+	 type = "REQUEST"
+  }
+  sslpolicybinding {
+     policyname = citrixadc_sslpolicy.tf_sslpolicy2.name
+     priority = 200
+	 gotopriorityexpression = "END"
+	 type = "REQUEST"
+  }
+
+}
+`
+
+const sslpolicy_config_cluster_step2 = `
+resource "citrixadc_sslaction" "tf_sslaction" {
+  name                   = "tf_sslaction"
+  clientauth             = "DOCLIENTAUTH"
+  clientcertverification = "Mandatory"
+}
+
+resource "citrixadc_sslpolicy" "tf_sslpolicy" {
+  name   = "tf_policy"
+  rule   = "true"
+  action = citrixadc_sslaction.tf_sslaction.name
+}
+
+resource "citrixadc_sslpolicy" "tf_sslpolicy2" {
+  name   = "tf_policy2"
+  rule   = "true"
+  action = citrixadc_sslaction.tf_sslaction.name
+}
+
+resource "citrixadc_csvserver" "tf_csvserver" {
+  ipv46       = "10.10.10.22"
+  name        = "tf_csvserver"
+  port        = 443
+  servicetype = "SSL"
+  sslprofile = "ns_default_ssl_profile_frontend"
+
+  sslpolicybinding {
+     policyname = citrixadc_sslpolicy.tf_sslpolicy.name
+     priority = 300
+	 gotopriorityexpression = "END"
+	 type = "REQUEST"
+  }
+  sslpolicybinding {
+     policyname = citrixadc_sslpolicy.tf_sslpolicy2.name
+     priority = 100
+	 gotopriorityexpression = "END"
+	 type = "REQUEST"
+  }
+
+}
+`
+
+const sslpolicy_config_cluster_step3 = `
+resource "citrixadc_sslaction" "tf_sslaction" {
+  name                   = "tf_sslaction"
+  clientauth             = "DOCLIENTAUTH"
+  clientcertverification = "Mandatory"
+}
+
+resource "citrixadc_sslpolicy" "tf_sslpolicy" {
+  name   = "tf_policy"
+  rule   = "true"
+  action = citrixadc_sslaction.tf_sslaction.name
+}
+
+resource "citrixadc_sslpolicy" "tf_sslpolicy2" {
+  name   = "tf_policy2"
+  rule   = "true"
+  action = citrixadc_sslaction.tf_sslaction.name
+}
+
+resource "citrixadc_csvserver" "tf_csvserver" {
+  ipv46       = "10.10.10.22"
+  name        = "tf_csvserver"
+  port        = 443
+  servicetype = "SSL"
+  sslprofile = "ns_default_ssl_profile_frontend"
+
+  sslpolicybinding {
+     policyname = citrixadc_sslpolicy.tf_sslpolicy2.name
+     priority = 100
+	 gotopriorityexpression = "END"
+	 type = "REQUEST"
+  }
+
+}
+`
+
+const sslpolicy_config_cluster_step4 = `
+resource "citrixadc_sslaction" "tf_sslaction" {
+  name                   = "tf_sslaction"
+  clientauth             = "DOCLIENTAUTH"
+  clientcertverification = "Mandatory"
+}
+
+resource "citrixadc_sslpolicy" "tf_sslpolicy" {
+  name   = "tf_policy"
+  rule   = "true"
+  action = citrixadc_sslaction.tf_sslaction.name
+}
+
+resource "citrixadc_sslpolicy" "tf_sslpolicy2" {
+  name   = "tf_policy2"
+  rule   = "true"
+  action = citrixadc_sslaction.tf_sslaction.name
+}
+
+resource "citrixadc_csvserver" "tf_csvserver" {
+  ipv46       = "10.10.10.22"
+  name        = "tf_csvserver"
+  port        = 443
+  servicetype = "SSL"
+  sslprofile = "ns_default_ssl_profile_frontend"
+
+  sslpolicybinding {
+     policyname = citrixadc_sslpolicy.tf_sslpolicy.name
+     priority = 300
+	 gotopriorityexpression = "END"
+	 type = "REQUEST"
+  }
+  sslpolicybinding {
+     policyname = citrixadc_sslpolicy.tf_sslpolicy2.name
+     priority = 100
+	 gotopriorityexpression = "END"
+	 type = "REQUEST"
+  }
+
+}
+`

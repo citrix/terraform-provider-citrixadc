@@ -286,3 +286,41 @@ func TestAccService_enable_disable(t *testing.T) {
 		},
 	})
 }
+
+func TestAccService_sslservice(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServiceDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccService_sslservice_config,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExist("citrixadc_service.test_service", nil),
+					resource.TestCheckResourceAttr("citrixadc_service.test_service", "snienable", "ENABLED"),
+				),
+			},
+		},
+	})
+}
+
+const testAccService_sslservice_config = `
+
+resource "citrixadc_lbvserver" "test_lbvserver" {
+    name = "test_lbvserver"
+    ipv46 = "10.33.55.33"
+    port = 80
+
+}
+
+resource "citrixadc_service" "test_service" {
+    servicetype = "SSL"
+    name = "test_service"
+    ipaddress = "10.77.33.22"
+    ip = "10.77.33.22"
+    port = "443"
+    lbvserver = citrixadc_lbvserver.test_lbvserver.name
+    snienable = "ENABLED"
+	commonname = "test.com"
+}
+`

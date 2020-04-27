@@ -355,6 +355,11 @@ func resourceCitrixAdcCsvserver() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"snisslcertkeys": &schema.Schema{
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"sslprofile": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -372,6 +377,51 @@ func resourceCitrixAdcCsvserver() *schema.Resource {
 			"lbvserverbinding": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
+			},
+			"sslpolicybinding": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: false,
+				Set:      sslpolicybindingMappingHash,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"gotopriorityexpression": &schema.Schema{
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"invoke": &schema.Schema{
+							Type:     schema.TypeBool,
+							Optional: true,
+							Computed: true,
+						},
+						"labelname": &schema.Schema{
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"labeltype": &schema.Schema{
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"policyname": &schema.Schema{
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"priority": &schema.Schema{
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
+						},
+						"type": &schema.Schema{
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
 			},
 		},
 	}
@@ -394,6 +444,16 @@ func createCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("[ERROR] netscaler-provider: Specified ssl cert key does not exist on netscaler!")
 		}
 	}
+
+	snisslcertkeys, sniok := d.GetOk("snisslcertkeys")
+
+	if sniok {
+		exists_err := snisslcertkeysExist(snisslcertkeys, meta)
+		if exists_err != nil {
+			return exists_err
+		}
+	}
+
 	csvserver := cs.Csvserver{
 		Name:                    csvserverName,
 		Appflowlog:              d.Get("appflowlog").(string),
@@ -485,6 +545,13 @@ func createCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	if sniok {
+		err := syncSnisslcert(d, meta, csvserverName)
+		if err != nil {
+			return err
+		}
+	}
+
 	// Ignore for standalone
 	if isTargetAdcCluster(client) {
 		if err := syncCiphers(d, meta, csvserverName); err != nil {
@@ -532,6 +599,11 @@ func createCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("[ERROR] netscaler-provider:  Failed to bind lbvserver %s to csvserver %s", lbVserverName, csvserverName)
 		}
 		log.Printf("[DEBUG] netscaler-provider: lbvserver %s has been bound to csvserver %s", lbVserverName, csvserverName)
+	}
+
+	// update sslpolicy bindings
+	if err := updateSslpolicyBindings(d, meta, csvserverName); err != nil {
+		return err
 	}
 
 	d.SetId(csvserverName)
@@ -621,20 +693,13 @@ func readCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("ttl", data["ttl"])
 	d.Set("vipheader", data["vipheader"])
 
-	bindings, err := client.FindAllBoundResources(netscaler.Sslvserver.Type(), csvserverName, netscaler.Sslcertkey.Type())
-	if err != nil {
-		log.Printf("[WARN] netscaler-provider: csvserver binding to ssl error %s", csvserverName)
-		return nil
+	if err := readSslcerts(d, meta, csvserverName); err != nil {
+		return err
 	}
-	var boundCert string
-	for _, binding := range bindings {
-		cert, ok := binding["certkeyname"]
-		if ok {
-			boundCert = cert.(string)
-			break
-		}
+
+	if err := readSslpolicyBindings(d, meta, csvserverName); err != nil {
+		return err
 	}
-	d.Set("sslcertkey", boundCert)
 
 	dataSsl, _ := client.FindResource(netscaler.Sslvserver.Type(), csvserverName)
 	d.Set("sslprofile", dataSsl["sslprofile"])
@@ -667,6 +732,7 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	hasChange := false
 	sslcertkeyChanged := false
 	sslprofileChanged := false
+	snisslcertkeysChanged := false
 	ciphersChanged := false
 	ciphersuitesChanged := false
 	lbvserverbindingChanged := false
@@ -999,6 +1065,10 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] netscaler-provider:  ssl certkey has changed for csvserver %s, starting update", csvserverName)
 		sslcertkeyChanged = true
 	}
+	if d.HasChange("snisslcertkeys") {
+		log.Printf("[DEBUG] netscaler-provider:  sni ssl certkeys has changed for lbvserver %s, starting update", csvserverName)
+		snisslcertkeysChanged = true
+	}
 	if d.HasChange("sslprofile") {
 		log.Printf("[DEBUG] netscaler-provider:  ssl profile has changed for csvserver %s, starting update", csvserverName)
 		sslprofileChanged = true
@@ -1113,6 +1183,13 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	if snisslcertkeysChanged {
+		err := syncSnisslcert(d, meta, csvserverName)
+		if err != nil {
+			return err
+		}
+	}
+
 	// Ignore for standalone
 	if ciphersChanged && isTargetAdcCluster(client) {
 		if err := syncCiphers(d, meta, csvserverName); err != nil {
@@ -1122,6 +1199,12 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 
 	if ciphersuitesChanged {
 		if err := syncCiphersuites(d, meta, csvserverName); err != nil {
+			return err
+		}
+	}
+
+	if d.HasChange("sslpolicybinding") {
+		if err := updateSslpolicyBindings(d, meta, csvserverName); err != nil {
 			return err
 		}
 	}
