@@ -6,6 +6,7 @@ import (
 
 	"github.com/chiradeep/go-nitro/config/basic"
 	"github.com/chiradeep/go-nitro/config/lb"
+	"github.com/chiradeep/go-nitro/config/ssl"
 	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -299,6 +300,18 @@ func resourceCitrixAdcService() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+
+			// SSL service parameters
+			"snienable": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"commonname": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -427,6 +440,13 @@ func createServiceFunc(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	if hasSslserviceProperties(d) {
+		err := syncSslservice(d, client)
+		if err != nil {
+			return err
+		}
+	}
+
 	d.SetId(serviceName)
 	err = readServiceFunc(d, meta)
 	if err != nil {
@@ -538,6 +558,13 @@ func readServiceFunc(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 	d.Set("lbmonitor", boundMonitor)
+
+	if hasSslserviceProperties(d) {
+		err := readSslservice(d, client)
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 
@@ -886,6 +913,13 @@ func updateServiceFunc(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] netscaler-provider: new lbvserver has been bound to service  lbvserver %s service %s", lbvserverName, serviceName)
 	}
 
+	if hasSslserviceProperties(d) {
+		err := syncSslservice(d, client)
+		if err != nil {
+			return err
+		}
+	}
+
 	if stateChange {
 		err := doServiceStateChange(d, client)
 		if err != nil {
@@ -941,6 +975,64 @@ func doServiceStateChange(d *schema.ResourceData, client *netscaler.NitroClient)
 		}
 	} else {
 		return fmt.Errorf("\"%s\" is not a valid state. Use (\"ENABLED\", \"DISABLED\").", newstate)
+	}
+
+	return nil
+}
+
+func hasSslserviceProperties(d *schema.ResourceData) bool {
+	hasProperties := false
+	if _, ok := d.GetOk("snienable"); ok {
+		hasProperties = true
+	}
+	if _, ok := d.GetOk("commonname"); ok {
+		hasProperties = true
+	}
+	return hasProperties
+}
+
+func readSslservice(d *schema.ResourceData, client *netscaler.NitroClient) error {
+	log.Printf("[DEBUG]  netscaler-provider: In readSslservice")
+
+	// Only go ahead and read if sslservice parameters are defined
+	if !hasSslserviceProperties(d) {
+		return nil
+	}
+
+	// Fallthrough
+	sslserviceName := d.Get("name").(string)
+	findParams := netscaler.FindParams{
+		ResourceType: "sslservice",
+		ResourceName: sslserviceName,
+	}
+	arr, err := client.FindResourceArrayWithParams(findParams)
+	if err != nil {
+		return err
+	}
+	if len(arr) > 1 {
+		return fmt.Errorf("Too many sslservice results \"%v\"", arr)
+	}
+	d.Set("snienable", arr[0]["snienable"])
+	d.Set("commonname", arr[0]["commonname"])
+	return nil
+}
+
+func syncSslservice(d *schema.ResourceData, client *netscaler.NitroClient) error {
+	log.Printf("[DEBUG]  netscaler-provider: In syncSslservice")
+	if !hasSslserviceProperties(d) {
+		return nil
+	}
+
+	// Faltrhough
+	sslserviceName := d.Get("name").(string)
+	sslservice := ssl.Sslservice{
+		Servicename: sslserviceName,
+		Snienable:   d.Get("snienable").(string),
+		Commonname:  d.Get("commonname").(string),
+	}
+	err := client.UpdateUnnamedResource("sslservice", &sslservice)
+	if err != nil {
+		return err
 	}
 
 	return nil
