@@ -128,6 +128,9 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_auditmessageaction":   resourceCitrixAdcAuditmessageaction(),
 		"citrixadc_auditsyslogaction":    resourceCitrixAdcAuditsyslogaction(),
 		"citrixadc_auditsyslogpolicy":    resourceCitrixAdcAuditsyslogpolicy(),
+		"citrixadc_rebooter":             resourceCitrixAdcRebooter(),
+		"citrixadc_installer":            resourceCitrixAdcInstaller(),
+		"citrixadc_pinger":               resourceCitrixAdcPinger(),
 	}
 }
 

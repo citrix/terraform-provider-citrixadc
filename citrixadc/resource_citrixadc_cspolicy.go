@@ -63,6 +63,13 @@ func resourceCitrixAdcCspolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"forcenew_id_set": &schema.Schema{
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"priority": &schema.Schema{
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -194,12 +201,14 @@ func readCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	var boundCsvserver string
 	for _, binding := range bindings {
+		log.Printf("[TRACE] netscaler-provider: csvserver_cspolicy binding %v", binding)
 		csv, ok := binding["domain"]
 		if ok {
 			boundCsvserver = csv.(string)
 			break
 		}
 	}
+	log.Printf("[TRACE] netscaler-provider: boundCsvserver %v", boundCsvserver)
 	d.Set("csvserver", boundCsvserver)
 
 	return nil
@@ -312,7 +321,7 @@ func deleteCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	//First we unbind from cs vserver if necessary
 	err := client.UnbindResource(netscaler.Csvserver.Type(), csvserver, netscaler.Cspolicy.Type(), cspolicyName, "policyname")
 	if err != nil {
-		return fmt.Errorf("[ERROR] netscaler-provider: Error unbinding cspolicy from csvserver %s", cspolicyName)
+		return fmt.Errorf("[ERROR] netscaler-provider: Error unbinding cspolicy \"%s\" from csvserver \"%v\": %v ", cspolicyName, csvserver, err.Error())
 	}
 	err = client.DeleteResource(netscaler.Cspolicy.Type(), cspolicyName)
 	if err != nil {
