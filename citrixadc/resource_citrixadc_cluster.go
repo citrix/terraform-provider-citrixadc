@@ -144,6 +144,42 @@ func resourceCitrixAdcCluster() *schema.Resource {
 				Optional: true,
 				Default:  "10m",
 			},
+			"clusternodegroup": {
+				Type:     schema.TypeSet,
+				Required: true,
+				Computed: false,
+				Set:      clusternodegroupMappingHash,
+				MinItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": &schema.Schema{
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"priority": &schema.Schema{
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
+						},
+						"state": &schema.Schema{
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"sticky": &schema.Schema{
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"strict": &schema.Schema{
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"clusternode": {
 				Type:     schema.TypeSet,
 				Required: true,
@@ -290,6 +326,12 @@ func readClusterFunc(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
+	if isClusterModeL3(d) {
+		err = readClusterNodegroups(d, meta)
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 
@@ -305,6 +347,7 @@ func updateClusterFunc(d *schema.ResourceData, meta interface{}) error {
 		Clid: d.Get("clid").(int),
 	}
 	hasChange := false
+	clusterNodegroupChanged := false
 	if d.HasChange("backplanebasedview") {
 		log.Printf("[DEBUG]  citrixadc-provider: Backplanebasedview has changed for clusterinstance %s, starting update", clid)
 		clusterinstance.Backplanebasedview = d.Get("backplanebasedview").(string)
@@ -356,6 +399,11 @@ func updateClusterFunc(d *schema.ResourceData, meta interface{}) error {
 		hasChange = true
 	}
 
+	if d.HasChange("clusternodegroup") {
+		log.Printf("[DEBUG]  citrixadc-provider: clusternodegroup has changed for clusterinstance %s, starting update", clid)
+		clusterNodegroupChanged = true
+	}
+
 	if hasChange {
 		_, err := client.UpdateResource(netscaler.Clusterinstance.Type(), clid, &clusterinstance)
 		if err != nil {
@@ -363,9 +411,27 @@ func updateClusterFunc(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	// Add and update nodgroups before nodes
+	if isClusterModeL3(d) && clusterNodegroupChanged {
+		if err := addClusterNodegroups(d, meta); err != nil {
+			return err
+		}
+		if err := updateClusterNodegroups(d, meta); err != nil {
+			return err
+		}
+	}
+
 	if err := updateClusterNodes(d, meta); err != nil {
 		return err
 	}
+
+	// Delete nodegroups after nodes
+	if isClusterModeL3(d) && clusterNodegroupChanged {
+		if err := deleteClusterNodegroups(d, meta); err != nil {
+			return err
+		}
+	}
+
 	return readClusterFunc(d, meta)
 }
 
@@ -394,6 +460,35 @@ func deleteClusterFunc(d *schema.ResourceData, meta interface{}) error {
 	d.SetId("")
 
 	return nil
+}
+
+func clusternodegroupMappingHash(v interface{}) int {
+	log.Printf("[DEBUG]  citrixadc-provider: In clusternodegroupMappingHash")
+	var buf bytes.Buffer
+
+	m := v.(map[string]interface{})
+
+	if d, ok := m["name"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", d.(string)))
+	}
+
+	if d, ok := m["priority"]; ok {
+		buf.WriteString(fmt.Sprintf("%d-", d.(int)))
+	}
+
+	if d, ok := m["state"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", d.(string)))
+	}
+
+	if d, ok := m["sticky"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", d.(string)))
+	}
+
+	if d, ok := m["strict"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", d.(string)))
+	}
+
+	return hashcode.String(buf.String())
 }
 
 func clusternodeMappingHash(v interface{}) int {
@@ -501,11 +596,88 @@ func getClusterNodeByid(d *schema.ResourceData, id int) map[string]interface{} {
 	return nil
 }
 
+func getClusterNodegroupByName(d *schema.ResourceData, nodegroupName string) map[string]interface{} {
+	log.Printf("[DEBUG]  citrixadc-provider: In getClusterNodegroupByName")
+	for _, item := range d.Get("clusternodegroup").(*schema.Set).List() {
+		val := item.(map[string]interface{})
+		if val["name"].(string) == nodegroupName {
+			return val
+		}
+	}
+	return nil
+}
+
+func clusternodegroupExistsInCluster(client *netscaler.NitroClient, nodegroupName string) (bool, error) {
+	log.Printf("[DEBUG]  citrixadc-provider: In clusternodegroupExistsInCluster")
+	findParams := netscaler.FindParams{
+		ResourceType:             "clusternodegroup",
+		ResourceName:             nodegroupName,
+		ResourceMissingErrorCode: 258,
+	}
+	data, err := client.FindResourceArrayWithParams(findParams)
+	log.Printf("[DEBUG]  citrixadc-provider: data %v", data)
+
+	if err != nil {
+		return false, err
+	}
+
+	if len(data) == 0 {
+		return false, nil
+	} else if len(data) == 1 {
+		return true, nil
+	} else {
+		return false, fmt.Errorf("Got multiple node groups existing for name %s. ( %v )", nodegroupName, data)
+	}
+
+}
+
+func getClusternodegroupFromCluster(client *netscaler.NitroClient, nodegroupName string) (map[string]interface{}, error) {
+	log.Printf("[DEBUG]  citrixadc-provider: In getClusternodegroupFromCluster")
+	findParams := netscaler.FindParams{
+		ResourceType:             "clusternodegroup",
+		ResourceName:             nodegroupName,
+		ResourceMissingErrorCode: 258,
+	}
+	data, err := client.FindResourceArrayWithParams(findParams)
+	log.Printf("[DEBUG]  citrixadc-provider: data %v", data)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(data) == 0 {
+		return nil, nil
+	} else if len(data) == 1 {
+		return data[0], nil
+	} else {
+		return nil, fmt.Errorf("Got multiple node groups existing for name %s. ( %v )", nodegroupName, data)
+	}
+}
+
+func isClusterModeL3(d *schema.ResourceData) bool {
+	log.Printf("[DEBUG]  citrixadc-provider: In isClusterModeL3")
+	inc := d.Get("inc").(string)
+	nodegroupList := d.Get("clusternodegroup").(*schema.Set).List()
+	if inc == "ENABLED" && len(nodegroupList) > 0 {
+		return true
+	} else {
+		return false
+	}
+}
+
 func bootstrapCluster(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In bootstrapCluster")
 	var err error
+
 	if err = createFirstClusterNode(d, meta); err != nil {
 		return err
+	}
+
+	if isClusterModeL3(d) {
+		err = addClusterNodegroups(d, meta)
+		if err != nil {
+			return err
+		}
 	}
 
 	// Join rest of nodes to the cluster
@@ -560,6 +732,28 @@ func createFirstClusterNode(d *schema.ResourceData, meta interface{}) error {
 	_, err = nodeClient.AddResource("clusterinstance", clusterId, &clusterinstance)
 	if err != nil {
 		return err
+	}
+
+	// In L3 we need to create the nodegroup prior to adding the node
+	if isClusterModeL3(d) {
+		nodegroupName := firstNode["nodegroup"].(string)
+		nodegroupData := getClusterNodegroupByName(d, nodegroupName)
+		if nodegroupData == nil {
+			return fmt.Errorf("Cannot find node group %s in configuration", nodegroupName)
+		}
+
+		clusternodegroup := cluster.Clusternodegroup{
+			Name:     nodegroupData["name"].(string),
+			Priority: nodegroupData["priority"].(int),
+			State:    nodegroupData["state"].(string),
+			Sticky:   nodegroupData["sticky"].(string),
+			Strict:   nodegroupData["strict"].(string),
+		}
+
+		_, err := nodeClient.AddResource("clusternodegroup", clusternodegroup.Name, &clusternodegroup)
+		if err != nil {
+			return err
+		}
 	}
 
 	// Add first cluster node
@@ -668,6 +862,227 @@ func createFirstClusterNode(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
+func readClusterNodegroups(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[DEBUG]  citrixadc-provider: In readClusterNodegroups")
+
+	client := meta.(*NetScalerNitroClient).client
+	clusternodegroups, err := client.FindAllResources("clusternodegroup")
+	if err != nil {
+		return err
+	}
+
+	log.Printf("[DEBUG]  citrixadc-provider: fetched clusternodegroups %v", clusternodegroups)
+
+	processedClusterNodegroups := make([]interface{}, 0, len(clusternodegroups))
+	for _, clusternodegroup := range clusternodegroups {
+		node := make(map[string]interface{})
+
+		if _, ok := clusternodegroup["name"]; ok {
+			node["name"] = clusternodegroup["name"].(string)
+		}
+
+		if _, ok := clusternodegroup["priority"]; ok {
+			node["priority"] = clusternodegroup["priority"].(int)
+		}
+
+		if _, ok := clusternodegroup["state"]; ok {
+			node["state"] = clusternodegroup["state"].(string)
+		}
+
+		if _, ok := clusternodegroup["sticky"]; ok {
+			node["sticky"] = clusternodegroup["sticky"].(string)
+		}
+
+		if _, ok := clusternodegroup["strict"]; ok {
+			node["strict"] = clusternodegroup["strict"].(string)
+		}
+
+		if node["name"] == "DEFAULT_NG" {
+			continue
+		} else {
+			processedClusterNodegroups = append(processedClusterNodegroups, node)
+		}
+	}
+
+	updatedSet := schema.NewSet(clusternodegroupMappingHash, processedClusterNodegroups)
+	log.Printf("updatedSet %v\n", updatedSet)
+	if err := d.Set("clusternodegroup", updatedSet); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func addClusterNodegroups(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[DEBUG]  citrixadc-provider: In addClusterNodegroups")
+	client := meta.(*NetScalerNitroClient).client
+
+	nodegroupList := d.Get("clusternodegroup").(*schema.Set).List()
+	for _, nodegroup := range nodegroupList {
+		nodegroupData := nodegroup.(map[string]interface{})
+		name := nodegroupData["name"].(string)
+
+		exists, err := clusternodegroupExistsInCluster(client, name)
+
+		if err != nil {
+			return err
+		}
+
+		if !exists {
+			err = addSingleClusterNodegroup(d, meta, nodegroupData)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func updateClusterNodegroups(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[DEBUG]  citrixadc-provider: In updateClusterNodegroups")
+	client := meta.(*NetScalerNitroClient).client
+
+	// Do updates
+	nodegroupList := d.Get("clusternodegroup").(*schema.Set).List()
+	for _, nodegroup := range nodegroupList {
+		nodegroupData := nodegroup.(map[string]interface{})
+		name := nodegroupData["name"].(string)
+
+		exists, err := clusternodegroupExistsInCluster(client, name)
+
+		if err != nil {
+			return err
+		}
+
+		if exists {
+			fetchedNodegroupData, err := getClusternodegroupFromCluster(client, nodegroupData["name"].(string))
+			if err != nil {
+				return err
+			}
+			needsUpdate := false
+			// Check if any attribute needs update
+			for k, configValue := range nodegroupData {
+				fetchedValue, _ := fetchedNodegroupData[k]
+				if k == "priority" {
+					// Priority is numeric
+					if configValue != 0 && fetchedValue != configValue {
+						log.Printf("[DEBUG]  citrixadc-provider: needs update k:%v config:%v fetched:%v", k, configValue, fetchedValue)
+						needsUpdate = true
+					}
+				} else {
+					// Other keys are strings
+					if configValue != "" && fetchedValue != configValue {
+						log.Printf("[DEBUG]  citrixadc-provider: needs update k:%v config:%v fetched:%v", k, configValue, fetchedValue)
+						needsUpdate = true
+					}
+				}
+			}
+
+			log.Printf("[DEBUG]  citrixadc-provider: nodegroup:%v needsUpdate:%v", nodegroupData["name"], needsUpdate)
+			if needsUpdate {
+				err = updateSingleClusterNodegroup(d, meta, nodegroupData)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
+func deleteClusterNodegroups(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[DEBUG]  citrixadc-provider: In deleteClusterNodegroups")
+
+	o, n := d.GetChange("clusternodegroup")
+	oldSet := o.(*schema.Set)
+	newSet := n.(*schema.Set)
+
+	log.Printf("[DEBUG]  citrixadc-provider: old nodegroup set: %v", oldSet)
+	log.Printf("[DEBUG]  citrixadc-provider: new nodegroup set: %v", newSet)
+
+	nameInSet := func(s *schema.Set, name string) bool {
+		for _, v := range s.List() {
+			if v.(map[string]interface{})["name"].(string) == name {
+				return true
+			}
+		}
+		return false
+	}
+
+	// Do deletes
+	for _, nodegroup := range oldSet.List() {
+		nodegroupData := nodegroup.(map[string]interface{})
+		name := nodegroupData["name"].(string)
+
+		// Ignore DEFAULT_NG node group
+		if name == "DEFAULT_NG" {
+			continue
+		}
+
+		if !nameInSet(newSet, name) {
+			deleteSingleClusterNodegroup(d, meta, nodegroupData)
+		}
+	}
+	return nil
+}
+
+func updateSingleClusterNodegroup(d *schema.ResourceData, meta interface{}, nodegroupData map[string]interface{}) error {
+	log.Printf("[DEBUG]  citrixadc-provider: In updateSingleClusterNodegroup")
+	client := meta.(*NetScalerNitroClient).client
+
+	log.Printf("[DEBUG]  citrixadc-provider: Updating nodegroup %v", nodegroupData)
+
+	clusternodegroup := cluster.Clusternodegroup{
+		Name:     nodegroupData["name"].(string),
+		Priority: nodegroupData["priority"].(int),
+		State:    nodegroupData["state"].(string),
+		Sticky:   nodegroupData["sticky"].(string),
+		Strict:   nodegroupData["strict"].(string),
+	}
+	err := client.UpdateUnnamedResource("clusternodegroup", &clusternodegroup)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func deleteSingleClusterNodegroup(d *schema.ResourceData, meta interface{}, nodegroupData map[string]interface{}) error {
+	log.Printf("[DEBUG]  citrixadc-provider: In deleteSingleClusterNodegroup")
+	client := meta.(*NetScalerNitroClient).client
+
+	nodeName := nodegroupData["name"].(string)
+	err := client.DeleteResource("clusternodegroup", nodeName)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func addSingleClusterNodegroup(d *schema.ResourceData, meta interface{}, nodegroupData map[string]interface{}) error {
+	log.Printf("[DEBUG]  citrixadc-provider: In addSingleClusterNodegroup")
+
+	client := meta.(*NetScalerNitroClient).client
+
+	log.Printf("[DEBUG]  citrixadc-provider: Adding nodegroup %v", nodegroupData)
+
+	clusternodegroup := cluster.Clusternodegroup{
+		Name:     nodegroupData["name"].(string),
+		Priority: nodegroupData["priority"].(int),
+		State:    nodegroupData["state"].(string),
+		Sticky:   nodegroupData["sticky"].(string),
+		Strict:   nodegroupData["strict"].(string),
+	}
+
+	// Add cluster nodegroup on cluster configuration coordinator
+	_, err := client.AddResource("clusternodegroup", clusternodegroup.Name, &clusternodegroup)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func readClusterNodes(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In readClusterNodes")
 	client := meta.(*NetScalerNitroClient).client
@@ -691,7 +1106,9 @@ func readClusterNodes(d *schema.ResourceData, meta interface{}) error {
 			node["clearnodegroupconfig"] = val.(string)
 		}
 
-		node["backplane"] = clusternode["backplane"].(string)
+		if _, ok := clusternode["backplane"]; ok {
+			node["backplane"] = clusternode["backplane"].(string)
+		}
 		node["delay"] = int(clusternode["delay"].(float64))
 		node["ipaddress"] = clusternode["ipaddress"].(string)
 		node["nodegroup"] = clusternode["nodegroup"].(string)
