@@ -132,6 +132,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_installer":            resourceCitrixAdcInstaller(),
 		"citrixadc_pinger":               resourceCitrixAdcPinger(),
 		"citrixadc_nsrpcnode":            resourceCitrixAdcNsrpcnode(),
+		"citrixadc_routerdynamicrouting": resourceCitrixAdcRouterdynamicrouting(),
 	}
 }
 
