@@ -71,6 +71,7 @@ github.com/chiradeep/go-nitro/config/network
 github.com/chiradeep/go-nitro/config/ns
 github.com/chiradeep/go-nitro/config/responder
 github.com/chiradeep/go-nitro/config/rewrite
+github.com/chiradeep/go-nitro/config/router
 github.com/chiradeep/go-nitro/config/ssl
 github.com/chiradeep/go-nitro/config/system
 github.com/chiradeep/go-nitro/config/utility
