@@ -69,6 +69,7 @@ github.com/chiradeep/go-nitro/config/gslb
 github.com/chiradeep/go-nitro/config/lb
 github.com/chiradeep/go-nitro/config/network
 github.com/chiradeep/go-nitro/config/ns
+github.com/chiradeep/go-nitro/config/policy
 github.com/chiradeep/go-nitro/config/responder
 github.com/chiradeep/go-nitro/config/rewrite
 github.com/chiradeep/go-nitro/config/router
