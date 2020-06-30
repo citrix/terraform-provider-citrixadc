@@ -135,6 +135,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_routerdynamicrouting": resourceCitrixAdcRouterdynamicrouting(),
 		"citrixadc_policyexpression":     resourceCitrixAdcPolicyexpression(),
 		"citrixadc_systemextramgmtcpu":   resourceCitrixAdcSystemextramgmtcpu(),
+		"citrixadc_netprofile":           resourceCitrixAdcNetprofile(),
 	}
 }
 
