@@ -146,7 +146,7 @@ func resourceCitrixAdcCluster() *schema.Resource {
 			},
 			"clusternodegroup": {
 				Type:     schema.TypeSet,
-				Required: true,
+				Optional: true,
 				Computed: false,
 				Set:      clusternodegroupMappingHash,
 				MinItems: 1,
@@ -657,6 +657,9 @@ func getClusternodegroupFromCluster(client *netscaler.NitroClient, nodegroupName
 func isClusterModeL3(d *schema.ResourceData) bool {
 	log.Printf("[DEBUG]  citrixadc-provider: In isClusterModeL3")
 	inc := d.Get("inc").(string)
+	if _, ok := d.GetOk("clusternodegroup"); !ok {
+		return false
+	}
 	nodegroupList := d.Get("clusternodegroup").(*schema.Set).List()
 	if inc == "ENABLED" && len(nodegroupList) > 0 {
 		return true
