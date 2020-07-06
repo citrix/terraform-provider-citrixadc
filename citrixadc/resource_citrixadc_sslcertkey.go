@@ -19,6 +19,9 @@ func resourceCitrixAdcSslcertkey() *schema.Resource {
 		Update:        updateSslcertkeyFunc,
 		Delete:        deleteSslcertkeyFunc,
 		CustomizeDiff: customizeDiff,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"bundle": &schema.Schema{
 				Type:     schema.TypeString,
