@@ -17,6 +17,9 @@ func resourceCitrixAdcInterface() *schema.Resource {
 		Read:          readInterfaceFunc,
 		Update:        updateInterfaceFunc,
 		Delete:        deleteInterfaceFunc,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"autoneg": &schema.Schema{
 				Type:     schema.TypeString,
