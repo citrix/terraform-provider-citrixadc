@@ -20,6 +20,9 @@ func resourceCitrixAdcServicegroup() *schema.Resource {
 		Read:          readServicegroupFunc,
 		Update:        updateServicegroupFunc,
 		Delete:        deleteServicegroupFunc,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"appflowlog": &schema.Schema{
 				Type:     schema.TypeString,
