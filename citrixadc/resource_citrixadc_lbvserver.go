@@ -19,6 +19,9 @@ func resourceCitrixAdcLbvserver() *schema.Resource {
 		Read:          readLbvserverFunc,
 		Update:        updateLbvserverFunc,
 		Delete:        deleteLbvserverFunc,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"appflowlog": &schema.Schema{
 				Type:     schema.TypeString,
