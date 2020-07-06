@@ -17,6 +17,9 @@ func resourceCitrixAdcSystemcmdpolicy() *schema.Resource {
 		Read:          readSystemcmdpolicyFunc,
 		Update:        updateSystemcmdpolicyFunc,
 		Delete:        deleteSystemcmdpolicyFunc,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"action": &schema.Schema{
 				Type:     schema.TypeString,
