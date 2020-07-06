@@ -17,6 +17,9 @@ func resourceCitrixAdcNsrpcnode() *schema.Resource {
 		Read:          readNsrpcnodeFunc,
 		Update:        updateNsrpcnodeFunc,
 		Delete:        deleteNsrpcnodeFunc,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"ipaddress": &schema.Schema{
 				Type:     schema.TypeString,
