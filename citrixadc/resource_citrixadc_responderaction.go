@@ -19,6 +19,9 @@ func resourceCitrixAdcResponderaction() *schema.Resource {
 		Update:        updateResponderactionFunc,
 		Delete:        deleteResponderactionFunc,
 		CustomizeDiff: customizeResponderactionDiff,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"bypasssafetycheck": &schema.Schema{
 				Type:     schema.TypeString,
