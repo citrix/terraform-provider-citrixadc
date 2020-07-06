@@ -18,6 +18,9 @@ func resourceCitrixAdcServer() *schema.Resource {
 		Read:          readServerFunc,
 		Update:        updateServerFunc,
 		Delete:        deleteServerFunc,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"comment": &schema.Schema{
 				Type:     schema.TypeString,
