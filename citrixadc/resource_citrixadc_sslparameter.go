@@ -18,6 +18,9 @@ func resourceCitrixAdcSslparameter() *schema.Resource {
 		Read:          readSslparameterFunc,
 		Update:        updateSslparameterFunc,
 		Delete:        deleteSslparameterFunc, // Thought sslparameter resource donot have DELETE operation, it is required to set ID to "" d.SetID("") to maintain terraform state
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"crlmemorysizemb": &schema.Schema{
 				Type:     schema.TypeInt,
