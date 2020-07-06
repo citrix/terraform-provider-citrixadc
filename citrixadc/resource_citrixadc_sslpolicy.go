@@ -17,6 +17,9 @@ func resourceCitrixAdcSslpolicy() *schema.Resource {
 		Read:          readSslpolicyFunc,
 		Update:        updateSslpolicyFunc,
 		Delete:        deleteSslpolicyFunc,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"action": &schema.Schema{
 				Type:     schema.TypeString,
