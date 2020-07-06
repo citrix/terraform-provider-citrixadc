@@ -99,6 +99,9 @@ func resourceCitrixAdcSslprofile() *schema.Resource {
 		Read:          readSslprofileFunc,
 		Update:        updateSslprofileFunc,
 		Delete:        deleteSslprofileFunc,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
 				Type:     schema.TypeString,
