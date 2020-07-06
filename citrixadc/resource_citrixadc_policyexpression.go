@@ -17,6 +17,9 @@ func resourceCitrixAdcPolicyexpression() *schema.Resource {
 		Read:          readPolicyexpressionFunc,
 		Update:        updatePolicyexpressionFunc,
 		Delete:        deletePolicyexpressionFunc,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"clientsecuritymessage": &schema.Schema{
 				Type:     schema.TypeString,
