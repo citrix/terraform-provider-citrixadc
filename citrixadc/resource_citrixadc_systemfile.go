@@ -20,6 +20,16 @@ func resourceCitrixAdcSystemfile() *schema.Resource {
 		Create:        createSystemfileFunc,
 		Read:          readSystemfileFunc,
 		Delete:        deleteSystemfileFunc,
+		Importer: &schema.ResourceImporter{
+			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				fullpath := d.Id()
+				d.Set("filelocation", path.Dir(fullpath))
+				d.Set("filename", path.Base(fullpath))
+
+				return []*schema.ResourceData{d}, nil
+			},
+		},
+
 		Schema: map[string]*schema.Schema{
 			"filecontent": &schema.Schema{
 				Type:     schema.TypeString,
