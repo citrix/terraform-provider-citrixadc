@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 
-	_ "fmt"
 	"log"
 )
 
@@ -19,6 +18,9 @@ func resourceCitrixAdcSystemextramgmtcpu() *schema.Resource {
 		Read:          readSystemextramgmtcpuFunc,
 		Delete:        schema.Noop,
 		Update:        schema.Noop,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"enabled": &schema.Schema{
 				Type:     schema.TypeBool,
