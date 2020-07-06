@@ -15,6 +15,9 @@ func resourceCitrixAdcRewritepolicylabel() *schema.Resource {
 		Create:        createRewritepolicylabelFunc,
 		Read:          readRewritepolicylabelFunc,
 		Delete:        deleteRewritepolicylabelFunc,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"comment": &schema.Schema{
 				Type:     schema.TypeString,
