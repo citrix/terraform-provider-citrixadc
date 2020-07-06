@@ -18,6 +18,9 @@ func resourceCitrixAdcInat() *schema.Resource {
 		Read:          readInatFunc,
 		Update:        updateInatFunc,
 		Delete:        deleteInatFunc,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"ftp": &schema.Schema{
 				Type:     schema.TypeString,
