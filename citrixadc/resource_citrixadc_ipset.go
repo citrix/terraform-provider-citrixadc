@@ -16,6 +16,9 @@ func resourceCitrixAdcIpset() *schema.Resource {
 		Create:        createIpsetFunc,
 		Read:          readIpsetFunc,
 		Delete:        deleteIpsetFunc,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
 				Type:     schema.TypeString,
