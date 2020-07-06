@@ -18,6 +18,9 @@ func resourceCitrixAdcLbmonitor() *schema.Resource {
 		Read:          readLbmonitorFunc,
 		Update:        updateLbmonitorFunc,
 		Delete:        deleteLbmonitorFunc,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"action": &schema.Schema{
 				Type:     schema.TypeString,

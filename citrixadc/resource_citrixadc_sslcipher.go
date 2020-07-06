@@ -22,6 +22,9 @@ func resourceCitrixAdcSslcipher() *schema.Resource {
 		Read:          readSslcipherFunc,
 		// Update:        updateSslcipherFunc, // All fields are ForceNew or Computed w/out Optional, Update is superfluous
 		Delete: deleteSslcipherFunc,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"ciphergroupname": &schema.Schema{
 				Type:     schema.TypeString,

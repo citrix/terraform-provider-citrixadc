@@ -19,6 +19,9 @@ func resourceCitrixAdcCsvserver() *schema.Resource {
 		Read:          readCsvserverFunc,
 		Update:        updateCsvserverFunc,
 		Delete:        deleteCsvserverFunc,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"appflowlog": &schema.Schema{
 				Type:     schema.TypeString,

@@ -20,6 +20,9 @@ func resourceCitrixAdcSystemgroup() *schema.Resource {
 		Read:          readSystemgroupFunc,
 		Update:        updateSystemgroupFunc,
 		Delete:        deleteSystemgroupFunc,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"groupname": &schema.Schema{
 				Type:     schema.TypeString,

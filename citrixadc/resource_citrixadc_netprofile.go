@@ -18,6 +18,9 @@ func resourceCitrixAdcNetprofile() *schema.Resource {
 		Read:          readNetprofileFunc,
 		Update:        updateNetprofileFunc,
 		Delete:        deleteNetprofileFunc,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"mbf": &schema.Schema{
 				Type:     schema.TypeString,

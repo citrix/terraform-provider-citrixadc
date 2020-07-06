@@ -19,6 +19,9 @@ func resourceCitrixAdcRewriteaction() *schema.Resource {
 		Update:        updateRewriteactionFunc,
 		Delete:        deleteRewriteactionFunc,
 		CustomizeDiff: customizeRewriteactionDiff,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"bypasssafetycheck": &schema.Schema{
 				Type:     schema.TypeString,

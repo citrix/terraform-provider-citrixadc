@@ -18,6 +18,9 @@ func resourceCitrixAdcNsacl() *schema.Resource {
 		Read:          readNsaclFunc,
 		Update:        updateNsaclFunc,
 		Delete:        deleteNsaclFunc,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"aclaction": &schema.Schema{
 				Type:     schema.TypeString,

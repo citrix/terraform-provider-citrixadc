@@ -18,6 +18,9 @@ func resourceCitrixAdcLinkset() *schema.Resource {
 		Create:        createLinksetFunc,
 		Read:          readLinksetFunc,
 		Delete:        deleteLinksetFunc,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"linkset_id": &schema.Schema{
 				Type:     schema.TypeString,

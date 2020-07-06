@@ -18,6 +18,9 @@ func resourceCitrixAdcGslbsite() *schema.Resource {
 		Read:          readGslbsiteFunc,
 		Update:        updateGslbsiteFunc,
 		Delete:        deleteGslbsiteFunc,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"clip": &schema.Schema{
 				Type:     schema.TypeString,

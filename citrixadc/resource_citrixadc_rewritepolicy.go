@@ -24,6 +24,9 @@ func resourceCitrixAdcRewritepolicy() *schema.Resource {
 		Read:          readRewritepolicyFunc,
 		Update:        updateRewritepolicyFunc,
 		Delete:        deleteRewritepolicyFunc,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"action": &schema.Schema{
 				Type:     schema.TypeString,
@@ -236,12 +239,6 @@ func createRewritepolicyFunc(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(rewritepolicyName)
 
-	err = readRewritepolicyFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this rewritepolicy but we can't read it ?? %s", rewritepolicyName)
-		return nil
-	}
-
 	if err := updateRewriteGlobalBinding(d, meta); err != nil {
 		return err
 	}
@@ -252,6 +249,12 @@ func createRewritepolicyFunc(d *schema.ResourceData, meta interface{}) error {
 
 	if err := updateRewriteCsvserverBindings(d, meta); err != nil {
 		return err
+	}
+
+	err = readRewritepolicyFunc(d, meta)
+	if err != nil {
+		log.Printf("[ERROR] netscaler-provider: ?? we just created this rewritepolicy but we can't read it ?? %s", rewritepolicyName)
+		return nil
 	}
 
 	return nil

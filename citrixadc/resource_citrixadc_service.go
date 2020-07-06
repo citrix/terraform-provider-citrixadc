@@ -19,6 +19,9 @@ func resourceCitrixAdcService() *schema.Resource {
 		Read:          readServiceFunc,
 		Update:        updateServiceFunc,
 		Delete:        deleteServiceFunc,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"accessdown": {
 				Type:     schema.TypeString,

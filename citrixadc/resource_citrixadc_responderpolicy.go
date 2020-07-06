@@ -25,6 +25,9 @@ func resourceCitrixAdcResponderpolicy() *schema.Resource {
 		Update:        updateResponderpolicyFunc,
 		Delete:        deleteResponderpolicyFunc,
 		//CustomizeDiff: customizeResponderpolicyDiff,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"action": &schema.Schema{
 				Type:     schema.TypeString,

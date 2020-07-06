@@ -22,6 +22,9 @@ func resourceCitrixAdcAuditsyslogpolicy() *schema.Resource {
 		Read:          readAuditsyslogpolicyFunc,
 		Update:        updateAuditsyslogpolicyFunc,
 		Delete:        deleteAuditsyslogpolicyFunc,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"action": &schema.Schema{
 				Type:     schema.TypeString,

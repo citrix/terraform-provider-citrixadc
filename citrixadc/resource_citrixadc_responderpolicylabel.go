@@ -15,6 +15,9 @@ func resourceCitrixAdcResponderpolicylabel() *schema.Resource {
 		Create:        createResponderpolicylabelFunc,
 		Read:          readResponderpolicylabelFunc,
 		Delete:        deleteResponderpolicylabelFunc,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"comment": &schema.Schema{
 				Type:     schema.TypeString,

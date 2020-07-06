@@ -21,6 +21,9 @@ func resourceCitrixAdcGslbservice() *schema.Resource {
 		Read:          readGslbserviceFunc,
 		Update:        updateGslbserviceFunc,
 		Delete:        deleteGslbserviceFunc,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"appflowlog": &schema.Schema{
 				Type:     schema.TypeString,
