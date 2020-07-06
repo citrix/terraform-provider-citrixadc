@@ -17,6 +17,9 @@ func resourceCitrixAdcAuditsyslogaction() *schema.Resource {
 		Read:          readAuditsyslogactionFunc,
 		Update:        updateAuditsyslogactionFunc,
 		Delete:        deleteAuditsyslogactionFunc,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"acl": &schema.Schema{
 				Type:     schema.TypeString,
