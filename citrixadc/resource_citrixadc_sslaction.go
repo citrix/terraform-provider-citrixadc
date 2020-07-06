@@ -15,6 +15,9 @@ func resourceCitrixAdcSslaction() *schema.Resource {
 		Create:        createSslactionFunc,
 		Read:          readSslactionFunc,
 		Delete:        deleteSslactionFunc,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
 				Type:     schema.TypeString,
