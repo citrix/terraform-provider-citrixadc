@@ -18,6 +18,9 @@ func resourceCitrixAdcNstcpprofile() *schema.Resource {
 		Read:          readNstcpprofileFunc,
 		Update:        updateNstcpprofileFunc,
 		Delete:        deleteNstcpprofileFunc,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"ackaggregation": &schema.Schema{
 				Type:     schema.TypeString,
