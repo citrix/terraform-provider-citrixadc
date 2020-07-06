@@ -17,6 +17,9 @@ func resourceCitrixAdcCsaction() *schema.Resource {
 		Read:          readCsactionFunc,
 		Update:        updateCsactionFunc,
 		Delete:        deleteCsactionFunc,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"comment": &schema.Schema{
 				Type:     schema.TypeString,
