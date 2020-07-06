@@ -20,6 +20,9 @@ func resourceCitrixAdcSystemuser() *schema.Resource {
 		Read:          readSystemuserFunc,
 		Update:        updateSystemuserFunc,
 		Delete:        deleteSystemuserFunc,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"externalauth": &schema.Schema{
 				Type:     schema.TypeString,
