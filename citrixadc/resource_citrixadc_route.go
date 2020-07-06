@@ -18,6 +18,9 @@ func resourceCitrixAdcRoute() *schema.Resource {
 		Read:          readRouteFunc,
 		Update:        updateRouteFunc,
 		Delete:        deleteRouteFunc,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"network": &schema.Schema{
 				Type:     schema.TypeString,
