@@ -19,6 +19,9 @@ func resourceCitrixAdcNsip6() *schema.Resource {
 		Read:          readNsip6Func,
 		Update:        updateNsip6Func,
 		Delete:        deleteNsip6Func,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"advertiseondefaultpartition": &schema.Schema{
 				Type:     schema.TypeString,
