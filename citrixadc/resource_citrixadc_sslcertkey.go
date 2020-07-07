@@ -185,8 +185,10 @@ func readSslcertkeyFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("nodomaincheck", data["nodomaincheck"])
 	d.Set("notificationperiod", data["notificationperiod"])
 	d.Set("ocspstaplingcache", data["ocspstaplingcache"])
-	d.Set("passplain", data["passplain"])
-	d.Set("password", data["password"])
+	// `passplain` and `password` are not returned by NITRO request
+	// commenting out to avoid perpetual divergence between local and remote state
+	//d.Set("passplain", data["passplain"])
+	//d.Set("password", data["password"])
 
 	return nil
 
