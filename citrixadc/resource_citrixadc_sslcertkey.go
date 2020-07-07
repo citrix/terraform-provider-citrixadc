@@ -142,12 +142,16 @@ func createSslcertkeyFunc(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	d.SetId(sslcertkeyName)
+
 	if err := handleLinkedCertificate(d, client); err != nil {
 		log.Printf("Error linking certificate during creation\n")
+		err2 := deleteSslcertkeyFunc(d, meta)
+		if err2 != nil {
+			return fmt.Errorf("Delete error:%s while handling linked certificate error: %s", err2.Error(), err.Error())
+		}
 		return err
 	}
-
-	d.SetId(sslcertkeyName)
 
 	err = readSslcertkeyFunc(d, meta)
 	if err != nil {
