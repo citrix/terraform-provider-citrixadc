@@ -699,7 +699,11 @@ func readServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 			break
 		}
 	}
-	d.Set("lbmonitor", boundMonitor)
+	// Need to do this due to explicit binding resource
+	// We ignore lbmonitors if not explicitely defined in the resource
+	if _, ok := d.GetOk("lbmonitor"); ok {
+		d.Set("lbmonitor", boundMonitor)
+	}
 
 	return nil
 
