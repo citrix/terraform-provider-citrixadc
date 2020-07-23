@@ -137,6 +137,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_systemextramgmtcpu":             resourceCitrixAdcSystemextramgmtcpu(),
 		"citrixadc_netprofile":                     resourceCitrixAdcNetprofile(),
 		"citrixadc_servicegroup_lbmonitor_binding": resourceCitrixAdcServicegroup_lbmonitor_binding(),
+		"citrixadc_nsparam":                        resourceCitrixAdcNsparam(),
 	}
 }
 
