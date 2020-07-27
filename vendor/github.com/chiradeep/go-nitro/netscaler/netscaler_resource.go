@@ -439,3 +439,19 @@ func (c *NitroClient) listStat(resourceType, resourceName string) ([]byte, error
 	return c.doHTTPRequest("GET", url, bytes.NewBuffer([]byte{}), readResponseHandler)
 
 }
+
+func (c *NitroClient) listStatWithArgs(resourceType string, resourceName string, args []string) ([]byte, error) {
+	log.Println("[DEBUG] go-nitro: listing stat of type ", resourceType, ", name: ", resourceName, ", args:", args)
+	var url string
+
+	if len(resourceName) > 0 {
+		url = c.statsURL + fmt.Sprintf("%s/%s", resourceType, resourceName)
+	} else {
+		url = c.statsURL + fmt.Sprintf("%s", resourceType)
+	}
+	strArgs := strings.Join(args, ",")
+	url = url + "?args=" + strArgs
+	log.Println("[TRACE] go-nitro: url is ", url)
+
+	return c.doHTTPRequest("GET", url, bytes.NewBuffer([]byte{}), readResponseHandler)
+}

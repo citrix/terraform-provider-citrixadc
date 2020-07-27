@@ -18,6 +18,7 @@ package netscaler
 
 import (
 	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -25,6 +26,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"io/ioutil"
 )
 
 //NitroParams encapsulates options to create a NitroClient
@@ -35,6 +37,8 @@ type NitroParams struct {
 	ProxiedNs string
 	SslVerify bool
 	Timeout   int
+	RootCAPath string
+	ServerName string
 }
 
 //NitroClient has methods to configure the NetScaler
@@ -84,7 +88,25 @@ func NewNitroClientFromParams(params NitroParams) (*NitroClient, error) {
 	c.sessionid = ""
 	c.timeout = params.Timeout
 	if params.SslVerify {
-		c.client = &http.Client{}
+		if( len(params.RootCAPath) > 0 ){
+			caCert, err := ioutil.ReadFile(params.RootCAPath)
+			if err != nil {
+			    return nil, fmt.Errorf("Unable to read certificate file: %v", err)
+			}
+			caCertPool := x509.NewCertPool()
+			if ok := caCertPool.AppendCertsFromPEM(caCert); !ok {
+				return nil, fmt.Errorf("Could not Append CA certificate.")
+			}
+			tr := &http.Transport{
+				TLSClientConfig: &tls.Config{
+					RootCAs: caCertPool,
+					ServerName: params.ServerName,
+				},
+			}
+			c.client = &http.Client{Transport: tr}
+		} else {
+			c.client = &http.Client{}
+		}
 	} else {
 		tr := &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},

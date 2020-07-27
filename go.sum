@@ -87,6 +87,12 @@ github.com/boltdb/bolt v1.3.1/go.mod h1:clJnj/oiGkjum5o1McbSZDSLxVThjynRyGBgiAx2
 github.com/cheggaaa/pb v1.0.27/go.mod h1:pQciLPpbU0oxA0h+VJYYLxO+XeDQb5pZijXscXHm81s=
 github.com/chiradeep/go-nitro v0.0.0-20200327171648-47dbcb679e54 h1:wk2ukyd2A8hgCWemrDCq+pM71QMtn3wpxEQL4aNOH2I=
 github.com/chiradeep/go-nitro v0.0.0-20200327171648-47dbcb679e54/go.mod h1:RIyfAubyIck4tVaQrEiNGW4Y1e6CcTONDnYSX8VktH8=
+github.com/chiradeep/go-nitro v0.0.0-20200522165541-e35ec60a1d1b h1:Q0m3P756l2lcBEEQmm2WWMs/OXs8WtX9D2uY9X9OY6k=
+github.com/chiradeep/go-nitro v0.0.0-20200522165541-e35ec60a1d1b/go.mod h1:RIyfAubyIck4tVaQrEiNGW4Y1e6CcTONDnYSX8VktH8=
+github.com/chiradeep/go-nitro v0.0.0-20200723075907-bf03b0d21306 h1:wuZCDMb2/1c5W3vSyQ1jLZbylVVIkGhW0+v53AGzQcA=
+github.com/chiradeep/go-nitro v0.0.0-20200723075907-bf03b0d21306/go.mod h1:RIyfAubyIck4tVaQrEiNGW4Y1e6CcTONDnYSX8VktH8=
+github.com/chiradeep/go-nitro v0.0.0-20200724075413-fe307aa68464 h1:y8Ovob0o1JKjOvh8LwhfjQSNbFvYVHSRr0t19PqcJlY=
+github.com/chiradeep/go-nitro v0.0.0-20200724075413-fe307aa68464/go.mod h1:RIyfAubyIck4tVaQrEiNGW4Y1e6CcTONDnYSX8VktH8=
 github.com/chzyer/logex v1.1.10/go.mod h1:+Ywpsq7O8HXn0nuIou7OrIPyXbp3wmkHB+jjWRnGsAI=
 github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e h1:fY5BOSpyZCqRo5OhCuC+XN+r/bBCmeuuJtjz+bCNIf8=
 github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e/go.mod h1:nSuG5e5PlCu98SY8svDHJxuZscDgtXS6KTTbou5AhLI=
