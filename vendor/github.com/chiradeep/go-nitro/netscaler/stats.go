@@ -52,3 +52,31 @@ func (c *NitroClient) FindStat(resourceType string, resourceName string) (map[st
 
 	return resource.(map[string]interface{}), nil
 }
+
+func (c *NitroClient) FindStatWithArgs(resourceType string, resourceName string, args []string) (map[string]interface{}, error) {
+
+	var data map[string]interface{}
+	result, err := c.listStatWithArgs(resourceType, resourceName, args)
+	if err != nil {
+		log.Printf("[WARN] go-nitro: FindStatWithArgs: No %s %s found", resourceType, resourceName)
+		return nil, fmt.Errorf("[INFO] go-nitro: FindStatWithArgs: No resource %s of type %s found", resourceName, resourceType)
+	}
+	if err = json.Unmarshal(result, &data); err != nil {
+		log.Printf("[ERROR] go-nitro: FindStatWithArgs: Failed to unmarshal Netscaler Response!")
+		return nil, fmt.Errorf("[ERROR] go-nitro: FindStatWithArgs: Failed to unmarshal Netscaler Response:resource %s of type %s", resourceName, resourceType)
+	}
+	rsrc, ok := data[resourceType]
+	if !ok || rsrc == nil {
+		log.Printf("[WARN] go-nitro: FindStatWithArgs No %s type with name %s found", resourceType, resourceName)
+		return nil, fmt.Errorf("[INFO] go-nitro: FindStatWithArgs: No resource %s of type %s found", resourceName, resourceType)
+	}
+	switch result := data[resourceType].(type) {
+	case map[string]interface{}:
+		return result, nil
+	case []interface{}:
+		return result[0].(map[string]interface{}), nil
+	default:
+		log.Printf("[WARN] go-nitro: FindStatWithArgs Unable to determine type of response")
+		return nil, fmt.Errorf("[INFO] go-nitro: FindStatWithArgs: Unable to determine type of response")
+	}
+}
