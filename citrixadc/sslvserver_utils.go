@@ -383,6 +383,12 @@ func readSslpolicyBindings(d *schema.ResourceData, meta interface{}, sslvserverN
 	log.Printf("[DEBUG]  citrixadc-provider: In readSslpolicyBindings")
 	client := meta.(*NetScalerNitroClient).client
 
+	// Ignore sslpolicy bindings unless explicitely in configuration
+	// If not it is confused with binding defined by the explicit sslvserver_sslpolicy_binding resource
+	if _, ok := d.GetOk("sslpolicybinding"); !ok {
+		return nil
+	}
+
 	findParams := netscaler.FindParams{
 		ResourceType:             "sslvserver_sslpolicy_binding",
 		ResourceName:             sslvserverName,
