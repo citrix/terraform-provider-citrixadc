@@ -138,6 +138,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_netprofile":                     resourceCitrixAdcNetprofile(),
 		"citrixadc_servicegroup_lbmonitor_binding": resourceCitrixAdcServicegroup_lbmonitor_binding(),
 		"citrixadc_nsparam":                        resourceCitrixAdcNsparam(),
+		"citrixadc_sslvserver_sslpolicy_binding":   resourceCitrixAdcSslvserver_sslpolicy_binding(),
 	}
 }
 
