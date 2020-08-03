@@ -295,7 +295,7 @@ func resourceCitrixAdcService() *schema.Resource {
 
 			"lbvserver": &schema.Schema{
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 
 			"lbmonitor": &schema.Schema{
