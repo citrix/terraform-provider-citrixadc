@@ -148,6 +148,9 @@ func (c *NitroClient) createHTTPRequest(method string, urlstr string, buff *byte
 
 func (c *NitroClient) doHTTPRequest(method string, urlstr string, bytes *bytes.Buffer, respHandler responseHandlerFunc) ([]byte, error) {
 	req, err := c.createHTTPRequest(method, urlstr, bytes)
+	log.Printf("[TRACE] go-nitro: doHTTPRequest HTTP method: %v", method)
+	log.Printf("[TRACE] go-nitro: doHTTPRequest HTTP url: %v", urlstr)
+	log.Printf("[TRACE] go-nitro: doHTTPRequest HTTP body: %v", bytes.String())
 
 	resp, err := c.client.Do(req)
 	if resp != nil {

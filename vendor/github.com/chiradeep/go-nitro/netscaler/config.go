@@ -522,9 +522,10 @@ func (c *NitroClient) FindResourceArrayWithParams(findParams FindParams) ([]map[
 
 	url := urlBuilder.String()
 
-	log.Printf("[TRACE] go-nitro: url is %s", url)
+	log.Printf("[TRACE] go-nitro: FindResourceArrayWithParams: url is %s", url)
 	result, httpErr := c.doHTTPRequest("GET", url, bytes.NewBuffer([]byte{}), readResponseHandler)
-	log.Printf("result %v", string(result))
+	log.Printf("[TRACE] go-nitro: FindResourceArrayWithParams: HTTP GET result: %v", string(result))
+	log.Printf("[TRACE] go-nitro: FindResourceArrayWithParams: HTTP GET error: %v", httpErr)
 
 	// Ignore 404.
 	// We need to parse the NITRO errorcode value to determine if this is an actual error
@@ -532,7 +533,7 @@ func (c *NitroClient) FindResourceArrayWithParams(findParams FindParams) ([]map[
 		if !strings.Contains(httpErr.Error(), "404") {
 			return nil, httpErr
 		} else {
-			log.Printf("[DEBUG] go-nitro: FindResource: Ignoring 404 http status. %s", httpErr.Error())
+			log.Printf("[DEBUG] go-nitro: FindResourceArrayWithParams: Ignoring 404 http status. %s", httpErr.Error())
 		}
 	}
 
@@ -540,18 +541,18 @@ func (c *NitroClient) FindResourceArrayWithParams(findParams FindParams) ([]map[
 
 	err := json.Unmarshal(result, &jsonData)
 	if err != nil {
-		return nil, fmt.Errorf("[ERROR] go-nitro: FindResourceWithParams: JSON unmarshal error: %s", err.Error())
+		return nil, fmt.Errorf("[ERROR] go-nitro: FindResourceArrayWithParams: JSON unmarshal error: %s", err.Error())
 	}
 
 	nitroData, ok := jsonData.(map[string]interface{})
 	if !ok {
-		return nil, fmt.Errorf("[ERROR] go-nitro: FindResourceWithParams: Type assertion map[string]interface{} does not hold. Actual type %T", jsonData)
+		return nil, fmt.Errorf("[ERROR] go-nitro: FindResourceArrayWithParams: Type assertion map[string]interface{} does not hold. Actual type %T", jsonData)
 	}
 
 	// Get error code from nitro resource
 	errorcode, errok := nitroData["errorcode"]
 	if !errok {
-		return nil, fmt.Errorf("[ERROR] go-nitro: FindResourceWithParams: there is no error code in nitro response")
+		return nil, fmt.Errorf("[ERROR] go-nitro: FindResourceArrayWithParams: there is no error code in nitro response")
 	}
 
 	errorcode = int(errorcode.(float64))
@@ -567,7 +568,7 @@ func (c *NitroClient) FindResourceArrayWithParams(findParams FindParams) ([]map[
 	// Fallthrough
 
 	if errorcode != 0 {
-		return nil, fmt.Errorf("[ERROR] go-nitro: FindResourceWithParams: non zero errorcode %d", errorcode)
+		return nil, fmt.Errorf("[ERROR] go-nitro: FindResourceArrayWithParams: non zero errorcode %d", errorcode)
 	}
 	// Fallthrough
 
@@ -580,7 +581,7 @@ func (c *NitroClient) FindResourceArrayWithParams(findParams FindParams) ([]map[
 	}
 	// Falthrough
 
-	log.Printf("[DEBUG] go-nitro: FindResourceWithParams: retrieved NITRO object: %v", resourceData)
+	log.Printf("[DEBUG] go-nitro: FindResourceArrayWithParams: retrieved NITRO object: %v", resourceData)
 
 	// resource data assertion
 	resourceArray, arrayOk := resourceData.([]interface{})
@@ -602,7 +603,7 @@ func (c *NitroClient) FindResourceArrayWithParams(findParams FindParams) ([]map[
 
 	}
 	// Fallthrough to error condition
-	return nil, fmt.Errorf("[ERROR] go-nitro: FindResourceWithParams: Cannot handle returned NITRO resource data type %T", resourceData)
+	return nil, fmt.Errorf("[ERROR] go-nitro: FindResourceArrayWithParams: Cannot handle returned NITRO resource data type %T", resourceData)
 
 }
 
