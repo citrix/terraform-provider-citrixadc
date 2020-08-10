@@ -28,7 +28,7 @@ import (
 const testAccSslcipher_add = `
 	resource "citrixadc_sslcipher" "foo" {
 		ciphergroupname = "tfAccsslcipher"
-	
+
 		# ciphersuitebinding is MANDATORY attribute
 		# Any change in the ciphersuitebinding will result in re-creation of the whole sslcipher resource.
 		ciphersuitebinding {
@@ -46,11 +46,32 @@ const testAccSslcipher_add = `
 	}
 `
 
+const testAccSslcipher_transpose = `
+	resource "citrixadc_sslcipher" "foo" {
+		ciphergroupname = "tfAccsslcipher"
+
+		# ciphersuitebinding is MANDATORY attribute
+		# Any change in the ciphersuitebinding will result in re-creation of the whole sslcipher resource.
+		ciphersuitebinding {
+			ciphername     = "TLS1.2-ECDHE-RSA-AES128-GCM-SHA256"
+			cipherpriority = 3
+		}
+		ciphersuitebinding {
+			ciphername     = "TLS1.2-ECDHE-RSA-AES256-GCM-SHA384"
+			cipherpriority = 2
+		}
+		ciphersuitebinding {
+			ciphername     = "TLS1.2-ECDHE-RSA-AES-128-SHA256"
+			cipherpriority = 1
+		}
+	}
+`
+
 // Update re-creates the while ciphergroup
 const testAccSslcipher_update = `  
 	resource "citrixadc_sslcipher" "foo" {
 		ciphergroupname = "tfAccsslcipher"
-	
+
 		# ciphersuitebinding is MANDATORY attribute
 		# Any change in the ciphersuitebinding will result in re-creation of the whole sslcipher resource.
 		ciphersuitebinding {
@@ -74,6 +95,16 @@ func TestAccSslcipher_basic(t *testing.T) {
 					testAccCheckSslcipherCiphersuiteBinding("tfAccsslcipher", "TLS1.2-ECDHE-RSA-AES128-GCM-SHA256", 1),
 					testAccCheckSslcipherCiphersuiteBinding("tfAccsslcipher", "TLS1.2-ECDHE-RSA-AES256-GCM-SHA384", 2),
 					testAccCheckSslcipherCiphersuiteBinding("tfAccsslcipher", "TLS1.2-ECDHE-RSA-AES-128-SHA256", 3),
+				),
+			},
+			resource.TestStep{
+				Config: testAccSslcipher_transpose,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslcipherExist("citrixadc_sslcipher.foo", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslcipher.foo", "ciphergroupname", "tfAccsslcipher"),
+					testAccCheckSslcipherCiphersuiteBinding("tfAccsslcipher", "TLS1.2-ECDHE-RSA-AES128-GCM-SHA256", 3),
+					testAccCheckSslcipherCiphersuiteBinding("tfAccsslcipher", "TLS1.2-ECDHE-RSA-AES256-GCM-SHA384", 2),
+					testAccCheckSslcipherCiphersuiteBinding("tfAccsslcipher", "TLS1.2-ECDHE-RSA-AES-128-SHA256", 1),
 				),
 			},
 			resource.TestStep{
