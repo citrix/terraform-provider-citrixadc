@@ -20,8 +20,8 @@ func resourceCitrixAdcSslcipher() *schema.Resource {
 		SchemaVersion: 1,
 		Create:        createSslcipherFunc,
 		Read:          readSslcipherFunc,
-		// Update:        updateSslcipherFunc, // All fields are ForceNew or Computed w/out Optional, Update is superfluous
-		Delete: deleteSslcipherFunc,
+		Update:        updateSslcipherFunc,
+		Delete:        deleteSslcipherFunc,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -35,7 +35,6 @@ func resourceCitrixAdcSslcipher() *schema.Resource {
 			"ciphersuitebinding": {
 				Type:     schema.TypeSet,
 				Required: true,
-				ForceNew: true,
 				Set:      sslcipherCipherSuitebindingMappingHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -84,6 +83,24 @@ func createSslcipherFunc(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
+func updateSslcipherFunc(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[DEBUG]  citrixadc-provider: In updateSslcipherFunc")
+	sslcipherGroupName := d.Get("ciphergroupname").(string)
+	hasChange := false
+	if d.HasChange("ciphersuitebinding") {
+		log.Printf("[DEBUG]  citrixadc-provider: Ciphersuitebinding has changed for sslcipherGroupName %s, starting update", sslcipherGroupName)
+		hasChange = true
+	}
+	if hasChange {
+		err := updateSslCipherCipherSuiteBindings(d, meta)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func readSslcipherFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSslcipherFunc")
 	client := meta.(*NetScalerNitroClient).client
@@ -120,8 +137,6 @@ func deleteSslcipherFunc(d *schema.ResourceData, meta interface{}) error {
 
 	return nil
 }
-
-// sslcipher_sslciphersuite_binding
 
 type cipherPriority struct {
 	cipherName     string
@@ -197,18 +212,32 @@ func addSingleSslCipherCipherSuiteBinding(d *schema.ResourceData, meta interface
 
 func updateSslCipherCipherSuiteBindings(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateSslCipherCipherSuiteBindings")
-	oldSet, newSet := d.GetChange("ciphersuitebinding")
-	log.Printf("[DEBUG]  citrixadc-provider: oldSet %v\n", oldSet)
-	log.Printf("[DEBUG]  citrixadc-provider: newSet %v\n", newSet)
-	remove := oldSet.(*schema.Set).Difference(newSet.(*schema.Set))
-	add := newSet.(*schema.Set).Difference(oldSet.(*schema.Set))
+	client := meta.(*NetScalerNitroClient).client
 
-	for _, binding := range remove.List() {
-		if err := deleteSingleSslCipherCipherSuiteBinding(d, meta, binding.(map[string]interface{})); err != nil {
+	findParams := netscaler.FindParams{
+		ResourceType: "sslcipher_sslciphersuite_binding",
+		ResourceName: d.Get("ciphergroupname").(string),
+	}
+
+	dataArr, err := client.FindResourceArrayWithParams(findParams)
+	if err != nil {
+		return err
+	}
+
+	// We need to do this since adding a ciphersuite with lower priority than an existing one
+	// will bump the existing priority by one.
+	// Delete all existing bindings
+	for _, data := range dataArr {
+		binding := make(map[string]interface{})
+		binding["ciphername"] = data["ciphername"]
+		binding["cipherpriority"] = data["cipherpriority"]
+
+		if err := deleteSingleSslCipherCipherSuiteBinding(d, meta, binding); err != nil {
 			return err
 		}
 	}
-
+	// Add all configured bindings
+	add := d.Get("ciphersuitebinding").(*schema.Set)
 	for _, binding := range getSortedCipherBindigs(add) {
 		if err := addSingleSslCipherCipherSuiteBinding(d, meta, binding); err != nil {
 			return err

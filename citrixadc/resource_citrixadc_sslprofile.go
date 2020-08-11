@@ -1226,6 +1226,11 @@ func updateSslprofileCipherBindings(d *schema.ResourceData, meta interface{}) er
 func readSslprofileCipherbindings(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In readSslprofileCipherbindings")
 	client := meta.(*NetScalerNitroClient).client
+
+	// Ignore bindings unless there is an explicit configuration for it
+	if _, ok := d.GetOk("cipherbindings"); !ok {
+		return nil
+	}
 	sslprofileName := d.Get("name").(string)
 	bindings, _ := client.FindResourceArray(netscaler.Sslprofile_sslcipher_binding.Type(), sslprofileName)
 	log.Printf("bindings %v\n", bindings)
