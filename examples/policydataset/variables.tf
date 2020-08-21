@@ -1,0 +1,3 @@
+variable "inputdata" {
+  type = map
+}
