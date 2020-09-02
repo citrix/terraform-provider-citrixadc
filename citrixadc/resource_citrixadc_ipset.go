@@ -8,6 +8,7 @@ import (
 
 	"fmt"
 	"log"
+	"net/url"
 )
 
 func resourceCitrixAdcIpset() *schema.Resource {
@@ -15,6 +16,7 @@ func resourceCitrixAdcIpset() *schema.Resource {
 		SchemaVersion: 1,
 		Create:        createIpsetFunc,
 		Read:          readIpsetFunc,
+		Update:        updateIpsetFunc,
 		Delete:        deleteIpsetFunc,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -29,17 +31,16 @@ func resourceCitrixAdcIpset() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"nsipbinding": &schema.Schema{
 				Type:     schema.TypeSet,
 				Optional: true,
-				ForceNew: true, // to avoid this error: https://github.com/hashicorp/terraform/blob/master/helper/schema/resource.go#L635
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"nsip6binding": &schema.Schema{
 				Type:     schema.TypeSet,
 				Optional: true,
-				ForceNew: true, // to avoid this error: https://github.com/hashicorp/terraform/blob/master/helper/schema/resource.go#L635
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 		},
@@ -79,6 +80,24 @@ func createIpsetFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	return nil
+}
+
+func updateIpsetFunc(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[DEBUG]  citrixadc-provider: In updateIpsetFunc")
+
+	var err error
+
+	err = updateIpsetNsipBindings(d, meta)
+	if err != nil {
+		return err
+	}
+
+	err = updateIpsetNsip6Bindings(d, meta)
+	if err != nil {
+		return err
+	}
+
+	return readIpsetFunc(d, meta)
 }
 
 func readIpsetFunc(d *schema.ResourceData, meta interface{}) error {
@@ -166,17 +185,19 @@ func updateIpsetNsipBindings(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: newSet %v\n", newSet)
 	remove := oldSet.(*schema.Set).Difference(newSet.(*schema.Set))
 	add := newSet.(*schema.Set).Difference(oldSet.(*schema.Set))
-	for _, nsip := range remove.List() {
-		if err := deleteSingleIpsetNsipBinding(d, meta, nsip.(string)); err != nil {
-			return err
-		}
-	}
 
 	for _, nsip := range add.List() {
 		if err := addSingleIpsetNsipBinding(d, meta, nsip.(string)); err != nil {
 			return err
 		}
 	}
+
+	for _, nsip := range remove.List() {
+		if err := deleteSingleIpsetNsipBinding(d, meta, nsip.(string)); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -207,7 +228,7 @@ func deleteSingleIpsetNsip6Binding(d *schema.ResourceData, meta interface{}, nsi
 	name := d.Get("name").(string)
 	args := make([]string, 0, 1)
 
-	s := fmt.Sprintf("ipaddress:%s", nsip6)
+	s := fmt.Sprintf("ipaddress:%s", url.QueryEscape(nsip6))
 	args = append(args, s)
 
 	log.Printf("args is %v", args)
@@ -244,17 +265,19 @@ func updateIpsetNsip6Bindings(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: newSet %v\n", newSet)
 	remove := oldSet.(*schema.Set).Difference(newSet.(*schema.Set))
 	add := newSet.(*schema.Set).Difference(oldSet.(*schema.Set))
-	for _, nsip6 := range remove.List() {
-		if err := deleteSingleIpsetNsip6Binding(d, meta, nsip6.(string)); err != nil {
-			return err
-		}
-	}
 
 	for _, nsip6 := range add.List() {
 		if err := addSingleIpsetNsip6Binding(d, meta, nsip6.(string)); err != nil {
 			return err
 		}
 	}
+
+	for _, nsip6 := range remove.List() {
+		if err := deleteSingleIpsetNsip6Binding(d, meta, nsip6.(string)); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
