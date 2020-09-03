@@ -103,23 +103,15 @@ func TestAccIpset_with_bindings(t *testing.T) {
 		Steps: []resource.TestStep{
 			resource.TestStep{
 				Config: testAccIpset_no_bindings,
-				Check: resource.ComposeTestCheckFunc(testAccCheckIpsetExist("citrixadc_ipset.foo", nil),
-					resource.TestCheckResourceAttr("citrixadc_ipset.foo", "name", "tf_test_ipset"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIpsetExist("citrixadc_ipset.foo", nil),
 				),
 			},
 			resource.TestStep{
 				Config: testAccIpset_single_binding,
-				Check: resource.ComposeTestCheckFunc(testAccCheckIpsetExist("citrixadc_ipset.foo", nil),
-					resource.TestCheckResourceAttr("citrixadc_ipset.foo", "name", "tf_test_ipset"),
-					// TODO: add TechCheckResourceAttr() for checking bindings
-					// resource.TestCheckResourceAttr("citrixadc_ipset.foo", "ipaddress", "1.1.1.1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIpsetExist("citrixadc_ipset.foo", nil),
 				),
-			},
-			resource.TestStep{
-				Config: testAccIpset_2nd_binding_added,
-				Check:  resource.ComposeTestCheckFunc(testAccCheckIpsetExist("citrixadc_ipset.foo", nil)), // resource.TestCheckResourceAttr("citrixadc_ipset.foo", "name", "tf_test_ipset"),
-				// resource.TestCheckResourceAttr("citrixadc_ipset.foo", "ipaddress", "[\"1.1.1.1\", \"2.2.2.2\"]"), // list order may vary
-
 			},
 		},
 	})
@@ -179,4 +171,176 @@ func testAccCheckIpsetDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccIpset_swap_ipv4_step1 = `
+resource "citrixadc_csvserver" "test_csvserver" {
+  ipset = citrixadc_ipset.tf_ipset.name
+  name        = "tf_csvserver"
+  ipv46 = "10.78.60.22"
+  port        = 80
+  servicetype = "HTTP"
+
+}
+
+resource "citrixadc_ipset" "tf_ipset" {
+  name = "tf_test_ipset"
+  nsipbinding = [
+	citrixadc_nsip.nsip2.ipaddress,
+  ]
+
+}
+
+resource "citrixadc_nsip" "nsip1" {
+  ipaddress = "10.1.1.1"
+  type      = "VIP"
+  netmask   = "255.255.255.0"
+}
+resource "citrixadc_nsip" "nsip2" {
+  ipaddress = "10.2.2.2"
+  type      = "VIP"
+  netmask   = "255.255.255.0"
+}
+`
+
+const testAccIpset_swap_ipv4_step2 = `
+resource "citrixadc_csvserver" "test_csvserver" {
+  ipset = citrixadc_ipset.tf_ipset.name
+  name        = "tf_csvserver"
+  ipv46 = "10.78.60.22"
+  port        = 80
+  servicetype = "HTTP"
+
+}
+
+resource "citrixadc_ipset" "tf_ipset" {
+  name = "tf_test_ipset"
+  nsipbinding = [
+	citrixadc_nsip.nsip1.ipaddress,
+  ]
+
+}
+
+resource "citrixadc_nsip" "nsip1" {
+  ipaddress = "10.1.1.1"
+  type      = "VIP"
+  netmask   = "255.255.255.0"
+}
+resource "citrixadc_nsip" "nsip2" {
+  ipaddress = "10.2.2.2"
+  type      = "VIP"
+  netmask   = "255.255.255.0"
+}
+`
+
+func TestAccIpset_ipv4_swaps(t *testing.T) {
+	if isCpxRun {
+		t.Skip("No support in CPX")
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckIpsetDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccIpset_swap_ipv4_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIpsetExist("citrixadc_ipset.tf_ipset", nil),
+				),
+			},
+			resource.TestStep{
+				Config: testAccIpset_swap_ipv4_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIpsetExist("citrixadc_ipset.tf_ipset", nil),
+				),
+			},
+		},
+	})
+}
+
+const testAccIpset_swap_ipv6_step1 = `
+resource "citrixadc_csvserver" "test_csvserver" {
+  ipset = citrixadc_ipset.tf_ipset.name
+  name        = "tf_csvserver"
+  ipv46 = "10.78.60.22"
+  port        = 80
+  servicetype = "HTTP"
+
+}
+
+resource "citrixadc_ipset" "tf_ipset" {
+  name = "tf_test_ipset"
+  nsip6binding = [
+	format("%s/0", split("/", citrixadc_nsip6.tf_nsip1.ipv6address)[0]),
+  ]
+
+}
+
+resource "citrixadc_nsip6" "tf_nsip1" {
+    ipv6address = "2001:db8:100::fb/64"
+    type = "VIP"
+    icmp = "DISABLED"
+}
+
+resource "citrixadc_nsip6" "tf_nsip2" {
+    ipv6address = "2001:db8:100::fc/64"
+    type = "VIP"
+    icmp = "DISABLED" 
+}
+`
+
+const testAccIpset_swap_ipv6_step2 = `
+resource "citrixadc_csvserver" "test_csvserver" {
+  ipset = citrixadc_ipset.tf_ipset.name
+  name        = "tf_csvserver"
+  ipv46 = "10.78.60.22"
+  port        = 80
+  servicetype = "HTTP"
+
+}
+
+resource "citrixadc_ipset" "tf_ipset" {
+  name = "tf_test_ipset"
+  nsip6binding = [
+	format("%s/0", split("/", citrixadc_nsip6.tf_nsip2.ipv6address)[0]),
+  ]
+
+}
+
+resource "citrixadc_nsip6" "tf_nsip1" {
+    ipv6address = "2001:db8:100::fb/64"
+    type = "VIP"
+    icmp = "DISABLED"
+}
+
+resource "citrixadc_nsip6" "tf_nsip2" {
+    ipv6address = "2001:db8:100::fc/64"
+    type = "VIP"
+    icmp = "DISABLED" 
+}
+`
+
+func TestAccIpset_ipv6_swaps(t *testing.T) {
+	if isCpxRun {
+		t.Skip("No support in CPX")
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckIpsetDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccIpset_swap_ipv6_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIpsetExist("citrixadc_ipset.tf_ipset", nil),
+				),
+			},
+			resource.TestStep{
+				Config: testAccIpset_swap_ipv6_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIpsetExist("citrixadc_ipset.tf_ipset", nil),
+				),
+			},
+		},
+	})
 }
