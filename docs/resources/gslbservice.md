@@ -4,7 +4,7 @@ subcategory: "GSLB"
 
 # Resource: gslbservice
 
-This resource is used to manage Global Server Load Balancing service
+This resource is used to manage Global Server Load Balancing service.
 
 
 ## Example usage
@@ -64,6 +64,15 @@ resource "citrixadc_gslbservice" "tf_gslbservice" {
 * `viewip` - (Optional) IP address to be used for the given view.
 * `weight` - (Optional) Weight to assign to the monitor-service binding. A larger number specifies a greater weight. Contributes to the monitoring threshold, which determines the state of the service.
 * `monitornamesvc` - (Optional) Name of the monitor to bind to the service.
+* `lbmonitorbinding` - (Optional) A set of lb monitor blocks. Documented below
+
+
+Lb monitor supports the following:
+
+* `weight` - (Optional) Weight to assign to the monitor-service binding. A larger number specifies a greater weight. Contributes to the monitoring threshold, which determines the state of the service.
+* `monitor_name` - (Optional) Monitor name.
+* `monstate` - (Optional) State of the monitor bound to gslb service. Possible values: [ ENABLED, DISABLED ]
+
 
 ## Attribute Reference
 
