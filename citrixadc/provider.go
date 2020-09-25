@@ -143,6 +143,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_policydataset":                  resourceCitrixAdcPolicydataset(),
 		"citrixadc_policydataset_value_binding":    resourceCitrixAdcPolicydataset_value_binding(),
 		"citrixadc_password_resetter":              resourceCitrixAdcPasswordResetter(),
+		"citrixadc_csvserver_cspolicy_binding":     resourceCitrixAdcCsvserver_cspolicy_binding(),
 	}
 }
 

@@ -59,7 +59,7 @@ func resourceCitrixAdcCspolicy() *schema.Resource {
 
 			"csvserver": &schema.Schema{
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
 			},
 			"targetlbvserver": &schema.Schema{
@@ -93,15 +93,6 @@ func createCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	_, uok := d.GetOk("url")
 	_, rok := d.GetOk("rule")
 
-	if lbok && rok && !pok {
-		return fmt.Errorf("[ERROR] netscaler-provider: Priority needs to be specified if target lb vserver and rule is specified")
-	}
-	if !lbok && !pok {
-		return fmt.Errorf("[ERROR] netscaler-provider: Priority needs to be specified if target lb vserver is not specified")
-	}
-	if !lbok && !aok {
-		return fmt.Errorf("[ERROR] netscaler-provider: Action or targetlbvserver needs to be specified")
-	}
 	if aok {
 		actionExists := client.ResourceExists(netscaler.Csaction.Type(), action.(string))
 		if !actionExists {
@@ -145,29 +136,29 @@ func createCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	binding := cs.Csvservercspolicybinding{
-		Name:            csvserver,
-		Policyname:      cspolicyName,
-		Targetlbvserver: targetlbvserver.(string),
-		Priority:        priority.(int),
-	}
-
-	if !lbok {
-		binding = cs.Csvservercspolicybinding{
+	if _, ok := d.GetOk("csvserver"); ok {
+		binding := cs.Csvservercspolicybinding{
 			Name:       csvserver,
 			Policyname: cspolicyName,
-			Priority:   priority.(int),
 		}
-	}
 
-	err = client.BindResource(netscaler.Csvserver.Type(), csvserver, netscaler.Cspolicy.Type(), cspolicyName, &binding)
-	if err != nil {
-		d.SetId("")
-		err2 := client.DeleteResource(netscaler.Cspolicy.Type(), cspolicyName)
-		if err2 != nil {
-			return fmt.Errorf("[ERROR] netscaler-provider:  Failed to undo add cspolicy after bind cspolicy %s to Csvserver failed err=%v", cspolicyName, err2)
+		if pok {
+			binding.Priority = priority.(int)
 		}
-		return fmt.Errorf("[ERROR] netscaler-provider:  Failed to bind cspolicy %s to Csvserver, err=%v", cspolicyName, err)
+
+		if lbok {
+			binding.Targetlbvserver = targetlbvserver.(string)
+		}
+
+		err = client.BindResource(netscaler.Csvserver.Type(), csvserver, netscaler.Cspolicy.Type(), cspolicyName, &binding)
+		if err != nil {
+			d.SetId("")
+			err2 := client.DeleteResource(netscaler.Cspolicy.Type(), cspolicyName)
+			if err2 != nil {
+				return fmt.Errorf("[ERROR] netscaler-provider:  Failed to undo add cspolicy after bind cspolicy %s to Csvserver failed err=%v", cspolicyName, err2)
+			}
+			return fmt.Errorf("[ERROR] netscaler-provider:  Failed to bind cspolicy %s to Csvserver, err=%v", cspolicyName, err)
+		}
 	}
 	d.SetId(cspolicyName)
 	err = readCspolicyFunc(d, meta)
@@ -197,22 +188,24 @@ func readCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("url", data["url"])
 
 	//read the csvserver binding and update
-	bindings, err := client.FindAllBoundResources(netscaler.Cspolicy.Type(), cspolicyName, netscaler.Csvserver.Type())
-	if err != nil {
-		log.Printf("[WARN] netscaler-provider: cspolicy binding to csvserver error %s", cspolicyName)
-		return nil
-	}
-	var boundCsvserver string
-	for _, binding := range bindings {
-		log.Printf("[TRACE] netscaler-provider: csvserver_cspolicy binding %v", binding)
-		csv, ok := binding["domain"]
-		if ok {
-			boundCsvserver = csv.(string)
-			break
+	if _, ok := d.GetOk("csvserver"); ok {
+		bindings, err := client.FindAllBoundResources(netscaler.Cspolicy.Type(), cspolicyName, netscaler.Csvserver.Type())
+		if err != nil {
+			log.Printf("[WARN] netscaler-provider: cspolicy binding to csvserver error %s", cspolicyName)
+			return nil
 		}
+		var boundCsvserver string
+		for _, binding := range bindings {
+			log.Printf("[TRACE] netscaler-provider: csvserver_cspolicy binding %v", binding)
+			csv, ok := binding["domain"]
+			if ok {
+				boundCsvserver = csv.(string)
+				break
+			}
+		}
+		log.Printf("[TRACE] netscaler-provider: boundCsvserver %v", boundCsvserver)
+		d.Set("csvserver", boundCsvserver)
 	}
-	log.Printf("[TRACE] netscaler-provider: boundCsvserver %v", boundCsvserver)
-	d.Set("csvserver", boundCsvserver)
 
 	return nil
 
@@ -270,15 +263,16 @@ func updateCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] netscaler-provider: targetlbvserver has changed for cspolicy %s, starting update", cspolicyName)
 		lbvserverChanged = true
 	}
-
-	if lbvserverChanged || priorityChanged {
-		//Binding has to be updated
-		//First we unbind from cs vserver
-		err := client.UnbindResource(netscaler.Csvserver.Type(), csvserver, netscaler.Cspolicy.Type(), cspolicyName, "policyname")
-		if err != nil {
-			return fmt.Errorf("[ERROR] netscaler-provider: Error unbinding cspolicy from csvserver %s", cspolicyName)
+	if _, ok := d.GetOk("csvserver"); ok {
+		if lbvserverChanged || priorityChanged {
+			//Binding has to be updated
+			//First we unbind from cs vserver
+			err := client.UnbindResource(netscaler.Csvserver.Type(), csvserver, netscaler.Cspolicy.Type(), cspolicyName, "policyname")
+			if err != nil {
+				return fmt.Errorf("[ERROR] netscaler-provider: Error unbinding cspolicy from csvserver %s", cspolicyName)
+			}
+			log.Printf("[DEBUG] netscaler-provider: cspolicy has been unbound from csvserver for cspolicy %s ", cspolicyName)
 		}
-		log.Printf("[DEBUG] netscaler-provider: cspolicy has been unbound from csvserver for cspolicy %s ", cspolicyName)
 	}
 
 	if hasChange {
@@ -289,27 +283,29 @@ func updateCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] netscaler-provider: cspolicy has been updated  cspolicy %s ", cspolicyName)
 	}
 
-	if lbvserverChanged || priorityChanged {
-		//Binding has to be updated
-		//rebind
-		targetlbvserver, lbok := d.GetOk("targetlbvserver")
-		priority, pok := d.GetOk("priority")
+	if _, ok := d.GetOk("csvserver"); ok {
+		if lbvserverChanged || priorityChanged {
+			//Binding has to be updated
+			//rebind
+			targetlbvserver, lbok := d.GetOk("targetlbvserver")
+			priority, pok := d.GetOk("priority")
 
-		if !pok && lbok {
-			return fmt.Errorf("[ERROR] netscaler-provider: Need to specify priority if lbvserver is specified")
-		}
+			if !pok && lbok {
+				return fmt.Errorf("[ERROR] netscaler-provider: Need to specify priority if lbvserver is specified")
+			}
 
-		binding := cs.Csvservercspolicybinding{
-			Name:            csvserver,
-			Policyname:      cspolicyName,
-			Targetlbvserver: targetlbvserver.(string),
-			Priority:        priority.(int),
+			binding := cs.Csvservercspolicybinding{
+				Name:            csvserver,
+				Policyname:      cspolicyName,
+				Targetlbvserver: targetlbvserver.(string),
+				Priority:        priority.(int),
+			}
+			err := client.BindResource(netscaler.Csvserver.Type(), csvserver, netscaler.Cspolicy.Type(), cspolicyName, &binding)
+			if err != nil {
+				return fmt.Errorf("[ERROR] netscaler-provider: Failed to bind new cspolicy to Csvserver")
+			}
+			log.Printf("[DEBUG] netscaler-provider: cspolicy has been bound to csvserver  cspolicy %s csvserver %s", cspolicyName, csvserver)
 		}
-		err := client.BindResource(netscaler.Csvserver.Type(), csvserver, netscaler.Cspolicy.Type(), cspolicyName, &binding)
-		if err != nil {
-			return fmt.Errorf("[ERROR] netscaler-provider: Failed to bind new cspolicy to Csvserver")
-		}
-		log.Printf("[DEBUG] netscaler-provider: cspolicy has been bound to csvserver  cspolicy %s csvserver %s", cspolicyName, csvserver)
 	}
 
 	return readCspolicyFunc(d, meta)
@@ -322,11 +318,13 @@ func deleteCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	csvserver := d.Get("csvserver").(string)
 
 	//First we unbind from cs vserver if necessary
-	err := client.UnbindResource(netscaler.Csvserver.Type(), csvserver, netscaler.Cspolicy.Type(), cspolicyName, "policyname")
-	if err != nil {
-		return fmt.Errorf("[ERROR] netscaler-provider: Error unbinding cspolicy \"%s\" from csvserver \"%v\": %v ", cspolicyName, csvserver, err.Error())
+	if _, ok := d.GetOk("csvserver"); ok {
+		err := client.UnbindResource(netscaler.Csvserver.Type(), csvserver, netscaler.Cspolicy.Type(), cspolicyName, "policyname")
+		if err != nil {
+			return fmt.Errorf("[ERROR] netscaler-provider: Error unbinding cspolicy \"%s\" from csvserver \"%v\": %v ", cspolicyName, csvserver, err.Error())
+		}
 	}
-	err = client.DeleteResource(netscaler.Cspolicy.Type(), cspolicyName)
+	err := client.DeleteResource(netscaler.Cspolicy.Type(), cspolicyName)
 	if err != nil {
 		return fmt.Errorf("[ERROR] netscaler-provider: Error  deleting cspolicy %s", cspolicyName)
 	}
