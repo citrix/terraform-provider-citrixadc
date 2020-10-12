@@ -6,7 +6,9 @@ ADC](https://www.citrix.com/products/netscaler-adc/)
 
 ## Description
 
-This project is a terraform custom provider for Citrix ADC. Configure your ADCs using Terraform for different use-cases such as Load Balancing, SSL, Content Switching, GSLB, NAT etc.  These ADCs could be deployed anywhere - Public Cloud , On-Prem etc.
+This project is a terraform custom provider for Citrix ADC.
+[Configure your ADCs using Terraform](https://www.youtube.com/watch?v=IJIIWm5rzpQ&ab_channel=Citrix)
+for different use-cases such as Load Balancing, SSL, Content Switching, GSLB, NAT etc.  These ADCs could be deployed anywhere - Public Cloud , On-Prem etc.
 
 All the ADC modules available for Terraform automation can be found in citrixadc folder. It uses the [Nitro API](https://developer-docs.citrix.com/projects/citrix-adc-nitro-api-reference/en/latest/) to create/configure LB configurations. To get you started quickly we also have  configuration examples in the example folder. You can modify them for your configurations or create your own.
 
