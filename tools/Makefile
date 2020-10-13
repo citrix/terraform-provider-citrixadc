@@ -85,6 +85,7 @@ schema_only:
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/audit/auditsyslogpolicy.json
 	@# appfw
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/appfw/appfwprofile.json
+	./$(SCHEMA_EXEC) -i $(JSON_DIR)/appfw/appfwpolicy.json
 
 
 schema: schema_only fmt

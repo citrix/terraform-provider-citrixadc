@@ -145,6 +145,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_password_resetter":              resourceCitrixAdcPasswordResetter(),
 		"citrixadc_csvserver_cspolicy_binding":     resourceCitrixAdcCsvserver_cspolicy_binding(),
 		"citrixadc_appfwprofile":                   resourceCitrixAdcAppfwprofile(),
+		"citrixadc_appfwpolicy":                    resourceCitrixAdcAppfwpolicy(),
 	}
 }
 
