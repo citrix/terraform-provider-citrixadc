@@ -17,7 +17,7 @@ GENERATED_PKGS=$(shell go list ./... )
 JSON_DIR = ../../../chiradeep/go-nitro/jsonconfig
 SCHEMA_EXEC = generate_schema
 
-default: build 
+default: build
 
 build:
 	go build -v -o $(SCHEMA_EXEC)  .
@@ -83,7 +83,8 @@ schema_only:
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/audit/auditmessageaction.json
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/audit/auditsyslogaction.json
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/audit/auditsyslogpolicy.json
-	
+	@# appfw
+	./$(SCHEMA_EXEC) -i $(JSON_DIR)/appfw/appfwprofile.json
 
 
 schema: schema_only fmt
