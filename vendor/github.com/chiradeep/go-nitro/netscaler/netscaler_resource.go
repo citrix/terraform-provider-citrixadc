@@ -29,7 +29,7 @@ import (
 )
 
 // Idempotent flag can't be added for these resources
-var idempotentInvalidResources = []string{"login", "logout", "reboot", "shutdown", "ping", "ping6", "traceroute", "traceroute6", "install"}
+var idempotentInvalidResources = []string{"login", "logout", "reboot", "shutdown", "ping", "ping6", "traceroute", "traceroute6", "install", "appfwjsoncontenttype", "appfwxmlcontenttype"}
 
 const (
 	nsErrSessionExpired = 444
