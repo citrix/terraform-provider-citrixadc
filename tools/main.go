@@ -152,7 +152,7 @@ func main() {
 		cfg.BoundType = strings.Title(strings.Split(bindingSchema.ID, "_")[0])
 	}
 
-	writer, err := os.Create(filepath.Join("citrixadc", "resource_"+schema.ID+".go"))
+	writer, err := os.Create(filepath.Join("citrixadc", "resource_citrixadc_"+schema.ID+".go"))
 	err = t.ExecuteTemplate(writer, "resource.tmpl", *cfg)
 	if err != nil {
 		log.Fatalf("execution failed: %s", err)
@@ -163,7 +163,7 @@ func main() {
 		log.Fatalf("execution failed: %s", err)
 	}
 
-	writer, err = os.Create(filepath.Join("citrixadc", "resource_"+schema.ID+"_test.go"))
+	writer, err = os.Create(filepath.Join("citrixadc", "resource_citrixadc_"+schema.ID+"_test.go"))
 	err = t.ExecuteTemplate(writer, "resource_test.tmpl", *cfg)
 	if err != nil {
 		log.Fatalf("execution failed: %s", err)
