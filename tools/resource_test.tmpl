@@ -23,6 +23,33 @@ import (
 	"testing"
 )
 
+const testAcc{{.TfTitle}}_basic = `
+{{if isPresent .KeyFieldsBound }}
+	resource "citrixadc_{{$.BoundType|lower}}" "foo" {
+		{{range $key, $value := .KeyFieldsBound -}}
+		{{if isInt $value  }}
+		{{$key}} = {{$value}}
+		{{- else}}
+		{{$key}} = "{{$value}}"
+		{{- end}}
+		{{- end}}
+	}
+{{end}}
+
+	resource "citrixadc_{{.TfName}}" "foo" {
+		{{range $key, $value := .KeyFields -}}
+		{{if isInt $value  }}
+		{{$key}} = {{$value}}
+		{{- else}}
+		{{$key}} = "{{$value}}"
+		{{- end}}
+		{{- end}}
+		{{if isPresent .KeyFieldsBound }}
+		depends_on = ["citrixadc_{{$.BoundType|lower}}.foo"]
+		{{end}}
+	}
+`
+
 func TestAcc{{.TfTitle}}_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -51,7 +78,7 @@ func testAccCheck{{.TfTitle}}Exist(n string, id *string) resource.TestCheckFunc 
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No lb vserver name is set")
+			return fmt.Errorf("No {{$.TfName}} name is set")
 		}
 
 		if id != nil {
@@ -70,7 +97,7 @@ func testAccCheck{{.TfTitle}}Exist(n string, id *string) resource.TestCheckFunc 
 		}
 
 		if data == nil {
-			return fmt.Errorf("LB vserver %s not found", n)
+			return fmt.Errorf("{{$.TfName}} %s not found", n)
 		}
 
 		return nil
@@ -91,37 +118,10 @@ func testAccCheck{{.TfTitle}}Destroy(s *terraform.State) error {
 
                 _, err := nsClient.FindResource(netscaler.{{.TfTitle}}.Type(), rs.Primary.ID)
 		if err == nil {
-			return fmt.Errorf("LB vserver %s still exists", rs.Primary.ID)
+			return fmt.Errorf("{{$.TfName}} %s still exists", rs.Primary.ID)
 		}
 
 	}
 
 	return nil
 }
-
-const testAcc{{.TfTitle}}_basic = `
-{{if isPresent .KeyFieldsBound }}
-resource "citrixadc_{{$.BoundType|lower}}" "foo" {
-  {{range $key, $value := .KeyFieldsBound -}}
-  {{if isInt $value  }}
-  {{$key}} = {{$value}}
-  {{- else}}
-  {{$key}} = "{{$value}}"
-  {{- end}}
-  {{- end}}
-}
-{{end}}
-
-resource "citrixadc_{{.TfName}}" "foo" {
-  {{range $key, $value := .KeyFields -}}
-  {{if isInt $value  }}
-  {{$key}} = {{$value}}
-  {{- else}}
-  {{$key}} = "{{$value}}"
-  {{- end}}
-  {{- end}}
-{{if isPresent .KeyFieldsBound }}
-  depends_on = ["citrixadc_{{$.BoundType|lower}}.foo"]
-{{end}}
-}
-`
