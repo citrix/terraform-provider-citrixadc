@@ -10,3 +10,5 @@ crash.log
 .DS_Store
 dist/
 .vscode/
+tf.log
+*.plan
