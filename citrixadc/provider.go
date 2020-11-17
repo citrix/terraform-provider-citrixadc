@@ -150,6 +150,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_appfwpolicylabel":               resourceCitrixAdcAppfwpolicylabel(),
 		"citrixadc_appfwjsoncontenttype":           resourceCitrixAdcAppfwjsoncontenttype(),
 		"citrixadc_appfwxmlcontenttype":            resourceCitrixAdcAppfwxmlcontenttype(),
+		"citrixadc_appfwprofile_starturl_binding":  resourceCitrixAdcAppfwprofileStarturlBinding(),
 	}
 }
 
