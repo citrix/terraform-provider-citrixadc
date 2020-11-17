@@ -91,6 +91,7 @@ schema_only:
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/appfw/appfwjsoncontenttype.json
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/appfw/appfwxmlcontenttype.json
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/appfw/appfwprofile_starturl_binding.json
+	./$(SCHEMA_EXEC) -i $(JSON_DIR)/appfw/appfwprofile_denyurl_binding.json
 
 
 schema: schema_only fmt
