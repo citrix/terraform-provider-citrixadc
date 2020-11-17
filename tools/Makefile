@@ -87,6 +87,7 @@ schema_only:
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/appfw/appfwprofile.json
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/appfw/appfwpolicy.json
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/appfw/appfwfieldtype.json
+	./$(SCHEMA_EXEC) -i $(JSON_DIR)/appfw/appfwpolicylabel.json
 
 
 schema: schema_only fmt
