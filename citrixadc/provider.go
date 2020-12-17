@@ -158,6 +158,9 @@ func providerResources() map[string]*schema.Resource {
 }
 
 func providerConfigure(d *schema.ResourceData) (interface{}, error) {
+	userHeaders := map[string]string{
+		"User-Agent": "terraform-ctxadc",
+	}
 	c := NetScalerNitroClient{
 		Username: d.Get("username").(string),
 		Password: d.Get("password").(string),
@@ -170,6 +173,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		Password:  d.Get("password").(string),
 		ProxiedNs: d.Get("proxied_ns").(string),
 		SslVerify: !d.Get("insecure_skip_verify").(bool),
+		Headers:   userHeaders,
 	}
 	client, err := netscaler.NewNitroClientFromParams(params)
 	if err != nil {
