@@ -18,6 +18,7 @@ package citrixadc
 import (
 	"fmt"
 	"os"
+	"reflect"
 	"testing"
 
 	"github.com/chiradeep/go-nitro/config/basic"
@@ -36,6 +37,7 @@ func TestAccServer_basic(t *testing.T) {
 				Config: testAccServer_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExist("citrixadc_server.foo", nil),
+					testAccCheckUserAgent(),
 				),
 			},
 		},
@@ -213,4 +215,18 @@ func TestAccServer_enable_disable(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccCheckUserAgent() resource.TestCheckFunc {
+	// TODO check logs of ADC for presence of user agent string
+	return func(s *terraform.State) error {
+		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+		fv := reflect.ValueOf(nsClient).Elem().FieldByName("headers")
+
+		if fmt.Sprintf("%v", fv) == "map[User-Agent:terraform-ctxadc]" {
+			return nil
+		} else {
+			return fmt.Errorf("Could not verify headers. fv is %v", fv)
+		}
+	}
 }

@@ -39,6 +39,7 @@ type NitroParams struct {
 	Timeout   int
 	RootCAPath string
 	ServerName string
+	Headers    map[string]string
 }
 
 //NitroClient has methods to configure the NetScaler
@@ -53,6 +54,7 @@ type NitroClient struct {
 	sessionidMux sync.RWMutex
 	sessionid    string
 	timeout      int
+	headers      map[string]string
 }
 
 //NewNitroClient returns a usable NitroClient. Does not check validity of supplied parameters
@@ -84,6 +86,7 @@ func NewNitroClientFromParams(params NitroParams) (*NitroClient, error) {
 	c.statsURL = strings.Trim(params.Url, " /") + "/nitro/v1/stat/"
 	c.username = params.Username
 	c.password = params.Password
+	c.headers = params.Headers
 	c.proxiedNs = params.ProxiedNs
 	c.sessionid = ""
 	c.timeout = params.Timeout

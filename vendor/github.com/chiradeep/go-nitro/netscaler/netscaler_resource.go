@@ -143,6 +143,11 @@ func (c *NitroClient) createHTTPRequest(method string, urlstr string, buff *byte
 		req.SetBasicAuth(c.username, c.password)
 		req.Header.Set("_MPS_API_PROXY_MANAGED_INSTANCE_IP", c.proxiedNs)
 	}
+
+	// User defined headers may overwrite previous headers
+	for k, v := range c.headers {
+		req.Header.Set(k, v)
+	}
 	return req, nil
 }
 
@@ -151,6 +156,7 @@ func (c *NitroClient) doHTTPRequest(method string, urlstr string, bytes *bytes.B
 	log.Printf("[TRACE] go-nitro: doHTTPRequest HTTP method: %v", method)
 	log.Printf("[TRACE] go-nitro: doHTTPRequest HTTP url: %v", urlstr)
 	log.Printf("[TRACE] go-nitro: doHTTPRequest HTTP body: %v", bytes.String())
+	log.Printf("[TRACE] go-nitro: doHTTPRequest HTTP request headers: %v", req.Header)
 
 	resp, err := c.client.Do(req)
 	if resp != nil {
