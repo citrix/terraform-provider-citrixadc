@@ -1,8 +1,6 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/ns"
-
 	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -10,6 +8,70 @@ import (
 	"fmt"
 	"log"
 )
+
+// nstcpprofile struct is defined here to add MPcapableCbit support.
+// Once this attribute available in the main builds, respective go-notro file will be taken care.
+type nstcpprofile struct {
+	Ackaggregation              string      `json:"ackaggregation,omitempty"`
+	Ackonpush                   string      `json:"ackonpush,omitempty"`
+	Applyadaptivetcp            string      `json:"applyadaptivetcp,omitempty"`
+	Buffersize                  int         `json:"buffersize,omitempty"`
+	Builtin                     interface{} `json:"builtin,omitempty"`
+	Burstratecontrol            string      `json:"burstratecontrol,omitempty"`
+	Clientiptcpoption           string      `json:"clientiptcpoption,omitempty"`
+	Clientiptcpoptionnumber     int         `json:"clientiptcpoptionnumber,omitempty"`
+	Delayedack                  int         `json:"delayedack,omitempty"`
+	Dropestconnontimeout        string      `json:"dropestconnontimeout,omitempty"`
+	Drophalfclosedconnontimeout string      `json:"drophalfclosedconnontimeout,omitempty"`
+	Dsack                       string      `json:"dsack,omitempty"`
+	Dupackthresh                int         `json:"dupackthresh,omitempty"`
+	Dynamicreceivebuffering     string      `json:"dynamicreceivebuffering,omitempty"`
+	Ecn                         string      `json:"ecn,omitempty"`
+	Establishclientconn         string      `json:"establishclientconn,omitempty"`
+	Fack                        string      `json:"fack,omitempty"`
+	Feature                     string      `json:"feature,omitempty"`
+	Flavor                      string      `json:"flavor,omitempty"`
+	Frto                        string      `json:"frto,omitempty"`
+	Hystart                     string      `json:"hystart,omitempty"`
+	Initialcwnd                 int         `json:"initialcwnd,omitempty"`
+	Ka                          string      `json:"ka,omitempty"`
+	Kaconnidletime              int         `json:"kaconnidletime,omitempty"`
+	Kamaxprobes                 int         `json:"kamaxprobes,omitempty"`
+	Kaprobeinterval             int         `json:"kaprobeinterval,omitempty"`
+	Kaprobeupdatelastactivity   string      `json:"kaprobeupdatelastactivity,omitempty"`
+	Maxburst                    int         `json:"maxburst,omitempty"`
+	Maxcwnd                     int         `json:"maxcwnd,omitempty"`
+	Maxpktpermss                int         `json:"maxpktpermss,omitempty"`
+	Minrto                      int         `json:"minrto,omitempty"`
+	Mptcp                       string      `json:"mptcp,omitempty"`
+	Mptcpdropdataonpreestsf     string      `json:"mptcpdropdataonpreestsf,omitempty"`
+	Mptcpfastopen               string      `json:"mptcpfastopen,omitempty"`
+	Mptcpsessiontimeout         int         `json:"mptcpsessiontimeout,omitempty"`
+	Mss                         int         `json:"mss,omitempty"`
+	Nagle                       string      `json:"nagle,omitempty"`
+	Name                        string      `json:"name,omitempty"`
+	Oooqsize                    int         `json:"oooqsize,omitempty"`
+	Pktperretx                  int         `json:"pktperretx,omitempty"`
+	Rateqmax                    int         `json:"rateqmax,omitempty"`
+	Refcnt                      int         `json:"refcnt,omitempty"`
+	Rstmaxack                   string      `json:"rstmaxack,omitempty"`
+	Rstwindowattenuate          string      `json:"rstwindowattenuate,omitempty"`
+	Sack                        string      `json:"sack,omitempty"`
+	Sendbuffsize                int         `json:"sendbuffsize,omitempty"`
+	Slowstartincr               int         `json:"slowstartincr,omitempty"`
+	Spoofsyndrop                string      `json:"spoofsyndrop,omitempty"`
+	Syncookie                   string      `json:"syncookie,omitempty"`
+	Taillossprobe               string      `json:"taillossprobe,omitempty"`
+	Tcpfastopen                 string      `json:"tcpfastopen,omitempty"`
+	Tcpfastopencookiesize       int         `json:"tcpfastopencookiesize,omitempty"`
+	Tcpmode                     string      `json:"tcpmode,omitempty"`
+	Tcprate                     int         `json:"tcprate,omitempty"`
+	Tcpsegoffload               string      `json:"tcpsegoffload,omitempty"`
+	Timestamp                   string      `json:"timestamp,omitempty"`
+	Ws                          string      `json:"ws,omitempty"`
+	Wsval                       int         `json:"wsval,omitempty"`
+	Mpcapablecbit               string      `json:"mpcapablecbit,omitempty"`
+}
 
 func resourceCitrixAdcNstcpprofile() *schema.Resource {
 	return &schema.Resource{
@@ -297,6 +359,11 @@ func resourceCitrixAdcNstcpprofile() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"mpcapablecbit": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -311,7 +378,7 @@ func createNstcpprofileFunc(d *schema.ResourceData, meta interface{}) error {
 		nstcpprofileName = resource.PrefixedUniqueId("tf-nstcpprofile-")
 		d.Set("name", nstcpprofileName)
 	}
-	nstcpprofile := ns.Nstcpprofile{
+	nstcpprofile := nstcpprofile{
 		Ackaggregation:              d.Get("ackaggregation").(string),
 		Ackonpush:                   d.Get("ackonpush").(string),
 		Applyadaptivetcp:            d.Get("applyadaptivetcp").(string),
@@ -367,6 +434,7 @@ func createNstcpprofileFunc(d *schema.ResourceData, meta interface{}) error {
 		Timestamp:                   d.Get("timestamp").(string),
 		Ws:                          d.Get("ws").(string),
 		Wsval:                       d.Get("wsval").(int),
+		Mpcapablecbit:               d.Get("mpcapablecbit").(string),
 	}
 
 	_, err := client.AddResource(netscaler.Nstcpprofile.Type(), nstcpprofileName, &nstcpprofile)
@@ -451,6 +519,7 @@ func readNstcpprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("timestamp", data["timestamp"])
 	d.Set("ws", data["ws"])
 	d.Set("wsval", data["wsval"])
+	d.Set("mpcapablecbit", data["mpcapablecbit"])
 
 	return nil
 
@@ -461,7 +530,7 @@ func updateNstcpprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	nstcpprofileName := d.Get("name").(string)
 
-	nstcpprofile := ns.Nstcpprofile{
+	nstcpprofile := nstcpprofile{
 		Name: d.Get("name").(string),
 	}
 	hasChange := false
@@ -738,6 +807,11 @@ func updateNstcpprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("wsval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Wsval has changed for nstcpprofile %s, starting update", nstcpprofileName)
 		nstcpprofile.Wsval = d.Get("wsval").(int)
+		hasChange = true
+	}
+	if d.HasChange("mpcapablecbit") {
+		log.Printf("[DEBUG]  citrixadc-provider: Mpcapablecbit has changed for nstcpprofile %s, starting update", nstcpprofileName)
+		nstcpprofile.Mpcapablecbit = d.Get("mpcapablecbit").(string)
 		hasChange = true
 	}
 
