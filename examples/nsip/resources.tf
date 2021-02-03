@@ -4,4 +4,5 @@ resource "citrixadc_nsip" "nsip" {
     netmask = "255.255.255.0"
     icmp = "ENABLED"
     state = "ENABLED"
+    #mptcpadvertise = "YES" # "YES" | "NO"
 }

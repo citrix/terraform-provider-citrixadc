@@ -1,8 +1,6 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/ns"
-
 	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -10,6 +8,60 @@ import (
 	"fmt"
 	"log"
 )
+
+// nsip struct is defined here to add MPTCPadvertise support.
+// Once this attribute available in the main builds, respective go-notro file will be taken care.
+type nsip struct {
+	Advertiseondefaultpartition string      `json:"advertiseondefaultpartition,omitempty"`
+	Arp                         string      `json:"arp,omitempty"`
+	Arpowner                    int         `json:"arpowner,omitempty"`
+	Arpresponse                 string      `json:"arpresponse,omitempty"`
+	Bgp                         string      `json:"bgp,omitempty"`
+	Decrementttl                string      `json:"decrementttl,omitempty"`
+	Dynamicrouting              string      `json:"dynamicrouting,omitempty"`
+	Flags                       int         `json:"flags,omitempty"`
+	Freeports                   int         `json:"freeports,omitempty"`
+	Ftp                         string      `json:"ftp,omitempty"`
+	Gui                         string      `json:"gui,omitempty"`
+	Hostroute                   string      `json:"hostroute,omitempty"`
+	Hostrtgw                    string      `json:"hostrtgw,omitempty"`
+	Hostrtgwact                 string      `json:"hostrtgwact,omitempty"`
+	Icmp                        string      `json:"icmp,omitempty"`
+	Icmpresponse                string      `json:"icmpresponse,omitempty"`
+	Ipaddress                   string      `json:"ipaddress,omitempty"`
+	Iptype                      interface{} `json:"iptype,omitempty"`
+	Metric                      int         `json:"metric,omitempty"`
+	Mgmtaccess                  string      `json:"mgmtaccess,omitempty"`
+	Netmask                     string      `json:"netmask,omitempty"`
+	Networkroute                string      `json:"networkroute,omitempty"`
+	Operationalarpowner         int         `json:"operationalarpowner,omitempty"`
+	Ospf                        string      `json:"ospf,omitempty"`
+	Ospfarea                    int         `json:"ospfarea,omitempty"`
+	Ospfareaval                 int         `json:"ospfareaval,omitempty"`
+	Ospflsatype                 string      `json:"ospflsatype,omitempty"`
+	Ownerdownresponse           string      `json:"ownerdownresponse,omitempty"`
+	Ownernode                   int         `json:"ownernode,omitempty"`
+	Restrictaccess              string      `json:"restrictaccess,omitempty"`
+	Rip                         string      `json:"rip,omitempty"`
+	Riserhimsgcode              int         `json:"riserhimsgcode,omitempty"`
+	Snmp                        string      `json:"snmp,omitempty"`
+	Ssh                         string      `json:"ssh,omitempty"`
+	State                       string      `json:"state,omitempty"`
+	Tag                         int         `json:"tag,omitempty"`
+	Td                          int         `json:"td,omitempty"`
+	Telnet                      string      `json:"telnet,omitempty"`
+	Type                        string      `json:"type,omitempty"`
+	Viprtadv2bsd                bool        `json:"viprtadv2bsd,omitempty"`
+	Vipvsercount                int         `json:"vipvsercount,omitempty"`
+	Vipvserdowncount            int         `json:"vipvserdowncount,omitempty"`
+	Vipvsrvrrhiactivecount      int         `json:"vipvsrvrrhiactivecount,omitempty"`
+	Vipvsrvrrhiactiveupcount    int         `json:"vipvsrvrrhiactiveupcount,omitempty"`
+	Vrid                        int         `json:"vrid,omitempty"`
+	Vserver                     string      `json:"vserver,omitempty"`
+	Vserverrhilevel             string      `json:"vserverrhilevel,omitempty"`
+	Vserverrhimode              string      `json:"vserverrhimode,omitempty"`
+	Mptcpadvertise              string      `json:"mptcpadvertise,omitempty"`
+}
 
 func resourceCitrixAdcNsip() *schema.Resource {
 	return &schema.Resource{
@@ -201,6 +253,11 @@ func resourceCitrixAdcNsip() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"mptcpadvertise": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -215,7 +272,7 @@ func createNsipFunc(d *schema.ResourceData, meta interface{}) error {
 		ipaddress = resource.PrefixedUniqueId("tf-nsip-")
 		d.Set("ipaddress", ipaddress)
 	}
-	nsip := ns.Nsip{
+	nsip := nsip{
 		Advertiseondefaultpartition: d.Get("advertiseondefaultpartition").(string),
 		Arp:                         d.Get("arp").(string),
 		Arpresponse:                 d.Get("arpresponse").(string),
@@ -251,6 +308,7 @@ func createNsipFunc(d *schema.ResourceData, meta interface{}) error {
 		Vserver:                     d.Get("vserver").(string),
 		Vserverrhilevel:             d.Get("vserverrhilevel").(string),
 		Vserverrhimode:              d.Get("vserverrhimode").(string),
+		Mptcpadvertise:              d.Get("mptcpadvertise").(string),
 	}
 
 	_, err := client.AddResource(netscaler.Nsip.Type(), ipaddress, &nsip)
@@ -315,6 +373,7 @@ func readNsipFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("vserver", data["vserver"])
 	d.Set("vserverrhilevel", data["vserverrhilevel"])
 	d.Set("vserverrhimode", data["vserverrhimode"])
+	d.Set("mptcpadvertise", data["mptcpadvertise"])
 
 	return nil
 
@@ -325,7 +384,7 @@ func updateNsipFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	ipaddress := d.Get("ipaddress").(string)
 
-	nsip := ns.Nsip{
+	nsip := nsip{
 		Ipaddress: d.Get("ipaddress").(string),
 	}
 	stateChange := false
@@ -505,6 +564,11 @@ func updateNsipFunc(d *schema.ResourceData, meta interface{}) error {
 		nsip.Vserverrhimode = d.Get("vserverrhimode").(string)
 		hasChange = true
 	}
+	if d.HasChange("mptcpadvertise") {
+		log.Printf("[DEBUG]  citrixadc-provider: Mptcpadvertise has changed for nsip %s, starting update", ipaddress)
+		nsip.Mptcpadvertise = d.Get("mptcpadvertise").(string)
+		hasChange = true
+	}
 
 	if hasChange {
 		_, err := client.UpdateResource(netscaler.Nsip.Type(), ipaddress, &nsip)
@@ -541,7 +605,7 @@ func doNsipStateChange(d *schema.ResourceData, client *netscaler.NitroClient) er
 
 	// We need a new instance of the struct since
 	// ActOnResource will fail if we put in superfluous attributes
-	nsip := ns.Nsip{
+	nsip := nsip{
 		Ipaddress: d.Get("ipaddress").(string),
 		Td:        d.Get("td").(int),
 	}
