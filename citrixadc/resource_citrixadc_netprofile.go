@@ -1,8 +1,6 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/network"
-
 	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -10,6 +8,20 @@ import (
 	"fmt"
 	"log"
 )
+
+// netprofile struct is defined here to add proxyProtocolAfterTLSHandshake  support.
+// Once this attribute available in the main builds, respective go-notro file will be taken care.
+type netprofile struct {
+	Mbf                            string `json:"mbf,omitempty"`
+	Name                           string `json:"name,omitempty"`
+	Overridelsn                    string `json:"overridelsn,omitempty"`
+	Proxyprotocol                  string `json:"proxyprotocol,omitempty"`
+	Proxyprotocoltxversion         string `json:"proxyprotocoltxversion,omitempty"`
+	Srcip                          string `json:"srcip,omitempty"`
+	Srcippersistency               string `json:"srcippersistency,omitempty"`
+	Td                             int    `json:"td,omitempty"`
+	Proxyprotocolaftertlshandshake string `json:"proxyprotocolaftertlshandshake,omitempty"`
+}
 
 func resourceCitrixAdcNetprofile() *schema.Resource {
 	return &schema.Resource{
@@ -63,6 +75,11 @@ func resourceCitrixAdcNetprofile() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"proxyprotocolaftertlshandshake": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -77,15 +94,16 @@ func createNetprofileFunc(d *schema.ResourceData, meta interface{}) error {
 		netprofileName = resource.PrefixedUniqueId("tf-netprofile-")
 		d.Set("name", netprofileName)
 	}
-	netprofile := network.Netprofile{
-		Mbf:                    d.Get("mbf").(string),
-		Name:                   d.Get("name").(string),
-		Overridelsn:            d.Get("overridelsn").(string),
-		Proxyprotocol:          d.Get("proxyprotocol").(string),
-		Proxyprotocoltxversion: d.Get("proxyprotocoltxversion").(string),
-		Srcip:                  d.Get("srcip").(string),
-		Srcippersistency:       d.Get("srcippersistency").(string),
-		Td:                     d.Get("td").(int),
+	netprofile := netprofile{
+		Mbf:                            d.Get("mbf").(string),
+		Name:                           d.Get("name").(string),
+		Overridelsn:                    d.Get("overridelsn").(string),
+		Proxyprotocol:                  d.Get("proxyprotocol").(string),
+		Proxyprotocoltxversion:         d.Get("proxyprotocoltxversion").(string),
+		Srcip:                          d.Get("srcip").(string),
+		Srcippersistency:               d.Get("srcippersistency").(string),
+		Td:                             d.Get("td").(int),
+		Proxyprotocolaftertlshandshake: d.Get("proxyprotocolaftertlshandshake").(string),
 	}
 
 	_, err := client.AddResource(netscaler.Netprofile.Type(), netprofileName, &netprofile)
@@ -123,6 +141,7 @@ func readNetprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("srcip", data["srcip"])
 	d.Set("srcippersistency", data["srcippersistency"])
 	d.Set("td", data["td"])
+	d.Set("proxyprotocolaftertlshandshake", data["proxyprotocolaftertlshandshake"])
 
 	return nil
 
@@ -133,7 +152,7 @@ func updateNetprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	netprofileName := d.Get("name").(string)
 
-	netprofile := network.Netprofile{
+	netprofile := netprofile{
 		Name: d.Get("name").(string),
 	}
 	hasChange := false
@@ -175,6 +194,11 @@ func updateNetprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("td") {
 		log.Printf("[DEBUG]  citrixadc-provider: Td has changed for netprofile %s, starting update", netprofileName)
 		netprofile.Td = d.Get("td").(int)
+		hasChange = true
+	}
+	if d.HasChange("proxyprotocolaftertlshandshake") {
+		log.Printf("[DEBUG]  citrixadc-provider: Proxyprotocolaftertlshandshake has changed for netprofile %s, starting update", netprofileName)
+		netprofile.Proxyprotocolaftertlshandshake = d.Get("proxyprotocolaftertlshandshake").(string)
 		hasChange = true
 	}
 
