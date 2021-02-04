@@ -15,6 +15,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -270,7 +271,7 @@ func uploadLicenseFile(d *schema.ResourceData, meta interface{}, sftpClient *sft
 		return err
 	}
 
-	localFile, err := os.Open(fileName)
+	localFile, err := os.Open(filepath.Clean(fileName))
 	if err != nil {
 		return err
 	}
