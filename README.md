@@ -67,6 +67,9 @@ provider "citrixadc" {
 
 We can use a `https` URL and accept the untrusted authority certificate on the Citrix ADC by specifying `insecure_skip_verify = true`
 
+**Note** Use of `https` is preferred. Using `http` will result in all provider configuration variables as well as resource variables
+to be transmitted in cleartext. Anyone observing the HTTP data stream will be able to parse sensitive values such as the provider password.
+
 ##### Argument Reference
 
 The following arguments are supported.
