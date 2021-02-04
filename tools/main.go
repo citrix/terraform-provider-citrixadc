@@ -38,7 +38,7 @@ var (
 )
 
 func parseSchema(inputFile string) *Schema {
-	b, err := ioutil.ReadFile(inputFile)
+	b, err := ioutil.ReadFile(filepath.Clean(inputFile))
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Failed to read the input file with error ", err)
 		return nil
