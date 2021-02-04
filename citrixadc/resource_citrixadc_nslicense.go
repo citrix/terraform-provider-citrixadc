@@ -276,7 +276,12 @@ func uploadLicenseFile(d *schema.ResourceData, meta interface{}, sftpClient *sft
 		return err
 	}
 
-	defer localFile.Close()
+	defer func() {
+		err := localFile.Close()
+		if err != nil {
+			log.Printf("[DEBUG] netscaler-provider: error closing license file %v", err)
+		}
+	}()
 
 	fileBytes, err := ioutil.ReadAll(localFile)
 	if err != nil {
