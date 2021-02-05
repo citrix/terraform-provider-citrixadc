@@ -54,6 +54,34 @@ func TestAccNetprofile_basic(t *testing.T) {
 	})
 }
 
+const testAccNetprofile_proxyprotocolaftertlshandshake = `
+	resource "citrixadc_netprofile" "tf_netprofile_proxyprotocolaftertlshandshake" {
+		name = "tf_netprofile2"
+		proxyprotocol = "ENABLED"
+		proxyprotocoltxversion = "V2"
+		proxyprotocolaftertlshandshake = "ENABLED"
+	}
+`
+
+func TestAccNetprofile_proxyprotocolaftertlshandshake(t *testing.T) {
+	if isCpxRun {
+		t.Skip("CPX 12.0 is outdated for this resource")
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNetprofileDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccNetprofile_proxyprotocolaftertlshandshake,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNetprofileExist("citrixadc_netprofile.tf_netprofile_proxyprotocolaftertlshandshake", nil),
+					resource.TestCheckResourceAttr("citrixadc_netprofile.tf_netprofile_proxyprotocolaftertlshandshake", "proxyprotocolaftertlshandshake", "ENABLED"),
+				),
+			},
+		},
+	})
+}
 func testAccCheckNetprofileExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

@@ -57,6 +57,36 @@ func TestAccNsip_basic(t *testing.T) {
 	})
 }
 
+const testAccNsip_mptcpadvertise = `
+	resource "citrixadc_nsip" "tf_test_nsip_mptcpadvertise" {
+		ipaddress = "192.168.1.55"
+		type = "VIP"
+		netmask = "255.255.255.0"
+		icmp = "ENABLED"
+		mptcpadvertise = "YES"
+	}
+`
+
+func TestAccNsip_mptcpadvertise(t *testing.T) {
+	if isCpxRun {
+		t.Skip("No support in CPX")
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNsipDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccNsip_mptcpadvertise,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNsipExist("citrixadc_nsip.tf_test_nsip_mptcpadvertise", nil),
+					resource.TestCheckResourceAttr("citrixadc_nsip.tf_test_nsip_mptcpadvertise", "mptcpadvertise", "YES"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckNsipExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

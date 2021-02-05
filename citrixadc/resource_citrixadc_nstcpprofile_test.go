@@ -45,6 +45,36 @@ func TestAccNstcpprofile_basic(t *testing.T) {
 	})
 }
 
+const testAccNstcpprofile_mpcapablecbit = `
+
+resource "citrixadc_nstcpprofile" "tf_test_profile_mpcapablecbit" {
+    name = "test_profile_mpcapablecbit"
+    ws = "ENABLED"
+	ackaggregation = "ENABLED"
+	mpcapablecbit = "ENABLED"
+}
+`
+
+func TestAccNstcpprofile_mpcapablecbit(t *testing.T) {
+	if isCpxRun {
+		t.Skip("No support in CPX")
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNstcpprofileDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccNstcpprofile_mpcapablecbit,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNstcpprofileExist("citrixadc_nstcpprofile.tf_test_profile_mpcapablecbit", nil),
+					resource.TestCheckResourceAttr("citrixadc_nstcpprofile.tf_test_profile_mpcapablecbit", "mpcapablecbit", "ENABLED"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckNstcpprofileExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
