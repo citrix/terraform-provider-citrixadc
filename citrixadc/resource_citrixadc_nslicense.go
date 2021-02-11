@@ -15,6 +15,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -59,7 +60,7 @@ func resourceCitrixAdcNslicense() *schema.Resource {
 			},
 			"ssh_host_pubkey": &schema.Schema{
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 			},
 			"reboot": &schema.Schema{
 				Type:     schema.TypeBool,
@@ -151,6 +152,7 @@ func resourceAdcinstanceLicensePoll(d *schema.ResourceData, meta interface{}) re
 }
 
 func powerCycleAndWait(d *schema.ResourceData, meta interface{}, t time.Duration) error {
+	log.Printf("[DEBUG] netscaler-provider: In powerCycleAndWait")
 	var err error
 
 	if err = rebootAdcInstance(d, meta); err != nil {
@@ -183,6 +185,8 @@ func powerCycleAndWait(d *schema.ResourceData, meta interface{}, t time.Duration
 }
 
 func getSshConnection(d *schema.ResourceData, meta interface{}) (*ssh.Client, error) {
+	log.Printf("[DEBUG] netscaler-provider: In getSshConnection")
+
 	nsClient := meta.(*NetScalerNitroClient)
 
 	var username, password, host, port string
@@ -222,15 +226,14 @@ func getSshConnection(d *schema.ResourceData, meta interface{}) (*ssh.Client, er
 
 	// Confgiure host key verification
 	var hostKeyCallBack ssh.HostKeyCallback
-	if val, ok := d.GetOk("ssh_host_pubkey"); ok {
-		publickey, _, _, _, err := ssh.ParseAuthorizedKey([]byte(val.(string)))
-		if err != nil {
-			return nil, err
-		}
-		hostKeyCallBack = ssh.FixedHostKey(publickey)
-	} else {
-		hostKeyCallBack = ssh.InsecureIgnoreHostKey()
+
+	val := d.Get("ssh_host_pubkey")
+	publickey, _, _, _, err := ssh.ParseAuthorizedKey([]byte(val.(string)))
+	if err != nil {
+		return nil, err
 	}
+
+	hostKeyCallBack = ssh.FixedHostKey(publickey)
 
 	config := &ssh.ClientConfig{
 		User: username,
@@ -248,6 +251,7 @@ func getSshConnection(d *schema.ResourceData, meta interface{}) (*ssh.Client, er
 }
 
 func getSftpClient(d *schema.ResourceData, meta interface{}, sshConn *ssh.Client) (*sftp.Client, error) {
+	log.Printf("[DEBUG] netscaler-provider: In getSftpClient")
 	sftpClient, err := sftp.NewClient(sshConn)
 	if err != nil {
 		return nil, err
@@ -267,12 +271,17 @@ func uploadLicenseFile(d *schema.ResourceData, meta interface{}, sftpClient *sft
 		return err
 	}
 
-	localFile, err := os.Open(fileName)
+	localFile, err := os.Open(filepath.Clean(fileName))
 	if err != nil {
 		return err
 	}
 
-	defer localFile.Close()
+	defer func() {
+		err := localFile.Close()
+		if err != nil {
+			log.Printf("[DEBUG] netscaler-provider: error closing license file %v", err)
+		}
+	}()
 
 	fileBytes, err := ioutil.ReadAll(localFile)
 	if err != nil {
