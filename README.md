@@ -67,8 +67,15 @@ provider "citrixadc" {
 
 We can use a `https` URL and accept the untrusted authority certificate on the Citrix ADC by specifying `insecure_skip_verify = true`
 
-**Note** Use of `https` is preferred. Using `http` will result in all provider configuration variables as well as resource variables
+To use `https` without the need to set `insecure_skip_verify = true` follow this [guide](https://support.citrix.com/article/CTX122521) on
+how to replace the default TLS certificate with one from a trusted Certifcate Authority.
+
+Use of `https` is preferred. Using `http` will result in all provider configuration variables as well as resource variables
 to be transmitted in cleartext. Anyone observing the HTTP data stream will be able to parse sensitive values such as the provider password.
+
+Avoid storing provider credentials in the local state by using a backend that supports encryption.
+The hasicorp [vault provider](https://registry.terraform.io/providers/hashicorp/vault/latest/docs) is also recommended for
+storing sensitive data.
 
 ##### Argument Reference
 
