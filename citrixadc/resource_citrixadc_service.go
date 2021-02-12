@@ -295,7 +295,7 @@ func resourceCitrixAdcService() *schema.Resource {
 
 			"lbvserver": &schema.Schema{
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 
 			"lbmonitor": &schema.Schema{
@@ -473,11 +473,14 @@ func readServiceFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	//read bound vserver.
-	vserverBindings, err := client.FindResourceArray(netscaler.Svcbindings.Type(), serviceName)
-	if err != nil {
-		log.Printf("[WARN] netscaler-provider: Clearing service state %s", serviceName)
-		d.SetId("")
-		return nil
+	var vserverBindings []map[string]interface{}
+	if _, ok := d.GetOk("lbvserver"); ok {
+		vserverBindings, err = client.FindResourceArray(netscaler.Svcbindings.Type(), serviceName)
+		if err != nil {
+			log.Printf("[WARN] netscaler-provider: Clearing service state %s", serviceName)
+			d.SetId("")
+			return nil
+		}
 	}
 	//read bound lb monitor.
 	boundMonitors, err := client.FindAllBoundResources(netscaler.Service.Type(), serviceName, netscaler.Lbmonitor.Type())
@@ -542,11 +545,13 @@ func readServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("weight", data["weight"])
 
 	var boundVserver string
-	for _, vserver := range vserverBindings {
-		vs, ok := vserver["vservername"]
-		if ok {
-			boundVserver = vs.(string)
-			break
+	if _, ok := d.GetOk("lbvserver"); ok {
+		for _, vserver := range vserverBindings {
+			vs, ok := vserver["vservername"]
+			if ok {
+				boundVserver = vs.(string)
+				break
+			}
 		}
 	}
 	d.Set("lbvserver", boundVserver)
