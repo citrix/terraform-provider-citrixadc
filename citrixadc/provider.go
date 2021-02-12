@@ -154,6 +154,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_appfwprofile_denyurl_binding":   resourceCitrixAdcAppfwprofileDenyurlBinding(),
 		"citrixadc_nslicenseserver":                resourceCitrixAdcNslicenseserver(),
 		"citrixadc_nscapacity":                     resourceCitrixAdcNscapacity(),
+		"citrixadc_lbvserver_service_binding":      resourceCitrixAdcLbvserver_service_binding(),
 	}
 }
 
