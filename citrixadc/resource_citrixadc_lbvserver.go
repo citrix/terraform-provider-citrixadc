@@ -890,8 +890,12 @@ func readLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("vipheader", data["vipheader"])
 	d.Set("weight", data["weight"])
 
-	if err := readSslcerts(d, meta, lbvserverName); err != nil {
-		return err
+	_, sslok := d.GetOk("sslcertkey")
+	_, sniok := d.GetOk("snisslcertkeys")
+	if sslok || sniok {
+		if err := readSslcerts(d, meta, lbvserverName); err != nil {
+			return err
+		}
 	}
 
 	if err := readSslpolicyBindings(d, meta, lbvserverName); err != nil {

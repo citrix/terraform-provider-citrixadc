@@ -162,6 +162,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_transformpolicy":                   resourceCitrixAdcTransformpolicy(),
 		"citrixadc_lbvserver_transformpolicy_binding": resourceCitrixAdcLbvserver_transformpolicy_binding(),
 		"citrixadc_csvserver_transformpolicy_binding": resourceCitrixAdcCsvserver_transformpolicy_binding(),
+		"citrixadc_sslvserver_sslcertkey_binding":     resourceCitrixAdcSslvserver_sslcertkey_binding(),
 	}
 }
 
