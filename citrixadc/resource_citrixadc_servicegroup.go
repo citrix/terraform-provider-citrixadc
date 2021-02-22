@@ -658,26 +658,30 @@ func readServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("usip", data["usip"])
 	d.Set("weight", data["weight"])
 
-	//boundMembers is of type []map[string]interface{}
-	servicegroupMembers := make([]string, 0, len(boundMembers))
-	servicegroupMembersByServername := make([]string, 0, len(boundMembers))
-	for _, member := range boundMembers {
-		ip := member["ip"].(string)
-		servername := member["servername"].(string)
-		port := member["port"].(float64) //TODO: why is this not int?
-		weight := member["weight"].(string)
-		// Heuristic rule
-		var strmember string
-		if servername == ip {
-			strmember = fmt.Sprintf("%s:%.0f:%s", ip, port, weight)
-			servicegroupMembers = append(servicegroupMembers, strmember)
-		} else {
-			strmember = fmt.Sprintf("%s:%.0f:%s", servername, port, weight)
-			servicegroupMembersByServername = append(servicegroupMembersByServername, strmember)
+	_, membersOk := d.GetOk("servicegroupmembers")
+	_, membersByNameOk := d.GetOk("servicegroupmembers_by_servername")
+	if membersOk || membersByNameOk {
+		//boundMembers is of type []map[string]interface{}
+		servicegroupMembers := make([]string, 0, len(boundMembers))
+		servicegroupMembersByServername := make([]string, 0, len(boundMembers))
+		for _, member := range boundMembers {
+			ip := member["ip"].(string)
+			servername := member["servername"].(string)
+			port := member["port"].(float64) //TODO: why is this not int?
+			weight := member["weight"].(string)
+			// Heuristic rule
+			var strmember string
+			if servername == ip {
+				strmember = fmt.Sprintf("%s:%.0f:%s", ip, port, weight)
+				servicegroupMembers = append(servicegroupMembers, strmember)
+			} else {
+				strmember = fmt.Sprintf("%s:%.0f:%s", servername, port, weight)
+				servicegroupMembersByServername = append(servicegroupMembersByServername, strmember)
+			}
 		}
+		d.Set("servicegroupmembers", servicegroupMembers)
+		d.Set("servicegroupmembers_by_servername", servicegroupMembersByServername)
 	}
-	d.Set("servicegroupmembers", servicegroupMembers)
-	d.Set("servicegroupmembers_by_servername", servicegroupMembersByServername)
 
 	//vserverBindings is of type []map[string]interface{}
 	var boundVserver string
