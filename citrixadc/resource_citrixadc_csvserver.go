@@ -696,8 +696,12 @@ func readCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("ttl", data["ttl"])
 	d.Set("vipheader", data["vipheader"])
 
-	if err := readSslcerts(d, meta, csvserverName); err != nil {
-		return err
+	_, sslok := d.GetOk("sslcertkey")
+	_, sniok := d.GetOk("snisslcertkeys")
+	if sslok || sniok {
+		if err := readSslcerts(d, meta, csvserverName); err != nil {
+			return err
+		}
 	}
 
 	if err := readSslpolicyBindings(d, meta, csvserverName); err != nil {

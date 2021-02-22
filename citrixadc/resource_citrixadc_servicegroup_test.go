@@ -175,11 +175,6 @@ func TestAccServicegroupAssertNonUpdateableAttributes(t *testing.T) {
 	testHelperVerifyImmutabilityFunc(c, t, servicegroupType, servicegroupName, servicegroupInstance, "td")
 	servicegroupInstance.Td = 0
 
-	//autoscale
-	servicegroupInstance.Autoscale = "ENABLED"
-	testHelperVerifyImmutabilityFunc(c, t, servicegroupType, servicegroupName, servicegroupInstance, "autoscale")
-	servicegroupInstance.Autoscale = ""
-
 	//memberport
 	servicegroupInstance.Memberport = 80
 	testHelperVerifyImmutabilityFunc(c, t, servicegroupType, servicegroupName, servicegroupInstance, "memberport")
