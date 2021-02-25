@@ -39,6 +39,9 @@ const testAccQuicbridgeprofile_update = `
 `
 
 func TestAccQuicbridgeprofile_basic(t *testing.T) {
+	if isCpxRun {
+		t.Skip("No support in CPX")
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
