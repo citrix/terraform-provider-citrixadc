@@ -57,6 +57,44 @@ func TestAccLbvserver_basic(t *testing.T) {
 	})
 }
 
+const testAccLbvserver_quicbridgeprofile = `
+	resource citrixadc_quicbridgeprofile demo_quicbridge {
+		name             = "demo_quicbridge"
+		routingalgorithm = "PLAINTEXT"
+		serveridlength   = 4
+	}
+	resource "citrixadc_lbvserver" "tfAcc_lbvserver" {
+		name                  = "demo_quicbridge_vserver"
+		ipv46                 = "10.202.11.11"
+		lbmethod              = "TOKEN"
+		persistencetype       = "CUSTOMSERVERID"
+		port                  = 8080
+		servicetype           = "QUIC_BRIDGE"
+		quicbridgeprofilename = citrixadc_quicbridgeprofile.demo_quicbridge.name
+	}
+`
+
+func TestAccLbvserver_quicbridgeprofile(t *testing.T) {
+	if isCpxRun {
+		t.Skip("No support in CPX")
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLbvserverDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccLbvserver_quicbridgeprofile,
+				Check: resource.ComposeTestCheckFunc(testAccCheckLbvserverExist("citrixadc_lbvserver.tfAcc_lbvserver", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbvserver.tfAcc_lbvserver", "servicetype", "QUIC_BRIDGE"),
+					resource.TestCheckResourceAttr("citrixadc_lbvserver.tfAcc_lbvserver", "persistencetype", "CUSTOMSERVERID"),
+					resource.TestCheckResourceAttr("citrixadc_lbvserver.tfAcc_lbvserver", "quicbridgeprofilename", "demo_quicbridge"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccLbvserver_snicerts(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { doPreChecks(t) },
