@@ -168,6 +168,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_policypatset":                            resourceCitrixAdcPolicypatset(),
 		"citrixadc_policypatset_pattern_binding":            resourceCitrixAdcPolicypatset_pattern_binding(),
 		"citrixadc_filterpolicy":                            resourceCitrixAdcFilterpolicy(),
+		"citrixadc_lbvserver_filterpolicy_binding":          resourceCitrixAdcLbvserver_filterpolicy_binding(),
 	}
 }
 
