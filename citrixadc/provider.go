@@ -167,6 +167,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_quicbridgeprofile":                       resourceCitrixAdcQuicbridgeprofile(),
 		"citrixadc_policypatset":                            resourceCitrixAdcPolicypatset(),
 		"citrixadc_policypatset_pattern_binding":            resourceCitrixAdcPolicypatset_pattern_binding(),
+		"citrixadc_filterpolicy":                            resourceCitrixAdcFilterpolicy(),
 	}
 }
 
