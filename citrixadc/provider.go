@@ -165,6 +165,14 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_sslvserver_sslcertkey_binding":           resourceCitrixAdcSslvserver_sslcertkey_binding(),
 		"citrixadc_servicegroup_servicegroupmember_binding": resourceCitrixAdcServicegroup_servicegroupmember_binding(),
 		"citrixadc_quicbridgeprofile":                       resourceCitrixAdcQuicbridgeprofile(),
+		"citrixadc_policypatset":                            resourceCitrixAdcPolicypatset(),
+		"citrixadc_policypatset_pattern_binding":            resourceCitrixAdcPolicypatset_pattern_binding(),
+		"citrixadc_filterpolicy":                            resourceCitrixAdcFilterpolicy(),
+		"citrixadc_lbvserver_filterpolicy_binding":          resourceCitrixAdcLbvserver_filterpolicy_binding(),
+		"citrixadc_csvserver_filterpolicy_binding":          resourceCitrixAdcCsvserver_filterpolicy_binding(),
+		"citrixadc_cmppolicy":                               resourceCitrixAdcCmppolicy(),
+		"citrixadc_lbvserver_cmppolicy_binding":             resourceCitrixAdcLbvserver_cmppolicy_binding(),
+		"citrixadc_csvserver_cmppolicy_binding":             resourceCitrixAdcCsvserver_cmppolicy_binding(),
 	}
 }
 

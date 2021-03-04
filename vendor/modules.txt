@@ -65,7 +65,9 @@ github.com/chiradeep/go-nitro/config/appfw
 github.com/chiradeep/go-nitro/config/audit
 github.com/chiradeep/go-nitro/config/basic
 github.com/chiradeep/go-nitro/config/cluster
+github.com/chiradeep/go-nitro/config/cmp
 github.com/chiradeep/go-nitro/config/cs
+github.com/chiradeep/go-nitro/config/filter
 github.com/chiradeep/go-nitro/config/gslb
 github.com/chiradeep/go-nitro/config/lb
 github.com/chiradeep/go-nitro/config/network
@@ -76,6 +78,7 @@ github.com/chiradeep/go-nitro/config/rewrite
 github.com/chiradeep/go-nitro/config/router
 github.com/chiradeep/go-nitro/config/ssl
 github.com/chiradeep/go-nitro/config/system
+github.com/chiradeep/go-nitro/config/transform
 github.com/chiradeep/go-nitro/config/utility
 github.com/chiradeep/go-nitro/netscaler
 # github.com/davecgh/go-spew v1.1.1
