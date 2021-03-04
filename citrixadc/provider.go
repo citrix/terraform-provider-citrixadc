@@ -172,6 +172,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_csvserver_filterpolicy_binding":          resourceCitrixAdcCsvserver_filterpolicy_binding(),
 		"citrixadc_cmppolicy":                               resourceCitrixAdcCmppolicy(),
 		"citrixadc_lbvserver_cmppolicy_binding":             resourceCitrixAdcLbvserver_cmppolicy_binding(),
+		"citrixadc_csvserver_cmppolicy_binding":             resourceCitrixAdcCsvserver_cmppolicy_binding(),
 	}
 }
 
