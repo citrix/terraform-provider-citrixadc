@@ -65,6 +65,7 @@ github.com/chiradeep/go-nitro/config/appfw
 github.com/chiradeep/go-nitro/config/audit
 github.com/chiradeep/go-nitro/config/basic
 github.com/chiradeep/go-nitro/config/cluster
+github.com/chiradeep/go-nitro/config/cmp
 github.com/chiradeep/go-nitro/config/cs
 github.com/chiradeep/go-nitro/config/filter
 github.com/chiradeep/go-nitro/config/gslb
