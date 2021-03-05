@@ -24,7 +24,6 @@ func resourceCitrixAdcResponderpolicy() *schema.Resource {
 		Read:          readResponderpolicyFunc,
 		Update:        updateResponderpolicyFunc,
 		Delete:        deleteResponderpolicyFunc,
-		//CustomizeDiff: customizeResponderpolicyDiff,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -286,16 +285,20 @@ func readResponderpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("rule", data["rule"])
 	d.Set("undefaction", data["undefaction"])
 
-	if err := readGlobalBinding(d, meta); err != nil {
-		return err
+	if _, ok := d.GetOk("globalbinding"); ok {
+		if err := readGlobalBinding(d, meta); err != nil {
+			return err
+		}
 	}
-
-	if err := readLbvserverBindings(d, meta); err != nil {
-		return err
+	if _, ok := d.GetOk("lbvserverbinding"); ok {
+		if err := readLbvserverBindings(d, meta); err != nil {
+			return err
+		}
 	}
-
-	if err := readCsvserverBindings(d, meta); err != nil {
-		return err
+	if _, ok := d.GetOk("csvserverbinding"); ok {
+		if err := readCsvserverBindings(d, meta); err != nil {
+			return err
+		}
 	}
 	return nil
 
@@ -990,28 +993,6 @@ func deleteCsvserverBindings(d *schema.ResourceData, meta interface{}) error {
 			if err := deleteSingleCsvserverBinding(d, meta, binding.(map[string]interface{})); err != nil {
 				return err
 			}
-		}
-	}
-	return nil
-}
-
-func customizeResponderpolicyDiff(diff *schema.ResourceDiff, meta interface{}) error {
-	log.Printf("[DEBUG] netscaler-provider:  In customizeResponderpolicyDiff")
-	o := diff.GetChangedKeysPrefix("globalbinding")
-	old, new := diff.GetChange("globalbinding")
-	log.Printf("old %v\n", old)
-	log.Printf("old type %T\n", old)
-
-	log.Printf("new %v\n", new)
-	log.Printf("new type %T\n", new)
-
-	log.Printf("Changed keys %v\n", o)
-	log.Printf("Changed keys type %T\n", o)
-	for _, key := range o {
-		if strings.HasSuffix(key, "invoke") {
-			log.Printf("Found key to delete %v\n", key)
-			diff.Clear(key)
-			//diff.Clear("globalbinding")
 		}
 	}
 	return nil
