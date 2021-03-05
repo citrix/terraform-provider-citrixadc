@@ -272,16 +272,20 @@ func readRewritepolicyFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	if err := readRewriteGlobalBinding(d, meta); err != nil {
-		return err
+	if _, ok := d.GetOk("globalbinding"); ok {
+		if err := readRewriteGlobalBinding(d, meta); err != nil {
+			return err
+		}
 	}
-
-	if err := readRewriteLbvserverBindings(d, meta); err != nil {
-		return err
+	if _, ok := d.GetOk("lbvserverbinding"); ok {
+		if err := readRewriteLbvserverBindings(d, meta); err != nil {
+			return err
+		}
 	}
-
-	if err := readRewriteCsvserverBindings(d, meta); err != nil {
-		return err
+	if _, ok := d.GetOk("csvserverbinding"); ok {
+		if err := readRewriteCsvserverBindings(d, meta); err != nil {
+			return err
+		}
 	}
 
 	d.Set("name", data["name"])
