@@ -6,6 +6,7 @@ Citrix has developed a custom Terraform provider for automating [Citrix ADC](htt
 For users new to terraform provider for Citrix ADC, check out the [_**installation steps**_](#installation) and [_**getting started with configuring adc**_](#get-started-on-configuring-adc-through-terraform).
 
 For deploying Citrix ADC in Public Cloud - AWS and Azure, check out cloud scripts in github repo [terraform-cloud-scripts](https://github.com/citrix/terraform-cloud-scripts).
+
 Learn more about Citrix ADC Automation [here](https://docs.citrix.com/en-us/citrix-adc/current-release/deploying-vpx/citrix-adc-automation.html) 
 
 **Important note: The provider will not commit the config changes to Citrix ADC's persistent store.**
@@ -146,7 +147,7 @@ terraform-provider-citrixadc/examples/simple_server$ terraform apply
 ![image](https://user-images.githubusercontent.com/68320753/111423077-bf640c00-8715-11eb-835a-fe36b90576db.png)
 As you see above, terraform successfully created server with name test_server3 and given ipaddress on your target ADC. You can validate it by going to ADC GUI, and navigating to Traffic Management -> Load Balancing -> Servers. 
 
-_Similary repeat steps 1-6 for different resource configurations on Citrix ADC. Also refer to [general guidelines on configuring ADC](#general-guidelines-on-configuring-adc)
+_Similary repeat steps 1-6 for different resource configurations on Citrix ADC. Also refer to [general guidelines on configuring ADC](#general-guidelines-on-configuring-adc)_
 
 
 ## Usage Guidelines
