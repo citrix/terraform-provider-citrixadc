@@ -144,9 +144,9 @@ terraform-provider-citrixadc/examples/simple_server$ terraform apply
 
 ![image](https://user-images.githubusercontent.com/68320753/111423045-b410e080-8715-11eb-9845-741b6398efbb.png)
 ![image](https://user-images.githubusercontent.com/68320753/111423077-bf640c00-8715-11eb-835a-fe36b90576db.png)
-As you see terraform successfully created server with name test_server3 and given ipaddress on your target ADC. You can validate it by going to ADC GUI, and navigating to Traffic Management -> Load Balancing -> Servers. 
+As you see above, terraform successfully created server with name test_server3 and given ipaddress on your target ADC. You can validate it by going to ADC GUI, and navigating to Traffic Management -> Load Balancing -> Servers. 
 
-**_Repeat Steps 1-6 above for different configurations that you want in Citrix ADC._**
+_Similary repeat steps 1-6 for different resource configurations on Citrix ADC. Also refer to [general guidelines on configuring ADC](#general-guidelines-on-configuring-adc)
 
 
 ## Usage Guidelines
@@ -208,7 +208,7 @@ If the state of the lb vserver is out of sync with the terraform configuration y
 **
 
 ## General guidelines on configuring ADC
-The subfolders in the example folder have examples of different ADC configurations through terraform
+The subfolders in the [example folder](https://github.com/citrix/terraform-provider-citrixadc/tree/master/examples) contains examples of different ADC configurations through terraform
 
 ### Structure
 * `resources.tf` describes the actual NetScaler config objects to be created. The attributes of these resources are either hard coded or looked up from input variables in `terraform.tfvars`
