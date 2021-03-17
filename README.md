@@ -4,23 +4,120 @@
 [Terraform](https://www.terraform.io) Provider for [Citrix
 ADC](https://www.citrix.com/products/netscaler-adc/)
 
-## Description
 
-This project is a terraform custom provider for Citrix ADC.
-[Configure your ADCs using Terraform](https://www.youtube.com/watch?v=IJIIWm5rzpQ&ab_channel=Citrix)
-for different use-cases such as Load Balancing, SSL, Content Switching, GSLB, Respoder/Rewrite policies, NAT etc.  These ADCs could be deployed anywhere - Public Cloud -AWS, Azure,GCP , On-Prem etc.
+## Descritpion
+Citrix has developed a custom Terraform provider for automating Citrix ADC deployments and configurations. Using [Terraform](https://www.terraform.io), you can [custom configure your ADCs](https://www.youtube.com/watch?v=IJIIWm5rzpQ&ab_channel=Citrix). Configure your ADCs using Terraform for different use-cases such as Load Balancing, SSL, Content Switching, GSLB, WAF etc. 
 
-All the ADC modules available for Terraform automation can be found in citrixadc folder. It uses the [Nitro API](https://developer-docs.citrix.com/projects/citrix-adc-nitro-api-reference/en/latest/) to create/configure LB configurations. To get you started quickly we also have  configuration examples in the example folder. You can modify them for your configurations or create your own.
+For deploying Citrix ADC in Public Cloud - AWS and Azure, check out cloud scripts in github repo [terraform-cloud-scripts](https://github.com/citrix/terraform-cloud-scripts)
 
-To deploy Citrix ADC in public clouds, check out cloud scripts in github repo [terraform-cloud-scripts](https://github.com/citrix/terraform-cloud-scripts) .
+All the Citrix ADC modules available for Terraform automation can be found in citrixadc folder. It uses the Nitro API to create/configure LB configurations. To get you started quickly we also have configuration examples in the example folder. You can modify them for your configurations or create your own.
 
-**Important note: The provider will not commit the config changes to Citrix ADC's persistent
-store.**
+Check out the blog to get an overview on automating Citrix ADC.
+
+**Important note: The provider will not commit the config changes to Citrix ADC's persistent store.**
 
 ## Requirement
 
 * [hashicorp/terraform](https://github.com/hashicorp/terraform)
 
+## Contents
+	1. General Description - What is Terraform ? What can you do with Citrix ADC ? 
+	2. Navigating and Understanding Terraform Repository
+	3. Quick Start on using Citrix ADC-Terraform provider:
+		a. Installation
+			i. Installing Terraform 
+			ii. Installing Citrix ADC Provider
+		b. Configuring ADC through Terraform
+			i. Create terraform resources for basic Load Balancing use-case in Citrix ADC
+			ii. Create terraform provider file
+			iii. Running terraform commands to configure adc
+	4. Use-Case supported through Terraform 
+	5. Understanding resources file and repositories
+	6. Using remote-exe
+
+## Installation
+
+### **Step 1. Installing Terraform CLI:**
+First step is to install Terraform CLI. Refer the https://learn.hashicorp.com/tutorials/terraform/install-cli for installing Terraform CLI. 
+
+### **Step 2. Installing Citrix ADC Provider:**
+Terraform provider for Citrix ADC is not available through terrform.registry.io as of now. Hence users have to install the provider manually.
+
+**Follow below steps to install citrix adc provider for Terraform CLI version < 13.0**
+
+
+**Follow below steps to install citrix adc provider for Terraform CLI version >13.0**
+i) Download the citrix adc terraform binary in your local machine where you have terraform installed from the [Releases section of the github repo](https://github.com/citrix/terraform-provider-citrixadc/releases).Untar the files and you can find the binary file terraform-provider-ctxadc.
+
+ii) Create a following directory in your local machine and save the citrix adc terraform binary. e.g. in Ubuntu machine. Note that the directory structure has to be same as below, you can edit the version -0.12.43 to the citrix adc version you downloaded.
+```
+mkdir -p /home/user/.terraform.d/plugins/registry.terraform.io/citrix/citrixadc/0.12.43/linux_amd64/
+```
+iii) Copy the terraform-provider-citrixadc to the above created folder as shown below
+```
+cp terraform-provider-citrixadc /home/user/.terraform.d/plugins/registry.terraform.io/citrix/citrixadc/0.12.43/linux_amd64/
+```
+
+## Configuring ADC through Terraform
+Here we will configure the basic use-case of setting up server in ADC through Terraform.
+Before we configure, clone the github repository in your local machine as follows:
+```
+git clone https://github.com/citrix/terraform-provider-citrixadc/
+```
+**Step-1** : Now navigate to examples folder as below. Here you can find many ready to use examples for you to get started:
+```
+cd terraform-provider-citrixadc/examples/
+```
+Lets configure a simple server in citrix ADC.
+```
+cd terraform-provider-citrixadc/examples/simple_server/
+```
+**Step-2** : Provider.tf contains the details of the target Citrix ADC.Edit the simple_server/provider.tf as follows and add details of your target adc.
+```
+terraform {
+    required_providers {
+        citrixadc = {
+            source = "citrix/citrixadc"
+        }
+    }
+}
+provider "citrixadc" {
+  endpoint = "http://10.1.1.3:80"
+  username = "UsernameOfYourADC"
+  password = "PasswordOfYourADC"
+ }
+```
+**Step-3** : Resources.tf contains the desired state of the resources that you want to manage through terraform.Here we want to create simple server. Edit the simple_server/resources.tf with your configuration values - name,ipaddress as below. 
+```
+resource "citrixadc_server" "test_server" {
+  name      = "test_server"
+  ipaddress = "192.168.2.2"
+}
+```
+**Step-4** : Once the provider.tf and resources.tf is edited and saved with the desired values in the simple_server folder, you are good to run terraform and configure ADC.Initialize the terraform by running terraform-init inside the simple_server folder as follow:
+```
+terraform-provider-citrixadc/examples/simple_server$ terraform init
+```
+You should see following output if terraform was able to successfully find citrix adc provider and initialize it -
+![image](https://user-images.githubusercontent.com/68320753/111422447-ba528d00-8714-11eb-91a6-02a1418b73eb.png)
+
+**Step-5** : Now run the terraform-plan command. This will fetch the true state of your target ADC and will show you the changes/additions it need to make to achieve the desired configuration given in resources.tf. As we see below, terraform plans to add a new resource :
+```
+terraform-provider-citrixadc/examples/simple_server$ terraform plan
+```
+
+![image](https://user-images.githubusercontent.com/68320753/111422516-d5250180-8714-11eb-89e2-bc3d3432c9c7.png)
+
+**Step-6** : If the above plan looks good, then go ahead and run terraform-apply to apply the configurations. Type yes, when prompted.**
+```
+terraform-provider-citrixadc/examples/simple_server$ terraform apply
+```
+
+![image](https://user-images.githubusercontent.com/68320753/111423045-b410e080-8715-11eb-9845-741b6398efbb.png)
+![image](https://user-images.githubusercontent.com/68320753/111423077-bf640c00-8715-11eb-835a-fe36b90576db.png)
+As you see terraform successfully created server with name test_server and given ipaddress on your target ADC. You can validate this through ADC GUI, checking out Traffic Management -> Load Balancing -> Servers. 
+
+**Repeat Steps 1-6 above for different configurations that you want in Citrix ADC.**
 
 ## Usage
 
