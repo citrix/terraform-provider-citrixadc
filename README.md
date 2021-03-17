@@ -208,19 +208,19 @@ In order to understand the arguments, possible values, and other arguments avail
 If the state of the lb vserver is out of sync with the terraform configuration you will need to manually taint the resource and apply the configuration again.
 **
 
-## General guidelines on configuring ADC
-The subfolders in the [example folder](https://github.com/citrix/terraform-provider-citrixadc/tree/master/examples) contains examples of different ADC configurations through terraform
+### General guidelines on configuring ADC
+The subfolders in the example folder contains examples of different ADC configurations through terraform. Refer to [simple_lb](https://github.com/citrix/terraform-provider-citrixadc/tree/master/examples/simple_lb) example to understand below structure and usage.
 
-### Structure
+#### Structure
 * `resources.tf` describes the actual NetScaler config objects to be created. The attributes of these resources are either hard coded or looked up from input variables in `terraform.tfvars`
 * `variables.tf` describes the input variables to the terraform config. These can have defaults
 * `provider.tf` is used to specify the username, password and endpoint of the NetScaler. Alternatively, you can set the NS_URL, NS_LOGIN and NS_PASSWORD environment variables.
 * `terraform.tfvars` has the variable inputs specified in `variables.tf`
 
-### Using
+#### Using
 Modify the `terraform.tfvars` and `provider.tf` to suit your own NetScaler deployment. Use `terraform plan` and `terraform apply` to configure the NetScaler.
 
-### Updating your configuration
+#### Updating your configuration
 Modify the set of backend services and use `terraform plan` and `terraform apply` to verify the changes
 
 ### Commiting changes to Citrix ADC's persistent store
