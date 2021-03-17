@@ -1,26 +1,21 @@
 [![CircleCI](https://circleci.com/gh/citrix/terraform-provider-citrixadc/tree/master.svg?style=shield)](https://circleci.com/gh/citrix/terraform-provider-citrixadc/tree/master)
-# terraform-provider-citrixadc
 
 ## Terraform provider for Citrix ADC
-Citrix has developed a custom Terraform provider for automating [Citrix ADC](https://www.citrix.com/products/netscaler-adc/) deployments and configurations. Using [Terraform](https://www.terraform.io), you can [custom configure your ADCs](https://www.youtube.com/watch?v=IJIIWm5rzpQ&ab_channel=Citrix).Configure your ADCs using Terraform for different use-cases such as Load Balancing, SSL, Content Switching, GSLB, WAF etc. 
+Citrix has developed a custom Terraform provider for automating [Citrix ADC](https://www.citrix.com/products/netscaler-adc/) deployments and configurations. Using [Terraform](https://www.terraform.io), you can [custom configure your ADCs](https://www.youtube.com/watch?v=IJIIWm5rzpQ&ab_channel=Citrix) for different use-cases such as Load Balancing, SSL, Content Switching, GSLB, WAF etc. 
 
-For users new to Terraform and configuring Citrix ADC, start from
+For users new to terraform provider for Citrix ADC, check out the [_**installation steps**_](#installation) and [_**getting started with configuring adc**_](#get-started-on-configuring-adc-through-terraform).
 
-For deploying Citrix ADC in Public Cloud - AWS and Azure, check out cloud scripts in github repo [terraform-cloud-scripts](https://github.com/citrix/terraform-cloud-scripts)
-
+For deploying Citrix ADC in Public Cloud - AWS and Azure, check out cloud scripts in github repo [terraform-cloud-scripts](https://github.com/citrix/terraform-cloud-scripts).
 Learn more about Citrix ADC Automation [here](https://docs.citrix.com/en-us/citrix-adc/current-release/deploying-vpx/citrix-adc-automation.html) 
 
 **Important note: The provider will not commit the config changes to Citrix ADC's persistent store.**
 
-## Requirement
-
-* [hashicorp/terraform](https://github.com/hashicorp/terraform)
-
 ## Table of contents
 
+* [Why Terraform for Citrix ADC ?](#why-terraform-for-citrix-adc?)
 * [Navigating Repository](#navigating-the-repository)
 * [Installating Terraform and Citrix ADC Provider](#installation)
-* [Get Started on using terraform to configuring Citrix ADC](#get-started-on-configuring-adc-through-terraform)
+* [Get Started on using terraform to configure Citrix ADC](#get-started-on-configuring-adc-through-terraform)
 * Usage Guidelines
   - [Commiting changes to Citrix ADC's persistent store](#commiting-changes-to-citrix-adc's-persistent-store)
   - [Understanding Provider Configuration](#understanding-provider-configuration)
@@ -30,22 +25,19 @@ Learn more about Citrix ADC Automation [here](https://docs.citrix.com/en-us/citr
   - [Building your own provider](#building)
 
 
-## Contents
-	1. General Description - What is Terraform ? What can you do with Citrix ADC ? 
-	2. Navigating and Understanding Terraform Repository
-	3. Quick Start on using Citrix ADC-Terraform provider:
-		a. Installation
-			i. Installing Terraform 
-			ii. Installing Citrix ADC Provider
-		b. Configuring ADC through Terraform
-			i. Create terraform resources for basic Load Balancing use-case in Citrix ADC
-			ii. Create terraform provider file
-			iii. Running terraform commands to configure adc
-	4. Use-Case supported through Terraform 
-	5. Understanding resources file and repositories
-	6. Using remote-exe
+## Why Terraform for Citrix ADC ?
 
+[Terraform](https://www.terraform.io/) is an open-source infrastructure as code software tool that provides a consistent CLI workflow to manage hundreds of cloud services.Terraform codifies cloud APIs into declarative configuration files.
+Terraform can be used to **_deploy_** and **_configure_** ADC. Configuring Citrix ADC through Terraform provides multiple benefits.
+1. Infrastucture as Code approach to ADC -You can store the ADC configs in scm tools like GitHub and version and track it like just other code repositories you have.
+2. Declarative Approach to ADC automation - Users just need to defined the target state of ADC. ADC terraform resources will make the appropriate API calls to achieve the target state.
+3. ADC resources files in Terraform are human friendly and easy to understand.
+4. Abstract away the complexity associated with Citrix ADC internals architecture.
+5. Detect the configuration drifts on ADC through Terraform easily.
 
+## Requirement [Do we need this ????????]
+
+* [hashicorp/terraform](https://github.com/hashicorp/terraform)
 
 ## Navigating the repository
 
