@@ -1,24 +1,34 @@
 [![CircleCI](https://circleci.com/gh/citrix/terraform-provider-citrixadc/tree/master.svg?style=shield)](https://circleci.com/gh/citrix/terraform-provider-citrixadc/tree/master)
 # terraform-provider-citrixadc
 
-[Terraform](https://www.terraform.io) Provider for [Citrix
-ADC](https://www.citrix.com/products/netscaler-adc/)
+## Terraform provider for Citrix ADC
+Citrix has developed a custom Terraform provider for automating [Citrix ADC](https://www.citrix.com/products/netscaler-adc/) deployments and configurations. Using [Terraform](https://www.terraform.io), you can [custom configure your ADCs](https://www.youtube.com/watch?v=IJIIWm5rzpQ&ab_channel=Citrix).Configure your ADCs using Terraform for different use-cases such as Load Balancing, SSL, Content Switching, GSLB, WAF etc. 
 
-
-## Descritpion
-Citrix has developed a custom Terraform provider for automating Citrix ADC deployments and configurations. Using [Terraform](https://www.terraform.io), you can [custom configure your ADCs](https://www.youtube.com/watch?v=IJIIWm5rzpQ&ab_channel=Citrix). Configure your ADCs using Terraform for different use-cases such as Load Balancing, SSL, Content Switching, GSLB, WAF etc. 
+For users new to Terraform and configuring Citrix ADC, start from
 
 For deploying Citrix ADC in Public Cloud - AWS and Azure, check out cloud scripts in github repo [terraform-cloud-scripts](https://github.com/citrix/terraform-cloud-scripts)
 
-All the Citrix ADC modules available for Terraform automation can be found in citrixadc folder. It uses the Nitro API to create/configure LB configurations. To get you started quickly we also have configuration examples in the example folder. You can modify them for your configurations or create your own.
-
-Check out the blog to get an overview on automating Citrix ADC.
+Learn more about Citrix ADC Automation [here](https://docs.citrix.com/en-us/citrix-adc/current-release/deploying-vpx/citrix-adc-automation.html) 
 
 **Important note: The provider will not commit the config changes to Citrix ADC's persistent store.**
 
 ## Requirement
 
 * [hashicorp/terraform](https://github.com/hashicorp/terraform)
+
+## Table of contents
+
+* [Navigating Repository](#navigating-the-repository)
+* [Installating Terraform and Citrix ADC Provider](#installation)
+* [Get Started on using terraform to configuring Citrix ADC](#get-started-on-configuring-adc-through-terraform)
+* Usage Guidelines
+  - [Commiting changes to Citrix ADC's persistent store](#commiting-changes-to-citrix-adc's-persistent-store)
+  - [Understanding Provider Configuration](#understanding-provider-configuration)
+  - [Understnading Resource Configuration](#resource-configuration)
+  - [List of ADC use-cases supported through Terraform](#adc-use-case-supported-through-terraform)
+  - [Using `remote-exec` for one-time tasks](#using-`remote-exec`-for-one-time-tasks)
+  - [Building your own provider](#building)
+
 
 ## Contents
 	1. General Description - What is Terraform ? What can you do with Citrix ADC ? 
@@ -39,10 +49,9 @@ Check out the blog to get an overview on automating Citrix ADC.
 
 ## Navigating the repository
 
-1. citrixadc folder - 
-2. examples folder - 
-3. docs folder - https://github.com/citrix/terraform-provider-citrixadc/tree/master/docs/resources  - contains the documentation of all resources confgirations supported through Terraform.
-4. 
+1. citrixadc folder - Contains all the ADC resources library that we support through Terraform. These resource libraries will internally call NITRO APIS to configure target ADC.
+2. examples folder - Contain the examples for users to use various ADC resources e.g [simple_lb](https://github.com/citrix/terraform-provider-citrixadc/blob/master/examples/simple_lb/) folder contains the resources.tf that illustrates how citrixadc_lbvserver resource can be used to create a Load Balancing vserver on target ADC. Similarly , different folders contains examples on defining different resources. Users are expected to review these examples and define their desired ADC configurations.
+3. docs folder - https://github.com/citrix/terraform-provider-citrixadc/tree/master/docs/resources  - contains the documentation of all resources confgirations supported through Terraform. Refer this to understand the different arguments, values that a particular resource takes.
 
 
 ## Installation
@@ -75,7 +84,7 @@ mkdir -p /home/user/.terraform.d/plugins/registry.terraform.io/citrix/citrixadc/
 cp terraform-provider-citrixadc /home/user/.terraform.d/plugins/registry.terraform.io/citrix/citrixadc/0.12.43/linux_amd64/
 ```
 
-## Configuring ADC through Terraform
+## Get Started on Configuring ADC through Terraform
 _In order to familiarize with citrix adc configuration through terraform, lets get started with basic configuration of setting up server in ADC through Terraform._
 
 Before we configure, clone the github repository in your local machine as follows:
@@ -91,7 +100,7 @@ Lets configure a simple server in citrix ADC.
 cd terraform-provider-citrixadc/examples/simple_server/
 ```
 **Step-2** : Provider.tf contains the details of the target Citrix ADC.Edit the simple_server/provider.tf as follows and add details of your target adc.
-_For terraform version > 13.0 edit the provider.tf as follows_ 
+For **terraform version > 13.0** edit the provider.tf as follows
 ```
 terraform {
     required_providers {
@@ -106,7 +115,7 @@ provider "citrixadc" {
   password = "PasswordOfYourADC"
  }
 ```
-_For terraform version < 13.0, edit the provider.tf as follows_
+For **terraform version < 13.0**, edit the provider.tf as follows
 ```
 provider "citrixadc" {
   endpoint = "http://10.1.1.3:80"
@@ -164,8 +173,8 @@ export NS_PASSWORD=nsroot
 
 To ensure that the config is saved on every run, we can use something like `terraform apply && ns_commit.sh`
 
-### Provider Configuration
-
+### Understanding Provider Configuration
+Provider.tf contains the information on target ADC where you want to apply configuration.
 ```
 provider "citrixadc" {
     username = "${var.ns_user}"
@@ -220,7 +229,7 @@ In order to understand the arguments, possible values, and other arguments avail
 If the state of the lb vserver is out of sync with the terraform configuration you will need to manually taint the resource and apply the configuration again.
 **
 
-## ADC Use-Case supported in Terraform along with Examples
+## ADC Use-Case supported through Terraform
 
 ADC Use-Case -  Configuration examples (resource.tf )
 
@@ -247,7 +256,3 @@ its configuration files, tfstate files, etc.
 2. Install `dep` (<https://github.com/golang/dep>)
 3. Check out this code: `git clone https://<>`
 4. Build this code using `make build`
-
-## Samples
-See the `examples` directory for various LB topologies that can be driven from this terraform provider.
-
