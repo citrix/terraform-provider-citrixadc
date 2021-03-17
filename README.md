@@ -93,7 +93,7 @@ Lets configure a simple server in citrix ADC.
 ```
 cd terraform-provider-citrixadc/examples/simple_server/
 ```
-**Step-2** : Provider.tf contains the details of the target Citrix ADC.Edit the simple_server/provider.tf as follows and add details of your target adc.
+**Step-2** : Provider.tf contains the details of the target Citrix ADC.Edit the `simple_server/provider.tf` as follows and add details of your target adc.
 For **terraform version > 13.0** edit the provider.tf as follows
 ```
 terraform {
@@ -109,7 +109,7 @@ provider "citrixadc" {
   password = "PasswordOfYourADC"
  }
 ```
-For **terraform version < 13.0**, edit the provider.tf as follows
+For **terraform version < 13.0**, edit the `provider.tf` as follows
 ```
 provider "citrixadc" {
   endpoint = "http://10.1.1.3:80"
@@ -117,28 +117,28 @@ provider "citrixadc" {
   password = "PasswordOfYourADC"
  }
  ```
-**Step-3** : Resources.tf contains the desired state of the resources that you want to manage through terraform.Here we want to create simple server. Edit the simple_server/resources.tf with your configuration values - name,ipaddress as below. 
+**Step-3** : Resources.tf contains the desired state of the resources that you want to manage through terraform.Here we want to create simple server. Edit the `simple_server/resources.tf` with your configuration values - name,ipaddress as below. 
 ```
 resource "citrixadc_server" "test_server" {
   name      = "test_server"
   ipaddress = "192.168.2.2"
 }
 ```
-**Step-4** : Once the provider.tf and resources.tf is edited and saved with the desired values in the simple_server folder, you are good to run terraform and configure ADC.Initialize the terraform by running terraform-init inside the simple_server folder as follow:
+**Step-4** : Once the provider.tf and resources.tf is edited and saved with the desired values in the simple_server folder, you are good to run terraform and configure ADC.Initialize the terraform by running `terraform-init` inside the simple_server folder as follow:
 ```
 terraform-provider-citrixadc/examples/simple_server$ terraform init
 ```
 You should see following output if terraform was able to successfully find citrix adc provider and initialize it -
 ![image](https://user-images.githubusercontent.com/68320753/111422447-ba528d00-8714-11eb-91a6-02a1418b73eb.png)
 
-**Step-5** : Now run the terraform-plan command. This will fetch the true state of your target ADC and will show you the changes/additions it need to make to achieve the desired configuration given in resources.tf. As we see below, terraform plans to add a new resource :
+**Step-5** : Now run the `terraform-plan` command. This will fetch the true state of your target ADC and will show you the changes/additions it need to make to achieve the desired configuration given in resources.tf. As we see below, terraform plans to add a new resource :
 ```
 terraform-provider-citrixadc/examples/simple_server$ terraform plan
 ```
 
 ![image](https://user-images.githubusercontent.com/68320753/111422516-d5250180-8714-11eb-89e2-bc3d3432c9c7.png)
 
-**Step-6** : If the above plan looks good, then go ahead and run terraform-apply to apply the configurations. Type yes, when prompted.**
+**Step-6** : If the above plan looks good, then go ahead and run `terraform-apply` to apply the configurations. Type yes, when prompted.**
 ```
 terraform-provider-citrixadc/examples/simple_server$ terraform apply
 ```
