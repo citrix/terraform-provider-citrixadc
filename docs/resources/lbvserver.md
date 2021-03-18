@@ -99,8 +99,8 @@ resource "citrixadc_lbvserver" "tf_lbvserver" {
 * `newservicerequest` - (Optional) Number of requests, or percentage of the load on existing services, by which to increase the load on a new service at each interval in slow-start mode. A non-zero value indicates that slow-start is applicable. A zero value indicates that the global RR startup parameter is applied. Changing the value to zero will cause services currently in slow start to take the full traffic as determined by the LB method. Subsequently, any new services added will use the global RR factor.
 * `newservicerequestunit` - (Optional) Units in which to increment load at each interval in slow-start mode. Possible values: [ PER_SECOND, PERCENT ]
 * `newservicerequestincrementinterval` - (Optional) Interval, in seconds, between successive increments in the load on a new service or a service whose state has just changed from DOWN to UP. A value of 0 (zero) specifies manual slow start.
-* `minautoscalemembers` - (Optional) 
-* `maxautoscalemembers` - (Optional) 
+* `minautoscalemembers` - (Optional)
+* `maxautoscalemembers` - (Optional)
 * `skippersistency` - (Optional) This argument decides the behavior incase the service which is selected from an existing persistence session has reached threshold. Possible values: [ Bypass, ReLb, None ]
 * `td` - (Optional) Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.
 * `authnprofile` - (Optional) Name of the authentication profile to be used when authentication is turned on.
@@ -134,7 +134,7 @@ SSL policy binding supports the following:
 * `invoke` - (Optional) Invoke flag. This attribute is relevant only for ADVANCED policies.
 * `labeltype` - (Optional) Type of policy label invocation. Possible values: [ vserver, service, policylabel ]
 * `labelname` - (Optional) Name of the label to invoke if the current policy rule evaluates to TRUE.
-
+* `quicbridgeprofilename` - (Optional) Name of the QUIC Bridge profile whose settings are to be applied to the virtual server. Refer [quicbridgeprofile](./quicbridgeprofile.md) for usage.
 
 ## Attribute Reference
 
