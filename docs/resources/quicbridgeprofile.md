@@ -39,8 +39,4 @@ In addition to the arguments, the following attributes are available:
 
 ## Import
 
-A `quicbridgeprofile` can be imported using its name, e.g.
 
-``` shell
-terraform import citrixadc_quicbridgeprofile.demo_quicbridge.name
-```
