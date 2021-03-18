@@ -13,7 +13,7 @@ Learn more about Citrix ADC Automation [here](https://docs.citrix.com/en-us/citr
 
 ## Table of contents
 
-* [Why Terraform for Citrix ADC ?](#why-terraform-for-citrix-adc?)
+* [Why Terraform for Citrix ADC ?](#why-terraform-for-citrix-adc-)
 * [Navigating Repository](#navigating-the-repository)
 * [Installating Terraform and Citrix ADC Provider](#installation)
 * [Get Started on using terraform to configure Citrix ADC](#get-started-on-configuring-adc-through-terraform)
@@ -21,9 +21,9 @@ Learn more about Citrix ADC Automation [here](https://docs.citrix.com/en-us/citr
   - [Understanding Provider Configuration](#understanding-provider-configuration)
   - [Understanding Resource Configuration](#resource-configuration)
   - [General guidelines on ADC configurations](#general-guidelines-on-configuring-adc)
-  - [Commiting changes to Citrix ADC's persistent store](#commiting-changes-to-citrix-adc's-persistent-store)
+  - [Commiting changes to Citrix ADC's persistent store](#commiting-changes-to-citrix-adcs-persistent-store)
   - [List of ADC use-cases supported through Terraform](#adc-use-case-supported-through-terraform)
-  - [Using `remote-exec` for one-time tasks](#using-`remote-exec`-for-one-time-tasks)
+  - [Using `remote-exec` for one-time tasks](#using-remote-exec-for-one-time-tasks)
   - [Building your own provider](#building)
 
 
@@ -40,6 +40,11 @@ Terraform can be used to **_deploy_** and **_configure_** ADC. Configuring Citri
 ## Requirement [Do we need this ????????]
 
 * [hashicorp/terraform](https://github.com/hashicorp/terraform)
+
+To run the terraform-citrixadc-provider you need to have the hashicorp terraform executable
+installed in your system.
+
+You can download it from this [page](https://releases.hashicorp.com/terraform/).
 
 ## Navigating the repository
 
@@ -237,16 +242,18 @@ To ensure that the config is saved on every run, we can use something like `terr
 
 ## ADC Use-Case supported through Terraform
 
-ADC Use-Case -  Configuration examples (resource.tf )
+Examples can be found in the [examples](examples) directory.
 
-1. Load Balancing -  
-2. Content Switching
-3. Responder/Rewrite Policies
-4. SSL
-5. Global Load Server Balancing (GSLB)
-6. Web Application Firewall (WAF)
-7. Core ADC features
-8. Pool Licensing         
+| ADC Use Case | Configuration Examples |
+| ----------- | ---------------------- |
+| Load Balancing | lbvserver <br /> lbvserver\_cmppolicy\_binding <br /> lbvserver\_filterpolicy\_binding <br /> lbvserver\_responderpolicy\_binding <br /> lbvserver\_rewritepolicy\_binding <br /> lbvserver\_service\_binding <br /> lbvserver\_transformpolicy\_binding <br /> simple\_lb <br /> simple\_server |
+| Content Switching | csvserver <br /> csvserver\_cmppolicy\_binding <br /> csvserver\_cspolicy\_binding <br /> csvserver\_filterpolicy\_binding <br /> csvserver\_lbvserver\_binding <br /> csvserver\_responderpolicy\_binding <br /> csvserver\_rewritepolicy\_binding <br /> csvserver\_transformpolicy\_binding <br /> content\_switch\_ssl\_lb\_mon |
+| Responder/Rewrite Policies | csvserver\_responderpolicy\_binding <br /> lbvserver\_responderpolicy\_binding <br /> responder <br /> csvserver\_rewritepolicy\_binding <br /> lbvserver\_rewritepolicy\_binding <br /> rewrite |
+| SSL | content\_switch\_ssl\_lb\_mon <br /> ssl\_lb\_monitors <br /> sslaction <br /> sslcipher <br /> ssldhparam <br /> sslparameter <br /> sslpolicy <br /> sslprofile <br /> sslprofile\_sslcipher\_binding <br /> sslvserver <br /> sslvserver\_sslcertkey\_binding <br /> sslvserver\_sslpolicy\_binding |
+| Global Load Server Balancing (GSLB) | gslb <br /> gslbservice\_lbmonbindings  |
+| Web Application Firewall (WAF) | appfwfieldtype <br /> appfwjsoncontenttype <br /> appfwpolicy <br /> appfwpolicylabel <br /> appfwprofile <br /> appfwprofile\_denyurl\_binding <br /> appfwprofile\_starturl\_binding <br /> appfwxmlcontenttype |
+| Core ADC features | cluster <br /> clusterL3 <br /> installer <br /> interface <br /> ipset <br /> linkset <br /> netprofile <br /> network <br /> nsacl <br /> nsconfig <br /> nsfeature <br /> nshttprofile <br /> nsip <br /> nsip6 <br /> nsparam <br /> nsrpcnode <br /> nstcpprofile <br /> password\_resetter <br /> pinger <br /> rebooter <br /> route <br /> routerdynamicrouting <br /> saveconfig <br /> systemfile <br /> systemgroup <br /> systemuser |
+| Pool Licensing | nscapacity\_cico <br /> nscapacity\_pooled <br /> nscapacity\_vcpu <br /> nslicenseserver <br /> nslicense |
 
 
 ## Using `remote-exec` for one-time tasks
@@ -259,6 +266,6 @@ its configuration files, tfstate files, etc.
 * You are comfortable with the Go language and its code organization.
 
 1. Install `terraform` from <https://www.terraform.io/downloads.html>
-2. Install `dep` (<https://github.com/golang/dep>)
-3. Check out this code: `git clone https://<>`
-4. Build this code using `make build`
+2. Check out this code: `git clone https://<>`
+3. Build this code using `make build`
+4. Binary can be found at `$GOPATH/bin/terraform-provider-citrixadc`
