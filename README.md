@@ -37,7 +37,7 @@ Terraform can be used to **_deploy_** and **_configure_** ADC. Configuring Citri
 4. Abstract away the complexity associated with Citrix ADC internals architecture.
 5. Detect the configuration drifts on ADC through Terraform easily.
 
-## Requirement [Do we need this ????????]
+## Requirement
 
 * [hashicorp/terraform](https://github.com/hashicorp/terraform)
 
