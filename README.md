@@ -209,7 +209,7 @@ resource "citrixadc_lbvserver" "foo" {
 ```
 In order to understand the arguments, possible values, and other arguments available for a given resource, refer the NITRO API documentation <https://developer-docs.citrix.com/projects/netscaler-nitro-api/en/12.0/configuration/load-balancing/lbvserver/lbvserver/>  and the Terraform documentation such as https://github.com/citrix/terraform-provider-citrixadc/blob/master/docs/resources/lbvserver.md .
 
-??????**Note that the attribute `state` is not synced with the remote object.
+**Note that the attribute `state` is not synced with the remote object.
 If the state of the lb vserver is out of sync with the terraform configuration you will need to manually taint the resource and apply the configuration again.
 **
 
