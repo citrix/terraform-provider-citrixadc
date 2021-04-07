@@ -4,7 +4,6 @@ import (
 	"github.com/chiradeep/go-nitro/config/lb"
 
 	"github.com/chiradeep/go-nitro/netscaler"
-	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"fmt"
@@ -19,6 +18,16 @@ func resourceCitrixAdcLbvserver_appfwpolicy_binding() *schema.Resource {
 		Update:        updateLbvserver_appfwpolicy_bindingFunc,
 		Delete:        deleteLbvserver_appfwpolicy_bindingFunc,
 		Schema: map[string]*schema.Schema{
+			"name": &schema.Schema{
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"policyname": &schema.Schema{
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
 			"bindpoint": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -44,16 +53,6 @@ func resourceCitrixAdcLbvserver_appfwpolicy_binding() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"name": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"policyname": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
 			"priority": &schema.Schema{
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -66,13 +65,7 @@ func resourceCitrixAdcLbvserver_appfwpolicy_binding() *schema.Resource {
 func createLbvserver_appfwpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createLbvserver_appfwpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
-	var lbvserver_appfwpolicy_bindingName string
-	if v, ok := d.GetOk("name"); ok {
-		lbvserver_appfwpolicy_bindingName = v.(string)
-	} else {
-		lbvserver_appfwpolicy_bindingName = resource.PrefixedUniqueId("tf-lbvserver_appfwpolicy_binding-")
-		d.Set("name", lbvserver_appfwpolicy_bindingName)
-	}
+	lbvserver_appfwpolicy_bindingName := d.Get("name").(string)
 	lbvserver_appfwpolicy_binding := lb.Lbvserverappfwpolicybinding{
 		Bindpoint:              d.Get("bindpoint").(string),
 		Gotopriorityexpression: d.Get("gotopriorityexpression").(string),
