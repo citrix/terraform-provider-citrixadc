@@ -92,6 +92,7 @@ schema_only:
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/appfw/appfwxmlcontenttype.json
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/appfw/appfwprofile_starturl_binding.json
 	./$(SCHEMA_EXEC) -i $(JSON_DIR)/appfw/appfwprofile_denyurl_binding.json
+	./$(SCHEMA_EXEC) -i $(JSON_DIR)/appfw/appfwprofile_sqlinjection_binding.json
 	@# quicbridge - TODO: yet to add in go-nitro
 	#./$(SCHEMA_EXEC) -i $(JSON_DIR)/appfw/quicbridgeprofile.json
 
