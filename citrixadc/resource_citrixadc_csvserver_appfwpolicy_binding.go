@@ -6,7 +6,6 @@ import (
 	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
-	"fmt"
 	"log"
 )
 
@@ -15,7 +14,6 @@ func resourceCitrixAdcCsvserver_appfwpolicy_binding() *schema.Resource {
 		SchemaVersion: 1,
 		Create:        createCsvserver_appfwpolicy_bindingFunc,
 		Read:          readCsvserver_appfwpolicy_bindingFunc,
-		Update:        updateCsvserver_appfwpolicy_bindingFunc,
 		Delete:        deleteCsvserver_appfwpolicy_bindingFunc,
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
@@ -122,70 +120,6 @@ func readCsvserver_appfwpolicy_bindingFunc(d *schema.ResourceData, meta interfac
 
 	return nil
 
-}
-
-func updateCsvserver_appfwpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[DEBUG]  citrixadc-provider: In updateCsvserver_appfwpolicy_bindingFunc")
-	client := meta.(*NetScalerNitroClient).client
-	csvserver_appfwpolicy_bindingName := d.Get("name").(string)
-
-	csvserver_appfwpolicy_binding := cs.Csvserverappfwpolicybinding{
-		Name: d.Get("name").(string),
-	}
-	hasChange := false
-	if d.HasChange("bindpoint") {
-		log.Printf("[DEBUG]  citrixadc-provider: Bindpoint has changed for csvserver_appfwpolicy_binding %s, starting update", csvserver_appfwpolicy_bindingName)
-		csvserver_appfwpolicy_binding.Bindpoint = d.Get("bindpoint").(string)
-		hasChange = true
-	}
-	if d.HasChange("gotopriorityexpression") {
-		log.Printf("[DEBUG]  citrixadc-provider: Gotopriorityexpression has changed for csvserver_appfwpolicy_binding %s, starting update", csvserver_appfwpolicy_bindingName)
-		csvserver_appfwpolicy_binding.Gotopriorityexpression = d.Get("gotopriorityexpression").(string)
-		hasChange = true
-	}
-	if d.HasChange("invoke") {
-		log.Printf("[DEBUG]  citrixadc-provider: Invoke has changed for csvserver_appfwpolicy_binding %s, starting update", csvserver_appfwpolicy_bindingName)
-		csvserver_appfwpolicy_binding.Invoke = d.Get("invoke").(bool)
-		hasChange = true
-	}
-	if d.HasChange("labelname") {
-		log.Printf("[DEBUG]  citrixadc-provider: Labelname has changed for csvserver_appfwpolicy_binding %s, starting update", csvserver_appfwpolicy_bindingName)
-		csvserver_appfwpolicy_binding.Labelname = d.Get("labelname").(string)
-		hasChange = true
-	}
-	if d.HasChange("labeltype") {
-		log.Printf("[DEBUG]  citrixadc-provider: Labeltype has changed for csvserver_appfwpolicy_binding %s, starting update", csvserver_appfwpolicy_bindingName)
-		csvserver_appfwpolicy_binding.Labeltype = d.Get("labeltype").(string)
-		hasChange = true
-	}
-	if d.HasChange("name") {
-		log.Printf("[DEBUG]  citrixadc-provider: Name has changed for csvserver_appfwpolicy_binding %s, starting update", csvserver_appfwpolicy_bindingName)
-		csvserver_appfwpolicy_binding.Name = d.Get("name").(string)
-		hasChange = true
-	}
-	if d.HasChange("policyname") {
-		log.Printf("[DEBUG]  citrixadc-provider: Policyname has changed for csvserver_appfwpolicy_binding %s, starting update", csvserver_appfwpolicy_bindingName)
-		csvserver_appfwpolicy_binding.Policyname = d.Get("policyname").(string)
-		hasChange = true
-	}
-	if d.HasChange("priority") {
-		log.Printf("[DEBUG]  citrixadc-provider: Priority has changed for csvserver_appfwpolicy_binding %s, starting update", csvserver_appfwpolicy_bindingName)
-		csvserver_appfwpolicy_binding.Priority = d.Get("priority").(int)
-		hasChange = true
-	}
-	if d.HasChange("targetlbvserver") {
-		log.Printf("[DEBUG]  citrixadc-provider: Targetlbvserver has changed for csvserver_appfwpolicy_binding %s, starting update", csvserver_appfwpolicy_bindingName)
-		csvserver_appfwpolicy_binding.Targetlbvserver = d.Get("targetlbvserver").(string)
-		hasChange = true
-	}
-
-	if hasChange {
-		_, err := client.UpdateResource(netscaler.Csvserver_appfwpolicy_binding.Type(), csvserver_appfwpolicy_bindingName, &csvserver_appfwpolicy_binding)
-		if err != nil {
-			return fmt.Errorf("Error updating csvserver_appfwpolicy_binding %s", csvserver_appfwpolicy_bindingName)
-		}
-	}
-	return readCsvserver_appfwpolicy_bindingFunc(d, meta)
 }
 
 func deleteCsvserver_appfwpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
