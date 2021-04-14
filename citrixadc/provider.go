@@ -180,6 +180,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_nsvpxparam":                              resourceCitrixAdcNsvpxparam(),
 		"citrixadc_nstcpparam":                              resourceCitrixAdcNstcpparam(),
 		"citrixadc_dnsnsrec":                                resourceCitrixAdcDnsnsrec(),
+		"citrixadc_dnssoarec":                               resourceCitrixAdcDnssoarec(),
 	}
 }
 
