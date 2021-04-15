@@ -60,13 +60,14 @@ github.com/bgentry/speakeasy
 github.com/blang/semver
 # github.com/bmatcuk/doublestar v1.1.5
 github.com/bmatcuk/doublestar
-# github.com/chiradeep/go-nitro v0.0.0-20201217095705-33aeab85c408
+# github.com/chiradeep/go-nitro v0.0.0-20210415084059-355fec1cd7ac
 github.com/chiradeep/go-nitro/config/appfw
 github.com/chiradeep/go-nitro/config/audit
 github.com/chiradeep/go-nitro/config/basic
 github.com/chiradeep/go-nitro/config/cluster
 github.com/chiradeep/go-nitro/config/cmp
 github.com/chiradeep/go-nitro/config/cs
+github.com/chiradeep/go-nitro/config/dns
 github.com/chiradeep/go-nitro/config/filter
 github.com/chiradeep/go-nitro/config/gslb
 github.com/chiradeep/go-nitro/config/lb

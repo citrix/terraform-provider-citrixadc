@@ -29,7 +29,7 @@ import (
 )
 
 // Idempotent flag can't be added for these resources
-var idempotentInvalidResources = []string{"login", "logout", "reboot", "shutdown", "ping", "ping6", "traceroute", "traceroute6", "install", "appfwjsoncontenttype", "appfwxmlcontenttype"}
+var idempotentInvalidResources = []string{"login", "logout", "reboot", "shutdown", "ping", "ping6", "traceroute", "traceroute6", "install", "appfwjsoncontenttype", "appfwxmlcontenttype", "dnsnsrec"}
 
 const (
 	nsErrSessionExpired = 444
@@ -151,12 +151,30 @@ func (c *NitroClient) createHTTPRequest(method string, urlstr string, buff *byte
 	return req, nil
 }
 
+func maskHeaders(headers http.Header) http.Header {
+	maskedHeaders := make(http.Header, len(headers))
+	for k, v := range headers {
+		upperKey := strings.ToUpper(k)
+
+		if upperKey == "X-NITRO-PASS" {
+			maskedHeaders[k] = []string{"*********"}
+		} else if upperKey == "X-NITRO-USER" {
+			maskedHeaders[k] = []string{"*********"}
+		} else {
+			maskedHeaders[k] = v
+		}
+	}
+	return maskedHeaders
+}
+
 func (c *NitroClient) doHTTPRequest(method string, urlstr string, bytes *bytes.Buffer, respHandler responseHandlerFunc) ([]byte, error) {
 	req, err := c.createHTTPRequest(method, urlstr, bytes)
 	log.Printf("[TRACE] go-nitro: doHTTPRequest HTTP method: %v", method)
 	log.Printf("[TRACE] go-nitro: doHTTPRequest HTTP url: %v", urlstr)
 	log.Printf("[TRACE] go-nitro: doHTTPRequest HTTP body: %v", bytes.String())
-	log.Printf("[TRACE] go-nitro: doHTTPRequest HTTP request headers: %v", req.Header)
+
+	maskedHeaders := maskHeaders(req.Header)
+	log.Printf("[TRACE] go-nitro: doHTTPRequest HTTP request headers: %v", maskedHeaders)
 
 	resp, err := c.client.Do(req)
 	if resp != nil {
