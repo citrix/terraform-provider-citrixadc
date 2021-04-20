@@ -129,11 +129,6 @@ func resourceCitrixAdcGslbvserver() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"newname": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
 			"persistenceid": &schema.Schema{
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -337,7 +332,6 @@ func createGslbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		Mir:                    d.Get("mir").(string),
 		Name:                   d.Get("name").(string),
 		Netmask:                d.Get("netmask").(string),
-		Newname:                d.Get("newname").(string),
 		Persistenceid:          d.Get("persistenceid").(int),
 		Persistencetype:        d.Get("persistencetype").(string),
 		Persistmask:            d.Get("persistmask").(string),
@@ -423,7 +417,6 @@ func readGslbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("mir", data["mir"])
 	d.Set("name", data["name"])
 	d.Set("netmask", data["netmask"])
-	d.Set("newname", data["newname"])
 	d.Set("persistenceid", data["persistenceid"])
 	d.Set("persistencetype", data["persistencetype"])
 	d.Set("persistmask", data["persistmask"])
@@ -573,11 +566,6 @@ func updateGslbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("netmask") {
 		log.Printf("[DEBUG]  netscaler-provider: Netmask has changed for gslbvserver %s, starting update", gslbvserverName)
 		gslbvserver.Netmask = d.Get("netmask").(string)
-		hasChange = true
-	}
-	if d.HasChange("newname") {
-		log.Printf("[DEBUG]  netscaler-provider: Newname has changed for gslbvserver %s, starting update", gslbvserverName)
-		gslbvserver.Newname = d.Get("newname").(string)
 		hasChange = true
 	}
 	if d.HasChange("persistenceid") {
