@@ -139,11 +139,6 @@ func resourceCitrixAdcGslbservice() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"newname": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
 			"port": &schema.Schema{
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -287,7 +282,6 @@ func createGslbserviceFunc(d *schema.ResourceData, meta interface{}) error {
 		Naptrpreference:  d.Get("naptrpreference").(int),
 		Naptrreplacement: d.Get("naptrreplacement").(string),
 		Naptrservices:    d.Get("naptrservices").(string),
-		Newname:          d.Get("newname").(string),
 		Port:             d.Get("port").(int),
 		Publicip:         d.Get("publicip").(string),
 		Publicport:       d.Get("publicport").(int),
@@ -357,7 +351,6 @@ func readGslbserviceFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("naptrpreference", data["naptrpreference"])
 	d.Set("naptrreplacement", data["naptrreplacement"])
 	d.Set("naptrservices", data["naptrservices"])
-	d.Set("newname", data["newname"])
 	d.Set("port", data["port"])
 	d.Set("publicip", data["publicip"])
 	d.Set("publicport", data["publicport"])
@@ -499,11 +492,6 @@ func updateGslbserviceFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("naptrservices") {
 		log.Printf("[DEBUG]  netscaler-provider: Naptrservices has changed for gslbservice %s, starting update", gslbserviceName)
 		gslbservice.Naptrservices = d.Get("naptrservices").(string)
-		hasChange = true
-	}
-	if d.HasChange("newname") {
-		log.Printf("[DEBUG]  netscaler-provider: Newname has changed for gslbservice %s, starting update", gslbserviceName)
-		gslbservice.Newname = d.Get("newname").(string)
 		hasChange = true
 	}
 	if d.HasChange("port") {
