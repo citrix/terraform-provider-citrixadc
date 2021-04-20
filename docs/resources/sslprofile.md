@@ -4,7 +4,7 @@ subcategory: "SSL"
 
 # Resource: sslprofile
 
-The sslprofile resource is used to create <fillme>.
+The sslprofile resource is used to create SSL profiles.
 
 
 ## Example usage

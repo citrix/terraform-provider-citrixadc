@@ -78,6 +78,10 @@ resource "citrixadc_service" "tf_service" {
 
 * `snienable` - (Optional) State of the Server Name Indication (SNI) feature on the virtual server and service-based offload. SNI helps to enable SSL encryption on multiple domains on a single virtual server or service if the domains are controlled by the same organization and share the same second-level domain name. For example, \*.sports.net can be used to secure domains such as login.sports.net and help.sports.net. Possible values: [ ENABLED, DISABLED ]
 * `commonname` - (Optional) Name to be checked against the CommonName (CN) field in the server certificate bound to the SSL service.
+* `all` - (Optional)
+* `riseapbrstatsmsgcode` - (Optional)
+* `accessdown` - (Optional) 
+* `appflowlog` - (Optional)
 
 
 ## Attribute Reference

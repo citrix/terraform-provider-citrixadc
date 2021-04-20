@@ -75,6 +75,7 @@ resource "citrixadc_servicegroup" "tf_servicegroup" {
 * `servicegroupmembers_by_servername` - (Optional) list of service members bindings by service name. e.g. `["service1:80:1", "service2:80:1"]`
 * `servicegroupmembers` - (Optional) list of members bindings by server ip address. e.g.`["172.20.0.9:80:10", "172.20.0.10:80:10"]
 * `lbmonitor` - (Optional) lbmonitor to bind the servicegroup to.
+* `riseapbrstatsmsgcode` - (Optional)
 
 
 ## Attribute Reference

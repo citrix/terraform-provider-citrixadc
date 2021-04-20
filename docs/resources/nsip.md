@@ -55,6 +55,8 @@ resource "citrixadc_nsip" "tf_nsip" {
 * `arpresponse` - (Optional) Respond to ARP requests for a Virtual IP (VIP) address on the basis of the states of the virtual servers associated with that VIP. Available settings function as follows: * NONE - The Citrix ADC responds to any ARP request for the VIP address, irrespective of the states of the virtual servers associated with the address. * ONE VSERVER - The Citrix ADC responds to any ARP request for the VIP address if at least one of the associated virtual servers is in UP state. * ALL VSERVER - The Citrix ADC responds to any ARP request for the VIP address if all of the associated virtual servers are in UP state. Possible values: [ NONE, ONE_VSERVER, ALL_VSERVERS ]
 * `ownerdownresponse` - (Optional) in cluster system, if the owner node is down, whether should it respond to icmp/arp. Possible values: [ YES, NO ]
 * `td` - (Optional) Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0. TD id 4095 is used reserved for  LSN use  .
+* `vserverrhimode` - (Optional)
+* `mptcpadvertise` - (Optional)
 
 
 ## Attribute Reference

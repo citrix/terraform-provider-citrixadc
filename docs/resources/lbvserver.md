@@ -123,6 +123,7 @@ resource "citrixadc_lbvserver" "tf_lbvserver" {
 * `ciphersuites` - (Optional) A set of ciphersuites to be bound to the lb vserver.
 * `ciphers` - (Optional) A set of ciphers to be bound to the lb vserver. This is only relevant for cluster deployments of ADC. In all other cases it is ignored.
 * `snisslcertkeys` - (Optional) A set of SNI ssl certificates bound to the lb vserver.
+* `sslprofile` - (Optional) A SSL profile to bind to this lb vserver.
 * `sslpolicybinding` - (Optional) SSL policy bound to the lb vserver block. Documented below
 
 SSL policy binding supports the following:
@@ -145,7 +146,7 @@ In addition to the arguments, the following attributes are available:
 
 ## Import
 
-A <resource> can be imported using its name, e.g.
+A lbvserver can be imported using its name, e.g.
 
 ```shell
 terraform import citrixadc_lbvserver.tf_lbvserver tf_lbvserver

@@ -4,7 +4,7 @@ subcategory: "Rewrite"
 
 # Resource: rewritepolicylabel
 
-The rewritepolicylabel resource is used to create <fillme>.
+The rewritepolicylabel resource is used to create rewrite policy labels.
 
 
 ## Example usage

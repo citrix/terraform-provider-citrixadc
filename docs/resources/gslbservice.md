@@ -64,6 +64,7 @@ resource "citrixadc_gslbservice" "tf_gslbservice" {
 * `viewip` - (Optional) IP address to be used for the given view.
 * `weight` - (Optional) Weight to assign to the monitor-service binding. A larger number specifies a greater weight. Contributes to the monitoring threshold, which determines the state of the service.
 * `monitornamesvc` - (Optional) Name of the monitor to bind to the service.
+* `delay` - (Optional) Delay to wait for service to be disabled.
 * `lbmonitorbinding` - (Optional) A set of lb monitor blocks. Documented below
 
 

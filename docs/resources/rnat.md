@@ -33,6 +33,7 @@ A rnat block supports the following:
 * `td` - (Optional) Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.
 * `redirectport` - (Optional) Port number to which the IPv4 packets are redirected. Applicable to TCP and UDP protocols.
 * `natip` - (Optional) Any NetScaler-owned IPv4 address except the NSIP address. The NetScaler appliance replaces the source IP addresses of server-generated packets with the IP address specified. The IP address must be a public NetScaler-owned IP address. If you specify multiple addresses for this field, NATIP selection uses the round robin algorithm for each session. By specifying a range of IP addresses, you can specify all NetScaler-owned IP addresses, except the NSIP, that fall within the specified range.
+* `natip2` - (Optional)
 
 
 ## Attribute Reference

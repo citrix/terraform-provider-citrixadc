@@ -36,7 +36,7 @@ In addition to the arguments, the following attributes are available:
 
 ## Import
 
-A <resource> can be imported using its name, e.g.
+A linkset can be imported using its `linskset_id` attribute, e.g.
 
 ```shell
 terraform import citrixadc_linkset.tf_linkset LS/1

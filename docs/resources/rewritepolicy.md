@@ -48,6 +48,7 @@ A global binding supports the following:
 * `labeltype` - (Optional) Type of invocation. Available settings function as follows: * reqvserver - Forward the request to the specified request virtual server. * resvserver - Forward the response to the specified response virtual server. * policylabel - Invoke the specified policy label. Possible values: [ reqvserver, resvserver, policylabel ]
 * `labelname` - (Optional) * If labelType is policylabel, name of the policy label to invoke.  * If labelType is reqvserver or resvserver, name of the virtual server to which to forward the request of response.
 * `globalbindtype` - (Optional) . Possible values: [ SYSTEM_GLOBAL, VPN_GLOBAL, RNAT_GLOBAL ]
+* `policyname` - (Optional) Policy name.
 
 A lbvserver binding supports the following:
 

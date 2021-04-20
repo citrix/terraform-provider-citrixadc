@@ -28,6 +28,7 @@ resource "citrixadc_netprofile" "tf_netprofile" {
 * `mbf` - (Optional) Response will be sent using learnt info if enabled. When creating a netprofile, if you do not set this parameter, the netprofile inherits the global MBF setting (available in the enable ns mode and disable ns mode CLI commands, or in the System > Settings > Configure modes > Configure Modes dialog box). However, you can override this setting after you create the netprofile. Possible values: [ ENABLED, DISABLED ]
 * `proxyprotocol` - (Optional) Proxy Protocol Action (Enabled/Disabled). Possible values: [ ENABLED, DISABLED ]
 * `proxyprotocoltxversion` - (Optional) Proxy Protocol Version (V1/V2). Possible values: [ V1, V2 ]
+* `proxyprotocolaftertlshandshake` - (Optional)
 
 
 ## Attribute Reference
