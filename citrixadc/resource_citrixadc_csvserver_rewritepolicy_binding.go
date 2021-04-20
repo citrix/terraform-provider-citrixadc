@@ -18,6 +18,9 @@ func resourceCitrixAdcCsvserver_rewritepolicy_binding() *schema.Resource {
 		Create:        createCsvserver_rewritepolicy_bindingFunc,
 		Read:          readCsvserver_rewritepolicy_bindingFunc,
 		Delete:        deleteCsvserver_rewritepolicy_bindingFunc,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"bindpoint": &schema.Schema{
 				Type:     schema.TypeString,

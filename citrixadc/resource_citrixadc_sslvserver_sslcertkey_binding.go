@@ -17,6 +17,9 @@ func resourceCitrixAdcSslvserver_sslcertkey_binding() *schema.Resource {
 		Create:        createSslvserver_sslcertkey_bindingFunc,
 		Read:          readSslvserver_sslcertkey_bindingFunc,
 		Delete:        deleteSslvserver_sslcertkey_bindingFunc,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"ca": &schema.Schema{
 				Type:     schema.TypeBool,

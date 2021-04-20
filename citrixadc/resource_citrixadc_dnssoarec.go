@@ -17,6 +17,9 @@ func resourceCitrixAdcDnssoarec() *schema.Resource {
 		Read:          readDnssoarecFunc,
 		Update:        updateDnssoarecFunc,
 		Delete:        deleteDnssoarecFunc,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"contact": &schema.Schema{
 				Type:     schema.TypeString,

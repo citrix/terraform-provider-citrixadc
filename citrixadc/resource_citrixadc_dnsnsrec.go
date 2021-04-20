@@ -18,6 +18,9 @@ func resourceCitrixAdcDnsnsrec() *schema.Resource {
 		Create:        createDnsnsrecFunc,
 		Read:          readDnsnsrecFunc,
 		Delete:        deleteDnsnsrecFunc,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"domain": &schema.Schema{
 				Type:     schema.TypeString,

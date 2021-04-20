@@ -17,6 +17,9 @@ func resourceCitrixAdcFilterpolicy() *schema.Resource {
 		Read:          readFilterpolicyFunc,
 		Update:        updateFilterpolicyFunc,
 		Delete:        deleteFilterpolicyFunc,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
 				Type:     schema.TypeString,
