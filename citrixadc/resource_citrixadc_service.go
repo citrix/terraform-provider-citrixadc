@@ -187,11 +187,6 @@ func resourceCitrixAdcService() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"newname": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
 			"pathmonitor": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -379,7 +374,6 @@ func createServiceFunc(d *schema.ResourceData, meta interface{}) error {
 		Monitornamesvc:               d.Get("monitornamesvc").(string),
 		Monthreshold:                 d.Get("monthreshold").(int),
 		Netprofile:                   d.Get("netprofile").(string),
-		Newname:                      d.Get("newname").(string),
 		Pathmonitor:                  d.Get("pathmonitor").(string),
 		Pathmonitorindv:              d.Get("pathmonitorindv").(string),
 		Port:                         d.Get("port").(int),
@@ -524,7 +518,6 @@ func readServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("monthreshold", data["monthreshold"])
 	d.Set("name", data["name"])
 	d.Set("netprofile", data["netprofile"])
-	d.Set("newname", data["newname"])
 	d.Set("pathmonitor", data["pathmonitor"])
 	d.Set("pathmonitorindv", data["pathmonitorindv"])
 	d.Set("port", data["port"])
@@ -742,11 +735,6 @@ func updateServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("netprofile") {
 		log.Printf("[DEBUG] netscaler-provider:  Netprofile has changed for service %s, starting update", serviceName)
 		service.Netprofile = d.Get("netprofile").(string)
-		hasChange = true
-	}
-	if d.HasChange("newname") {
-		log.Printf("[DEBUG] netscaler-provider:  Newname has changed for service %s, starting update", serviceName)
-		service.Newname = d.Get("newname").(string)
 		hasChange = true
 	}
 	if d.HasChange("pathmonitor") {
