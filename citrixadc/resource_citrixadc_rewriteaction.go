@@ -38,11 +38,6 @@ func resourceCitrixAdcRewriteaction() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"newname": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
 			"pattern": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -92,7 +87,6 @@ func createRewriteactionFunc(d *schema.ResourceData, meta interface{}) error {
 		Bypasssafetycheck: d.Get("bypasssafetycheck").(string),
 		Comment:           d.Get("comment").(string),
 		Name:              d.Get("name").(string),
-		Newname:           d.Get("newname").(string),
 		Pattern:           d.Get("pattern").(string),
 		Refinesearch:      d.Get("refinesearch").(string),
 		Search:            d.Get("search").(string),
@@ -131,7 +125,6 @@ func readRewriteactionFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("bypasssafetycheck", data["bypasssafetycheck"])
 	d.Set("comment", data["comment"])
 	d.Set("name", data["name"])
-	d.Set("newname", data["newname"])
 	d.Set("pattern", data["pattern"])
 	d.Set("refinesearch", data["refinesearch"])
 	d.Set("search", data["search"])
@@ -165,11 +158,6 @@ func updateRewriteactionFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("name") {
 		log.Printf("[DEBUG]  citrixadc-provider: Name has changed for rewriteaction %s, starting update", rewriteactionName)
 		rewriteaction.Name = d.Get("name").(string)
-		hasChange = true
-	}
-	if d.HasChange("newname") {
-		log.Printf("[DEBUG]  citrixadc-provider: Newname has changed for rewriteaction %s, starting update", rewriteactionName)
-		rewriteaction.Newname = d.Get("newname").(string)
 		hasChange = true
 	}
 	if d.HasChange("pattern") {
