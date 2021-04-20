@@ -75,11 +75,6 @@ func resourceCitrixAdcServer() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"newname": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
 			"querytype": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -129,7 +124,6 @@ func createServerFunc(d *schema.ResourceData, meta interface{}) error {
 		Ipaddress:          d.Get("ipaddress").(string),
 		Ipv6address:        d.Get("ipv6address").(string),
 		Name:               d.Get("name").(string),
-		Newname:            d.Get("newname").(string),
 		Querytype:          d.Get("querytype").(string),
 		State:              d.Get("state").(string),
 		Td:                 d.Get("td").(int),
@@ -172,7 +166,6 @@ func readServerFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("ipaddress", data["ipaddress"])
 	d.Set("ipv6address", data["ipv6address"])
 	d.Set("name", data["name"])
-	d.Set("newname", data["newname"])
 	d.Set("querytype", data["querytype"])
 	d.Set("state", data["state"])
 	d.Set("td", data["td"])
@@ -234,11 +227,6 @@ func updateServerFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("name") {
 		log.Printf("[DEBUG]  netscaler-provider: Name has changed for server %s, starting update", serverName)
 		server.Name = d.Get("name").(string)
-		hasChange = true
-	}
-	if d.HasChange("newname") {
-		log.Printf("[DEBUG]  netscaler-provider: Newname has changed for server %s, starting update", serverName)
-		server.Newname = d.Get("newname").(string)
 		hasChange = true
 	}
 	if d.HasChange("querytype") {
