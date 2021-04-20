@@ -209,11 +209,6 @@ func resourceCitrixAdcCsvserver() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"newname": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
 			"oracleserverversion": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -495,7 +490,6 @@ func createCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		Mysqlservercapabilities: d.Get("mysqlservercapabilities").(int),
 		Mysqlserverversion:      d.Get("mysqlserverversion").(string),
 		Netprofile:              d.Get("netprofile").(string),
-		Newname:                 d.Get("newname").(string),
 		Oracleserverversion:     d.Get("oracleserverversion").(string),
 		Persistenceid:           d.Get("persistenceid").(int),
 		Port:                    d.Get("port").(int),
@@ -668,7 +662,6 @@ func readCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("mysqlserverversion", data["mysqlserverversion"])
 	d.Set("name", data["name"])
 	d.Set("netprofile", data["netprofile"])
-	d.Set("newname", data["newname"])
 	d.Set("oracleserverversion", data["oracleserverversion"])
 	d.Set("persistenceid", data["persistenceid"])
 	d.Set("port", data["port"])
@@ -927,11 +920,6 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("netprofile") {
 		log.Printf("[DEBUG] netscaler-provider:  Netprofile has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Netprofile = d.Get("netprofile").(string)
-		hasChange = true
-	}
-	if d.HasChange("newname") {
-		log.Printf("[DEBUG] netscaler-provider:  Newname has changed for csvserver %s, starting update", csvserverName)
-		csvserver.Newname = d.Get("newname").(string)
 		hasChange = true
 	}
 	if d.HasChange("oracleserverversion") {
