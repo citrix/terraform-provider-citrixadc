@@ -113,7 +113,7 @@ resource "citrixadc_gslbsite" "foo" {
 }
 `
 
-func TestAccGslbsiteAssertNonUpdateableAttributes(t *testing.T) {
+func TestAccGslbsite_AssertNonUpdateableAttributes(t *testing.T) {
 
 	if tfAcc := os.Getenv("TF_ACC"); tfAcc == "" {
 		t.Skip("TF_ACC not set. Skipping acceptance test.")

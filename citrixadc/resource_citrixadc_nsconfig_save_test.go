@@ -176,6 +176,8 @@ func testAccSaveRaceSetup(t *testing.T) {
 	go do_save()
 
 	// Give it 500ms to head start operation
+
+	//lintignore:R018
 	time.Sleep(500 * time.Millisecond)
 	t.Log("end of setup")
 }

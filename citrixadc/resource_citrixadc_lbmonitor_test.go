@@ -112,7 +112,7 @@ resource "citrixadc_lbmonitor" "foo" {
 }
 `
 
-func TestAccLbmonitorAssertNonUpdateableAttributes(t *testing.T) {
+func TestAccLbmonitor_AssertNonUpdateableAttributes(t *testing.T) {
 
 	if tfAcc := os.Getenv("TF_ACC"); tfAcc == "" {
 		t.Skip("TF_ACC not set. Skipping acceptance test.")

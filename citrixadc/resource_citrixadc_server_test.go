@@ -111,7 +111,7 @@ resource "citrixadc_server" "foo" {
 
 // Test for immutability of attributes
 // This is to catch any attibute having ForceNew: true while not actually needed
-func TestAccServerAssertNonUpdateableAttributes(t *testing.T) {
+func TestAccServer_AssertNonUpdateableAttributes(t *testing.T) {
 
 	if tfAcc := os.Getenv("TF_ACC"); tfAcc == "" {
 		t.Skip("TF_ACC not set. Skipping acceptance test.")

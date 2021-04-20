@@ -11,6 +11,7 @@ func isTargetAdcCluster(nsClient *netscaler.NitroClient) bool {
 
 	datalist, err := nsClient.FindAllResources(netscaler.Clusterinstance.Type())
 	if err != nil {
+		//lintignore:R009
 		panic(err)
 	}
 

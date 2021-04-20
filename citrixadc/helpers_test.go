@@ -153,12 +153,14 @@ func testIsTargetAdcCluster() bool {
 	log.Printf("[DEBUG]  citrixadc-provider-test: In isTargetAdcCluster")
 	c, err := testHelperInstantiateClient("", "", "", false)
 	if err != nil {
+		//lintignore:R009
 		panic(err)
 	}
 	nsClient := c.client
 
 	datalist, err := nsClient.FindAllResources(netscaler.Clusterinstance.Type())
 	if err != nil {
+		//lintignore:R009
 		panic(err)
 	}
 
