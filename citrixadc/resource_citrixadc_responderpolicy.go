@@ -53,11 +53,6 @@ func resourceCitrixAdcResponderpolicy() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"newname": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
 			"rule": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -232,7 +227,6 @@ func createResponderpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 		Comment:       d.Get("comment").(string),
 		Logaction:     d.Get("logaction").(string),
 		Name:          d.Get("name").(string),
-		Newname:       d.Get("newname").(string),
 		Rule:          d.Get("rule").(string),
 		Undefaction:   d.Get("undefaction").(string),
 	}
@@ -281,7 +275,6 @@ func readResponderpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("comment", data["comment"])
 	d.Set("logaction", data["logaction"])
 	d.Set("name", data["name"])
-	d.Set("newname", data["newname"])
 	d.Set("rule", data["rule"])
 	d.Set("undefaction", data["undefaction"])
 
@@ -336,11 +329,6 @@ func updateResponderpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("name") {
 		log.Printf("[DEBUG]  citrixadc-provider: Name has changed for responderpolicy %s, starting update", responderpolicyName)
 		responderpolicy.Name = d.Get("name").(string)
-		hasChange = true
-	}
-	if d.HasChange("newname") {
-		log.Printf("[DEBUG]  citrixadc-provider: Newname has changed for responderpolicy %s, starting update", responderpolicyName)
-		responderpolicy.Newname = d.Get("newname").(string)
 		hasChange = true
 	}
 	if d.HasChange("rule") {
