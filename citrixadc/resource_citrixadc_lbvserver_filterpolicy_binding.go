@@ -18,6 +18,9 @@ func resourceCitrixAdcLbvserver_filterpolicy_binding() *schema.Resource {
 		Create:        createLbvserver_filterpolicy_bindingFunc,
 		Read:          readLbvserver_filterpolicy_bindingFunc,
 		Delete:        deleteLbvserver_filterpolicy_bindingFunc,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"bindpoint": &schema.Schema{
 				Type:     schema.TypeString,

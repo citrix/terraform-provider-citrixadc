@@ -122,6 +122,25 @@ resource "citrixadc_csvserver" "tf_csvserver" {
 * `cookiedomain` - (Optional)
 * `cookietimeout` - (Optional)
 * `sitedomainttl` - (Optional)
+* `tcpprofilename` - (Optional) Name of the TCP profile containing TCP configuration settings for the virtual server.
+* `ciphersuites` - (Optional) List of ciphersuites to bind to the cs virtual server.
+* `ciphers` - (Optional) List of ciphers to bind to the cs virtual server. Applicable only for cluster deployments of ADC.
+* `lbvserverbinding` - (Optional) Name of lb vserver to bind to the cs vserver.
+* `sslprofile` - (Optional) SSL profile to bind to cs vserver.
+* `snisslcertkeys` - (Optional) List of SNI SSL certificates to bind to the cs vserver.
+* `sslcertkey` - (Optional) SSL certificate to bind to this cs vserver.
+ 
+* `sslpolicybinding` - (Optional) A block defining an ssl policy binding. See below for details.
+
+An `sslpolicybinding` block may contain the following attributes:
+
+* `policyname` - (Optional) The name of the SSL policy binding.
+* `priority` - (Optional) The priority of the policies bound to this SSL service.
+* `type` - (Optional) Bind point to which to bind the policy. Possible Values: REQUEST, INTERCEPT_REQ and CLIENTHELLO_REQ. These bindpoints mean: 1. REQUEST: Policy evaluation will be done at appplication above SSL. This bindpoint is default and is used for actions based on clientauth and client cert. 2. INTERCEPT_REQ: Policy evaluation will be done during SSL handshake to decide whether to intercept or not. Actions allowed with this type are: INTERCEPT, BYPASS and RESET. 3. CLIENTHELLO_REQ: Policy evaluation will be done during handling of Client Hello Request. Action allowed with this type is: RESET, FORWARD and PICKCACERTGRP. Possible values: [ INTERCEPT_REQ, REQUEST, CLIENTHELLO_REQ ]
+* `gotopriorityexpression` - (Optional) Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
+* `invoke` - (Optional) Invoke flag. This attribute is relevant only for ADVANCED policies.
+* `labeltype` - (Optional) Type of policy label invocation. Possible values: [ vserver, service, policylabel ]
+* `labelname` - (Optional) Name of the label to invoke if the current policy rule evaluates to TRUE.
 
 
 ## Attribute Reference

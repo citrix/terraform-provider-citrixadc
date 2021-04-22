@@ -29,7 +29,7 @@ resource "citrixadc_installer" "tf_installer" {
 * `wait_until_reachable` - (Optional) Boolean value to determine if the resource should wait for the ADC to become reachable after the build is installed.
 * `reachable_timeout` - (Optional) Time period to wait untill the target ADC becomes reachable. Default value "10m"
 * `reachable_poll_delay` - (Optional) Time delay before the first poll. Must be sufficiently large to allow the ADC to start reboot. Default value "60s".
-* `reachable_poll_delay` - (Optional) Time interval between polls for reachability. Default value "60s".
+* `reachable_poll_interval` - (Optional) Time interval between polls for reachability. Default value "60s".
 * `reachable_poll_timeout` - (Optional) Time period to wait before the http poll request times out. Default value "20s".
 
 

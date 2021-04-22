@@ -240,7 +240,7 @@ resource "citrixadc_csvserver" "foo" {
 }
 `
 
-func TestAccCsvserverAssertNonUpdateableAttributes(t *testing.T) {
+func TestAccCsvserver_AssertNonUpdateableAttributes(t *testing.T) {
 
 	if tfAcc := os.Getenv("TF_ACC"); tfAcc == "" {
 		t.Skip("TF_ACC not set. Skipping acceptance test.")

@@ -33,4 +33,4 @@ resource "citrixadc_rebooter" "tf_rebooter" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the <fillme>. It has the same value as the `name` attribute.
+* `id` - The id of the rebooter. It is a unique string prefixed with "tf-rebooter-"

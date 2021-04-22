@@ -128,7 +128,7 @@ In addition to the arguments, the following attributes are available:
 
 ## Import
 
-A <resource> can be imported using its name, e.g.
+A lbmonitor can be imported using its name, e.g.
 
 ```shell
 terraform import citrixadc_lbmonitor.tf_lbmonitor tf_lbmonitor

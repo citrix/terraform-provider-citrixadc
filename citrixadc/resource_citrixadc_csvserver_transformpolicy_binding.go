@@ -17,6 +17,9 @@ func resourceCitrixAdcCsvserver_transformpolicy_binding() *schema.Resource {
 		Create:        createCsvserver_transformpolicy_bindingFunc,
 		Read:          readCsvserver_transformpolicy_bindingFunc,
 		Delete:        deleteCsvserver_transformpolicy_bindingFunc,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"bindpoint": &schema.Schema{
 				Type:     schema.TypeString,

@@ -18,6 +18,9 @@ func resourceCitrixAdcLbvserver_rewritepolicy_binding() *schema.Resource {
 		Create:        createLbvserver_rewritepolicy_bindingFunc,
 		Read:          readLbvserver_rewritepolicy_bindingFunc,
 		Delete:        deleteLbvserver_rewritepolicy_bindingFunc,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"bindpoint": &schema.Schema{
 				Type:     schema.TypeString,

@@ -49,7 +49,6 @@ A global binding block supports the following:
 * `invoke` - (Optional) If the current policy evaluates to TRUE, terminate evaluation of policies bound to the current policy label, and then forward the request to the specified virtual server or evaluate the specified policy label.
 * `labeltype` - (Optional) Type of invocation, Available settings function as follows: * vserver - Forward the request to the specified virtual server. * policylabel - Invoke the specified policy label. Possible values: [ vserver, policylabel ]
 * `labelname` - (Optional) Name of the policy label to invoke. If the current policy evaluates to TRUE, the invoke parameter is set, and Label Type is policylabel.
-* `globalbindtype` - (Optional) . Possible values: [ SYSTEM_GLOBAL, VPN_GLOBAL, RNAT_GLOBAL ]
 
 A lbvserver binding block supports the following:
 
@@ -60,6 +59,7 @@ A lbvserver binding block supports the following:
 * `labelname` - (Optional) Name of the label invoked.
 * `name` - (Optional) Name for the virtual server.
 * `bindpoint` - (Optional) Bind point to which to bind the policy. Applicable only to compression, rewrite, videooptimization and cache policies. Possible values: [ REQUEST, RESPONSE ]
+* `policyname` - (Optional) Name of the policy.
 
 A csvserver binding block supports the following:
 
@@ -71,6 +71,7 @@ A csvserver binding block supports the following:
 * `name` - (Optional) Name of the content switching virtual server to which the content switching policy applies.
 * `targetlbvserver` - (Optional) Name of the Load Balancing virtual server to which the content is switched, if policy rule is evaluated to be TRUE. Example: bind cs vs cs1 -policyname pol1 -priority 101 -targetLBVserver lb1 Note: Use this parameter only in case of Content Switching policy bind operations to a CS vserver.
 * `bindpoint` - (Optional) For a rewrite policy, the bind point to which to bind the policy. Note: This parameter applies only to rewrite policies, because content switching policies are evaluated only at request time. Possible values: [ REQUEST, RESPONSE, ICA_REQUEST, OTHERTCP_REQUEST ]
+* `policyname` - (Optional) Name of the policy.
 
 
 

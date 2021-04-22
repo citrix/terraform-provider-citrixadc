@@ -40,6 +40,7 @@ Global binding supports the following:
     Specify one of the following values:
     * NEXT - Evaluate the policy with the next higher priority number.
     * END - End policy evaluation.
+* `feature` - (Optional) The feature to be checked while applying this config.
 
 
 ## Attribute Reference

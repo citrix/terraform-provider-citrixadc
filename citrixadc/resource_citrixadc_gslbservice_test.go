@@ -129,7 +129,7 @@ resource "citrixadc_gslbservice" "foo" {
 }
 `
 
-func TestAccGslbserviceAssertNonUpdateableAttributes(t *testing.T) {
+func TestAccGslbservice_AssertNonUpdateableAttributes(t *testing.T) {
 
 	if tfAcc := os.Getenv("TF_ACC"); tfAcc == "" {
 		t.Skip("TF_ACC not set. Skipping acceptance test.")
@@ -286,7 +286,7 @@ resource "citrixadc_gslbservice" "tf_test_acc_gslbservice" {
 }
 `
 
-func TestAccGsblservice_enable_disable(t *testing.T) {
+func TestAccGslbservice_enable_disable(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -320,7 +320,7 @@ func TestAccGsblservice_enable_disable(t *testing.T) {
 	})
 }
 
-func TestAccGsblservice_lbmonitorbinding(t *testing.T) {
+func TestAccGslbservice_lbmonitorbinding(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,

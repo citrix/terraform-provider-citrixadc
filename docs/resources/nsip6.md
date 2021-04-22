@@ -51,6 +51,7 @@ resource "citrixadc_nsip6" "tf_nsip6" {
 * `ownernode` - (Optional) ID of the cluster node for which you are adding the IP address. Must be used if you want the IP address to be active only on the specific node. Can be configured only through the cluster IP address. Cannot be changed after the IP address is created.
 * `ownerdownresponse` - (Optional) in cluster system, if the owner node is down, whether should it respond to icmp/arp. Possible values: [ YES, NO ]
 * `td` - (Optional) Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.
+* `mptcpadvertise` - (Optional)
 
 
 ## Attribute Reference

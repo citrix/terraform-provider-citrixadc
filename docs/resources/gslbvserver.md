@@ -102,6 +102,7 @@ A domain binding supports the following:
 * `sitedomainttl` - (Optional) TTL, in seconds, for all internally created site domains (created when a site prefix is configured on a GSLB service) that are associated with this virtual server.
 * `cookiedomain` - (Optional) The cookie domain for the GSLB site. Used when inserting the GSLB site cookie in the HTTP response.
 * `cookiedomainflag` - (Optional) The cookie domain for the GSLB site. Used when inserting the GSLB site cookie in the HTTP response.
+* `name` - (Optional) Name of the virtual server on which to perform the binding operation.
 
 A GSLB service binding supports the following:
 

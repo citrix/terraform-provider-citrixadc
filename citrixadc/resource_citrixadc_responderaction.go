@@ -44,11 +44,6 @@ func resourceCitrixAdcResponderaction() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"newname": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
 			"reasonphrase": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -89,7 +84,6 @@ func createResponderactionFunc(d *schema.ResourceData, meta interface{}) error {
 		Comment:            d.Get("comment").(string),
 		Htmlpage:           d.Get("htmlpage").(string),
 		Name:               d.Get("name").(string),
-		Newname:            d.Get("newname").(string),
 		Reasonphrase:       d.Get("reasonphrase").(string),
 		Responsestatuscode: d.Get("responsestatuscode").(int),
 		Target:             d.Get("target").(string),
@@ -127,7 +121,6 @@ func readResponderactionFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("comment", data["comment"])
 	d.Set("htmlpage", data["htmlpage"])
 	d.Set("name", data["name"])
-	d.Set("newname", data["newname"])
 	d.Set("reasonphrase", data["reasonphrase"])
 	d.Set("responsestatuscode", data["responsestatuscode"])
 	d.Set("target", data["target"])
@@ -164,11 +157,6 @@ func updateResponderactionFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("name") {
 		log.Printf("[DEBUG]  citrixadc-provider: Name has changed for responderaction %s, starting update", responderactionName)
 		responderaction.Name = d.Get("name").(string)
-		hasChange = true
-	}
-	if d.HasChange("newname") {
-		log.Printf("[DEBUG]  citrixadc-provider: Newname has changed for responderaction %s, starting update", responderactionName)
-		responderaction.Newname = d.Get("newname").(string)
 		hasChange = true
 	}
 	if d.HasChange("reasonphrase") {

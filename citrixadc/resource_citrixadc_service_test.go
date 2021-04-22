@@ -127,7 +127,7 @@ resource "citrixadc_service" "foo" {
 }
 `
 
-func TestAccServiceAssertNonUpdateableAttributes(t *testing.T) {
+func TestAccService_AssertNonUpdateableAttributes(t *testing.T) {
 
 	if tfAcc := os.Getenv("TF_ACC"); tfAcc == "" {
 		t.Skip("TF_ACC not set. Skipping acceptance test.")

@@ -21,6 +21,10 @@ resource "citrixadc_nsconfig_save" "tf_ns_save" {
 
 * `all` - (Optional) Use this option to do saveconfig for all partitions.
 * `timestamp` - (Required) the timestamp of the operation. Can be any string. Used to force the operation again if all other attributes have remained the same.
+* `concurrent_save_ok` - (Optional) Boolean value signifying if a concurrent save error should be toleratted. When set to `true` a process of retries will take place waiting for the resource to return no error.
+* `concurrent_save_retries` - (Optional) Number of retries after which we throw an error for the concurrent save error code.
+* `concurrent_save_timeout` - (Optional) Time period after which we throw an error for the concurrent save error code.
+* `concurrent_save_interval` - (Optional) Time period between tries to save the resource when processing the save error workflow.
 
 
 ## Attribute Reference

@@ -36,11 +36,6 @@ func resourceCitrixAdcCspolicy() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"newname": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
 			"policyname": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -237,11 +232,6 @@ func updateCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("logaction") {
 		log.Printf("[DEBUG] netscaler-provider: Logaction has changed for cspolicy %s, starting update", cspolicyName)
 		cspolicy.Logaction = d.Get("logaction").(string)
-		hasChange = true
-	}
-	if d.HasChange("newname") {
-		log.Printf("[DEBUG] netscaler-provider: Newname has changed for cspolicy %s, starting update", cspolicyName)
-		cspolicy.Newname = d.Get("newname").(string)
 		hasChange = true
 	}
 	if d.HasChange("rule") {

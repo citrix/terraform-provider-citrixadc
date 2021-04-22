@@ -75,6 +75,7 @@ resource "citrixadc_nstcpprofile" "tf_nsprofile" {
 * `taillossprobe` - (Optional) TCP tail loss probe optimizations. Possible values: [ ENABLED, DISABLED ]
 * `clientiptcpoption` - (Optional) Client IP in TCP options. Possible values: [ ENABLED, DISABLED ]
 * `clientiptcpoptionnumber` - (Optional) ClientIP TCP Option number.
+* `mpcapablecbit` - (Optional)
 
 
 ## Attribute Reference
