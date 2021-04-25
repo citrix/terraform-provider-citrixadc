@@ -8,7 +8,6 @@ import (
 	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
-	"fmt"
 	"log"
 )
 
