@@ -1,7 +1,9 @@
 package citrixadc
 
 import (
+	"fmt"
 	"net/url"
+	"strings"
 
 	"github.com/chiradeep/go-nitro/config/appfw"
 
@@ -42,41 +44,49 @@ func resourceCitrixAdcAppfwprofile_sqlinjection_binding() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"as_value_expr_sql": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"as_value_type_sql": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"comment": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"isautodeployed": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"isregex_sql": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"isvalueregex_sql": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"state": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 		},
 	}
@@ -85,7 +95,10 @@ func resourceCitrixAdcAppfwprofile_sqlinjection_binding() *schema.Resource {
 func createAppfwprofile_sqlinjection_bindingFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppfwprofile_sqlinjection_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
-	appfwprofile_sqlinjection_bindingName := d.Get("name").(string)
+	appFwName := d.Get("name").(string)
+	sqlinjection := d.Get("sqlinjection").(string)
+	bindingId := fmt.Sprintf("%s,%s", appFwName, sqlinjection)
+
 	appfwprofile_sqlinjection_binding := appfw.Appfwprofilesqlinjectionbinding{
 		Alertonly:         d.Get("alertonly").(string),
 		Asscanlocationsql: d.Get("as_scan_location_sql").(string),
@@ -96,21 +109,21 @@ func createAppfwprofile_sqlinjection_bindingFunc(d *schema.ResourceData, meta in
 		Isautodeployed:    d.Get("isautodeployed").(string),
 		Isregexsql:        d.Get("isregex_sql").(string),
 		Isvalueregexsql:   d.Get("isvalueregex_sql").(string),
-		Name:              d.Get("name").(string),
-		Sqlinjection:      d.Get("sqlinjection").(string),
+		Name:              appFwName,
+		Sqlinjection:      sqlinjection,
 		State:             d.Get("state").(string),
 	}
 
-	_, err := client.AddResource(netscaler.Appfwprofile_sqlinjection_binding.Type(), appfwprofile_sqlinjection_bindingName, &appfwprofile_sqlinjection_binding)
+	_, err := client.AddResource(netscaler.Appfwprofile_sqlinjection_binding.Type(), sqlinjection, &appfwprofile_sqlinjection_binding)
 	if err != nil {
 		return err
 	}
 
-	d.SetId(appfwprofile_sqlinjection_bindingName)
+	d.SetId(bindingId)
 
 	err = readAppfwprofile_sqlinjection_bindingFunc(d, meta)
 	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this appfwprofile_sqlinjection_binding but we can't read it ?? %s", appfwprofile_sqlinjection_bindingName)
+		log.Printf("[ERROR] netscaler-provider: ?? we just created this appfwprofile_sqlinjection_binding but we can't read it ?? %s", bindingId)
 		return nil
 	}
 	return nil
@@ -119,14 +132,53 @@ func createAppfwprofile_sqlinjection_bindingFunc(d *schema.ResourceData, meta in
 func readAppfwprofile_sqlinjection_bindingFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAppfwprofile_sqlinjection_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
-	appfwprofile_sqlinjection_bindingName := d.Id()
-	log.Printf("[DEBUG] citrixadc-provider: Reading appfwprofile_sqlinjection_binding state %s", appfwprofile_sqlinjection_bindingName)
-	data, err := client.FindResource(netscaler.Appfwprofile_sqlinjection_binding.Type(), appfwprofile_sqlinjection_bindingName)
+	bindingId := d.Id()
+	log.Printf("[DEBUG] citrixadc-provider: readAppfwprofile_sqlinjection_bindingFunc: bindingId: %s", bindingId)
+	idSlice := strings.SplitN(bindingId, ",", 2)
+	appFwName := idSlice[0]
+	sqlinjection := idSlice[1]
+	log.Printf("[DEBUG] citrixadc-provider: Reading appfwprofile_sqlinjection_binding state %s", bindingId)
+
+	findParams := netscaler.FindParams{
+		ResourceType:             netscaler.Appfwprofile_sqlinjection_binding.Type(),
+		ResourceName:             appFwName,
+		ResourceMissingErrorCode: 258,
+	}
+	dataArr, err := client.FindResourceArrayWithParams(findParams)
+
+	// Unexpected error
 	if err != nil {
-		log.Printf("[WARN] citrixadc-provider: Clearing appfwprofile_sqlinjection_binding state %s", appfwprofile_sqlinjection_bindingName)
+		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
+		return err
+	}
+
+	// Resource is missing
+	if len(dataArr) == 0 {
+		log.Printf("[DEBUG] citrixadc-provider: FindResourceArrayWithParams returned empty array")
+		log.Printf("[WARN] citrixadc-provider: Clearing appfwprofile_sqlinjection_binding state %s", bindingId)
 		d.SetId("")
 		return nil
 	}
+
+	// Iterate through results to find the one with the right policy name
+	foundIndex := -1
+	for i, v := range dataArr {
+		if v["sqlinjection"].(string) == sqlinjection {
+			foundIndex = i
+			break
+		}
+	}
+
+	// Resource is missing
+	if foundIndex == -1 {
+		log.Printf("[DEBUG] citrixadc-provider: FindResourceArrayWithParams monitor name not found in array")
+		log.Printf("[WARN] citrixadc-provider: Clearing appfwprofile_sqlinjection_binding state %s", bindingId)
+		d.SetId("")
+		return nil
+	}
+	// Fallthrough
+	data := dataArr[foundIndex]
+
 	d.Set("name", data["name"])
 	d.Set("alertonly", data["alertonly"])
 	d.Set("as_scan_location_sql", data["as_scan_location_sql"])
@@ -148,11 +200,17 @@ func readAppfwprofile_sqlinjection_bindingFunc(d *schema.ResourceData, meta inte
 func deleteAppfwprofile_sqlinjection_bindingFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppfwprofile_sqlinjection_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
+	bindingId := d.Id()
+	idSlice := strings.SplitN(bindingId, ",", 2)
+	appFwName := idSlice[0]
+	sqlinjection := idSlice[1]
+
 	args := make(map[string]string)
-	args["sqlinjection"] = d.Get("sqlinjection").(string)
+	args["sqlinjection"] = sqlinjection
 	args["formactionurl_sql"] = url.QueryEscape(d.Get("formactionurl_sql").(string))
 	args["as_scan_location_sql"] = d.Get("as_scan_location_sql").(string)
-	err := client.DeleteResourceWithArgsMap(netscaler.Appfwprofile_sqlinjection_binding.Type(), d.Get("name").(string), args)
+
+	err := client.DeleteResourceWithArgsMap(netscaler.Appfwprofile_sqlinjection_binding.Type(), appFwName, args)
 	if err != nil {
 		return err
 	}

@@ -70,4 +70,4 @@ resource citrixadc_appfwprofile demo_appfw {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the `appfwprofile_sqlinjection_binding`. It has the same value as the `name` attribute.
+* `id` - The id of the `appfwprofile_sqlinjection_binding`. It is the concatenation of the `name` and `sqlinjection` attributes separated by a comma.

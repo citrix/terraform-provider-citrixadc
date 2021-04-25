@@ -17,10 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"testing"
 )
 
 const testAccAppfwprofile_sqlinjection_binding_basic = `
@@ -105,14 +107,35 @@ func testAccCheckAppfwprofile_sqlinjection_bindingExist(n string, id *string) re
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(netscaler.Appfwprofile_sqlinjection_binding.Type(), rs.Primary.ID)
+		bindingId := rs.Primary.ID
+		idSlice := strings.SplitN(bindingId, ",", 2)
+		appFwName := idSlice[0]
+		sqlinjection := idSlice[1]
 
+		findParams := netscaler.FindParams{
+			ResourceType:             netscaler.Appfwprofile_sqlinjection_binding.Type(),
+			ResourceName:             appFwName,
+			ResourceMissingErrorCode: 258,
+		}
+		dataArr, err := nsClient.FindResourceArrayWithParams(findParams)
+
+		// Unexpected error
 		if err != nil {
 			return err
 		}
 
-		if data == nil {
-			return fmt.Errorf("appfwprofile_sqlinjection_binding %s not found", n)
+		// Iterate through results to find the one with the right policy name
+		foundIndex := -1
+		for i, v := range dataArr {
+			if v["sqlinjection"].(string) == sqlinjection {
+				foundIndex = i
+				break
+			}
+		}
+
+		// Resource is missing
+		if foundIndex == -1 {
+			return fmt.Errorf("Cannot find appfwprofile_sqlinjection_binding ID %v", bindingId)
 		}
 
 		return nil
