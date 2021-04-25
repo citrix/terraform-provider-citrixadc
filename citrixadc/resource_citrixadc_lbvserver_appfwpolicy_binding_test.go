@@ -17,10 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"testing"
 )
 
 const testAccLbvserver_appfwpolicy_binding_basic = `
@@ -125,14 +127,35 @@ func testAccCheckLbvserver_appfwpolicy_bindingExist(n string, id *string) resour
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(netscaler.Lbvserver_appfwpolicy_binding.Type(), rs.Primary.ID)
+		bindingId := rs.Primary.ID
+		idSlice := strings.SplitN(bindingId, ",", 2)
+		lbvserverName := idSlice[0]
+		appfwPolicyName := idSlice[1]
 
+		findParams := netscaler.FindParams{
+			ResourceType:             netscaler.Lbvserver_appfwpolicy_binding.Type(),
+			ResourceName:             lbvserverName,
+			ResourceMissingErrorCode: 258,
+		}
+		dataArr, err := nsClient.FindResourceArrayWithParams(findParams)
+
+		// Unexpected error
 		if err != nil {
 			return err
 		}
 
-		if data == nil {
-			return fmt.Errorf("lbvserver_appfwpolicy_binding %s not found", n)
+		// Iterate through results to find the one with the right policy name
+		foundIndex := -1
+		for i, v := range dataArr {
+			if v["policyname"].(string) == appfwPolicyName {
+				foundIndex = i
+				break
+			}
+		}
+
+		// Resource is missing
+		if foundIndex == -1 {
+			return fmt.Errorf("Cannot find lbvserver_appfwpolicy_binding ID %v", bindingId)
 		}
 
 		return nil

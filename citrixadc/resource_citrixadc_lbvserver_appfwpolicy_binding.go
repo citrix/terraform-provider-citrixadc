@@ -1,6 +1,8 @@
 package citrixadc
 
 import (
+	"strings"
+
 	"github.com/chiradeep/go-nitro/config/lb"
 
 	"github.com/chiradeep/go-nitro/netscaler"
@@ -15,7 +17,6 @@ func resourceCitrixAdcLbvserver_appfwpolicy_binding() *schema.Resource {
 		SchemaVersion: 1,
 		Create:        createLbvserver_appfwpolicy_bindingFunc,
 		Read:          readLbvserver_appfwpolicy_bindingFunc,
-		Update:        updateLbvserver_appfwpolicy_bindingFunc,
 		Delete:        deleteLbvserver_appfwpolicy_bindingFunc,
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
@@ -32,31 +33,37 @@ func resourceCitrixAdcLbvserver_appfwpolicy_binding() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"gotopriorityexpression": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"invoke": &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"labelname": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"labeltype": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"priority": &schema.Schema{
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 		},
 	}
@@ -65,28 +72,31 @@ func resourceCitrixAdcLbvserver_appfwpolicy_binding() *schema.Resource {
 func createLbvserver_appfwpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createLbvserver_appfwpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
-	lbvserver_appfwpolicy_bindingName := d.Get("name").(string)
+	lbvserverName := d.Get("name").(string)
+	appfwPolicyName := d.Get("policyname").(string)
+	bindingId := fmt.Sprintf("%s,%s", lbvserverName, appfwPolicyName)
+
 	lbvserver_appfwpolicy_binding := lb.Lbvserverappfwpolicybinding{
 		Bindpoint:              d.Get("bindpoint").(string),
 		Gotopriorityexpression: d.Get("gotopriorityexpression").(string),
 		Invoke:                 d.Get("invoke").(bool),
 		Labelname:              d.Get("labelname").(string),
 		Labeltype:              d.Get("labeltype").(string),
-		Name:                   d.Get("name").(string),
-		Policyname:             d.Get("policyname").(string),
+		Name:                   lbvserverName,
+		Policyname:             appfwPolicyName,
 		Priority:               d.Get("priority").(int),
 	}
 
-	_, err := client.AddResource(netscaler.Lbvserver_appfwpolicy_binding.Type(), lbvserver_appfwpolicy_bindingName, &lbvserver_appfwpolicy_binding)
+	_, err := client.AddResource(netscaler.Lbvserver_appfwpolicy_binding.Type(), lbvserverName, &lbvserver_appfwpolicy_binding)
 	if err != nil {
 		return err
 	}
 
-	d.SetId(lbvserver_appfwpolicy_bindingName)
+	d.SetId(bindingId)
 
 	err = readLbvserver_appfwpolicy_bindingFunc(d, meta)
 	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this lbvserver_appfwpolicy_binding but we can't read it ?? %s", lbvserver_appfwpolicy_bindingName)
+		log.Printf("[ERROR] netscaler-provider: ?? we just created this lbvserver_appfwpolicy_binding but we can't read it ?? %s", bindingId)
 		return nil
 	}
 	return nil
@@ -95,14 +105,54 @@ func createLbvserver_appfwpolicy_bindingFunc(d *schema.ResourceData, meta interf
 func readLbvserver_appfwpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] citrixadc-provider:  In readLbvserver_appfwpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
-	lbvserver_appfwpolicy_bindingName := d.Id()
-	log.Printf("[DEBUG] citrixadc-provider: Reading lbvserver_appfwpolicy_binding state %s", lbvserver_appfwpolicy_bindingName)
-	data, err := client.FindResource(netscaler.Lbvserver_appfwpolicy_binding.Type(), lbvserver_appfwpolicy_bindingName)
+
+	bindingId := d.Id()
+	log.Printf("[DEBUG] citrixadc-provider: readLbvserver_appfwpolicy_bindingFunc: bindingId: %s", bindingId)
+	idSlice := strings.SplitN(bindingId, ",", 2)
+	lbvserverName := idSlice[0]
+	appfwPolicyName := idSlice[1]
+	log.Printf("[DEBUG] citrixadc-provider: Reading lbvserver_appfwpolicy_binding state %s", bindingId)
+
+	findParams := netscaler.FindParams{
+		ResourceType:             netscaler.Lbvserver_appfwpolicy_binding.Type(),
+		ResourceName:             lbvserverName,
+		ResourceMissingErrorCode: 258,
+	}
+	dataArr, err := client.FindResourceArrayWithParams(findParams)
+
+	// Unexpected error
 	if err != nil {
-		log.Printf("[WARN] citrixadc-provider: Clearing lbvserver_appfwpolicy_binding state %s", lbvserver_appfwpolicy_bindingName)
+		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
+		return err
+	}
+
+	// Resource is missing
+	if len(dataArr) == 0 {
+		log.Printf("[DEBUG] citrixadc-provider: FindResourceArrayWithParams returned empty array")
+		log.Printf("[WARN] citrixadc-provider: Clearing lbvserver_appfwpolicy_binding state %s", bindingId)
 		d.SetId("")
 		return nil
 	}
+
+	// Iterate through results to find the one with the right policy name
+	foundIndex := -1
+	for i, v := range dataArr {
+		if v["policyname"].(string) == appfwPolicyName {
+			foundIndex = i
+			break
+		}
+	}
+
+	// Resource is missing
+	if foundIndex == -1 {
+		log.Printf("[DEBUG] citrixadc-provider: FindResourceArrayWithParams monitor name not found in array")
+		log.Printf("[WARN] citrixadc-provider: Clearing lbvserver_appfwpolicy_binding state %s", bindingId)
+		d.SetId("")
+		return nil
+	}
+	// Fallthrough
+	data := dataArr[foundIndex]
+
 	d.Set("name", data["name"])
 	d.Set("bindpoint", data["bindpoint"])
 	d.Set("gotopriorityexpression", data["gotopriorityexpression"])
@@ -117,71 +167,18 @@ func readLbvserver_appfwpolicy_bindingFunc(d *schema.ResourceData, meta interfac
 
 }
 
-func updateLbvserver_appfwpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[DEBUG]  citrixadc-provider: In updateLbvserver_appfwpolicy_bindingFunc")
-	client := meta.(*NetScalerNitroClient).client
-	lbvserver_appfwpolicy_bindingName := d.Get("name").(string)
-
-	lbvserver_appfwpolicy_binding := lb.Lbvserverappfwpolicybinding{
-		Name: d.Get("name").(string),
-	}
-	hasChange := false
-	if d.HasChange("bindpoint") {
-		log.Printf("[DEBUG]  citrixadc-provider: Bindpoint has changed for lbvserver_appfwpolicy_binding %s, starting update", lbvserver_appfwpolicy_bindingName)
-		lbvserver_appfwpolicy_binding.Bindpoint = d.Get("bindpoint").(string)
-		hasChange = true
-	}
-	if d.HasChange("gotopriorityexpression") {
-		log.Printf("[DEBUG]  citrixadc-provider: Gotopriorityexpression has changed for lbvserver_appfwpolicy_binding %s, starting update", lbvserver_appfwpolicy_bindingName)
-		lbvserver_appfwpolicy_binding.Gotopriorityexpression = d.Get("gotopriorityexpression").(string)
-		hasChange = true
-	}
-	if d.HasChange("invoke") {
-		log.Printf("[DEBUG]  citrixadc-provider: Invoke has changed for lbvserver_appfwpolicy_binding %s, starting update", lbvserver_appfwpolicy_bindingName)
-		lbvserver_appfwpolicy_binding.Invoke = d.Get("invoke").(bool)
-		hasChange = true
-	}
-	if d.HasChange("labelname") {
-		log.Printf("[DEBUG]  citrixadc-provider: Labelname has changed for lbvserver_appfwpolicy_binding %s, starting update", lbvserver_appfwpolicy_bindingName)
-		lbvserver_appfwpolicy_binding.Labelname = d.Get("labelname").(string)
-		hasChange = true
-	}
-	if d.HasChange("labeltype") {
-		log.Printf("[DEBUG]  citrixadc-provider: Labeltype has changed for lbvserver_appfwpolicy_binding %s, starting update", lbvserver_appfwpolicy_bindingName)
-		lbvserver_appfwpolicy_binding.Labeltype = d.Get("labeltype").(string)
-		hasChange = true
-	}
-	if d.HasChange("name") {
-		log.Printf("[DEBUG]  citrixadc-provider: Name has changed for lbvserver_appfwpolicy_binding %s, starting update", lbvserver_appfwpolicy_bindingName)
-		lbvserver_appfwpolicy_binding.Name = d.Get("name").(string)
-		hasChange = true
-	}
-	if d.HasChange("policyname") {
-		log.Printf("[DEBUG]  citrixadc-provider: Policyname has changed for lbvserver_appfwpolicy_binding %s, starting update", lbvserver_appfwpolicy_bindingName)
-		lbvserver_appfwpolicy_binding.Policyname = d.Get("policyname").(string)
-		hasChange = true
-	}
-	if d.HasChange("priority") {
-		log.Printf("[DEBUG]  citrixadc-provider: Priority has changed for lbvserver_appfwpolicy_binding %s, starting update", lbvserver_appfwpolicy_bindingName)
-		lbvserver_appfwpolicy_binding.Priority = d.Get("priority").(int)
-		hasChange = true
-	}
-
-	if hasChange {
-		_, err := client.UpdateResource(netscaler.Lbvserver_appfwpolicy_binding.Type(), lbvserver_appfwpolicy_bindingName, &lbvserver_appfwpolicy_binding)
-		if err != nil {
-			return fmt.Errorf("Error updating lbvserver_appfwpolicy_binding %s", lbvserver_appfwpolicy_bindingName)
-		}
-	}
-	return readLbvserver_appfwpolicy_bindingFunc(d, meta)
-}
-
 func deleteLbvserver_appfwpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteLbvserver_appfwpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
+
+	bindingId := d.Id()
+	idSlice := strings.SplitN(bindingId, ",", 2)
+	lbvserverName := idSlice[0]
+	appfwPolicyName := idSlice[1]
+
 	args := make(map[string]string)
-	args["policyname"] = d.Get("policyname").(string)
-	err := client.DeleteResourceWithArgsMap(netscaler.Lbvserver_appfwpolicy_binding.Type(), d.Get("name").(string), args)
+	args["policyname"] = appfwPolicyName
+	err := client.DeleteResourceWithArgsMap(netscaler.Lbvserver_appfwpolicy_binding.Type(), lbvserverName, args)
 	if err != nil {
 		return err
 	}
