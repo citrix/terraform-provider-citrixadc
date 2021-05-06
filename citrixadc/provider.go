@@ -185,6 +185,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_csvserver_appfwpolicy_binding":           resourceCitrixAdcCsvserver_appfwpolicy_binding(),
 		"citrixadc_appfwprofile_cookieconsistency_binding":  resourceCitrixAdcAppfwprofile_cookieconsistency_binding(),
 		"citrixadc_appfwprofile_crosssitescripting_binding": resourceCitrixAdcAppfwprofile_crosssitescripting_binding(),
+		"citrixadc_appfwprofile_sqlinjection_binding":       resourceCitrixAdcAppfwprofile_sqlinjection_binding(),
 	}
 }
 
