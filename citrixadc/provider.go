@@ -183,6 +183,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_dnssoarec":                               resourceCitrixAdcDnssoarec(),
 		"citrixadc_lbvserver_appfwpolicy_binding":           resourceCitrixAdcLbvserver_appfwpolicy_binding(),
 		"citrixadc_csvserver_appfwpolicy_binding":           resourceCitrixAdcCsvserver_appfwpolicy_binding(),
+		"citrixadc_appfwprofile_cookieconsistency_binding":  resourceCitrixAdcAppfwprofile_cookieconsistency_binding(),
 	}
 }
 
