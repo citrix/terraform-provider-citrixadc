@@ -9,6 +9,9 @@ FEATURES
 * **New Resource** `appfwprofile_denyurl_binding`
 * **New Resource** `appfwprofile`
 * **New Resource** `appfwprofile_starturl_binding`
+* **New Resource** `appfwprofile_sqlinjection_binding`
+* **New Resource** `appfwprofile_crosssitescripting_binding`
+* **New Resource** `appfwprofile_cookieconsistency_binding`
 * **New Resource** `appfwxmlcontenttype`
 * **New Resource** `auditmessageaction`
 * **New Resource** `auditsyslogaction`
@@ -18,6 +21,7 @@ FEATURES
 * **New Resource** `cmppolicy`
 * **New Resource** `csaction`
 * **New Resource** `cspolicy`
+* **New Resource** `csvserver_appfwpolicy_binding`
 * **New Resource** `csvserver_cmppolicy_binding`
 * **New Resource** `csvserver_cspolicy_binding`
 * **New Resource** `csvserver_filterpolicy_binding`
@@ -36,6 +40,7 @@ FEATURES
 * **New Resource** `interface`
 * **New Resource** `ipset`
 * **New Resource** `lbmonitor`
+* **New Resource** `lbvserver_appfwpolicy_binding`
 * **New Resource** `lbvserver_cmppolicy_binding`
 * **New Resource** `lbvserver_filterpolicy_binding`
 * **New Resource** `lbvserver`
