@@ -1,3 +1,10 @@
-provider "netscaler" {
-    endpoint = "http://localhost:32783/"
+terraform {
+  required_providers {
+    citrixadc = {
+      source = "citrix/citrixadc"
+    }
+  }
+}
+provider "citrixadc" {
+  endpoint = "http://localhost:8080"
 }

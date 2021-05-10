@@ -1,3 +1,10 @@
+terraform {
+  required_providers {
+    citrixadc = {
+      source = "citrix/citrixadc"
+    }
+  }
+}
 provider "citrixadc" {
   endpoint   = "http://10.78.60.207"
   username   = "nsroot"
