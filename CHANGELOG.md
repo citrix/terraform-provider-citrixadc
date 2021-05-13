@@ -1,5 +1,11 @@
 ## 1.1.0 (Unreleased)
 
+## 1.0.1 (May 13, 2021)
+
+NOTES
+
+* Correct category in documentation for csvserver\_appfwpolicy\_binding
+
 ## 1.0.0 (May 10, 2021)
 
 FEATURES
