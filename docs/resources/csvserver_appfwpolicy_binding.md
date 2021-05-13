@@ -1,5 +1,5 @@
 ---
-subcategory: "Contect Switching"
+subcategory: "Content Switching"
 ---
 
 # Resource: csvserver_appfwpolicy_binding
