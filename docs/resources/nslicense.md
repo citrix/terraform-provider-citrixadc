@@ -24,7 +24,7 @@ resource "citrixadc_nslicense" "tf_license" {
 * `ssh_username` - (Optional) The user name for the ssh connection.
 * `ssh_password` - (Optional) The password for the ssh connection.
 * `ssh_port` - (Optional) The port for the ssh connection.
-* `ssh_host_pubkey` - (Optional) The ADC public ssh host key.
+* `ssh_host_pubkey` - (Required) The ADC public ssh host key.
 * `reboot` - (Optional) Set this to true to reboot and wait for the ADC to become responsive.
 * `poll_delay` - (Optional) Time to wait before the first poll after reboot. Defaults to "60s".
 * `poll_interval` - (Optional) Interval between polls. Defaults to "60s".
