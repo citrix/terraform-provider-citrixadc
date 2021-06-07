@@ -677,16 +677,18 @@ func readServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	//vserverBindings is of type []map[string]interface{}
-	var boundVserver string
-	lbvservers := make([]string, 0, len(vserverBindings))
-	for _, vserver := range vserverBindings {
-		vs, ok := vserver["vservername"]
-		if ok {
-			boundVserver = vs.(string)
-			lbvservers = append(lbvservers, boundVserver)
+	if _, ok := d.GetOk("lbvservers"); ok {
+		var boundVserver string
+		lbvservers := make([]string, 0, len(vserverBindings))
+		for _, vserver := range vserverBindings {
+			vs, ok := vserver["vservername"]
+			if ok {
+				boundVserver = vs.(string)
+				lbvservers = append(lbvservers, boundVserver)
+			}
 		}
+		d.Set("lbvservers", lbvservers)
 	}
-	d.Set("lbvservers", lbvservers)
 
 	var boundMonitor string
 	for _, monitor := range boundMonitors {
