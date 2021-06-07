@@ -1,4 +1,18 @@
-## 1.1.0 (Unreleased)
+## 1.2.0 (Unreleased)
+
+## 1.1.0 (June 7, 2021)
+
+FEATURES
+
+* **New Resource** `citrixadc_lbvserver_servicegroup_binding`
+
+ENHANCEMENTS
+
+* resource/citrixadc\_servicegroup: Do not read `lbvservers` attribute when not set. Needed for maintaining idempotency in conjuction with  `citrixadc_lbvserver_servicegroup_binding` resource.
+
+NOTES
+
+* Correct documentation of citrixadc\_nslicense to list `ssh_host_pubkey` attribute as `Required`.
 
 ## 1.0.1 (May 13, 2021)
 
