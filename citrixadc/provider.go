@@ -188,6 +188,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_appfwprofile_sqlinjection_binding":       resourceCitrixAdcAppfwprofile_sqlinjection_binding(),
 		"citrixadc_lbvserver_servicegroup_binding":          resourceCitrixAdcLbvserver_servicegroup_binding(),
 		"citrixadc_lbparameter":                             resourceCitrixAdcLbparameter(),
+		"citrixadc_iptunnel":                                resourceCitrixAdcIptunnel(),
 	}
 }
 
