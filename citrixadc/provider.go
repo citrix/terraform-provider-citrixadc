@@ -189,6 +189,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_lbvserver_servicegroup_binding":          resourceCitrixAdcLbvserver_servicegroup_binding(),
 		"citrixadc_lbparameter":                             resourceCitrixAdcLbparameter(),
 		"citrixadc_iptunnel":                                resourceCitrixAdcIptunnel(),
+		"citrixadc_vlan":                                    resourceCitrixAdcVlan(),
 	}
 }
 
