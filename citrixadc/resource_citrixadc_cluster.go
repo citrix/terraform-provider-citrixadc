@@ -1641,17 +1641,17 @@ func pollClusterNodeWithid(d *schema.ResourceData, meta interface{}, nodeid int)
 			}
 			if val_nodeid == nodeid {
 				nodeidFound = true
-				if val["health"] == "UP" {
+				if val["masterstate"] == "ACTIVE" {
 					return_state = "node_added"
 				} else {
-					log.Printf("[DEBUG] citrixadc-provider: node %v health %v", nodeid, val["health"])
+					log.Printf("[DEBUG] citrixadc-provider: node masterstate is %s", val["masterstate"])
 				}
 				break
 			}
 		}
 		// There is something very wrong
 		if !nodeidFound {
-			return nil, "adding_node", fmt.Errorf("Node id %v not in retrived nodes list", nodeid)
+			return nil, "adding_node", fmt.Errorf("Node id %v not in retrieved nodes list", nodeid)
 		}
 		// Node is being added. Wait.
 		if return_state == "adding_node" {

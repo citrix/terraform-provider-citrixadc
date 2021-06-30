@@ -1,4 +1,14 @@
-## 1.2.0 (Unreleased)
+## 1.2.0 (June 30, 2021)
+
+FEATURES
+
+* **New Resource** `citrixadc_iptunnel`
+* **New Resource** `citrixadc_lbparameter`
+* **New Resource** `citrixadc_vlan`
+
+BUG FIXES
+
+* resource/citrixadc\_cluster: Check `masterstate` instead of `health` for determining when a node has succesfully joined the cluster.
 
 ## 1.1.0 (June 7, 2021)
 
