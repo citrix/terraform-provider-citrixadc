@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/chiradeep/go-nitro/netscaler"
+	"testing"
+
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"testing"
 )
 
 func TestAccNsrpcnode_basic(t *testing.T) {
@@ -67,7 +68,7 @@ func testAccCheckNsrpcnodeExist(n string, id *string) resource.TestCheckFunc {
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(netscaler.Nsrpcnode.Type(), rs.Primary.ID)
+		data, err := nsClient.FindResource(service.Nsrpcnode.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err

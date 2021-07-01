@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/chiradeep/go-nitro/netscaler"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
 	"strings"
 	"testing"
+
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 const testAccSslvserver_sslcertkey_binding_lb_step1 = `
@@ -281,7 +282,7 @@ func testAccCheckSslvserver_sslcertkey_bindingExist(n string, id *string) resour
 		vservername := idSlice[0]
 		certkeyname := idSlice[1]
 
-		findParams := netscaler.FindParams{
+		findParams := service.FindParams{
 			ResourceType:             "sslvserver_sslcertkey_binding",
 			ResourceName:             vservername,
 			ResourceMissingErrorCode: 461,
@@ -322,7 +323,7 @@ func testAccCheckSslvserver_sslcertkey_bindingDestroy(s *terraform.State) error 
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(netscaler.Sslvserver_sslcertkey_binding.Type(), rs.Primary.ID)
+		_, err := nsClient.FindResource(service.Sslvserver_sslcertkey_binding.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("sslvserver_sslcertkey_binding %s still exists", rs.Primary.ID)
 		}

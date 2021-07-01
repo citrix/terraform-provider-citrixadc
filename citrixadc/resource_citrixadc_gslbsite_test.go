@@ -17,12 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/chiradeep/go-nitro/config/gslb"
-	"github.com/chiradeep/go-nitro/netscaler"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
 	"os"
 	"testing"
+
+	"github.com/citrix/adc-nitro-go/resource/config/gslb"
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccGslbsite_basic(t *testing.T) {
@@ -66,7 +67,7 @@ func testAccCheckGslbsiteExist(n string, id *string) resource.TestCheckFunc {
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(netscaler.Gslbsite.Type(), rs.Primary.ID)
+		data, err := nsClient.FindResource(service.Gslbsite.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -92,7 +93,7 @@ func testAccCheckGslbsiteDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(netscaler.Gslbsite.Type(), rs.Primary.ID)
+		_, err := nsClient.FindResource(service.Gslbsite.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("LB vserver %s still exists", rs.Primary.ID)
 		}
@@ -126,7 +127,7 @@ func TestAccGslbsite_AssertNonUpdateableAttributes(t *testing.T) {
 
 	// Create resource
 	siteName := "tf-acc-glsb-site-test"
-	siteType := netscaler.Gslbsite.Type()
+	siteType := service.Gslbsite.Type()
 
 	// Defer deletion of actual resource
 	defer testHelperEnsureResourceDeletion(c, t, siteType, siteName, nil)

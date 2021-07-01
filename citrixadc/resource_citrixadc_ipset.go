@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/network"
+	"github.com/citrix/adc-nitro-go/resource/config/network"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"fmt"
@@ -54,10 +54,10 @@ func createIpsetFunc(d *schema.ResourceData, meta interface{}) error {
 
 	ipset := network.Ipset{
 		Name: d.Get("name").(string),
-		Td:   d.Get("td").(int),
+		Td:   uint32(d.Get("td").(int)),
 	}
 
-	_, err := client.AddResource(netscaler.Ipset.Type(), ipsetName, &ipset)
+	_, err := client.AddResource(service.Ipset.Type(), ipsetName, &ipset)
 	if err != nil {
 		return err
 	}
@@ -105,7 +105,7 @@ func readIpsetFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	ipsetName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading ipset state %s", ipsetName)
-	data, err := client.FindResource(netscaler.Ipset.Type(), ipsetName)
+	data, err := client.FindResource(service.Ipset.Type(), ipsetName)
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing ipset state %s", ipsetName)
 		d.SetId("")
@@ -133,7 +133,7 @@ func deleteIpsetFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteIpsetFunc")
 	client := meta.(*NetScalerNitroClient).client
 	ipsetName := d.Id()
-	err := client.DeleteResource(netscaler.Ipset.Type(), ipsetName)
+	err := client.DeleteResource(service.Ipset.Type(), ipsetName)
 	if err != nil {
 		return err
 	}
@@ -167,7 +167,7 @@ func addSingleIpsetNsipBinding(d *schema.ResourceData, meta interface{}, nsip st
 	log.Printf("[DEBUG]  citrixadc-provider: In addSingleIpsetNsipBinding")
 	client := meta.(*NetScalerNitroClient).client
 
-	bindingStruct := network.Ipsetnsipbinding{}
+	bindingStruct := network.Ipsetipbinding{}
 	bindingStruct.Name = d.Get("name").(string)
 	bindingStruct.Ipaddress = nsip
 
@@ -245,7 +245,7 @@ func addSingleIpsetNsip6Binding(d *schema.ResourceData, meta interface{}, nsip6 
 	log.Printf("[DEBUG]  citrixadc-provider: In addSingleIpsetNsip6Binding")
 	client := meta.(*NetScalerNitroClient).client
 
-	bindingStruct := network.Ipsetnsip6binding{}
+	bindingStruct := network.Ipsetip6binding{}
 	bindingStruct.Name = d.Get("name").(string)
 	bindingStruct.Ipaddress = nsip6 //strings.SplitN(nsip6, "/", -1)[0]
 

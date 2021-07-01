@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/lb"
+	"github.com/citrix/adc-nitro-go/resource/config/lb"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"fmt"
@@ -78,7 +78,7 @@ func createLbvserver_rewritepolicy_bindingFunc(d *schema.ResourceData, meta inte
 	name := d.Get("name").(string)
 	policyname := d.Get("policyname").(string)
 	bindingId := fmt.Sprintf("%s,%s", name, policyname)
-	lbvserver_rewritepolicy_binding := lb.Lbvserverrewritepolicybinding{
+	lbvserver_rewritepolicy_binding := lb.Lbvserverpolicybinding{
 		Bindpoint:              d.Get("bindpoint").(string),
 		Gotopriorityexpression: d.Get("gotopriorityexpression").(string),
 		Invoke:                 d.Get("invoke").(bool),
@@ -86,10 +86,10 @@ func createLbvserver_rewritepolicy_bindingFunc(d *schema.ResourceData, meta inte
 		Labeltype:              d.Get("labeltype").(string),
 		Name:                   d.Get("name").(string),
 		Policyname:             d.Get("policyname").(string),
-		Priority:               d.Get("priority").(int),
+		Priority:               uint32(d.Get("priority").(int)),
 	}
 
-	err := client.UpdateUnnamedResource(netscaler.Lbvserver_rewritepolicy_binding.Type(), &lbvserver_rewritepolicy_binding)
+	err := client.UpdateUnnamedResource(service.Lbvserver_rewritepolicy_binding.Type(), &lbvserver_rewritepolicy_binding)
 	if err != nil {
 		return err
 	}
@@ -113,7 +113,7 @@ func readLbvserver_rewritepolicy_bindingFunc(d *schema.ResourceData, meta interf
 	policyname := idSlice[1]
 	log.Printf("[DEBUG] citrixadc-provider: Reading lbvserver_rewritepolicy_binding state %s", bindingId)
 
-	findParams := netscaler.FindParams{
+	findParams := service.FindParams{
 		ResourceType:             "lbvserver_rewritepolicy_binding",
 		ResourceName:             name,
 		ResourceMissingErrorCode: 258,
@@ -189,7 +189,7 @@ func deleteLbvserver_rewritepolicy_bindingFunc(d *schema.ResourceData, meta inte
 	if v, ok := d.GetOk("priority"); ok {
 		argsMap["priority"] = url.QueryEscape(fmt.Sprintf("%v", v))
 	}
-	err := client.DeleteResourceWithArgsMap(netscaler.Lbvserver_rewritepolicy_binding.Type(), name, argsMap)
+	err := client.DeleteResourceWithArgsMap(service.Lbvserver_rewritepolicy_binding.Type(), name, argsMap)
 	if err != nil {
 		return err
 	}

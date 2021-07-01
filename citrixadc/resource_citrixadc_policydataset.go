@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/policy"
+	"github.com/citrix/adc-nitro-go/resource/config/policy"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 
@@ -63,7 +63,7 @@ func createPolicydatasetFunc(d *schema.ResourceData, meta interface{}) error {
 		Type:      d.Get("type").(string),
 	}
 
-	_, err := client.AddResource(netscaler.Policydataset.Type(), policydatasetName, &policydataset)
+	_, err := client.AddResource(service.Policydataset.Type(), policydatasetName, &policydataset)
 	if err != nil {
 		return err
 	}
@@ -83,7 +83,7 @@ func readPolicydatasetFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	policydatasetName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading policydataset state %s", policydatasetName)
-	data, err := client.FindResource(netscaler.Policydataset.Type(), policydatasetName)
+	data, err := client.FindResource(service.Policydataset.Type(), policydatasetName)
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing policydataset state %s", policydatasetName)
 		d.SetId("")
@@ -103,7 +103,7 @@ func deletePolicydatasetFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deletePolicydatasetFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policydatasetName := d.Id()
-	err := client.DeleteResource(netscaler.Policydataset.Type(), policydatasetName)
+	err := client.DeleteResource(service.Policydataset.Type(), policydatasetName)
 	if err != nil {
 		return err
 	}

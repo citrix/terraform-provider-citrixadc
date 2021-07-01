@@ -1,7 +1,7 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/netscaler"
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 
@@ -106,7 +106,7 @@ func createNetprofileFunc(d *schema.ResourceData, meta interface{}) error {
 		Proxyprotocolaftertlshandshake: d.Get("proxyprotocolaftertlshandshake").(string),
 	}
 
-	_, err := client.AddResource(netscaler.Netprofile.Type(), netprofileName, &netprofile)
+	_, err := client.AddResource(service.Netprofile.Type(), netprofileName, &netprofile)
 	if err != nil {
 		return err
 	}
@@ -126,7 +126,7 @@ func readNetprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	netprofileName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading netprofile state %s", netprofileName)
-	data, err := client.FindResource(netscaler.Netprofile.Type(), netprofileName)
+	data, err := client.FindResource(service.Netprofile.Type(), netprofileName)
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing netprofile state %s", netprofileName)
 		d.SetId("")
@@ -203,7 +203,7 @@ func updateNetprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if hasChange {
-		_, err := client.UpdateResource(netscaler.Netprofile.Type(), netprofileName, &netprofile)
+		_, err := client.UpdateResource(service.Netprofile.Type(), netprofileName, &netprofile)
 		if err != nil {
 			return fmt.Errorf("Error updating netprofile %s", netprofileName)
 		}
@@ -215,7 +215,7 @@ func deleteNetprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNetprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	netprofileName := d.Id()
-	err := client.DeleteResource(netscaler.Netprofile.Type(), netprofileName)
+	err := client.DeleteResource(service.Netprofile.Type(), netprofileName)
 	if err != nil {
 		return err
 	}

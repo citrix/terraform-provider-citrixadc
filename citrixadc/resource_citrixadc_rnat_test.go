@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/chiradeep/go-nitro/netscaler"
+	"testing"
+
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"testing"
 )
 
 func TestAccRnat_basic(t *testing.T) {
@@ -59,7 +60,7 @@ func testAccCheckRnatExist(n string, id *string) resource.TestCheckFunc {
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		d, err := nsClient.FindFilteredResourceArray(netscaler.Rnat.Type(), map[string]string{"network": "192.168.96.0", "netmask": "255.255.240.0", "natip": "*"})
+		d, err := nsClient.FindFilteredResourceArray(service.Rnat.Type(), map[string]string{"network": "192.168.96.0", "netmask": "255.255.240.0", "natip": "*"})
 
 		if err != nil {
 			return err
@@ -85,7 +86,7 @@ func testAccCheckRnatDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindFilteredResourceArray(netscaler.Rnat.Type(), map[string]string{"network": "192.168.96.0", "netmask": "255.255.240.0", "natip": "*"})
+		_, err := nsClient.FindFilteredResourceArray(service.Rnat.Type(), map[string]string{"network": "192.168.96.0", "netmask": "255.255.240.0", "natip": "*"})
 		if err == nil {
 			return fmt.Errorf("Rnat rule %s still exists", rs.Primary.ID)
 		}

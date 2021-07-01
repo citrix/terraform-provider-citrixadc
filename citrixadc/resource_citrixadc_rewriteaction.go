@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/rewrite"
+	"github.com/citrix/adc-nitro-go/resource/config/rewrite"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 
@@ -95,7 +95,7 @@ func createRewriteactionFunc(d *schema.ResourceData, meta interface{}) error {
 		Type:              d.Get("type").(string),
 	}
 
-	_, err := client.AddResource(netscaler.Rewriteaction.Type(), rewriteactionName, &rewriteaction)
+	_, err := client.AddResource(service.Rewriteaction.Type(), rewriteactionName, &rewriteaction)
 	if err != nil {
 		return err
 	}
@@ -115,7 +115,7 @@ func readRewriteactionFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	rewriteactionName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading rewriteaction state %s", rewriteactionName)
-	data, err := client.FindResource(netscaler.Rewriteaction.Type(), rewriteactionName)
+	data, err := client.FindResource(service.Rewriteaction.Type(), rewriteactionName)
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing rewriteaction state %s", rewriteactionName)
 		d.SetId("")
@@ -192,7 +192,7 @@ func updateRewriteactionFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if hasChange {
-		_, err := client.UpdateResource(netscaler.Rewriteaction.Type(), rewriteactionName, &rewriteaction)
+		_, err := client.UpdateResource(service.Rewriteaction.Type(), rewriteactionName, &rewriteaction)
 		if err != nil {
 			return fmt.Errorf("Error updating rewriteaction %s.\n%s", rewriteactionName, err)
 		}
@@ -204,7 +204,7 @@ func deleteRewriteactionFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteRewriteactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	rewriteactionName := d.Id()
-	err := client.DeleteResource(netscaler.Rewriteaction.Type(), rewriteactionName)
+	err := client.DeleteResource(service.Rewriteaction.Type(), rewriteactionName)
 	if err != nil {
 		return err
 	}

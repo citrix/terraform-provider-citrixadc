@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/responder"
+	"github.com/citrix/adc-nitro-go/resource/config/responder"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"log"
@@ -51,7 +51,7 @@ func createResponderpolicylabelFunc(d *schema.ResourceData, meta interface{}) er
 		Policylabeltype: d.Get("policylabeltype").(string),
 	}
 
-	_, err := client.AddResource(netscaler.Responderpolicylabel.Type(), responderpolicylabelName, &responderpolicylabel)
+	_, err := client.AddResource(service.Responderpolicylabel.Type(), responderpolicylabelName, &responderpolicylabel)
 	if err != nil {
 		return err
 	}
@@ -71,7 +71,7 @@ func readResponderpolicylabelFunc(d *schema.ResourceData, meta interface{}) erro
 	client := meta.(*NetScalerNitroClient).client
 	responderpolicylabelName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading responderpolicylabel state %s", responderpolicylabelName)
-	data, err := client.FindResource(netscaler.Responderpolicylabel.Type(), responderpolicylabelName)
+	data, err := client.FindResource(service.Responderpolicylabel.Type(), responderpolicylabelName)
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing responderpolicylabel state %s", responderpolicylabelName)
 		d.SetId("")
@@ -89,7 +89,7 @@ func deleteResponderpolicylabelFunc(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteResponderpolicylabelFunc")
 	client := meta.(*NetScalerNitroClient).client
 	responderpolicylabelName := d.Id()
-	err := client.DeleteResource(netscaler.Responderpolicylabel.Type(), responderpolicylabelName)
+	err := client.DeleteResource(service.Responderpolicylabel.Type(), responderpolicylabelName)
 	if err != nil {
 		return err
 	}

@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/chiradeep/go-nitro/netscaler"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
 	"strings"
 	"testing"
+
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccResponderpolicy_globalbinding(t *testing.T) {
@@ -75,7 +76,7 @@ func testAccCheckResponderpolicyExist(n string, id *string) resource.TestCheckFu
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(netscaler.Responderpolicy.Type(), rs.Primary.ID)
+		data, err := nsClient.FindResource(service.Responderpolicy.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -159,7 +160,7 @@ func testAccCheckResponderpolicyDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(netscaler.Responderpolicy.Type(), rs.Primary.ID)
+		_, err := nsClient.FindResource(service.Responderpolicy.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("LB vserver %s still exists", rs.Primary.ID)
 		}

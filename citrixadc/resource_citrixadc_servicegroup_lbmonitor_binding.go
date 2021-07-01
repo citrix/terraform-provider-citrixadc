@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/basic"
+	"github.com/citrix/adc-nitro-go/resource/config/basic"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"fmt"
@@ -103,22 +103,22 @@ func createServicegroup_lbmonitor_bindingFunc(d *schema.ResourceData, meta inter
 	// Use `,` as the separator since it is invalid character for servicegroup and monitor name
 	servicegroupLbmonitorBindingId := fmt.Sprintf("%s,%s", servicegroupName, monitorName)
 
-	servicegroup_lbmonitor_binding := basic.Servicegrouplbmonitorbinding{
+	servicegroup_lbmonitor_binding := basic.Servicegroupmonitorbinding{
 		Customserverid:   d.Get("customserverid").(string),
-		Dbsttl:           d.Get("dbsttl").(int),
-		Hashid:           d.Get("hashid").(int),
+		Dbsttl:           uint64(d.Get("dbsttl").(int)),
+		Hashid:           uint32(d.Get("hashid").(int)),
 		Monitorname:      d.Get("monitorname").(string),
 		Monstate:         d.Get("monstate").(string),
 		Nameserver:       d.Get("nameserver").(string),
 		Passive:          d.Get("passive").(bool),
-		Port:             d.Get("port").(int),
-		Serverid:         d.Get("serverid").(int),
+		Port:             int32(d.Get("port").(int)),
+		Serverid:         uint32(d.Get("serverid").(int)),
 		Servicegroupname: d.Get("servicegroupname").(string),
 		State:            d.Get("state").(string),
-		Weight:           d.Get("weight").(int),
+		Weight:           uint32(d.Get("weight").(int)),
 	}
 
-	err := client.UpdateUnnamedResource(netscaler.Servicegroup_lbmonitor_binding.Type(), &servicegroup_lbmonitor_binding)
+	err := client.UpdateUnnamedResource(service.Servicegroup_lbmonitor_binding.Type(), &servicegroup_lbmonitor_binding)
 	if err != nil {
 		return err
 	}
@@ -151,7 +151,7 @@ func readServicegroup_lbmonitor_bindingFunc(d *schema.ResourceData, meta interfa
 	monitorName := idSlice[1]
 
 	log.Printf("[DEBUG] citrixadc-provider: Reading servicegroup_lbmonitor_binding state %s", servicegroupLbmonitorBindingId)
-	findParams := netscaler.FindParams{
+	findParams := service.FindParams{
 		ResourceType:             "servicegroup_lbmonitor_binding",
 		ResourceName:             servicegroupName,
 		ResourceMissingErrorCode: 258,
@@ -225,7 +225,7 @@ func deleteServicegroup_lbmonitor_bindingFunc(d *schema.ResourceData, meta inter
 		args = append(args, fmt.Sprintf("port:%v", v))
 	}
 
-	err := client.DeleteResourceWithArgs(netscaler.Servicegroup_lbmonitor_binding.Type(), servicegroupName, args)
+	err := client.DeleteResourceWithArgs(service.Servicegroup_lbmonitor_binding.Type(), servicegroupName, args)
 	if err != nil {
 		return err
 	}

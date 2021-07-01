@@ -20,9 +20,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/chiradeep/go-nitro/config/basic"
-	"github.com/chiradeep/go-nitro/config/gslb"
-	"github.com/chiradeep/go-nitro/netscaler"
+	"github.com/citrix/adc-nitro-go/resource/config/basic"
+	"github.com/citrix/adc-nitro-go/resource/config/gslb"
+	"github.com/citrix/adc-nitro-go/service"
+
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
@@ -74,7 +75,7 @@ func testAccCheckGslbserviceExist(n string, id *string) resource.TestCheckFunc {
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(netscaler.Gslbservice.Type(), rs.Primary.ID)
+		data, err := nsClient.FindResource(service.Gslbservice.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -100,7 +101,7 @@ func testAccCheckGslbserviceDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(netscaler.Gslbservice.Type(), rs.Primary.ID)
+		_, err := nsClient.FindResource(service.Gslbservice.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("LB vserver %s still exists", rs.Primary.ID)
 		}
@@ -143,7 +144,7 @@ func TestAccGslbservice_AssertNonUpdateableAttributes(t *testing.T) {
 	// Requisite resource
 	serverName := "tf-acc-server-helper"
 	serverAddress := "10.12.32.33"
-	serverType := netscaler.Server.Type()
+	serverType := service.Server.Type()
 
 	// Defer deletion of requisite resource
 	defer testHelperEnsureResourceDeletion(c, t, serverType, serverName, nil)
@@ -156,7 +157,7 @@ func TestAccGslbservice_AssertNonUpdateableAttributes(t *testing.T) {
 	// Requisite resource
 	siteName := "tf-acc-gslb-site-name"
 	siteIpaddress := "10.122.22.22"
-	siteType := netscaler.Gslbsite.Type()
+	siteType := service.Gslbsite.Type()
 
 	if _, err := c.client.AddResource(serverType, serverName, serverInstance); err != nil {
 		t.Logf("Error while creating requisite resource")
@@ -178,7 +179,7 @@ func TestAccGslbservice_AssertNonUpdateableAttributes(t *testing.T) {
 
 	// Create resource
 	serviceName := "tf-acc-gslb-service-test"
-	serviceType := netscaler.Gslbservice.Type()
+	serviceType := service.Gslbservice.Type()
 
 	// Defer deletion of actual resource
 	defer testHelperEnsureResourceDeletion(c, t, serviceType, serviceName, nil)

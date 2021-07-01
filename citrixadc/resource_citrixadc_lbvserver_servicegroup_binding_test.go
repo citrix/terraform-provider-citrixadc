@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/chiradeep/go-nitro/netscaler"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
 	"strings"
 	"testing"
+
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 const testAccLbvserver_servicegroup_binding_basic = `
@@ -117,7 +118,7 @@ func testAccCheckLbvserver_servicegroup_bindingExist(n string, id *string) resou
 		name := idSlice[0]
 		servicegroupname := idSlice[1]
 
-		findParams := netscaler.FindParams{
+		findParams := service.FindParams{
 			ResourceType:             "lbvserver_servicegroup_binding",
 			ResourceName:             name,
 			ResourceMissingErrorCode: 258,
@@ -158,7 +159,7 @@ func testAccCheckLbvserver_servicegroup_bindingDestroy(s *terraform.State) error
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(netscaler.Lbvserver_servicegroup_binding.Type(), rs.Primary.ID)
+		_, err := nsClient.FindResource(service.Lbvserver_servicegroup_binding.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("lbvserver_servicegroup_binding %s still exists", rs.Primary.ID)
 		}

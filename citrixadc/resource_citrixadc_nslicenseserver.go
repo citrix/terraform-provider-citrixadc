@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/ns"
+	"github.com/citrix/adc-nitro-go/resource/config/ns"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"fmt"
@@ -51,8 +51,8 @@ func createNslicenseserverFunc(d *schema.ResourceData, meta interface{}) error {
 
 	nslicenseserver := ns.Nslicenseserver{
 		Forceupdateip: d.Get("forceupdateip").(bool),
-		Nodeid:        d.Get("nodeid").(int),
-		Port:          d.Get("port").(int),
+		Nodeid:        uint32(d.Get("nodeid").(int)),
+		Port:          uint32(d.Get("port").(int)),
 		Servername:    d.Get("servername").(string),
 	}
 
@@ -77,7 +77,7 @@ func readNslicenseserverFunc(d *schema.ResourceData, meta interface{}) error {
 	nslicenseserverId := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading nslicenseserver state %s", nslicenseserverId)
 
-	findParams := netscaler.FindParams{
+	findParams := service.FindParams{
 		ResourceType: "nslicenseserver",
 	}
 

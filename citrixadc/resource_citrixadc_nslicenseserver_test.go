@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/chiradeep/go-nitro/netscaler"
+	"testing"
+
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"testing"
 )
 
 func TestAccNslicenseserver_basic(t *testing.T) {
@@ -61,7 +62,7 @@ func testAccCheckNslicenseserverExist(n string, id *string) resource.TestCheckFu
 			*id = rs.Primary.ID
 		}
 
-		findParams := netscaler.FindParams{
+		findParams := service.FindParams{
 			ResourceType: "nslicenseserver",
 		}
 

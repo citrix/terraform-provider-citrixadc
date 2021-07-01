@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/chiradeep/go-nitro/netscaler"
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
@@ -137,7 +137,7 @@ func testAccCheckIpsetExist(n string, id *string) resource.TestCheckFunc {
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(netscaler.Ipset.Type(), rs.Primary.ID)
+		data, err := nsClient.FindResource(service.Ipset.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -163,7 +163,7 @@ func testAccCheckIpsetDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(netscaler.Ipset.Type(), rs.Primary.ID)
+		_, err := nsClient.FindResource(service.Ipset.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("LB vserver %s still exists", rs.Primary.ID)
 		}

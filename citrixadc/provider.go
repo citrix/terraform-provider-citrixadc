@@ -19,7 +19,7 @@ import (
 	"log"
 	"sync"
 
-	"github.com/chiradeep/go-nitro/netscaler"
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
 	"github.com/hashicorp/terraform/version"
@@ -29,7 +29,7 @@ type NetScalerNitroClient struct {
 	Username string
 	Password string
 	Endpoint string
-	client   *netscaler.NitroClient
+	client   *service.NitroClient
 	lock     sync.Mutex
 }
 
@@ -203,7 +203,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		Endpoint: d.Get("endpoint").(string),
 	}
 
-	params := netscaler.NitroParams{
+	params := service.NitroParams{
 		Url:       d.Get("endpoint").(string),
 		Username:  d.Get("username").(string),
 		Password:  d.Get("password").(string),
@@ -211,7 +211,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		SslVerify: !d.Get("insecure_skip_verify").(bool),
 		Headers:   userHeaders,
 	}
-	client, err := netscaler.NewNitroClientFromParams(params)
+	client, err := service.NewNitroClientFromParams(params)
 	if err != nil {
 		return nil, err
 	}

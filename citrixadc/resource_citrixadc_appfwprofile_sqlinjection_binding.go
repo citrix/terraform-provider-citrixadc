@@ -5,9 +5,9 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/chiradeep/go-nitro/config/appfw"
+	"github.com/citrix/adc-nitro-go/resource/config/appfw"
 
-	"github.com/chiradeep/go-nitro/netscaler"
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"log"
@@ -114,7 +114,7 @@ func createAppfwprofile_sqlinjection_bindingFunc(d *schema.ResourceData, meta in
 		State:             d.Get("state").(string),
 	}
 
-	_, err := client.AddResource(netscaler.Appfwprofile_sqlinjection_binding.Type(), sqlinjection, &appfwprofile_sqlinjection_binding)
+	_, err := client.AddResource(service.Appfwprofile_sqlinjection_binding.Type(), sqlinjection, &appfwprofile_sqlinjection_binding)
 	if err != nil {
 		return err
 	}
@@ -139,8 +139,8 @@ func readAppfwprofile_sqlinjection_bindingFunc(d *schema.ResourceData, meta inte
 	sqlinjection := idSlice[1]
 	log.Printf("[DEBUG] citrixadc-provider: Reading appfwprofile_sqlinjection_binding state %s", bindingId)
 
-	findParams := netscaler.FindParams{
-		ResourceType:             netscaler.Appfwprofile_sqlinjection_binding.Type(),
+	findParams := service.FindParams{
+		ResourceType:             service.Appfwprofile_sqlinjection_binding.Type(),
 		ResourceName:             appFwName,
 		ResourceMissingErrorCode: 258,
 	}
@@ -210,7 +210,7 @@ func deleteAppfwprofile_sqlinjection_bindingFunc(d *schema.ResourceData, meta in
 	args["formactionurl_sql"] = url.QueryEscape(d.Get("formactionurl_sql").(string))
 	args["as_scan_location_sql"] = d.Get("as_scan_location_sql").(string)
 
-	err := client.DeleteResourceWithArgsMap(netscaler.Appfwprofile_sqlinjection_binding.Type(), appFwName, args)
+	err := client.DeleteResourceWithArgsMap(service.Appfwprofile_sqlinjection_binding.Type(), appFwName, args)
 	if err != nil {
 		return err
 	}

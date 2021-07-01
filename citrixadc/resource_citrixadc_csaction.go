@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/cs"
+	"github.com/citrix/adc-nitro-go/resource/config/cs"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"fmt"
@@ -64,7 +64,7 @@ func createCsactionFunc(d *schema.ResourceData, meta interface{}) error {
 		Targetvserverexpr: d.Get("targetvserverexpr").(string),
 	}
 
-	_, err := client.AddResource(netscaler.Csaction.Type(), csactionName, &csaction)
+	_, err := client.AddResource(service.Csaction.Type(), csactionName, &csaction)
 	if err != nil {
 		return err
 	}
@@ -84,7 +84,7 @@ func readCsactionFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	csactionName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading csaction state %s", csactionName)
-	data, err := client.FindResource(netscaler.Csaction.Type(), csactionName)
+	data, err := client.FindResource(service.Csaction.Type(), csactionName)
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing csaction state %s", csactionName)
 		d.SetId("")
@@ -136,7 +136,7 @@ func updateCsactionFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if hasChange {
-		_, err := client.UpdateResource(netscaler.Csaction.Type(), csactionName, &csaction)
+		_, err := client.UpdateResource(service.Csaction.Type(), csactionName, &csaction)
 		if err != nil {
 			return fmt.Errorf("Error updating csaction %s", csactionName)
 		}
@@ -148,7 +148,7 @@ func deleteCsactionFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteCsactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	csactionName := d.Id()
-	err := client.DeleteResource(netscaler.Csaction.Type(), csactionName)
+	err := client.DeleteResource(service.Csaction.Type(), csactionName)
 	if err != nil {
 		return err
 	}

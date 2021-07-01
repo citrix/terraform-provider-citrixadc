@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/chiradeep/go-nitro/netscaler"
+	"testing"
+
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"testing"
 )
 
 func TestAccPolicydataset_basic(t *testing.T) {
@@ -59,7 +60,7 @@ func testAccCheckPolicydatasetExist(n string, id *string) resource.TestCheckFunc
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(netscaler.Policydataset.Type(), rs.Primary.ID)
+		data, err := nsClient.FindResource(service.Policydataset.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -85,7 +86,7 @@ func testAccCheckPolicydatasetDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(netscaler.Policydataset.Type(), rs.Primary.ID)
+		_, err := nsClient.FindResource(service.Policydataset.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("dataset %s still exists", rs.Primary.ID)
 		}

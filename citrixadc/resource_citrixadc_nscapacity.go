@@ -1,7 +1,7 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/ns"
+	"github.com/citrix/adc-nitro-go/resource/config/ns"
 
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -85,9 +85,9 @@ func createNscapacityFunc(d *schema.ResourceData, meta interface{}) error {
 
 	nscapacityId := resource.PrefixedUniqueId("tf-nscapacity-")
 	nscapacity := ns.Nscapacity{
-		Bandwidth: d.Get("bandwidth").(int),
+		Bandwidth: uint32(d.Get("bandwidth").(int)),
 		Edition:   d.Get("edition").(string),
-		Nodeid:    d.Get("nodeid").(int),
+		Nodeid:    uint32(d.Get("nodeid").(int)),
 		Platform:  d.Get("platform").(string),
 		Unit:      d.Get("unit").(string),
 		Vcpu:      d.Get("vcpu").(bool),

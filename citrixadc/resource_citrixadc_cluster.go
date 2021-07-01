@@ -1,10 +1,10 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/cluster"
+	"github.com/citrix/adc-nitro-go/resource/config/cluster"
+	"github.com/citrix/adc-nitro-go/resource/config/ns"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/config/ns"
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -286,7 +286,7 @@ func readClusterFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	clusterId := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading cluster state %s", clusterId)
-	datalist, err := client.FindAllResources(netscaler.Clusterinstance.Type())
+	datalist, err := client.FindAllResources(service.Clusterinstance.Type())
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing cluster state %s", clusterId)
 		d.SetId("")
@@ -344,7 +344,7 @@ func updateClusterFunc(d *schema.ResourceData, meta interface{}) error {
 	clid := strconv.Itoa(d.Get("clid").(int))
 
 	clusterinstance := cluster.Clusterinstance{
-		Clid: d.Get("clid").(int),
+		Clid: uint32(d.Get("clid").(int)),
 	}
 	hasChange := false
 	clusterNodegroupChanged := false
@@ -355,17 +355,17 @@ func updateClusterFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("clid") {
 		log.Printf("[DEBUG]  citrixadc-provider: Clid has changed for clusterinstance %s, starting update", clid)
-		clusterinstance.Clid = d.Get("clid").(int)
+		clusterinstance.Clid = uint32(d.Get("clid").(int))
 		hasChange = true
 	}
 	if d.HasChange("deadinterval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Deadinterval has changed for clusterinstance %s, starting update", clid)
-		clusterinstance.Deadinterval = d.Get("deadinterval").(int)
+		clusterinstance.Deadinterval = uint64(d.Get("deadinterval").(int))
 		hasChange = true
 	}
 	if d.HasChange("hellointerval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Hellointerval has changed for clusterinstance %s, starting update", clid)
-		clusterinstance.Hellointerval = d.Get("hellointerval").(int)
+		clusterinstance.Hellointerval = uint32(d.Get("hellointerval").(int))
 		hasChange = true
 	}
 	if d.HasChange("inc") {
@@ -405,7 +405,7 @@ func updateClusterFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if hasChange {
-		_, err := client.UpdateResource(netscaler.Clusterinstance.Type(), clid, &clusterinstance)
+		_, err := client.UpdateResource(service.Clusterinstance.Type(), clid, &clusterinstance)
 		if err != nil {
 			return fmt.Errorf("Error updating clusterinstance %s. %s", clid, err.Error())
 		}
@@ -607,9 +607,9 @@ func getClusterNodegroupByName(d *schema.ResourceData, nodegroupName string) map
 	return nil
 }
 
-func clusternodegroupExistsInCluster(client *netscaler.NitroClient, nodegroupName string) (bool, error) {
+func clusternodegroupExistsInCluster(client *service.NitroClient, nodegroupName string) (bool, error) {
 	log.Printf("[DEBUG]  citrixadc-provider: In clusternodegroupExistsInCluster")
-	findParams := netscaler.FindParams{
+	findParams := service.FindParams{
 		ResourceType:             "clusternodegroup",
 		ResourceName:             nodegroupName,
 		ResourceMissingErrorCode: 258,
@@ -631,9 +631,9 @@ func clusternodegroupExistsInCluster(client *netscaler.NitroClient, nodegroupNam
 
 }
 
-func getClusternodegroupFromCluster(client *netscaler.NitroClient, nodegroupName string) (map[string]interface{}, error) {
+func getClusternodegroupFromCluster(client *service.NitroClient, nodegroupName string) (map[string]interface{}, error) {
 	log.Printf("[DEBUG]  citrixadc-provider: In getClusternodegroupFromCluster")
-	findParams := netscaler.FindParams{
+	findParams := service.FindParams{
 		ResourceType:             "clusternodegroup",
 		ResourceName:             nodegroupName,
 		ResourceMissingErrorCode: 258,
@@ -722,9 +722,9 @@ func createFirstClusterNode(d *schema.ResourceData, meta interface{}) error {
 
 	clusterinstance := cluster.Clusterinstance{
 		Backplanebasedview:         d.Get("backplanebasedview").(string),
-		Clid:                       d.Get("clid").(int),
-		Deadinterval:               d.Get("deadinterval").(int),
-		Hellointerval:              d.Get("hellointerval").(int),
+		Clid:                       uint32(d.Get("clid").(int)),
+		Deadinterval:               uint64(d.Get("deadinterval").(int)),
+		Hellointerval:              uint32(d.Get("hellointerval").(int)),
 		Inc:                        d.Get("inc").(string),
 		Nodegroup:                  d.Get("nodegroup").(string),
 		Preemption:                 d.Get("preemption").(string),
@@ -747,7 +747,7 @@ func createFirstClusterNode(d *schema.ResourceData, meta interface{}) error {
 
 		clusternodegroup := cluster.Clusternodegroup{
 			Name:     nodegroupData["name"].(string),
-			Priority: nodegroupData["priority"].(int),
+			Priority: uint32(nodegroupData["priority"].(int)),
 			State:    nodegroupData["state"].(string),
 			Sticky:   nodegroupData["sticky"].(string),
 			Strict:   nodegroupData["strict"].(string),
@@ -764,17 +764,17 @@ func createFirstClusterNode(d *schema.ResourceData, meta interface{}) error {
 	clusternode := cluster.Clusternode{
 		Backplane:            firstNode["backplane"].(string),
 		Clearnodegroupconfig: firstNode["clearnodegroupconfig"].(string),
-		Delay:                firstNode["delay"].(int),
+		Delay:                uint32(firstNode["delay"].(int)),
 		Ipaddress:            firstNode["ipaddress"].(string),
 		Nodegroup:            firstNode["nodegroup"].(string),
-		Nodeid:               firstNode["nodeid"].(int),
-		Priority:             firstNode["priority"].(int),
+		Nodeid:               uint32(firstNode["nodeid"].(int)),
+		Priority:             uint32(firstNode["priority"].(int)),
 		State:                firstNode["state"].(string),
 		Tunnelmode:           firstNode["tunnelmode"].(string),
 	}
 
 	log.Printf("[DEBUG]  citrixadc-provider: Nodeid %v", clusternode.Nodeid)
-	_, err = nodeClient.AddResource("clusternode", strconv.Itoa(clusternode.Nodeid), &clusternode)
+	_, err = nodeClient.AddResource("clusternode", strconv.FormatUint(uint64(clusternode.Nodeid), 10), &clusternode)
 	if err != nil {
 		return err
 	}
@@ -787,14 +787,14 @@ func createFirstClusterNode(d *schema.ResourceData, meta interface{}) error {
 		Type:      "CLIP",
 	}
 
-	_, err = nodeClient.AddResource(netscaler.Nsip.Type(), ipaddress, &nsip)
+	_, err = nodeClient.AddResource(service.Nsip.Type(), ipaddress, &nsip)
 	if err != nil {
 		return err
 	}
 
 	// Enable cluster instance on first node
 	clusterinstanceEnabler := cluster.Clusterinstance{
-		Clid: d.Get("clid").(int),
+		Clid: uint32(d.Get("clid").(int)),
 	}
 	err = nodeClient.ActOnResource("clusterinstance", &clusterinstanceEnabler, "enable")
 	if err != nil {
@@ -1038,7 +1038,7 @@ func updateSingleClusterNodegroup(d *schema.ResourceData, meta interface{}, node
 
 	clusternodegroup := cluster.Clusternodegroup{
 		Name:     nodegroupData["name"].(string),
-		Priority: nodegroupData["priority"].(int),
+		Priority: uint32(nodegroupData["priority"].(int)),
 		State:    nodegroupData["state"].(string),
 		Sticky:   nodegroupData["sticky"].(string),
 		Strict:   nodegroupData["strict"].(string),
@@ -1071,7 +1071,7 @@ func addSingleClusterNodegroup(d *schema.ResourceData, meta interface{}, nodegro
 
 	clusternodegroup := cluster.Clusternodegroup{
 		Name:     nodegroupData["name"].(string),
-		Priority: nodegroupData["priority"].(int),
+		Priority: uint32(nodegroupData["priority"].(int)),
 		State:    nodegroupData["state"].(string),
 		Sticky:   nodegroupData["sticky"].(string),
 		Strict:   nodegroupData["strict"].(string),
@@ -1337,17 +1337,17 @@ func addSingleClusterNode(d *schema.ResourceData, meta interface{}, nodeData map
 	clusternode := cluster.Clusternode{
 		Backplane:            nodeData["backplane"].(string),
 		Clearnodegroupconfig: nodeData["clearnodegroupconfig"].(string),
-		Delay:                nodeData["delay"].(int),
+		Delay:                uint32(nodeData["delay"].(int)),
 		Ipaddress:            nodeData["ipaddress"].(string),
 		Nodegroup:            nodeData["nodegroup"].(string),
-		Nodeid:               nodeData["nodeid"].(int),
-		Priority:             nodeData["priority"].(int),
+		Nodeid:               uint32(nodeData["nodeid"].(int)),
+		Priority:             uint32(nodeData["priority"].(int)),
 		State:                nodeData["state"].(string),
 		Tunnelmode:           nodeData["tunnelmode"].(string),
 	}
 
 	// Add cluster node on cluster configuration coordinator
-	_, err := client.AddResource("clusternode", strconv.Itoa(clusternode.Nodeid), &clusternode)
+	_, err := client.AddResource("clusternode", strconv.FormatUint(uint64(clusternode.Nodeid), 10), &clusternode)
 	if err != nil {
 		return err
 	}
@@ -1482,9 +1482,9 @@ func updateSingleClusterNode(d *schema.ResourceData, meta interface{}, nodeData 
 	// Only include attributes that can be present in HTTP PUT operation
 	clusternode := cluster.Clusternode{
 		Backplane:  nodeData["backplane"].(string),
-		Delay:      nodeData["delay"].(int),
-		Nodeid:     nodeData["nodeid"].(int),
-		Priority:   nodeData["priority"].(int),
+		Delay:      uint32(nodeData["delay"].(int)),
+		Nodeid:     uint32(nodeData["nodeid"].(int)),
+		Priority:   uint32(nodeData["priority"].(int)),
 		State:      nodeData["state"].(string),
 		Tunnelmode: nodeData["tunnelmode"].(string),
 	}
@@ -1533,7 +1533,7 @@ func describeNodeMapDiff(left, right map[string]interface{}) {
 	}
 }
 
-func instantiateNodeClient(d *schema.ResourceData, meta interface{}, nodeMap map[string]interface{}) (*netscaler.NitroClient, error) {
+func instantiateNodeClient(d *schema.ResourceData, meta interface{}, nodeMap map[string]interface{}) (*service.NitroClient, error) {
 	log.Printf("[DEBUG]  citrixadc-provider: In instantiateNodeClient")
 
 	var nodeEndpoint string
@@ -1559,7 +1559,7 @@ func instantiateNodeClient(d *schema.ResourceData, meta interface{}, nodeMap map
 	// Always exists has default value
 	nodeSslVerrify = !nodeMap["insecure_skip_verify"].(bool)
 
-	params := netscaler.NitroParams{
+	params := service.NitroParams{
 		Url:       nodeEndpoint,
 		Username:  nodeUsername,
 		Password:  nodePassword,
@@ -1568,7 +1568,7 @@ func instantiateNodeClient(d *schema.ResourceData, meta interface{}, nodeMap map
 
 	log.Printf("[DEBUG]  citrixadc-provider: node client params %v", params)
 
-	nodeClient, err := netscaler.NewNitroClientFromParams(params)
+	nodeClient, err := service.NewNitroClientFromParams(params)
 	return nodeClient, err
 }
 

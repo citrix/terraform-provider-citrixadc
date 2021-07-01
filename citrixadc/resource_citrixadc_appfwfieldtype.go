@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/appfw"
+	"github.com/citrix/adc-nitro-go/resource/config/appfw"
 
-	"github.com/chiradeep/go-nitro/netscaler"
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"fmt"
@@ -55,11 +55,11 @@ func createAppfwfieldtypeFunc(d *schema.ResourceData, meta interface{}) error {
 		Comment:    d.Get("comment").(string),
 		Name:       appfwfieldtypeName,
 		Nocharmaps: d.Get("nocharmaps").(bool),
-		Priority:   d.Get("priority").(int),
+		Priority:   uint32(d.Get("priority").(int)),
 		Regex:      d.Get("regex").(string),
 	}
 
-	_, err := client.AddResource(netscaler.Appfwfieldtype.Type(), appfwfieldtypeName, &appfwfieldtype)
+	_, err := client.AddResource(service.Appfwfieldtype.Type(), appfwfieldtypeName, &appfwfieldtype)
 	if err != nil {
 		return err
 	}
@@ -79,7 +79,7 @@ func readAppfwfieldtypeFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	appfwfieldtypeName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading appfwfieldtype state %s", appfwfieldtypeName)
-	data, err := client.FindResource(netscaler.Appfwfieldtype.Type(), appfwfieldtypeName)
+	data, err := client.FindResource(service.Appfwfieldtype.Type(), appfwfieldtypeName)
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing appfwfieldtype state %s", appfwfieldtypeName)
 		d.SetId("")
@@ -123,7 +123,7 @@ func updateAppfwfieldtypeFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("priority") {
 		log.Printf("[DEBUG]  citrixadc-provider: Priority has changed for appfwfieldtype %s, starting update", appfwfieldtypeName)
-		appfwfieldtype.Priority = d.Get("priority").(int)
+		appfwfieldtype.Priority = uint32(d.Get("priority").(int))
 		hasChange = true
 	}
 	// if d.HasChange("regex") {
@@ -133,7 +133,7 @@ func updateAppfwfieldtypeFunc(d *schema.ResourceData, meta interface{}) error {
 	// }
 
 	if hasChange {
-		_, err := client.UpdateResource(netscaler.Appfwfieldtype.Type(), appfwfieldtypeName, &appfwfieldtype)
+		_, err := client.UpdateResource(service.Appfwfieldtype.Type(), appfwfieldtypeName, &appfwfieldtype)
 		if err != nil {
 			return fmt.Errorf("Error updating appfwfieldtype %s", appfwfieldtypeName)
 		}
@@ -145,7 +145,7 @@ func deleteAppfwfieldtypeFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppfwfieldtypeFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appfwfieldtypeName := d.Id()
-	err := client.DeleteResource(netscaler.Appfwfieldtype.Type(), appfwfieldtypeName)
+	err := client.DeleteResource(service.Appfwfieldtype.Type(), appfwfieldtypeName)
 	if err != nil {
 		return err
 	}

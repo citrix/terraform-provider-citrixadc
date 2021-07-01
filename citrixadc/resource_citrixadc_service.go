@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/chiradeep/go-nitro/config/basic"
-	"github.com/chiradeep/go-nitro/config/lb"
-	"github.com/chiradeep/go-nitro/config/ssl"
-	"github.com/chiradeep/go-nitro/netscaler"
+	"github.com/citrix/adc-nitro-go/resource/config/basic"
+	"github.com/citrix/adc-nitro-go/resource/config/lb"
+	"github.com/citrix/adc-nitro-go/resource/config/ssl"
+	"github.com/citrix/adc-nitro-go/service"
+
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -330,7 +331,7 @@ func createServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	lbmonitor, mok := d.GetOk("lbmonitor")
 	if mok {
-		exists := client.ResourceExists(netscaler.Lbmonitor.Type(), lbmonitor.(string))
+		exists := client.ResourceExists(service.Lbmonitor.Type(), lbmonitor.(string))
 		if !exists {
 			return fmt.Errorf("[ERROR] netscaler-provider: Specified lb monitor does not exist on netscaler!")
 		}
@@ -338,12 +339,12 @@ func createServiceFunc(d *schema.ResourceData, meta interface{}) error {
 
 	lbvserver, lok := d.GetOk("lbvserver")
 	if lok {
-		exists := client.ResourceExists(netscaler.Lbvserver.Type(), lbvserver.(string))
+		exists := client.ResourceExists(service.Lbvserver.Type(), lbvserver.(string))
 		if !exists {
 			return fmt.Errorf("[ERROR] netscaler-provider: Specified lb vserver does not exist on netscaler!")
 		}
 	}
-	service := basic.Service{
+	svc := basic.Service{
 		Name:                         serviceName,
 		Accessdown:                   d.Get("accessdown").(string),
 		All:                          d.Get("all").(bool),
@@ -353,51 +354,50 @@ func createServiceFunc(d *schema.ResourceData, meta interface{}) error {
 		Cip:                          d.Get("cip").(string),
 		Cipheader:                    d.Get("cipheader").(string),
 		Cka:                          d.Get("cka").(string),
-		Cleartextport:                d.Get("cleartextport").(int),
-		Clttimeout:                   d.Get("clttimeout").(int),
+		Cleartextport:                int32(d.Get("cleartextport").(int)),
+		Clttimeout:                   uint64(d.Get("clttimeout").(int)),
 		Cmp:                          d.Get("cmp").(string),
 		Comment:                      d.Get("comment").(string),
 		Contentinspectionprofilename: d.Get("contentinspectionprofilename").(string),
 		Customserverid:               d.Get("customserverid").(string),
 		Dnsprofilename:               d.Get("dnsprofilename").(string),
 		Downstateflush:               d.Get("downstateflush").(string),
-		Hashid:                       d.Get("hashid").(int),
+		Hashid:                       uint32(d.Get("hashid").(int)),
 		Healthmonitor:                d.Get("healthmonitor").(string),
 		Httpprofilename:              d.Get("httpprofilename").(string),
 		Internal:                     d.Get("internal").(bool),
 		Ip:                           d.Get("ip").(string),
 		Ipaddress:                    d.Get("ipaddress").(string),
-		Maxbandwidth:                 d.Get("maxbandwidth").(int),
-		Maxclient:                    d.Get("maxclient").(int),
-		Maxreq:                       d.Get("maxreq").(int),
+		Maxbandwidth:                 uint32(d.Get("maxbandwidth").(int)),
+		Maxclient:                    uint32(d.Get("maxclient").(int)),
+		Maxreq:                       uint32(d.Get("maxreq").(int)),
 		Monconnectionclose:           d.Get("monconnectionclose").(string),
 		Monitornamesvc:               d.Get("monitornamesvc").(string),
-		Monthreshold:                 d.Get("monthreshold").(int),
+		Monthreshold:                 uint32(d.Get("monthreshold").(int)),
 		Netprofile:                   d.Get("netprofile").(string),
 		Pathmonitor:                  d.Get("pathmonitor").(string),
 		Pathmonitorindv:              d.Get("pathmonitorindv").(string),
-		Port:                         d.Get("port").(int),
+		Port:                         int32(d.Get("port").(int)),
 		Processlocal:                 d.Get("processlocal").(string),
-		Riseapbrstatsmsgcode:         d.Get("riseapbrstatsmsgcode").(int),
 		Rtspsessionidremap:           d.Get("rtspsessionidremap").(string),
 		Sc:                           d.Get("sc").(string),
-		Serverid:                     d.Get("serverid").(int),
+		Serverid:                     uint32(d.Get("serverid").(int)),
 		Servername:                   d.Get("servername").(string),
 		Servicetype:                  d.Get("servicetype").(string),
 		Sp:                           d.Get("sp").(string),
 		State:                        d.Get("state").(string),
-		Svrtimeout:                   d.Get("svrtimeout").(int),
+		Svrtimeout:                   uint64(d.Get("svrtimeout").(int)),
 		Tcpb:                         d.Get("tcpb").(string),
 		Tcpprofilename:               d.Get("tcpprofilename").(string),
-		Td:                           d.Get("td").(int),
+		Td:                           uint32(d.Get("td").(int)),
 		Useproxyport:                 d.Get("useproxyport").(string),
 		Usip:                         d.Get("usip").(string),
-		Weight:                       d.Get("weight").(int),
+		Weight:                       uint32(d.Get("weight").(int)),
 	}
 
-	_, err := client.AddResource(netscaler.Service.Type(), serviceName, &service)
+	_, err := client.AddResource(service.Service.Type(), serviceName, &svc)
 	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: could not add resource %s of type %s", netscaler.Service.Type(), serviceName)
+		log.Printf("[ERROR] netscaler-provider: could not add resource %s of type %s", service.Service.Type(), serviceName)
 		return err
 	}
 	if lok { //lbvserver is specified
@@ -407,10 +407,10 @@ func createServiceFunc(d *schema.ResourceData, meta interface{}) error {
 			Servicename: serviceName,
 		}
 		log.Printf("[INFO] netscaler-provider:  Binding service %s to lbvserver %s", serviceName, lbvserverName)
-		err = client.BindResource(netscaler.Lbvserver.Type(), lbvserverName, netscaler.Service.Type(), serviceName, &binding)
+		err = client.BindResource(service.Lbvserver.Type(), lbvserverName, service.Service.Type(), serviceName, &binding)
 		if err != nil {
 			log.Printf("[ERROR] netscaler-provider:  Failed to bind service %s to lbvserver %s", serviceName, lbvserverName)
-			err2 := client.DeleteResource(netscaler.Service.Type(), serviceName)
+			err2 := client.DeleteResource(service.Service.Type(), serviceName)
 			if err2 != nil {
 				log.Printf("[ERROR] netscaler-provider:  Failed to delete service %s after bind to lb vserver failed", serviceName)
 				return fmt.Errorf("[ERROR] netscaler-provider:  Failed to delete service %s after bind to lbvserver failed", serviceName)
@@ -425,10 +425,10 @@ func createServiceFunc(d *schema.ResourceData, meta interface{}) error {
 			Servicename: serviceName,
 		}
 		log.Printf("[INFO] netscaler-provider:  Binding service %s to lbmonitor %s", serviceName, lbmonitorName)
-		err = client.BindResource(netscaler.Lbmonitor.Type(), lbmonitorName, netscaler.Service.Type(), serviceName, &binding)
+		err = client.BindResource(service.Lbmonitor.Type(), lbmonitorName, service.Service.Type(), serviceName, &binding)
 		if err != nil {
 			log.Printf("[ERROR] netscaler-provider:  Failed to bind service %s to lbmonitor %s", serviceName, lbmonitorName)
-			err2 := client.DeleteResource(netscaler.Service.Type(), serviceName)
+			err2 := client.DeleteResource(service.Service.Type(), serviceName)
 			if err2 != nil {
 				log.Printf("[ERROR] netscaler-provider:  Failed to delete service %s after bind to lbmonitor failed", serviceName)
 				return fmt.Errorf("[ERROR] netscaler-provider:  Failed to delete service %s after bind to lbmonitor failed", serviceName)
@@ -459,7 +459,7 @@ func readServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	serviceName := d.Id()
 	log.Printf("[DEBUG] netscaler-provider: Reading service state %s", serviceName)
-	data, err := client.FindResource(netscaler.Service.Type(), serviceName)
+	data, err := client.FindResource(service.Service.Type(), serviceName)
 	log.Printf("Reading service state %v", data)
 	if err != nil {
 		log.Printf("[WARN] netscaler-provider: Clearing service state %s", serviceName)
@@ -469,7 +469,7 @@ func readServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	//read bound vserver.
 	var vserverBindings []map[string]interface{}
 	if _, ok := d.GetOk("lbvserver"); ok {
-		vserverBindings, err = client.FindResourceArray(netscaler.Svcbindings.Type(), serviceName)
+		vserverBindings, err = client.FindResourceArray(service.Svcbindings.Type(), serviceName)
 		if err != nil {
 			log.Printf("[WARN] netscaler-provider: Clearing service state %s", serviceName)
 			d.SetId("")
@@ -477,7 +477,7 @@ func readServiceFunc(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 	//read bound lb monitor.
-	boundMonitors, err := client.FindAllBoundResources(netscaler.Service.Type(), serviceName, netscaler.Lbmonitor.Type())
+	boundMonitors, err := client.FindAllBoundResources(service.Service.Type(), serviceName, service.Lbmonitor.Type())
 	if err != nil {
 		//This is actually OK in most cases
 		log.Printf("[WARN] netscaler-provider: Clearing servicestate %s", serviceName)
@@ -584,212 +584,207 @@ func updateServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	hasChange := false
 	lbvserverChanged := false
 	lbmonitorChanged := false
-	service := basic.Service{
+	svc := basic.Service{
 		Name: d.Get("name").(string),
 	}
 	if d.HasChange("accessdown") {
 		log.Printf("[DEBUG] netscaler-provider:  Accessdown has changed for service %s, starting update", serviceName)
-		service.Accessdown = d.Get("accessdown").(string)
+		svc.Accessdown = d.Get("accessdown").(string)
 		hasChange = true
 	}
 	if d.HasChange("all") {
 		log.Printf("[DEBUG] netscaler-provider:  All has changed for service %s, starting update", serviceName)
-		service.All = d.Get("all").(bool)
+		svc.All = d.Get("all").(bool)
 		hasChange = true
 	}
 	if d.HasChange("appflowlog") {
 		log.Printf("[DEBUG] netscaler-provider:  Appflowlog has changed for service %s, starting update", serviceName)
-		service.Appflowlog = d.Get("appflowlog").(string)
+		svc.Appflowlog = d.Get("appflowlog").(string)
 		hasChange = true
 	}
 	if d.HasChange("cacheable") {
 		log.Printf("[DEBUG] netscaler-provider:  Cacheable has changed for service %s, starting update", serviceName)
-		service.Cacheable = d.Get("cacheable").(string)
+		svc.Cacheable = d.Get("cacheable").(string)
 		hasChange = true
 	}
 	if d.HasChange("cachetype") {
 		log.Printf("[DEBUG] netscaler-provider:  Cachetype has changed for service %s, starting update", serviceName)
-		service.Cachetype = d.Get("cachetype").(string)
+		svc.Cachetype = d.Get("cachetype").(string)
 		hasChange = true
 	}
 	if d.HasChange("cip") {
 		log.Printf("[DEBUG] netscaler-provider:  Cip has changed for service %s, starting update", serviceName)
-		service.Cip = d.Get("cip").(string)
+		svc.Cip = d.Get("cip").(string)
 		hasChange = true
 	}
 	if d.HasChange("cipheader") {
 		log.Printf("[DEBUG] netscaler-provider:  Cipheader has changed for service %s, starting update", serviceName)
-		service.Cipheader = d.Get("cipheader").(string)
+		svc.Cipheader = d.Get("cipheader").(string)
 		hasChange = true
 	}
 	if d.HasChange("cka") {
 		log.Printf("[DEBUG] netscaler-provider:  Cka has changed for service %s, starting update", serviceName)
-		service.Cka = d.Get("cka").(string)
+		svc.Cka = d.Get("cka").(string)
 		hasChange = true
 	}
 	if d.HasChange("cleartextport") {
 		log.Printf("[DEBUG] netscaler-provider:  Cleartextport has changed for service %s, starting update", serviceName)
-		service.Cleartextport = d.Get("cleartextport").(int)
+		svc.Cleartextport = int32(d.Get("cleartextport").(int))
 		hasChange = true
 	}
 	if d.HasChange("clttimeout") {
 		log.Printf("[DEBUG] netscaler-provider:  Clttimeout has changed for service %s, starting update", serviceName)
-		service.Clttimeout = d.Get("clttimeout").(int)
+		svc.Clttimeout = uint64(d.Get("clttimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("cmp") {
 		log.Printf("[DEBUG] netscaler-provider:  Cmp has changed for service %s, starting update", serviceName)
-		service.Cmp = d.Get("cmp").(string)
+		svc.Cmp = d.Get("cmp").(string)
 		hasChange = true
 	}
 	if d.HasChange("comment") {
 		log.Printf("[DEBUG] netscaler-provider:  Comment has changed for service %s, starting update", serviceName)
-		service.Comment = d.Get("comment").(string)
+		svc.Comment = d.Get("comment").(string)
 		hasChange = true
 	}
 	if d.HasChange("contentinspectionprofilename") {
 		log.Printf("[DEBUG]  netscaler-provider: Contentinspectionprofilename has changed for service %s, starting update", serviceName)
-		service.Contentinspectionprofilename = d.Get("contentinspectionprofilename").(string)
+		svc.Contentinspectionprofilename = d.Get("contentinspectionprofilename").(string)
 		hasChange = true
 	}
 	if d.HasChange("customserverid") {
 		log.Printf("[DEBUG] netscaler-provider:  Customserverid has changed for service %s, starting update", serviceName)
-		service.Customserverid = d.Get("customserverid").(string)
+		svc.Customserverid = d.Get("customserverid").(string)
 		hasChange = true
 	}
 	if d.HasChange("dnsprofilename") {
 		log.Printf("[DEBUG]  netscaler-provider: Dnsprofilename has changed for service %s, starting update", serviceName)
-		service.Dnsprofilename = d.Get("dnsprofilename").(string)
+		svc.Dnsprofilename = d.Get("dnsprofilename").(string)
 		hasChange = true
 	}
 	if d.HasChange("downstateflush") {
 		log.Printf("[DEBUG] netscaler-provider:  Downstateflush has changed for service %s, starting update", serviceName)
-		service.Downstateflush = d.Get("downstateflush").(string)
+		svc.Downstateflush = d.Get("downstateflush").(string)
 		hasChange = true
 	}
 	if d.HasChange("hashid") {
 		log.Printf("[DEBUG] netscaler-provider:  Hashid has changed for service %s, starting update", serviceName)
-		service.Hashid = d.Get("hashid").(int)
+		svc.Hashid = uint32(d.Get("hashid").(int))
 		hasChange = true
 	}
 	if d.HasChange("healthmonitor") {
 		log.Printf("[DEBUG] netscaler-provider:  Healthmonitor has changed for service %s, starting update", serviceName)
-		service.Healthmonitor = d.Get("healthmonitor").(string)
+		svc.Healthmonitor = d.Get("healthmonitor").(string)
 		hasChange = true
 	}
 	if d.HasChange("httpprofilename") {
 		log.Printf("[DEBUG] netscaler-provider:  Httpprofilename has changed for service %s, starting update", serviceName)
-		service.Httpprofilename = d.Get("httpprofilename").(string)
+		svc.Httpprofilename = d.Get("httpprofilename").(string)
 		hasChange = true
 	}
 	if d.HasChange("internal") {
 		log.Printf("[DEBUG] netscaler-provider:  Internal has changed for service %s, starting update", serviceName)
-		service.Internal = d.Get("internal").(bool)
+		svc.Internal = d.Get("internal").(bool)
 		hasChange = true
 	}
 	if d.HasChange("ip") {
 		log.Printf("[DEBUG] netscaler-provider:  Ip has changed for service %s, starting update", serviceName)
-		service.Ipaddress = d.Get("ip").(string)
+		svc.Ipaddress = d.Get("ip").(string)
 		hasChange = true
 	}
 	if d.HasChange("ipaddress") {
 		log.Printf("[DEBUG] netscaler-provider:  Ipaddress has changed for service %s, starting update", serviceName)
-		service.Ipaddress = d.Get("ipaddress").(string)
+		svc.Ipaddress = d.Get("ipaddress").(string)
 		hasChange = true
 	}
 	if d.HasChange("maxbandwidth") {
 		log.Printf("[DEBUG] netscaler-provider:  Maxbandwidth has changed for service %s, starting update", serviceName)
-		service.Maxbandwidth = d.Get("maxbandwidth").(int)
+		svc.Maxbandwidth = uint32(d.Get("maxbandwidth").(int))
 		hasChange = true
 	}
 	if d.HasChange("maxclient") {
 		log.Printf("[DEBUG] netscaler-provider:  Maxclient has changed for service %s, starting update", serviceName)
-		service.Maxclient = d.Get("maxclient").(int)
+		svc.Maxclient = uint32(d.Get("maxclient").(int))
 		hasChange = true
 	}
 	if d.HasChange("maxreq") {
 		log.Printf("[DEBUG] netscaler-provider:  Maxreq has changed for service %s, starting update", serviceName)
-		service.Maxreq = d.Get("maxreq").(int)
+		svc.Maxreq = uint32(d.Get("maxreq").(int))
 		hasChange = true
 	}
 	if d.HasChange("monconnectionclose") {
 		log.Printf("[DEBUG]  netscaler-provider: Monconnectionclose has changed for service %s, starting update", serviceName)
-		service.Monconnectionclose = d.Get("monconnectionclose").(string)
+		svc.Monconnectionclose = d.Get("monconnectionclose").(string)
 		hasChange = true
 	}
 	if d.HasChange("monitornamesvc") {
 		log.Printf("[DEBUG] netscaler-provider:  Monitornamesvc has changed for service %s, starting update", serviceName)
-		service.Monitornamesvc = d.Get("monitornamesvc").(string)
+		svc.Monitornamesvc = d.Get("monitornamesvc").(string)
 		hasChange = true
 	}
 	if d.HasChange("monthreshold") {
 		log.Printf("[DEBUG] netscaler-provider:  Monthreshold has changed for service %s, starting update", serviceName)
-		service.Monthreshold = d.Get("monthreshold").(int)
+		svc.Monthreshold = uint32(d.Get("monthreshold").(int))
 		hasChange = true
 	}
 	if d.HasChange("name") {
 		log.Printf("[DEBUG] netscaler-provider:  Name has changed for service %s, starting update", serviceName)
-		service.Name = d.Get("name").(string)
+		svc.Name = d.Get("name").(string)
 		hasChange = true
 	}
 	if d.HasChange("netprofile") {
 		log.Printf("[DEBUG] netscaler-provider:  Netprofile has changed for service %s, starting update", serviceName)
-		service.Netprofile = d.Get("netprofile").(string)
+		svc.Netprofile = d.Get("netprofile").(string)
 		hasChange = true
 	}
 	if d.HasChange("pathmonitor") {
 		log.Printf("[DEBUG] netscaler-provider:  Pathmonitor has changed for service %s, starting update", serviceName)
-		service.Pathmonitor = d.Get("pathmonitor").(string)
+		svc.Pathmonitor = d.Get("pathmonitor").(string)
 		hasChange = true
 	}
 	if d.HasChange("pathmonitorindv") {
 		log.Printf("[DEBUG] netscaler-provider:  Pathmonitorindv has changed for service %s, starting update", serviceName)
-		service.Pathmonitorindv = d.Get("pathmonitorindv").(string)
+		svc.Pathmonitorindv = d.Get("pathmonitorindv").(string)
 		hasChange = true
 	}
 	if d.HasChange("port") {
 		log.Printf("[DEBUG] netscaler-provider:  Port has changed for service %s, starting update", serviceName)
-		service.Port = d.Get("port").(int)
+		svc.Port = int32(d.Get("port").(int))
 		hasChange = true
 	}
 	if d.HasChange("processlocal") {
 		log.Printf("[DEBUG]  netscaler-provider: Processlocal has changed for service %s, starting update", serviceName)
-		service.Processlocal = d.Get("processlocal").(string)
-		hasChange = true
-	}
-	if d.HasChange("riseapbrstatsmsgcode") {
-		log.Printf("[DEBUG]  netscaler-provider: Riseapbrstatsmsgcode has changed for service %s, starting update", serviceName)
-		service.Riseapbrstatsmsgcode = d.Get("riseapbrstatsmsgcode").(int)
+		svc.Processlocal = d.Get("processlocal").(string)
 		hasChange = true
 	}
 	if d.HasChange("rtspsessionidremap") {
 		log.Printf("[DEBUG] netscaler-provider:  Rtspsessionidremap has changed for service %s, starting update", serviceName)
-		service.Rtspsessionidremap = d.Get("rtspsessionidremap").(string)
+		svc.Rtspsessionidremap = d.Get("rtspsessionidremap").(string)
 		hasChange = true
 	}
 	if d.HasChange("sc") {
 		log.Printf("[DEBUG] netscaler-provider:  Sc has changed for service %s, starting update", serviceName)
-		service.Sc = d.Get("sc").(string)
+		svc.Sc = d.Get("sc").(string)
 		hasChange = true
 	}
 	if d.HasChange("serverid") {
 		log.Printf("[DEBUG] netscaler-provider:  Serverid has changed for service %s, starting update", serviceName)
-		service.Serverid = d.Get("serverid").(int)
+		svc.Serverid = uint32(d.Get("serverid").(int))
 		hasChange = true
 	}
 	if d.HasChange("servername") {
 		log.Printf("[DEBUG] netscaler-provider:  Servername has changed for service %s, starting update", serviceName)
-		service.Servername = d.Get("servername").(string)
+		svc.Servername = d.Get("servername").(string)
 		hasChange = true
 	}
 	if d.HasChange("servicetype") {
 		log.Printf("[DEBUG] netscaler-provider:  Servicetype has changed for service %s, starting update", serviceName)
-		service.Servicetype = d.Get("servicetype").(string)
+		svc.Servicetype = d.Get("servicetype").(string)
 		hasChange = true
 	}
 	if d.HasChange("sp") {
 		log.Printf("[DEBUG] netscaler-provider:  Sp has changed for service %s, starting update", serviceName)
-		service.Sp = d.Get("sp").(string)
+		svc.Sp = d.Get("sp").(string)
 		hasChange = true
 	}
 	if d.HasChange("state") {
@@ -798,37 +793,37 @@ func updateServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("svrtimeout") {
 		log.Printf("[DEBUG] netscaler-provider:  Svrtimeout has changed for service %s, starting update", serviceName)
-		service.Svrtimeout = d.Get("svrtimeout").(int)
+		svc.Svrtimeout = uint64(d.Get("svrtimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("tcpb") {
 		log.Printf("[DEBUG] netscaler-provider:  Tcpb has changed for service %s, starting update", serviceName)
-		service.Tcpb = d.Get("tcpb").(string)
+		svc.Tcpb = d.Get("tcpb").(string)
 		hasChange = true
 	}
 	if d.HasChange("tcpprofilename") {
 		log.Printf("[DEBUG] netscaler-provider:  Tcpprofilename has changed for service %s, starting update", serviceName)
-		service.Tcpprofilename = d.Get("tcpprofilename").(string)
+		svc.Tcpprofilename = d.Get("tcpprofilename").(string)
 		hasChange = true
 	}
 	if d.HasChange("td") {
 		log.Printf("[DEBUG] netscaler-provider:  Td has changed for service %s, starting update", serviceName)
-		service.Td = d.Get("td").(int)
+		svc.Td = uint32(d.Get("td").(int))
 		hasChange = true
 	}
 	if d.HasChange("useproxyport") {
 		log.Printf("[DEBUG] netscaler-provider:  Useproxyport has changed for service %s, starting update", serviceName)
-		service.Useproxyport = d.Get("useproxyport").(string)
+		svc.Useproxyport = d.Get("useproxyport").(string)
 		hasChange = true
 	}
 	if d.HasChange("usip") {
 		log.Printf("[DEBUG] netscaler-provider:  Usip has changed for service %s, starting update", serviceName)
-		service.Usip = d.Get("usip").(string)
+		svc.Usip = d.Get("usip").(string)
 		hasChange = true
 	}
 	if d.HasChange("weight") {
 		log.Printf("[DEBUG] netscaler-provider:  Weight has changed for service %s, starting update", serviceName)
-		service.Weight = d.Get("weight").(int)
+		svc.Weight = uint32(d.Get("weight").(int))
 		hasChange = true
 	}
 	if d.HasChange("lbmonitor") {
@@ -850,7 +845,7 @@ func updateServiceFunc(d *schema.ResourceData, meta interface{}) error {
 		oldLbmonitor, _ := d.GetChange("lbmonitor")
 		oldLbmonitorName := oldLbmonitor.(string)
 		if oldLbmonitorName != "" {
-			err := client.UnbindResource(netscaler.Lbmonitor.Type(), oldLbmonitorName, netscaler.Service.Type(), serviceName, "servicename")
+			err := client.UnbindResource(service.Lbmonitor.Type(), oldLbmonitorName, service.Service.Type(), serviceName, "servicename")
 			if err != nil {
 				return fmt.Errorf("[ERROR] netscaler-provider: Error unbinding lbmonitor from service %s", oldLbmonitorName)
 			}
@@ -863,7 +858,7 @@ func updateServiceFunc(d *schema.ResourceData, meta interface{}) error {
 		oldLbvserver, _ := d.GetChange("lbvserver")
 		oldLbvserverName := oldLbvserver.(string)
 		if oldLbvserverName != "" {
-			err := client.UnbindResource(netscaler.Lbvserver.Type(), oldLbvserverName, netscaler.Service.Type(), serviceName, "servicename")
+			err := client.UnbindResource(service.Lbvserver.Type(), oldLbvserverName, service.Service.Type(), serviceName, "servicename")
 			if err != nil {
 				return fmt.Errorf("[ERROR] netscaler-provider: Error unbinding lbvserver from service %s", oldLbvserverName)
 			}
@@ -872,7 +867,7 @@ func updateServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if hasChange {
-		_, err := client.UpdateResource(netscaler.Service.Type(), serviceName, &service)
+		_, err := client.UpdateResource(service.Service.Type(), serviceName, &svc)
 		if err != nil {
 			return fmt.Errorf("[ERROR] netscaler-provider: Error updating service %s", serviceName)
 		}
@@ -886,7 +881,7 @@ func updateServiceFunc(d *schema.ResourceData, meta interface{}) error {
 			Servicename: serviceName,
 		}
 		log.Printf("[INFO] netscaler-provider:  Binding monitor %s to service %s", lbmonitorName, serviceName)
-		err := client.BindResource(netscaler.Lbmonitor.Type(), lbmonitorName, netscaler.Service.Type(), serviceName, &binding)
+		err := client.BindResource(service.Lbmonitor.Type(), lbmonitorName, service.Service.Type(), serviceName, &binding)
 		if err != nil {
 			log.Printf("[ERROR] netscaler-provider:  Failed to bind  lbmonitor %s to service %s", lbmonitorName, serviceName)
 			return fmt.Errorf("[ERROR] netscaler-provider:  Failed to bind lb monitor %s to service %s", lbmonitorName, serviceName)
@@ -901,7 +896,7 @@ func updateServiceFunc(d *schema.ResourceData, meta interface{}) error {
 			Servicename: serviceName,
 		}
 		log.Printf("[INFO] netscaler-provider:  Binding vserver %s to service %s", lbvserverName, serviceName)
-		err := client.BindResource(netscaler.Lbvserver.Type(), lbvserverName, netscaler.Service.Type(), serviceName, &binding)
+		err := client.BindResource(service.Lbvserver.Type(), lbvserverName, service.Service.Type(), serviceName, &binding)
 		if err != nil {
 			log.Printf("[ERROR] netscaler-provider:  Failed to bind  lbvserver %s to service %s", lbvserverName, serviceName)
 			return fmt.Errorf("[ERROR] netscaler-provider:  Failed to bind lb vserver %s to service %s", lbvserverName, serviceName)
@@ -934,7 +929,7 @@ func deleteServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	defer meta.(*NetScalerNitroClient).lock.Unlock()
 
 	serviceName := d.Id()
-	err := client.DeleteResource(netscaler.Service.Type(), serviceName)
+	err := client.DeleteResource(service.Service.Type(), serviceName)
 	if err != nil {
 		return err
 	}
@@ -944,12 +939,12 @@ func deleteServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func doServiceStateChange(d *schema.ResourceData, client *netscaler.NitroClient) error {
+func doServiceStateChange(d *schema.ResourceData, client *service.NitroClient) error {
 	log.Printf("[DEBUG]  netscaler-provider: In doServiceStateChange")
 
 	// We need a new instance of the struct since
 	// ActOnResource will fail if we put in superfluous attributes
-	service := basic.Service{
+	svc := basic.Service{
 		Name: d.Get("name").(string),
 	}
 
@@ -957,15 +952,15 @@ func doServiceStateChange(d *schema.ResourceData, client *netscaler.NitroClient)
 
 	// Enable action
 	if newstate == "ENABLED" {
-		err := client.ActOnResource(netscaler.Service.Type(), service, "enable")
+		err := client.ActOnResource(service.Service.Type(), svc, "enable")
 		if err != nil {
 			return err
 		}
 	} else if newstate == "DISABLED" {
 		// Add attributes relevant to the disable operation
-		service.Delay = d.Get("delay").(int)
-		service.Graceful = d.Get("graceful").(string)
-		err := client.ActOnResource(netscaler.Service.Type(), service, "disable")
+		svc.Delay = uint64(d.Get("delay").(int))
+		svc.Graceful = d.Get("graceful").(string)
+		err := client.ActOnResource(service.Service.Type(), svc, "disable")
 		if err != nil {
 			return err
 		}
@@ -987,7 +982,7 @@ func hasSslserviceProperties(d *schema.ResourceData) bool {
 	return hasProperties
 }
 
-func readSslservice(d *schema.ResourceData, client *netscaler.NitroClient) error {
+func readSslservice(d *schema.ResourceData, client *service.NitroClient) error {
 	log.Printf("[DEBUG]  netscaler-provider: In readSslservice")
 
 	// Only go ahead and read if sslservice parameters are defined
@@ -997,7 +992,7 @@ func readSslservice(d *schema.ResourceData, client *netscaler.NitroClient) error
 
 	// Fallthrough
 	sslserviceName := d.Get("name").(string)
-	findParams := netscaler.FindParams{
+	findParams := service.FindParams{
 		ResourceType: "sslservice",
 		ResourceName: sslserviceName,
 	}
@@ -1013,7 +1008,7 @@ func readSslservice(d *schema.ResourceData, client *netscaler.NitroClient) error
 	return nil
 }
 
-func syncSslservice(d *schema.ResourceData, client *netscaler.NitroClient) error {
+func syncSslservice(d *schema.ResourceData, client *service.NitroClient) error {
 	log.Printf("[DEBUG]  netscaler-provider: In syncSslservice")
 	if !hasSslserviceProperties(d) {
 		return nil

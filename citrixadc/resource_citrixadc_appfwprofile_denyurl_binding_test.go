@@ -21,7 +21,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/chiradeep/go-nitro/netscaler"
+	"github.com/citrix/adc-nitro-go/service"
+
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
@@ -117,8 +118,8 @@ func testAccCheckAppfwprofile_denyurl_bindingExist(n string, id *string) resourc
 		profileName := idSlice[0]
 		denyURL := idSlice[1]
 
-		findParams := netscaler.FindParams{
-			ResourceType: netscaler.Appfwprofile_denyurl_binding.Type(),
+		findParams := service.FindParams{
+			ResourceType: service.Appfwprofile_denyurl_binding.Type(),
 			ResourceName: profileName,
 		}
 		findParams.FilterMap = make(map[string]string)
@@ -149,7 +150,7 @@ func testAccCheckAppfwprofile_denyurl_bindingDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(netscaler.Appfwprofile_denyurl_binding.Type(), rs.Primary.ID)
+		_, err := nsClient.FindResource(service.Appfwprofile_denyurl_binding.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("appfwprofile_denyurl_binding %s still exists", rs.Primary.ID)
 		}

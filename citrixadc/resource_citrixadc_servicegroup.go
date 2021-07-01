@@ -1,9 +1,10 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/basic"
-	"github.com/chiradeep/go-nitro/config/lb"
-	"github.com/chiradeep/go-nitro/netscaler"
+	"github.com/citrix/adc-nitro-go/resource/config/basic"
+	"github.com/citrix/adc-nitro-go/resource/config/lb"
+	"github.com/citrix/adc-nitro-go/service"
+
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 
@@ -321,7 +322,7 @@ func createServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 
 	lbmonitor, mok := d.GetOk("lbmonitor")
 	if mok {
-		exists := client.ResourceExists(netscaler.Lbmonitor.Type(), lbmonitor.(string))
+		exists := client.ResourceExists(service.Lbmonitor.Type(), lbmonitor.(string))
 		if !exists {
 			return fmt.Errorf("[ERROR] netscaler-provider: Specified lb monitor does not exist on netscaler!")
 		}
@@ -332,7 +333,7 @@ func createServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 	if lok {
 		lbvservers = expandStringList(l.(*schema.Set).List())
 		for _, lbvserver := range lbvservers {
-			exists := client.ResourceExists(netscaler.Lbvserver.Type(), lbvserver)
+			exists := client.ResourceExists(service.Lbvserver.Type(), lbvserver)
 			if !exists {
 				return fmt.Errorf("[ERROR] netscaler-provider: Specified lb vserver %s does not exist on netscaler!", lbvserver)
 			}
@@ -352,57 +353,56 @@ func createServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	servicegroup := basic.Servicegroup{
-		Appflowlog:           d.Get("appflowlog").(string),
-		Autodisabledelay:     d.Get("autodisabledelay").(int),
-		Autodisablegraceful:  d.Get("autodisablegraceful").(string),
-		Autoscale:            d.Get("autoscale").(string),
-		Cacheable:            d.Get("cacheable").(string),
-		Cachetype:            d.Get("cachetype").(string),
-		Cip:                  d.Get("cip").(string),
-		Cipheader:            d.Get("cipheader").(string),
-		Cka:                  d.Get("cka").(string),
-		Clttimeout:           d.Get("clttimeout").(int),
-		Cmp:                  d.Get("cmp").(string),
-		Comment:              d.Get("comment").(string),
-		Customserverid:       d.Get("customserverid").(string),
-		Dbsttl:               d.Get("dbsttl").(int),
-		Downstateflush:       d.Get("downstateflush").(string),
-		Dupweight:            d.Get("dupweight").(int),
-		Hashid:               d.Get("hashid").(int),
-		Healthmonitor:        d.Get("healthmonitor").(string),
-		Httpprofilename:      d.Get("httpprofilename").(string),
-		Includemembers:       d.Get("includemembers").(bool),
-		Maxbandwidth:         d.Get("maxbandwidth").(int),
-		Maxclient:            d.Get("maxclient").(int),
-		Maxreq:               d.Get("maxreq").(int),
-		Memberport:           d.Get("memberport").(int),
-		Monconnectionclose:   d.Get("monconnectionclose").(string),
-		Monitornamesvc:       d.Get("monitornamesvc").(string),
-		Monthreshold:         d.Get("monthreshold").(int),
-		Nameserver:           d.Get("nameserver").(string),
-		Netprofile:           d.Get("netprofile").(string),
-		Pathmonitor:          d.Get("pathmonitor").(string),
-		Pathmonitorindv:      d.Get("pathmonitorindv").(string),
-		Port:                 d.Get("port").(int),
-		Riseapbrstatsmsgcode: d.Get("riseapbrstatsmsgcode").(int),
-		Rtspsessionidremap:   d.Get("rtspsessionidremap").(string),
-		Sc:                   d.Get("sc").(string),
-		Serverid:             d.Get("serverid").(int),
-		Servername:           d.Get("servername").(string),
-		Servicegroupname:     d.Get("servicegroupname").(string),
-		Servicetype:          d.Get("servicetype").(string),
-		Sp:                   d.Get("sp").(string),
-		State:                d.Get("state").(string),
-		Svrtimeout:           d.Get("svrtimeout").(int),
-		Tcpb:                 d.Get("tcpb").(string),
-		Tcpprofilename:       d.Get("tcpprofilename").(string),
-		Td:                   d.Get("td").(int),
-		Useproxyport:         d.Get("useproxyport").(string),
-		Usip:                 d.Get("usip").(string),
-		Weight:               d.Get("weight").(int),
+		Appflowlog:          d.Get("appflowlog").(string),
+		Autodisabledelay:    uint64(d.Get("autodisabledelay").(int)),
+		Autodisablegraceful: d.Get("autodisablegraceful").(string),
+		Autoscale:           d.Get("autoscale").(string),
+		Cacheable:           d.Get("cacheable").(string),
+		Cachetype:           d.Get("cachetype").(string),
+		Cip:                 d.Get("cip").(string),
+		Cipheader:           d.Get("cipheader").(string),
+		Cka:                 d.Get("cka").(string),
+		Clttimeout:          uint64(d.Get("clttimeout").(int)),
+		Cmp:                 d.Get("cmp").(string),
+		Comment:             d.Get("comment").(string),
+		Customserverid:      d.Get("customserverid").(string),
+		Dbsttl:              uint64(d.Get("dbsttl").(int)),
+		Downstateflush:      d.Get("downstateflush").(string),
+		Dupweight:           uint32(d.Get("dupweight").(int)),
+		Hashid:              uint32(d.Get("hashid").(int)),
+		Healthmonitor:       d.Get("healthmonitor").(string),
+		Httpprofilename:     d.Get("httpprofilename").(string),
+		Includemembers:      d.Get("includemembers").(bool),
+		Maxbandwidth:        uint32(d.Get("maxbandwidth").(int)),
+		Maxclient:           uint32(d.Get("maxclient").(int)),
+		Maxreq:              uint32(d.Get("maxreq").(int)),
+		Memberport:          int32(d.Get("memberport").(int)),
+		Monconnectionclose:  d.Get("monconnectionclose").(string),
+		Monitornamesvc:      d.Get("monitornamesvc").(string),
+		Monthreshold:        uint32(d.Get("monthreshold").(int)),
+		Nameserver:          d.Get("nameserver").(string),
+		Netprofile:          d.Get("netprofile").(string),
+		Pathmonitor:         d.Get("pathmonitor").(string),
+		Pathmonitorindv:     d.Get("pathmonitorindv").(string),
+		Port:                int32(d.Get("port").(int)),
+		Rtspsessionidremap:  d.Get("rtspsessionidremap").(string),
+		Sc:                  d.Get("sc").(string),
+		Serverid:            uint32(d.Get("serverid").(int)),
+		Servername:          d.Get("servername").(string),
+		Servicegroupname:    d.Get("servicegroupname").(string),
+		Servicetype:         d.Get("servicetype").(string),
+		Sp:                  d.Get("sp").(string),
+		State:               d.Get("state").(string),
+		Svrtimeout:          uint64(d.Get("svrtimeout").(int)),
+		Tcpb:                d.Get("tcpb").(string),
+		Tcpprofilename:      d.Get("tcpprofilename").(string),
+		Td:                  uint32(d.Get("td").(int)),
+		Useproxyport:        d.Get("useproxyport").(string),
+		Usip:                d.Get("usip").(string),
+		Weight:              uint32(d.Get("weight").(int)),
 	}
 
-	_, err := client.AddResource(netscaler.Servicegroup.Type(), servicegroupName, &servicegroup)
+	_, err := client.AddResource(service.Servicegroup.Type(), servicegroupName, &servicegroup)
 	if err != nil {
 		return err
 	}
@@ -420,10 +420,10 @@ func createServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 			Servicegroupname: servicegroupName,
 		}
 		log.Printf("[INFO] netscaler-provider:  Binding servicegroup %s to lbmonitor %s", servicegroupName, lbmonitorName)
-		err = client.BindResource(netscaler.Lbmonitor.Type(), lbmonitorName, netscaler.Servicegroup.Type(), servicegroupName, &binding)
+		err = client.BindResource(service.Lbmonitor.Type(), lbmonitorName, service.Servicegroup.Type(), servicegroupName, &binding)
 		if err != nil {
 			log.Printf("[ERROR] netscaler-provider:  Failed to bind servicegroup %s to lbmonitor %s", servicegroupName, lbmonitorName)
-			err2 := client.DeleteResource(netscaler.Servicegroup.Type(), servicegroupName)
+			err2 := client.DeleteResource(service.Servicegroup.Type(), servicegroupName)
 			if err2 != nil {
 				log.Printf("[ERROR] netscaler-provider:  Failed to delete servicegroup %s after bind to lbmonitor failed", servicegroupName)
 				return fmt.Errorf("[ERROR] netscaler-provider:  Failed to delete servicegroup %s after bind to lbmonitor failed", servicegroupName)
@@ -450,12 +450,13 @@ func createServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func createServicegroupMemberBindings(client *netscaler.NitroClient, servicegroupName string, groupmembers []string, bindByServername bool) error {
+func createServicegroupMemberBindings(client *service.NitroClient, servicegroupName string, groupmembers []string, bindByServername bool) error {
 	for _, member := range groupmembers {
 		//format is ip:port:weight
 		parts := strings.Split(member, ":")
 		var ip, servername string
-		var port, weight int
+		var port int32
+		var weight uint32
 		if !bindByServername {
 			ip = parts[0]
 		} else {
@@ -466,14 +467,17 @@ func createServicegroupMemberBindings(client *netscaler.NitroClient, servicegrou
 			//TODO: take it from memberport
 			continue
 		}
-		port, err := strconv.Atoi(parts[1])
+		port64, err := strconv.ParseInt(parts[1], 10, 32)
+		port = int32(port64)
 		if err != nil {
 			log.Printf("[WARN] netscaler-provider:  servicgroupmembers has invalid port: not an integer: %s", parts[1])
 			continue
 		}
-		weight = -1
+		weightFound := false
 		if len(parts) > 2 {
-			weight, err = strconv.Atoi(parts[2])
+			weight64, err := strconv.ParseUint(parts[2], 10, 32)
+			weight = uint32(weight64)
+			weightFound = true
 			if err != nil {
 				log.Printf("[WARN] netscaler-provider:  servicgroupmembers has invalid weight: not an integer:%s", parts[2])
 			}
@@ -493,11 +497,11 @@ func createServicegroupMemberBindings(client *netscaler.NitroClient, servicegrou
 			}
 		}
 
-		if weight > -1 {
+		if weightFound {
 			binding.Weight = weight
 		}
 		log.Printf("[INFO] netscaler-provider:  Binding servicegroup %s to ip %s", servicegroupName, ip)
-		_, err = client.AddResource(netscaler.Servicegroup_servicegroupmember_binding.Type(), servicegroupName, &binding)
+		_, err = client.AddResource(service.Servicegroup_servicegroupmember_binding.Type(), servicegroupName, &binding)
 		if err != nil {
 			log.Printf("[ERROR] netscaler-provider:  Failed to bind servicegroup %s to ip %s", servicegroupName, ip)
 			continue //TODO: should be break here?
@@ -507,7 +511,7 @@ func createServicegroupMemberBindings(client *netscaler.NitroClient, servicegrou
 	return nil
 }
 
-func removeServicegroupMemberBindings(client *netscaler.NitroClient, servicegroupName string, groupmembers []string, bindByServername bool) error {
+func removeServicegroupMemberBindings(client *service.NitroClient, servicegroupName string, groupmembers []string, bindByServername bool) error {
 	for _, member := range groupmembers {
 		//format is ip:port:weight
 		parts := strings.Split(member, ":")
@@ -530,7 +534,7 @@ func removeServicegroupMemberBindings(client *netscaler.NitroClient, servicegrou
 		} else {
 			args[0] = fmt.Sprintf("servername:%s,port:%s", servername, port)
 		}
-		err := client.DeleteResourceWithArgs(netscaler.Servicegroup_servicegroupmember_binding.Type(), servicegroupName, args)
+		err := client.DeleteResourceWithArgs(service.Servicegroup_servicegroupmember_binding.Type(), servicegroupName, args)
 		if err != nil {
 			log.Printf("[ERROR] netscaler-provider:  Failed to unbind servicegroup %s from ip %s", servicegroupName, ip)
 			continue //TODO: should be break here?
@@ -540,14 +544,14 @@ func removeServicegroupMemberBindings(client *netscaler.NitroClient, servicegrou
 	return nil
 }
 
-func addLbvserverBindings(client *netscaler.NitroClient, servicegroupName string, lbvservers []string) error {
+func addLbvserverBindings(client *service.NitroClient, servicegroupName string, lbvservers []string) error {
 	for _, lbvserverName := range lbvservers {
 		binding := lb.Lbvserverservicegroupbinding{
 			Name:             lbvserverName,
 			Servicegroupname: servicegroupName,
 		}
 		log.Printf("[INFO] netscaler-provider:  Binding servicegroup %s to lbvserver %s", servicegroupName, lbvserverName)
-		err := client.BindResource(netscaler.Lbvserver.Type(), lbvserverName, netscaler.Servicegroup.Type(), servicegroupName, &binding)
+		err := client.BindResource(service.Lbvserver.Type(), lbvserverName, service.Servicegroup.Type(), servicegroupName, &binding)
 		if err != nil {
 			log.Printf("[ERROR] netscaler-provider:  Failed to bind servicegroup %s to lbvserver %s", servicegroupName, lbvserverName)
 			return fmt.Errorf("[ERROR] netscaler-provider:  Failed to bind  servicegroup %s to lbvserver %s", servicegroupName, lbvserverName)
@@ -556,9 +560,9 @@ func addLbvserverBindings(client *netscaler.NitroClient, servicegroupName string
 	return nil
 }
 
-func removeLbvserverBindings(client *netscaler.NitroClient, servicegroupName string, lbvservers []string) error {
+func removeLbvserverBindings(client *service.NitroClient, servicegroupName string, lbvservers []string) error {
 	for _, lbvserverName := range lbvservers {
-		err := client.UnbindResource(netscaler.Lbvserver.Type(), lbvserverName, netscaler.Servicegroup.Type(), servicegroupName, "servicegroupname")
+		err := client.UnbindResource(service.Lbvserver.Type(), lbvserverName, service.Servicegroup.Type(), servicegroupName, "servicegroupname")
 		if err != nil {
 			log.Printf("[ERROR] netscaler-provider: Error unbinding lbvserver %s from servicegroup %s", lbvserverName, servicegroupName)
 			return fmt.Errorf("[ERROR] netscaler-provider: Error unbinding lbvserver %s from servicegroup %s", lbvserverName, servicegroupName)
@@ -572,28 +576,28 @@ func readServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	servicegroupName := d.Id()
 	log.Printf("[DEBUG] netscaler-provider: Reading servicegroup state %s", servicegroupName)
-	data, err := client.FindResource(netscaler.Servicegroup.Type(), servicegroupName)
+	data, err := client.FindResource(service.Servicegroup.Type(), servicegroupName)
 	if err != nil {
 		log.Printf("[WARN] netscaler-provider: Clearing servicegroup state %s", servicegroupName)
 		d.SetId("")
 		return nil
 	}
-	//read bound service group members. Note that there is no type defined called netscaler.Servicegroupmember.Type()
-	boundMembers, err := client.FindAllBoundResources(netscaler.Servicegroup.Type(), servicegroupName, "servicegroupmember")
+	//read bound service group members. Note that there is no type defined called service.Servicegroupmember.Type()
+	boundMembers, err := client.FindAllBoundResources(service.Servicegroup.Type(), servicegroupName, "servicegroupmember")
 	if err != nil {
 		log.Printf("[WARN] netscaler-provider: Clearing servicegroup state %s", servicegroupName)
 		d.SetId("")
 		return nil
 	}
 	//read bound vservers.
-	vserverBindings, err := client.FindResourceArray(netscaler.Servicegroupbindings.Type(), servicegroupName)
+	vserverBindings, err := client.FindResourceArray(service.Servicegroupbindings.Type(), servicegroupName)
 	if err != nil {
 		log.Printf("[WARN] netscaler-provider: Clearing servicegroup state %s", servicegroupName)
 		d.SetId("")
 		return nil
 	}
 	//read bound lb monitor.
-	boundMonitors, err := client.FindAllBoundResources(netscaler.Servicegroup.Type(), servicegroupName, netscaler.Lbmonitor.Type())
+	boundMonitors, err := client.FindAllBoundResources(service.Servicegroup.Type(), servicegroupName, service.Lbmonitor.Type())
 	if err != nil {
 		//This is actually OK in most cases
 		log.Printf("[WARN] netscaler-provider: Clearing servicegroup state %s", servicegroupName)
@@ -731,7 +735,7 @@ func updateServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("autodisabledelay") {
 		log.Printf("[DEBUG]  netscaler-provider: Autodisabledelay has changed for servicegroup %s, starting update", servicegroupName)
-		servicegroup.Autodisabledelay = d.Get("autodisabledelay").(int)
+		servicegroup.Autodisabledelay = uint64(d.Get("autodisabledelay").(int))
 		hasChange = true
 	}
 	if d.HasChange("autodisablegraceful") {
@@ -771,7 +775,7 @@ func updateServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("clttimeout") {
 		log.Printf("[DEBUG]  netscaler-provider: Clttimeout has changed for servicegroup %s, starting update", servicegroupName)
-		servicegroup.Clttimeout = d.Get("clttimeout").(int)
+		servicegroup.Clttimeout = uint64(d.Get("clttimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("cmp") {
@@ -791,7 +795,7 @@ func updateServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("dbsttl") {
 		log.Printf("[DEBUG]  netscaler-provider: Dbsttl has changed for servicegroup %s, starting update", servicegroupName)
-		servicegroup.Dbsttl = d.Get("dbsttl").(int)
+		servicegroup.Dbsttl = uint64(d.Get("dbsttl").(int))
 		hasChange = true
 	}
 	if d.HasChange("downstateflush") {
@@ -801,12 +805,12 @@ func updateServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("dupweight") {
 		log.Printf("[DEBUG]  netscaler-provider: Dupweight has changed for servicegroup %s, starting update", servicegroupName)
-		servicegroup.Dupweight = d.Get("dupweight").(int)
+		servicegroup.Dupweight = uint32(d.Get("dupweight").(int))
 		hasChange = true
 	}
 	if d.HasChange("hashid") {
 		log.Printf("[DEBUG]  netscaler-provider: Hashid has changed for servicegroup %s, starting update", servicegroupName)
-		servicegroup.Hashid = d.Get("hashid").(int)
+		servicegroup.Hashid = uint32(d.Get("hashid").(int))
 		hasChange = true
 	}
 	if d.HasChange("healthmonitor") {
@@ -826,22 +830,22 @@ func updateServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("maxbandwidth") {
 		log.Printf("[DEBUG]  netscaler-provider: Maxbandwidth has changed for servicegroup %s, starting update", servicegroupName)
-		servicegroup.Maxbandwidth = d.Get("maxbandwidth").(int)
+		servicegroup.Maxbandwidth = uint32(d.Get("maxbandwidth").(int))
 		hasChange = true
 	}
 	if d.HasChange("maxclient") {
 		log.Printf("[DEBUG]  netscaler-provider: Maxclient has changed for servicegroup %s, starting update", servicegroupName)
-		servicegroup.Maxclient = d.Get("maxclient").(int)
+		servicegroup.Maxclient = uint32(d.Get("maxclient").(int))
 		hasChange = true
 	}
 	if d.HasChange("maxreq") {
 		log.Printf("[DEBUG]  netscaler-provider: Maxreq has changed for servicegroup %s, starting update", servicegroupName)
-		servicegroup.Maxreq = d.Get("maxreq").(int)
+		servicegroup.Maxreq = uint32(d.Get("maxreq").(int))
 		hasChange = true
 	}
 	if d.HasChange("memberport") {
 		log.Printf("[DEBUG]  netscaler-provider: Memberport has changed for servicegroup %s, starting update", servicegroupName)
-		servicegroup.Memberport = d.Get("memberport").(int)
+		servicegroup.Memberport = int32(d.Get("memberport").(int))
 		hasChange = true
 	}
 	if d.HasChange("monconnectionclose") {
@@ -856,7 +860,7 @@ func updateServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("monthreshold") {
 		log.Printf("[DEBUG]  netscaler-provider: Monthreshold has changed for servicegroup %s, starting update", servicegroupName)
-		servicegroup.Monthreshold = d.Get("monthreshold").(int)
+		servicegroup.Monthreshold = uint32(d.Get("monthreshold").(int))
 		hasChange = true
 	}
 	if d.HasChange("nameserver") {
@@ -881,12 +885,7 @@ func updateServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("port") {
 		log.Printf("[DEBUG]  netscaler-provider: Port has changed for servicegroup %s, starting update", servicegroupName)
-		servicegroup.Port = d.Get("port").(int)
-		hasChange = true
-	}
-	if d.HasChange("riseapbrstatsmsgcode") {
-		log.Printf("[DEBUG]  netscaler-provider: Riseapbrstatsmsgcode has changed for servicegroup %s, starting update", servicegroupName)
-		servicegroup.Riseapbrstatsmsgcode = d.Get("riseapbrstatsmsgcode").(int)
+		servicegroup.Port = int32(d.Get("port").(int))
 		hasChange = true
 	}
 	if d.HasChange("rtspsessionidremap") {
@@ -901,7 +900,7 @@ func updateServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("serverid") {
 		log.Printf("[DEBUG]  netscaler-provider: Serverid has changed for servicegroup %s, starting update", servicegroupName)
-		servicegroup.Serverid = d.Get("serverid").(int)
+		servicegroup.Serverid = uint32(d.Get("serverid").(int))
 		hasChange = true
 	}
 	if d.HasChange("servername") {
@@ -930,7 +929,7 @@ func updateServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("svrtimeout") {
 		log.Printf("[DEBUG]  netscaler-provider: Svrtimeout has changed for servicegroup %s, starting update", servicegroupName)
-		servicegroup.Svrtimeout = d.Get("svrtimeout").(int)
+		servicegroup.Svrtimeout = uint64(d.Get("svrtimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("tcpb") {
@@ -945,7 +944,7 @@ func updateServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("td") {
 		log.Printf("[DEBUG]  netscaler-provider: Td has changed for servicegroup %s, starting update", servicegroupName)
-		servicegroup.Td = d.Get("td").(int)
+		servicegroup.Td = uint32(d.Get("td").(int))
 		hasChange = true
 	}
 	if d.HasChange("useproxyport") {
@@ -960,7 +959,7 @@ func updateServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("weight") {
 		log.Printf("[DEBUG]  netscaler-provider: Weight has changed for servicegroup %s, starting update", servicegroupName)
-		servicegroup.Weight = d.Get("weight").(int)
+		servicegroup.Weight = uint32(d.Get("weight").(int))
 		hasChange = true
 	}
 	if d.HasChange("lbvservers") {
@@ -1013,7 +1012,7 @@ func updateServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 		oldLbmonitor, _ := d.GetChange("lbmonitor")
 		oldLbmonitorName := oldLbmonitor.(string)
 		if oldLbmonitorName != "" {
-			err := client.UnbindResource(netscaler.Lbmonitor.Type(), oldLbmonitorName, netscaler.Servicegroup.Type(), servicegroupName, "servicegroupname")
+			err := client.UnbindResource(service.Lbmonitor.Type(), oldLbmonitorName, service.Servicegroup.Type(), servicegroupName, "servicegroupname")
 			if err != nil {
 				return fmt.Errorf("[ERROR] netscaler-provider: Error unbinding lbmonitor from servicegroup %s", oldLbmonitorName)
 			}
@@ -1022,7 +1021,7 @@ func updateServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if hasChange {
-		_, err := client.UpdateResource(netscaler.Servicegroup.Type(), servicegroupName, &servicegroup)
+		_, err := client.UpdateResource(service.Servicegroup.Type(), servicegroupName, &servicegroup)
 		if err != nil {
 			return fmt.Errorf("Error updating servicegroup %s", servicegroupName)
 		}
@@ -1036,7 +1035,7 @@ func updateServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 			Servicegroupname: servicegroupName,
 		}
 		log.Printf("[INFO] netscaler-provider:  Binding monitor %s to servicegroup %s", lbmonitorName, servicegroupName)
-		err := client.BindResource(netscaler.Lbmonitor.Type(), lbmonitorName, netscaler.Servicegroup.Type(), servicegroupName, &binding)
+		err := client.BindResource(service.Lbmonitor.Type(), lbmonitorName, service.Servicegroup.Type(), servicegroupName, &binding)
 		if err != nil {
 			log.Printf("[ERROR] netscaler-provider:  Failed to bind  lbmonitor %s to servicegroup %s", lbmonitorName, servicegroupName)
 			return fmt.Errorf("[ERROR] netscaler-provider:  Failed to bind lb monitor %s to servicegroup %s", lbmonitorName, servicegroupName)
@@ -1092,7 +1091,7 @@ func deleteServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  netscaler-provider: In deleteServicegroupFunc")
 	client := meta.(*NetScalerNitroClient).client
 	servicegroupName := d.Id()
-	err := client.DeleteResource(netscaler.Servicegroup.Type(), servicegroupName)
+	err := client.DeleteResource(service.Servicegroup.Type(), servicegroupName)
 	if err != nil {
 		return err
 	}
@@ -1112,7 +1111,7 @@ func expandStringList(configured []interface{}) []string {
 	return vs
 }
 
-func doServicegroupStateChange(d *schema.ResourceData, client *netscaler.NitroClient) error {
+func doServicegroupStateChange(d *schema.ResourceData, client *service.NitroClient) error {
 	log.Printf("[DEBUG]  netscaler-provider: In doServicegroupStateChange")
 
 	// We need a new instance of the struct since
@@ -1120,22 +1119,22 @@ func doServicegroupStateChange(d *schema.ResourceData, client *netscaler.NitroCl
 	serviceGroup := basic.Servicegroup{
 		Servicegroupname: d.Get("servicegroupname").(string),
 		Servername:       d.Get("servername").(string),
-		Port:             d.Get("port").(int),
+		Port:             int32(d.Get("port").(int)),
 	}
 
 	newstate := d.Get("state")
 
 	// Enable action
 	if newstate == "ENABLED" {
-		err := client.ActOnResource(netscaler.Servicegroup.Type(), serviceGroup, "enable")
+		err := client.ActOnResource(service.Servicegroup.Type(), serviceGroup, "enable")
 		if err != nil {
 			return err
 		}
 	} else if newstate == "DISABLED" {
 		// Add attributes relevant to the disable operation
-		serviceGroup.Delay = d.Get("delay").(int)
+		serviceGroup.Delay = uint64(d.Get("delay").(int))
 		serviceGroup.Graceful = d.Get("graceful").(string)
-		err := client.ActOnResource(netscaler.Servicegroup.Type(), serviceGroup, "disable")
+		err := client.ActOnResource(service.Servicegroup.Type(), serviceGroup, "disable")
 		if err != nil {
 			return err
 		}

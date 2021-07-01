@@ -16,10 +16,12 @@ limitations under the License.
 package citrixadc
 
 import (
-	"fmt"
-	"github.com/chiradeep/go-nitro/netscaler"
+	"github.com/citrix/adc-nitro-go/service"
+
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+
+	"fmt"
 	"strings"
 	"testing"
 )
@@ -73,7 +75,7 @@ func testAccCheckCsvserver_cspolicy_bindingExist(n string, id *string) resource.
 		name := idSlice[0]
 		policyname := idSlice[1]
 
-		findParams := netscaler.FindParams{
+		findParams := service.FindParams{
 			ResourceType:             "csvserver_cspolicy_binding",
 			ResourceName:             name,
 			ResourceMissingErrorCode: 258,
@@ -119,7 +121,7 @@ func testAccCheckCsvserver_cspolicy_bindingDestroy(s *terraform.State) error {
 		name := idSlice[0]
 		policyname := idSlice[1]
 
-		findParams := netscaler.FindParams{
+		findParams := service.FindParams{
 			ResourceType:             "csvserver_cspolicy_binding",
 			ResourceName:             name,
 			ResourceMissingErrorCode: 258,

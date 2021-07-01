@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/cluster"
+	"github.com/citrix/adc-nitro-go/resource/config/cluster"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	_ "fmt"
@@ -38,10 +38,10 @@ func createClusterfilessyncerFunc(d *schema.ResourceData, meta interface{}) erro
 	client := meta.(*NetScalerNitroClient).client
 	timestamp := d.Get("timestamp").(string)
 	clusterfiles := cluster.Clusterfiles{
-		Mode: d.Get("mode").(*schema.Set).List(),
+		Mode: toStringList(d.Get("mode").(*schema.Set).List()),
 	}
 
-	err := client.ActOnResource(netscaler.Clusterfiles.Type(), &clusterfiles, "sync")
+	err := client.ActOnResource(service.Clusterfiles.Type(), &clusterfiles, "sync")
 	if err != nil {
 		return err
 	}

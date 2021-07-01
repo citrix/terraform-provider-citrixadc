@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/appfw"
+	"github.com/citrix/adc-nitro-go/resource/config/appfw"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"fmt"
@@ -491,23 +491,23 @@ func createAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 		Name:                                       appfwprofileName,
 		Addcookieflags:                             d.Get("addcookieflags").(string),
 		Archivename:                                d.Get("archivename").(string),
-		Bufferoverflowmaxcookielength:              d.Get("bufferoverflowmaxcookielength").(int),
-		Bufferoverflowmaxheaderlength:              d.Get("bufferoverflowmaxheaderlength").(int),
-		Bufferoverflowmaxurllength:                 d.Get("bufferoverflowmaxurllength").(int),
+		Bufferoverflowmaxcookielength:              uint32(d.Get("bufferoverflowmaxcookielength").(int)),
+		Bufferoverflowmaxheaderlength:              uint32(d.Get("bufferoverflowmaxheaderlength").(int)),
+		Bufferoverflowmaxurllength:                 uint32(d.Get("bufferoverflowmaxurllength").(int)),
 		Canonicalizehtmlresponse:                   d.Get("canonicalizehtmlresponse").(string),
 		Checkrequestheaders:                        d.Get("checkrequestheaders").(string),
 		Comment:                                    d.Get("comment").(string),
 		Cookieencryption:                           d.Get("cookieencryption").(string),
 		Cookieproxying:                             d.Get("cookieproxying").(string),
 		Cookietransforms:                           d.Get("cookietransforms").(string),
-		Creditcardmaxallowed:                       d.Get("creditcardmaxallowed").(int),
+		Creditcardmaxallowed:                       uint32(d.Get("creditcardmaxallowed").(int)),
 		Creditcardxout:                             d.Get("creditcardxout").(string),
 		Crosssitescriptingcheckcompleteurls:        d.Get("crosssitescriptingcheckcompleteurls").(string),
 		Crosssitescriptingtransformunsafehtml:      d.Get("crosssitescriptingtransformunsafehtml").(string),
 		Customsettings:                             d.Get("customsettings").(string),
 		Defaultcharset:                             d.Get("defaultcharset").(string),
-		Defaultfieldformatmaxlength:                d.Get("defaultfieldformatmaxlength").(int),
-		Defaultfieldformatminlength:                d.Get("defaultfieldformatminlength").(int),
+		Defaultfieldformatmaxlength:                uint32(d.Get("defaultfieldformatmaxlength").(int)),
+		Defaultfieldformatminlength:                uint32(d.Get("defaultfieldformatminlength").(int)),
 		Defaultfieldformattype:                     d.Get("defaultfieldformattype").(string),
 		Defaults:                                   d.Get("defaults").(string),
 		Dosecurecreditcardlogging:                  d.Get("dosecurecreditcardlogging").(string),
@@ -515,7 +515,7 @@ func createAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 		Errorurl:                                   d.Get("errorurl").(string),
 		Excludefileuploadfromchecks:                d.Get("excludefileuploadfromchecks").(string),
 		Exemptclosureurlsfromsecuritychecks:        d.Get("exemptclosureurlsfromsecuritychecks").(string),
-		Fileuploadmaxnum:                           d.Get("fileuploadmaxnum").(int),
+		Fileuploadmaxnum:                           uint32(d.Get("fileuploadmaxnum").(int)),
 		Htmlerrorobject:                            d.Get("htmlerrorobject").(string),
 		Invalidpercenthandling:                     d.Get("invalidpercenthandling").(string),
 		Jsonerrorobject:                            d.Get("jsonerrorobject").(string),
@@ -523,8 +523,8 @@ func createAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 		Logeverypolicyhit:                          d.Get("logeverypolicyhit").(string),
 		Optimizepartialreqs:                        d.Get("optimizepartialreqs").(string),
 		Percentdecoderecursively:                   d.Get("percentdecoderecursively").(string),
-		Postbodylimit:                              d.Get("postbodylimit").(int),
-		Postbodylimitsignature:                     d.Get("postbodylimitsignature").(int),
+		Postbodylimit:                              uint64(d.Get("postbodylimit").(int)),
+		Postbodylimitsignature:                     uint32(d.Get("postbodylimitsignature").(int)),
 		Refererheadercheck:                         d.Get("refererheadercheck").(string),
 		Requestcontenttype:                         d.Get("requestcontenttype").(string),
 		Responsecontenttype:                        d.Get("responsecontenttype").(string),
@@ -554,36 +554,36 @@ func createAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 		Xmlsqlinjectiontype:                        d.Get("xmlsqlinjectiontype").(string),
 	}
 
-	appfwprofile.Bufferoverflowaction = d.Get("bufferoverflowaction").(*schema.Set).List()
-	appfwprofile.Contenttypeaction = d.Get("contenttypeaction").(*schema.Set).List()
-	appfwprofile.Cookieconsistencyaction = d.Get("cookieconsistencyaction").(*schema.Set).List()
-	appfwprofile.Creditcard = d.Get("creditcard").(*schema.Set).List()
-	appfwprofile.Creditcardaction = d.Get("creditcardaction").(*schema.Set).List()
-	appfwprofile.Crosssitescriptingaction = d.Get("crosssitescriptingaction").(*schema.Set).List()
-	appfwprofile.Csrftagaction = d.Get("csrftagaction").(*schema.Set).List()
-	appfwprofile.Denyurlaction = d.Get("denyurlaction").(*schema.Set).List()
-	appfwprofile.Dynamiclearning = d.Get("dynamiclearning").(*schema.Set).List()
-	appfwprofile.Fieldconsistencyaction = d.Get("fieldconsistencyaction").(*schema.Set).List()
-	appfwprofile.Fieldformataction = d.Get("fieldformataction").(*schema.Set).List()
-	appfwprofile.Fileuploadtypesaction = d.Get("fileuploadtypesaction").(*schema.Set).List()
-	appfwprofile.Inspectcontenttypes = d.Get("inspectcontenttypes").(*schema.Set).List()
-	appfwprofile.Jsondosaction = d.Get("jsondosaction").(*schema.Set).List()
-	appfwprofile.Jsonsqlinjectionaction = d.Get("jsonsqlinjectionaction").(*schema.Set).List()
-	appfwprofile.Jsonxssaction = d.Get("jsonxssaction").(*schema.Set).List()
-	appfwprofile.Multipleheaderaction = d.Get("multipleheaderaction").(*schema.Set).List()
-	appfwprofile.Sqlinjectionaction = d.Get("sqlinjectionaction").(*schema.Set).List()
-	appfwprofile.Starturlaction = d.Get("starturlaction").(*schema.Set).List()
-	appfwprofile.Type = d.Get("type").(*schema.Set).List()
-	appfwprofile.Xmlattachmentaction = d.Get("xmlattachmentaction").(*schema.Set).List()
-	appfwprofile.Xmldosaction = d.Get("xmldosaction").(*schema.Set).List()
-	appfwprofile.Xmlformataction = d.Get("xmlformataction").(*schema.Set).List()
-	appfwprofile.Xmlsoapfaultaction = d.Get("xmlsoapfaultaction").(*schema.Set).List()
-	appfwprofile.Xmlsqlinjectionaction = d.Get("xmlsqlinjectionaction").(*schema.Set).List()
-	appfwprofile.Xmlvalidationaction = d.Get("xmlvalidationaction").(*schema.Set).List()
-	appfwprofile.Xmlwsiaction = d.Get("xmlwsiaction").(*schema.Set).List()
-	appfwprofile.Xmlxssaction = d.Get("xmlxssaction").(*schema.Set).List()
+	appfwprofile.Bufferoverflowaction = toStringList(d.Get("bufferoverflowaction").(*schema.Set).List())
+	appfwprofile.Contenttypeaction = toStringList(d.Get("contenttypeaction").(*schema.Set).List())
+	appfwprofile.Cookieconsistencyaction = toStringList(d.Get("cookieconsistencyaction").(*schema.Set).List())
+	appfwprofile.Creditcard = toStringList(d.Get("creditcard").(*schema.Set).List())
+	appfwprofile.Creditcardaction = toStringList(d.Get("creditcardaction").(*schema.Set).List())
+	appfwprofile.Crosssitescriptingaction = toStringList(d.Get("crosssitescriptingaction").(*schema.Set).List())
+	appfwprofile.Csrftagaction = toStringList(d.Get("csrftagaction").(*schema.Set).List())
+	appfwprofile.Denyurlaction = toStringList(d.Get("denyurlaction").(*schema.Set).List())
+	appfwprofile.Dynamiclearning = toStringList(d.Get("dynamiclearning").(*schema.Set).List())
+	appfwprofile.Fieldconsistencyaction = toStringList(d.Get("fieldconsistencyaction").(*schema.Set).List())
+	appfwprofile.Fieldformataction = toStringList(d.Get("fieldformataction").(*schema.Set).List())
+	appfwprofile.Fileuploadtypesaction = toStringList(d.Get("fileuploadtypesaction").(*schema.Set).List())
+	appfwprofile.Inspectcontenttypes = toStringList(d.Get("inspectcontenttypes").(*schema.Set).List())
+	appfwprofile.Jsondosaction = toStringList(d.Get("jsondosaction").(*schema.Set).List())
+	appfwprofile.Jsonsqlinjectionaction = toStringList(d.Get("jsonsqlinjectionaction").(*schema.Set).List())
+	appfwprofile.Jsonxssaction = toStringList(d.Get("jsonxssaction").(*schema.Set).List())
+	appfwprofile.Multipleheaderaction = toStringList(d.Get("multipleheaderaction").(*schema.Set).List())
+	appfwprofile.Sqlinjectionaction = toStringList(d.Get("sqlinjectionaction").(*schema.Set).List())
+	appfwprofile.Starturlaction = toStringList(d.Get("starturlaction").(*schema.Set).List())
+	appfwprofile.Type = toStringList(d.Get("type").(*schema.Set).List())
+	appfwprofile.Xmlattachmentaction = toStringList(d.Get("xmlattachmentaction").(*schema.Set).List())
+	appfwprofile.Xmldosaction = toStringList(d.Get("xmldosaction").(*schema.Set).List())
+	appfwprofile.Xmlformataction = toStringList(d.Get("xmlformataction").(*schema.Set).List())
+	appfwprofile.Xmlsoapfaultaction = toStringList(d.Get("xmlsoapfaultaction").(*schema.Set).List())
+	appfwprofile.Xmlsqlinjectionaction = toStringList(d.Get("xmlsqlinjectionaction").(*schema.Set).List())
+	appfwprofile.Xmlvalidationaction = toStringList(d.Get("xmlvalidationaction").(*schema.Set).List())
+	appfwprofile.Xmlwsiaction = toStringList(d.Get("xmlwsiaction").(*schema.Set).List())
+	appfwprofile.Xmlxssaction = toStringList(d.Get("xmlxssaction").(*schema.Set).List())
 
-	_, err := client.AddResource(netscaler.Appfwprofile.Type(), appfwprofileName, &appfwprofile)
+	_, err := client.AddResource(service.Appfwprofile.Type(), appfwprofileName, &appfwprofile)
 	if err != nil {
 		return err
 	}
@@ -603,7 +603,7 @@ func readAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	appfwprofileName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading appfwprofile state %s", appfwprofileName)
-	data, err := client.FindResource(netscaler.Appfwprofile.Type(), appfwprofileName)
+	data, err := client.FindResource(service.Appfwprofile.Type(), appfwprofileName)
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing appfwprofile state %s", appfwprofileName)
 		d.SetId("")
@@ -729,17 +729,17 @@ func updateAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("bufferoverflowmaxcookielength") {
 		log.Printf("[DEBUG]  citrixadc-provider: Bufferoverflowmaxcookielength has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Bufferoverflowmaxcookielength = d.Get("bufferoverflowmaxcookielength").(int)
+		appfwprofile.Bufferoverflowmaxcookielength = uint32(d.Get("bufferoverflowmaxcookielength").(int))
 		hasChange = true
 	}
 	if d.HasChange("bufferoverflowmaxheaderlength") {
 		log.Printf("[DEBUG]  citrixadc-provider: Bufferoverflowmaxheaderlength has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Bufferoverflowmaxheaderlength = d.Get("bufferoverflowmaxheaderlength").(int)
+		appfwprofile.Bufferoverflowmaxheaderlength = uint32(d.Get("bufferoverflowmaxheaderlength").(int))
 		hasChange = true
 	}
 	if d.HasChange("bufferoverflowmaxurllength") {
 		log.Printf("[DEBUG]  citrixadc-provider: Bufferoverflowmaxurllength has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Bufferoverflowmaxurllength = d.Get("bufferoverflowmaxurllength").(int)
+		appfwprofile.Bufferoverflowmaxurllength = uint32(d.Get("bufferoverflowmaxurllength").(int))
 		hasChange = true
 	}
 	if d.HasChange("canonicalizehtmlresponse") {
@@ -774,7 +774,7 @@ func updateAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("creditcardmaxallowed") {
 		log.Printf("[DEBUG]  citrixadc-provider: Creditcardmaxallowed has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Creditcardmaxallowed = d.Get("creditcardmaxallowed").(int)
+		appfwprofile.Creditcardmaxallowed = uint32(d.Get("creditcardmaxallowed").(int))
 		hasChange = true
 	}
 	if d.HasChange("creditcardxout") {
@@ -804,12 +804,12 @@ func updateAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("defaultfieldformatmaxlength") {
 		log.Printf("[DEBUG]  citrixadc-provider: Defaultfieldformatmaxlength has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Defaultfieldformatmaxlength = d.Get("defaultfieldformatmaxlength").(int)
+		appfwprofile.Defaultfieldformatmaxlength = uint32(d.Get("defaultfieldformatmaxlength").(int))
 		hasChange = true
 	}
 	if d.HasChange("defaultfieldformatminlength") {
 		log.Printf("[DEBUG]  citrixadc-provider: Defaultfieldformatminlength has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Defaultfieldformatminlength = d.Get("defaultfieldformatminlength").(int)
+		appfwprofile.Defaultfieldformatminlength = uint32(d.Get("defaultfieldformatminlength").(int))
 		hasChange = true
 	}
 	if d.HasChange("defaultfieldformattype") {
@@ -849,7 +849,7 @@ func updateAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("fileuploadmaxnum") {
 		log.Printf("[DEBUG]  citrixadc-provider: Fileuploadmaxnum has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Fileuploadmaxnum = d.Get("fileuploadmaxnum").(int)
+		appfwprofile.Fileuploadmaxnum = uint32(d.Get("fileuploadmaxnum").(int))
 		hasChange = true
 	}
 	if d.HasChange("htmlerrorobject") {
@@ -894,12 +894,12 @@ func updateAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("postbodylimit") {
 		log.Printf("[DEBUG]  citrixadc-provider: Postbodylimit has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Postbodylimit = d.Get("postbodylimit").(int)
+		appfwprofile.Postbodylimit = uint64(d.Get("postbodylimit").(int))
 		hasChange = true
 	}
 	if d.HasChange("postbodylimitsignature") {
 		log.Printf("[DEBUG]  citrixadc-provider: Postbodylimitsignature has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Postbodylimitsignature = d.Get("postbodylimitsignature").(int)
+		appfwprofile.Postbodylimitsignature = uint32(d.Get("postbodylimitsignature").(int))
 		hasChange = true
 	}
 	if d.HasChange("refererheadercheck") {
@@ -1040,174 +1040,174 @@ func updateAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("bufferoverflowaction") {
 		log.Printf("[DEBUG]  citrixadc-provider: Bufferoverflowaction has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Bufferoverflowaction = d.Get("bufferoverflowaction").(*schema.Set).List()
+		appfwprofile.Bufferoverflowaction = toStringList(d.Get("bufferoverflowaction").(*schema.Set).List())
 		hasChange = true
 	}
 
 	if d.HasChange("contenttypeaction") {
 		log.Printf("[DEBUG]  citrixadc-provider: Contenttypeaction has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Contenttypeaction = d.Get("contenttypeaction").(*schema.Set).List()
+		appfwprofile.Contenttypeaction = toStringList(d.Get("contenttypeaction").(*schema.Set).List())
 		hasChange = true
 	}
 
 	if d.HasChange("cookieconsistencyaction") {
 		log.Printf("[DEBUG]  citrixadc-provider: Cookieconsistencyaction has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Cookieconsistencyaction = d.Get("cookieconsistencyaction").(*schema.Set).List()
+		appfwprofile.Cookieconsistencyaction = toStringList(d.Get("cookieconsistencyaction").(*schema.Set).List())
 		hasChange = true
 	}
 
 	if d.HasChange("creditcard") {
 		log.Printf("[DEBUG]  citrixadc-provider: Creditcard has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Creditcard = d.Get("creditcard").(*schema.Set).List()
+		appfwprofile.Creditcard = toStringList(d.Get("creditcard").(*schema.Set).List())
 		hasChange = true
 	}
 
 	if d.HasChange("creditcardaction") {
 		log.Printf("[DEBUG]  citrixadc-provider: Creditcardaction has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Creditcardaction = d.Get("creditcardaction").(*schema.Set).List()
+		appfwprofile.Creditcardaction = toStringList(d.Get("creditcardaction").(*schema.Set).List())
 		hasChange = true
 	}
 
 	if d.HasChange("crosssitescriptingaction") {
 		log.Printf("[DEBUG]  citrixadc-provider: Crosssitescriptingaction has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Crosssitescriptingaction = d.Get("crosssitescriptingaction").(*schema.Set).List()
+		appfwprofile.Crosssitescriptingaction = toStringList(d.Get("crosssitescriptingaction").(*schema.Set).List())
 		hasChange = true
 	}
 
 	if d.HasChange("csrftagaction") {
 		log.Printf("[DEBUG]  citrixadc-provider: Csrftagaction has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Csrftagaction = d.Get("csrftagaction").(*schema.Set).List()
+		appfwprofile.Csrftagaction = toStringList(d.Get("csrftagaction").(*schema.Set).List())
 		hasChange = true
 	}
 
 	if d.HasChange("denyurlaction") {
 		log.Printf("[DEBUG]  citrixadc-provider: Denyurlaction has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Denyurlaction = d.Get("denyurlaction").(*schema.Set).List()
+		appfwprofile.Denyurlaction = toStringList(d.Get("denyurlaction").(*schema.Set).List())
 		hasChange = true
 	}
 
 	if d.HasChange("dynamiclearning") {
 		log.Printf("[DEBUG]  citrixadc-provider: Dynamiclearning has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Dynamiclearning = d.Get("dynamiclearning").(*schema.Set).List()
+		appfwprofile.Dynamiclearning = toStringList(d.Get("dynamiclearning").(*schema.Set).List())
 		hasChange = true
 	}
 
 	if d.HasChange("fieldconsistencyaction") {
 		log.Printf("[DEBUG]  citrixadc-provider: Fieldconsistencyaction has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Fieldconsistencyaction = d.Get("fieldconsistencyaction").(*schema.Set).List()
+		appfwprofile.Fieldconsistencyaction = toStringList(d.Get("fieldconsistencyaction").(*schema.Set).List())
 		hasChange = true
 	}
 
 	if d.HasChange("fieldformataction") {
 		log.Printf("[DEBUG]  citrixadc-provider: Fieldformataction has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Fieldformataction = d.Get("fieldformataction").(*schema.Set).List()
+		appfwprofile.Fieldformataction = toStringList(d.Get("fieldformataction").(*schema.Set).List())
 		hasChange = true
 	}
 
 	if d.HasChange("fileuploadtypesaction") {
 		log.Printf("[DEBUG]  citrixadc-provider: Fileuploadtypesaction has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Fileuploadtypesaction = d.Get("fileuploadtypesaction").(*schema.Set).List()
+		appfwprofile.Fileuploadtypesaction = toStringList(d.Get("fileuploadtypesaction").(*schema.Set).List())
 		hasChange = true
 	}
 
 	if d.HasChange("inspectcontenttypes") {
 		log.Printf("[DEBUG]  citrixadc-provider: Inspectcontenttypes has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Inspectcontenttypes = d.Get("inspectcontenttypes").(*schema.Set).List()
+		appfwprofile.Inspectcontenttypes = toStringList(d.Get("inspectcontenttypes").(*schema.Set).List())
 		hasChange = true
 	}
 
 	if d.HasChange("jsondosaction") {
 		log.Printf("[DEBUG]  citrixadc-provider: Jsondosaction has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Jsondosaction = d.Get("jsondosaction").(*schema.Set).List()
+		appfwprofile.Jsondosaction = toStringList(d.Get("jsondosaction").(*schema.Set).List())
 		hasChange = true
 	}
 
 	if d.HasChange("jsonsqlinjectionaction") {
 		log.Printf("[DEBUG]  citrixadc-provider: Jsonsqlinjectionaction has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Jsonsqlinjectionaction = d.Get("jsonsqlinjectionaction").(*schema.Set).List()
+		appfwprofile.Jsonsqlinjectionaction = toStringList(d.Get("jsonsqlinjectionaction").(*schema.Set).List())
 		hasChange = true
 	}
 
 	if d.HasChange("jsonxssaction") {
 		log.Printf("[DEBUG]  citrixadc-provider: Jsonxssaction has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Jsonxssaction = d.Get("jsonxssaction").(*schema.Set).List()
+		appfwprofile.Jsonxssaction = toStringList(d.Get("jsonxssaction").(*schema.Set).List())
 		hasChange = true
 	}
 
 	if d.HasChange("multipleheaderaction") {
 		log.Printf("[DEBUG]  citrixadc-provider: Multipleheaderaction has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Multipleheaderaction = d.Get("multipleheaderaction").(*schema.Set).List()
+		appfwprofile.Multipleheaderaction = toStringList(d.Get("multipleheaderaction").(*schema.Set).List())
 		hasChange = true
 	}
 
 	if d.HasChange("sqlinjectionaction") {
 		log.Printf("[DEBUG]  citrixadc-provider: Sqlinjectionaction has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Sqlinjectionaction = d.Get("sqlinjectionaction").(*schema.Set).List()
+		appfwprofile.Sqlinjectionaction = toStringList(d.Get("sqlinjectionaction").(*schema.Set).List())
 		hasChange = true
 	}
 
 	if d.HasChange("starturlaction") {
 		log.Printf("[DEBUG]  citrixadc-provider: Starturlaction has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Starturlaction = d.Get("starturlaction").(*schema.Set).List()
+		appfwprofile.Starturlaction = toStringList(d.Get("starturlaction").(*schema.Set).List())
 		hasChange = true
 	}
 
 	if d.HasChange("type") {
 		log.Printf("[DEBUG]  citrixadc-provider: Type has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Type = d.Get("type").(*schema.Set).List()
+		appfwprofile.Type = toStringList(d.Get("type").(*schema.Set).List())
 		hasChange = true
 	}
 
 	if d.HasChange("xmlattachmentaction") {
 		log.Printf("[DEBUG]  citrixadc-provider: Xmlattachmentaction has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Xmlattachmentaction = d.Get("xmlattachmentaction").(*schema.Set).List()
+		appfwprofile.Xmlattachmentaction = toStringList(d.Get("xmlattachmentaction").(*schema.Set).List())
 		hasChange = true
 	}
 
 	if d.HasChange("xmldosaction") {
 		log.Printf("[DEBUG]  citrixadc-provider: Xmldosaction has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Xmldosaction = d.Get("xmldosaction").(*schema.Set).List()
+		appfwprofile.Xmldosaction = toStringList(d.Get("xmldosaction").(*schema.Set).List())
 		hasChange = true
 	}
 
 	if d.HasChange("xmlformataction") {
 		log.Printf("[DEBUG]  citrixadc-provider: Xmlformataction has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Xmlformataction = d.Get("xmlformataction").(*schema.Set).List()
+		appfwprofile.Xmlformataction = toStringList(d.Get("xmlformataction").(*schema.Set).List())
 		hasChange = true
 	}
 
 	if d.HasChange("xmlsoapfaultaction") {
 		log.Printf("[DEBUG]  citrixadc-provider: Xmlsoapfaultaction has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Xmlsoapfaultaction = d.Get("xmlsoapfaultaction").(*schema.Set).List()
+		appfwprofile.Xmlsoapfaultaction = toStringList(d.Get("xmlsoapfaultaction").(*schema.Set).List())
 		hasChange = true
 	}
 
 	if d.HasChange("xmlsqlinjectionaction") {
 		log.Printf("[DEBUG]  citrixadc-provider: Xmlsqlinjectionaction has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Xmlsqlinjectionaction = d.Get("xmlsqlinjectionaction").(*schema.Set).List()
+		appfwprofile.Xmlsqlinjectionaction = toStringList(d.Get("xmlsqlinjectionaction").(*schema.Set).List())
 		hasChange = true
 	}
 
 	if d.HasChange("xmlvalidationaction") {
 		log.Printf("[DEBUG]  citrixadc-provider: Xmlvalidationaction has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Xmlvalidationaction = d.Get("xmlvalidationaction").(*schema.Set).List()
+		appfwprofile.Xmlvalidationaction = toStringList(d.Get("xmlvalidationaction").(*schema.Set).List())
 		hasChange = true
 	}
 
 	if d.HasChange("xmlwsiaction") {
 		log.Printf("[DEBUG]  citrixadc-provider: Xmlwsiaction has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Xmlwsiaction = d.Get("xmlwsiaction").(*schema.Set).List()
+		appfwprofile.Xmlwsiaction = toStringList(d.Get("xmlwsiaction").(*schema.Set).List())
 		hasChange = true
 	}
 
 	if d.HasChange("xmlxssaction") {
 		log.Printf("[DEBUG]  citrixadc-provider: Xmlxssaction has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Xmlxssaction = d.Get("xmlxssaction").(*schema.Set).List()
+		appfwprofile.Xmlxssaction = toStringList(d.Get("xmlxssaction").(*schema.Set).List())
 		hasChange = true
 	}
 
 	if hasChange {
-		_, err := client.UpdateResource(netscaler.Appfwprofile.Type(), appfwprofileName, &appfwprofile)
+		_, err := client.UpdateResource(service.Appfwprofile.Type(), appfwprofileName, &appfwprofile)
 		if err != nil {
 			return fmt.Errorf("Error updating appfwprofile %s", appfwprofileName)
 		}
@@ -1219,7 +1219,7 @@ func deleteAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppfwprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appfwprofileName := d.Id()
-	err := client.DeleteResource(netscaler.Appfwprofile.Type(), appfwprofileName)
+	err := client.DeleteResource(service.Appfwprofile.Type(), appfwprofileName)
 	if err != nil {
 		return err
 	}

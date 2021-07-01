@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/chiradeep/go-nitro/netscaler"
+	"testing"
+
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"testing"
 )
 
 const testAccDnssoarec_basic_step1 = `
@@ -85,7 +86,7 @@ func testAccCheckDnssoarecExist(n string, id *string) resource.TestCheckFunc {
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(netscaler.Dnssoarec.Type(), rs.Primary.ID)
+		data, err := nsClient.FindResource(service.Dnssoarec.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -111,7 +112,7 @@ func testAccCheckDnssoarecDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(netscaler.Dnssoarec.Type(), rs.Primary.ID)
+		_, err := nsClient.FindResource(service.Dnssoarec.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("dnssoarec %s still exists", rs.Primary.ID)
 		}

@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/audit"
+	"github.com/citrix/adc-nitro-go/resource/config/audit"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"fmt"
@@ -172,17 +172,17 @@ func createAuditsyslogactionFunc(d *schema.ResourceData, meta interface{}) error
 		Dateformat:           d.Get("dateformat").(string),
 		Dns:                  d.Get("dns").(string),
 		Domainresolvenow:     d.Get("domainresolvenow").(bool),
-		Domainresolveretry:   d.Get("domainresolveretry").(int),
+		Domainresolveretry:   int32(d.Get("domainresolveretry").(int)),
 		Lbvservername:        d.Get("lbvservername").(string),
 		Logfacility:          d.Get("logfacility").(string),
-		Loglevel:             loglevelValue(d),
+		Loglevel:             toStringList(loglevelValue(d)),
 		Lsn:                  d.Get("lsn").(string),
-		Maxlogdatasizetohold: d.Get("maxlogdatasizetohold").(int),
+		Maxlogdatasizetohold: uint32(d.Get("maxlogdatasizetohold").(int)),
 		Name:                 d.Get("name").(string),
 		Netprofile:           d.Get("netprofile").(string),
 		Serverdomainname:     d.Get("serverdomainname").(string),
 		Serverip:             d.Get("serverip").(string),
-		Serverport:           d.Get("serverport").(int),
+		Serverport:           int32(d.Get("serverport").(int)),
 		Sslinterception:      d.Get("sslinterception").(string),
 		Subscriberlog:        d.Get("subscriberlog").(string),
 		Tcp:                  d.Get("tcp").(string),
@@ -193,7 +193,7 @@ func createAuditsyslogactionFunc(d *schema.ResourceData, meta interface{}) error
 		Userdefinedauditlog:  d.Get("userdefinedauditlog").(string),
 	}
 
-	_, err := client.AddResource(netscaler.Auditsyslogaction.Type(), auditsyslogactionName, &auditsyslogaction)
+	_, err := client.AddResource(service.Auditsyslogaction.Type(), auditsyslogactionName, &auditsyslogaction)
 	if err != nil {
 		return err
 	}
@@ -213,7 +213,7 @@ func readAuditsyslogactionFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	auditsyslogactionName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading auditsyslogaction state %s", auditsyslogactionName)
-	data, err := client.FindResource(netscaler.Auditsyslogaction.Type(), auditsyslogactionName)
+	data, err := client.FindResource(service.Auditsyslogaction.Type(), auditsyslogactionName)
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing auditsyslogaction state %s", auditsyslogactionName)
 		d.SetId("")
@@ -297,7 +297,7 @@ func updateAuditsyslogactionFunc(d *schema.ResourceData, meta interface{}) error
 	}
 	if d.HasChange("domainresolveretry") {
 		log.Printf("[DEBUG]  citrixadc-provider: Domainresolveretry has changed for auditsyslogaction %s, starting update", auditsyslogactionName)
-		auditsyslogaction.Domainresolveretry = d.Get("domainresolveretry").(int)
+		auditsyslogaction.Domainresolveretry = int32(d.Get("domainresolveretry").(int))
 		hasChange = true
 	}
 	if d.HasChange("lbvservername") {
@@ -312,7 +312,7 @@ func updateAuditsyslogactionFunc(d *schema.ResourceData, meta interface{}) error
 	}
 	if d.HasChange("loglevel") {
 		log.Printf("[DEBUG]  citrixadc-provider: Loglevel has changed for auditsyslogaction %s, starting update", auditsyslogactionName)
-		auditsyslogaction.Loglevel = loglevelValue(d)
+		auditsyslogaction.Loglevel = toStringList(loglevelValue(d))
 		hasChange = true
 	}
 	if d.HasChange("lsn") {
@@ -322,7 +322,7 @@ func updateAuditsyslogactionFunc(d *schema.ResourceData, meta interface{}) error
 	}
 	if d.HasChange("maxlogdatasizetohold") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxlogdatasizetohold has changed for auditsyslogaction %s, starting update", auditsyslogactionName)
-		auditsyslogaction.Maxlogdatasizetohold = d.Get("maxlogdatasizetohold").(int)
+		auditsyslogaction.Maxlogdatasizetohold = uint32(d.Get("maxlogdatasizetohold").(int))
 		hasChange = true
 	}
 	if d.HasChange("name") {
@@ -347,7 +347,7 @@ func updateAuditsyslogactionFunc(d *schema.ResourceData, meta interface{}) error
 	}
 	if d.HasChange("serverport") {
 		log.Printf("[DEBUG]  citrixadc-provider: Serverport has changed for auditsyslogaction %s, starting update", auditsyslogactionName)
-		auditsyslogaction.Serverport = d.Get("serverport").(int)
+		auditsyslogaction.Serverport = int32(d.Get("serverport").(int))
 		hasChange = true
 	}
 	if d.HasChange("sslinterception") {
@@ -392,7 +392,7 @@ func updateAuditsyslogactionFunc(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if hasChange {
-		_, err := client.UpdateResource(netscaler.Auditsyslogaction.Type(), auditsyslogactionName, &auditsyslogaction)
+		_, err := client.UpdateResource(service.Auditsyslogaction.Type(), auditsyslogactionName, &auditsyslogaction)
 		if err != nil {
 			return fmt.Errorf("Error updating auditsyslogaction %s", auditsyslogactionName)
 		}
@@ -404,7 +404,7 @@ func deleteAuditsyslogactionFunc(d *schema.ResourceData, meta interface{}) error
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAuditsyslogactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	auditsyslogactionName := d.Id()
-	err := client.DeleteResource(netscaler.Auditsyslogaction.Type(), auditsyslogactionName)
+	err := client.DeleteResource(service.Auditsyslogaction.Type(), auditsyslogactionName)
 	if err != nil {
 		return err
 	}

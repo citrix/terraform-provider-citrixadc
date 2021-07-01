@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/appfw"
+	"github.com/citrix/adc-nitro-go/resource/config/appfw"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"log"
@@ -39,7 +39,7 @@ func createAppfwxmlcontenttypeFunc(d *schema.ResourceData, meta interface{}) err
 		Xmlcontenttypevalue: appfwxmlcontenttypeName,
 	}
 
-	_, err := client.AddResource(netscaler.Appfwxmlcontenttype.Type(), appfwxmlcontenttypeName, &appfwxmlcontenttype)
+	_, err := client.AddResource(service.Appfwxmlcontenttype.Type(), appfwxmlcontenttypeName, &appfwxmlcontenttype)
 	if err != nil {
 		return err
 	}
@@ -59,7 +59,7 @@ func readAppfwxmlcontenttypeFunc(d *schema.ResourceData, meta interface{}) error
 	client := meta.(*NetScalerNitroClient).client
 	appfwxmlcontenttypeName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading appfwxmlcontenttype state %s", appfwxmlcontenttypeName)
-	data, err := client.FindResource(netscaler.Appfwxmlcontenttype.Type(), appfwxmlcontenttypeName)
+	data, err := client.FindResource(service.Appfwxmlcontenttype.Type(), appfwxmlcontenttypeName)
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing appfwxmlcontenttype state %s", appfwxmlcontenttypeName)
 		d.SetId("")
@@ -76,7 +76,7 @@ func deleteAppfwxmlcontenttypeFunc(d *schema.ResourceData, meta interface{}) err
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppfwxmlcontenttypeFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appfwxmlcontenttypeName := d.Id()
-	err := client.DeleteResource(netscaler.Appfwxmlcontenttype.Type(), appfwxmlcontenttypeName)
+	err := client.DeleteResource(service.Appfwxmlcontenttype.Type(), appfwxmlcontenttypeName)
 	if err != nil {
 		return err
 	}

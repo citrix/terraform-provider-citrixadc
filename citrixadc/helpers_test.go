@@ -13,8 +13,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/chiradeep/go-nitro/config/system"
-	"github.com/chiradeep/go-nitro/netscaler"
+	"github.com/citrix/adc-nitro-go/resource/config/system"
+	"github.com/citrix/adc-nitro-go/service"
 )
 
 func uploadTestdataFile(c *NetScalerNitroClient, t *testing.T, filename, targetDir string) error {
@@ -33,14 +33,14 @@ func uploadTestdataFile(c *NetScalerNitroClient, t *testing.T, filename, targetD
 		Filecontent:  base64.StdEncoding.EncodeToString(b),
 		Filelocation: targetDir,
 	}
-	_, err = nsClient.AddResource(netscaler.Systemfile.Type(), filename, &sf)
+	_, err = nsClient.AddResource(service.Systemfile.Type(), filename, &sf)
 	if err != nil && strings.Contains(err.Error(), "File already exists") {
 		url_args := map[string]string{"filelocation": strings.Replace(targetDir, "/", "%2F", -1)}
-		err := nsClient.DeleteResourceWithArgsMap(netscaler.Systemfile.Type(), filename, url_args)
+		err := nsClient.DeleteResourceWithArgsMap(service.Systemfile.Type(), filename, url_args)
 		if err != nil {
 			return err
 		}
-		_, err = nsClient.AddResource(netscaler.Systemfile.Type(), filename, &sf)
+		_, err = nsClient.AddResource(service.Systemfile.Type(), filename, &sf)
 		if err != nil {
 			return err
 		}
@@ -80,14 +80,14 @@ func testHelperInstantiateClient(nsUrl, username, password string, sslVerify boo
 		Endpoint: nsUrl,
 	}
 
-	params := netscaler.NitroParams{
+	params := service.NitroParams{
 		Url:      nsUrl,
 		Username: username,
 		Password: password,
 		//ProxiedNs: d.Get("proxied_ns").(string),
 		SslVerify: sslVerify,
 	}
-	client, err := netscaler.NewNitroClientFromParams(params)
+	client, err := service.NewNitroClientFromParams(params)
 	if err != nil {
 		return nil, err
 	}
@@ -158,7 +158,7 @@ func testIsTargetAdcCluster() bool {
 	}
 	nsClient := c.client
 
-	datalist, err := nsClient.FindAllResources(netscaler.Clusterinstance.Type())
+	datalist, err := nsClient.FindAllResources(service.Clusterinstance.Type())
 	if err != nil {
 		//lintignore:R009
 		panic(err)

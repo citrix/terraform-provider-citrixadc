@@ -1,10 +1,10 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/cs"
-	"github.com/chiradeep/go-nitro/config/ssl"
+	"github.com/citrix/adc-nitro-go/resource/config/cs"
+	"github.com/citrix/adc-nitro-go/resource/config/ssl"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 
@@ -437,7 +437,7 @@ func createCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	sslcertkey, sok := d.GetOk("sslcertkey")
 	if sok {
-		exists := client.ResourceExists(netscaler.Sslcertkey.Type(), sslcertkey.(string))
+		exists := client.ResourceExists(service.Sslcertkey.Type(), sslcertkey.(string))
 		if !exists {
 			return fmt.Errorf("[ERROR] netscaler-provider: Specified ssl cert key does not exist on netscaler!")
 		}
@@ -464,10 +464,10 @@ func createCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		Backupvserver:           d.Get("backupvserver").(string),
 		Cacheable:               d.Get("cacheable").(string),
 		Casesensitive:           d.Get("casesensitive").(string),
-		Clttimeout:              d.Get("clttimeout").(int),
+		Clttimeout:              uint64(d.Get("clttimeout").(int)),
 		Comment:                 d.Get("comment").(string),
 		Cookiedomain:            d.Get("cookiedomain").(string),
-		Cookietimeout:           d.Get("cookietimeout").(int),
+		Cookietimeout:           uint32(d.Get("cookietimeout").(int)),
 		Dbprofilename:           d.Get("dbprofilename").(string),
 		Disableprimaryondown:    d.Get("disableprimaryondown").(string),
 		Dnsprofilename:          d.Get("dnsprofilename").(string),
@@ -483,57 +483,57 @@ func createCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		Ipv46:                   d.Get("ipv46").(string),
 		L2conn:                  d.Get("l2conn").(string),
 		Listenpolicy:            d.Get("listenpolicy").(string),
-		Listenpriority:          d.Get("listenpriority").(int),
+		Listenpriority:          uint32(d.Get("listenpriority").(int)),
 		Mssqlserverversion:      d.Get("mssqlserverversion").(string),
-		Mysqlcharacterset:       d.Get("mysqlcharacterset").(int),
-		Mysqlprotocolversion:    d.Get("mysqlprotocolversion").(int),
-		Mysqlservercapabilities: d.Get("mysqlservercapabilities").(int),
+		Mysqlcharacterset:       uint32(d.Get("mysqlcharacterset").(int)),
+		Mysqlprotocolversion:    uint32(d.Get("mysqlprotocolversion").(int)),
+		Mysqlservercapabilities: uint32(d.Get("mysqlservercapabilities").(int)),
 		Mysqlserverversion:      d.Get("mysqlserverversion").(string),
 		Netprofile:              d.Get("netprofile").(string),
 		Oracleserverversion:     d.Get("oracleserverversion").(string),
-		Persistenceid:           d.Get("persistenceid").(int),
-		Port:                    d.Get("port").(int),
+		Persistenceid:           uint32(d.Get("persistenceid").(int)),
+		Port:                    int32(d.Get("port").(int)),
 		Precedence:              d.Get("precedence").(string),
 		Push:                    d.Get("push").(string),
 		Pushlabel:               d.Get("pushlabel").(string),
 		Pushmulticlients:        d.Get("pushmulticlients").(string),
 		Pushvserver:             d.Get("pushvserver").(string),
-		Range:                   d.Get("range").(int),
+		Range:                   uint32(d.Get("range").(int)),
 		Redirectportrewrite:     d.Get("redirectportrewrite").(string),
 		Redirecturl:             d.Get("redirecturl").(string),
 		Rhistate:                d.Get("rhistate").(string),
 		Rtspnat:                 d.Get("rtspnat").(string),
 		Servicetype:             d.Get("servicetype").(string),
-		Sitedomainttl:           d.Get("sitedomainttl").(int),
+		Sitedomainttl:           uint64(d.Get("sitedomainttl").(int)),
 		Sobackupaction:          d.Get("sobackupaction").(string),
 		Somethod:                d.Get("somethod").(string),
 		Sopersistence:           d.Get("sopersistence").(string),
-		Sopersistencetimeout:    d.Get("sopersistencetimeout").(int),
-		Sothreshold:             d.Get("sothreshold").(int),
+		Sopersistencetimeout:    uint32(d.Get("sopersistencetimeout").(int)),
+		Sothreshold:             uint32(d.Get("sothreshold").(int)),
 		State:                   d.Get("state").(string),
 		Stateupdate:             d.Get("stateupdate").(string),
 		Targettype:              d.Get("targettype").(string),
 		Tcpprofilename:          d.Get("tcpprofilename").(string),
-		Td:                      d.Get("td").(int),
-		Ttl:                     d.Get("ttl").(int),
+		Td:                      uint32(d.Get("td").(int)),
+		Ttl:                     uint64(d.Get("ttl").(int)),
 		Vipheader:               d.Get("vipheader").(string),
 	}
 
-	_, err := client.AddResource(netscaler.Csvserver.Type(), csvserverName, &csvserver)
+	_, err := client.AddResource(service.Csvserver.Type(), csvserverName, &csvserver)
 	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: could not add resource %s of type %s", netscaler.Csvserver.Type(), csvserverName)
+		log.Printf("[ERROR] netscaler-provider: could not add resource %s of type %s", service.Csvserver.Type(), csvserverName)
 		return err
 	}
 	if sok { //ssl cert is specified
-		binding := ssl.Sslvserversslcertkeybinding{
+		binding := ssl.Sslvservercertkeybinding{
 			Vservername: csvserverName,
 			Certkeyname: sslcertkey.(string),
 		}
 		log.Printf("[INFO] netscaler-provider:  Binding ssl cert %s to csvserver %s", sslcertkey, csvserverName)
-		err = client.BindResource(netscaler.Sslvserver.Type(), csvserverName, netscaler.Sslcertkey.Type(), sslcertkey.(string), &binding)
+		err = client.BindResource(service.Sslvserver.Type(), csvserverName, service.Sslcertkey.Type(), sslcertkey.(string), &binding)
 		if err != nil {
 			log.Printf("[ERROR] netscaler-provider:  Failed to bind ssl cert %s to csvserver %s", sslcertkey, csvserverName)
-			err2 := client.DeleteResource(netscaler.Csvserver.Type(), csvserverName)
+			err2 := client.DeleteResource(service.Csvserver.Type(), csvserverName)
 			if err2 != nil {
 				log.Printf("[ERROR] netscaler-provider:  Failed to delete csvserver %s after bind to ssl cert failed", csvserverName)
 				return fmt.Errorf("[ERROR] netscaler-provider:  Failed to delete csvserver %s after bind to ssl cert failed", csvserverName)
@@ -567,10 +567,10 @@ func createCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 			Sslprofile:  sslprofile.(string),
 		}
 		log.Printf("[INFO] netscaler-provider:  Binding ssl profile %s to csvserver %s", sslprofile, csvserverName)
-		_, err := client.UpdateResource(netscaler.Sslvserver.Type(), csvserverName, &sslvserver)
+		_, err := client.UpdateResource(service.Sslvserver.Type(), csvserverName, &sslvserver)
 		if err != nil {
 			log.Printf("[ERROR] netscaler-provider:  Failed to bind ssl profile %s to csvserver %s", sslprofile, csvserverName)
-			err2 := client.DeleteResource(netscaler.Csvserver.Type(), csvserverName)
+			err2 := client.DeleteResource(service.Csvserver.Type(), csvserverName)
 			if err2 != nil {
 				log.Printf("[ERROR] netscaler-provider:  Failed to delete csvserver %s after bind to ssl profile failed", csvserverName)
 				return fmt.Errorf("[ERROR] netscaler-provider:  Failed to delete csvserver %s after bind to ssl profile failed", csvserverName)
@@ -584,13 +584,13 @@ func createCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		lbVserverName := lbVserver.(string)
 		log.Printf("Adding binding to lbvserver %s", lbVserverName)
 
-		bindingStruct := cs.Csvserverlbvserverbinding{
+		bindingStruct := cs.Csvservervserverbinding{
 			Name:      d.Get("name").(string),
 			Lbvserver: lbVserverName,
 		}
 		log.Printf("[INFO] netscaler-provider:  Binding lbvserver %s to csvserver %s", lbVserverName, csvserverName)
 
-		err := client.BindResource(netscaler.Csvserver.Type(), csvserverName, netscaler.Lbvserver.Type(), lbVserverName, &bindingStruct)
+		err := client.BindResource(service.Csvserver.Type(), csvserverName, service.Lbvserver.Type(), lbVserverName, &bindingStruct)
 		if err != nil {
 			log.Printf("[ERROR] netscaler-provider:  Failed to bind lbvserver %s to csvserver %s", lbVserverName, csvserverName)
 			return fmt.Errorf("[ERROR] netscaler-provider:  Failed to bind lbvserver %s to csvserver %s", lbVserverName, csvserverName)
@@ -618,7 +618,7 @@ func readCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	csvserverName := d.Id()
 	log.Printf("[DEBUG] netscaler-provider: csvserver state %s", csvserverName)
-	data, err := client.FindResource(netscaler.Csvserver.Type(), csvserverName)
+	data, err := client.FindResource(service.Csvserver.Type(), csvserverName)
 	if err != nil {
 		log.Printf("[WARN] netscaler-provider: csvserver state %s", csvserverName)
 		d.SetId("")
@@ -701,7 +701,7 @@ func readCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	dataSsl, _ := client.FindResource(netscaler.Sslvserver.Type(), csvserverName)
+	dataSsl, _ := client.FindResource(service.Sslvserver.Type(), csvserverName)
 	d.Set("sslprofile", dataSsl["sslprofile"])
 
 	// Avoid duplicate listing of ciphersuites in standalone
@@ -789,7 +789,7 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("clttimeout") {
 		log.Printf("[DEBUG] netscaler-provider:  Clttimeout has changed for csvserver %s, starting update", csvserverName)
-		csvserver.Clttimeout = d.Get("clttimeout").(int)
+		csvserver.Clttimeout = uint64(d.Get("clttimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("comment") {
@@ -804,7 +804,7 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("cookietimeout") {
 		log.Printf("[DEBUG]  netscaler-provider: Cookietimeout has changed for csvserver %s, starting update", csvserverName)
-		csvserver.Cookietimeout = d.Get("cookietimeout").(int)
+		csvserver.Cookietimeout = uint32(d.Get("cookietimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("dbprofilename") {
@@ -884,7 +884,7 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("listenpriority") {
 		log.Printf("[DEBUG] netscaler-provider:  Listenpriority has changed for csvserver %s, starting update", csvserverName)
-		csvserver.Listenpriority = d.Get("listenpriority").(int)
+		csvserver.Listenpriority = uint32(d.Get("listenpriority").(int))
 		hasChange = true
 	}
 	if d.HasChange("mssqlserverversion") {
@@ -894,17 +894,17 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("mysqlcharacterset") {
 		log.Printf("[DEBUG] netscaler-provider:  Mysqlcharacterset has changed for csvserver %s, starting update", csvserverName)
-		csvserver.Mysqlcharacterset = d.Get("mysqlcharacterset").(int)
+		csvserver.Mysqlcharacterset = uint32(d.Get("mysqlcharacterset").(int))
 		hasChange = true
 	}
 	if d.HasChange("mysqlprotocolversion") {
 		log.Printf("[DEBUG] netscaler-provider:  Mysqlprotocolversion has changed for csvserver %s, starting update", csvserverName)
-		csvserver.Mysqlprotocolversion = d.Get("mysqlprotocolversion").(int)
+		csvserver.Mysqlprotocolversion = uint32(d.Get("mysqlprotocolversion").(int))
 		hasChange = true
 	}
 	if d.HasChange("mysqlservercapabilities") {
 		log.Printf("[DEBUG] netscaler-provider:  Mysqlservercapabilities has changed for csvserver %s, starting update", csvserverName)
-		csvserver.Mysqlservercapabilities = d.Get("mysqlservercapabilities").(int)
+		csvserver.Mysqlservercapabilities = uint32(d.Get("mysqlservercapabilities").(int))
 		hasChange = true
 	}
 	if d.HasChange("mysqlserverversion") {
@@ -929,12 +929,12 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("persistenceid") {
 		log.Printf("[DEBUG]  netscaler-provider: Persistenceid has changed for csvserver %s, starting update", csvserverName)
-		csvserver.Persistenceid = d.Get("persistenceid").(int)
+		csvserver.Persistenceid = uint32(d.Get("persistenceid").(int))
 		hasChange = true
 	}
 	if d.HasChange("port") {
 		log.Printf("[DEBUG] netscaler-provider:  Port has changed for csvserver %s, starting update", csvserverName)
-		csvserver.Port = d.Get("port").(int)
+		csvserver.Port = int32(d.Get("port").(int))
 		hasChange = true
 	}
 	if d.HasChange("precedence") {
@@ -964,7 +964,7 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("range") {
 		log.Printf("[DEBUG] netscaler-provider:  Range has changed for csvserver %s, starting update", csvserverName)
-		csvserver.Range = d.Get("range").(int)
+		csvserver.Range = uint32(d.Get("range").(int))
 		hasChange = true
 	}
 	if d.HasChange("redirectportrewrite") {
@@ -994,7 +994,7 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("sitedomainttl") {
 		log.Printf("[DEBUG]  netscaler-provider: Sitedomainttl has changed for csvserver %s, starting update", csvserverName)
-		csvserver.Sitedomainttl = d.Get("sitedomainttl").(int)
+		csvserver.Sitedomainttl = uint64(d.Get("sitedomainttl").(int))
 		hasChange = true
 	}
 	if d.HasChange("sobackupaction") {
@@ -1014,12 +1014,12 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("sopersistencetimeout") {
 		log.Printf("[DEBUG] netscaler-provider:  Sopersistencetimeout has changed for csvserver %s, starting update", csvserverName)
-		csvserver.Sopersistencetimeout = d.Get("sopersistencetimeout").(int)
+		csvserver.Sopersistencetimeout = uint32(d.Get("sopersistencetimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("sothreshold") {
 		log.Printf("[DEBUG] netscaler-provider:  Sothreshold has changed for csvserver %s, starting update", csvserverName)
-		csvserver.Sothreshold = d.Get("sothreshold").(int)
+		csvserver.Sothreshold = uint32(d.Get("sothreshold").(int))
 		hasChange = true
 	}
 	if d.HasChange("state") {
@@ -1043,12 +1043,12 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("td") {
 		log.Printf("[DEBUG] netscaler-provider:  Td has changed for csvserver %s, starting update", csvserverName)
-		csvserver.Td = d.Get("td").(int)
+		csvserver.Td = uint32(d.Get("td").(int))
 		hasChange = true
 	}
 	if d.HasChange("ttl") {
 		log.Printf("[DEBUG]  netscaler-provider: Ttl has changed for csvserver %s, starting update", csvserverName)
-		csvserver.Ttl = d.Get("ttl").(int)
+		csvserver.Ttl = uint64(d.Get("ttl").(int))
 		hasChange = true
 	}
 	if d.HasChange("vipheader") {
@@ -1089,7 +1089,7 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		oldSslcertkey, _ := d.GetChange("sslcertkey")
 		oldSslcertkeyName := oldSslcertkey.(string)
 		if oldSslcertkeyName != "" {
-			err := client.UnbindResource(netscaler.Sslvserver.Type(), csvserverName, netscaler.Sslcertkey.Type(), oldSslcertkeyName, "certkeyname")
+			err := client.UnbindResource(service.Sslvserver.Type(), csvserverName, service.Sslcertkey.Type(), oldSslcertkeyName, "certkeyname")
 			if err != nil {
 				return fmt.Errorf("[ERROR] netscaler-provider: Error unbinding sslcertkey from csvserver %s", oldSslcertkeyName)
 			}
@@ -1103,7 +1103,7 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		oldLbVserverName := oldLbVserver.(string)
 
 		if oldLbVserverName != "" {
-			err := client.UnbindResource(netscaler.Csvserver.Type(), csvserverName, netscaler.Lbvserver.Type(), oldLbVserverName, "lbvserver")
+			err := client.UnbindResource(service.Csvserver.Type(), csvserverName, service.Lbvserver.Type(), oldLbVserverName, "lbvserver")
 			if err != nil {
 				return fmt.Errorf("[ERROR] netscaler-provider: Error unbinding lbvserver %s from csvserver %s", oldLbVserverName, csvserverName)
 			}
@@ -1111,7 +1111,7 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 	if hasChange {
-		_, err := client.UpdateResource(netscaler.Csvserver.Type(), csvserverName, &csvserver)
+		_, err := client.UpdateResource(service.Csvserver.Type(), csvserverName, &csvserver)
 		if err != nil {
 			return fmt.Errorf("[ERROR] netscaler-provider: Error updating csvserver %s", csvserverName)
 		}
@@ -1121,12 +1121,12 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	if sslcertkeyChanged && sslcertkeyName != "" {
 		//Binding has to be updated
 		//rebind
-		binding := ssl.Sslvserversslcertkeybinding{
+		binding := ssl.Sslvservercertkeybinding{
 			Vservername: csvserverName,
 			Certkeyname: sslcertkeyName,
 		}
 		log.Printf("[INFO] netscaler-provider:  Binding ssl cert %s to csvserver %s", sslcertkeyName, csvserverName)
-		err := client.BindResource(netscaler.Sslvserver.Type(), csvserverName, netscaler.Sslcertkey.Type(), sslcertkeyName, &binding)
+		err := client.BindResource(service.Sslvserver.Type(), csvserverName, service.Sslcertkey.Type(), sslcertkeyName, &binding)
 		if err != nil {
 			log.Printf("[ERROR] netscaler-provider:  Failed to bind ssl cert %s to csvserver %s", sslcertkeyName, csvserverName)
 			return fmt.Errorf("[ERROR] netscaler-provider:  Failed to bind ssl cert %s to csvserver %s", sslcertkeyName, csvserverName)
@@ -1138,12 +1138,12 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	if lbvserverbindingChanged && newLbvserverName != "" {
 		//Binding has to be updated
 		//rebind
-		bindingStruct := cs.Csvserverlbvserverbinding{
+		bindingStruct := cs.Csvservervserverbinding{
 			Name:      csvserverName,
 			Lbvserver: newLbvserverName,
 		}
 		log.Printf("[INFO] netscaler-provider:  Binding lbvserver %s to csvserver %s", newLbvserverName, csvserverName)
-		err := client.BindResource(netscaler.Csvserver.Type(), csvserverName, netscaler.Lbvserver.Type(), newLbvserverName, &bindingStruct)
+		err := client.BindResource(service.Csvserver.Type(), csvserverName, service.Lbvserver.Type(), newLbvserverName, &bindingStruct)
 		if err != nil {
 			log.Printf("[ERROR] netscaler-provider:  Failed to bind lbvserver %s to csvserver %s", newLbvserverName, csvserverName)
 			return fmt.Errorf("[ERROR] netscaler-provider:  Failed to bind lbvserver %s to csvserver %s", newLbvserverName, csvserverName)
@@ -1159,7 +1159,7 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 				Vservername: csvserverName,
 				Sslprofile:  "true",
 			}
-			err := client.ActOnResource(netscaler.Sslvserver.Type(), &sslvserver, "unset")
+			err := client.ActOnResource(service.Sslvserver.Type(), &sslvserver, "unset")
 			if err != nil {
 				return fmt.Errorf("[ERROR] netscaler-provider: Error unbinding ssl profile from csvserver %s", csvserverName)
 			}
@@ -1169,7 +1169,7 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 				Sslprofile:  sslprofileName,
 			}
 			log.Printf("[INFO] netscaler-provider:  Binding ssl profile %s to csvserver %s", sslprofileName, csvserverName)
-			_, err := client.UpdateResource(netscaler.Sslvserver.Type(), csvserverName, &sslvserver)
+			_, err := client.UpdateResource(service.Sslvserver.Type(), csvserverName, &sslvserver)
 			if err != nil {
 				log.Printf("[ERROR] netscaler-provider:  Failed to bind ssl profile %s to csvserver %s", sslprofileName, csvserverName)
 				return fmt.Errorf("[ERROR] netscaler-provider:  Failed to bind ssl profile %s to csvserver %s", sslprofileName, csvserverName)
@@ -1218,7 +1218,7 @@ func deleteCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] netscaler-provider:  In deleteCsvserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	csvserverName := d.Id()
-	err := client.DeleteResource(netscaler.Csvserver.Type(), csvserverName)
+	err := client.DeleteResource(service.Csvserver.Type(), csvserverName)
 	if err != nil {
 		return err
 	}
@@ -1228,7 +1228,7 @@ func deleteCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func doCsvserverStateChange(d *schema.ResourceData, client *netscaler.NitroClient) error {
+func doCsvserverStateChange(d *schema.ResourceData, client *service.NitroClient) error {
 	log.Printf("[DEBUG]  netscaler-provider: In doLbvserverStateChange")
 
 	// We need a new instance of the struct since
@@ -1241,13 +1241,13 @@ func doCsvserverStateChange(d *schema.ResourceData, client *netscaler.NitroClien
 
 	// Enable action
 	if newstate == "ENABLED" {
-		err := client.ActOnResource(netscaler.Csvserver.Type(), csvserver, "enable")
+		err := client.ActOnResource(service.Csvserver.Type(), csvserver, "enable")
 		if err != nil {
 			return err
 		}
 	} else if newstate == "DISABLED" {
 		// Add attributes relevant to the disable operation
-		err := client.ActOnResource(netscaler.Csvserver.Type(), csvserver, "disable")
+		err := client.ActOnResource(service.Csvserver.Type(), csvserver, "disable")
 		if err != nil {
 			return err
 		}

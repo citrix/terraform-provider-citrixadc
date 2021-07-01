@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/chiradeep/go-nitro/netscaler"
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
@@ -87,7 +87,7 @@ func testAccCheckSslparameterExist(n string, id *string) resource.TestCheckFunc 
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(netscaler.Sslparameter.Type(), "")
+		data, err := nsClient.FindResource(service.Sslparameter.Type(), "")
 
 		if err != nil {
 			return err

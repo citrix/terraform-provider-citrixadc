@@ -1,10 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/system"
+	"github.com/citrix/adc-nitro-go/resource/config/system"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
-	_ "github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"encoding/base64"
@@ -81,7 +80,7 @@ func createSystemfileFunc(d *schema.ResourceData, meta interface{}) error {
 		Filename:     filename,
 	}
 
-	_, err := client.AddResource(netscaler.Systemfile.Type(), "", &systemfile)
+	_, err := client.AddResource(service.Systemfile.Type(), "", &systemfile)
 	if err != nil {
 		return err
 	}
@@ -111,7 +110,7 @@ func readSystemfileFunc(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	findParams := netscaler.FindParams{
+	findParams := service.FindParams{
 		ResourceType: "systemfile",
 		ArgsMap:      argsMap,
 	}

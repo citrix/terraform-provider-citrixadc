@@ -17,12 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/chiradeep/go-nitro/config/basic"
-	"github.com/chiradeep/go-nitro/netscaler"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
 	"os"
 	"testing"
+
+	"github.com/citrix/adc-nitro-go/resource/config/basic"
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccService_basic(t *testing.T) {
@@ -67,7 +68,7 @@ func testAccCheckServiceExist(n string, id *string) resource.TestCheckFunc {
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(netscaler.Service.Type(), rs.Primary.ID)
+		data, err := nsClient.FindResource(service.Service.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -93,7 +94,7 @@ func testAccCheckServiceDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(netscaler.Service.Type(), rs.Primary.ID)
+		_, err := nsClient.FindResource(service.Service.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("LB vserver %s still exists", rs.Primary.ID)
 		}
@@ -140,7 +141,7 @@ func TestAccService_AssertNonUpdateableAttributes(t *testing.T) {
 
 	// Create resource
 	serviceName := "tf-acc-service-test"
-	serviceType := netscaler.Service.Type()
+	serviceType := service.Service.Type()
 
 	// Defer deletion of actual resource
 	defer testHelperEnsureResourceDeletion(c, t, serviceType, serviceName, nil)
@@ -196,11 +197,6 @@ func TestAccService_AssertNonUpdateableAttributes(t *testing.T) {
 	serviceInstance.Td = 2
 	testHelperVerifyImmutabilityFunc(c, t, serviceType, serviceName, serviceInstance, "td")
 	serviceInstance.Td = 0
-
-	//riseapbrstatsmsgcode
-	serviceInstance.Riseapbrstatsmsgcode = 2
-	testHelperVerifyImmutabilityFunc(c, t, serviceType, serviceName, serviceInstance, "riseapbrstatsmsgcode")
-	serviceInstance.Riseapbrstatsmsgcode = 0
 
 }
 

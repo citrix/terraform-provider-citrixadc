@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/cs"
+	"github.com/citrix/adc-nitro-go/resource/config/cs"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"fmt"
@@ -85,7 +85,7 @@ func createCsvserver_cmppolicy_bindingFunc(d *schema.ResourceData, meta interfac
 	policyname := d.Get("policyname").(string)
 	bindingId := fmt.Sprintf("%s,%s", name, policyname)
 
-	csvserver_cmppolicy_binding := cs.Csvservercmppolicybinding{
+	csvserver_cmppolicy_binding := cs.Csvserverpolicybinding{
 		Bindpoint:              d.Get("bindpoint").(string),
 		Gotopriorityexpression: d.Get("gotopriorityexpression").(string),
 		Invoke:                 d.Get("invoke").(bool),
@@ -93,11 +93,11 @@ func createCsvserver_cmppolicy_bindingFunc(d *schema.ResourceData, meta interfac
 		Labeltype:              d.Get("labeltype").(string),
 		Name:                   d.Get("name").(string),
 		Policyname:             d.Get("policyname").(string),
-		Priority:               d.Get("priority").(int),
+		Priority:               uint32(d.Get("priority").(int)),
 		Targetlbvserver:        d.Get("targetlbvserver").(string),
 	}
 
-	err := client.UpdateUnnamedResource(netscaler.Csvserver_cmppolicy_binding.Type(), &csvserver_cmppolicy_binding)
+	err := client.UpdateUnnamedResource(service.Csvserver_cmppolicy_binding.Type(), &csvserver_cmppolicy_binding)
 	if err != nil {
 		return err
 	}
@@ -121,7 +121,7 @@ func readCsvserver_cmppolicy_bindingFunc(d *schema.ResourceData, meta interface{
 	policyname := idSlice[1]
 	log.Printf("[DEBUG] citrixadc-provider: Reading csvserver_cmppolicy_binding state %s", bindingId)
 
-	findParams := netscaler.FindParams{
+	findParams := service.FindParams{
 		ResourceType:             "csvserver_cmppolicy_binding",
 		ResourceName:             name,
 		ResourceMissingErrorCode: 258,
@@ -196,7 +196,7 @@ func deleteCsvserver_cmppolicy_bindingFunc(d *schema.ResourceData, meta interfac
 	if v, ok := d.GetOk("priority"); ok {
 		argsMap["priority"] = url.QueryEscape(fmt.Sprintf("%v", v))
 	}
-	err := client.DeleteResourceWithArgsMap(netscaler.Csvserver_cmppolicy_binding.Type(), name, argsMap)
+	err := client.DeleteResourceWithArgsMap(service.Csvserver_cmppolicy_binding.Type(), name, argsMap)
 	if err != nil {
 		return err
 	}

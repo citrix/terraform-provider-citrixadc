@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/system"
+	"github.com/citrix/adc-nitro-go/resource/config/system"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/schema"
 
@@ -76,10 +76,10 @@ func createSystemgroupFunc(d *schema.ResourceData, meta interface{}) error {
 	systemgroup := system.Systemgroup{
 		Groupname:    d.Get("groupname").(string),
 		Promptstring: d.Get("promptstring").(string),
-		Timeout:      d.Get("timeout").(int),
+		Timeout:      uint64(d.Get("timeout").(int)),
 	}
 
-	_, err := client.AddResource(netscaler.Systemgroup.Type(), systemgroupName, &systemgroup)
+	_, err := client.AddResource(service.Systemgroup.Type(), systemgroupName, &systemgroup)
 	if err != nil {
 		return err
 	}
@@ -109,7 +109,7 @@ func readSystemgroupFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	systemgroupName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading systemgroup state %s", systemgroupName)
-	data, err := client.FindResource(netscaler.Systemgroup.Type(), systemgroupName)
+	data, err := client.FindResource(service.Systemgroup.Type(), systemgroupName)
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing systemgroup state %s", systemgroupName)
 		d.SetId("")
@@ -151,12 +151,12 @@ func updateSystemgroupFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("timeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Timeout has changed for systemgroup %s, starting update", systemgroupName)
-		systemgroup.Timeout = d.Get("timeout").(int)
+		systemgroup.Timeout = uint64(d.Get("timeout").(int))
 		hasChange = true
 	}
 
 	if hasChange {
-		_, err := client.UpdateResource(netscaler.Systemgroup.Type(), systemgroupName, &systemgroup)
+		_, err := client.UpdateResource(service.Systemgroup.Type(), systemgroupName, &systemgroup)
 		if err != nil {
 			return fmt.Errorf("Error updating systemgroup %s", systemgroupName)
 		}
@@ -181,7 +181,7 @@ func deleteSystemgroupFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSystemgroupFunc")
 	client := meta.(*NetScalerNitroClient).client
 	systemgroupName := d.Id()
-	err := client.DeleteResource(netscaler.Systemgroup.Type(), systemgroupName)
+	err := client.DeleteResource(service.Systemgroup.Type(), systemgroupName)
 	if err != nil {
 		return err
 	}
@@ -219,7 +219,7 @@ func addSingleSystemgroupCmdpolicyBinding(d *schema.ResourceData, meta interface
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("Adding binding %v", binding)
 
-	bindingStruct := system.Systemgroupsystemcmdpolicybinding{}
+	bindingStruct := system.Systemgroupcmdpolicybinding{}
 	bindingStruct.Groupname = d.Get("groupname").(string)
 
 	if d, ok := binding["policyname"]; ok {
@@ -227,7 +227,7 @@ func addSingleSystemgroupCmdpolicyBinding(d *schema.ResourceData, meta interface
 	}
 
 	if d, ok := binding["priority"]; ok {
-		bindingStruct.Priority = d.(int)
+		bindingStruct.Priority = uint32(d.(int))
 	}
 
 	// We need to do a HTTP PUT hence the UpdateResource
@@ -318,7 +318,7 @@ func addSingleSystemgroupSystemuserBinding(d *schema.ResourceData, meta interfac
 	log.Printf("[DEBUG]  citrixadc-provider: In addSingleSystemgroupSystemuserBinding")
 	client := meta.(*NetScalerNitroClient).client
 
-	bindingStruct := system.Systemgroupsystemuserbinding{}
+	bindingStruct := system.Systemgroupuserbinding{}
 	bindingStruct.Groupname = d.Get("groupname").(string)
 	bindingStruct.Username = username
 

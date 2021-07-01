@@ -20,7 +20,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/chiradeep/go-nitro/netscaler"
+	"github.com/citrix/adc-nitro-go/service"
+
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
@@ -119,8 +120,8 @@ func testAccCheckAppfwprofile_crosssitescripting_bindingExist(n string, id *stri
 		appFwName := idSlice[0]
 		crosssitescripting := idSlice[1]
 
-		findParams := netscaler.FindParams{
-			ResourceType:             netscaler.Appfwprofile_crosssitescripting_binding.Type(),
+		findParams := service.FindParams{
+			ResourceType:             service.Appfwprofile_crosssitescripting_binding.Type(),
 			ResourceName:             appFwName,
 			ResourceMissingErrorCode: 258,
 		}
@@ -161,7 +162,7 @@ func testAccCheckAppfwprofile_crosssitescripting_bindingDestroy(s *terraform.Sta
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(netscaler.Appfwprofile_crosssitescripting_binding.Type(), rs.Primary.ID)
+		_, err := nsClient.FindResource(service.Appfwprofile_crosssitescripting_binding.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("appfwprofile_crosssitescripting_binding %s still exists", rs.Primary.ID)
 		}

@@ -20,7 +20,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/chiradeep/go-nitro/netscaler"
+	"github.com/citrix/adc-nitro-go/service"
+
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
@@ -112,8 +113,8 @@ func testAccCheckAppfwprofile_sqlinjection_bindingExist(n string, id *string) re
 		appFwName := idSlice[0]
 		sqlinjection := idSlice[1]
 
-		findParams := netscaler.FindParams{
-			ResourceType:             netscaler.Appfwprofile_sqlinjection_binding.Type(),
+		findParams := service.FindParams{
+			ResourceType:             service.Appfwprofile_sqlinjection_binding.Type(),
 			ResourceName:             appFwName,
 			ResourceMissingErrorCode: 258,
 		}
@@ -154,7 +155,7 @@ func testAccCheckAppfwprofile_sqlinjection_bindingDestroy(s *terraform.State) er
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(netscaler.Appfwprofile_sqlinjection_binding.Type(), rs.Primary.ID)
+		_, err := nsClient.FindResource(service.Appfwprofile_sqlinjection_binding.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("appfwprofile_sqlinjection_binding %s still exists", rs.Primary.ID)
 		}

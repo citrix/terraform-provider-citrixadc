@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/chiradeep/go-nitro/netscaler"
+	"testing"
+
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"testing"
 )
 
 const testAccLbparameter_basic_step1 = `
@@ -114,7 +115,7 @@ func testAccCheckLbparameterExist(n string, id *string) resource.TestCheckFunc {
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(netscaler.Lbparameter.Type(), "")
+		data, err := nsClient.FindResource(service.Lbparameter.Type(), "")
 
 		if err != nil {
 			return err
@@ -140,7 +141,7 @@ func testAccCheckLbparameterDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(netscaler.Lbparameter.Type(), rs.Primary.ID)
+		_, err := nsClient.FindResource(service.Lbparameter.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("lbparameter %s still exists", rs.Primary.ID)
 		}

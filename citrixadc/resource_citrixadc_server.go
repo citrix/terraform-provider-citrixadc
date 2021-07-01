@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/basic"
+	"github.com/citrix/adc-nitro-go/resource/config/basic"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 
@@ -119,19 +119,19 @@ func createServerFunc(d *schema.ResourceData, meta interface{}) error {
 		Comment:            d.Get("comment").(string),
 		Domain:             d.Get("domain").(string),
 		Domainresolvenow:   d.Get("domainresolvenow").(bool),
-		Domainresolveretry: d.Get("domainresolveretry").(int),
+		Domainresolveretry: int32(d.Get("domainresolveretry").(int)),
 		Internal:           d.Get("internal").(bool),
 		Ipaddress:          d.Get("ipaddress").(string),
 		Ipv6address:        d.Get("ipv6address").(string),
 		Name:               d.Get("name").(string),
 		Querytype:          d.Get("querytype").(string),
 		State:              d.Get("state").(string),
-		Td:                 d.Get("td").(int),
+		Td:                 uint32(d.Get("td").(int)),
 		Translationip:      d.Get("translationip").(string),
 		Translationmask:    d.Get("translationmask").(string),
 	}
 
-	_, err := client.AddResource(netscaler.Server.Type(), serverName, &server)
+	_, err := client.AddResource(service.Server.Type(), serverName, &server)
 	if err != nil {
 		return err
 	}
@@ -151,7 +151,7 @@ func readServerFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	serverName := d.Id()
 	log.Printf("[DEBUG] netscaler-provider: Reading server state %s", serverName)
-	data, err := client.FindResource(netscaler.Server.Type(), serverName)
+	data, err := client.FindResource(service.Server.Type(), serverName)
 	if err != nil {
 		log.Printf("[WARN] netscaler-provider: Clearing server state %s", serverName)
 		d.SetId("")
@@ -206,7 +206,7 @@ func updateServerFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("domainresolveretry") {
 		log.Printf("[DEBUG]  netscaler-provider: Domainresolveretry has changed for server %s, starting update", serverName)
-		server.Domainresolveretry = d.Get("domainresolveretry").(int)
+		server.Domainresolveretry = int32(d.Get("domainresolveretry").(int))
 		hasChange = true
 	}
 	if d.HasChange("internal") {
@@ -240,7 +240,7 @@ func updateServerFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("td") {
 		log.Printf("[DEBUG]  netscaler-provider: Td has changed for server %s, starting update", serverName)
-		server.Td = d.Get("td").(int)
+		server.Td = uint32(d.Get("td").(int))
 		hasChange = true
 	}
 	if d.HasChange("translationip") {
@@ -255,7 +255,7 @@ func updateServerFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if hasChange {
-		_, err := client.UpdateResource(netscaler.Server.Type(), serverName, &server)
+		_, err := client.UpdateResource(service.Server.Type(), serverName, &server)
 		if err != nil {
 			return fmt.Errorf("Error updating server %s", serverName)
 		}
@@ -273,7 +273,7 @@ func deleteServerFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  netscaler-provider: In deleteServerFunc")
 	client := meta.(*NetScalerNitroClient).client
 	serverName := d.Id()
-	err := client.DeleteResource(netscaler.Server.Type(), serverName)
+	err := client.DeleteResource(service.Server.Type(), serverName)
 	if err != nil {
 		return err
 	}
@@ -283,7 +283,7 @@ func deleteServerFunc(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func doServerStateChange(d *schema.ResourceData, client *netscaler.NitroClient) error {
+func doServerStateChange(d *schema.ResourceData, client *service.NitroClient) error {
 	log.Printf("[DEBUG]  netscaler-provider: In doServerStateChange")
 
 	// We need a new instance of the struct since
@@ -296,15 +296,15 @@ func doServerStateChange(d *schema.ResourceData, client *netscaler.NitroClient) 
 
 	// Enable action
 	if newstate == "ENABLED" {
-		err := client.ActOnResource(netscaler.Server.Type(), server, "enable")
+		err := client.ActOnResource(service.Server.Type(), server, "enable")
 		if err != nil {
 			return err
 		}
 	} else if newstate == "DISABLED" {
 		// Add attributes relevant to the disable operation
-		server.Delay = d.Get("delay").(int)
+		server.Delay = uint64(d.Get("delay").(int))
 		server.Graceful = d.Get("graceful").(string)
-		err := client.ActOnResource(netscaler.Server.Type(), server, "disable")
+		err := client.ActOnResource(service.Server.Type(), server, "disable")
 		if err != nil {
 			return err
 		}

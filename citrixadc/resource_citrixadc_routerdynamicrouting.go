@@ -1,7 +1,7 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/router"
+	"github.com/citrix/adc-nitro-go/resource/config/router"
 
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -49,7 +49,7 @@ func applyRouterdynamicroutingFunc(d *schema.ResourceData, meta interface{}) err
 
 	routerdynamicrouting := router.Routerdynamicrouting{
 		Commandstring: cmdString,
-		Nodeid:        d.Get("nodeid").(int),
+		Nodeid:        uint32(d.Get("nodeid").(int)),
 	}
 
 	err := client.ActOnResource("routerdynamicrouting", &routerdynamicrouting, "apply")

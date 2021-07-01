@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/ns"
+	"github.com/citrix/adc-nitro-go/resource/config/ns"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 
@@ -176,27 +176,27 @@ func createNsparamFunc(d *schema.ResourceData, meta interface{}) error {
 		Cipheader:                 d.Get("cipheader").(string),
 		Cookieversion:             d.Get("cookieversion").(string),
 		Crportrange:               d.Get("crportrange").(string),
-		Exclusivequotamaxclient:   d.Get("exclusivequotamaxclient").(int),
-		Exclusivequotaspillover:   d.Get("exclusivequotaspillover").(int),
+		Exclusivequotamaxclient:   uint32(d.Get("exclusivequotamaxclient").(int)),
+		Exclusivequotaspillover:   uint32(d.Get("exclusivequotaspillover").(int)),
 		Ftpportrange:              d.Get("ftpportrange").(string),
-		Grantquotamaxclient:       d.Get("grantquotamaxclient").(int),
-		Grantquotaspillover:       d.Get("grantquotaspillover").(int),
+		Grantquotamaxclient:       uint32(d.Get("grantquotamaxclient").(int)),
+		Grantquotaspillover:       uint32(d.Get("grantquotaspillover").(int)),
 		Internaluserlogin:         d.Get("internaluserlogin").(string),
-		Maxconn:                   d.Get("maxconn").(int),
-		Maxreq:                    d.Get("maxreq").(int),
-		Mgmthttpport:              d.Get("mgmthttpport").(int),
-		Mgmthttpsport:             d.Get("mgmthttpsport").(int),
-		Pmtumin:                   d.Get("pmtumin").(int),
-		Pmtutimeout:               d.Get("pmtutimeout").(int),
+		Maxconn:                   uint32(d.Get("maxconn").(int)),
+		Maxreq:                    uint32(d.Get("maxreq").(int)),
+		Mgmthttpport:              int32(d.Get("mgmthttpport").(int)),
+		Mgmthttpsport:             int32(d.Get("mgmthttpsport").(int)),
+		Pmtumin:                   uint32(d.Get("pmtumin").(int)),
+		Pmtutimeout:               uint32(d.Get("pmtutimeout").(int)),
 		Proxyprotocol:             d.Get("proxyprotocol").(string),
 		Securecookie:              d.Get("securecookie").(string),
-		Servicepathingressvlan:    d.Get("servicepathingressvlan").(int),
+		Servicepathingressvlan:    uint32(d.Get("servicepathingressvlan").(int)),
 		Tcpcip:                    d.Get("tcpcip").(string),
 		Timezone:                  d.Get("timezone").(string),
 		Useproxyport:              d.Get("useproxyport").(string),
 	}
 
-	err := client.UpdateUnnamedResource(netscaler.Nsparam.Type(), &nsparam)
+	err := client.UpdateUnnamedResource(service.Nsparam.Type(), &nsparam)
 	if err != nil {
 		return err
 	}
@@ -216,7 +216,7 @@ func readNsparamFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	nsparamName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading nsparam state %s", nsparamName)
-	data, err := client.FindResource(netscaler.Nsparam.Type(), "")
+	data, err := client.FindResource(service.Nsparam.Type(), "")
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing nsparam state %s", nsparamName)
 		d.SetId("")

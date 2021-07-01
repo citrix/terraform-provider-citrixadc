@@ -1,7 +1,8 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/netscaler"
+	"github.com/citrix/adc-nitro-go/service"
+
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 
@@ -78,7 +79,7 @@ func readNsvpxparamFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	nsvpxparamName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading nsvpxparam state %s", nsvpxparamName)
-	findParams := netscaler.FindParams{
+	findParams := service.FindParams{
 		ResourceType: "nsvpxparam",
 	}
 	dataArr, err := client.FindResourceArrayWithParams(findParams)

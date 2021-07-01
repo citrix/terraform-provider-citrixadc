@@ -17,12 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/chiradeep/go-nitro/config/basic"
-	"github.com/chiradeep/go-nitro/netscaler"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
 	"os"
 	"testing"
+
+	"github.com/citrix/adc-nitro-go/resource/config/basic"
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccServicegroup_basic(t *testing.T) {
@@ -66,7 +67,7 @@ func testAccCheckServicegroupExist(n string, id *string) resource.TestCheckFunc 
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(netscaler.Servicegroup.Type(), rs.Primary.ID)
+		data, err := nsClient.FindResource(service.Servicegroup.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -92,7 +93,7 @@ func testAccCheckServicegroupDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(netscaler.Servicegroup.Type(), rs.Primary.ID)
+		_, err := nsClient.FindResource(service.Servicegroup.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("LB vserver %s still exists", rs.Primary.ID)
 		}
@@ -145,7 +146,7 @@ func TestAccServicegroup_AssertNonUpdateableAttributes(t *testing.T) {
 
 	// Create resource
 	servicegroupName := "tf-acc-servicegroup-test"
-	servicegroupType := netscaler.Servicegroup.Type()
+	servicegroupType := service.Servicegroup.Type()
 
 	// Defer deletion of actual resource
 	defer testHelperEnsureResourceDeletion(c, t, servicegroupType, servicegroupName, nil)
@@ -179,11 +180,6 @@ func TestAccServicegroup_AssertNonUpdateableAttributes(t *testing.T) {
 	servicegroupInstance.Memberport = 80
 	testHelperVerifyImmutabilityFunc(c, t, servicegroupType, servicegroupName, servicegroupInstance, "memberport")
 	servicegroupInstance.Memberport = 0
-
-	//riseapbrstatsmsgcode
-	servicegroupInstance.Riseapbrstatsmsgcode = 10
-	testHelperVerifyImmutabilityFunc(c, t, servicegroupType, servicegroupName, servicegroupInstance, "riseapbrstatsmsgcode")
-	servicegroupInstance.Riseapbrstatsmsgcode = 0
 
 	//includemembers
 	servicegroupInstance.Includemembers = true

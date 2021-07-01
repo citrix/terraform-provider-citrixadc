@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/chiradeep/go-nitro/netscaler"
+	"testing"
+
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"testing"
 )
 
 func TestAccAuditsyslogaction_basic(t *testing.T) {
@@ -71,7 +72,7 @@ func testAccCheckAuditsyslogactionExist(n string, id *string) resource.TestCheck
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(netscaler.Auditsyslogaction.Type(), rs.Primary.ID)
+		data, err := nsClient.FindResource(service.Auditsyslogaction.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -97,7 +98,7 @@ func testAccCheckAuditsyslogactionDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(netscaler.Auditsyslogaction.Type(), rs.Primary.ID)
+		_, err := nsClient.FindResource(service.Auditsyslogaction.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("%s still exists", rs.Primary.ID)
 		}

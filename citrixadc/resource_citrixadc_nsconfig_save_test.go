@@ -21,9 +21,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/chiradeep/go-nitro/config/lb"
-	"github.com/chiradeep/go-nitro/config/ns"
-	"github.com/chiradeep/go-nitro/netscaler"
+	"github.com/citrix/adc-nitro-go/resource/config/lb"
+	"github.com/citrix/adc-nitro-go/resource/config/ns"
+	"github.com/citrix/adc-nitro-go/service"
+
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
@@ -126,13 +127,13 @@ func testAccSaveRaceSetup(t *testing.T) {
 	// Run Save config concurrently
 	url := os.Getenv("NS_URL")
 	password := os.Getenv("NS_PASSWORD")
-	params := netscaler.NitroParams{
+	params := service.NitroParams{
 		Url:       url,
 		Username:  "nsroot",
 		Password:  password,
 		SslVerify: false,
 	}
-	client, err := netscaler.NewNitroClientFromParams(params)
+	client, err := service.NewNitroClientFromParams(params)
 	if err != nil {
 		t.Fatalf("extra client instantiation error: %s", err.Error())
 	}

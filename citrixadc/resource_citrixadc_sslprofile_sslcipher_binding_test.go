@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/chiradeep/go-nitro/netscaler"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
 	"strings"
 	"testing"
+
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccSslprofile_sslcipher_binding_basic(t *testing.T) {
@@ -85,7 +86,7 @@ func testAccCheckSslprofile_sslcipher_bindingExist(n string, id *string) resourc
 		profileName := idSlice[0]
 		cipherName := idSlice[1]
 
-		findParams := netscaler.FindParams{
+		findParams := service.FindParams{
 			ResourceType:             "sslprofile_sslcipher_binding",
 			ResourceName:             profileName,
 			ResourceMissingErrorCode: 3248,
@@ -133,7 +134,7 @@ func testAccCheckSslprofile_sslcipher_bindingDestroy(s *terraform.State) error {
 
 		profileName := idSlice[0]
 
-		findParams := netscaler.FindParams{
+		findParams := service.FindParams{
 			ResourceType:             "sslprofile_sslcipher_binding",
 			ResourceName:             profileName,
 			ResourceMissingErrorCode: 3248,

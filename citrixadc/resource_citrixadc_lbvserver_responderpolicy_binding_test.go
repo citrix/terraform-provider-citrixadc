@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/chiradeep/go-nitro/netscaler"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
 	"strings"
 	"testing"
+
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 const testAccLbvserver_responderpolicy_binding_basic_step1 = `
@@ -145,7 +146,7 @@ func testAccCheckLbvserver_responderpolicy_bindingExist(n string, id *string) re
 		name := idSlice[0]
 		policyname := idSlice[1]
 
-		findParams := netscaler.FindParams{
+		findParams := service.FindParams{
 			ResourceType:             "lbvserver_responderpolicy_binding",
 			ResourceName:             name,
 			ResourceMissingErrorCode: 258,
@@ -187,7 +188,7 @@ func testAccCheckLbvserver_responderpolicy_bindingDestroy(s *terraform.State) er
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(netscaler.Lbvserver_responderpolicy_binding.Type(), rs.Primary.ID)
+		_, err := nsClient.FindResource(service.Lbvserver_responderpolicy_binding.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("lbvserver_responderpolicy_binding %s still exists", rs.Primary.ID)
 		}

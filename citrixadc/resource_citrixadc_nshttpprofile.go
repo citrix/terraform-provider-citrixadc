@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/ns"
+	"github.com/citrix/adc-nitro-go/resource/config/ns"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"fmt"
@@ -209,7 +209,7 @@ func createNshttpprofileFunc(d *schema.ResourceData, meta interface{}) error {
 		Name:                      nshttpprofileName,
 		Adpttimeout:               d.Get("adpttimeout").(string),
 		Altsvc:                    d.Get("altsvc").(string),
-		Apdexcltresptimethreshold: d.Get("apdexcltresptimethreshold").(int),
+		Apdexcltresptimethreshold: uint32(d.Get("apdexcltresptimethreshold").(int)),
 		Clientiphdrexpr:           d.Get("clientiphdrexpr").(string),
 		Cmponpush:                 d.Get("cmponpush").(string),
 		Conmultiplex:              d.Get("conmultiplex").(string),
@@ -218,32 +218,32 @@ func createNshttpprofileFunc(d *schema.ResourceData, meta interface{}) error {
 		Dropinvalreqs:             d.Get("dropinvalreqs").(string),
 		Http2:                     d.Get("http2").(string),
 		Http2direct:               d.Get("http2direct").(string),
-		Http2headertablesize:      d.Get("http2headertablesize").(int),
-		Http2initialwindowsize:    d.Get("http2initialwindowsize").(int),
-		Http2maxconcurrentstreams: d.Get("http2maxconcurrentstreams").(int),
-		Http2maxframesize:         d.Get("http2maxframesize").(int),
-		Http2maxheaderlistsize:    d.Get("http2maxheaderlistsize").(int),
-		Http2minseverconn:         d.Get("http2minseverconn").(int),
+		Http2headertablesize:      uint32(d.Get("http2headertablesize").(int)),
+		Http2initialwindowsize:    uint32(d.Get("http2initialwindowsize").(int)),
+		Http2maxconcurrentstreams: uint32(d.Get("http2maxconcurrentstreams").(int)),
+		Http2maxframesize:         uint32(d.Get("http2maxframesize").(int)),
+		Http2maxheaderlistsize:    uint32(d.Get("http2maxheaderlistsize").(int)),
+		Http2minseverconn:         uint32(d.Get("http2minseverconn").(int)),
 		Http2strictcipher:         d.Get("http2strictcipher").(string),
-		Incomphdrdelay:            d.Get("incomphdrdelay").(int),
+		Incomphdrdelay:            uint32(d.Get("incomphdrdelay").(int)),
 		Markconnreqinval:          d.Get("markconnreqinval").(string),
 		Markhttp09inval:           d.Get("markhttp09inval").(string),
 		Marktracereqinval:         d.Get("marktracereqinval").(string),
-		Maxheaderlen:              d.Get("maxheaderlen").(int),
-		Maxreq:                    d.Get("maxreq").(int),
-		Maxreusepool:              d.Get("maxreusepool").(int),
-		Minreusepool:              d.Get("minreusepool").(int),
+		Maxheaderlen:              uint32(d.Get("maxheaderlen").(int)),
+		Maxreq:                    uint32(d.Get("maxreq").(int)),
+		Maxreusepool:              uint32(d.Get("maxreusepool").(int)),
+		Minreusepool:              uint32(d.Get("minreusepool").(int)),
 		Persistentetag:            d.Get("persistentetag").(string),
-		Reqtimeout:                d.Get("reqtimeout").(int),
+		Reqtimeout:                uint32(d.Get("reqtimeout").(int)),
 		Reqtimeoutaction:          d.Get("reqtimeoutaction").(string),
-		Reusepooltimeout:          d.Get("reusepooltimeout").(int),
+		Reusepooltimeout:          uint32(d.Get("reusepooltimeout").(int)),
 		Rtsptunnel:                d.Get("rtsptunnel").(string),
 		Spdy:                      d.Get("spdy").(string),
 		Weblog:                    d.Get("weblog").(string),
 		Websocket:                 d.Get("websocket").(string),
 	}
 
-	_, err := client.AddResource(netscaler.Nshttpprofile.Type(), nshttpprofileName, &nshttpprofile)
+	_, err := client.AddResource(service.Nshttpprofile.Type(), nshttpprofileName, &nshttpprofile)
 	if err != nil {
 		return err
 	}
@@ -263,7 +263,7 @@ func readNshttpprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	nshttpprofileName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading nshttpprofile state %s", nshttpprofileName)
-	data, err := client.FindResource(netscaler.Nshttpprofile.Type(), nshttpprofileName)
+	data, err := client.FindResource(service.Nshttpprofile.Type(), nshttpprofileName)
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing nshttpprofile state %s", nshttpprofileName)
 		d.SetId("")
@@ -331,7 +331,7 @@ func updateNshttpprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("apdexcltresptimethreshold") {
 		log.Printf("[DEBUG]  citrixadc-provider: Apdexcltresptimethreshold has changed for nshttpprofile %s, starting update", nshttpprofileName)
-		nshttpprofile.Apdexcltresptimethreshold = d.Get("apdexcltresptimethreshold").(int)
+		nshttpprofile.Apdexcltresptimethreshold = uint32(d.Get("apdexcltresptimethreshold").(int))
 		hasChange = true
 	}
 	if d.HasChange("clientiphdrexpr") {
@@ -376,32 +376,32 @@ func updateNshttpprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("http2headertablesize") {
 		log.Printf("[DEBUG]  citrixadc-provider: Http2headertablesize has changed for nshttpprofile %s, starting update", nshttpprofileName)
-		nshttpprofile.Http2headertablesize = d.Get("http2headertablesize").(int)
+		nshttpprofile.Http2headertablesize = uint32(d.Get("http2headertablesize").(int))
 		hasChange = true
 	}
 	if d.HasChange("http2initialwindowsize") {
 		log.Printf("[DEBUG]  citrixadc-provider: Http2initialwindowsize has changed for nshttpprofile %s, starting update", nshttpprofileName)
-		nshttpprofile.Http2initialwindowsize = d.Get("http2initialwindowsize").(int)
+		nshttpprofile.Http2initialwindowsize = uint32(d.Get("http2initialwindowsize").(int))
 		hasChange = true
 	}
 	if d.HasChange("http2maxconcurrentstreams") {
 		log.Printf("[DEBUG]  citrixadc-provider: Http2maxconcurrentstreams has changed for nshttpprofile %s, starting update", nshttpprofileName)
-		nshttpprofile.Http2maxconcurrentstreams = d.Get("http2maxconcurrentstreams").(int)
+		nshttpprofile.Http2maxconcurrentstreams = uint32(d.Get("http2maxconcurrentstreams").(int))
 		hasChange = true
 	}
 	if d.HasChange("http2maxframesize") {
 		log.Printf("[DEBUG]  citrixadc-provider: Http2maxframesize has changed for nshttpprofile %s, starting update", nshttpprofileName)
-		nshttpprofile.Http2maxframesize = d.Get("http2maxframesize").(int)
+		nshttpprofile.Http2maxframesize = uint32(d.Get("http2maxframesize").(int))
 		hasChange = true
 	}
 	if d.HasChange("http2maxheaderlistsize") {
 		log.Printf("[DEBUG]  citrixadc-provider: Http2maxheaderlistsize has changed for nshttpprofile %s, starting update", nshttpprofileName)
-		nshttpprofile.Http2maxheaderlistsize = d.Get("http2maxheaderlistsize").(int)
+		nshttpprofile.Http2maxheaderlistsize = uint32(d.Get("http2maxheaderlistsize").(int))
 		hasChange = true
 	}
 	if d.HasChange("http2minseverconn") {
 		log.Printf("[DEBUG]  citrixadc-provider: Http2minseverconn has changed for nshttpprofile %s, starting update", nshttpprofileName)
-		nshttpprofile.Http2minseverconn = d.Get("http2minseverconn").(int)
+		nshttpprofile.Http2minseverconn = uint32(d.Get("http2minseverconn").(int))
 		hasChange = true
 	}
 	if d.HasChange("http2strictcipher") {
@@ -411,7 +411,7 @@ func updateNshttpprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("incomphdrdelay") {
 		log.Printf("[DEBUG]  citrixadc-provider: Incomphdrdelay has changed for nshttpprofile %s, starting update", nshttpprofileName)
-		nshttpprofile.Incomphdrdelay = d.Get("incomphdrdelay").(int)
+		nshttpprofile.Incomphdrdelay = uint32(d.Get("incomphdrdelay").(int))
 		hasChange = true
 	}
 	if d.HasChange("markconnreqinval") {
@@ -431,22 +431,22 @@ func updateNshttpprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("maxheaderlen") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxheaderlen has changed for nshttpprofile %s, starting update", nshttpprofileName)
-		nshttpprofile.Maxheaderlen = d.Get("maxheaderlen").(int)
+		nshttpprofile.Maxheaderlen = uint32(d.Get("maxheaderlen").(int))
 		hasChange = true
 	}
 	if d.HasChange("maxreq") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxreq has changed for nshttpprofile %s, starting update", nshttpprofileName)
-		nshttpprofile.Maxreq = d.Get("maxreq").(int)
+		nshttpprofile.Maxreq = uint32(d.Get("maxreq").(int))
 		hasChange = true
 	}
 	if d.HasChange("maxreusepool") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxreusepool has changed for nshttpprofile %s, starting update", nshttpprofileName)
-		nshttpprofile.Maxreusepool = d.Get("maxreusepool").(int)
+		nshttpprofile.Maxreusepool = uint32(d.Get("maxreusepool").(int))
 		hasChange = true
 	}
 	if d.HasChange("minreusepool") {
 		log.Printf("[DEBUG]  citrixadc-provider: Minreusepool has changed for nshttpprofile %s, starting update", nshttpprofileName)
-		nshttpprofile.Minreusepool = d.Get("minreusepool").(int)
+		nshttpprofile.Minreusepool = uint32(d.Get("minreusepool").(int))
 		hasChange = true
 	}
 	if d.HasChange("name") {
@@ -461,7 +461,7 @@ func updateNshttpprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("reqtimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Reqtimeout has changed for nshttpprofile %s, starting update", nshttpprofileName)
-		nshttpprofile.Reqtimeout = d.Get("reqtimeout").(int)
+		nshttpprofile.Reqtimeout = uint32(d.Get("reqtimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("reqtimeoutaction") {
@@ -471,7 +471,7 @@ func updateNshttpprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("reusepooltimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Reusepooltimeout has changed for nshttpprofile %s, starting update", nshttpprofileName)
-		nshttpprofile.Reusepooltimeout = d.Get("reusepooltimeout").(int)
+		nshttpprofile.Reusepooltimeout = uint32(d.Get("reusepooltimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("rtsptunnel") {
@@ -496,7 +496,7 @@ func updateNshttpprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if hasChange {
-		_, err := client.UpdateResource(netscaler.Nshttpprofile.Type(), nshttpprofileName, &nshttpprofile)
+		_, err := client.UpdateResource(service.Nshttpprofile.Type(), nshttpprofileName, &nshttpprofile)
 		if err != nil {
 			return fmt.Errorf("Error updating nshttpprofile %s", nshttpprofileName)
 		}
@@ -508,7 +508,7 @@ func deleteNshttpprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNshttpprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nshttpprofileName := d.Id()
-	err := client.DeleteResource(netscaler.Nshttpprofile.Type(), nshttpprofileName)
+	err := client.DeleteResource(service.Nshttpprofile.Type(), nshttpprofileName)
 	if err != nil {
 		return err
 	}

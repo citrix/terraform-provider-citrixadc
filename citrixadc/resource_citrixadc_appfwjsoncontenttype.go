@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/appfw"
+	"github.com/citrix/adc-nitro-go/resource/config/appfw"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"log"
@@ -39,7 +39,7 @@ func createAppfwjsoncontenttypeFunc(d *schema.ResourceData, meta interface{}) er
 		Jsoncontenttypevalue: appfwjsoncontenttypeName,
 	}
 
-	_, err := client.AddResource(netscaler.Appfwjsoncontenttype.Type(), appfwjsoncontenttypeName, &appfwjsoncontenttype)
+	_, err := client.AddResource(service.Appfwjsoncontenttype.Type(), appfwjsoncontenttypeName, &appfwjsoncontenttype)
 	if err != nil {
 		return err
 	}
@@ -59,7 +59,7 @@ func readAppfwjsoncontenttypeFunc(d *schema.ResourceData, meta interface{}) erro
 	client := meta.(*NetScalerNitroClient).client
 	appfwjsoncontenttypeName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading appfwjsoncontenttype state %s", appfwjsoncontenttypeName)
-	data, err := client.FindResource(netscaler.Appfwjsoncontenttype.Type(), appfwjsoncontenttypeName)
+	data, err := client.FindResource(service.Appfwjsoncontenttype.Type(), appfwjsoncontenttypeName)
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing appfwjsoncontenttype state %s", appfwjsoncontenttypeName)
 		d.SetId("")
@@ -76,7 +76,7 @@ func deleteAppfwjsoncontenttypeFunc(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppfwjsoncontenttypeFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appfwjsoncontenttypeName := d.Id()
-	err := client.DeleteResource(netscaler.Appfwjsoncontenttype.Type(), appfwjsoncontenttypeName)
+	err := client.DeleteResource(service.Appfwjsoncontenttype.Type(), appfwjsoncontenttypeName)
 	if err != nil {
 		return err
 	}

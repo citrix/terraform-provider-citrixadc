@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/dns"
+	"github.com/citrix/adc-nitro-go/resource/config/dns"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"fmt"
@@ -92,18 +92,18 @@ func createDnssoarecFunc(d *schema.ResourceData, meta interface{}) error {
 		Contact:      d.Get("contact").(string),
 		Domain:       d.Get("domain").(string),
 		Ecssubnet:    d.Get("ecssubnet").(string),
-		Expire:       d.Get("expire").(int),
-		Minimum:      d.Get("minimum").(int),
-		Nodeid:       d.Get("nodeid").(int),
+		Expire:       uint64(d.Get("expire").(int)),
+		Minimum:      uint64(d.Get("minimum").(int)),
+		Nodeid:       uint32(d.Get("nodeid").(int)),
 		Originserver: d.Get("originserver").(string),
-		Refresh:      d.Get("refresh").(int),
-		Retry:        d.Get("retry").(int),
-		Serial:       d.Get("serial").(int),
-		Ttl:          d.Get("ttl").(int),
+		Refresh:      uint64(d.Get("refresh").(int)),
+		Retry:        uint64(d.Get("retry").(int)),
+		Serial:       uint32(d.Get("serial").(int)),
+		Ttl:          uint64(d.Get("ttl").(int)),
 		Type:         d.Get("type").(string),
 	}
 
-	_, err := client.AddResource(netscaler.Dnssoarec.Type(), dnssoarecId, &dnssoarec)
+	_, err := client.AddResource(service.Dnssoarec.Type(), dnssoarecId, &dnssoarec)
 	if err != nil {
 		return err
 	}
@@ -123,7 +123,7 @@ func readDnssoarecFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	dnssoarecName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading dnssoarec state %s", dnssoarecName)
-	data, err := client.FindResource(netscaler.Dnssoarec.Type(), dnssoarecName)
+	data, err := client.FindResource(service.Dnssoarec.Type(), dnssoarecName)
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing dnssoarec state %s", dnssoarecName)
 		d.SetId("")
@@ -172,17 +172,17 @@ func updateDnssoarecFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("expire") {
 		log.Printf("[DEBUG]  citrixadc-provider: Expire has changed for dnssoarec %s, starting update", dnssoarecId)
-		dnssoarec.Expire = d.Get("expire").(int)
+		dnssoarec.Expire = uint64(d.Get("expire").(int))
 		hasChange = true
 	}
 	if d.HasChange("minimum") {
 		log.Printf("[DEBUG]  citrixadc-provider: Minimum has changed for dnssoarec %s, starting update", dnssoarecId)
-		dnssoarec.Minimum = d.Get("minimum").(int)
+		dnssoarec.Minimum = uint64(d.Get("minimum").(int))
 		hasChange = true
 	}
 	if d.HasChange("nodeid") {
 		log.Printf("[DEBUG]  citrixadc-provider: Nodeid has changed for dnssoarec %s, starting update", dnssoarecId)
-		dnssoarec.Nodeid = d.Get("nodeid").(int)
+		dnssoarec.Nodeid = uint32(d.Get("nodeid").(int))
 		hasChange = true
 	}
 	if d.HasChange("originserver") {
@@ -192,22 +192,22 @@ func updateDnssoarecFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("refresh") {
 		log.Printf("[DEBUG]  citrixadc-provider: Refresh has changed for dnssoarec %s, starting update", dnssoarecId)
-		dnssoarec.Refresh = d.Get("refresh").(int)
+		dnssoarec.Refresh = uint64(d.Get("refresh").(int))
 		hasChange = true
 	}
 	if d.HasChange("retry") {
 		log.Printf("[DEBUG]  citrixadc-provider: Retry has changed for dnssoarec %s, starting update", dnssoarecId)
-		dnssoarec.Retry = d.Get("retry").(int)
+		dnssoarec.Retry = uint64(d.Get("retry").(int))
 		hasChange = true
 	}
 	if d.HasChange("serial") {
 		log.Printf("[DEBUG]  citrixadc-provider: Serial has changed for dnssoarec %s, starting update", dnssoarecId)
-		dnssoarec.Serial = d.Get("serial").(int)
+		dnssoarec.Serial = uint32(d.Get("serial").(int))
 		hasChange = true
 	}
 	if d.HasChange("ttl") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ttl has changed for dnssoarec %s, starting update", dnssoarecId)
-		dnssoarec.Ttl = d.Get("ttl").(int)
+		dnssoarec.Ttl = uint64(d.Get("ttl").(int))
 		hasChange = true
 	}
 	if d.HasChange("type") {
@@ -217,7 +217,7 @@ func updateDnssoarecFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if hasChange {
-		_, err := client.UpdateResource(netscaler.Dnssoarec.Type(), dnssoarecId, &dnssoarec)
+		_, err := client.UpdateResource(service.Dnssoarec.Type(), dnssoarecId, &dnssoarec)
 		if err != nil {
 			return fmt.Errorf("Error updating dnssoarec %s. %s", dnssoarecId, err)
 		}
@@ -229,7 +229,7 @@ func deleteDnssoarecFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteDnssoarecFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnssoarecId := d.Id()
-	err := client.DeleteResource(netscaler.Dnssoarec.Type(), dnssoarecId)
+	err := client.DeleteResource(service.Dnssoarec.Type(), dnssoarecId)
 	if err != nil {
 		return err
 	}

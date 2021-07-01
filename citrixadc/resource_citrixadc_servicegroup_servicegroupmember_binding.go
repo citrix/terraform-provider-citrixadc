@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/basic"
+	"github.com/citrix/adc-nitro-go/resource/config/basic"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"fmt"
@@ -116,19 +116,19 @@ func createServicegroup_servicegroupmember_bindingFunc(d *schema.ResourceData, m
 
 	servicegroup_servicegroupmember_binding := basic.Servicegroupservicegroupmemberbinding{
 		Customserverid:   d.Get("customserverid").(string),
-		Dbsttl:           d.Get("dbsttl").(int),
-		Hashid:           d.Get("hashid").(int),
+		Dbsttl:           uint64(d.Get("dbsttl").(int)),
+		Hashid:           uint32(d.Get("hashid").(int)),
 		Ip:               d.Get("ip").(string),
 		Nameserver:       d.Get("nameserver").(string),
-		Port:             d.Get("port").(int),
-		Serverid:         d.Get("serverid").(int),
+		Port:             int32(d.Get("port").(int)),
+		Serverid:         uint32(d.Get("serverid").(int)),
 		Servername:       d.Get("servername").(string),
 		Servicegroupname: d.Get("servicegroupname").(string),
 		State:            d.Get("state").(string),
-		Weight:           d.Get("weight").(int),
+		Weight:           uint32(d.Get("weight").(int)),
 	}
 
-	err := client.UpdateUnnamedResource(netscaler.Servicegroup_servicegroupmember_binding.Type(), &servicegroup_servicegroupmember_binding)
+	err := client.UpdateUnnamedResource(service.Servicegroup_servicegroupmember_binding.Type(), &servicegroup_servicegroupmember_binding)
 	if err != nil {
 		return err
 	}
@@ -167,7 +167,7 @@ func readServicegroup_servicegroupmember_bindingFunc(d *schema.ResourceData, met
 
 	log.Printf("[DEBUG] citrixadc-provider: Reading servicegroup_servicegroupmember_binding state %v", bindingId)
 
-	findParams := netscaler.FindParams{
+	findParams := service.FindParams{
 		ResourceType:             "servicegroup_servicegroupmember_binding",
 		ResourceName:             servicegroupname,
 		ResourceMissingErrorCode: 258,

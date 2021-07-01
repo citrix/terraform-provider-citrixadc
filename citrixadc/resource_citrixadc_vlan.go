@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/network"
+	"github.com/citrix/adc-nitro-go/resource/config/network"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"fmt"
@@ -64,14 +64,14 @@ func createVlanFunc(d *schema.ResourceData, meta interface{}) error {
 	vlan := network.Vlan{
 		Aliasname:          d.Get("aliasname").(string),
 		Dynamicrouting:     d.Get("dynamicrouting").(string),
-		Id:                 d.Get("vlanid").(int),
+		Id:                 uint32(d.Get("vlanid").(int)),
 		Ipv6dynamicrouting: d.Get("ipv6dynamicrouting").(string),
-		Mtu:                d.Get("mtu").(int),
+		Mtu:                uint32(d.Get("mtu").(int)),
 		Sharing:            d.Get("sharing").(string),
 	}
 
 	vlanIdStr := strconv.Itoa(vlanId)
-	_, err := client.AddResource(netscaler.Vlan.Type(), vlanIdStr, &vlan)
+	_, err := client.AddResource(service.Vlan.Type(), vlanIdStr, &vlan)
 	if err != nil {
 		return err
 	}
@@ -91,7 +91,7 @@ func readVlanFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	vlanIdStr := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading vlan state %s", vlanIdStr)
-	data, err := client.FindResource(netscaler.Vlan.Type(), vlanIdStr)
+	data, err := client.FindResource(service.Vlan.Type(), vlanIdStr)
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing vlan state %s", vlanIdStr)
 		d.SetId("")
@@ -114,7 +114,7 @@ func updateVlanFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	vlanId := d.Get("vlanid").(int)
 	vlan := network.Vlan{
-		Id: d.Get("vlanid").(int),
+		Id: uint32(d.Get("vlanid").(int)),
 	}
 	hasChange := false
 	if d.HasChange("aliasname") {
@@ -134,7 +134,7 @@ func updateVlanFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("mtu") {
 		log.Printf("[DEBUG]  citrixadc-provider: Mtu has changed for vlan %d, starting update", vlanId)
-		vlan.Mtu = d.Get("mtu").(int)
+		vlan.Mtu = uint32(d.Get("mtu").(int))
 		hasChange = true
 	}
 	if d.HasChange("sharing") {
@@ -145,7 +145,7 @@ func updateVlanFunc(d *schema.ResourceData, meta interface{}) error {
 
 	vlanIdStr := strconv.Itoa(vlanId)
 	if hasChange {
-		_, err := client.UpdateResource(netscaler.Vlan.Type(), vlanIdStr, &vlan)
+		_, err := client.UpdateResource(service.Vlan.Type(), vlanIdStr, &vlan)
 		if err != nil {
 			return fmt.Errorf("Error updating vlan %d", vlanId)
 		}
@@ -157,7 +157,7 @@ func deleteVlanFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteVlanFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vlanName := d.Id()
-	err := client.DeleteResource(netscaler.Vlan.Type(), vlanName)
+	err := client.DeleteResource(service.Vlan.Type(), vlanName)
 	if err != nil {
 		return err
 	}

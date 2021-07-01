@@ -20,7 +20,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/chiradeep/go-nitro/netscaler"
+	"github.com/citrix/adc-nitro-go/service"
+
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
@@ -132,8 +133,8 @@ func testAccCheckLbvserver_appfwpolicy_bindingExist(n string, id *string) resour
 		lbvserverName := idSlice[0]
 		appfwPolicyName := idSlice[1]
 
-		findParams := netscaler.FindParams{
-			ResourceType:             netscaler.Lbvserver_appfwpolicy_binding.Type(),
+		findParams := service.FindParams{
+			ResourceType:             service.Lbvserver_appfwpolicy_binding.Type(),
 			ResourceName:             lbvserverName,
 			ResourceMissingErrorCode: 258,
 		}
@@ -174,7 +175,7 @@ func testAccCheckLbvserver_appfwpolicy_bindingDestroy(s *terraform.State) error 
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(netscaler.Lbvserver_appfwpolicy_binding.Type(), rs.Primary.ID)
+		_, err := nsClient.FindResource(service.Lbvserver_appfwpolicy_binding.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("lbvserver_appfwpolicy_binding %s still exists", rs.Primary.ID)
 		}

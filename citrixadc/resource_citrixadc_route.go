@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/network"
+	"github.com/citrix/adc-nitro-go/resource/config/network"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"fmt"
@@ -109,10 +109,10 @@ func createRouteFunc(d *schema.ResourceData, meta interface{}) error {
 
 	route := network.Route{
 		Advertise:  d.Get("advertise").(string),
-		Cost:       d.Get("cost").(int),
-		Cost1:      d.Get("cost1").(int),
+		Cost:       uint32(d.Get("cost").(int)),
+		Cost1:      uint32(d.Get("cost1").(int)),
 		Detail:     d.Get("detail").(bool),
-		Distance:   d.Get("distance").(int),
+		Distance:   uint32(d.Get("distance").(int)),
 		Gateway:    d.Get("gateway").(string),
 		Monitor:    d.Get("monitor").(string),
 		Msr:        d.Get("msr").(string),
@@ -120,12 +120,12 @@ func createRouteFunc(d *schema.ResourceData, meta interface{}) error {
 		Network:    d.Get("network").(string),
 		Ownergroup: d.Get("ownergroup").(string),
 		Routetype:  d.Get("routetype").(string),
-		Td:         d.Get("td").(int),
-		Vlan:       d.Get("vlan").(int),
-		Weight:     d.Get("weight").(int),
+		Td:         uint32(d.Get("td").(int)),
+		Vlan:       uint32(d.Get("vlan").(int)),
+		Weight:     uint32(d.Get("weight").(int)),
 	}
 
-	_, err := client.AddResource(netscaler.Route.Type(), route.Network, &route)
+	_, err := client.AddResource(service.Route.Type(), route.Network, &route)
 	if err != nil {
 		return err
 	}
@@ -149,8 +149,8 @@ func readRouteFunc(d *schema.ResourceData, meta interface{}) error {
 	argsMap["network"] = url.QueryEscape(d.Get("network").(string))
 	argsMap["netmask"] = url.QueryEscape(d.Get("netmask").(string))
 	argsMap["gateway"] = url.QueryEscape(d.Get("gateway").(string))
-	findParams := netscaler.FindParams{
-		ResourceType: netscaler.Route.Type(),
+	findParams := service.FindParams{
+		ResourceType: service.Route.Type(),
 		ArgsMap:      argsMap,
 	}
 	dataArray, err := client.FindResourceArrayWithParams(findParams)
@@ -205,12 +205,12 @@ func updateRouteFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("cost") {
 		log.Printf("[DEBUG]  citrixadc-provider: Cost has changed for route %s, starting update", routeName)
-		route.Cost = d.Get("cost").(int)
+		route.Cost = uint32(d.Get("cost").(int))
 		hasChange = true
 	}
 	if d.HasChange("cost1") {
 		log.Printf("[DEBUG]  citrixadc-provider: Cost1 has changed for route %s, starting update", routeName)
-		route.Cost1 = d.Get("cost1").(int)
+		route.Cost1 = uint32(d.Get("cost1").(int))
 		hasChange = true
 	}
 	if d.HasChange("detail") {
@@ -220,7 +220,7 @@ func updateRouteFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("distance") {
 		log.Printf("[DEBUG]  citrixadc-provider: Distance has changed for route %s, starting update", routeName)
-		route.Distance = d.Get("distance").(int)
+		route.Distance = uint32(d.Get("distance").(int))
 		hasChange = true
 	}
 	if d.HasChange("gateway") {
@@ -260,17 +260,17 @@ func updateRouteFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("td") {
 		log.Printf("[DEBUG]  citrixadc-provider: Td has changed for route %s, starting update", routeName)
-		route.Td = d.Get("td").(int)
+		route.Td = uint32(d.Get("td").(int))
 		hasChange = true
 	}
 	if d.HasChange("vlan") {
 		log.Printf("[DEBUG]  citrixadc-provider: Vlan has changed for route %s, starting update", routeName)
-		route.Vlan = d.Get("vlan").(int)
+		route.Vlan = uint32(d.Get("vlan").(int))
 		hasChange = true
 	}
 	if d.HasChange("weight") {
 		log.Printf("[DEBUG]  citrixadc-provider: Weight has changed for route %s, starting update", routeName)
-		route.Weight = d.Get("weight").(int)
+		route.Weight = uint32(d.Get("weight").(int))
 		hasChange = true
 	}
 
@@ -279,7 +279,7 @@ func updateRouteFunc(d *schema.ResourceData, meta interface{}) error {
 		route.Network = d.Get("network").(string)
 		route.Netmask = d.Get("netmask").(string)
 		route.Gateway = d.Get("gateway").(string)
-		err := client.UpdateUnnamedResource(netscaler.Route.Type(), &route)
+		err := client.UpdateUnnamedResource(service.Route.Type(), &route)
 		if err != nil {
 			return fmt.Errorf("Error updating route %s", routeName)
 		}
@@ -296,7 +296,7 @@ func deleteRouteFunc(d *schema.ResourceData, meta interface{}) error {
 	argsMap["netmask"] = url.QueryEscape(d.Get("netmask").(string))
 	argsMap["gateway"] = url.QueryEscape(d.Get("gateway").(string))
 
-	err := client.DeleteResourceWithArgsMap(netscaler.Route.Type(), d.Get("network").(string), argsMap)
+	err := client.DeleteResourceWithArgsMap(service.Route.Type(), d.Get("network").(string), argsMap)
 	if err != nil {
 		return err
 	}

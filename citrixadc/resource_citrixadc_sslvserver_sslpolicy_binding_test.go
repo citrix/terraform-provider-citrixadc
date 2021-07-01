@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/chiradeep/go-nitro/netscaler"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
 	"strings"
 	"testing"
+
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccSslvserver_sslpolicy_binding_lbvserver(t *testing.T) {
@@ -93,7 +94,7 @@ func testAccCheckSslvserver_sslpolicy_bindingExist(n string, id *string) resourc
 		policyname := idSlice[1]
 
 		client := testAccProvider.Meta().(*NetScalerNitroClient).client
-		findParams := netscaler.FindParams{
+		findParams := service.FindParams{
 			ResourceType:             "sslvserver_sslpolicy_binding",
 			ResourceName:             vservername,
 			ResourceMissingErrorCode: 461,
@@ -139,7 +140,7 @@ func testAccCheckSslvserver_sslpolicy_bindingDestroy(s *terraform.State) error {
 
 		vservername := idSlice[0]
 
-		findParams := netscaler.FindParams{
+		findParams := service.FindParams{
 			ResourceType:             "sslvserver_sslpolicy_binding",
 			ResourceName:             vservername,
 			ResourceMissingErrorCode: 461,

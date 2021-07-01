@@ -1,7 +1,7 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/utility"
+	"github.com/citrix/adc-nitro-go/resource/config/utility"
 
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -80,14 +80,14 @@ func createPingerFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	pingerId := resource.PrefixedUniqueId("tf-pinger-")
 	ping := utility.Ping{
-		C:        d.Get("c").(int),
+		C:        uint32(d.Get("c").(int)),
 		HostName: d.Get("hostname").(string),
-		I:        d.Get("i").(int),
+		I:        uint32(d.Get("i").(int)),
 		N:        d.Get("n").(bool),
 		P:        d.Get("p").(string),
 		Q:        d.Get("q").(bool),
-		S:        d.Get("s").(int),
-		T:        d.Get("t").(int),
+		S:        uint32(d.Get("s").(int)),
+		T:        uint32(d.Get("t").(int)),
 	}
 
 	if err := client.ActOnResource("ping", &ping, ""); err != nil {

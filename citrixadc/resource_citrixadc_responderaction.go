@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/responder"
+	"github.com/citrix/adc-nitro-go/resource/config/responder"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 
@@ -85,12 +85,12 @@ func createResponderactionFunc(d *schema.ResourceData, meta interface{}) error {
 		Htmlpage:           d.Get("htmlpage").(string),
 		Name:               d.Get("name").(string),
 		Reasonphrase:       d.Get("reasonphrase").(string),
-		Responsestatuscode: d.Get("responsestatuscode").(int),
+		Responsestatuscode: uint32(d.Get("responsestatuscode").(int)),
 		Target:             d.Get("target").(string),
 		Type:               d.Get("type").(string),
 	}
 
-	_, err := client.AddResource(netscaler.Responderaction.Type(), responderactionName, &responderaction)
+	_, err := client.AddResource(service.Responderaction.Type(), responderactionName, &responderaction)
 	if err != nil {
 		return err
 	}
@@ -110,7 +110,7 @@ func readResponderactionFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	responderactionName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading responderaction state %s", responderactionName)
-	data, err := client.FindResource(netscaler.Responderaction.Type(), responderactionName)
+	data, err := client.FindResource(service.Responderaction.Type(), responderactionName)
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing responderaction state %s", responderactionName)
 		d.SetId("")
@@ -166,7 +166,7 @@ func updateResponderactionFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("responsestatuscode") {
 		log.Printf("[DEBUG]  citrixadc-provider: Responsestatuscode has changed for responderaction %s, starting update", responderactionName)
-		responderaction.Responsestatuscode = d.Get("responsestatuscode").(int)
+		responderaction.Responsestatuscode = uint32(d.Get("responsestatuscode").(int))
 		hasChange = true
 	}
 	if d.HasChange("target") {
@@ -181,7 +181,7 @@ func updateResponderactionFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if hasChange {
-		_, err := client.UpdateResource(netscaler.Responderaction.Type(), responderactionName, &responderaction)
+		_, err := client.UpdateResource(service.Responderaction.Type(), responderactionName, &responderaction)
 		if err != nil {
 			return fmt.Errorf("Error updating responderaction %s", responderactionName)
 		}
@@ -193,7 +193,7 @@ func deleteResponderactionFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteResponderactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	responderactionName := d.Id()
-	err := client.DeleteResource(netscaler.Responderaction.Type(), responderactionName)
+	err := client.DeleteResource(service.Responderaction.Type(), responderactionName)
 	if err != nil {
 		return err
 	}

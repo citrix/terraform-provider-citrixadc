@@ -1,7 +1,8 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/netscaler"
+	"github.com/citrix/adc-nitro-go/service"
+
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 
@@ -311,7 +312,7 @@ func createNsipFunc(d *schema.ResourceData, meta interface{}) error {
 		Mptcpadvertise:              d.Get("mptcpadvertise").(string),
 	}
 
-	_, err := client.AddResource(netscaler.Nsip.Type(), ipaddress, &nsip)
+	_, err := client.AddResource(service.Nsip.Type(), ipaddress, &nsip)
 	if err != nil {
 		return err
 	}
@@ -331,7 +332,7 @@ func readNsipFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	nsipName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading nsip state %s", nsipName)
-	data, err := client.FindResource(netscaler.Nsip.Type(), nsipName)
+	data, err := client.FindResource(service.Nsip.Type(), nsipName)
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing nsip state %s", nsipName)
 		d.SetId("")
@@ -571,7 +572,7 @@ func updateNsipFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if hasChange {
-		_, err := client.UpdateResource(netscaler.Nsip.Type(), ipaddress, &nsip)
+		_, err := client.UpdateResource(service.Nsip.Type(), ipaddress, &nsip)
 		if err != nil {
 			return fmt.Errorf("Error updating nsip %s: %s", ipaddress, err.Error())
 		}
@@ -590,7 +591,7 @@ func deleteNsipFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNsipFunc")
 	client := meta.(*NetScalerNitroClient).client
 	ipaddress := d.Id()
-	err := client.DeleteResource(netscaler.Nsip.Type(), ipaddress)
+	err := client.DeleteResource(service.Nsip.Type(), ipaddress)
 	if err != nil {
 		return err
 	}
@@ -600,7 +601,7 @@ func deleteNsipFunc(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func doNsipStateChange(d *schema.ResourceData, client *netscaler.NitroClient) error {
+func doNsipStateChange(d *schema.ResourceData, client *service.NitroClient) error {
 	log.Printf("[DEBUG]  netscaler-provider: In doNsipStateChange")
 
 	// We need a new instance of the struct since
@@ -614,13 +615,13 @@ func doNsipStateChange(d *schema.ResourceData, client *netscaler.NitroClient) er
 
 	// Enable action
 	if newstate == "ENABLED" {
-		err := client.ActOnResource(netscaler.Nsip.Type(), nsip, "enable")
+		err := client.ActOnResource(service.Nsip.Type(), nsip, "enable")
 		if err != nil {
 			return err
 		}
 		// Disable action
 	} else if newstate == "DISABLED" {
-		err := client.ActOnResource(netscaler.Nsip.Type(), nsip, "disable")
+		err := client.ActOnResource(service.Nsip.Type(), nsip, "disable")
 		if err != nil {
 			return err
 		}

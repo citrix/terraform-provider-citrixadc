@@ -5,9 +5,9 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/chiradeep/go-nitro/config/appfw"
+	"github.com/citrix/adc-nitro-go/resource/config/appfw"
 
-	"github.com/chiradeep/go-nitro/netscaler"
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"log"
@@ -80,7 +80,7 @@ func createAppfwprofile_cookieconsistency_bindingFunc(d *schema.ResourceData, me
 		State:             d.Get("state").(string),
 	}
 
-	_, err := client.AddResource(netscaler.Appfwprofile_cookieconsistency_binding.Type(), appFwName, &appfwprofile_cookieconsistency_binding)
+	_, err := client.AddResource(service.Appfwprofile_cookieconsistency_binding.Type(), appFwName, &appfwprofile_cookieconsistency_binding)
 	if err != nil {
 		return err
 	}
@@ -104,8 +104,8 @@ func readAppfwprofile_cookieconsistency_bindingFunc(d *schema.ResourceData, meta
 	cookieconsistency := idSlice[1]
 	log.Printf("[DEBUG] citrixadc-provider: Reading appfwprofile_cookieconsistency_binding state %s", bindingId)
 
-	findParams := netscaler.FindParams{
-		ResourceType:             netscaler.Appfwprofile_cookieconsistency_binding.Type(),
+	findParams := service.FindParams{
+		ResourceType:             service.Appfwprofile_cookieconsistency_binding.Type(),
 		ResourceName:             appFwName,
 		ResourceMissingErrorCode: 258,
 	}
@@ -168,7 +168,7 @@ func deleteAppfwprofile_cookieconsistency_bindingFunc(d *schema.ResourceData, me
 	args := make(map[string]string)
 	args["cookieconsistency"] = url.QueryEscape(cookieConsistencyString)
 
-	err := client.DeleteResourceWithArgsMap(netscaler.Appfwprofile_cookieconsistency_binding.Type(), appFwName, args)
+	err := client.DeleteResourceWithArgsMap(service.Appfwprofile_cookieconsistency_binding.Type(), appFwName, args)
 	if err != nil {
 		return err
 	}

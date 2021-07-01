@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/chiradeep/go-nitro/netscaler"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
 	"strings"
 	"testing"
+
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccServicegroup_lbmonitor_binding_basic(t *testing.T) {
@@ -80,7 +81,7 @@ func testAccCheckServicegroup_lbmonitor_bindingExist(n string, id *string) resou
 		servicegroupName := idSlice[0]
 		monitorName := idSlice[1]
 
-		findParams := netscaler.FindParams{
+		findParams := service.FindParams{
 			ResourceType:             "servicegroup_lbmonitor_binding",
 			ResourceName:             servicegroupName,
 			ResourceMissingErrorCode: 258,
@@ -121,7 +122,7 @@ func testAccCheckServicegroup_lbmonitor_bindingDestroy(s *terraform.State) error
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(netscaler.Servicegroup_lbmonitor_binding.Type(), rs.Primary.ID)
+		_, err := nsClient.FindResource(service.Servicegroup_lbmonitor_binding.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("LB vserver %s still exists", rs.Primary.ID)
 		}

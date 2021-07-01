@@ -3,13 +3,13 @@ package citrixadc
 import (
 	"log"
 
-	"github.com/chiradeep/go-nitro/netscaler"
+	"github.com/citrix/adc-nitro-go/service"
 )
 
-func isTargetAdcCluster(nsClient *netscaler.NitroClient) bool {
+func isTargetAdcCluster(nsClient *service.NitroClient) bool {
 	log.Printf("[DEBUG]  citrixadc-provider-test: In isTargetAdcCluster")
 
-	datalist, err := nsClient.FindAllResources(netscaler.Clusterinstance.Type())
+	datalist, err := nsClient.FindAllResources(service.Clusterinstance.Type())
 	if err != nil {
 		//lintignore:R009
 		panic(err)
@@ -20,4 +20,12 @@ func isTargetAdcCluster(nsClient *netscaler.NitroClient) bool {
 	} else {
 		return true
 	}
+}
+
+func toStringList(in []interface{}) []string {
+	out := make([]string, 0, len(in))
+	for _, val := range in {
+		out = append(out, val.(string))
+	}
+	return out
 }

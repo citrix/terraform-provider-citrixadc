@@ -16,11 +16,12 @@ limitations under the License.
 package citrixadc
 
 import (
-	"fmt"
-	"github.com/chiradeep/go-nitro/netscaler"
+	"github.com/citrix/adc-nitro-go/service"
+
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 
+	"fmt"
 	"strings"
 	"testing"
 )
@@ -106,7 +107,7 @@ func testAccCheckDnsnsrecExist(n string, id *string) resource.TestCheckFunc {
 		domain := idSlice[0]
 		nameserver := idSlice[1]
 
-		findParams := netscaler.FindParams{
+		findParams := service.FindParams{
 			ResourceType: "dnsnsrec",
 		}
 
@@ -143,7 +144,7 @@ func testAccCheckDnsnsrecDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(netscaler.Dnsnsrec.Type(), rs.Primary.ID)
+		_, err := nsClient.FindResource(service.Dnsnsrec.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("dnsnsrec %s still exists", rs.Primary.ID)
 		}

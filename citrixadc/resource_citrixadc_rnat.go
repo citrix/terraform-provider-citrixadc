@@ -1,12 +1,12 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/network"
-	"github.com/mitchellh/mapstructure"
+	"github.com/citrix/adc-nitro-go/resource/config/network"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/mitchellh/mapstructure"
 
 	"log"
 )
@@ -100,7 +100,7 @@ func readRnatsFunc(d *schema.ResourceData, meta interface{}) error {
 	rnatName := d.Id()
 	log.Printf("[DEBUG] netscaler-provider: Reading rnat state %s", rnatName)
 
-	data, _ := client.FindAllResources(netscaler.Rnat.Type())
+	data, _ := client.FindAllResources(service.Rnat.Type())
 	rnats := make([]map[string]interface{}, len(data))
 	for i, a := range data {
 		rnats[i] = a
@@ -168,7 +168,7 @@ func createSingleRnat(rnat map[string]interface{}, meta interface{}) error {
 	rnat2 := network.Rnat{}
 	mapstructure.Decode(rnat, &rnat2)
 
-	err := client.UpdateUnnamedResource(netscaler.Rnat.Type(), &rnat2)
+	err := client.UpdateUnnamedResource(service.Rnat.Type(), &rnat2)
 	if err != nil {
 		return err
 	}
@@ -181,7 +181,7 @@ func deleteSingleRnat(rnat map[string]interface{}, meta interface{}) error {
 	rnat2 := network.Rnat{}
 	mapstructure.Decode(rnat, &rnat2)
 	client := meta.(*NetScalerNitroClient).client
-	err := client.ActOnResource(netscaler.Rnat.Type(), rnat2, "clear")
+	err := client.ActOnResource(service.Rnat.Type(), rnat2, "clear")
 	if err != nil {
 		return err
 	}

@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/ns"
-	"github.com/chiradeep/go-nitro/config/system"
-	"github.com/chiradeep/go-nitro/netscaler"
+	"github.com/citrix/adc-nitro-go/resource/config/ns"
+	"github.com/citrix/adc-nitro-go/resource/config/system"
+	"github.com/citrix/adc-nitro-go/service"
 
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -108,7 +108,7 @@ func readSystemextramgmtcpuFunc(d *schema.ResourceData, meta interface{}) error 
 	client := meta.(*NetScalerNitroClient).client
 	systemextramgmtcpuName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading systemextramgmtcpu state %s", systemextramgmtcpuName)
-	findParams := netscaler.FindParams{
+	findParams := service.FindParams{
 		ResourceType: "systemextramgmtcpu",
 	}
 	dataarray, err := client.FindResourceArrayWithParams(findParams)

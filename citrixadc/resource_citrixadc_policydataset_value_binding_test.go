@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/chiradeep/go-nitro/netscaler"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
 	"strings"
 	"testing"
+
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccPolicydataset_value_binding_basic(t *testing.T) {
@@ -74,7 +75,7 @@ func testAccCheckPolicydatasetValue(n string) resource.TestCheckFunc {
 		name := idSlice[0]
 		value := idSlice[1]
 
-		findParams := netscaler.FindParams{
+		findParams := service.FindParams{
 			ResourceType:             "policydataset_value_binding",
 			ResourceName:             name,
 			ResourceMissingErrorCode: 2823,
@@ -121,7 +122,7 @@ func testAccCheckPolicydataset_value_bindingDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(netscaler.Policydataset_value_binding.Type(), rs.Primary.ID)
+		_, err := nsClient.FindResource(service.Policydataset_value_binding.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("LB vserver %s still exists", rs.Primary.ID)
 		}

@@ -1,11 +1,11 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/cs"
-	"github.com/chiradeep/go-nitro/config/lb"
-	"github.com/chiradeep/go-nitro/config/rewrite"
+	"github.com/citrix/adc-nitro-go/resource/config/cs"
+	"github.com/citrix/adc-nitro-go/resource/config/lb"
+	"github.com/citrix/adc-nitro-go/resource/config/rewrite"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -75,11 +75,6 @@ func resourceCitrixAdcRewritepolicy() *schema.Resource {
 							Optional: true,
 							Computed: true,
 						},
-						"invoke": &schema.Schema{
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
 						"labelname": &schema.Schema{
 							Type:     schema.TypeString,
 							Optional: true,
@@ -97,11 +92,6 @@ func resourceCitrixAdcRewritepolicy() *schema.Resource {
 						},
 						"priority": &schema.Schema{
 							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
-						},
-						"type": &schema.Schema{
-							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
@@ -226,7 +216,7 @@ func createRewritepolicyFunc(d *schema.ResourceData, meta interface{}) error {
 		Undefaction: d.Get("undefaction").(string),
 	}
 
-	_, err := client.AddResource(netscaler.Rewritepolicy.Type(), rewritepolicyName, &rewritepolicy)
+	_, err := client.AddResource(service.Rewritepolicy.Type(), rewritepolicyName, &rewritepolicy)
 	if err != nil {
 		return err
 	}
@@ -259,7 +249,7 @@ func readRewritepolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	rewritepolicyName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading rewritepolicy state %s", rewritepolicyName)
-	data, err := client.FindResource(netscaler.Rewritepolicy.Type(), rewritepolicyName)
+	data, err := client.FindResource(service.Rewritepolicy.Type(), rewritepolicyName)
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing rewritepolicy state %s", rewritepolicyName)
 		d.SetId("")
@@ -335,7 +325,7 @@ func updateRewritepolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if hasChange {
-		_, err := client.UpdateResource(netscaler.Rewritepolicy.Type(), rewritepolicyName, &rewritepolicy)
+		_, err := client.UpdateResource(service.Rewritepolicy.Type(), rewritepolicyName, &rewritepolicy)
 		if err != nil {
 			return fmt.Errorf("Error updating rewritepolicy %s", rewritepolicyName)
 		}
@@ -375,7 +365,7 @@ func deleteRewritepolicyFunc(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err := client.DeleteResource(netscaler.Rewritepolicy.Type(), rewritepolicyName)
+	err := client.DeleteResource(service.Rewritepolicy.Type(), rewritepolicyName)
 	if err != nil {
 		return err
 	}
@@ -414,13 +404,10 @@ func addSingleRewriteGlobalBinding(d *schema.ResourceData, meta interface{}, bin
 
 	client := meta.(*NetScalerNitroClient).client
 
-	bindingStruct := rewrite.Rewriteglobalrewritepolicybinding{}
-	bindingStruct.Policyname = d.Get("name").(string)
+	bindingStruct := rewrite.Rewritepolicyglobalbinding{}
+	bindingStruct.Name = d.Get("name").(string)
 	if d, ok := binding["gotopriorityexpression"]; ok {
 		bindingStruct.Gotopriorityexpression = d.(string)
-	}
-	if d, ok := binding["invoke"]; ok {
-		bindingStruct.Invoke = d.(bool)
 	}
 	if d, ok := binding["labelname"]; ok {
 		log.Printf("Labelname %v\n", d)
@@ -431,11 +418,7 @@ func addSingleRewriteGlobalBinding(d *schema.ResourceData, meta interface{}, bin
 		bindingStruct.Labeltype = d.(string)
 	}
 	if d, ok := binding["priority"]; ok {
-		bindingStruct.Priority = d.(int)
-	}
-	if d, ok := binding["type"]; ok {
-		log.Printf("Type %v\n", d)
-		bindingStruct.Type = d.(string)
+		bindingStruct.Priority = uint32(d.(int))
 	}
 
 	if err := client.UpdateUnnamedResource("rewriteglobal_rewritepolicy_binding", bindingStruct); err != nil {
@@ -736,7 +719,7 @@ func addSingleRewriteLbvserverBinding(d *schema.ResourceData, meta interface{}, 
 	log.Printf("[DEBUG]  citrixadc-provider: In addSingleRewriteLbvserverBinding")
 	client := meta.(*NetScalerNitroClient).client
 
-	bindingStruct := lb.Lbvserverrewritepolicybinding{}
+	bindingStruct := lb.Lbvserverpolicybinding{}
 	bindingStruct.Policyname = d.Get("name").(string)
 
 	if d, ok := binding["bindpoint"]; ok {
@@ -759,7 +742,7 @@ func addSingleRewriteLbvserverBinding(d *schema.ResourceData, meta interface{}, 
 		bindingStruct.Name = d.(string)
 	}
 	if d, ok := binding["priority"]; ok {
-		bindingStruct.Priority = d.(int)
+		bindingStruct.Priority = uint32(d.(int))
 	}
 
 	// We need to do a HTTP PUT hence the UpdateResource
@@ -892,7 +875,7 @@ func addSingleRewriteCsvserverBinding(d *schema.ResourceData, meta interface{}, 
 	log.Printf("[DEBUG]  citrixadc-provider: In addSingleRewriteCsvserverBinding")
 	client := meta.(*NetScalerNitroClient).client
 
-	bindingStruct := cs.Csvserverrewritepolicybinding{}
+	bindingStruct := cs.Csvserverpolicybinding{}
 	bindingStruct.Policyname = d.Get("name").(string)
 
 	if d, ok := binding["bindpoint"]; ok {
@@ -915,7 +898,7 @@ func addSingleRewriteCsvserverBinding(d *schema.ResourceData, meta interface{}, 
 		bindingStruct.Name = d.(string)
 	}
 	if d, ok := binding["priority"]; ok {
-		bindingStruct.Priority = d.(int)
+		bindingStruct.Priority = uint32(d.(int))
 	}
 
 	// We need to do a HTTP PUT hence the UpdateResource

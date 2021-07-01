@@ -1,7 +1,7 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/netscaler"
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 
@@ -437,7 +437,7 @@ func createNstcpprofileFunc(d *schema.ResourceData, meta interface{}) error {
 		Mpcapablecbit:               d.Get("mpcapablecbit").(string),
 	}
 
-	_, err := client.AddResource(netscaler.Nstcpprofile.Type(), nstcpprofileName, &nstcpprofile)
+	_, err := client.AddResource(service.Nstcpprofile.Type(), nstcpprofileName, &nstcpprofile)
 	if err != nil {
 		return err
 	}
@@ -457,7 +457,7 @@ func readNstcpprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	nstcpprofileName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading nstcpprofile state %s", nstcpprofileName)
-	data, err := client.FindResource(netscaler.Nstcpprofile.Type(), nstcpprofileName)
+	data, err := client.FindResource(service.Nstcpprofile.Type(), nstcpprofileName)
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing nstcpprofile state %s", nstcpprofileName)
 		d.SetId("")
@@ -816,7 +816,7 @@ func updateNstcpprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if hasChange {
-		_, err := client.UpdateResource(netscaler.Nstcpprofile.Type(), nstcpprofileName, &nstcpprofile)
+		_, err := client.UpdateResource(service.Nstcpprofile.Type(), nstcpprofileName, &nstcpprofile)
 		if err != nil {
 			return fmt.Errorf("Error updating nstcpprofile %s", nstcpprofileName)
 		}
@@ -828,7 +828,7 @@ func deleteNstcpprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNstcpprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nstcpprofileName := d.Id()
-	err := client.DeleteResource(netscaler.Nstcpprofile.Type(), nstcpprofileName)
+	err := client.DeleteResource(service.Nstcpprofile.Type(), nstcpprofileName)
 	if err != nil {
 		return err
 	}

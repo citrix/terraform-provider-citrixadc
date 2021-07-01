@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/ns"
+	"github.com/citrix/adc-nitro-go/resource/config/ns"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"fmt"
@@ -58,7 +58,7 @@ func createNsrpcnodeFunc(d *schema.ResourceData, meta interface{}) error {
 		Srcip:     d.Get("srcip").(string),
 	}
 
-	err := client.UpdateUnnamedResource(netscaler.Nsrpcnode.Type(), &nsrpcnode)
+	err := client.UpdateUnnamedResource(service.Nsrpcnode.Type(), &nsrpcnode)
 	if err != nil {
 		return err
 	}
@@ -78,7 +78,7 @@ func readNsrpcnodeFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	nsrpcnodeIpaddress := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading nsrpcnode state %s", nsrpcnodeIpaddress)
-	findParams := netscaler.FindParams{
+	findParams := service.FindParams{
 		ResourceType: "nsrpcnode",
 		ResourceName: nsrpcnodeIpaddress,
 	}
@@ -131,7 +131,7 @@ func updateNsrpcnodeFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if hasChange {
-		err := client.UpdateUnnamedResource(netscaler.Nsrpcnode.Type(), &nsrpcnode)
+		err := client.UpdateUnnamedResource(service.Nsrpcnode.Type(), &nsrpcnode)
 		if err != nil {
 			return fmt.Errorf("Error updating nsrpcnode %s. %s", nsrpcnodeIpaddress, err.Error())
 		}

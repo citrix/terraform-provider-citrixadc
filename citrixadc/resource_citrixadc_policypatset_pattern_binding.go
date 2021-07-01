@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/policy"
+	"github.com/citrix/adc-nitro-go/resource/config/policy"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"fmt"
@@ -68,12 +68,12 @@ func createPolicypatset_pattern_bindingFunc(d *schema.ResourceData, meta interfa
 		Charset: d.Get("charset").(string),
 		Comment: d.Get("comment").(string),
 		Feature: d.Get("feature").(string),
-		Index:   d.Get("index").(int),
+		Index:   uint32(d.Get("index").(int)),
 		Name:    d.Get("name").(string),
 		String:  d.Get("string").(string),
 	}
 
-	err := client.UpdateUnnamedResource(netscaler.Policypatset_pattern_binding.Type(), &policypatset_pattern_binding)
+	err := client.UpdateUnnamedResource(service.Policypatset_pattern_binding.Type(), &policypatset_pattern_binding)
 	if err != nil {
 		return err
 	}
@@ -100,7 +100,7 @@ func readPolicypatset_pattern_bindingFunc(d *schema.ResourceData, meta interface
 	stringText := idSlice[1]
 
 	log.Printf("[DEBUG] citrixadc-provider: Reading policypatset_pattern_binding state %s", bindingId)
-	findParams := netscaler.FindParams{
+	findParams := service.FindParams{
 		ResourceType:             "policypatset_pattern_binding",
 		ResourceName:             name,
 		ResourceMissingErrorCode: 2823,
@@ -164,7 +164,7 @@ func deletePolicypatset_pattern_bindingFunc(d *schema.ResourceData, meta interfa
 	argsMap := make(map[string]string)
 	argsMap["String"] = url.QueryEscape(stringText)
 
-	err := client.DeleteResourceWithArgsMap(netscaler.Policypatset_pattern_binding.Type(), name, argsMap)
+	err := client.DeleteResourceWithArgsMap(service.Policypatset_pattern_binding.Type(), name, argsMap)
 	if err != nil {
 		return err
 	}

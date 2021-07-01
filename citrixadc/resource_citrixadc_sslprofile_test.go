@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/chiradeep/go-nitro/netscaler"
+	"testing"
+
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"testing"
 )
 
 const testAccSslprofile_add = `
@@ -168,7 +169,7 @@ func testAccCheckSslprofileExist(n string, id *string) resource.TestCheckFunc {
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(netscaler.Sslprofile.Type(), rs.Primary.ID)
+		data, err := nsClient.FindResource(service.Sslprofile.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -194,7 +195,7 @@ func testAccCheckSslprofileDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(netscaler.Sslprofile.Type(), rs.Primary.ID)
+		_, err := nsClient.FindResource(service.Sslprofile.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("SSL Profile %s still exists", rs.Primary.ID)
 		}

@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/ns"
+	"github.com/citrix/adc-nitro-go/resource/config/ns"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 
@@ -217,14 +217,14 @@ func createNsaclFunc(d *schema.ResourceData, meta interface{}) error {
 		Destportval:    d.Get("destportval").(string),
 		Dfdhash:        d.Get("dfdhash").(string),
 		Established:    d.Get("established").(bool),
-		Icmpcode:       d.Get("icmpcode").(int),
-		Icmptype:       d.Get("icmptype").(int),
+		Icmpcode:       uint32(d.Get("icmpcode").(int)),
+		Icmptype:       uint32(d.Get("icmptype").(int)),
 		Interface:      d.Get("interface").(string),
 		Logstate:       d.Get("logstate").(string),
-		Priority:       d.Get("priority").(int),
+		Priority:       uint32(d.Get("priority").(int)),
 		Protocol:       d.Get("protocol").(string),
-		Protocolnumber: d.Get("protocolnumber").(int),
-		Ratelimit:      d.Get("ratelimit").(int),
+		Protocolnumber: uint32(d.Get("protocolnumber").(int)),
+		Ratelimit:      uint32(d.Get("ratelimit").(int)),
 		Srcip:          srcip,
 		Srcipop:        d.Get("srcipop").(string),
 		Srcipval:       d.Get("srcipval").(string),
@@ -235,13 +235,13 @@ func createNsaclFunc(d *schema.ResourceData, meta interface{}) error {
 		Srcportval:     d.Get("srcportval").(string),
 		State:          d.Get("state").(string),
 		Stateful:       d.Get("stateful").(string),
-		Td:             d.Get("td").(int),
-		Ttl:            d.Get("ttl").(int),
-		Vlan:           d.Get("vlan").(int),
-		Vxlan:          d.Get("vxlan").(int),
+		Td:             uint32(d.Get("td").(int)),
+		Ttl:            uint32(d.Get("ttl").(int)),
+		Vlan:           uint32(d.Get("vlan").(int)),
+		Vxlan:          uint32(d.Get("vxlan").(int)),
 	}
 
-	_, err := client.AddResource(netscaler.Nsacl.Type(), nsaclName, &nsacl)
+	_, err := client.AddResource(service.Nsacl.Type(), nsaclName, &nsacl)
 	if err != nil {
 		return err
 	}
@@ -261,7 +261,7 @@ func readNsaclFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	nsaclName := d.Id()
 	log.Printf("[DEBUG] netscaler-provider: Reading nsacl state %s", nsaclName)
-	data, err := client.FindResource(netscaler.Nsacl.Type(), nsaclName)
+	data, err := client.FindResource(service.Nsacl.Type(), nsaclName)
 	if err != nil {
 		log.Printf("[WARN] netscaler-provider: Clearing nsacl state %s", nsaclName)
 		d.SetId("")
@@ -361,12 +361,12 @@ func updateNsaclFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("icmpcode") {
 		log.Printf("[DEBUG]  netscaler-provider: Icmpcode has changed for nsacl %s, starting update", nsaclName)
-		nsacl.Icmpcode = d.Get("icmpcode").(int)
+		nsacl.Icmpcode = uint32(d.Get("icmpcode").(int))
 		hasChange = true
 	}
 	if d.HasChange("icmptype") {
 		log.Printf("[DEBUG]  netscaler-provider: Icmptype has changed for nsacl %s, starting update", nsaclName)
-		nsacl.Icmptype = d.Get("icmptype").(int)
+		nsacl.Icmptype = uint32(d.Get("icmptype").(int))
 		hasChange = true
 	}
 	if d.HasChange("interface") {
@@ -381,7 +381,7 @@ func updateNsaclFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("priority") {
 		log.Printf("[DEBUG]  netscaler-provider: Priority has changed for nsacl %s, starting update", nsaclName)
-		nsacl.Priority = d.Get("priority").(int)
+		nsacl.Priority = uint32(d.Get("priority").(int))
 		hasChange = true
 	}
 	if d.HasChange("protocol") {
@@ -391,12 +391,12 @@ func updateNsaclFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("protocolnumber") {
 		log.Printf("[DEBUG]  netscaler-provider: Protocolnumber has changed for nsacl %s, starting update", nsaclName)
-		nsacl.Protocolnumber = d.Get("protocolnumber").(int)
+		nsacl.Protocolnumber = uint32(d.Get("protocolnumber").(int))
 		hasChange = true
 	}
 	if d.HasChange("ratelimit") {
 		log.Printf("[DEBUG]  netscaler-provider: Ratelimit has changed for nsacl %s, starting update", nsaclName)
-		nsacl.Ratelimit = d.Get("ratelimit").(int)
+		nsacl.Ratelimit = uint32(d.Get("ratelimit").(int))
 		hasChange = true
 	}
 	if d.HasChange("srcipop") {
@@ -444,27 +444,27 @@ func updateNsaclFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("td") {
 		log.Printf("[DEBUG]  netscaler-provider: Td has changed for nsacl %s, starting update", nsaclName)
-		nsacl.Td = d.Get("td").(int)
+		nsacl.Td = uint32(d.Get("td").(int))
 		hasChange = true
 	}
 	if d.HasChange("ttl") {
 		log.Printf("[DEBUG]  netscaler-provider: Ttl has changed for nsacl %s, starting update", nsaclName)
-		nsacl.Ttl = d.Get("ttl").(int)
+		nsacl.Ttl = uint32(d.Get("ttl").(int))
 		hasChange = true
 	}
 	if d.HasChange("vlan") {
 		log.Printf("[DEBUG]  netscaler-provider: Vlan has changed for nsacl %s, starting update", nsaclName)
-		nsacl.Vlan = d.Get("vlan").(int)
+		nsacl.Vlan = uint32(d.Get("vlan").(int))
 		hasChange = true
 	}
 	if d.HasChange("vxlan") {
 		log.Printf("[DEBUG]  netscaler-provider: Vxlan has changed for nsacl %s, starting update", nsaclName)
-		nsacl.Vxlan = d.Get("vxlan").(int)
+		nsacl.Vxlan = uint32(d.Get("vxlan").(int))
 		hasChange = true
 	}
 
 	if hasChange {
-		_, err := client.UpdateResource(netscaler.Nsacl.Type(), nsaclName, &nsacl)
+		_, err := client.UpdateResource(service.Nsacl.Type(), nsaclName, &nsacl)
 		if err != nil {
 			return fmt.Errorf("Error updating nsacl %s", nsaclName)
 		}
@@ -483,7 +483,7 @@ func deleteNsaclFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  netscaler-provider: In deleteNsaclFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nsaclName := d.Id()
-	err := client.DeleteResource(netscaler.Nsacl.Type(), nsaclName)
+	err := client.DeleteResource(service.Nsacl.Type(), nsaclName)
 	if err != nil {
 		return err
 	}
@@ -493,7 +493,7 @@ func deleteNsaclFunc(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func doNsaclStateChange(d *schema.ResourceData, client *netscaler.NitroClient) error {
+func doNsaclStateChange(d *schema.ResourceData, client *service.NitroClient) error {
 	log.Printf("[DEBUG]  netscaler-provider: In doServerStateChange")
 
 	// We need a new instance of the struct since
@@ -505,12 +505,12 @@ func doNsaclStateChange(d *schema.ResourceData, client *netscaler.NitroClient) e
 	newstate := d.Get("state")
 
 	if newstate == "ENABLED" {
-		err := client.ActOnResource(netscaler.Nsacl.Type(), nsacl, "enable")
+		err := client.ActOnResource(service.Nsacl.Type(), nsacl, "enable")
 		if err != nil {
 			return err
 		}
 	} else if newstate == "DISABLED" {
-		err := client.ActOnResource(netscaler.Nsacl.Type(), nsacl, "disable")
+		err := client.ActOnResource(service.Nsacl.Type(), nsacl, "disable")
 		if err != nil {
 			return err
 		}

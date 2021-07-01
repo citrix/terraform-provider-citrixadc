@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/ssl"
+	"github.com/citrix/adc-nitro-go/resource/config/ssl"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"fmt"
@@ -72,7 +72,7 @@ func createSslvserver_sslcertkey_bindingFunc(d *schema.ResourceData, meta interf
 	certkeyname := d.Get("certkeyname").(string)
 	bindingId := fmt.Sprintf("%s,%s", vservername, certkeyname)
 
-	sslvserver_sslcertkey_binding := ssl.Sslvserversslcertkeybinding{
+	sslvserver_sslcertkey_binding := ssl.Sslvservercertkeybinding{
 		Ca:          d.Get("ca").(bool),
 		Certkeyname: d.Get("certkeyname").(string),
 		Crlcheck:    d.Get("crlcheck").(string),
@@ -82,7 +82,7 @@ func createSslvserver_sslcertkey_bindingFunc(d *schema.ResourceData, meta interf
 		Vservername: d.Get("vservername").(string),
 	}
 
-	err := client.UpdateUnnamedResource(netscaler.Sslvserver_sslcertkey_binding.Type(), &sslvserver_sslcertkey_binding)
+	err := client.UpdateUnnamedResource(service.Sslvserver_sslcertkey_binding.Type(), &sslvserver_sslcertkey_binding)
 	if err != nil {
 		return err
 	}
@@ -108,7 +108,7 @@ func readSslvserver_sslcertkey_bindingFunc(d *schema.ResourceData, meta interfac
 	certkeyname := idSlice[1]
 
 	log.Printf("[DEBUG] citrixadc-provider: Reading sslvserver_sslcertkey_binding state %s", bindingId)
-	findParams := netscaler.FindParams{
+	findParams := service.FindParams{
 		ResourceType:             "sslvserver_sslcertkey_binding",
 		ResourceName:             vservername,
 		ResourceMissingErrorCode: 461,
@@ -190,7 +190,7 @@ func deleteSslvserver_sslcertkey_bindingFunc(d *schema.ResourceData, meta interf
 		args = append(args, fmt.Sprintf("ocspcheck:%v", v))
 	}
 
-	err := client.DeleteResourceWithArgs(netscaler.Sslvserver_sslcertkey_binding.Type(), vservername, args)
+	err := client.DeleteResourceWithArgs(service.Sslvserver_sslcertkey_binding.Type(), vservername, args)
 	if err != nil {
 		return err
 	}

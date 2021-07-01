@@ -21,8 +21,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/chiradeep/go-nitro/config/basic"
-	"github.com/chiradeep/go-nitro/netscaler"
+	"github.com/citrix/adc-nitro-go/resource/config/basic"
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
@@ -64,7 +64,7 @@ func testAccCheckServerExist(n string, id *string) resource.TestCheckFunc {
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(netscaler.Server.Type(), rs.Primary.ID)
+		data, err := nsClient.FindResource(service.Server.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -90,7 +90,7 @@ func testAccCheckServerDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(netscaler.Server.Type(), rs.Primary.ID)
+		_, err := nsClient.FindResource(service.Server.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("server %s still exists", rs.Primary.ID)
 		}
@@ -124,7 +124,7 @@ func TestAccServer_AssertNonUpdateableAttributes(t *testing.T) {
 
 	// Create resource
 	serverName := "tf-acc-server-name"
-	serverType := netscaler.Server.Type()
+	serverType := service.Server.Type()
 
 	// Defer deletion of actual resource
 	defer testHelperEnsureResourceDeletion(c, t, serverType, serverName, nil)

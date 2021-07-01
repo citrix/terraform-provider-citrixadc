@@ -17,12 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/chiradeep/go-nitro/config/responder"
-	"github.com/chiradeep/go-nitro/netscaler"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
 	"strings"
 	"testing"
+
+	"github.com/citrix/adc-nitro-go/resource/config/responder"
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccResponderaction_basic(t *testing.T) {
@@ -99,7 +100,7 @@ func testAccCheckResponderactionExist(n string, id *string) resource.TestCheckFu
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(netscaler.Responderaction.Type(), rs.Primary.ID)
+		data, err := nsClient.FindResource(service.Responderaction.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -125,7 +126,7 @@ func testAccCheckResponderactionDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(netscaler.Responderaction.Type(), rs.Primary.ID)
+		_, err := nsClient.FindResource(service.Responderaction.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("LB vserver %s still exists", rs.Primary.ID)
 		}
@@ -168,7 +169,7 @@ func doResponderactionPreChecks(t *testing.T) {
 	pages = append(pages, otherErrorPage)
 
 	for _, page := range pages {
-		if err := c.client.ActOnResource(netscaler.Responderhtmlpage.Type(), page, "Import"); err != nil {
+		if err := c.client.ActOnResource(service.Responderhtmlpage.Type(), page, "Import"); err != nil {
 			if !strings.Contains(err.Error(), "Object already exists") {
 				t.Errorf(err.Error())
 			}

@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/lb"
+	"github.com/citrix/adc-nitro-go/resource/config/lb"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 
@@ -536,7 +536,7 @@ func createLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	lbmonitor := lb.Lbmonitor{
 		Action:                         d.Get("action").(string),
-		Alertretries:                   d.Get("alertretries").(int),
+		Alertretries:                   int32(d.Get("alertretries").(int)),
 		Application:                    d.Get("application").(string),
 		Attribute:                      d.Get("attribute").(string),
 		Basedn:                         d.Get("basedn").(string),
@@ -544,33 +544,33 @@ func createLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 		Customheaders:                  d.Get("customheaders").(string),
 		Database:                       d.Get("database").(string),
 		Destip:                         d.Get("destip").(string),
-		Destport:                       d.Get("destport").(int),
-		Deviation:                      d.Get("deviation").(int),
+		Destport:                       int32(d.Get("destport").(int)),
+		Deviation:                      uint32(d.Get("deviation").(int)),
 		Dispatcherip:                   d.Get("dispatcherip").(string),
-		Dispatcherport:                 d.Get("dispatcherport").(int),
+		Dispatcherport:                 int32(d.Get("dispatcherport").(int)),
 		Domain:                         d.Get("domain").(string),
-		Downtime:                       d.Get("downtime").(int),
+		Downtime:                       int32(d.Get("downtime").(int)),
 		Evalrule:                       d.Get("evalrule").(string),
-		Failureretries:                 d.Get("failureretries").(int),
+		Failureretries:                 int32(d.Get("failureretries").(int)),
 		Filename:                       d.Get("filename").(string),
 		Filter:                         d.Get("filter").(string),
-		Firmwarerevision:               d.Get("firmwarerevision").(int),
+		Firmwarerevision:               uint32(d.Get("firmwarerevision").(int)),
 		Group:                          d.Get("group").(string),
 		Hostipaddress:                  d.Get("hostipaddress").(string),
 		Hostname:                       d.Get("hostname").(string),
 		Httprequest:                    d.Get("httprequest").(string),
 		Inbandsecurityid:               d.Get("inbandsecurityid").(string),
-		Interval:                       d.Get("interval").(int),
+		Interval:                       int32(d.Get("interval").(int)),
 		Iptunnel:                       d.Get("iptunnel").(string),
 		Kcdaccount:                     d.Get("kcdaccount").(string),
 		Lasversion:                     d.Get("lasversion").(string),
 		Logonpointname:                 d.Get("logonpointname").(string),
 		Lrtm:                           d.Get("lrtm").(string),
-		Maxforwards:                    d.Get("maxforwards").(int),
+		Maxforwards:                    uint32(d.Get("maxforwards").(int)),
 		Metric:                         d.Get("metric").(string),
 		Metrictable:                    d.Get("metrictable").(string),
-		Metricthreshold:                d.Get("metricthreshold").(int),
-		Metricweight:                   d.Get("metricweight").(int),
+		Metricthreshold:                uint64(d.Get("metricthreshold").(int)),
+		Metricweight:                   uint32(d.Get("metricweight").(int)),
 		Monitorname:                    d.Get("monitorname").(string),
 		Mssqlprotocolversion:           d.Get("mssqlprotocolversion").(string),
 		Netprofile:                     d.Get("netprofile").(string),
@@ -582,7 +582,7 @@ func createLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 		Query:                          d.Get("query").(string),
 		Querytype:                      d.Get("querytype").(string),
 		Radaccountsession:              d.Get("radaccountsession").(string),
-		Radaccounttype:                 d.Get("radaccounttype").(int),
+		Radaccounttype:                 uint32(d.Get("radaccounttype").(int)),
 		Radapn:                         d.Get("radapn").(string),
 		Radframedip:                    d.Get("radframedip").(string),
 		Radkey:                         d.Get("radkey").(string),
@@ -590,9 +590,9 @@ func createLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 		Radnasid:                       d.Get("radnasid").(string),
 		Radnasip:                       d.Get("radnasip").(string),
 		Recv:                           d.Get("recv").(string),
-		Resptimeout:                    d.Get("resptimeout").(int),
-		Resptimeoutthresh:              d.Get("resptimeoutthresh").(int),
-		Retries:                        d.Get("retries").(int),
+		Resptimeout:                    int32(d.Get("resptimeout").(int)),
+		Resptimeoutthresh:              uint32(d.Get("resptimeoutthresh").(int)),
+		Retries:                        int32(d.Get("retries").(int)),
 		Reverse:                        d.Get("reverse").(string),
 		Rtsprequest:                    d.Get("rtsprequest").(string),
 		Scriptargs:                     d.Get("scriptargs").(string),
@@ -617,11 +617,11 @@ func createLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 		Storefrontacctservice:          d.Get("storefrontacctservice").(string),
 		Storefrontcheckbackendservices: d.Get("storefrontcheckbackendservices").(string),
 		Storename:                      d.Get("storename").(string),
-		Successretries:                 d.Get("successretries").(int),
+		Successretries:                 int32(d.Get("successretries").(int)),
 		Tos:                            d.Get("tos").(string),
-		Tosid:                          d.Get("tosid").(int),
+		Tosid:                          uint32(d.Get("tosid").(int)),
 		Transparent:                    d.Get("transparent").(string),
-		Trofscode:                      d.Get("trofscode").(int),
+		Trofscode:                      uint32(d.Get("trofscode").(int)),
 		Trofsstring:                    d.Get("trofsstring").(string),
 		Type:                           d.Get("type").(string),
 		Units1:                         d.Get("units1").(string),
@@ -630,12 +630,12 @@ func createLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 		Units4:                         d.Get("units4").(string),
 		Username:                       d.Get("username").(string),
 		Validatecred:                   d.Get("validatecred").(string),
-		Vendorid:                       d.Get("vendorid").(int),
-		Vendorspecificvendorid:         d.Get("vendorspecificvendorid").(int),
-		Respcode:                       d.Get("respcode").([]interface{}),
+		Vendorid:                       uint32(d.Get("vendorid").(int)),
+		Vendorspecificvendorid:         uint32(d.Get("vendorspecificvendorid").(int)),
+		Respcode:                       toStringList(d.Get("respcode").([]interface{})),
 	}
 
-	_, err := client.AddResource(netscaler.Lbmonitor.Type(), lbmonitorName, &lbmonitor)
+	_, err := client.AddResource(service.Lbmonitor.Type(), lbmonitorName, &lbmonitor)
 	if err != nil {
 		return err
 	}
@@ -656,7 +656,7 @@ func readLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 
 	lbmonitorName := d.Id()
 	log.Printf("[DEBUG] netscaler-provider: Reading lbmonitor state %s", lbmonitorName)
-	data, err := client.FindResource(netscaler.Lbmonitor.Type(), lbmonitorName)
+	data, err := client.FindResource(service.Lbmonitor.Type(), lbmonitorName)
 	if err != nil {
 		log.Printf("[WARN] netscaler-provider: Clearing lbmonitor state %s", lbmonitorName)
 		d.SetId("")
@@ -786,7 +786,7 @@ func updateLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("alertretries") {
 		log.Printf("[DEBUG] netscaler-provider:  Alertretries has changed for lbmonitor %s, starting update", lbmonitorName)
-		lbmonitor.Alertretries = d.Get("alertretries").(int)
+		lbmonitor.Alertretries = int32(d.Get("alertretries").(int))
 		hasChange = true
 	}
 	if d.HasChange("application") {
@@ -826,12 +826,12 @@ func updateLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("destport") {
 		log.Printf("[DEBUG] netscaler-provider:  Destport has changed for lbmonitor %s, starting update", lbmonitorName)
-		lbmonitor.Destport = d.Get("destport").(int)
+		lbmonitor.Destport = int32(d.Get("destport").(int))
 		hasChange = true
 	}
 	if d.HasChange("deviation") {
 		log.Printf("[DEBUG] netscaler-provider:  Deviation has changed for lbmonitor %s, starting update", lbmonitorName)
-		lbmonitor.Deviation = d.Get("deviation").(int)
+		lbmonitor.Deviation = uint32(d.Get("deviation").(int))
 		hasChange = true
 	}
 	if d.HasChange("dispatcherip") {
@@ -841,7 +841,7 @@ func updateLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("dispatcherport") {
 		log.Printf("[DEBUG] netscaler-provider:  Dispatcherport has changed for lbmonitor %s, starting update", lbmonitorName)
-		lbmonitor.Dispatcherport = d.Get("dispatcherport").(int)
+		lbmonitor.Dispatcherport = int32(d.Get("dispatcherport").(int))
 		hasChange = true
 	}
 	if d.HasChange("domain") {
@@ -851,7 +851,7 @@ func updateLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("downtime") {
 		log.Printf("[DEBUG] netscaler-provider:  Downtime has changed for lbmonitor %s, starting update", lbmonitorName)
-		lbmonitor.Downtime = d.Get("downtime").(int)
+		lbmonitor.Downtime = int32(d.Get("downtime").(int))
 		hasChange = true
 	}
 	if d.HasChange("evalrule") {
@@ -861,7 +861,7 @@ func updateLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("failureretries") {
 		log.Printf("[DEBUG] netscaler-provider:  Failureretries has changed for lbmonitor %s, starting update", lbmonitorName)
-		lbmonitor.Failureretries = d.Get("failureretries").(int)
+		lbmonitor.Failureretries = int32(d.Get("failureretries").(int))
 		hasChange = true
 	}
 	if d.HasChange("filename") {
@@ -876,7 +876,7 @@ func updateLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("firmwarerevision") {
 		log.Printf("[DEBUG] netscaler-provider:  Firmwarerevision has changed for lbmonitor %s, starting update", lbmonitorName)
-		lbmonitor.Firmwarerevision = d.Get("firmwarerevision").(int)
+		lbmonitor.Firmwarerevision = uint32(d.Get("firmwarerevision").(int))
 		hasChange = true
 	}
 	if d.HasChange("group") {
@@ -906,7 +906,7 @@ func updateLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("interval") {
 		log.Printf("[DEBUG] netscaler-provider:  Interval has changed for lbmonitor %s, starting update", lbmonitorName)
-		lbmonitor.Interval = d.Get("interval").(int)
+		lbmonitor.Interval = int32(d.Get("interval").(int))
 		hasChange = true
 	}
 	if d.HasChange("iptunnel") {
@@ -936,7 +936,7 @@ func updateLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("maxforwards") {
 		log.Printf("[DEBUG] netscaler-provider:  Maxforwards has changed for lbmonitor %s, starting update", lbmonitorName)
-		lbmonitor.Maxforwards = d.Get("maxforwards").(int)
+		lbmonitor.Maxforwards = uint32(d.Get("maxforwards").(int))
 		hasChange = true
 	}
 	if d.HasChange("metric") {
@@ -951,12 +951,12 @@ func updateLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("metricthreshold") {
 		log.Printf("[DEBUG] netscaler-provider:  Metricthreshold has changed for lbmonitor %s, starting update", lbmonitorName)
-		lbmonitor.Metricthreshold = d.Get("metricthreshold").(int)
+		lbmonitor.Metricthreshold = uint64(d.Get("metricthreshold").(int))
 		hasChange = true
 	}
 	if d.HasChange("metricweight") {
 		log.Printf("[DEBUG] netscaler-provider:  Metricweight has changed for lbmonitor %s, starting update", lbmonitorName)
-		lbmonitor.Metricweight = d.Get("metricweight").(int)
+		lbmonitor.Metricweight = uint32(d.Get("metricweight").(int))
 		hasChange = true
 	}
 	if d.HasChange("monitorname") {
@@ -1016,7 +1016,7 @@ func updateLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("radaccounttype") {
 		log.Printf("[DEBUG] netscaler-provider:  Radaccounttype has changed for lbmonitor %s, starting update", lbmonitorName)
-		lbmonitor.Radaccounttype = d.Get("radaccounttype").(int)
+		lbmonitor.Radaccounttype = uint32(d.Get("radaccounttype").(int))
 		hasChange = true
 	}
 	if d.HasChange("radapn") {
@@ -1056,17 +1056,17 @@ func updateLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("resptimeout") {
 		log.Printf("[DEBUG] netscaler-provider:  Resptimeout has changed for lbmonitor %s, starting update", lbmonitorName)
-		lbmonitor.Resptimeout = d.Get("resptimeout").(int)
+		lbmonitor.Resptimeout = int32(d.Get("resptimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("resptimeoutthresh") {
 		log.Printf("[DEBUG] netscaler-provider:  Resptimeoutthresh has changed for lbmonitor %s, starting update", lbmonitorName)
-		lbmonitor.Resptimeoutthresh = d.Get("resptimeoutthresh").(int)
+		lbmonitor.Resptimeoutthresh = uint32(d.Get("resptimeoutthresh").(int))
 		hasChange = true
 	}
 	if d.HasChange("retries") {
 		log.Printf("[DEBUG] netscaler-provider:  Retries has changed for lbmonitor %s, starting update", lbmonitorName)
-		lbmonitor.Retries = d.Get("retries").(int)
+		lbmonitor.Retries = int32(d.Get("retries").(int))
 		hasChange = true
 	}
 	if d.HasChange("reverse") {
@@ -1191,7 +1191,7 @@ func updateLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("successretries") {
 		log.Printf("[DEBUG] netscaler-provider:  Successretries has changed for lbmonitor %s, starting update", lbmonitorName)
-		lbmonitor.Successretries = d.Get("successretries").(int)
+		lbmonitor.Successretries = int32(d.Get("successretries").(int))
 		hasChange = true
 	}
 	if d.HasChange("tos") {
@@ -1201,7 +1201,7 @@ func updateLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("tosid") {
 		log.Printf("[DEBUG] netscaler-provider:  Tosid has changed for lbmonitor %s, starting update", lbmonitorName)
-		lbmonitor.Tosid = d.Get("tosid").(int)
+		lbmonitor.Tosid = uint32(d.Get("tosid").(int))
 		hasChange = true
 	}
 	if d.HasChange("transparent") {
@@ -1211,7 +1211,7 @@ func updateLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("trofscode") {
 		log.Printf("[DEBUG]  netscaler-provider: Trofscode has changed for lbmonitor %s, starting update", lbmonitorName)
-		lbmonitor.Trofscode = d.Get("trofscode").(int)
+		lbmonitor.Trofscode = uint32(d.Get("trofscode").(int))
 		hasChange = true
 	}
 	if d.HasChange("trofsstring") {
@@ -1256,19 +1256,19 @@ func updateLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("vendorid") {
 		log.Printf("[DEBUG] netscaler-provider:  Vendorid has changed for lbmonitor %s, starting update", lbmonitorName)
-		lbmonitor.Vendorid = d.Get("vendorid").(int)
+		lbmonitor.Vendorid = uint32(d.Get("vendorid").(int))
 		hasChange = true
 	}
 	if d.HasChange("vendorspecificvendorid") {
 		log.Printf("[DEBUG] netscaler-provider:  Vendorspecificvendorid has changed for lbmonitor %s, starting update", lbmonitorName)
-		lbmonitor.Vendorspecificvendorid = d.Get("vendorspecificvendorid").(int)
+		lbmonitor.Vendorspecificvendorid = uint32(d.Get("vendorspecificvendorid").(int))
 		hasChange = true
 	}
 
 	if d.HasChange("respcode") {
 		log.Printf("[DEBUG] netscaler-provider:  Respcode has changed for lbmonitor %s, starting update", lbmonitorName)
 		_, ok := d.GetOk("respcode")
-		respcode_val := d.Get("respcode").([]interface{})
+		respcode_val := toStringList(d.Get("respcode").([]interface{}))
 
 		if ok {
 			lbmonitor.Respcode = respcode_val
@@ -1277,7 +1277,7 @@ func updateLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if hasChange {
-		_, err := client.UpdateResource(netscaler.Lbmonitor.Type(), lbmonitorName, &lbmonitor)
+		_, err := client.UpdateResource(service.Lbmonitor.Type(), lbmonitorName, &lbmonitor)
 		if err != nil {
 			return fmt.Errorf("[ERROR] netscaler-provider: Error updating lbmonitor %s", lbmonitorName)
 		}
@@ -1295,7 +1295,7 @@ func deleteLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 	lbmonitorName := d.Id()
 	args := make([]string, 1, 1)
 	args[0] = "type:" + d.Get("type").(string)
-	err := client.DeleteResourceWithArgs(netscaler.Lbmonitor.Type(), lbmonitorName, args)
+	err := client.DeleteResourceWithArgs(service.Lbmonitor.Type(), lbmonitorName, args)
 	if err != nil {
 		return err
 	}

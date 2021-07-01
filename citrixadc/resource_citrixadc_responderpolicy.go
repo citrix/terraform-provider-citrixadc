@@ -1,11 +1,11 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/cs"
-	"github.com/chiradeep/go-nitro/config/lb"
-	"github.com/chiradeep/go-nitro/config/responder"
+	"github.com/citrix/adc-nitro-go/resource/config/cs"
+	"github.com/citrix/adc-nitro-go/resource/config/lb"
+	"github.com/citrix/adc-nitro-go/resource/config/responder"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -75,11 +75,6 @@ func resourceCitrixAdcResponderpolicy() *schema.Resource {
 							Optional: true,
 							Computed: true,
 						},
-						"invoke": &schema.Schema{
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
 						"labelname": &schema.Schema{
 							Type:     schema.TypeString,
 							Optional: true,
@@ -97,11 +92,6 @@ func resourceCitrixAdcResponderpolicy() *schema.Resource {
 						},
 						"priority": &schema.Schema{
 							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
-						},
-						"type": &schema.Schema{
-							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
@@ -231,7 +221,7 @@ func createResponderpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 		Undefaction:   d.Get("undefaction").(string),
 	}
 
-	_, err := client.AddResource(netscaler.Responderpolicy.Type(), responderpolicyName, &responderpolicy)
+	_, err := client.AddResource(service.Responderpolicy.Type(), responderpolicyName, &responderpolicy)
 	if err != nil {
 		return err
 	}
@@ -263,7 +253,7 @@ func readResponderpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	responderpolicyName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading responderpolicy state %s", responderpolicyName)
-	data, err := client.FindResource(netscaler.Responderpolicy.Type(), responderpolicyName)
+	data, err := client.FindResource(service.Responderpolicy.Type(), responderpolicyName)
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing responderpolicy state %s", responderpolicyName)
 		d.SetId("")
@@ -343,7 +333,7 @@ func updateResponderpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if hasChange {
-		_, err := client.UpdateResource(netscaler.Responderpolicy.Type(), responderpolicyName, &responderpolicy)
+		_, err := client.UpdateResource(service.Responderpolicy.Type(), responderpolicyName, &responderpolicy)
 		if err != nil {
 			return fmt.Errorf("Error updating responderpolicy %s", responderpolicyName)
 		}
@@ -384,7 +374,7 @@ func deleteResponderpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 
 	// Delete policy
 	responderpolicyName := d.Id()
-	err := client.DeleteResource(netscaler.Responderpolicy.Type(), responderpolicyName)
+	err := client.DeleteResource(service.Responderpolicy.Type(), responderpolicyName)
 	if err != nil {
 		return err
 	}
@@ -423,13 +413,10 @@ func addSingleGlobalBinding(d *schema.ResourceData, meta interface{}, binding ma
 
 	client := meta.(*NetScalerNitroClient).client
 
-	bindingStruct := responder.Responderglobalresponderpolicybinding{}
-	bindingStruct.Policyname = d.Get("name").(string)
+	bindingStruct := responder.Responderpolicyglobalbinding{}
+	bindingStruct.Name = d.Get("name").(string)
 	if d, ok := binding["gotopriorityexpression"]; ok {
 		bindingStruct.Gotopriorityexpression = d.(string)
-	}
-	if d, ok := binding["invoke"]; ok {
-		bindingStruct.Invoke = d.(bool)
 	}
 	if d, ok := binding["labelname"]; ok {
 		log.Printf("Labelname %v\n", d)
@@ -440,11 +427,7 @@ func addSingleGlobalBinding(d *schema.ResourceData, meta interface{}, binding ma
 		bindingStruct.Labeltype = d.(string)
 	}
 	if d, ok := binding["priority"]; ok {
-		bindingStruct.Priority = d.(int)
-	}
-	if d, ok := binding["type"]; ok {
-		log.Printf("Type %v\n", d)
-		bindingStruct.Type = d.(string)
+		bindingStruct.Priority = uint32(d.(int))
 	}
 
 	if err := client.UpdateUnnamedResource("responderglobal_responderpolicy_binding", bindingStruct); err != nil {
@@ -755,7 +738,7 @@ func addSingleLbvserverBinding(d *schema.ResourceData, meta interface{}, binding
 	log.Printf("[DEBUG]  citrixadc-provider: In addSingleLbvserverBinding")
 	client := meta.(*NetScalerNitroClient).client
 
-	bindingStruct := lb.Lbvserverresponderpolicybinding{}
+	bindingStruct := lb.Lbvserverpolicybinding{}
 	bindingStruct.Policyname = d.Get("name").(string)
 
 	if d, ok := binding["bindpoint"]; ok {
@@ -778,7 +761,7 @@ func addSingleLbvserverBinding(d *schema.ResourceData, meta interface{}, binding
 		bindingStruct.Name = d.(string)
 	}
 	if d, ok := binding["priority"]; ok {
-		bindingStruct.Priority = d.(int)
+		bindingStruct.Priority = uint32(d.(int))
 	}
 
 	// We need to do a HTTP PUT hence the UpdateResource
@@ -911,7 +894,7 @@ func addSingleCsvserverBinding(d *schema.ResourceData, meta interface{}, binding
 	log.Printf("[DEBUG]  citrixadc-provider: In addSingleCsvserverBinding")
 	client := meta.(*NetScalerNitroClient).client
 
-	bindingStruct := cs.Csvserverresponderpolicybinding{}
+	bindingStruct := cs.Csvserverpolicybinding{}
 	bindingStruct.Policyname = d.Get("name").(string)
 
 	if d, ok := binding["bindpoint"]; ok {
@@ -934,7 +917,7 @@ func addSingleCsvserverBinding(d *schema.ResourceData, meta interface{}, binding
 		bindingStruct.Name = d.(string)
 	}
 	if d, ok := binding["priority"]; ok {
-		bindingStruct.Priority = d.(int)
+		bindingStruct.Priority = uint32(d.(int))
 	}
 
 	// We need to do a HTTP PUT hence the UpdateResource

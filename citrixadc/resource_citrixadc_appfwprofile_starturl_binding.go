@@ -3,9 +3,9 @@ package citrixadc
 import (
 	"net/url"
 
-	"github.com/chiradeep/go-nitro/config/appfw"
+	"github.com/citrix/adc-nitro-go/resource/config/appfw"
 
-	"github.com/chiradeep/go-nitro/netscaler"
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"fmt"
@@ -73,7 +73,7 @@ func createAppfwprofileStarturlBindingFunc(d *schema.ResourceData, meta interfac
 		State:          d.Get("state").(string),
 	}
 
-	err := client.UpdateUnnamedResource(netscaler.Appfwprofile_starturl_binding.Type(), &appfwprofileStarturlBinding)
+	err := client.UpdateUnnamedResource(service.Appfwprofile_starturl_binding.Type(), &appfwprofileStarturlBinding)
 	if err != nil {
 		return err
 	}
@@ -104,8 +104,8 @@ func readAppfwprofileStarturlBindingFunc(d *schema.ResourceData, meta interface{
 
 	log.Printf("[DEBUG] citrixadc-provider: Reading appfwprofileStarturlBinding state %s", bindingID)
 
-	findParams := netscaler.FindParams{
-		ResourceType: netscaler.Appfwprofile_starturl_binding.Type(),
+	findParams := service.FindParams{
+		ResourceType: service.Appfwprofile_starturl_binding.Type(),
 		ResourceName: profileName,
 	}
 	findParams.FilterMap = make(map[string]string)
@@ -157,7 +157,7 @@ func deleteAppfwprofileStarturlBindingFunc(d *schema.ResourceData, meta interfac
 	args := make([]string, 0)
 	args = append(args, fmt.Sprintf("starturl:%v", url.QueryEscape(startURL)))
 
-	err := client.DeleteResourceWithArgs(netscaler.Appfwprofile_starturl_binding.Type(), profileName, args)
+	err := client.DeleteResourceWithArgs(service.Appfwprofile_starturl_binding.Type(), profileName, args)
 	if err != nil {
 		return err
 	}

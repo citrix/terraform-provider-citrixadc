@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/cmp"
+	"github.com/citrix/adc-nitro-go/resource/config/cmp"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"fmt"
@@ -50,7 +50,7 @@ func createCmppolicyFunc(d *schema.ResourceData, meta interface{}) error {
 		Rule:      d.Get("rule").(string),
 	}
 
-	_, err := client.AddResource(netscaler.Cmppolicy.Type(), cmppolicyName, &cmppolicy)
+	_, err := client.AddResource(service.Cmppolicy.Type(), cmppolicyName, &cmppolicy)
 	if err != nil {
 		return err
 	}
@@ -70,7 +70,7 @@ func readCmppolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	cmppolicyName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading cmppolicy state %s", cmppolicyName)
-	data, err := client.FindResource(netscaler.Cmppolicy.Type(), cmppolicyName)
+	data, err := client.FindResource(service.Cmppolicy.Type(), cmppolicyName)
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing cmppolicy state %s", cmppolicyName)
 		d.SetId("")
@@ -111,7 +111,7 @@ func updateCmppolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if hasChange {
-		_, err := client.UpdateResource(netscaler.Cmppolicy.Type(), cmppolicyName, &cmppolicy)
+		_, err := client.UpdateResource(service.Cmppolicy.Type(), cmppolicyName, &cmppolicy)
 		if err != nil {
 			return fmt.Errorf("Error updating cmppolicy %s", cmppolicyName)
 		}
@@ -123,7 +123,7 @@ func deleteCmppolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteCmppolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	cmppolicyName := d.Id()
-	err := client.DeleteResource(netscaler.Cmppolicy.Type(), cmppolicyName)
+	err := client.DeleteResource(service.Cmppolicy.Type(), cmppolicyName)
 	if err != nil {
 		return err
 	}
