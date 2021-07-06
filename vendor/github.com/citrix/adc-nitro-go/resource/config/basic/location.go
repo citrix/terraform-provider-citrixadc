@@ -37,12 +37,12 @@ type Location struct {
 	* Numerical value, in degrees, specifying the longitude of the geographical location of the IP address-range. 
 		Note: Longitude and latitude parameters are used for selecting a service with the static proximity GSLB method. If they are not specified, selection is based on the qualifiers specified for the location.
 	*/
-	Longitude int32 `json:"longitude,omitempty"`
+	Longitude int `json:"longitude,omitempty"`
 	/**
 	* Numerical value, in degrees, specifying the latitude of the geographical location of the IP address-range. 
 		Note: Longitude and latitude parameters are used for selecting a service with the static proximity GSLB method. If they are not specified, selection is based on the qualifiers specified for the location.
 	*/
-	Latitude int32 `json:"latitude,omitempty"`
+	Latitude int `json:"latitude,omitempty"`
 
 	//------- Read only Parameter ---------;
 

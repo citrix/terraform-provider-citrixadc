@@ -31,7 +31,7 @@ type Sslprofileecccurvebinding struct {
 	/**
 	* Priority of the cipher binding
 	*/
-	Cipherpriority uint32 `json:"cipherpriority,omitempty"`
+	Cipherpriority int `json:"cipherpriority,omitempty"`
 
 
 }

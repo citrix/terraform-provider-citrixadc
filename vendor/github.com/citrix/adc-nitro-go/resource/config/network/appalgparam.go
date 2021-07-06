@@ -23,6 +23,6 @@ type Appalgparam struct {
 	/**
 	* Interval in sec, after which data sessions of PPTP GRE is cleared.
 	*/
-	Pptpgreidletimeout uint32 `json:"pptpgreidletimeout,omitempty"`
+	Pptpgreidletimeout int `json:"pptpgreidletimeout,omitempty"`
 
 }

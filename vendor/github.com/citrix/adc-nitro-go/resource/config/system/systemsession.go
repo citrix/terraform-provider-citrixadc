@@ -23,7 +23,7 @@ type Systemsession struct {
 	/**
 	* ID of the system session about which to display information.
 	*/
-	Sid uint32 `json:"sid,omitempty"`
+	Sid int `json:"sid,omitempty"`
 	/**
 	* Terminate all the system sessions except the current session.
 	*/

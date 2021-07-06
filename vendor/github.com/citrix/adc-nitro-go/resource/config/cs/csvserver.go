@@ -30,7 +30,7 @@ type Csvserver struct {
 	/**
 	* Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.
 	*/
-	Td uint32 `json:"td,omitempty"`
+	Td int `json:"td,omitempty"`
 	/**
 	* Protocol used by the virtual server.
 	*/
@@ -44,7 +44,7 @@ type Csvserver struct {
 	*/
 	Targettype string `json:"targettype,omitempty"`
 	Dnsrecordtype string `json:"dnsrecordtype,omitempty"`
-	Persistenceid uint32 `json:"persistenceid,omitempty"`
+	Persistenceid int `json:"persistenceid,omitempty"`
 	/**
 	* IP address pattern, in dotted decimal notation, for identifying packets to be accepted by the virtual server. The IP Mask parameter specifies which part of the destination IP address is matched against the pattern. Mutually exclusive with the IP Address parameter. 
 		For example, if the IP pattern assigned to the virtual server is 198.51.100.0 and the IP mask is 255.255.240.0 (a forward mask), the first 20 bits in the destination IP addresses are matched with the first 20 bits in the pattern. The virtual server accepts requests with IP addresses that range from 198.51.96.1 to 198.51.111.254. You can also use a pattern such as 0.0.2.2 and a mask such as 0.0.255.255 (a reverse mask).
@@ -58,11 +58,11 @@ type Csvserver struct {
 	/**
 	* Number of consecutive IP addresses, starting with the address specified by the IP Address parameter, to include in a range of addresses assigned to this virtual server.
 	*/
-	Range uint32 `json:"range,omitempty"`
+	Range int `json:"range,omitempty"`
 	/**
 	* Port number for content switching virtual server.
 	*/
-	Port int32 `json:"port,omitempty"`
+	Port int `json:"port,omitempty"`
 	/**
 	* The list of IPv4/IPv6 addresses bound to ipset would form a part of listening service on the current cs vserver
 	*/
@@ -97,7 +97,7 @@ type Csvserver struct {
 		120 seconds for DNS-based services.
 		120 seconds for other UDP-based services.
 	*/
-	Clttimeout uint64 `json:"clttimeout,omitempty"`
+	Clttimeout int `json:"clttimeout,omitempty"`
 	/**
 	* Type of precedence to use for both RULE-based and URL-based policies on the content switching virtual server. With the default (RULE) setting, incoming requests are evaluated against the rule-based content switching policies. If none of the rules match, the URL in the request is evaluated against the URL-based content switching policies.
 	*/
@@ -117,11 +117,11 @@ type Csvserver struct {
 	/**
 	* Time-out value, in minutes, for spillover persistence.
 	*/
-	Sopersistencetimeout uint32 `json:"sopersistencetimeout,omitempty"`
+	Sopersistencetimeout int `json:"sopersistencetimeout,omitempty"`
 	/**
 	* Depending on the spillover method, the maximum number of connections or the maximum total bandwidth (Kbps) that a virtual server can handle before spillover occurs.
 	*/
-	Sothreshold uint32 `json:"sothreshold,omitempty"`
+	Sothreshold int `json:"sothreshold,omitempty"`
 	/**
 	* Action to be performed if spillover is to take effect, but no backup chain to spillover is usable or exists
 	*/
@@ -174,7 +174,7 @@ type Csvserver struct {
 	/**
 	* Integer specifying the priority of the listen policy. A higher number specifies a lower priority. If a request matches the listen policies of more than one virtual server the virtual server whose listen policy has the highest priority (the lowest priority number) accepts the request.
 	*/
-	Listenpriority uint32 `json:"listenpriority,omitempty"`
+	Listenpriority int `json:"listenpriority,omitempty"`
 	/**
 	* Enable HTTP 401-response based authentication.
 	*/
@@ -230,7 +230,7 @@ type Csvserver struct {
 	/**
 	* The protocol version returned by the mysql vserver.
 	*/
-	Mysqlprotocolversion uint32 `json:"mysqlprotocolversion,omitempty"`
+	Mysqlprotocolversion int `json:"mysqlprotocolversion,omitempty"`
 	/**
 	* The server version string returned by the mysql vserver.
 	*/
@@ -238,11 +238,11 @@ type Csvserver struct {
 	/**
 	* The character set returned by the mysql vserver.
 	*/
-	Mysqlcharacterset uint32 `json:"mysqlcharacterset,omitempty"`
+	Mysqlcharacterset int `json:"mysqlcharacterset,omitempty"`
 	/**
 	* The server capabilities returned by the mysql vserver.
 	*/
-	Mysqlservercapabilities uint32 `json:"mysqlservercapabilities,omitempty"`
+	Mysqlservercapabilities int `json:"mysqlservercapabilities,omitempty"`
 	/**
 	* Enable logging appflow flow information
 	*/
@@ -288,11 +288,11 @@ type Csvserver struct {
 	/**
 	* Persistence mask for IP based persistence types, for IPv6 virtual servers.
 	*/
-	V6persistmasklen uint32 `json:"v6persistmasklen,omitempty"`
+	V6persistmasklen int `json:"v6persistmasklen,omitempty"`
 	/**
 	* Time period for which a persistence session is in effect.
 	*/
-	Timeout uint32 `json:"timeout,omitempty"`
+	Timeout int `json:"timeout,omitempty"`
 	/**
 	* Use this parameter to  specify the cookie name for COOKIE peristence type. It specifies the name of cookie with a maximum of 32 characters. If not specified, cookie name is internally generated.
 	*/
@@ -304,11 +304,11 @@ type Csvserver struct {
 	/**
 	* Time period for which backup persistence is in effect.
 	*/
-	Backuppersistencetimeout uint32 `json:"backuppersistencetimeout,omitempty"`
+	Backuppersistencetimeout int `json:"backuppersistencetimeout,omitempty"`
 	/**
 	* Port number for external TCP probe. NetScaler provides support for external TCP health check of the vserver status over the selected port. This option is only supported for vservers assigned with an IPAddress or ipset.
 	*/
-	Tcpprobeport int32 `json:"tcpprobeport,omitempty"`
+	Tcpprobeport int `json:"tcpprobeport,omitempty"`
 	/**
 	* Citrix ADC provides support for external health check of the vserver status. Select HTTP or TCP probes for healthcheck
 	*/
@@ -320,7 +320,7 @@ type Csvserver struct {
 	/**
 	* Citrix ADC provides support for external health check of the vserver status. Select port for HTTP/TCP monitring
 	*/
-	Probeport int32 `json:"probeport,omitempty"`
+	Probeport int `json:"probeport,omitempty"`
 	/**
 	* Name of QUIC profile which will be attached to the Content Switching VServer.
 	*/
@@ -329,11 +329,11 @@ type Csvserver struct {
 	* Domain name for which to change the time to live (TTL) and/or backup service IP address.
 	*/
 	Domainname string `json:"domainname,omitempty"`
-	Ttl uint64 `json:"ttl,omitempty"`
+	Ttl int `json:"ttl,omitempty"`
 	Backupip string `json:"backupip,omitempty"`
 	Cookiedomain string `json:"cookiedomain,omitempty"`
-	Cookietimeout uint32 `json:"cookietimeout,omitempty"`
-	Sitedomainttl uint64 `json:"sitedomainttl,omitempty"`
+	Cookietimeout int `json:"cookietimeout,omitempty"`
+	Sitedomainttl int `json:"sitedomainttl,omitempty"`
 	/**
 	* New name for the virtual server. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at sign (@), equal sign (=), and hyphen (-) characters. 
 		The following requirement applies only to the Citrix ADC CLI:

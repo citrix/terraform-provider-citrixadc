@@ -23,11 +23,11 @@ type Gslbparameter struct {
 	/**
 	* Time, in seconds, after which an inactive LDNS entry is removed.
 	*/
-	Ldnsentrytimeout uint64 `json:"ldnsentrytimeout,omitempty"`
+	Ldnsentrytimeout int `json:"ldnsentrytimeout,omitempty"`
 	/**
 	* Tolerance, in milliseconds, for newly learned round-trip time (RTT) values. If the difference between the old RTT value and the newly computed RTT value is less than or equal to the specified tolerance value, the LDNS entry in the network metric table is not updated with the new RTT value. Prevents the exchange of metrics when variations in RTT values are negligible.
 	*/
-	Rtttolerance uint32 `json:"rtttolerance,omitempty"`
+	Rtttolerance int `json:"rtttolerance,omitempty"`
 	/**
 	* The IPv4 network mask with which to create LDNS entries.
 	*/
@@ -35,7 +35,7 @@ type Gslbparameter struct {
 	/**
 	* Mask for creating LDNS entries for IPv6 source addresses. The mask is defined as the number of leading bits to consider, in the source IP address, when creating an LDNS entry.
 	*/
-	V6ldnsmasklen uint32 `json:"v6ldnsmasklen,omitempty"`
+	V6ldnsmasklen int `json:"v6ldnsmasklen,omitempty"`
 	/**
 	* Order in which monitors should be initiated to calculate RTT.
 	*/
@@ -48,11 +48,11 @@ type Gslbparameter struct {
 	* Amount of delay in updating the state of GSLB service to DOWN when MEP goes down.
 		This parameter is applicable only if monitors are not bound to GSLB services
 	*/
-	Gslbsvcstatedelaytime uint64 `json:"gslbsvcstatedelaytime,omitempty"`
+	Gslbsvcstatedelaytime int `json:"gslbsvcstatedelaytime,omitempty"`
 	/**
 	* Time (in seconds) within which local or child site services remain in learning phase. GSLB site will enter the learning phase after reboot, HA failover, Cluster GSLB owner node changes or MEP being enabled on local node.  Backup parent (if configured) will selectively move the adopted children's GSLB services to learning phase when primary parent goes down. While a service is in learning period, remote site will not honour the state and stats got through MEP for that service. State can be learnt from health monitor if bound explicitly.
 	*/
-	Svcstatelearningtime uint64 `json:"svcstatelearningtime,omitempty"`
+	Svcstatelearningtime int `json:"svcstatelearningtime,omitempty"`
 	/**
 	* GSLB configuration will be synced automatically to remote gslb sites if enabled.
 	*/
@@ -60,11 +60,11 @@ type Gslbparameter struct {
 	/**
 	* Time duartion (in seconds) during which if no new packets received by Local gslb site from Remote gslb site then mark the MEP connection DOWN
 	*/
-	Mepkeepalivetimeout uint64 `json:"mepkeepalivetimeout,omitempty"`
+	Mepkeepalivetimeout int `json:"mepkeepalivetimeout,omitempty"`
 	/**
 	* Time duartion (in seconds) for which the gslb sync process will wait before checking for config changes.
 	*/
-	Gslbsyncinterval uint64 `json:"gslbsyncinterval,omitempty"`
+	Gslbsyncinterval int `json:"gslbsyncinterval,omitempty"`
 	/**
 	* Mode in which configuration will be synced from master site to remote sites.
 	*/

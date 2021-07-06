@@ -46,7 +46,7 @@ type Filteraction struct {
 	/**
 	* Response code to be returned for HTTP requests (for use with the ERRORCODE qualifier).
 	*/
-	Respcode uint32 `json:"respcode,omitempty"`
+	Respcode int `json:"respcode,omitempty"`
 	/**
 	* HTML page to return for HTTP requests (For use with the ERRORCODE qualifier).
 	*/

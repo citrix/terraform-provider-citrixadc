@@ -33,15 +33,15 @@ type Mapbmr struct {
 	/**
 	* Start bit position  of Port Set Identifier(PSID) value in Embedded Address (EA) bits.
 	*/
-	Psidoffset uint32 `json:"psidoffset,omitempty"`
+	Psidoffset int `json:"psidoffset,omitempty"`
 	/**
 	* The Embedded Address (EA) bit field encodes the CE-specific IPv4 address and port information.  The EA bit field, which is unique for a 
 		given Rule IPv6 prefix.
 	*/
-	Eabitlength uint32 `json:"eabitlength,omitempty"`
+	Eabitlength int `json:"eabitlength,omitempty"`
 	/**
 	* Length of Port Set IdentifierPort Set Identifier(PSID) in Embedded Address (EA) bits
 	*/
-	Psidlength uint32 `json:"psidlength,omitempty"`
+	Psidlength int `json:"psidlength,omitempty"`
 
 }

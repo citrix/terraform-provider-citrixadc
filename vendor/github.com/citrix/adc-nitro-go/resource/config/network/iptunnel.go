@@ -51,7 +51,7 @@ type Iptunnel struct {
 	/**
 	* The vlan for mulicast packets
 	*/
-	Vlan uint32 `json:"vlan,omitempty"`
+	Vlan int `json:"vlan,omitempty"`
 	/**
 	* The owner node group in a Cluster for the iptunnel.
 	*/

@@ -61,11 +61,11 @@ type Interface struct {
 	/**
 	* The Maximum Transmission Unit (MTU) is the largest packet size, measured in bytes excluding 14 bytes ethernet header and 4 bytes CRC, that can be transmitted and received by an interface. The default value of MTU is 1500 on all the interface of Citrix ADC, some Cloud Platforms will restrict Citrix ADC to use the lesser default value. Any MTU value more than 1500 is called Jumbo MTU and will make the interface as jumbo enabled. The Maximum Jumbo MTU in Citrix ADC is 9216, however, some Virtualized / Cloud Platforms will have lesser Maximum Jumbo MTU Value (9000). In the case of Cluster, the Backplane interface requires an MTU value of 78 bytes more than the Max MTU configured on any other Data-Plane Interface. When the Data plane interfaces are all at default 1500 MTU, Cluster Back Plane will be automatically set to 1578 (1500 + 78) MTU. If a Backplane interface is reset to Data Plane Interface, then the 1578 MTU will be automatically reset to the default MTU of 1500(or whatever lesser default value). If any data plane interface of a Cluster is configured with a Jumbo MTU ( > 1500), then all backplane interfaces require to be configured with a minimum MTU of 'Highest Data Plane MTU in the Cluster + 78'. That makes the maximum Jumbo MTU for any Data-Plane Interface in a Cluster System to be '9138 (9216 - 78)., where 9216 is the maximum Jumbo MTU. On certain Virtualized / Cloud Platforms, the maximum  possible MTU is restricted to a lesser value, Similar calculation can be applied, Maximum Data Plane MTU in Cluster = (Maximum possible MTU - 78).
 	*/
-	Mtu uint32 `json:"mtu,omitempty"`
+	Mtu int `json:"mtu,omitempty"`
 	/**
 	* The receive ringsize of the interface. A higher number provides more number of buffers in handling incoming traffic.
 	*/
-	Ringsize uint32 `json:"ringsize,omitempty"`
+	Ringsize int `json:"ringsize,omitempty"`
 	/**
 	* The receive ringtype of the interface (Fixed or Elastic). A fixed ring type pre-allocates configured number of buffers irrespective of traffic rate. In contrast, an elastic ring, expands and shrinks based on incoming traffic rate.
 	*/
@@ -99,7 +99,7 @@ type Interface struct {
 		For an LA channel of the Citrix ADC, this digit specifies the variable x of an LA channel in LA/x notation, where x can range from 1 to 8. For example, if you specify 3 as the LACP key for an LA channel, the interface is bound to the LA channel LA/3.
 		For an LA channel of a cluster configuration, this digit specifies the variable y of a cluster LA channel in CLA/(y-4) notation, where y can range from 5 to 8. For example, if you specify 6 as the LACP key for a cluster LA channel, the interface is bound to the cluster LA channel CLA/2.
 	*/
-	Lacpkey uint32 `json:"lacpkey,omitempty"`
+	Lacpkey int `json:"lacpkey,omitempty"`
 	/**
 	* Type of entity (Citrix ADC or cluster configuration) for which to create the channel.
 	*/
@@ -107,7 +107,7 @@ type Interface struct {
 	/**
 	* LACP port priority, expressed as an integer. The lower the number, the higher the priority. The Citrix ADC limits the number of interfaces in an LA channel to sixteen.
 	*/
-	Lacppriority uint32 `json:"lacppriority,omitempty"`
+	Lacppriority int `json:"lacppriority,omitempty"`
 	/**
 	* Interval at which the Citrix ADC sends LACPDU messages to the peer device on the LA channel.
 		Available settings function as follows:
@@ -122,7 +122,7 @@ type Interface struct {
 	/**
 	* Low threshold value for the throughput of the interface, in Mbps. In an HA configuration, failover is triggered if the interface has HA MON enabled and the throughput is below the specified the threshold.
 	*/
-	Throughput uint32 `json:"throughput,omitempty"`
+	Throughput int `json:"throughput,omitempty"`
 	/**
 	* Link Redundancy for Cluster LAG.
 	*/
@@ -130,11 +130,11 @@ type Interface struct {
 	/**
 	* High threshold value for the bandwidth usage of the interface, in Mbps. The Citrix ADC generates an SNMP trap message when the bandwidth usage of the interface is greater than or equal to the specified high threshold value.
 	*/
-	Bandwidthhigh uint32 `json:"bandwidthhigh,omitempty"`
+	Bandwidthhigh int `json:"bandwidthhigh,omitempty"`
 	/**
 	* Normal threshold value for the bandwidth usage of the interface, in Mbps. When the bandwidth usage of the interface becomes less than or equal to the specified normal threshold after exceeding the high threshold, the Citrix ADC generates an SNMP trap message to indicate that the bandwidth usage has returned to normal.
 	*/
-	Bandwidthnormal uint32 `json:"bandwidthnormal,omitempty"`
+	Bandwidthnormal int `json:"bandwidthnormal,omitempty"`
 	/**
 	* Link Layer Discovery Protocol (LLDP) mode for an interface. The resultant LLDP mode of an interface depends on the LLDP mode configured at the global and the interface levels.
 	*/
@@ -142,7 +142,7 @@ type Interface struct {
 	/**
 	* LRSET port priority, expressed as an integer ranging from 1 to 1024. The highest priority is 1. The Citrix ADC limits the number of interfaces in an LRSET to 8. Within a LRSET the highest LR Priority Interface is considered as the first candidate for the Active interface, if the interface is UP.
 	*/
-	Lrsetpriority uint32 `json:"lrsetpriority,omitempty"`
+	Lrsetpriority int `json:"lrsetpriority,omitempty"`
 
 	//------- Read only Parameter ---------;
 

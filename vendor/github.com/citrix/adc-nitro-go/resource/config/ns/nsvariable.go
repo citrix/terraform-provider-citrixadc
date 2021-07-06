@@ -81,7 +81,7 @@ type Nsvariable struct {
 	/**
 	* Value expiration in seconds. If the value is not referenced within the expiration period it will be deleted. 0 (the default) means no expiration.
 	*/
-	Expires uint32 `json:"expires,omitempty"`
+	Expires int `json:"expires,omitempty"`
 	/**
 	* Comments associated with this variable.
 	*/

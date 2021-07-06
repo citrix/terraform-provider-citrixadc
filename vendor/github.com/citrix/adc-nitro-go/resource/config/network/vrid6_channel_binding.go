@@ -27,15 +27,15 @@ type Vrid6channelbinding struct {
 	/**
 	* The VLAN in which this VRID resides.
 	*/
-	Vlan uint32 `json:"vlan,omitempty"`
+	Vlan int `json:"vlan,omitempty"`
 	/**
 	* Flags.
 	*/
-	Flags uint32 `json:"flags,omitempty"`
+	Flags int `json:"flags,omitempty"`
 	/**
 	* Integer value that uniquely identifies a VMAC6 address.
 	*/
-	Id uint32 `json:"id,omitempty"`
+	Id int `json:"id,omitempty"`
 
 
 }

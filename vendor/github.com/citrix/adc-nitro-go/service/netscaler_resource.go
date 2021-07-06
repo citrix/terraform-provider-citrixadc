@@ -30,7 +30,10 @@ import (
 )
 
 // Idempotent flag can't be added for these resources
-var idempotentInvalidResources = []string{"login", "logout", "reboot", "shutdown", "ping", "ping6", "traceroute", "traceroute6", "install", "appfwjsoncontenttype", "appfwxmlcontenttype", "dnsnsrec"}
+var idempotentInvalidResources = []string{"login", "logout", "reboot", "shutdown", "ping", "ping6", "traceroute", "traceroute6", "install", "appfwjsoncontenttype", "appfwxmlcontenttype", "dnsnsrec", "transformaction"}
+
+// HTTP Headers to be masked and not shown in logs
+var headersToBeMasked = []string{"X-NITRO-USER", "X-NITRO-PASS", "Set-Cookie"}
 
 const (
 	nsErrSessionExpired = 444
@@ -156,10 +159,7 @@ func maskHeaders(headers http.Header) http.Header {
 	maskedHeaders := make(http.Header, len(headers))
 	for k, v := range headers {
 		upperKey := strings.ToUpper(k)
-
-		if upperKey == "X-NITRO-PASS" {
-			maskedHeaders[k] = []string{"*********"}
-		} else if upperKey == "X-NITRO-USER" {
+		if contains(headersToBeMasked, upperKey) {
 			maskedHeaders[k] = []string{"*********"}
 		} else {
 			maskedHeaders[k] = v
@@ -172,7 +172,7 @@ func (c *NitroClient) doHTTPRequest(method string, urlstr string, bytes *bytes.B
 	req, err := c.createHTTPRequest(method, urlstr, bytes)
 
 	maskedHeaders := maskHeaders(req.Header)
-	c.logger.Trace("doHTTPRequest HTTP method", "method", method, "url", urlstr, "body", bytes.String(), "headers", maskedHeaders)
+	c.logger.Trace("doHTTPRequest HTTP method", "method", method, "url", urlstr, "headers", maskedHeaders)
 
 	resp, err := c.client.Do(req)
 	if resp != nil {

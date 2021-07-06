@@ -27,7 +27,7 @@ type Ssldhparam struct {
 	/**
 	* Size, in bits, of the DH key being generated.
 	*/
-	Bits uint32 `json:"bits,omitempty"`
+	Bits int `json:"bits,omitempty"`
 	/**
 	* Random number required for generating the DH key. Required as part of the DH key generation algorithm.
 	*/

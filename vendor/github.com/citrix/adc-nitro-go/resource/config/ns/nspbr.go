@@ -34,7 +34,7 @@ type Nspbr struct {
 	/**
 	* Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.
 	*/
-	Td uint32 `json:"td,omitempty"`
+	Td int `json:"td,omitempty"`
 	/**
 	* IP address or range of IP addresses to match against the source IP address of an outgoing IPv4 packet. In the command line interface, separate the range with a hyphen. For example: 10.102.29.30-10.102.29.189.
 	*/
@@ -123,15 +123,15 @@ type Nspbr struct {
 	/**
 	* Protocol, identified by protocol number, to match against the protocol of an outgoing IPv4 packet.
 	*/
-	Protocolnumber uint32 `json:"protocolnumber,omitempty"`
+	Protocolnumber int `json:"protocolnumber,omitempty"`
 	/**
 	* ID of the VLAN. The Citrix ADC compares the PBR only to the outgoing packets on the specified VLAN. If you do not specify any interface ID, the appliance compares the PBR to the outgoing packets on all VLANs.
 	*/
-	Vlan uint32 `json:"vlan,omitempty"`
+	Vlan int `json:"vlan,omitempty"`
 	/**
 	* ID of the VXLAN. The Citrix ADC compares the PBR only to the outgoing packets on the specified VXLAN. If you do not specify any interface ID, the appliance compares the PBR to the outgoing packets on all VXLANs.
 	*/
-	Vxlan uint32 `json:"vxlan,omitempty"`
+	Vxlan int `json:"vxlan,omitempty"`
 	/**
 	* ID of an interface. The Citrix ADC compares the PBR only to the outgoing packets on the specified interface. If you do not specify any value, the appliance compares the PBR to the outgoing packets on all interfaces.
 	*/
@@ -139,7 +139,7 @@ type Nspbr struct {
 	/**
 	* Priority of the PBR, which determines the order in which it is evaluated relative to the other PBRs. If you do not specify priorities while creating PBRs, the PBRs are evaluated in the order in which they are created.
 	*/
-	Priority uint32 `json:"priority,omitempty"`
+	Priority int `json:"priority,omitempty"`
 	/**
 	* Monitor the route specified byte Next Hop parameter. This parameter is not applicable if you specify a link load balancing (LLB) virtual server name with the Next Hop parameter.
 	*/

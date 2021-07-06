@@ -31,7 +31,7 @@ type Appfwprofilexmldosurlbinding struct {
 	/**
 	* Maximum nesting (depth) of XML elements. This check protects against documents that have excessive hierarchy depths.
 	*/
-	Xmlmaxelementdepth uint32 `json:"xmlmaxelementdepth,omitempty"`
+	Xmlmaxelementdepth int `json:"xmlmaxelementdepth,omitempty"`
 	/**
 	* State if XML Max element name length check is ON or OFF.
 	*/
@@ -39,7 +39,7 @@ type Appfwprofilexmldosurlbinding struct {
 	/**
 	* Specify the longest name of any element (including the expanded namespace) to protect against overflow attacks.
 	*/
-	Xmlmaxelementnamelength uint32 `json:"xmlmaxelementnamelength,omitempty"`
+	Xmlmaxelementnamelength int `json:"xmlmaxelementnamelength,omitempty"`
 	/**
 	* State if XML Max elements check is ON or OFF.
 	*/
@@ -47,7 +47,7 @@ type Appfwprofilexmldosurlbinding struct {
 	/**
 	* Specify the maximum number of XML elements allowed. Protects against overflow attacks.
 	*/
-	Xmlmaxelements uint32 `json:"xmlmaxelements,omitempty"`
+	Xmlmaxelements int `json:"xmlmaxelements,omitempty"`
 	/**
 	* State if XML Max element children check is ON or OFF.
 	*/
@@ -55,7 +55,7 @@ type Appfwprofilexmldosurlbinding struct {
 	/**
 	* Specify the maximum number of children allowed per XML element. Protects against overflow attacks.
 	*/
-	Xmlmaxelementchildren uint32 `json:"xmlmaxelementchildren,omitempty"`
+	Xmlmaxelementchildren int `json:"xmlmaxelementchildren,omitempty"`
 	/**
 	* State if XML Max nodes check is ON or OFF.
 	*/
@@ -63,7 +63,7 @@ type Appfwprofilexmldosurlbinding struct {
 	/**
 	* Specify the maximum number of XML nodes. Protects against overflow attacks.
 	*/
-	Xmlmaxnodes uint32 `json:"xmlmaxnodes,omitempty"`
+	Xmlmaxnodes int `json:"xmlmaxnodes,omitempty"`
 	/**
 	* State if XML Max Entity Expansions Check is ON or OFF.
 	*/
@@ -71,7 +71,7 @@ type Appfwprofilexmldosurlbinding struct {
 	/**
 	* Specify maximum allowed number of entity expansions. Protects aganist Entity Expansion Attack.
 	*/
-	Xmlmaxentityexpansions uint32 `json:"xmlmaxentityexpansions,omitempty"`
+	Xmlmaxentityexpansions int `json:"xmlmaxentityexpansions,omitempty"`
 	/**
 	* State if XML Max Entity Expansions Depth Check is ON or OFF.
 	*/
@@ -79,7 +79,7 @@ type Appfwprofilexmldosurlbinding struct {
 	/**
 	* Specify maximum entity expansion depth. Protects aganist Entity Expansion Attack.
 	*/
-	Xmlmaxentityexpansiondepth uint32 `json:"xmlmaxentityexpansiondepth,omitempty"`
+	Xmlmaxentityexpansiondepth int `json:"xmlmaxentityexpansiondepth,omitempty"`
 	/**
 	* State if XML Max attributes check is ON or OFF.
 	*/
@@ -87,7 +87,7 @@ type Appfwprofilexmldosurlbinding struct {
 	/**
 	* Specify maximum number of attributes per XML element. Protects against overflow attacks.
 	*/
-	Xmlmaxattributes uint32 `json:"xmlmaxattributes,omitempty"`
+	Xmlmaxattributes int `json:"xmlmaxattributes,omitempty"`
 	/**
 	* State if XML Max attribute name length check is ON or OFF.
 	*/
@@ -95,7 +95,7 @@ type Appfwprofilexmldosurlbinding struct {
 	/**
 	* Specify the longest name of any XML attribute. Protects against overflow attacks.
 	*/
-	Xmlmaxattributenamelength uint32 `json:"xmlmaxattributenamelength,omitempty"`
+	Xmlmaxattributenamelength int `json:"xmlmaxattributenamelength,omitempty"`
 	/**
 	* State if XML Max atribute value length is ON or OFF.
 	*/
@@ -103,7 +103,7 @@ type Appfwprofilexmldosurlbinding struct {
 	/**
 	* Specify the longest value of any XML attribute. Protects against overflow attacks.
 	*/
-	Xmlmaxattributevaluelength uint32 `json:"xmlmaxattributevaluelength,omitempty"`
+	Xmlmaxattributevaluelength int `json:"xmlmaxattributevaluelength,omitempty"`
 	/**
 	* State if XML Max namespaces check is ON or OFF.
 	*/
@@ -111,7 +111,7 @@ type Appfwprofilexmldosurlbinding struct {
 	/**
 	* Specify maximum number of active namespaces. Protects against overflow attacks.
 	*/
-	Xmlmaxnamespaces uint32 `json:"xmlmaxnamespaces,omitempty"`
+	Xmlmaxnamespaces int `json:"xmlmaxnamespaces,omitempty"`
 	/**
 	* State if XML Max namespace URI length check is ON or OFF.
 	*/
@@ -119,7 +119,7 @@ type Appfwprofilexmldosurlbinding struct {
 	/**
 	* Specify the longest URI of any XML namespace. Protects against overflow attacks.
 	*/
-	Xmlmaxnamespaceurilength uint32 `json:"xmlmaxnamespaceurilength,omitempty"`
+	Xmlmaxnamespaceurilength int `json:"xmlmaxnamespaceurilength,omitempty"`
 	/**
 	* State if XML Max CDATA length check is ON or OFF.
 	*/
@@ -127,7 +127,7 @@ type Appfwprofilexmldosurlbinding struct {
 	/**
 	* Specify the maximum size of CDATA. Protects against overflow attacks and large quantities of unparsed data within XML messages.
 	*/
-	Xmlmaxchardatalength uint32 `json:"xmlmaxchardatalength,omitempty"`
+	Xmlmaxchardatalength int `json:"xmlmaxchardatalength,omitempty"`
 	/**
 	* State if XML Max file size check is ON or OFF.
 	*/
@@ -135,7 +135,7 @@ type Appfwprofilexmldosurlbinding struct {
 	/**
 	* Specify the maximum size of XML messages. Protects against overflow attacks.
 	*/
-	Xmlmaxfilesize uint32 `json:"xmlmaxfilesize,omitempty"`
+	Xmlmaxfilesize int `json:"xmlmaxfilesize,omitempty"`
 	/**
 	* State if XML Min file size check is ON or OFF.
 	*/
@@ -143,7 +143,7 @@ type Appfwprofilexmldosurlbinding struct {
 	/**
 	* Enforces minimum message size.
 	*/
-	Xmlminfilesize uint32 `json:"xmlminfilesize,omitempty"`
+	Xmlminfilesize int `json:"xmlminfilesize,omitempty"`
 	/**
 	* State if XML Block PI is ON or OFF. Protects resources from denial of service attacks as SOAP messages cannot have processing instructions (PI) in messages.
 	*/
@@ -163,11 +163,11 @@ type Appfwprofilexmldosurlbinding struct {
 	/**
 	* XML Max Total SOAP Array Size. Protects against SOAP Array Abuse attack.
 	*/
-	Xmlmaxsoaparraysize uint32 `json:"xmlmaxsoaparraysize,omitempty"`
+	Xmlmaxsoaparraysize int `json:"xmlmaxsoaparraysize,omitempty"`
 	/**
 	* XML Max Individual SOAP Array Rank. This is the dimension of the SOAP array.
 	*/
-	Xmlmaxsoaparrayrank uint32 `json:"xmlmaxsoaparrayrank,omitempty"`
+	Xmlmaxsoaparrayrank int `json:"xmlmaxsoaparrayrank,omitempty"`
 	/**
 	* Enabled.
 	*/

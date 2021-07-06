@@ -59,7 +59,7 @@ type Sslcrl struct {
 	/**
 	* Port for the LDAP server.
 	*/
-	Port int32 `json:"port,omitempty"`
+	Port int `json:"port,omitempty"`
 	/**
 	* Base distinguished name (DN), which is used in an LDAP search to search for a CRL. Citrix recommends searching for the Base DN instead of the Issuer Name from the CA certificate, because the Issuer Name field might not exactly match the LDAP directory structure's DN.
 	*/
@@ -77,7 +77,7 @@ type Sslcrl struct {
 	/**
 	* Day on which to refresh the CRL, or, if the Interval parameter is not set, the number of days after which to refresh the CRL. If Interval is set to MONTHLY, specify the date. If Interval is set to WEEKLY, specify the day of the week (for example, Sun=0 and Sat=6). This parameter is not applicable if the Interval is set to DAILY.
 	*/
-	Day uint32 `json:"day,omitempty"`
+	Day int `json:"day,omitempty"`
 	/**
 	* Time, in hours (1-24) and minutes (1-60), at which to refresh the CRL.
 	*/

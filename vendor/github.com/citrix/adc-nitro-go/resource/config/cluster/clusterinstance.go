@@ -23,15 +23,15 @@ type Clusterinstance struct {
 	/**
 	* Unique number that identifies the cluster.
 	*/
-	Clid uint32 `json:"clid,omitempty"`
+	Clid int `json:"clid,omitempty"`
 	/**
 	* Amount of time, in seconds, after which nodes that do not respond to the heartbeats are assumed to be down.If the value is less than 3 sec, set the helloInterval parameter to 200 msec
 	*/
-	Deadinterval uint64 `json:"deadinterval,omitempty"`
+	Deadinterval int `json:"deadinterval,omitempty"`
 	/**
 	* Interval, in milliseconds, at which heartbeats are sent to each cluster node to check the health status.Set the value to 200 msec, if the deadInterval parameter is less than 3 sec
 	*/
-	Hellointerval uint32 `json:"hellointerval,omitempty"`
+	Hellointerval int `json:"hellointerval,omitempty"`
 	/**
 	* Preempt a cluster node that is configured as a SPARE if an ACTIVE node becomes available.
 	*/

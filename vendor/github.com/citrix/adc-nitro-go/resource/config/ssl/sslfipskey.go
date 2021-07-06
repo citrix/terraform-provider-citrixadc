@@ -39,7 +39,7 @@ type Sslfipskey struct {
 	/**
 	* Modulus, in multiples of 64, of the FIPS key to be created.
 	*/
-	Modulus uint32 `json:"modulus,omitempty"`
+	Modulus int `json:"modulus,omitempty"`
 	/**
 	* Only p_256 (prime256v1) and P_384 (secp384r1) are supported.
 	*/

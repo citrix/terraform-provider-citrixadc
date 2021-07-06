@@ -27,6 +27,6 @@ type Nsservicefunction struct {
 	/**
 	* VLAN ID on which the traffic from service function reaches Citrix ADC.
 	*/
-	Ingressvlan uint32 `json:"ingressvlan,omitempty"`
+	Ingressvlan int `json:"ingressvlan,omitempty"`
 
 }

@@ -37,15 +37,15 @@ type Traceroute6 struct {
 	/**
 	* Maximum hop value for outgoing probe packets. For Nitro API, default value is taken as 10.
 	*/
-	M int32 `json:"m,omitempty"`
+	M int `json:"m,omitempty"`
 	/**
 	* Base port number used in probes.
 	*/
-	P int32 `json:"p,omitempty"`
+	P int `json:"p,omitempty"`
 	/**
 	* Number of probes per hop. For Nitro API, default value is taken as 1.
 	*/
-	Q int32 `json:"q,omitempty"`
+	Q int `json:"q,omitempty"`
 	/**
 	* Source IP address to use in the outgoing query packets. If the IP address does not belong to this appliance,  an error is returned and nothing is sent.
 	*/
@@ -53,11 +53,11 @@ type Traceroute6 struct {
 	/**
 	* Traffic Domain Id
 	*/
-	T uint32 `json:"T,omitempty"`
+	T int `json:"T,omitempty"`
 	/**
 	* Time (in seconds) to wait for a response to a query. For Nitro API, defalut value is set to 3.
 	*/
-	W int32 `json:"w,omitempty"`
+	W int `json:"w,omitempty"`
 	/**
 	* Destination host IP address or name.
 	*/
@@ -65,7 +65,7 @@ type Traceroute6 struct {
 	/**
 	* Length (in bytes) of the query packets.
 	*/
-	Packetlen int32 `json:"packetlen,omitempty"`
+	Packetlen int `json:"packetlen,omitempty"`
 
 	//------- Read only Parameter ---------;
 

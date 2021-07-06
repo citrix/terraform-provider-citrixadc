@@ -35,27 +35,27 @@ type Dnssoarec struct {
 	/**
 	* The secondary server uses this parameter to determine whether it requires a zone transfer from the primary server.
 	*/
-	Serial uint32 `json:"serial,omitempty"`
+	Serial int `json:"serial,omitempty"`
 	/**
 	* Time, in seconds, for which a secondary server must wait between successive checks on the value of the serial number.
 	*/
-	Refresh uint64 `json:"refresh,omitempty"`
+	Refresh int `json:"refresh,omitempty"`
 	/**
 	* Time, in seconds, between retries if a secondary server's attempt to contact the primary server for a zone refresh fails.
 	*/
-	Retry uint64 `json:"retry,omitempty"`
+	Retry int `json:"retry,omitempty"`
 	/**
 	* Time, in seconds, after which the zone data on a secondary name server can no longer be considered authoritative because all refresh and retry attempts made during the period have failed. After the expiry period, the secondary server stops serving the zone. Typically one week. Not used by the primary server.
 	*/
-	Expire uint64 `json:"expire,omitempty"`
+	Expire int `json:"expire,omitempty"`
 	/**
 	* Default time to live (TTL) for all records in the zone. Can be overridden for individual records.
 	*/
-	Minimum uint64 `json:"minimum,omitempty"`
+	Minimum int `json:"minimum,omitempty"`
 	/**
 	* Time to Live (TTL), in seconds, for the record. TTL is the time for which the record must be cached by DNS proxies. The specified TTL is applied to all the resource records that are of the same record type and belong to the specified domain name. For example, if you add an address record, with a TTL of 36000, to the domain name example.com, the TTLs of all the address records of example.com are changed to 36000. If the TTL is not specified, the Citrix ADC uses either the DNS zone's minimum TTL or, if the SOA record is not available on the appliance, the default value of 3600.
 	*/
-	Ttl uint64 `json:"ttl,omitempty"`
+	Ttl int `json:"ttl,omitempty"`
 	/**
 	* Subnet for which the cached SOA record need to be removed.
 	*/
@@ -70,7 +70,7 @@ type Dnssoarec struct {
 	/**
 	* Unique number that identifies the cluster node.
 	*/
-	Nodeid uint32 `json:"nodeid,omitempty"`
+	Nodeid int `json:"nodeid,omitempty"`
 
 	//------- Read only Parameter ---------;
 

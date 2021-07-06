@@ -27,11 +27,11 @@ type Vrid6trackinterfacebinding struct {
 	/**
 	* Flags.
 	*/
-	Flags uint32 `json:"flags,omitempty"`
+	Flags int `json:"flags,omitempty"`
 	/**
 	* Integer value that uniquely identifies a VMAC6 address.
 	*/
-	Id uint32 `json:"id,omitempty"`
+	Id int `json:"id,omitempty"`
 
 
 }

@@ -35,7 +35,7 @@ type Sslservice struct {
 	/**
 	* Number of interactions, between the client and the Citrix ADC, after which the DH private-public pair is regenerated. A value of zero (0) specifies refresh every time. This parameter is not applicable when configuring a backend service. Allowed DH count values are 0 and >= 500.
 	*/
-	Dhcount uint32 `json:"dhcount,omitempty"`
+	Dhcount int `json:"dhcount,omitempty"`
 	/**
 	* This option enables the use of NIST recommended (NIST Special Publication 800-56A) bit size for private-key size. For example, for DH params of size 2048bit, the private-key size recommended is 224bits. This is rounded-up to 256bits.
 	*/
@@ -49,7 +49,7 @@ type Sslservice struct {
 	* Refresh count for regeneration of RSA public-key and private-key pair. Zero (0) specifies infinite usage (no refresh).
 		This parameter is not applicable when configuring a backend service.
 	*/
-	Ersacount uint32 `json:"ersacount,omitempty"`
+	Ersacount int `json:"ersacount,omitempty"`
 	/**
 	* State of session reuse. Establishing the initial handshake requires CPU-intensive public key encryption operations. With the ENABLED setting, session key exchange is avoided for session resumption requests received from the client.
 	*/
@@ -57,7 +57,7 @@ type Sslservice struct {
 	/**
 	* Time, in seconds, for which to keep the session active. Any session resumption request received after the timeout period will require a fresh SSL handshake and establishment of a new SSL session.
 	*/
-	Sesstimeout uint32 `json:"sesstimeout,omitempty"`
+	Sesstimeout int `json:"sesstimeout,omitempty"`
 	/**
 	* State of Cipher Redirect. If this parameter is set to ENABLED, you can configure an SSL virtual server or service to display meaningful error messages if the SSL handshake fails because of a cipher mismatch between the virtual server or service and the client.
 		This parameter is not applicable when configuring a backend service.

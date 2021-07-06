@@ -37,7 +37,7 @@ type Auditmessages struct {
 	/**
 	* Number of log messages to be displayed.
 	*/
-	Numofmesgs uint32 `json:"numofmesgs,omitempty"`
+	Numofmesgs int `json:"numofmesgs,omitempty"`
 
 	//------- Read only Parameter ---------;
 

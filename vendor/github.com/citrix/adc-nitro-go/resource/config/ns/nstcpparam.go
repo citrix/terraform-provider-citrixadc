@@ -28,7 +28,7 @@ type Nstcpparam struct {
 	* Factor used to calculate the new window size.
 		This argument is needed only when the window scaling is enabled.
 	*/
-	Wsval uint32 `json:"wsval,omitempty"`
+	Wsval int `json:"wsval,omitempty"`
 	/**
 	* Enable or disable Selective ACKnowledgement (SACK).
 	*/
@@ -40,19 +40,19 @@ type Nstcpparam struct {
 	/**
 	* Maximum number of TCP segments allowed in a burst.
 	*/
-	Maxburst uint32 `json:"maxburst,omitempty"`
+	Maxburst int `json:"maxburst,omitempty"`
 	/**
 	* Initial maximum upper limit on the number of TCP packets that can be outstanding on the TCP link to the server.
 	*/
-	Initialcwnd uint32 `json:"initialcwnd,omitempty"`
+	Initialcwnd int `json:"initialcwnd,omitempty"`
 	/**
 	* TCP Receive buffer size
 	*/
-	Recvbuffsize uint32 `json:"recvbuffsize,omitempty"`
+	Recvbuffsize int `json:"recvbuffsize,omitempty"`
 	/**
 	* Timeout for TCP delayed ACK, in milliseconds.
 	*/
-	Delayedack uint32 `json:"delayedack,omitempty"`
+	Delayedack int `json:"delayedack,omitempty"`
 	/**
 	* Flag to switch on RST on down services.
 	*/
@@ -68,7 +68,7 @@ type Nstcpparam struct {
 	/**
 	* Maximum size of out-of-order packets queue. A value of 0 means no limit.
 	*/
-	Oooqsize uint32 `json:"oooqsize,omitempty"`
+	Oooqsize int `json:"oooqsize,omitempty"`
 	/**
 	* Send immediate positive acknowledgement (ACK) on receipt of TCP packets with PUSH flag.
 	*/
@@ -76,47 +76,47 @@ type Nstcpparam struct {
 	/**
 	* Maximum number of TCP packets allowed per maximum segment size (MSS).
 	*/
-	Maxpktpermss uint32 `json:"maxpktpermss,omitempty"`
+	Maxpktpermss int `json:"maxpktpermss,omitempty"`
 	/**
 	* Maximum limit on the number of packets that should be retransmitted on receiving a partial ACK.
 	*/
-	Pktperretx int32 `json:"pktperretx,omitempty"`
+	Pktperretx int `json:"pktperretx,omitempty"`
 	/**
 	* Minimum retransmission timeout, in milliseconds, specified in 10-millisecond increments (value must yield a whole number if divided by 10).
 	*/
-	Minrto int32 `json:"minrto,omitempty"`
+	Minrto int `json:"minrto,omitempty"`
 	/**
 	* Multiplier that determines the rate at which slow start increases the size of the TCP transmission window after each acknowledgement of successful transmission.
 	*/
-	Slowstartincr int32 `json:"slowstartincr,omitempty"`
+	Slowstartincr int `json:"slowstartincr,omitempty"`
 	/**
 	* Maximum number of probes that Citrix ADC can send out in 10 milliseconds, to dynamically learn a service. Citrix ADC probes for the existence of the origin in case of wildcard virtual server or services.
 	*/
-	Maxdynserverprobes uint32 `json:"maxdynserverprobes,omitempty"`
+	Maxdynserverprobes int `json:"maxdynserverprobes,omitempty"`
 	/**
 	* Maximum threshold. After crossing this threshold number of outstanding probes for origin, the Citrix ADC reduces the number of connection retries for probe connections.
 	*/
-	Synholdfastgiveup uint32 `json:"synholdfastgiveup,omitempty"`
+	Synholdfastgiveup int `json:"synholdfastgiveup,omitempty"`
 	/**
 	* Limit the number of client connections (SYN) waiting for status of single probe. Any new SYN packets will be dropped.
 	*/
-	Maxsynholdperprobe uint32 `json:"maxsynholdperprobe,omitempty"`
+	Maxsynholdperprobe int `json:"maxsynholdperprobe,omitempty"`
 	/**
 	* Limit the number of client connections (SYN) waiting for status of probe system wide. Any new SYN packets will be dropped.
 	*/
-	Maxsynhold uint32 `json:"maxsynhold,omitempty"`
+	Maxsynhold int `json:"maxsynhold,omitempty"`
 	/**
 	* Duration, in seconds, to sample the Maximum Segment Size (MSS) of the services. The Citrix ADC determines the best MSS to set for the virtual server based on this sampling. The argument to enable maximum segment size (MSS) for virtual servers must be enabled.
 	*/
-	Msslearninterval uint32 `json:"msslearninterval,omitempty"`
+	Msslearninterval int `json:"msslearninterval,omitempty"`
 	/**
 	* Frequency, in seconds, at which the virtual servers learn the Maximum segment size (MSS) from the services. The argument to enable maximum segment size (MSS) for virtual servers must be enabled.
 	*/
-	Msslearndelay uint32 `json:"msslearndelay,omitempty"`
+	Msslearndelay int `json:"msslearndelay,omitempty"`
 	/**
 	* Maximum number of connections to hold in the TCP TIME_WAIT state on a packet engine. New connections entering TIME_WAIT state are proactively cleaned up.
 	*/
-	Maxtimewaitconn uint32 `json:"maxtimewaitconn,omitempty"`
+	Maxtimewaitconn int `json:"maxtimewaitconn,omitempty"`
 	/**
 	* Update last activity for KA probes
 	*/
@@ -124,7 +124,7 @@ type Nstcpparam struct {
 	/**
 	* When 'syncookie' is disabled in the TCP profile that is bound to the virtual server or service, and the number of TCP SYN+ACK retransmission by Citrix ADC for that virtual server or service crosses this threshold, the Citrix ADC responds by using the TCP SYN-Cookie mechanism.
 	*/
-	Maxsynackretx uint32 `json:"maxsynackretx,omitempty"`
+	Maxsynackretx int `json:"maxsynackretx,omitempty"`
 	/**
 	* Detect TCP SYN packet flood and send an SNMP trap.
 	*/
@@ -140,7 +140,7 @@ type Nstcpparam struct {
 	/**
 	* Flush an existing connection (as configured through -connFlushIfNoMem FIFO) if the system has more than specified number of connections, and a new connection is to be established.  Note: This value may be rounded down to be a whole multiple of the number of packet engines running.
 	*/
-	Connflushthres uint32 `json:"connflushthres,omitempty"`
+	Connflushthres int `json:"connflushthres,omitempty"`
 	/**
 	* Accept DATA_FIN/FAST_CLOSE on passive subflow
 	*/
@@ -152,27 +152,27 @@ type Nstcpparam struct {
 	/**
 	* The timeout value in seconds for idle mptcp subflows. If this timeout is not set, idle subflows are cleared after cltTimeout of vserver
 	*/
-	Mptcpsftimeout uint64 `json:"mptcpsftimeout,omitempty"`
+	Mptcpsftimeout int `json:"mptcpsftimeout,omitempty"`
 	/**
 	* The minimum idle time value in seconds for idle mptcp subflows after which the sublow is replaced by new incoming subflow if maximum subflow limit is reached. The priority for replacement is given to those subflow without any transaction
 	*/
-	Mptcpsfreplacetimeout uint64 `json:"mptcpsfreplacetimeout,omitempty"`
+	Mptcpsfreplacetimeout int `json:"mptcpsfreplacetimeout,omitempty"`
 	/**
 	* Maximum number of subflow connections supported in established state per mptcp connection.
 	*/
-	Mptcpmaxsf uint32 `json:"mptcpmaxsf,omitempty"`
+	Mptcpmaxsf int `json:"mptcpmaxsf,omitempty"`
 	/**
 	* Maximum number of subflow connections supported in pending join state per mptcp connection.
 	*/
-	Mptcpmaxpendingsf uint32 `json:"mptcpmaxpendingsf,omitempty"`
+	Mptcpmaxpendingsf int `json:"mptcpmaxpendingsf,omitempty"`
 	/**
 	* Maximum system level pending join connections allowed.
 	*/
-	Mptcppendingjointhreshold uint32 `json:"mptcppendingjointhreshold,omitempty"`
+	Mptcppendingjointhreshold int `json:"mptcppendingjointhreshold,omitempty"`
 	/**
 	* Number of RTO's at subflow level, after which MPCTP should start using other subflow.
 	*/
-	Mptcprtostoswitchsf uint32 `json:"mptcprtostoswitchsf,omitempty"`
+	Mptcprtostoswitchsf int `json:"mptcprtostoswitchsf,omitempty"`
 	/**
 	* When enabled, if NS receives a DSS on a backup subflow, NS will start using that subflow to send data. And if disabled, NS will continue to transmit on current chosen subflow. In case there is some error on a subflow (like RTO's/RST etc.) then NS can choose a backup subflow irrespective of this tunable.
 	*/
@@ -180,7 +180,7 @@ type Nstcpparam struct {
 	/**
 	* Number of RTO's after which a connection should be freed.
 	*/
-	Tcpmaxretries uint32 `json:"tcpmaxretries,omitempty"`
+	Tcpmaxretries int `json:"tcpmaxretries,omitempty"`
 	/**
 	* Allow subflows to close immediately on FIN before the DATA_FIN exchange is completed at mptcp level.
 	*/
@@ -200,15 +200,15 @@ type Nstcpparam struct {
 	/**
 	* Timeout in seconds after which a new TFO Key is computed for generating TFO Cookie. If zero, the same key is used always. If timeout is less than 120seconds, NS defaults to 120seconds timeout.
 	*/
-	Tcpfastopencookietimeout uint64 `json:"tcpfastopencookietimeout,omitempty"`
+	Tcpfastopencookietimeout int `json:"tcpfastopencookietimeout,omitempty"`
 	/**
 	* Timeout for the server to function in syncookie mode after the synattack. This is valid if TCP syncookie is disabled on the profile and server acts in non syncookie mode by default.
 	*/
-	Autosyncookietimeout uint32 `json:"autosyncookietimeout,omitempty"`
+	Autosyncookietimeout int `json:"autosyncookietimeout,omitempty"`
 	/**
 	* The amount of time in seconds, after which a TCP connnection in the TCP TIME-WAIT state is flushed.
 	*/
-	Tcpfintimeout uint64 `json:"tcpfintimeout,omitempty"`
+	Tcpfintimeout int `json:"tcpfintimeout,omitempty"`
 	/**
 	* If enabled, non-negotiated TCP options are removed from the received packet while proxying it. By default, non-negotiated TCP options would be replaced by NOPs in the proxied packets. This option is not applicable for Citrix ADC generated packets.
 	*/

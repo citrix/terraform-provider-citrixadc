@@ -41,6 +41,6 @@ type Nsdiameter struct {
 	/**
 	* ID of the cluster node for which the diameter id is set, can be configured only through CLIP
 	*/
-	Ownernode uint32 `json:"ownernode,omitempty"`
+	Ownernode int `json:"ownernode,omitempty"`
 
 }

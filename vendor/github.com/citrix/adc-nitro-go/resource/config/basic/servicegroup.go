@@ -35,16 +35,16 @@ type Servicegroup struct {
 	/**
 	* Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.
 	*/
-	Td uint32 `json:"td,omitempty"`
+	Td int `json:"td,omitempty"`
 	/**
 	* Maximum number of simultaneous open connections for the service group.
 	*/
-	Maxclient uint32 `json:"maxclient,omitempty"`
+	Maxclient int `json:"maxclient,omitempty"`
 	/**
 	* Maximum number of requests that can be sent on a persistent connection to the service group. 
 		Note: Connection requests beyond this value are rejected.
 	*/
-	Maxreq uint32 `json:"maxreq,omitempty"`
+	Maxreq int `json:"maxreq,omitempty"`
 	/**
 	* Use the transparent cache redirection virtual server to forward the request to the cache server.
 		Note: Do not set this parameter if you set the Cache Type.
@@ -96,11 +96,11 @@ type Servicegroup struct {
 	/**
 	* Time, in seconds, after which to terminate an idle client connection.
 	*/
-	Clttimeout uint64 `json:"clttimeout,omitempty"`
+	Clttimeout int `json:"clttimeout,omitempty"`
 	/**
 	* Time, in seconds, after which to terminate an idle server connection.
 	*/
-	Svrtimeout uint64 `json:"svrtimeout,omitempty"`
+	Svrtimeout int `json:"svrtimeout,omitempty"`
 	/**
 	* Enable client keep-alive for the service group.
 	*/
@@ -116,11 +116,11 @@ type Servicegroup struct {
 	/**
 	* Maximum bandwidth, in Kbps, allocated for all the services in the service group.
 	*/
-	Maxbandwidth uint32 `json:"maxbandwidth,omitempty"`
+	Maxbandwidth int `json:"maxbandwidth,omitempty"`
 	/**
 	* Minimum sum of weights of the monitors that are bound to this service. Used to determine whether to mark a service as UP or DOWN.
 	*/
-	Monthreshold uint32 `json:"monthreshold,omitempty"`
+	Monthreshold int `json:"monthreshold,omitempty"`
 	/**
 	* Initial state of the service group.
 	*/
@@ -156,7 +156,7 @@ type Servicegroup struct {
 	/**
 	* member port
 	*/
-	Memberport int32 `json:"memberport,omitempty"`
+	Memberport int `json:"memberport,omitempty"`
 	/**
 	* Indicates graceful shutdown of the service. System will wait for all outstanding connections to this service to be closed before disabling the service.
 	*/
@@ -164,7 +164,7 @@ type Servicegroup struct {
 	/**
 	* The time allowed (in seconds) for a graceful shutdown. During this period, new connections or requests will continue to be sent to this service for clients who already have a persistent session on the system. Connections or requests from fresh or new clients who do not yet have a persistence sessions on the system will not be sent to the service. Instead, they will be load balanced among other available services. After the delay time expires, no new requests or connections will be sent to the service.
 	*/
-	Autodisabledelay uint64 `json:"autodisabledelay,omitempty"`
+	Autodisabledelay int `json:"autodisabledelay,omitempty"`
 	/**
 	* Close monitoring connections by sending the service a connection termination message with the specified bit set.
 	*/
@@ -176,11 +176,11 @@ type Servicegroup struct {
 	/**
 	* Server port number.
 	*/
-	Port int32 `json:"port,omitempty"`
+	Port int `json:"port,omitempty"`
 	/**
 	* Weight to assign to the servers in the service group. Specifies the capacity of the servers relative to the other servers in the load balancing configuration. The higher the weight, the higher the percentage of requests sent to the service.
 	*/
-	Weight uint32 `json:"weight,omitempty"`
+	Weight int `json:"weight,omitempty"`
 	/**
 	* The identifier for this IP:Port pair. Used when the persistency type is set to Custom Server ID.
 	*/
@@ -188,11 +188,11 @@ type Servicegroup struct {
 	/**
 	* The  identifier for the service. This is used when the persistency type is set to Custom Server ID.
 	*/
-	Serverid uint32 `json:"serverid,omitempty"`
+	Serverid int `json:"serverid,omitempty"`
 	/**
 	* The hash identifier for the service. This must be unique for each service. This parameter is used by hash based load balancing methods.
 	*/
-	Hashid uint32 `json:"hashid,omitempty"`
+	Hashid int `json:"hashid,omitempty"`
 	/**
 	* Specify the nameserver to which the query for bound domain needs to be sent. If not specified, use the global nameserver
 	*/
@@ -200,7 +200,7 @@ type Servicegroup struct {
 	/**
 	* Specify the TTL for DNS record for domain based service.The default value of ttl is 0 which indicates to use the TTL received in DNS response for monitors
 	*/
-	Dbsttl uint64 `json:"dbsttl,omitempty"`
+	Dbsttl int `json:"dbsttl,omitempty"`
 	/**
 	* Name of the monitor bound to the service group. Used to assign a weight to the monitor.
 	*/
@@ -208,11 +208,11 @@ type Servicegroup struct {
 	/**
 	* weight of the monitor that is bound to servicegroup.
 	*/
-	Dupweight uint32 `json:"dup_weight,omitempty"`
+	Dupweight int `json:"dup_weight,omitempty"`
 	/**
 	* Time, in seconds, allocated for a shutdown of the services in the service group. During this period, new requests are sent to the service only for clients who already have persistent sessions on the appliance. Requests from new clients are load balanced among other available services. After the delay time expires, no requests are sent to the service, and the service is marked as unavailable (OUT OF SERVICE).
 	*/
-	Delay uint64 `json:"delay,omitempty"`
+	Delay int `json:"delay,omitempty"`
 	/**
 	* Wait for all existing connections to the service to terminate before shutting down the service.
 	*/

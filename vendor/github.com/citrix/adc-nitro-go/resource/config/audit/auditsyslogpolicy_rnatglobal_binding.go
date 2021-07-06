@@ -24,8 +24,8 @@ type Auditsyslogpolicyrnatglobalbinding struct {
 	* The entity name to which policy is bound
 	*/
 	Boundto string `json:"boundto,omitempty"`
-	Priority uint32 `json:"priority,omitempty"`
-	Activepolicy uint32 `json:"activepolicy,omitempty"`
+	Priority int `json:"priority,omitempty"`
+	Activepolicy int `json:"activepolicy,omitempty"`
 	/**
 	* Name of the policy.
 	*/

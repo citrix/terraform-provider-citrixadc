@@ -63,7 +63,7 @@ type Responderaction struct {
 	/**
 	* HTTP response status code, for example 200, 302, 404, etc. The default value for the redirect action type is 302 and for respondwithhtmlpage is 200
 	*/
-	Responsestatuscode uint32 `json:"responsestatuscode,omitempty"`
+	Responsestatuscode int `json:"responsestatuscode,omitempty"`
 	/**
 	* Expression specifying the reason phrase of the HTTP response. The reason phrase may be a string literal with quotes or a PI expression. For example: "Invalid URL: " + HTTP.REQ.URL
 	*/

@@ -43,11 +43,11 @@ type Onlinkipv6prefix struct {
 	/**
 	* Valide life time of the prefix, in seconds.
 	*/
-	Prefixvalidelifetime uint32 `json:"prefixvalidelifetime,omitempty"`
+	Prefixvalidelifetime int `json:"prefixvalidelifetime,omitempty"`
 	/**
 	* Preferred life time of the prefix, in seconds.
 	*/
-	Prefixpreferredlifetime uint32 `json:"prefixpreferredlifetime,omitempty"`
+	Prefixpreferredlifetime int `json:"prefixpreferredlifetime,omitempty"`
 
 	//------- Read only Parameter ---------;
 

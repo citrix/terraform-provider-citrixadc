@@ -45,7 +45,7 @@ type Server struct {
 	/**
 	* Time, in seconds, for which the Citrix ADC must wait, after DNS resolution fails, before sending the next DNS query to resolve the domain name.
 	*/
-	Domainresolveretry int32 `json:"domainresolveretry,omitempty"`
+	Domainresolveretry int `json:"domainresolveretry,omitempty"`
 	/**
 	* Initial state of the server.
 	*/
@@ -61,7 +61,7 @@ type Server struct {
 	/**
 	* Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.
 	*/
-	Td uint32 `json:"td,omitempty"`
+	Td int `json:"td,omitempty"`
 	/**
 	* Specify the type of DNS resolution to be done on the configured domain to get the backend services. Valid query types are A, AAAA and SRV with A being the default querytype. The type of DNS resolution done on the domains in SRV records is inherited from ipv6 argument.
 	*/
@@ -73,7 +73,7 @@ type Server struct {
 	/**
 	* Time, in seconds, after which all the services configured on the server are disabled.
 	*/
-	Delay uint64 `json:"delay,omitempty"`
+	Delay int `json:"delay,omitempty"`
 	/**
 	* Shut down gracefully, without accepting any new connections, and disabling each service when all of its connections are closed.
 	*/

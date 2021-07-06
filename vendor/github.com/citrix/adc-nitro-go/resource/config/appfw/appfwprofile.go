@@ -250,11 +250,11 @@ type Appfwprofile struct {
 	* Minimum length, in characters, for data entered into a field that is assigned the default field type. 
 		To disable the minimum and maximum length settings and allow data of any length to be entered into the field, set this parameter to zero (0).
 	*/
-	Defaultfieldformatminlength uint32 `json:"defaultfieldformatminlength,omitempty"`
+	Defaultfieldformatminlength int `json:"defaultfieldformatminlength,omitempty"`
 	/**
 	* Maximum length, in characters, for data entered into a field that is assigned the default field type.
 	*/
-	Defaultfieldformatmaxlength uint32 `json:"defaultfieldformatmaxlength,omitempty"`
+	Defaultfieldformatmaxlength int `json:"defaultfieldformatmaxlength,omitempty"`
 	/**
 	* One or more Buffer Overflow actions. Available settings function as follows:
 		* Block - Block connections that violate this security check.
@@ -267,23 +267,23 @@ type Appfwprofile struct {
 	/**
 	* Maximum length, in characters, for URLs on your protected web sites. Requests with longer URLs are blocked.
 	*/
-	Bufferoverflowmaxurllength uint32 `json:"bufferoverflowmaxurllength,omitempty"`
+	Bufferoverflowmaxurllength int `json:"bufferoverflowmaxurllength,omitempty"`
 	/**
 	* Maximum length, in characters, for HTTP headers in requests sent to your protected web sites. Requests with longer headers are blocked.
 	*/
-	Bufferoverflowmaxheaderlength uint32 `json:"bufferoverflowmaxheaderlength,omitempty"`
+	Bufferoverflowmaxheaderlength int `json:"bufferoverflowmaxheaderlength,omitempty"`
 	/**
 	* Maximum length, in characters, for cookies sent to your protected web sites. Requests with longer cookies are blocked.
 	*/
-	Bufferoverflowmaxcookielength uint32 `json:"bufferoverflowmaxcookielength,omitempty"`
+	Bufferoverflowmaxcookielength int `json:"bufferoverflowmaxcookielength,omitempty"`
 	/**
 	* Maximum length, in bytes, for query string sent to your protected web sites. Requests with longer query strings are blocked.
 	*/
-	Bufferoverflowmaxquerylength uint32 `json:"bufferoverflowmaxquerylength,omitempty"`
+	Bufferoverflowmaxquerylength int `json:"bufferoverflowmaxquerylength,omitempty"`
 	/**
 	* Maximum length, in bytes, for the total HTTP header length in requests sent to your protected web sites. The minimum value of this and maxHeaderLen in httpProfile will be used. Requests with longer length are blocked.
 	*/
-	Bufferoverflowmaxtotalheaderlength uint32 `json:"bufferoverflowmaxtotalheaderlength,omitempty"`
+	Bufferoverflowmaxtotalheaderlength int `json:"bufferoverflowmaxtotalheaderlength,omitempty"`
 	/**
 	* One or more Credit Card actions. Available settings function as follows:
 		* Block - Block connections that violate this security check.
@@ -300,7 +300,7 @@ type Appfwprofile struct {
 	/**
 	* This parameter value is used by the block action. It represents the maximum number of credit card numbers that can appear on a web page served by your protected web sites. Pages that contain more credit card numbers are blocked.
 	*/
-	Creditcardmaxallowed uint32 `json:"creditcardmaxallowed,omitempty"`
+	Creditcardmaxallowed int `json:"creditcardmaxallowed,omitempty"`
 	/**
 	* Mask any credit card number detected in a response by replacing each digit, except the digits in the final group, with the letter "X."
 	*/
@@ -336,7 +336,7 @@ type Appfwprofile struct {
 	/**
 	* Response status code associated with JSON error page
 	*/
-	Jsonerrorstatuscode uint32 `json:"jsonerrorstatuscode,omitempty"`
+	Jsonerrorstatuscode int `json:"jsonerrorstatuscode,omitempty"`
 	/**
 	* Response status message associated with JSON error page
 	*/
@@ -498,7 +498,7 @@ type Appfwprofile struct {
 	/**
 	* Response status code associated with XML error page
 	*/
-	Xmlerrorstatuscode uint32 `json:"xmlerrorstatuscode,omitempty"`
+	Xmlerrorstatuscode int `json:"xmlerrorstatuscode,omitempty"`
 	/**
 	* Response status message associated with XML error page
 	*/
@@ -541,7 +541,7 @@ type Appfwprofile struct {
 	/**
 	* Response status code associated with HTML error page
 	*/
-	Htmlerrorstatuscode uint32 `json:"htmlerrorstatuscode,omitempty"`
+	Htmlerrorstatuscode int `json:"htmlerrorstatuscode,omitempty"`
 	/**
 	* Response status message associated with HTML error page
 	*/
@@ -591,7 +591,7 @@ type Appfwprofile struct {
 	/**
 	* Maximum allowed HTTP post body size, in bytes. Maximum supported value is 10GB. Citrix recommends enabling streaming option for large values of post body limit (>20MB).
 	*/
-	Postbodylimit uint64 `json:"postbodylimit,omitempty"`
+	Postbodylimit int `json:"postbodylimit,omitempty"`
 	/**
 	* One or more Post Body Limit actions. Available settings function as follows:
 		* Block - Block connections that violate this security check. Must always be set.
@@ -603,11 +603,11 @@ type Appfwprofile struct {
 	/**
 	* Maximum allowed HTTP post body size for signature inspection for location HTTP_POST_BODY in the signatures, in bytes. Note that the changes in value could impact CPU and latency profile.
 	*/
-	Postbodylimitsignature uint32 `json:"postbodylimitsignature,omitempty"`
+	Postbodylimitsignature int `json:"postbodylimitsignature,omitempty"`
 	/**
 	* Maximum allowed number of file uploads per form-submission request. The maximum setting (65535) allows an unlimited number of uploads.
 	*/
-	Fileuploadmaxnum uint32 `json:"fileuploadmaxnum,omitempty"`
+	Fileuploadmaxnum int `json:"fileuploadmaxnum,omitempty"`
 	/**
 	* Perform HTML entity encoding for any special characters in responses sent by your protected web sites.
 	*/

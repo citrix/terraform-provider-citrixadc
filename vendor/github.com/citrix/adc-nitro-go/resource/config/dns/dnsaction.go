@@ -36,7 +36,7 @@ type Dnsaction struct {
 	/**
 	* Time to live, in seconds.
 	*/
-	Ttl uint64 `json:"ttl,omitempty"`
+	Ttl int `json:"ttl,omitempty"`
 	/**
 	* The view name that must be used for the given action.
 	*/

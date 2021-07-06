@@ -23,7 +23,7 @@ type Vxlaniptunnelbinding struct {
 	/**
 	* A positive integer, which is also called VXLAN Network Identifier (VNI), that uniquely identifies a VXLAN.
 	*/
-	Id uint32 `json:"id,omitempty"`
+	Id int `json:"id,omitempty"`
 	/**
 	* Specifies the name of the configured tunnel to be associated with this VXLAN.
 	*/

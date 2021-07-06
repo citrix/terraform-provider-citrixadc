@@ -23,7 +23,7 @@ type Nsspparams struct {
 	/**
 	* Maximum number of server connections that can be opened before surge protection is activated.
 	*/
-	Basethreshold int32 `json:"basethreshold,omitempty"`
+	Basethreshold int `json:"basethreshold,omitempty"`
 	/**
 	* Rate at which the system opens connections to the server.
 	*/

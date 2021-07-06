@@ -43,8 +43,8 @@ type Members struct {
 	/**
 	* The port number of the service to be enabled.
 	*/
-	Port int32 `json:"port,omitempty"`
-	Weight uint32 `json:"weight,omitempty"`
+	Port int `json:"port,omitempty"`
+	Weight int `json:"weight,omitempty"`
 	/**
 	* Initial state of the service group.
 	*/
@@ -59,5 +59,5 @@ type Failedmembers struct {
 	/**
 	* The port number of the service to be enabled.
 	*/
-	Port int32 `json:"port,omitempty"`
+	Port int `json:"port,omitempty"`
 }

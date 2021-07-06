@@ -23,7 +23,7 @@ type Clusternodebinding struct {
 	/**
 	* ID of the cluster node for which to display information. If an ID is not provided, information about all nodes is shown.<br/>Default value: 255<br/>Minimum value =  0<br/>Maximum value =  31
 	*/
-	Nodeid uint32 `json:"nodeid,omitempty"`
+	Nodeid int `json:"nodeid,omitempty"`
 
 
 }

@@ -31,19 +31,19 @@ type Dnssrvrec struct {
 	/**
 	* Integer specifying the priority of the target host. The lower the number, the higher the priority. If multiple target hosts have the same priority, selection is based on the Weight parameter.
 	*/
-	Priority uint32 `json:"priority,omitempty"`
+	Priority int `json:"priority,omitempty"`
 	/**
 	* Weight for the target host. Aids host selection when two or more hosts have the same priority. A larger number indicates greater weight.
 	*/
-	Weight uint32 `json:"weight,omitempty"`
+	Weight int `json:"weight,omitempty"`
 	/**
 	* Port on which the target host listens for client requests.
 	*/
-	Port uint32 `json:"port,omitempty"`
+	Port int `json:"port,omitempty"`
 	/**
 	* Time to Live (TTL), in seconds, for the record. TTL is the time for which the record must be cached by DNS proxies. The specified TTL is applied to all the resource records that are of the same record type and belong to the specified domain name. For example, if you add an address record, with a TTL of 36000, to the domain name example.com, the TTLs of all the address records of example.com are changed to 36000. If the TTL is not specified, the Citrix ADC uses either the DNS zone's minimum TTL or, if the SOA record is not available on the appliance, the default value of 3600.
 	*/
-	Ttl uint64 `json:"ttl,omitempty"`
+	Ttl int `json:"ttl,omitempty"`
 	/**
 	* Subnet for which the cached SRV record need to be removed.
 	*/
@@ -58,7 +58,7 @@ type Dnssrvrec struct {
 	/**
 	* Unique number that identifies the cluster node.
 	*/
-	Nodeid uint32 `json:"nodeid,omitempty"`
+	Nodeid int `json:"nodeid,omitempty"`
 
 	//------- Read only Parameter ---------;
 

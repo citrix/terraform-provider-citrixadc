@@ -36,7 +36,7 @@ type Lbvserverservicegroupbinding struct {
 	/**
 	* Integer specifying the weight of the service. A larger number specifies a greater weight. Defines the capacity of the service relative to the other services in the load balancing configuration. Determines the priority given to the service in load balancing decisions.
 	*/
-	Weight uint32 `json:"weight,omitempty"`
+	Weight int `json:"weight,omitempty"`
 
 
 }

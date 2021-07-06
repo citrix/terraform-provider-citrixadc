@@ -23,7 +23,7 @@ type Callhome struct {
 	/**
 	* Unique number that identifies the cluster node.
 	*/
-	Nodeid uint32 `json:"nodeid,omitempty"`
+	Nodeid int `json:"nodeid,omitempty"`
 	/**
 	* CallHome mode of operation
 	*/
@@ -35,7 +35,7 @@ type Callhome struct {
 	/**
 	* Interval (in days) between CallHome heartbeats
 	*/
-	Hbcustominterval uint32 `json:"hbcustominterval,omitempty"`
+	Hbcustominterval int `json:"hbcustominterval,omitempty"`
 	/**
 	* Enables or disables the proxy mode. The proxy server can be set by either specifying the IP address of the server or the name of the service representing the proxy server.
 	*/
@@ -51,7 +51,7 @@ type Callhome struct {
 	/**
 	* HTTP port on the Proxy server. This is a mandatory parameter for both IP address and service name based configuration.
 	*/
-	Port int32 `json:"port,omitempty"`
+	Port int `json:"port,omitempty"`
 
 	//------- Read only Parameter ---------;
 

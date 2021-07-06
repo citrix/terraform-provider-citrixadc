@@ -27,7 +27,7 @@ type L3param struct {
 	/**
 	* NS generated ICMP pkts per 10ms rate threshold
 	*/
-	Icmpgenratethreshold uint32 `json:"icmpgenratethreshold,omitempty"`
+	Icmpgenratethreshold int `json:"icmpgenratethreshold,omitempty"`
 	/**
 	* USNIP/USIP settings override RNAT settings for configured
 		service/virtual server traffic.. 
@@ -64,7 +64,7 @@ type L3param struct {
 	/**
 	* Parameter to tune acl logging time
 	*/
-	Acllogtime uint32 `json:"acllogtime,omitempty"`
+	Acllogtime int `json:"acllogtime,omitempty"`
 	/**
 	* Do not apply ACLs for internal ports
 	*/

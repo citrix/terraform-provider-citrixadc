@@ -51,7 +51,7 @@ type Policyurlset struct {
 	/**
 	* The interval, in seconds, rounded down to the nearest 15 minutes, at which the update of urlset occurs.
 	*/
-	Interval uint64 `json:"interval,omitempty"`
+	Interval int `json:"interval,omitempty"`
 	/**
 	* Prevent this urlset from being exported.
 	*/
@@ -63,7 +63,7 @@ type Policyurlset struct {
 	/**
 	* An ID that would be sent to AppFlow to indicate which URLSet was the last one that matched the requested URL.
 	*/
-	Matchedid uint32 `json:"matchedid,omitempty"`
+	Matchedid int `json:"matchedid,omitempty"`
 	/**
 	* Add this URL to this urlset. Used for testing when contents of urlset is kept confidential.
 	*/

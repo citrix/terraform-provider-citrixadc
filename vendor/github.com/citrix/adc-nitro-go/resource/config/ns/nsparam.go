@@ -23,15 +23,15 @@ type Nsparam struct {
 	/**
 	* HTTP ports on the web server. This allows the system to perform connection off-load for any client request that has a destination port matching one of these configured ports.
 	*/
-	Httpport []int32 `json:"httpport,omitempty"`
+	Httpport []int `json:"httpport,omitempty"`
 	/**
 	* Maximum number of connections that will be made from the appliance to the web server(s) attached to it. The value entered here is applied globally to all attached servers.
-	*/
-	Maxconn uint32 `json:"maxconn,omitempty"`
+	 */
+	Maxconn int `json:"maxconn"` // Zero is a valid value
 	/**
 	* Maximum number of requests that the system can pass on a particular connection between the appliance and a server attached to it. Setting this value to 0 allows an unlimited number of requests to be passed. This value is overridden by the maximum number of requests configured on the individual service.
 	*/
-	Maxreq uint32 `json:"maxreq,omitempty"`
+	Maxreq int `json:"maxreq,omitempty"`
 	/**
 	* Enable or disable the insertion of the actual client IP address into the HTTP header request passed from the client to one, some, or all servers attached to the system. The passed address can then be accessed through a minor modification to the server.
 		* If the CIP header is specified, it will be used as the client IP header.
@@ -53,11 +53,11 @@ type Nsparam struct {
 	/**
 	* Minimum path MTU value that Citrix ADC will process in the ICMP fragmentation needed message. If the ICMP message contains a value less than this value, then this value is used instead.
 	*/
-	Pmtumin uint32 `json:"pmtumin,omitempty"`
+	Pmtumin int `json:"pmtumin,omitempty"`
 	/**
 	* Interval, in minutes, for flushing the PMTU entries.
 	*/
-	Pmtutimeout uint32 `json:"pmtutimeout,omitempty"`
+	Pmtutimeout int `json:"pmtutimeout,omitempty"`
 	/**
 	* Minimum and maximum port (port range) that FTP services are allowed to use.
 	*/
@@ -73,19 +73,19 @@ type Nsparam struct {
 	/**
 	* Percentage of shared quota to be granted at a time for maxClient.
 	*/
-	Grantquotamaxclient uint32 `json:"grantquotamaxclient,omitempty"`
+	Grantquotamaxclient int `json:"grantquotamaxclient,omitempty"`
 	/**
 	* Percentage of maxClient to be given to PEs.
 	*/
-	Exclusivequotamaxclient uint32 `json:"exclusivequotamaxclient,omitempty"`
+	Exclusivequotamaxclient int `json:"exclusivequotamaxclient,omitempty"`
 	/**
 	* Percentage of shared quota to be granted at a time for spillover.
 	*/
-	Grantquotaspillover uint32 `json:"grantquotaspillover,omitempty"`
+	Grantquotaspillover int `json:"grantquotaspillover,omitempty"`
 	/**
 	* Percentage of maximum limit to be given to PEs.
 	*/
-	Exclusivequotaspillover uint32 `json:"exclusivequotaspillover,omitempty"`
+	Exclusivequotaspillover int `json:"exclusivequotaspillover,omitempty"`
 	/**
 	* Enable/Disable use_proxy_port setting
 	*/
@@ -102,7 +102,7 @@ type Nsparam struct {
 	* The ICA ports on the Web server. This allows the system to perform connection off-load for any
 		client request that has a destination port matching one of these configured ports.
 	*/
-	Icaports []int32 `json:"icaports,omitempty"`
+	Icaports []int `json:"icaports,omitempty"`
 	/**
 	* Enable or disable the insertion of the client TCP/IP header in TCP payload passed from the client to one, some, or all servers attached to the system. The passed address can then be accessed through a minor modification to the server.
 	*/
@@ -110,20 +110,20 @@ type Nsparam struct {
 	/**
 	* VLAN on which the subscriber traffic arrives on the appliance.
 	*/
-	Servicepathingressvlan uint32 `json:"servicepathingressvlan,omitempty"`
+	Servicepathingressvlan int `json:"servicepathingressvlan,omitempty"`
 	/**
 	* The Secure ICA ports on the Web server. This allows the system to perform connection off-load for any
 		client request that has a destination port matching one of these configured ports.
 	*/
-	Secureicaports []int32 `json:"secureicaports,omitempty"`
+	Secureicaports []int `json:"secureicaports,omitempty"`
 	/**
 	* This allow the configuration of management HTTP port.
 	*/
-	Mgmthttpport int32 `json:"mgmthttpport,omitempty"`
+	Mgmthttpport int `json:"mgmthttpport,omitempty"`
 	/**
 	* This allows the configuration of management HTTPS port.
 	*/
-	Mgmthttpsport int32 `json:"mgmthttpsport,omitempty"`
+	Mgmthttpsport int `json:"mgmthttpsport,omitempty"`
 	/**
 	* Disable/Enable v1 or v2 proxy protocol header for client info insertion
 	*/
@@ -135,7 +135,7 @@ type Nsparam struct {
 	/**
 	* Set the IP Time to Live (TTL) and Hop Limit value for all outgoing packets from Citrix ADC.
 	*/
-	Ipttl uint32 `json:"ipttl,omitempty"`
+	Ipttl int `json:"ipttl,omitempty"`
 
 	//------- Read only Parameter ---------;
 

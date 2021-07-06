@@ -23,11 +23,11 @@ type Filterhtmlinjectionparameter struct {
 	/**
 	* For a rate of x, HTML injection is done for 1 out of x policy matches.
 	*/
-	Rate uint32 `json:"rate,omitempty"`
+	Rate int `json:"rate,omitempty"`
 	/**
 	* For a frequency of x, HTML injection is done at least once per x milliseconds.
 	*/
-	Frequency uint32 `json:"frequency,omitempty"`
+	Frequency int `json:"frequency,omitempty"`
 	/**
 	* Searching for <html> tag. If this parameter is enabled, HTML injection does not insert the prebody or postbody content unless the <html> tag is found.
 	*/
@@ -35,7 +35,7 @@ type Filterhtmlinjectionparameter struct {
 	/**
 	* Number of characters, in the HTTP body, in which to search for the <html> tag if strict mode is set.
 	*/
-	Htmlsearchlen uint32 `json:"htmlsearchlen,omitempty"`
+	Htmlsearchlen int `json:"htmlsearchlen,omitempty"`
 
 	//------- Read only Parameter ---------;
 

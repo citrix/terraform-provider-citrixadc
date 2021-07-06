@@ -23,11 +23,11 @@ type Nstrafficdomainbridgegroupbinding struct {
 	/**
 	* ID of the configured bridge to bind to this traffic domain. More than one bridge group can be bound to a traffic domain, but the same bridge group cannot be a part of multiple traffic domains.
 	*/
-	Bridgegroup uint32 `json:"bridgegroup,omitempty"`
+	Bridgegroup int `json:"bridgegroup,omitempty"`
 	/**
 	* Integer value that uniquely identifies a traffic domain.
 	*/
-	Td uint32 `json:"td,omitempty"`
+	Td int `json:"td,omitempty"`
 
 
 }

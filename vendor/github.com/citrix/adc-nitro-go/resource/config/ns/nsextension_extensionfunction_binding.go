@@ -27,7 +27,7 @@ type Nsextensionextensionfunctionbinding struct {
 	/**
 	* Line number of the function in file.
 	*/
-	Extensionfunctionlinenumber uint32 `json:"extensionfunctionlinenumber,omitempty"`
+	Extensionfunctionlinenumber int `json:"extensionfunctionlinenumber,omitempty"`
 	/**
 	* Extension function class type.
 	*/
@@ -39,7 +39,7 @@ type Nsextensionextensionfunctionbinding struct {
 	/**
 	* Extension function is in use or not.
 	*/
-	Activeextensionfunction int32 `json:"activeextensionfunction,omitempty"`
+	Activeextensionfunction int `json:"activeextensionfunction,omitempty"`
 	/**
 	* List of extension function's arguments types
 	*/
@@ -51,7 +51,7 @@ type Nsextensionextensionfunctionbinding struct {
 	/**
 	* Number of parameters in the extension function
 	*/
-	Extensionfunctionargcount uint32 `json:"extensionfunctionargcount,omitempty"`
+	Extensionfunctionargcount int `json:"extensionfunctionargcount,omitempty"`
 	/**
 	* List of classes (including inherited) that the function is present in.
 	*/
@@ -59,7 +59,7 @@ type Nsextensionextensionfunctionbinding struct {
 	/**
 	* Number of classes the function is present in.
 	*/
-	Extensionfunctionclassescount uint32 `json:"extensionfunctionclassescount,omitempty"`
+	Extensionfunctionclassescount int `json:"extensionfunctionclassescount,omitempty"`
 	/**
 	* List of parameters (including promotions) that the function can accept.
 	*/
@@ -67,7 +67,7 @@ type Nsextensionextensionfunctionbinding struct {
 	/**
 	* Number of parameters (including promotions) that the function can accept.
 	*/
-	Extensionfunctionallparamscount uint32 `json:"extensionfunctionallparamscount,omitempty"`
+	Extensionfunctionallparamscount int `json:"extensionfunctionallparamscount,omitempty"`
 	/**
 	* Name of the extension object.
 	*/

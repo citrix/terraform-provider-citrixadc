@@ -53,7 +53,7 @@ type Nsconfig struct {
 	/**
 	* VLAN (NSVLAN) for the subnet on which the IP address resides.
 	*/
-	Nsvlan uint32 `json:"nsvlan,omitempty"`
+	Nsvlan int `json:"nsvlan,omitempty"`
 	/**
 	* Interfaces of the appliances that must be bound to the NSVLAN.
 	*/
@@ -66,15 +66,15 @@ type Nsconfig struct {
 	/**
 	* The HTTP ports on the Web server. This allows the system to perform connection off-load for any client request that has a destination port matching one of these configured ports.
 	*/
-	Httpport []int32 `json:"httpport,omitempty"`
+	Httpport []int `json:"httpport,omitempty"`
 	/**
 	* The maximum number of connections that will be made from the system to the web server(s) attached to it. The value entered here is applied globally to all attached servers.
 	*/
-	Maxconn uint32 `json:"maxconn,omitempty"`
+	Maxconn int `json:"maxconn,omitempty"`
 	/**
 	* The maximum number of requests that the system can pass on a particular connection between the system and a server attached to it. Setting this value to 0 allows an unlimited number of requests to be passed.
 	*/
-	Maxreq uint32 `json:"maxreq,omitempty"`
+	Maxreq int `json:"maxreq,omitempty"`
 	/**
 	* The option to control (enable or disable) the insertion of the actual client IP address into the HTTP header request passed from the client to one, some, or all servers attached to the system.
 		The passed address can then be accessed through a minor modification to the server.
@@ -97,11 +97,11 @@ type Nsconfig struct {
 	/**
 	* The minimum Path MTU.
 	*/
-	Pmtumin uint32 `json:"pmtumin,omitempty"`
+	Pmtumin int `json:"pmtumin,omitempty"`
 	/**
 	* The timeout value in minutes.
 	*/
-	Pmtutimeout uint32 `json:"pmtutimeout,omitempty"`
+	Pmtutimeout int `json:"pmtutimeout,omitempty"`
 	/**
 	* Port range configured for FTP services.
 	*/
@@ -117,19 +117,19 @@ type Nsconfig struct {
 	/**
 	* The percentage of shared quota to be granted at a time for maxClient
 	*/
-	Grantquotamaxclient uint32 `json:"grantquotamaxclient,omitempty"`
+	Grantquotamaxclient int `json:"grantquotamaxclient,omitempty"`
 	/**
 	* The percentage of maxClient to be given to PEs
 	*/
-	Exclusivequotamaxclient uint32 `json:"exclusivequotamaxclient,omitempty"`
+	Exclusivequotamaxclient int `json:"exclusivequotamaxclient,omitempty"`
 	/**
 	* The percentage of shared quota to be granted at a time for spillover
 	*/
-	Grantquotaspillover uint32 `json:"grantquotaspillover,omitempty"`
+	Grantquotaspillover int `json:"grantquotaspillover,omitempty"`
 	/**
 	* The percentage of max limit to be given to PEs
 	*/
-	Exclusivequotaspillover uint32 `json:"exclusivequotaspillover,omitempty"`
+	Exclusivequotaspillover int `json:"exclusivequotaspillover,omitempty"`
 	/**
 	* Use this option to do saveconfig for all partitions
 	*/

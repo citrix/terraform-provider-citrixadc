@@ -35,7 +35,7 @@ type Dnskey struct {
 	/**
 	* Time period for which to consider the key valid, after the key is used to sign a zone.
 	*/
-	Expires uint32 `json:"expires,omitempty"`
+	Expires int `json:"expires,omitempty"`
 	/**
 	* Units for the expiry period.
 	*/
@@ -43,7 +43,7 @@ type Dnskey struct {
 	/**
 	* Time at which to generate notification of key expiration, specified as number of days, hours, or minutes before expiry. Must be less than the expiry period. The notification is an SNMP trap sent to an SNMP manager. To enable the appliance to send the trap, enable the DNSKEY-EXPIRY SNMP alarm.
 	*/
-	Notificationperiod uint32 `json:"notificationperiod,omitempty"`
+	Notificationperiod int `json:"notificationperiod,omitempty"`
 	/**
 	* Units for the notification period.
 	*/
@@ -51,7 +51,7 @@ type Dnskey struct {
 	/**
 	* Time to Live (TTL), in seconds, for the DNSKEY resource record created in the zone. TTL is the time for which the record must be cached by the DNS proxies. If the TTL is not specified, either the DNS zone's minimum TTL or the default value of 3600 is used.
 	*/
-	Ttl uint64 `json:"ttl,omitempty"`
+	Ttl int `json:"ttl,omitempty"`
 	/**
 	* Passphrase for reading the encrypted public/private DNS keys
 	*/
@@ -71,7 +71,7 @@ type Dnskey struct {
 	/**
 	* Size of the key, in bits.
 	*/
-	Keysize uint32 `json:"keysize,omitempty"`
+	Keysize int `json:"keysize,omitempty"`
 	/**
 	* Common prefix for the names of the generated public and private key files and the Delegation Signer (DS) resource record. During key generation, the .key, .private, and .ds suffixes are appended automatically to the file name prefix to produce the names of the public key, the private key, and the DS record, respectively.
 	*/

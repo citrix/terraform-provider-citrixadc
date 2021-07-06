@@ -49,7 +49,7 @@ type Sslcert struct {
 	/**
 	* Number of days for which the certificate will be valid, beginning with the time and day (system time) of creation.
 	*/
-	Days uint32 `json:"days,omitempty"`
+	Days int `json:"days,omitempty"`
 	/**
 	* Subject Alternative Name (SAN) is an extension to X.509 that allows various values to be associated with a security certificate using a subjectAltName field. These values are called "Subject Alternative Names" (SAN). Names include:
 		1. Email addresses

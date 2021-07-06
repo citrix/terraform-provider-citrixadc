@@ -27,7 +27,7 @@ type Auditsyslogparams struct {
 	/**
 	* Port on which the syslog server accepts connections.
 	*/
-	Serverport int32 `json:"serverport,omitempty"`
+	Serverport int `json:"serverport,omitempty"`
 	/**
 	* Format of dates in the logs.
 		Supported formats are: 

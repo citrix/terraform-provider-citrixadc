@@ -23,7 +23,7 @@ type Nspartitionvxlanbinding struct {
 	/**
 	* Identifier of the vxlan that is assigned to this partition.
 	*/
-	Vxlan uint32 `json:"vxlan,omitempty"`
+	Vxlan int `json:"vxlan,omitempty"`
 	/**
 	* Name of the Partition. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters.
 	*/

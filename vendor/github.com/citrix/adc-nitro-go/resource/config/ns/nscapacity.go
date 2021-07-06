@@ -23,7 +23,7 @@ type Nscapacity struct {
 	/**
 	* System bandwidth limit.
 	*/
-	Bandwidth uint32 `json:"bandwidth,omitempty"`
+	Bandwidth int `json:"bandwidth,omitempty"`
 	/**
 	* appliance platform type.
 	*/
@@ -43,7 +43,7 @@ type Nscapacity struct {
 	/**
 	* Unique number that identifies the cluster node.
 	*/
-	Nodeid uint32 `json:"nodeid,omitempty"`
+	Nodeid int `json:"nodeid,omitempty"`
 
 	//------- Read only Parameter ---------;
 

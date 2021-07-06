@@ -27,7 +27,7 @@ type Inatparam struct {
 	/**
 	* Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.
 	*/
-	Td uint32 `json:"td,omitempty"`
+	Td int `json:"td,omitempty"`
 	/**
 	* Ignore TOS.
 	*/
@@ -39,7 +39,7 @@ type Inatparam struct {
 	/**
 	* MTU setting for the IPv6 side. If the incoming IPv4 packet greater than this, either fragment or send icmp need fragmentation error.
 	*/
-	Nat46v6mtu uint32 `json:"nat46v6mtu,omitempty"`
+	Nat46v6mtu int `json:"nat46v6mtu,omitempty"`
 	/**
 	* When disabled, translator will not insert IPv6 fragmentation header for non fragmented IPv4 packets
 	*/

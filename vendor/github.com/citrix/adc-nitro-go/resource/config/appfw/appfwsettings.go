@@ -32,15 +32,15 @@ type Appfwsettings struct {
 	/**
 	* Timeout, in seconds, after which a user session is terminated. Before continuing to use the protected web site, the user must establish a new session by opening a designated start URL.
 	*/
-	Sessiontimeout uint32 `json:"sessiontimeout,omitempty"`
+	Sessiontimeout int `json:"sessiontimeout,omitempty"`
 	/**
 	* Maximum number of connections per second that the application firewall learning engine examines to generate new relaxations for learning-enabled security checks. The application firewall drops any connections above this limit from the list of connections used by the learning engine.
 	*/
-	Learnratelimit uint32 `json:"learnratelimit,omitempty"`
+	Learnratelimit int `json:"learnratelimit,omitempty"`
 	/**
 	* Maximum amount of time (in seconds) that the application firewall allows a user session to remain active, regardless of user activity. After this time, the user session is terminated. Before continuing to use the protected web site, the user must establish a new session by opening a designated start URL.
 	*/
-	Sessionlifetime uint32 `json:"sessionlifetime,omitempty"`
+	Sessionlifetime int `json:"sessionlifetime,omitempty"`
 	/**
 	* Name of the session cookie that the application firewall uses to track user sessions. 
 		Must begin with a letter or number, and can consist of from 1 to 31 letters, numbers, and the hyphen (-) and underscore (_) symbols.
@@ -55,7 +55,7 @@ type Appfwsettings struct {
 	/**
 	* Cumulative total maximum number of bytes in web forms imported to a protected web site. If a user attempts to upload files with a total byte count higher than the specified limit, the application firewall blocks the request.
 	*/
-	Importsizelimit uint32 `json:"importsizelimit,omitempty"`
+	Importsizelimit int `json:"importsizelimit,omitempty"`
 	/**
 	* Flag used to enable/disable auto update signatures
 	*/
@@ -91,7 +91,7 @@ type Appfwsettings struct {
 	/**
 	* Maximum number of sessions that the application firewall allows to be active, regardless of user activity. After the max_limit reaches, No more user session will be created .
 	*/
-	Sessionlimit uint32 `json:"sessionlimit,omitempty"`
+	Sessionlimit int `json:"sessionlimit,omitempty"`
 	/**
 	*  flag to define action on malformed requests that application firewall cannot parse
 	*/
@@ -107,7 +107,7 @@ type Appfwsettings struct {
 	/**
 	* Proxy Server Port to get updated signatures from AWS.
 	*/
-	Proxyport int32 `json:"proxyport,omitempty"`
+	Proxyport int `json:"proxyport,omitempty"`
 
 	//------- Read only Parameter ---------;
 

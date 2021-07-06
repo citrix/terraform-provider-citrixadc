@@ -27,7 +27,7 @@ type Appfwpolicylabelpolicybindingbinding struct {
 	/**
 	* Positive integer specifying the priority of the policy. A lower number specifies a higher priority. Must be unique within a group of policies that are bound to the same bind point or label. Policies are evaluated in the order of their priority numbers.
 	*/
-	Priority uint32 `json:"priority,omitempty"`
+	Priority int `json:"priority,omitempty"`
 	/**
 	* Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 	*/

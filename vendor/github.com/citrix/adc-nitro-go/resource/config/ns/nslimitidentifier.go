@@ -28,11 +28,11 @@ type Nslimitidentifier struct {
 	* Maximum number of requests that are allowed in the given timeslice when requests (mode is set as REQUEST_RATE) are tracked per timeslice.
 		When connections (mode is set as CONNECTION) are tracked, it is the total number of connections that would be let through.
 	*/
-	Threshold uint32 `json:"threshold,omitempty"`
+	Threshold int `json:"threshold,omitempty"`
 	/**
 	* Time interval, in milliseconds, specified in multiples of 10, during which requests are tracked to check if they cross the threshold. This argument is needed only when the mode is set to REQUEST_RATE.
 	*/
-	Timeslice uint32 `json:"timeslice,omitempty"`
+	Timeslice int `json:"timeslice,omitempty"`
 	/**
 	* Defines the type of traffic to be tracked.
 		* REQUEST_RATE - Tracks requests/timeslice.
@@ -64,11 +64,11 @@ type Nslimitidentifier struct {
 	/**
 	* Maximum bandwidth permitted, in kbps.
 	*/
-	Maxbandwidth uint32 `json:"maxbandwidth,omitempty"`
+	Maxbandwidth int `json:"maxbandwidth,omitempty"`
 	/**
 	* Number of traps to be sent in the timeslice configured. A value of 0 indicates that traps are disabled.
 	*/
-	Trapsintimeslice uint32 `json:"trapsintimeslice,omitempty"`
+	Trapsintimeslice int `json:"trapsintimeslice,omitempty"`
 
 	//------- Read only Parameter ---------;
 

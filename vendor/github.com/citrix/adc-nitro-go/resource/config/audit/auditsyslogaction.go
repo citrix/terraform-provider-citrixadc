@@ -37,7 +37,7 @@ type Auditsyslogaction struct {
 	/**
 	* Time, in seconds, for which the Citrix ADC waits before sending another DNS query to resolve the host name of the syslog server if the last query failed.
 	*/
-	Domainresolveretry int32 `json:"domainresolveretry,omitempty"`
+	Domainresolveretry int `json:"domainresolveretry,omitempty"`
 	/**
 	* Name of the LB vserver. Mutually exclusive with syslog serverIP/serverName
 	*/
@@ -45,7 +45,7 @@ type Auditsyslogaction struct {
 	/**
 	* Port on which the syslog server accepts connections.
 	*/
-	Serverport int32 `json:"serverport,omitempty"`
+	Serverport int `json:"serverport,omitempty"`
 	/**
 	* Audit log level, which specifies the types of events to log. 
 		Available values function as follows: 
@@ -122,7 +122,7 @@ type Auditsyslogaction struct {
 	/**
 	* Max size of log data that can be held in NSB chain of server info.
 	*/
-	Maxlogdatasizetohold uint32 `json:"maxlogdatasizetohold,omitempty"`
+	Maxlogdatasizetohold int `json:"maxlogdatasizetohold,omitempty"`
 	/**
 	* Log DNS related syslog messages
 	*/

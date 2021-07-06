@@ -32,7 +32,7 @@ type Policyhttpcallout struct {
 	/**
 	* Server port to which the HTTP callout agent is mapped. Mutually exclusive with the Virtual Server parameter. Therefore, you cannot set the <IP Address, Port> and the Virtual Server in the same HTTP callout.
 	*/
-	Port int32 `json:"port,omitempty"`
+	Port int `json:"port,omitempty"`
 	/**
 	* Name of the load balancing, content switching, or cache redirection virtual server (the callout agent) to which the HTTP callout is sent. The service type of the virtual server must be HTTP. Mutually exclusive with the IP address and port parameters. Therefore, you cannot set the <IP Address, Port> and the Virtual Server in the same HTTP callout.
 	*/
@@ -88,7 +88,7 @@ type Policyhttpcallout struct {
 	* Duration, in seconds, for which the callout response is cached. The cached responses are stored in an integrated caching content group named "calloutContentGroup". If no duration is configured, the callout responses will not be cached unless normal caching configuration is used to cache them. This parameter takes precedence over any normal caching configuration that would otherwise apply to these responses.
 		Note that the calloutContentGroup definition may not be modified or removed nor may it be used with other cache policies.
 	*/
-	Cacheforsecs uint64 `json:"cacheforsecs,omitempty"`
+	Cacheforsecs int `json:"cacheforsecs,omitempty"`
 	/**
 	* Any comments to preserve information about this HTTP callout.
 	*/

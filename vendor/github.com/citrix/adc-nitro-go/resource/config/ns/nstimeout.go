@@ -23,66 +23,66 @@ type Nstimeout struct {
 	/**
 	* Interval, in seconds, at which the Citrix ADC zombie cleanup process must run. This process cleans up inactive TCP connections.
 	*/
-	Zombie uint32 `json:"zombie,omitempty"`
+	Zombie int `json:"zombie,omitempty"`
 	/**
 	* Client idle timeout (in seconds). If zero, the service-type default value is taken when service is created.
 	*/
-	Client uint32 `json:"client,omitempty"`
+	Client int `json:"client,omitempty"`
 	/**
 	* Server idle timeout (in seconds).  If zero, the service-type default value is taken when service is created.
 	*/
-	Server uint32 `json:"server,omitempty"`
+	Server int `json:"server,omitempty"`
 	/**
 	* Global idle timeout, in seconds, for client connections of HTTP service type. This value is over ridden by the client timeout that is configured on individual entities.
 	*/
-	Httpclient uint32 `json:"httpclient,omitempty"`
+	Httpclient int `json:"httpclient,omitempty"`
 	/**
 	* Global idle timeout, in seconds, for server connections of HTTP service type. This value is over ridden by the server timeout that is configured on individual entities.
 	*/
-	Httpserver uint32 `json:"httpserver,omitempty"`
+	Httpserver int `json:"httpserver,omitempty"`
 	/**
 	* Global idle timeout, in seconds, for non-HTTP client connections of TCP service type. This value is over ridden by the client timeout that is configured on individual entities.
 	*/
-	Tcpclient uint32 `json:"tcpclient,omitempty"`
+	Tcpclient int `json:"tcpclient,omitempty"`
 	/**
 	* Global idle timeout, in seconds, for non-HTTP server connections of TCP service type. This value is over ridden by the server timeout that is configured on entities.
 	*/
-	Tcpserver uint32 `json:"tcpserver,omitempty"`
+	Tcpserver int `json:"tcpserver,omitempty"`
 	/**
 	* Global idle timeout, in seconds, for non-TCP client connections. This value is over ridden by the client timeout that is configured on individual entities.
 	*/
-	Anyclient uint32 `json:"anyclient,omitempty"`
+	Anyclient int `json:"anyclient,omitempty"`
 	/**
 	* Global idle timeout, in seconds, for non TCP server connections. This value is over ridden by the server timeout that is configured on individual entities.
 	*/
-	Anyserver uint32 `json:"anyserver,omitempty"`
+	Anyserver int `json:"anyserver,omitempty"`
 	/**
 	* Global idle timeout, in seconds, for TCP client connections. This value takes precedence over  entity level timeout settings (vserver/service). This is applicable only to transport protocol TCP.
 	*/
-	Anytcpclient uint32 `json:"anytcpclient,omitempty"`
+	Anytcpclient int `json:"anytcpclient,omitempty"`
 	/**
 	* Global idle timeout, in seconds, for TCP server connections. This value takes precedence over entity level timeout settings ( vserver/service). This is applicable only to transport protocol TCP.
 	*/
-	Anytcpserver uint32 `json:"anytcpserver,omitempty"`
+	Anytcpserver int `json:"anytcpserver,omitempty"`
 	/**
 	* Idle timeout, in seconds, for connections that are in TCP half-closed state.
 	*/
-	Halfclose uint32 `json:"halfclose,omitempty"`
+	Halfclose int `json:"halfclose,omitempty"`
 	/**
 	* Interval at which the zombie clean-up process for non-TCP connections should run. Inactive IP NAT connections will be cleaned up.
 	*/
-	Nontcpzombie uint32 `json:"nontcpzombie,omitempty"`
+	Nontcpzombie int `json:"nontcpzombie,omitempty"`
 	/**
 	* Alternative idle timeout, in seconds, for closed TCP NATPCB connections.
 	*/
-	Reducedfintimeout uint32 `json:"reducedfintimeout,omitempty"`
+	Reducedfintimeout int `json:"reducedfintimeout,omitempty"`
 	/**
 	* Timer interval, in seconds, for abruptly terminated TCP NATPCB connections.
 	*/
-	Reducedrsttimeout uint32 `json:"reducedrsttimeout,omitempty"`
+	Reducedrsttimeout int `json:"reducedrsttimeout,omitempty"`
 	/**
 	* Timer interval, in seconds, for new TCP NATPCB connections on which no data was received.
 	*/
-	Newconnidletimeout uint32 `json:"newconnidletimeout,omitempty"`
+	Newconnidletimeout int `json:"newconnidletimeout,omitempty"`
 
 }

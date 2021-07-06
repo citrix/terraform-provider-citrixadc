@@ -27,7 +27,7 @@ type Sslvserver struct {
 	/**
 	* Port on which clear-text data is sent by the appliance to the server. Do not specify this parameter for SSL offloading with end-to-end encryption.
 	*/
-	Cleartextport int32 `json:"cleartextport,omitempty"`
+	Cleartextport int `json:"cleartextport,omitempty"`
 	/**
 	* State of Diffie-Hellman (DH) key exchange.
 	*/
@@ -39,7 +39,7 @@ type Sslvserver struct {
 	/**
 	* Number of interactions, between the client and the Citrix ADC, after which the DH private-public pair is regenerated. A value of zero (0) specifies refresh every time.
 	*/
-	Dhcount uint32 `json:"dhcount,omitempty"`
+	Dhcount int `json:"dhcount,omitempty"`
 	/**
 	* This option enables the use of NIST recommended (NIST Special Publication 800-56A) bit size for private-key size. For example, for DH params of size 2048bit, the private-key size recommended is 224bits. This is rounded-up to 256bits.
 	*/
@@ -51,7 +51,7 @@ type Sslvserver struct {
 	/**
 	* Refresh count for regeneration of the RSA public-key and private-key pair. Zero (0) specifies infinite usage (no refresh).
 	*/
-	Ersacount uint32 `json:"ersacount,omitempty"`
+	Ersacount int `json:"ersacount,omitempty"`
 	/**
 	* State of session reuse. Establishing the initial handshake requires CPU-intensive public key encryption operations. With the ENABLED setting, session key exchange is avoided for session resumption requests received from the client.
 	*/
@@ -59,7 +59,7 @@ type Sslvserver struct {
 	/**
 	* Time, in seconds, for which to keep the session active. Any session resumption request received after the timeout period will require a fresh SSL handshake and establishment of a new SSL session.
 	*/
-	Sesstimeout uint32 `json:"sesstimeout,omitempty"`
+	Sesstimeout int `json:"sesstimeout,omitempty"`
 	/**
 	* State of Cipher Redirect. If cipher redirect is enabled, you can configure an SSL virtual server or service to display meaningful error messages if the SSL handshake fails because of a cipher mismatch between the virtual server or service and the client.
 	*/
@@ -165,7 +165,7 @@ type Sslvserver struct {
 	/**
 	* Set the maximum time, in seconds, in the strict transport security (STS) header during which the client must send only HTTPS requests to the server
 	*/
-	Maxage uint32 `json:"maxage,omitempty"`
+	Maxage int `json:"maxage,omitempty"`
 	/**
 	* Enable HSTS for subdomains. If set to Yes, a client must send only HTTPS requests for subdomains.
 	*/
@@ -188,7 +188,7 @@ type Sslvserver struct {
 		This value can be increased to enable clients to open multiple parallel connections using a fresh ticket for each connection.
 		No tickets are sent if resumption is disabled.
 	*/
-	Tls13sessionticketsperauthcontext uint32 `json:"tls13sessionticketsperauthcontext,omitempty"`
+	Tls13sessionticketsperauthcontext int `json:"tls13sessionticketsperauthcontext,omitempty"`
 	/**
 	* Whether or not the SSL Virtual Server will require a DHE key exchange to occur when a PSK is accepted during a TLS 1.3 resumption handshake.
 		A DHE key exchange ensures forward secrecy even in the event that ticket keys are compromised, at the expense of an additional round trip and resources required to carry out the DHE key exchange.

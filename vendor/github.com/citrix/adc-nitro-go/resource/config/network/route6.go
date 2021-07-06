@@ -31,23 +31,23 @@ type Route6 struct {
 	/**
 	* Integer value that uniquely identifies a VLAN through which the Citrix ADC forwards the packets for this route.
 	*/
-	Vlan uint32 `json:"vlan,omitempty"`
+	Vlan int `json:"vlan,omitempty"`
 	/**
 	* Integer value that uniquely identifies a VXLAN through which the Citrix ADC forwards the packets for this route.
 	*/
-	Vxlan uint32 `json:"vxlan,omitempty"`
+	Vxlan int `json:"vxlan,omitempty"`
 	/**
 	* Positive integer used by the routing algorithms to determine preference for this route over others of equal cost. The lower the weight, the higher the preference.
 	*/
-	Weight uint32 `json:"weight,omitempty"`
+	Weight int `json:"weight,omitempty"`
 	/**
 	* Administrative distance of this route from the appliance.
 	*/
-	Distance uint32 `json:"distance,omitempty"`
+	Distance int `json:"distance,omitempty"`
 	/**
 	* Positive integer used by the routing algorithms to determine preference for this route. The lower the cost, the higher the preference.
 	*/
-	Cost uint32 `json:"cost,omitempty"`
+	Cost int `json:"cost,omitempty"`
 	/**
 	* Advertise this route.
 	*/
@@ -63,7 +63,7 @@ type Route6 struct {
 	/**
 	* Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.
 	*/
-	Td uint32 `json:"td,omitempty"`
+	Td int `json:"td,omitempty"`
 	/**
 	* The owner node group in a Cluster for this route6. If owner node group is not specified then the route is treated as Striped route.
 	*/

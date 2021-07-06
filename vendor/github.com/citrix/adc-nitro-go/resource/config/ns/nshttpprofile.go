@@ -60,7 +60,7 @@ type Nshttpprofile struct {
 	/**
 	* Maximum limit on the number of connections, from the Citrix ADC to a particular server that are kept in the reuse pool. This setting is helpful for optimal memory utilization and for reducing the idle connections to the server just after the peak time. Zero implies no limit on reuse pool size. If non-zero value is given, it has to be greater than or equal to the number of running Packet Engines.
 	*/
-	Maxreusepool uint32 `json:"maxreusepool,omitempty"`
+	Maxreusepool int `json:"maxreusepool,omitempty"`
 	/**
 	* Drop any extra 'CR' and 'LF' characters present after the header.
 	*/
@@ -68,7 +68,7 @@ type Nshttpprofile struct {
 	/**
 	* Maximum time to wait, in milliseconds, between incomplete header packets. If the header packets take longer to arrive at Citrix ADC, the connection is silently dropped.
 	*/
-	Incomphdrdelay uint32 `json:"incomphdrdelay,omitempty"`
+	Incomphdrdelay int `json:"incomphdrdelay,omitempty"`
 	/**
 	* HTTP connection to be upgraded to a web socket connection. Once upgraded, Citrix ADC does not process Layer 7 traffic on this connection.
 	*/
@@ -80,7 +80,7 @@ type Nshttpprofile struct {
 	/**
 	* Time, in seconds, within which the HTTP request must complete. If the request does not complete within this time, the specified request timeout action is executed. Zero disables the timeout.
 	*/
-	Reqtimeout uint32 `json:"reqtimeout,omitempty"`
+	Reqtimeout int `json:"reqtimeout,omitempty"`
 	/**
 	* Adapts the configured request timeout based on flow conditions. The timeout is increased or decreased internally and applied on the flow.
 	*/
@@ -107,7 +107,7 @@ type Nshttpprofile struct {
 	/**
 	* Maximum number of requests allowed on a single connection. Zero implies no limit on the number of requests.
 	*/
-	Maxreq uint32 `json:"maxreq,omitempty"`
+	Maxreq int `json:"maxreq,omitempty"`
 	/**
 	* Generate the persistent Citrix ADC specific ETag for the HTTP response with ETag header.
 	*/
@@ -143,67 +143,67 @@ type Nshttpprofile struct {
 	/**
 	* Idle timeout (in seconds) for server connections in re-use pool. Connections in the re-use pool are flushed, if they remain idle for the configured timeout.
 	*/
-	Reusepooltimeout uint32 `json:"reusepooltimeout,omitempty"`
+	Reusepooltimeout int `json:"reusepooltimeout,omitempty"`
 	/**
 	* Number of bytes to be queued to look for complete header before returning error. If complete header is not obtained after queuing these many bytes, request will be marked as invalid and no L7 processing will be done for that TCP connection.
 	*/
-	Maxheaderlen uint32 `json:"maxheaderlen,omitempty"`
+	Maxheaderlen int `json:"maxheaderlen,omitempty"`
 	/**
 	* Minimum limit on the number of connections, from the Citrix ADC to a particular server that are kept in the reuse pool. This setting is helpful for optimal memory utilization and for reducing the idle connections to the server just after the peak time. Zero implies no limit on reuse pool size.
 	*/
-	Minreusepool uint32 `json:"minreusepool,omitempty"`
+	Minreusepool int `json:"minreusepool,omitempty"`
 	/**
 	* Maximum size of header list that the Citrix ADC is prepared to accept, in bytes. NOTE: The actual plain text header size that the Citrix ADC accepts is limited by maxHeaderLen. Please change maxHeaderLen parameter as well when modifying http2MaxHeaderListSize.
 	*/
-	Http2maxheaderlistsize uint32 `json:"http2maxheaderlistsize,omitempty"`
+	Http2maxheaderlistsize int `json:"http2maxheaderlistsize,omitempty"`
 	/**
 	* Maximum size of the frame payload that the Citrix ADC is willing to receive, in bytes.
 	*/
-	Http2maxframesize uint32 `json:"http2maxframesize,omitempty"`
+	Http2maxframesize int `json:"http2maxframesize,omitempty"`
 	/**
 	* Maximum number of concurrent streams that is allowed per connection.
 	*/
-	Http2maxconcurrentstreams uint32 `json:"http2maxconcurrentstreams,omitempty"`
+	Http2maxconcurrentstreams int `json:"http2maxconcurrentstreams,omitempty"`
 	/**
 	* Initial window size for connection level flow control, in bytes.
 	*/
-	Http2initialconnwindowsize uint32 `json:"http2initialconnwindowsize,omitempty"`
+	Http2initialconnwindowsize int `json:"http2initialconnwindowsize,omitempty"`
 	/**
 	* Initial window size for stream level flow control, in bytes.
 	*/
-	Http2initialwindowsize uint32 `json:"http2initialwindowsize,omitempty"`
+	Http2initialwindowsize int `json:"http2initialwindowsize,omitempty"`
 	/**
 	* Maximum size of the header compression table used to decode header blocks, in bytes.
 	*/
-	Http2headertablesize uint32 `json:"http2headertablesize,omitempty"`
+	Http2headertablesize int `json:"http2headertablesize,omitempty"`
 	/**
 	* Minimum number of HTTP2 connections established to backend server, on receiving HTTP requests from client before multiplexing the streams into the available HTTP/2 connections.
 	*/
-	Http2minseverconn uint32 `json:"http2minseverconn,omitempty"`
+	Http2minseverconn int `json:"http2minseverconn,omitempty"`
 	/**
 	* Maximum number of ping frames allowed in HTTP2 connection per minute
 	*/
-	Http2maxpingframespermin uint32 `json:"http2maxpingframespermin,omitempty"`
+	Http2maxpingframespermin int `json:"http2maxpingframespermin,omitempty"`
 	/**
 	* Maximum number of settings frames allowed in HTTP2 connection per minute
 	*/
-	Http2maxsettingsframespermin uint32 `json:"http2maxsettingsframespermin,omitempty"`
+	Http2maxsettingsframespermin int `json:"http2maxsettingsframespermin,omitempty"`
 	/**
 	* Maximum number of reset frames allowed in HTTP/2 connection per minute
 	*/
-	Http2maxresetframespermin uint32 `json:"http2maxresetframespermin,omitempty"`
+	Http2maxresetframespermin int `json:"http2maxresetframespermin,omitempty"`
 	/**
 	* Maximum number of empty  frames allowed in HTTP2 connection per minute
 	*/
-	Http2maxemptyframespermin uint32 `json:"http2maxemptyframespermin,omitempty"`
+	Http2maxemptyframespermin int `json:"http2maxemptyframespermin,omitempty"`
 	/**
 	* Maximum size in bytes allowed to buffer gRPC packets till trailer is received
 	*/
-	Grpcholdlimit uint32 `json:"grpcholdlimit,omitempty"`
+	Grpcholdlimit int `json:"grpcholdlimit,omitempty"`
 	/**
 	* Maximum time in milliseconds allowed to buffer gRPC packets till trailer is received. The value should be in multiples of 100
 	*/
-	Grpcholdtimeout uint32 `json:"grpcholdtimeout,omitempty"`
+	Grpcholdtimeout int `json:"grpcholdtimeout,omitempty"`
 	/**
 	* Set to DISABLED for gRPC without a length delimitation.
 	*/
@@ -211,7 +211,7 @@ type Nshttpprofile struct {
 	/**
 	* This option sets the satisfactory threshold (T) for client response time in milliseconds to be used for APDEX calculations. This means a transaction responding in less than this threshold is considered satisfactory. Transaction responding between T and 4*T is considered tolerable. Any transaction responding in more than 4*T time is considered frustrating. Citrix ADC maintains stats for such tolerable and frustrating transcations. And client response time related apdex counters are only updated on a vserver which receives clients traffic.
 	*/
-	Apdexcltresptimethreshold uint32 `json:"apdexcltresptimethreshold,omitempty"`
+	Apdexcltresptimethreshold int `json:"apdexcltresptimethreshold,omitempty"`
 	/**
 	* Choose whether to enable support for HTTP/3.
 	*/
@@ -219,15 +219,15 @@ type Nshttpprofile struct {
 	/**
 	* Maximum size of the HTTP/3 header field section, in bytes.
 	*/
-	Http3maxheaderfieldsectionsize uint32 `json:"http3maxheaderfieldsectionsize,omitempty"`
+	Http3maxheaderfieldsectionsize int `json:"http3maxheaderfieldsectionsize,omitempty"`
 	/**
 	* Maximum size of the HTTP/3 QPACK dynamic header table, in bytes.
 	*/
-	Http3maxheadertablesize uint32 `json:"http3maxheadertablesize,omitempty"`
+	Http3maxheadertablesize int `json:"http3maxheadertablesize,omitempty"`
 	/**
 	* Maximum number of HTTP/3 streams that can be blocked while HTTP/3 headers are being decoded.
 	*/
-	Http3maxheaderblockedstreams uint32 `json:"http3maxheaderblockedstreams,omitempty"`
+	Http3maxheaderblockedstreams int `json:"http3maxheaderblockedstreams,omitempty"`
 
 	//------- Read only Parameter ---------;
 

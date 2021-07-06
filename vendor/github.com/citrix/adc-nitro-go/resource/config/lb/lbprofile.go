@@ -77,7 +77,7 @@ type Lbprofile struct {
 	/**
 	* This option is used to specify the number of fingers to be used in PRAC and JARH algorithms for hash based LB methods. Increasing the number of fingers might give better distribution of traffic at the expense of additional memory.
 	*/
-	Lbhashfingers uint32 `json:"lbhashfingers,omitempty"`
+	Lbhashfingers int `json:"lbhashfingers,omitempty"`
 
 	//------- Read only Parameter ---------;
 

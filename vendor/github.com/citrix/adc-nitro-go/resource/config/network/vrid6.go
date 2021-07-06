@@ -23,11 +23,11 @@ type Vrid6 struct {
 	/**
 	* Integer value that uniquely identifies a VMAC6 address.
 	*/
-	Id uint32 `json:"id,omitempty"`
+	Id int `json:"id,omitempty"`
 	/**
 	* Base priority (BP), in an active-active mode configuration, which ordinarily determines the master VIP address.
 	*/
-	Priority uint32 `json:"priority,omitempty"`
+	Priority int `json:"priority,omitempty"`
 	/**
 	* In an active-active mode configuration, make a backup VIP address the master if its priority becomes higher than that of a master VIP address bound to this VMAC address.
 		If you disable pre-emption while a backup VIP address is the master, the backup VIP address remains master until the original master VIP's priority becomes higher than that of the current master.
@@ -50,15 +50,15 @@ type Vrid6 struct {
 	/**
 	* Preemption delay time in seconds, in an active-active configuration. If any high priority node will come in network, it will wait for these many seconds before becoming master.
 	*/
-	Preemptiondelaytimer uint64 `json:"preemptiondelaytimer,omitempty"`
+	Preemptiondelaytimer int `json:"preemptiondelaytimer,omitempty"`
 	/**
 	* Priority by which the Effective priority will be reduced if any of the tracked interfaces goes down in an active-active configuration.
 	*/
-	Trackifnumpriority uint32 `json:"trackifnumpriority,omitempty"`
+	Trackifnumpriority int `json:"trackifnumpriority,omitempty"`
 	/**
 	* In a cluster setup, assign a cluster node as the owner of this VMAC address for IP based VRRP configuration. If no owner is configured, ow ner node is displayed as ALL and one node is dynamically elected as the owner.
 	*/
-	Ownernode uint32 `json:"ownernode,omitempty"`
+	Ownernode int `json:"ownernode,omitempty"`
 	/**
 	* Remove all configured VMAC6 addresses from the Citrix ADC.
 	*/

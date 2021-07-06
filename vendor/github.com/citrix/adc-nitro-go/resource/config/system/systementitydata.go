@@ -43,7 +43,7 @@ type Systementitydata struct {
 	/**
 	* Specify core ID of the PE in nCore.
 	*/
-	Core int32 `json:"core,omitempty"`
+	Core int `json:"core,omitempty"`
 	/**
 	* Specify the counters to be collected.
 	*/
@@ -59,7 +59,7 @@ type Systementitydata struct {
 	/**
 	* Last is literal way of saying a certain time period from the current moment. Example: -last 1 hour, -last 1 day, et cetera.
 	*/
-	Last int32 `json:"last,omitempty"`
+	Last int `json:"last,omitempty"`
 	/**
 	* Specify the time period from current moment. Example 1 x where x = hours/ days/ years.
 	*/

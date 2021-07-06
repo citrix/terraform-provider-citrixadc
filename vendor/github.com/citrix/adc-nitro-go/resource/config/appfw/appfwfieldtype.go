@@ -34,7 +34,7 @@ type Appfwfieldtype struct {
 	/**
 	* Positive integer specifying the priority of the field type. A lower number specifies a higher priority. Field types are checked in the order of their priority numbers.
 	*/
-	Priority uint32 `json:"priority,omitempty"`
+	Priority int `json:"priority,omitempty"`
 	/**
 	* Comment describing the type of field that this field type is intended to match.
 	*/

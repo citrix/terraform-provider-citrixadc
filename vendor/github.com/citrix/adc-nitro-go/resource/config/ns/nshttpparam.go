@@ -51,7 +51,7 @@ type Nshttpparam struct {
 	/**
 	* Maximum limit on the number of connections, from the Citrix ADC to a particular server that are kept in the reuse pool. This setting is helpful for optimal memory utilization and for reducing the idle connections to the server just after the peak time.
 	*/
-	Maxreusepool uint32 `json:"maxreusepool,omitempty"`
+	Maxreusepool int `json:"maxreusepool,omitempty"`
 	/**
 	* Enable/Disable HTTP/2 on server side
 	*/

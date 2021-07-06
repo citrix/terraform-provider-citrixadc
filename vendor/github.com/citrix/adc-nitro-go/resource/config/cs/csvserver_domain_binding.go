@@ -24,11 +24,11 @@ type Csvserverdomainbinding struct {
 	* Domain name for which to change the time to live (TTL) and/or backup service IP address.
 	*/
 	Domainname string `json:"domainname,omitempty"`
-	Ttl uint64 `json:"ttl,omitempty"`
+	Ttl int `json:"ttl,omitempty"`
 	Backupip string `json:"backupip,omitempty"`
 	Cookiedomain string `json:"cookiedomain,omitempty"`
-	Cookietimeout uint32 `json:"cookietimeout,omitempty"`
-	Sitedomainttl uint64 `json:"sitedomainttl,omitempty"`
+	Cookietimeout int `json:"cookietimeout,omitempty"`
+	Sitedomainttl int `json:"sitedomainttl,omitempty"`
 	/**
 	* Enable logging appflow flow information
 	*/

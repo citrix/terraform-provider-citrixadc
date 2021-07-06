@@ -35,7 +35,7 @@ type Sslservicegroup struct {
 	/**
 	* Time, in seconds, for which to keep the session active. Any session resumption request received after the timeout period will require a fresh SSL handshake and establishment of a new SSL session.
 	*/
-	Sesstimeout uint32 `json:"sesstimeout,omitempty"`
+	Sesstimeout int `json:"sesstimeout,omitempty"`
 	/**
 	* State of SSLv3 protocol support for the SSL service group.
 		Note: On platforms with SSL acceleration chips, if the SSL chip does not support SSLv3, this parameter cannot be set to ENABLED.

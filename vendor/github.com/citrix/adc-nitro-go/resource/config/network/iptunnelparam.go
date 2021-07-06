@@ -31,7 +31,7 @@ type Iptunnelparam struct {
 	/**
 	* Threshold value, as a percentage of CPU usage, at which to drop packets that require fragmentation to use the IP tunnel. Applies only if dropFragparameter is set to NO. The default value, 0, specifies that this parameter is not set.
 	*/
-	Dropfragcputhreshold uint32 `json:"dropfragcputhreshold,omitempty"`
+	Dropfragcputhreshold int `json:"dropfragcputhreshold,omitempty"`
 	/**
 	* Use a different source IP address for each new session through a particular IP tunnel, as determined by round robin selection of one of the SNIP addresses. This setting is ignored if a common global source IP address has been specified for all the IP tunnels. This setting does not apply to a tunnel for which a source IP address has been specified.
 	*/

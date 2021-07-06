@@ -27,7 +27,7 @@ type Nspbr6 struct {
 	/**
 	* Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.
 	*/
-	Td uint32 `json:"td,omitempty"`
+	Td int `json:"td,omitempty"`
 	/**
 	* Action to perform on the outgoing IPv6 packets that match the PBR6.
 		Available settings function as follows:
@@ -99,15 +99,15 @@ type Nspbr6 struct {
 	/**
 	* Protocol, identified by protocol number, to match against the protocol of an outgoing IPv6 packet.
 	*/
-	Protocolnumber uint32 `json:"protocolnumber,omitempty"`
+	Protocolnumber int `json:"protocolnumber,omitempty"`
 	/**
 	* ID of the VLAN. The Citrix ADC compares the PBR6 only to the outgoing packets on the specified VLAN. If you do not specify an interface ID, the appliance compares the PBR6 to the outgoing packets on all VLANs.
 	*/
-	Vlan uint32 `json:"vlan,omitempty"`
+	Vlan int `json:"vlan,omitempty"`
 	/**
 	* ID of the VXLAN. The Citrix ADC compares the PBR6 only to the outgoing packets on the specified VXLAN. If you do not specify an interface ID, the appliance compares the PBR6 to the outgoing packets on all VXLANs.
 	*/
-	Vxlan uint32 `json:"vxlan,omitempty"`
+	Vxlan int `json:"vxlan,omitempty"`
 	/**
 	* ID of an interface. The Citrix ADC compares the PBR6 only to the outgoing packets on the specified interface. If you do not specify a value, the appliance compares the PBR6 to the outgoing packets on all interfaces.
 	*/
@@ -115,7 +115,7 @@ type Nspbr6 struct {
 	/**
 	* Priority of the PBR6, which determines the order in which it is evaluated relative to the other PBR6s. If you do not specify priorities while creating PBR6s, the PBR6s are evaluated in the order in which they are created.
 	*/
-	Priority uint32 `json:"priority,omitempty"`
+	Priority int `json:"priority,omitempty"`
 	/**
 	* Enable or disable the PBR6. After you apply the PBR6s, the Citrix ADC compares outgoing packets to the enabled PBR6s.
 	*/
@@ -147,7 +147,7 @@ type Nspbr6 struct {
 	/**
 	* VLAN number to be used for link local nexthop .
 	*/
-	Nexthopvlan uint32 `json:"nexthopvlan,omitempty"`
+	Nexthopvlan int `json:"nexthopvlan,omitempty"`
 	/**
 	* The owner node group in a Cluster for this pbr rule. If owner node group is not specified then the pbr rule is treated as Striped pbr rule.
 	*/

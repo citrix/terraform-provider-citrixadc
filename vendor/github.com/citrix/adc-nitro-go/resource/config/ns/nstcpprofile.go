@@ -37,7 +37,7 @@ type Nstcpprofile struct {
 	* Factor used to calculate the new window size.
 		This argument is needed only when window scaling is enabled.
 	*/
-	Wsval uint32 `json:"wsval,omitempty"`
+	Wsval int `json:"wsval,omitempty"`
 	/**
 	* Enable or disable the Nagle algorithm on TCP connections.
 	*/
@@ -49,43 +49,43 @@ type Nstcpprofile struct {
 	/**
 	* Maximum number of octets to allow in a TCP data segment.
 	*/
-	Mss uint32 `json:"mss,omitempty"`
+	Mss int `json:"mss,omitempty"`
 	/**
 	* Maximum number of TCP segments allowed in a burst.
 	*/
-	Maxburst uint32 `json:"maxburst,omitempty"`
+	Maxburst int `json:"maxburst,omitempty"`
 	/**
 	* Initial maximum upper limit on the number of TCP packets that can be outstanding on the TCP link to the server.
 	*/
-	Initialcwnd uint32 `json:"initialcwnd,omitempty"`
+	Initialcwnd int `json:"initialcwnd,omitempty"`
 	/**
 	* Timeout for TCP delayed ACK, in milliseconds.
 	*/
-	Delayedack uint32 `json:"delayedack,omitempty"`
+	Delayedack int `json:"delayedack,omitempty"`
 	/**
 	* Maximum size of out-of-order packets queue. A value of 0 means no limit.
 	*/
-	Oooqsize uint32 `json:"oooqsize,omitempty"`
+	Oooqsize int `json:"oooqsize,omitempty"`
 	/**
 	* Maximum number of TCP packets allowed per maximum segment size (MSS).
 	*/
-	Maxpktpermss uint32 `json:"maxpktpermss,omitempty"`
+	Maxpktpermss int `json:"maxpktpermss,omitempty"`
 	/**
 	* Maximum limit on the number of packets that should be retransmitted on receiving a partial ACK.
 	*/
-	Pktperretx uint32 `json:"pktperretx,omitempty"`
+	Pktperretx int `json:"pktperretx,omitempty"`
 	/**
 	* Minimum retransmission timeout, in milliseconds, specified in 10-millisecond increments (value must yield a whole number if divided by  10).
 	*/
-	Minrto uint32 `json:"minrto,omitempty"`
+	Minrto int `json:"minrto,omitempty"`
 	/**
 	* Multiplier that determines the rate at which slow start increases the size of the TCP transmission window after each acknowledgement of successful transmission.
 	*/
-	Slowstartincr uint32 `json:"slowstartincr,omitempty"`
+	Slowstartincr int `json:"slowstartincr,omitempty"`
 	/**
 	* TCP buffering size, in bytes.
 	*/
-	Buffersize uint32 `json:"buffersize,omitempty"`
+	Buffersize int `json:"buffersize,omitempty"`
 	/**
 	* Enable or disable the SYNCOOKIE mechanism for TCP handshake with clients. Disabling SYNCOOKIE prevents SYN attack protection on the Citrix ADC.
 	*/
@@ -110,19 +110,19 @@ type Nstcpprofile struct {
 	/**
 	* Duration, in seconds, for the connection to be idle, before sending a keep-alive (KA) probe.
 	*/
-	Kaconnidletime uint32 `json:"kaconnidletime,omitempty"`
+	Kaconnidletime int `json:"kaconnidletime,omitempty"`
 	/**
 	* Number of keep-alive (KA) probes to be sent when not acknowledged, before assuming the peer to be down.
 	*/
-	Kamaxprobes uint32 `json:"kamaxprobes,omitempty"`
+	Kamaxprobes int `json:"kamaxprobes,omitempty"`
 	/**
 	* Time interval, in seconds, before the next keep-alive (KA) probe, if the peer does not respond.
 	*/
-	Kaprobeinterval uint32 `json:"kaprobeinterval,omitempty"`
+	Kaprobeinterval int `json:"kaprobeinterval,omitempty"`
 	/**
 	* TCP Send Buffer Size
 	*/
-	Sendbuffsize uint32 `json:"sendbuffsize,omitempty"`
+	Sendbuffsize int `json:"sendbuffsize,omitempty"`
 	/**
 	* Enable or disable Multipath TCP.
 	*/
@@ -162,7 +162,7 @@ type Nstcpprofile struct {
 	/**
 	* MPTCP session timeout in seconds. If this value is not set, idle MPTCP sessions are flushed after vserver's client idle timeout.
 	*/
-	Mptcpsessiontimeout uint32 `json:"mptcpsessiontimeout,omitempty"`
+	Mptcpsessiontimeout int `json:"mptcpsessiontimeout,omitempty"`
 	/**
 	* Enable or Disable TCP Timestamp option (RFC 1323)
 	*/
@@ -182,7 +182,7 @@ type Nstcpprofile struct {
 	/**
 	* TCP Maximum Congestion Window.
 	*/
-	Maxcwnd uint32 `json:"maxcwnd,omitempty"`
+	Maxcwnd int `json:"maxcwnd,omitempty"`
 	/**
 	* Enable or disable FACK (Forward ACK).
 	*/
@@ -202,7 +202,7 @@ type Nstcpprofile struct {
 	/**
 	* TCP dupack threshold.
 	*/
-	Dupackthresh uint32 `json:"dupackthresh,omitempty"`
+	Dupackthresh int `json:"dupackthresh,omitempty"`
 	/**
 	* TCP Burst Rate Control DISABLED/FIXED/DYNAMIC. FIXED requires a TCP rate to be set.
 	*/
@@ -210,11 +210,11 @@ type Nstcpprofile struct {
 	/**
 	* TCP connection payload send rate in Kb/s
 	*/
-	Tcprate uint32 `json:"tcprate,omitempty"`
+	Tcprate int `json:"tcprate,omitempty"`
 	/**
 	* Maximum connection queue size in bytes, when BurstRateControl is used
 	*/
-	Rateqmax uint32 `json:"rateqmax,omitempty"`
+	Rateqmax int `json:"rateqmax,omitempty"`
 	/**
 	* Silently drop tcp half closed connections on idle timeout
 	*/
@@ -230,7 +230,7 @@ type Nstcpprofile struct {
 	/**
 	* TCP FastOpen Cookie size. This accepts only even numbers. Odd number is trimmed down to nearest even number.
 	*/
-	Tcpfastopencookiesize uint32 `json:"tcpfastopencookiesize,omitempty"`
+	Tcpfastopencookiesize int `json:"tcpfastopencookiesize,omitempty"`
 	/**
 	* TCP tail loss probe optimizations
 	*/
@@ -242,7 +242,7 @@ type Nstcpprofile struct {
 	/**
 	* ClientIP TCP Option number
 	*/
-	Clientiptcpoptionnumber uint32 `json:"clientiptcpoptionnumber,omitempty"`
+	Clientiptcpoptionnumber int `json:"clientiptcpoptionnumber,omitempty"`
 	/**
 	* Set C bit in MP-CAPABLE Syn-Ack sent by Citrix ADC
 	*/

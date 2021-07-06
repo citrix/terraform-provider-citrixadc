@@ -27,11 +27,11 @@ type Vridtrackinterfacebinding struct {
 	/**
 	* Flags.
 	*/
-	Flags uint32 `json:"flags,omitempty"`
+	Flags int `json:"flags,omitempty"`
 	/**
 	* Integer that uniquely identifies the VMAC address. The generic VMAC address is in the form of 00:00:5e:00:01:<VRID>. For example, if you add a VRID with a value of 60 and bind it to an interface, the resulting VMAC address is 00:00:5e:00:01:3c, where 3c is the hexadecimal representation of 60.
 	*/
-	Id uint32 `json:"id,omitempty"`
+	Id int `json:"id,omitempty"`
 
 
 }

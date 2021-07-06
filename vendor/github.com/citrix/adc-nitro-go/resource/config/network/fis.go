@@ -27,7 +27,7 @@ type Fis struct {
 	/**
 	* ID of the cluster node for which you are creating the FIS. Can be configured only through the cluster IP address.
 	*/
-	Ownernode uint32 `json:"ownernode,omitempty"`
+	Ownernode int `json:"ownernode,omitempty"`
 
 	//------- Read only Parameter ---------;
 

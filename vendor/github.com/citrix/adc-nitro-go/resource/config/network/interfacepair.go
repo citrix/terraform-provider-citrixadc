@@ -23,7 +23,7 @@ type Interfacepair struct {
 	/**
 	* The Interface pair id
 	*/
-	Id uint32 `json:"id,omitempty"`
+	Id int `json:"id,omitempty"`
 	/**
 	* The constituent interfaces in the interface pair
 	*/

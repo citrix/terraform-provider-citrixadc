@@ -31,6 +31,6 @@ type Nslicenseproxyserver struct {
 	/**
 	* License proxy server port.
 	*/
-	Port uint32 `json:"port,omitempty"`
+	Port int `json:"port,omitempty"`
 
 }

@@ -39,7 +39,7 @@ type Vserver struct {
 	/**
 	* The timeout value in seconds for idle client connection
 	*/
-	Clttimeout uint64 `json:"clttimeout,omitempty"`
+	Clttimeout int `json:"clttimeout,omitempty"`
 	/**
 	* The spillover factor. The system will use this value to determine if it should send traffic to the backupvserver when the main virtual server reaches the spillover threshold.
 	*/
@@ -51,11 +51,11 @@ type Vserver struct {
 	/**
 	* The spillover persistence entry timeout.
 	*/
-	Sopersistencetimeout uint32 `json:"sopersistencetimeout,omitempty"`
+	Sopersistencetimeout int `json:"sopersistencetimeout,omitempty"`
 	/**
 	* The spillver threshold value.
 	*/
-	Sothreshold uint32 `json:"sothreshold,omitempty"`
+	Sothreshold int `json:"sothreshold,omitempty"`
 	/**
 	* The lb vserver of type PUSH/SSL_PUSH to which server pushes the updates received on the client facing non-push lb vserver.
 	*/

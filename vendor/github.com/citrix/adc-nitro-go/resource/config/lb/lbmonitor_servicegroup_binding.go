@@ -35,7 +35,7 @@ type Lbmonitorservicegroupbinding struct {
 	/**
 	* Weight to assign to the binding between the monitor and service.
 	*/
-	Dupweight uint32 `json:"dup_weight,omitempty"`
+	Dupweight int `json:"dup_weight,omitempty"`
 	/**
 	* Name of the service group.
 	*/
@@ -47,7 +47,7 @@ type Lbmonitorservicegroupbinding struct {
 	/**
 	* Weight to assign to the binding between the monitor and service.
 	*/
-	Weight uint32 `json:"weight,omitempty"`
+	Weight int `json:"weight,omitempty"`
 
 
 }

@@ -43,7 +43,7 @@ type Nsvpxparam struct {
 	/**
 	* ID of the cluster node for which you are setting the cpuyield. It can be configured only through the cluster IP address.
 	*/
-	Ownernode uint32 `json:"ownernode,omitempty"`
+	Ownernode int `json:"ownernode,omitempty"`
 
 	//------- Read only Parameter ---------;
 

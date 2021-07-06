@@ -36,7 +36,7 @@ type Sslprofile struct {
 	* Number of interactions, between the client and the Citrix ADC, after which the DH private-public pair is regenerated. A value of zero (0) specifies refresh every time.
 		This parameter is not applicable when configuring a backend profile. Allowed DH count values are 0 and >= 500.
 	*/
-	Dhcount uint32 `json:"dhcount,omitempty"`
+	Dhcount int `json:"dhcount,omitempty"`
 	/**
 	* State of Diffie-Hellman (DH) key exchange.
 		This parameter is not applicable when configuring a backend profile.
@@ -54,7 +54,7 @@ type Sslprofile struct {
 	/**
 	* The  refresh  count  for the re-generation of RSA public-key and private-key pair.
 	*/
-	Ersacount uint32 `json:"ersacount,omitempty"`
+	Ersacount int `json:"ersacount,omitempty"`
 	/**
 	* State of session reuse. Establishing the initial handshake requires CPU-intensive public key encryption operations. With the ENABLED setting, session key exchange is avoided for session resumption requests received from the client.
 	*/
@@ -62,7 +62,7 @@ type Sslprofile struct {
 	/**
 	* The Session timeout value in seconds.
 	*/
-	Sesstimeout uint32 `json:"sesstimeout,omitempty"`
+	Sesstimeout int `json:"sesstimeout,omitempty"`
 	/**
 	* State of Cipher Redirect. If this parameter is set to ENABLED, you can configure an SSL virtual server or service to display meaningful error messages if the SSL handshake fails because of a cipher mismatch between the virtual server or service and the client.
 		This parameter is not applicable when configuring a backend profile.
@@ -150,7 +150,7 @@ type Sslprofile struct {
 	/**
 	* Port on which clear-text data is sent by the appliance to the server. Do not specify this parameter for SSL offloading with end-to-end encryption.
 	*/
-	Cleartextport int32 `json:"cleartextport,omitempty"`
+	Cleartextport int `json:"cleartextport,omitempty"`
 	/**
 	* Encoding method used to insert the subject or issuer's name in HTTP requests to servers.
 	*/
@@ -175,7 +175,7 @@ type Sslprofile struct {
 	/**
 	* Maximum number of queued packets after which encryption is triggered. Use this setting for SSL transactions that send small packets from server to Citrix ADC.
 	*/
-	Encrypttriggerpktcount uint32 `json:"encrypttriggerpktcount,omitempty"`
+	Encrypttriggerpktcount int `json:"encrypttriggerpktcount,omitempty"`
 	/**
 	* Insert PUSH flag into decrypted, encrypted, or all records. If the PUSH flag is set to a value other than 0, the buffered records are forwarded on the basis of the value of the PUSH flag. Available settings function as follows:
 		0 - Auto (PUSH flag is not set.)
@@ -183,7 +183,7 @@ type Sslprofile struct {
 		2 -Insert PUSH flag into every encrypted record.
 		3 - Insert PUSH flag into every decrypted and encrypted record.
 	*/
-	Pushflag uint32 `json:"pushflag,omitempty"`
+	Pushflag int `json:"pushflag,omitempty"`
 	/**
 	* Host header check for SNI enabled sessions. If this check is enabled and the HTTP request does not contain the host header for SNI enabled sessions(i.e vserver or profile bound to vserver has SNI enabled and 'Client Hello' arrived with SNI extension), the request is dropped.
 	*/
@@ -207,11 +207,11 @@ type Sslprofile struct {
 	/**
 	* PUSH encryption trigger timeout value. The timeout value is applied only if you set the Push Encryption Trigger parameter to Timer in the SSL virtual server settings.
 	*/
-	Pushenctriggertimeout uint32 `json:"pushenctriggertimeout,omitempty"`
+	Pushenctriggertimeout int `json:"pushenctriggertimeout,omitempty"`
 	/**
 	* Time, in milliseconds, after which encryption is triggered for transactions that are not tracked on the Citrix ADC because their length is not known. There can be a delay of up to 10ms from the specified timeout value before the packet is pushed into the queue.
 	*/
-	Ssltriggertimeout uint32 `json:"ssltriggertimeout,omitempty"`
+	Ssltriggertimeout int `json:"ssltriggertimeout,omitempty"`
 	/**
 	* Certficates bound on the VIP are used for validating the client cert. Certficates came along with client cert are not used for validating the client cert
 	*/
@@ -231,7 +231,7 @@ type Sslprofile struct {
 	/**
 	* Maximum ssl session to be cached per dynamic origin server. A unique ssl session is created for each SNI received from the client on ClientHello and the matching session is used for server session reuse.
 	*/
-	Sslimaxsessperserver uint32 `json:"sslimaxsessperserver,omitempty"`
+	Sslimaxsessperserver int `json:"sslimaxsessperserver,omitempty"`
 	/**
 	* This option enables the use of session tickets, as per the RFC 5077
 	*/
@@ -239,7 +239,7 @@ type Sslprofile struct {
 	/**
 	* This option sets the life time of session tickets issued by NS in secs
 	*/
-	Sessionticketlifetime uint32 `json:"sessionticketlifetime,omitempty"`
+	Sessionticketlifetime int `json:"sessionticketlifetime,omitempty"`
 	/**
 	* This option enables the use of session tickets, as per the RFC 5077
 	*/
@@ -251,11 +251,11 @@ type Sslprofile struct {
 	/**
 	* This option sets the life time of symm key used to generate session tickets issued by NS in secs
 	*/
-	Sessionkeylifetime uint32 `json:"sessionkeylifetime,omitempty"`
+	Sessionkeylifetime int `json:"sessionkeylifetime,omitempty"`
 	/**
 	* This option sets the life time of symm key used to generate session tickets issued by NS in secs
 	*/
-	Prevsessionkeylifetime uint32 `json:"prevsessionkeylifetime,omitempty"`
+	Prevsessionkeylifetime int `json:"prevsessionkeylifetime,omitempty"`
 	/**
 	* State of HSTS protocol support for the SSL profile. Using HSTS, a server can enforce the use of an HTTPS connection for all communication with a client
 	*/
@@ -263,7 +263,7 @@ type Sslprofile struct {
 	/**
 	* Set the maximum time, in seconds, in the strict transport security (STS) header during which the client must send only HTTPS requests to the server
 	*/
-	Maxage uint32 `json:"maxage,omitempty"`
+	Maxage int `json:"maxage,omitempty"`
 	/**
 	* Enable HSTS for subdomains. If set to Yes, a client must send only HTTPS requests for subdomains.
 	*/
@@ -286,7 +286,7 @@ type Sslprofile struct {
 		This value can be increased to enable clients to open multiple parallel connections using a fresh ticket for each connection.
 		No tickets are sent if resumption is disabled.
 	*/
-	Tls13sessionticketsperauthcontext uint32 `json:"tls13sessionticketsperauthcontext,omitempty"`
+	Tls13sessionticketsperauthcontext int `json:"tls13sessionticketsperauthcontext,omitempty"`
 	/**
 	* Whether or not the SSL Virtual Server will require a DHE key exchange to occur when a PSK is accepted during a TLS 1.3 resumption handshake.
 		A DHE key exchange ensures forward secrecy even in the event that ticket keys are compromised, at the expense of an additional round trip and resources required to carry out the DHE key exchange.
@@ -313,7 +313,7 @@ type Sslprofile struct {
 	/**
 	* cipher priority
 	*/
-	Cipherpriority uint32 `json:"cipherpriority,omitempty"`
+	Cipherpriority int `json:"cipherpriority,omitempty"`
 	/**
 	* Parameter indicating to check whether peer entity certificate during TLS1.2 handshake is signed with one of signature-hash combination supported by Citrix ADC.
 	*/

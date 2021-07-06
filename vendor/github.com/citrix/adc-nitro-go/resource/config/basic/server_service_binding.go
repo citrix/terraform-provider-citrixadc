@@ -35,7 +35,7 @@ type Serverservicebinding struct {
 	/**
 	* The port number to be used for the bound service.
 	*/
-	Port int32 `json:"port,omitempty"`
+	Port int `json:"port,omitempty"`
 	/**
 	* The state of the bound service
 	*/

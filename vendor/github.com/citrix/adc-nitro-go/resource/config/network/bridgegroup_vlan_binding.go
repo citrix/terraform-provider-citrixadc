@@ -23,7 +23,7 @@ type Bridgegroupvlanbinding struct {
 	/**
 	* Names of all member VLANs.
 	*/
-	Vlan uint32 `json:"vlan,omitempty"`
+	Vlan int `json:"vlan,omitempty"`
 	/**
 	* Temporary flag used for internal purpose.
 	*/
@@ -31,7 +31,7 @@ type Bridgegroupvlanbinding struct {
 	/**
 	* The integer that uniquely identifies the bridge group.
 	*/
-	Id uint32 `json:"id,omitempty"`
+	Id int `json:"id,omitempty"`
 
 
 }

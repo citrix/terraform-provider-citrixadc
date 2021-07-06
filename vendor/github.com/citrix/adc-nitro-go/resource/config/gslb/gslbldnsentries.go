@@ -23,7 +23,7 @@ type Gslbldnsentries struct {
 	/**
 	* Unique number that identifies the cluster node.
 	*/
-	Nodeid uint32 `json:"nodeid,omitempty"`
+	Nodeid int `json:"nodeid,omitempty"`
 
 	//------- Read only Parameter ---------;
 

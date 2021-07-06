@@ -23,15 +23,15 @@ type Lbsipparameters struct {
 	/**
 	* Port number with which to match the source port in server-initiated SIP traffic. The rport parameter is added, without a value, to SIP packets that have a matching source port number, and CALL-ID based persistence is implemented for the responses received by the virtual server.
 	*/
-	Rnatsrcport int32 `json:"rnatsrcport,omitempty"`
+	Rnatsrcport int `json:"rnatsrcport,omitempty"`
 	/**
 	* Port number with which to match the destination port in server-initiated SIP traffic. The rport parameter is added, without a value, to SIP packets that have a matching destination port number, and CALL-ID based persistence is implemented for the responses received by the virtual server.
 	*/
-	Rnatdstport int32 `json:"rnatdstport,omitempty"`
+	Rnatdstport int `json:"rnatdstport,omitempty"`
 	/**
 	* Time, in seconds, for which a client must wait before initiating a connection after receiving a 503 Service Unavailable response from the SIP server. The time value is sent in the "Retry-After" header in the 503 response.
 	*/
-	Retrydur int32 `json:"retrydur,omitempty"`
+	Retrydur int `json:"retrydur,omitempty"`
 	/**
 	* Add the rport parameter to the VIA headers of SIP requests that virtual servers receive from clients or servers.
 	*/
@@ -39,15 +39,15 @@ type Lbsipparameters struct {
 	/**
 	* Maximum number of 503 Service Unavailable responses to generate, once every 10 milliseconds, when a SIP virtual server becomes unavailable.
 	*/
-	Sip503ratethreshold uint32 `json:"sip503ratethreshold,omitempty"`
+	Sip503ratethreshold int `json:"sip503ratethreshold,omitempty"`
 	/**
 	* Port number with which to match the source port in server-initiated SIP over SSL traffic. The rport parameter is added, without a value, to SIP packets that have a matching source port number, and CALL-ID based persistence is implemented for the responses received by the virtual server.
 	*/
-	Rnatsecuresrcport int32 `json:"rnatsecuresrcport,omitempty"`
+	Rnatsecuresrcport int `json:"rnatsecuresrcport,omitempty"`
 	/**
 	* Port number with which to match the destination port in server-initiated SIP over SSL traffic. The rport parameter is added, without a value, to SIP packets that have a matching destination port number, and CALL-ID based persistence is implemented for the responses received by the virtual server.
 	*/
-	Rnatsecuredstport int32 `json:"rnatsecuredstport,omitempty"`
+	Rnatsecuredstport int `json:"rnatsecuredstport,omitempty"`
 
 	//------- Read only Parameter ---------;
 

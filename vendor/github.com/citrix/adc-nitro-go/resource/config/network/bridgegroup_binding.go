@@ -23,7 +23,7 @@ type Bridgegroupbinding struct {
 	/**
 	* The name of the bridge group.<br/>Minimum value =  1<br/>Maximum value =  1000
 	*/
-	Id uint32 `json:"id,omitempty"`
+	Id int `json:"id,omitempty"`
 
 
 }

@@ -23,7 +23,7 @@ type Clusterinstancebinding struct {
 	/**
 	* Unique number that identifies the cluster.<br/>Minimum value =  1<br/>Maximum value =  16
 	*/
-	Clid uint32 `json:"clid,omitempty"`
+	Clid int `json:"clid,omitempty"`
 
 
 }

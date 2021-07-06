@@ -24,7 +24,7 @@ type Extendedmemoryparam struct {
 	* Amount of Citrix ADC memory to reserve for the memory used by LSN and Subscriber Session Store feature, in multiples of 2MB.
 		Note: If you later reduce the value of this parameter, the amount of active memory is not reduced. Changing the configured memory limit can only increase the amount of active memory.
 	*/
-	Memlimit uint64 `json:"memlimit,omitempty"`
+	Memlimit int `json:"memlimit,omitempty"`
 
 	//------- Read only Parameter ---------;
 

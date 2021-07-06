@@ -23,7 +23,7 @@ type Bridgegroup struct {
 	/**
 	* An integer that uniquely identifies the bridge group.
 	*/
-	Id uint32 `json:"id,omitempty"`
+	Id int `json:"id,omitempty"`
 	/**
 	* Enable dynamic routing for this bridgegroup.
 	*/

@@ -31,11 +31,11 @@ type Clusternoderoutemonitorbinding struct {
 	/**
 	* Current routemonstate
 	*/
-	Routemonstate uint32 `json:"routemonstate,omitempty"`
+	Routemonstate int `json:"routemonstate,omitempty"`
 	/**
 	* A number that uniquely identifies the cluster node. 
 	*/
-	Nodeid uint32 `json:"nodeid,omitempty"`
+	Nodeid int `json:"nodeid,omitempty"`
 
 
 }

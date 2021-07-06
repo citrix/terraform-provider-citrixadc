@@ -32,7 +32,7 @@ type Nsicapprofile struct {
 	/**
 	* Value of Preview Header field. Citrix ADC uses the minimum of this set value and the preview size received on OPTIONS response.
 	*/
-	Previewlength uint32 `json:"previewlength,omitempty"`
+	Previewlength int `json:"previewlength,omitempty"`
 	/**
 	* URI representing icap service. It is a mandatory argument while creating an icapprofile.
 	*/
@@ -74,7 +74,7 @@ type Nsicapprofile struct {
 	/**
 	* Time, in seconds, within which the remote server should respond to the ICAP-request. If the Netscaler does not receive full response with this time, the specified request timeout action is performed. Zero value disables this timeout functionality.
 	*/
-	Reqtimeout uint32 `json:"reqtimeout,omitempty"`
+	Reqtimeout int `json:"reqtimeout,omitempty"`
 	/**
 	* Name of the action to perform if the Vserver/Server representing the remote service does not respond with any response within the timeout value configured. The Supported actions are
 		* BYPASS - This Ignores the remote server response and sends the request/response to Client/Server.

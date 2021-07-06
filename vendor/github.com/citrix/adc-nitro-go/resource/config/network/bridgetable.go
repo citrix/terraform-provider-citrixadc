@@ -27,7 +27,7 @@ type Bridgetable struct {
 	/**
 	* The VXLAN to which this address is associated.
 	*/
-	Vxlan uint32 `json:"vxlan,omitempty"`
+	Vxlan int `json:"vxlan,omitempty"`
 	/**
 	* The IP address of the destination VXLAN tunnel endpoint where the Ethernet MAC ADDRESS resides.
 	*/
@@ -35,23 +35,23 @@ type Bridgetable struct {
 	/**
 	* The VXLAN VNI Network Identifier (or VXLAN Segment ID) to use to connect to the remote VXLAN tunnel endpoint.  If omitted the value specified as vxlan will be used.
 	*/
-	Vni uint32 `json:"vni,omitempty"`
+	Vni int `json:"vni,omitempty"`
 	/**
 	* The vlan on which to send multicast packets when the VXLAN tunnel endpoint is a muticast group address.
 	*/
-	Devicevlan uint32 `json:"devicevlan,omitempty"`
+	Devicevlan int `json:"devicevlan,omitempty"`
 	/**
 	* Time-out value for the bridge table entries, in seconds. The new value applies only to the entries that are dynamically learned after the new value is set. Previously existing bridge table entries expire after the previously configured time-out value.
 	*/
-	Bridgeage uint32 `json:"bridgeage,omitempty"`
+	Bridgeage int `json:"bridgeage,omitempty"`
 	/**
 	* Unique number that identifies the cluster node.
 	*/
-	Nodeid uint32 `json:"nodeid,omitempty"`
+	Nodeid int `json:"nodeid,omitempty"`
 	/**
 	* VLAN  whose entries are to be removed.
 	*/
-	Vlan uint32 `json:"vlan,omitempty"`
+	Vlan int `json:"vlan,omitempty"`
 	/**
 	* INTERFACE  whose entries are to be removed.
 	*/

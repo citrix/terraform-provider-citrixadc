@@ -23,7 +23,7 @@ type Nd6ravariables struct {
 	/**
 	* The VLAN number.
 	*/
-	Vlan uint32 `json:"vlan,omitempty"`
+	Vlan int `json:"vlan,omitempty"`
 	/**
 	* Cease router advertisements on this vlan.
 	*/
@@ -51,31 +51,31 @@ type Nd6ravariables struct {
 	/**
 	* Current Hop limit.
 	*/
-	Currhoplimit uint32 `json:"currhoplimit,omitempty"`
+	Currhoplimit int `json:"currhoplimit,omitempty"`
 	/**
 	* Maximum time allowed between unsolicited multicast RAs, in seconds.
 	*/
-	Maxrtadvinterval uint32 `json:"maxrtadvinterval,omitempty"`
+	Maxrtadvinterval int `json:"maxrtadvinterval,omitempty"`
 	/**
 	* Minimum time interval between RA messages, in seconds.
 	*/
-	Minrtadvinterval uint32 `json:"minrtadvinterval,omitempty"`
+	Minrtadvinterval int `json:"minrtadvinterval,omitempty"`
 	/**
 	* The Link MTU.
 	*/
-	Linkmtu uint32 `json:"linkmtu,omitempty"`
+	Linkmtu int `json:"linkmtu,omitempty"`
 	/**
 	* Reachable time, in milliseconds.
 	*/
-	Reachabletime uint32 `json:"reachabletime,omitempty"`
+	Reachabletime int `json:"reachabletime,omitempty"`
 	/**
 	* Retransmission time, in milliseconds.
 	*/
-	Retranstime uint32 `json:"retranstime,omitempty"`
+	Retranstime int `json:"retranstime,omitempty"`
 	/**
 	* Default life time, in seconds.
 	*/
-	Defaultlifetime int32 `json:"defaultlifetime,omitempty"`
+	Defaultlifetime int `json:"defaultlifetime,omitempty"`
 
 	//------- Read only Parameter ---------;
 

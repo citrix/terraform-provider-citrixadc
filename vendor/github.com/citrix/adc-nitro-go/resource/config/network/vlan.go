@@ -23,7 +23,7 @@ type Vlan struct {
 	/**
 	* A positive integer that uniquely identifies a VLAN.
 	*/
-	Id uint32 `json:"id,omitempty"`
+	Id int `json:"id,omitempty"`
 	/**
 	* A name for the VLAN. Must begin with a letter, a number, or the underscore symbol, and can consist of from 1 to 31 letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at sign (@), equals (=), colon (:), and underscore (_) characters. You should choose a name that helps identify the VLAN. However, you cannot perform any VLAN operation by specifying this name instead of the VLAN ID.
 	*/
@@ -39,7 +39,7 @@ type Vlan struct {
 	/**
 	* Specifies the maximum transmission unit (MTU), in bytes. The MTU is the largest packet size, excluding 14 bytes of ethernet header and 4 bytes of crc, that can be transmitted and received over this VLAN.
 	*/
-	Mtu uint32 `json:"mtu,omitempty"`
+	Mtu int `json:"mtu,omitempty"`
 	/**
 	* If sharing is enabled, then this vlan can be shared across multiple partitions by binding it to all those partitions. If sharing is disabled, then this vlan can be bound to only one of the partitions.
 	*/

@@ -38,7 +38,7 @@ type Systemparameter struct {
 	/**
 	* Flush the system if the number of Network Address Translation Protocol Control Blocks (NATPCBs) exceeds this value.
 	*/
-	Natpcbforceflushlimit uint32 `json:"natpcbforceflushlimit,omitempty"`
+	Natpcbforceflushlimit int `json:"natpcbforceflushlimit,omitempty"`
 	/**
 	* Send a reset signal to client and server connections when their NATPCBs time out. Avoids the buildup of idle TCP connections on both the sides.
 	*/
@@ -47,7 +47,7 @@ type Systemparameter struct {
 	* CLI session inactivity timeout, in seconds. If Restrictedtimeout argument is enabled, Timeout can have values in the range [300-86400] seconds.
 		If Restrictedtimeout argument is disabled, Timeout can have values in the range [0, 10-100000000] seconds. Default value is 900 seconds.
 	*/
-	Timeout uint64 `json:"timeout,omitempty"`
+	Timeout int `json:"timeout,omitempty"`
 	/**
 	* When enabled, local users can access Citrix ADC even when external authentication is configured. When disabled, local users are not allowed to access the Citrix ADC, Local users can access the Citrix ADC only when the configured external authentication servers are unavailable. This parameter is not applicable to SSH Key-based authentication
 	*/
@@ -55,7 +55,7 @@ type Systemparameter struct {
 	/**
 	* Minimum length of system user password. When strong password is enabled default minimum length is 4. User entered value can be greater than or equal to 4. Default mininum value is 1 when strong password is disabled. Maximum value is 127 in both cases.
 	*/
-	Minpasswordlen uint32 `json:"minpasswordlen,omitempty"`
+	Minpasswordlen int `json:"minpasswordlen,omitempty"`
 	/**
 	* After enabling strong password (enableall / enablelocal - not included in exclude list), all the passwords / sensitive information must have - Atleast 1 Lower case character, Atleast 1 Upper case character, Atleast 1 numeric character, Atleast 1 special character ( ~, `, !, @, #, $, %, ^, &, *, -, _, =, +, {, }, [, ], |, \, :, <, >, /, ., ,, " "). Exclude list in case of enablelocal is - NS_FIPS, NS_CRL, NS_RSAKEY, NS_PKCS12, NS_PKCS8, NS_LDAP, NS_TACACS, NS_TACACSACTION, NS_RADIUS, NS_RADIUSACTION, NS_ENCRYPTION_PARAMS. So no Strong Password checks will be performed on these ObjectType commands for enablelocal case.
 	*/
@@ -79,7 +79,7 @@ type Systemparameter struct {
 	/**
 	* Total time a request can take for authentication/authorization
 	*/
-	Totalauthtimeout uint32 `json:"totalauthtimeout,omitempty"`
+	Totalauthtimeout int `json:"totalauthtimeout,omitempty"`
 	/**
 	* Audit log level, which specifies the types of events to log for cli executed commands.
 		Available values function as follows:

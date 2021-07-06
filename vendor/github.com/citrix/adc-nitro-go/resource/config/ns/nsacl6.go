@@ -35,7 +35,7 @@ type Nsacl6 struct {
 	/**
 	* Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.
 	*/
-	Td uint32 `json:"td,omitempty"`
+	Td int `json:"td,omitempty"`
 	/**
 	* IP address or range of IP addresses to match against the source IP address of an incoming IPv6 packet. In the command line interface, separate the range with a hyphen.
 	*/
@@ -89,7 +89,7 @@ type Nsacl6 struct {
 	/**
 	* Time to expire this ACL6 (in seconds).
 	*/
-	Ttl uint32 `json:"ttl,omitempty"`
+	Ttl int `json:"ttl,omitempty"`
 	/**
 	* MAC address to match against the source MAC address of an incoming IPv6 packet.
 	*/
@@ -105,15 +105,15 @@ type Nsacl6 struct {
 	/**
 	* Protocol, identified by protocol number, to match against the protocol of an incoming IPv6 packet.
 	*/
-	Protocolnumber uint32 `json:"protocolnumber,omitempty"`
+	Protocolnumber int `json:"protocolnumber,omitempty"`
 	/**
 	* ID of the VLAN. The Citrix ADC applies the ACL6 rule only to the incoming packets on the specified VLAN. If you do not specify a VLAN ID, the appliance applies the ACL6 rule to the incoming packets on all VLANs.
 	*/
-	Vlan uint32 `json:"vlan,omitempty"`
+	Vlan int `json:"vlan,omitempty"`
 	/**
 	* ID of the VXLAN. The Citrix ADC applies the ACL6 rule only to the incoming packets on the specified VXLAN. If you do not specify a VXLAN ID, the appliance applies the ACL6 rule to the incoming packets on all VXLANs.
 	*/
-	Vxlan uint32 `json:"vxlan,omitempty"`
+	Vxlan int `json:"vxlan,omitempty"`
 	/**
 	* ID of an interface. The Citrix ADC applies the ACL6 rule only to the incoming packets from the specified interface. If you do not specify any value, the appliance applies the ACL6 rule to the incoming packets from all interfaces.
 	*/
@@ -126,16 +126,16 @@ type Nsacl6 struct {
 	* ICMP Message type to match against the message type of an incoming IPv6 ICMP packet. For example, to block DESTINATION UNREACHABLE messages, you must specify 3 as the ICMP type.
 		Note: This parameter can be specified only for the ICMP protocol.
 	*/
-	Icmptype uint32 `json:"icmptype,omitempty"`
+	Icmptype int `json:"icmptype,omitempty"`
 	/**
 	* Code of a particular ICMP message type to match against the ICMP code of an incoming IPv6 ICMP packet.  For example, to block DESTINATION HOST UNREACHABLE messages, specify 3 as the ICMP type and 1 as the ICMP code.
 		If you set this parameter, you must set the ICMP Type parameter.
 	*/
-	Icmpcode uint32 `json:"icmpcode,omitempty"`
+	Icmpcode int `json:"icmpcode,omitempty"`
 	/**
 	* Priority for the ACL6 rule, which determines the order in which it is evaluated relative to the other ACL6 rules. If you do not specify priorities while creating ACL6 rules, the ACL6 rules are evaluated in the order in which they are created.
 	*/
-	Priority uint32 `json:"priority,omitempty"`
+	Priority int `json:"priority,omitempty"`
 	/**
 	* State of the ACL6.
 	*/
@@ -154,7 +154,7 @@ type Nsacl6 struct {
 	/**
 	* hashprefix to be applied to SIP/DIP to generate rsshash FP.eg 128 => hash calculated on the complete IP
 	*/
-	Dfdprefix uint32 `json:"dfdprefix,omitempty"`
+	Dfdprefix int `json:"dfdprefix,omitempty"`
 	/**
 	* If stateful option is enabled, transparent sessions are created for the traffic hitting this ACL6 and not hitting any other features like LB, INAT etc. 
 	*/
@@ -166,7 +166,7 @@ type Nsacl6 struct {
 	/**
 	* Maximum number of log messages to be generated per second. If you set this parameter, you must enable the Log State parameter.
 	*/
-	Ratelimit uint32 `json:"ratelimit,omitempty"`
+	Ratelimit int `json:"ratelimit,omitempty"`
 	/**
 	* Action associated with the ACL6.
 	*/

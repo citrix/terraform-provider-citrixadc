@@ -39,11 +39,11 @@ type Appfwprofilefieldformatbinding struct {
 	/**
 	* The minimum allowed length for data in this form field.
 	*/
-	Fieldformatminlength uint32 `json:"fieldformatminlength,omitempty"`
+	Fieldformatminlength int `json:"fieldformatminlength,omitempty"`
 	/**
 	* The maximum allowed length for data in this form field.
 	*/
-	Fieldformatmaxlength uint32 `json:"fieldformatmaxlength,omitempty"`
+	Fieldformatmaxlength int `json:"fieldformatmaxlength,omitempty"`
 	/**
 	* Enabled.
 	*/

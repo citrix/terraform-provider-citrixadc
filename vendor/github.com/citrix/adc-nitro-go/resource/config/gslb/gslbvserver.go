@@ -45,7 +45,7 @@ type Gslbvserver struct {
 	/**
 	* A non zero value enables the feature whose minimum value is 2 minutes. The feature can be disabled by setting the value to zero. The created session is in effect for a specific client per domain.
 	*/
-	Backupsessiontimeout uint32 `json:"backupsessiontimeout,omitempty"`
+	Backupsessiontimeout int `json:"backupsessiontimeout,omitempty"`
 	/**
 	* Backup load balancing method. Becomes operational if the primary load balancing method fails or cannot be used. Valid only if the primary method is based on either round-trip time (RTT) or static proximity.
 	*/
@@ -57,7 +57,7 @@ type Gslbvserver struct {
 	/**
 	* Number of bits to consider, in an IPv6 source IP address, for creating the hash that is required by the SOURCEIPHASH load balancing method.
 	*/
-	V6netmasklen uint32 `json:"v6netmasklen,omitempty"`
+	V6netmasklen int `json:"v6netmasklen,omitempty"`
 	/**
 	* Expression, or name of a named expression, against which traffic is evaluated.
 		This field is applicable only if gslb method or gslb backup method are set to API.
@@ -70,7 +70,7 @@ type Gslbvserver struct {
 	/**
 	* Site selection tolerance, in milliseconds, for implementing the RTT load balancing method. If a site's RTT deviates from the lowest RTT by more than the specified tolerance, the site is not considered when the Citrix ADC makes a GSLB decision. The appliance implements the round robin method of global server load balancing between sites whose RTT values are within the specified tolerance. If the tolerance is 0 (zero), the appliance always sends clients the IP address of the site with the lowest RTT.
 	*/
-	Tolerance uint32 `json:"tolerance,omitempty"`
+	Tolerance int `json:"tolerance,omitempty"`
 	/**
 	* Use source IP address based persistence for the virtual server. 
 		After the load balancing method selects a service for the first packet, the IP address received in response to the DNS query is used for subsequent requests from the same client.
@@ -79,7 +79,7 @@ type Gslbvserver struct {
 	/**
 	* The persistence ID for the GSLB virtual server. The ID is a positive integer that enables GSLB sites to identify the GSLB virtual server, and is required if source IP address based or spill over based persistence is enabled on the virtual server.
 	*/
-	Persistenceid uint32 `json:"persistenceid,omitempty"`
+	Persistenceid int `json:"persistenceid,omitempty"`
 	/**
 	* The optional IPv4 network mask applied to IPv4 addresses to establish source IP address based persistence.
 	*/
@@ -87,11 +87,11 @@ type Gslbvserver struct {
 	/**
 	* Number of bits to consider in an IPv6 source IP address when creating source IP address based persistence sessions.
 	*/
-	V6persistmasklen uint32 `json:"v6persistmasklen,omitempty"`
+	V6persistmasklen int `json:"v6persistmasklen,omitempty"`
 	/**
 	* Idle time, in minutes, after which a persistence entry is cleared.
 	*/
-	Timeout uint32 `json:"timeout,omitempty"`
+	Timeout int `json:"timeout,omitempty"`
 	/**
 	* Send clients an empty DNS response when the GSLB virtual server is DOWN.
 	*/
@@ -145,11 +145,11 @@ type Gslbvserver struct {
 	/**
 	* Timeout for spillover persistence, in minutes.
 	*/
-	Sopersistencetimeout uint32 `json:"sopersistencetimeout,omitempty"`
+	Sopersistencetimeout int `json:"sopersistencetimeout,omitempty"`
 	/**
 	* Threshold at which spillover occurs. Specify an integer for the CONNECTION spillover method, a bandwidth value in kilobits per second for the BANDWIDTH method (do not enter the units), or a percentage for the HEALTH method (do not enter the percentage symbol).
 	*/
-	Sothreshold uint32 `json:"sothreshold,omitempty"`
+	Sothreshold int `json:"sothreshold,omitempty"`
 	/**
 	* Action to be performed if spillover is to take effect, but no backup chain to spillover is usable or exists
 	*/
@@ -169,7 +169,7 @@ type Gslbvserver struct {
 	/**
 	* Weight to assign to the GSLB service.
 	*/
-	Weight uint32 `json:"weight,omitempty"`
+	Weight int `json:"weight,omitempty"`
 	/**
 	* Domain name for which to change the time to live (TTL) and/or backup service IP address.
 	*/
@@ -177,7 +177,7 @@ type Gslbvserver struct {
 	/**
 	* Time to live (TTL) for the domain.
 	*/
-	Ttl uint64 `json:"ttl,omitempty"`
+	Ttl int `json:"ttl,omitempty"`
 	/**
 	* The IP address of the backup service for the specified domain name. Used when all the services bound to the domain are down, or when the backup chain of virtual servers is down.
 	*/
@@ -189,11 +189,11 @@ type Gslbvserver struct {
 	/**
 	* Timeout, in minutes, for the GSLB site cookie.
 	*/
-	Cookietimeout uint32 `json:"cookietimeout,omitempty"`
+	Cookietimeout int `json:"cookietimeout,omitempty"`
 	/**
 	* TTL, in seconds, for all internally created site domains (created when a site prefix is configured on a GSLB service) that are associated with this virtual server.
 	*/
-	Sitedomainttl uint64 `json:"sitedomainttl,omitempty"`
+	Sitedomainttl int `json:"sitedomainttl,omitempty"`
 	/**
 	* New name for the GSLB virtual server.
 	*/

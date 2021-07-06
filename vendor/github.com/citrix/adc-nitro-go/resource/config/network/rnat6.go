@@ -35,11 +35,11 @@ type Rnat6 struct {
 	/**
 	* Port number to which the IPv6 packets are redirected. Applicable to TCP and UDP protocols.
 	*/
-	Redirectport int32 `json:"redirectport,omitempty"`
+	Redirectport int `json:"redirectport,omitempty"`
 	/**
 	* Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.
 	*/
-	Td uint32 `json:"td,omitempty"`
+	Td int `json:"td,omitempty"`
 	/**
 	* Enable source ip persistency, which enables the Citrix ADC to use the RNAT ips using source ip.
 	*/

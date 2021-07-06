@@ -27,7 +27,7 @@ type Nstimer struct {
 	/**
 	* The frequency at which the policies bound to this timer are invoked. The minimum value is 20 msec. The maximum value is 20940 in seconds and 349 in minutes
 	*/
-	Interval int32 `json:"interval,omitempty"`
+	Interval int `json:"interval,omitempty"`
 	/**
 	* Timer interval unit
 	*/

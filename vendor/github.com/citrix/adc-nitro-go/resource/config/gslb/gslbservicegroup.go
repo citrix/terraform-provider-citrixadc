@@ -31,7 +31,7 @@ type Gslbservicegroup struct {
 	/**
 	* Maximum number of simultaneous open connections for the GSLB service group.
 	*/
-	Maxclient uint32 `json:"maxclient,omitempty"`
+	Maxclient int `json:"maxclient,omitempty"`
 	/**
 	* Insert the Client IP header in requests forwarded to the GSLB service.
 	*/
@@ -49,19 +49,19 @@ type Gslbservicegroup struct {
 	/**
 	* Time, in seconds, after which to terminate an idle client connection.
 	*/
-	Clttimeout uint64 `json:"clttimeout,omitempty"`
+	Clttimeout int `json:"clttimeout,omitempty"`
 	/**
 	* Time, in seconds, after which to terminate an idle server connection.
 	*/
-	Svrtimeout uint64 `json:"svrtimeout,omitempty"`
+	Svrtimeout int `json:"svrtimeout,omitempty"`
 	/**
 	* Maximum bandwidth, in Kbps, allocated for all the services in the GSLB service group.
 	*/
-	Maxbandwidth uint32 `json:"maxbandwidth,omitempty"`
+	Maxbandwidth int `json:"maxbandwidth,omitempty"`
 	/**
 	* Minimum sum of weights of the monitors that are bound to this GSLB service. Used to determine whether to mark a GSLB service as UP or DOWN.
 	*/
-	Monthreshold uint32 `json:"monthreshold,omitempty"`
+	Monthreshold int `json:"monthreshold,omitempty"`
 	/**
 	* Initial state of the GSLB service group.
 	*/
@@ -97,15 +97,15 @@ type Gslbservicegroup struct {
 	/**
 	* Server port number.
 	*/
-	Port int32 `json:"port,omitempty"`
+	Port int `json:"port,omitempty"`
 	/**
 	* Weight to assign to the servers in the service group. Specifies the capacity of the servers relative to the other servers in the load balancing configuration. The higher the weight, the higher the percentage of requests sent to the service.
 	*/
-	Weight uint32 `json:"weight,omitempty"`
+	Weight int `json:"weight,omitempty"`
 	/**
 	* The hash identifier for the service. This must be unique for each service. This parameter is used by hash based load balancing methods.
 	*/
-	Hashid uint32 `json:"hashid,omitempty"`
+	Hashid int `json:"hashid,omitempty"`
 	/**
 	* The public IP address that a NAT device translates to the GSLB service's private IP address. Optional.
 	*/
@@ -113,7 +113,7 @@ type Gslbservicegroup struct {
 	/**
 	* The public port associated with the GSLB service's public IP address. The port is mapped to the service's private port number. Applicable to the local GSLB service. Optional.
 	*/
-	Publicport int32 `json:"publicport,omitempty"`
+	Publicport int `json:"publicport,omitempty"`
 	/**
 	* The site's prefix string. When the GSLB service group is bound to a GSLB virtual server, a GSLB site domain is generated internally for each bound serviceitem-domain pair by concatenating the site prefix of the service item and the name of the domain. If the special string NONE is specified, the site-prefix string is unset. When implementing HTTP redirect site persistence, the Citrix ADC redirects GSLB requests to GSLB services by using their site domains.
 	*/
@@ -125,11 +125,11 @@ type Gslbservicegroup struct {
 	/**
 	* weight of the monitor that is bound to GSLB servicegroup.
 	*/
-	Dupweight uint32 `json:"dup_weight,omitempty"`
+	Dupweight int `json:"dup_weight,omitempty"`
 	/**
 	* The time allowed (in seconds) for a graceful shutdown. During this period, new connections or requests will continue to be sent to this service for clients who already have a persistent session on the system. Connections or requests from fresh or new clients who do not yet have a persistence sessions on the system will not be sent to the service. Instead, they will be load balanced among other available services. After the delay time expires, no new requests or connections will be sent to the service.
 	*/
-	Delay uint64 `json:"delay,omitempty"`
+	Delay int `json:"delay,omitempty"`
 	/**
 	* Wait for all existing connections to the service to terminate before shutting down the service.
 	*/

@@ -35,7 +35,7 @@ type Nsip6 struct {
 	/**
 	* The VLAN number.
 	*/
-	Vlan uint32 `json:"vlan,omitempty"`
+	Vlan int `json:"vlan,omitempty"`
 	/**
 	* Respond to Neighbor Discovery (ND) requests for this IP address.
 	*/
@@ -99,7 +99,7 @@ type Nsip6 struct {
 	/**
 	* Tag value for the network/host route associated with this IP.
 	*/
-	Tag uint32 `json:"tag,omitempty"`
+	Tag int `json:"tag,omitempty"`
 	/**
 	* IPv6 address of the gateway for the route. If Gateway is not set, VIP uses :: as the gateway.
 	*/
@@ -107,7 +107,7 @@ type Nsip6 struct {
 	/**
 	* Integer value to add to or subtract from the cost of the route advertised for the VIP6 address.
 	*/
-	Metric int32 `json:"metric,omitempty"`
+	Metric int `json:"metric,omitempty"`
 	/**
 	* Advertise or do not advertise the route for the Virtual IP (VIP6) address on the basis of the state of the virtual servers associated with that VIP6.
 		* NONE - Advertise the route for the VIP6 address, irrespective of the state of the virtual servers associated with the address.
@@ -127,7 +127,7 @@ type Nsip6 struct {
 	/**
 	* ID of the area in which the Intra-Area-Prefix LSAs are to be advertised for the VIP6 address by the IPv6 OSPF protocol running on the Citrix ADC. When ospfArea is not set, VIP6 is advertised on all areas.
 	*/
-	Ospfarea uint32 `json:"ospfarea,omitempty"`
+	Ospfarea int `json:"ospfarea,omitempty"`
 	/**
 	* Enable or disable the IP address.
 	*/
@@ -139,11 +139,11 @@ type Nsip6 struct {
 	/**
 	* A positive integer that uniquely identifies a VMAC address for binding to this VIP address. This binding is used to set up Citrix ADCs in an active-active configuration using VRRP.
 	*/
-	Vrid6 uint32 `json:"vrid6,omitempty"`
+	Vrid6 int `json:"vrid6,omitempty"`
 	/**
 	* ID of the cluster node for which you are adding the IP address. Must be used if you want the IP address to be active only on the specific node. Can be configured only through the cluster IP address. Cannot be changed after the IP address is created.
 	*/
-	Ownernode uint32 `json:"ownernode,omitempty"`
+	Ownernode int `json:"ownernode,omitempty"`
 	/**
 	* in cluster system, if the owner node is down, whether should it respond to icmp/arp
 	*/
@@ -151,11 +151,11 @@ type Nsip6 struct {
 	/**
 	* Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.
 	*/
-	Td uint32 `json:"td,omitempty"`
+	Td int `json:"td,omitempty"`
 	/**
 	* NdOwner in Cluster for VIPS and Striped SNIPS
 	*/
-	Ndowner uint32 `json:"ndowner,omitempty"`
+	Ndowner int `json:"ndowner,omitempty"`
 	/**
 	* If enabled, this IP will be advertised by Citrix ADC to MPTCP enabled clients as part of ADD_ADDR option.
 	*/
