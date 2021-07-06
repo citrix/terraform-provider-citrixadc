@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/chiradeep/go-nitro/netscaler"
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
@@ -38,8 +38,8 @@ const testAccSslparameter_basic_update = `
 `
 
 func TestAccSslparameter_basic(t *testing.T) {
-	if isCpxRun {
-		t.Skip("sslparameter failing in CPX12.0. Skipping for now!")
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
 	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -87,7 +87,7 @@ func testAccCheckSslparameterExist(n string, id *string) resource.TestCheckFunc 
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(netscaler.Sslparameter.Type(), "")
+		data, err := nsClient.FindResource(service.Sslparameter.Type(), "")
 
 		if err != nil {
 			return err

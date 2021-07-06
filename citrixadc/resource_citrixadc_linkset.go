@@ -2,14 +2,13 @@ package citrixadc
 
 import (
 	"fmt"
+	"log"
 	"net/url"
 
-	"github.com/chiradeep/go-nitro/config/network"
+	"github.com/citrix/adc-nitro-go/resource/config/network"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
-
-	"log"
 )
 
 func resourceCitrixAdcLinkset() *schema.Resource {
@@ -45,7 +44,7 @@ func createLinksetFunc(d *schema.ResourceData, meta interface{}) error {
 		Id: linksetName,
 	}
 
-	_, err := client.AddResource(netscaler.Linkset.Type(), "", &linkset)
+	_, err := client.AddResource(service.Linkset.Type(), "", &linkset)
 	if err != nil {
 		return err
 	}
@@ -71,8 +70,9 @@ func readLinksetFunc(d *schema.ResourceData, meta interface{}) error {
 	linksetName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading linkset state %s", linksetName)
 	// double encode value part as it contains `/`
-	linksetNameEscaped := url.QueryEscape(url.QueryEscape(linksetName))
-	data, err := client.FindResource(netscaler.Linkset.Type(), linksetNameEscaped)
+	//linksetNameEscaped := url.QueryEscape(url.QueryEscape(linksetName))
+	linksetNameEscaped := url.PathEscape(url.QueryEscape(linksetName))
+	data, err := client.FindResource(service.Linkset.Type(), linksetNameEscaped)
 
 	err = readLinksetInterfaceBindings(d, meta)
 	if err != nil {
@@ -91,7 +91,7 @@ func deleteLinksetFunc(d *schema.ResourceData, meta interface{}) error {
 	linksetName := d.Id()
 	// double encode value part as it contains `/`
 	linksetNameEscaped := url.QueryEscape(url.QueryEscape(linksetName))
-	err := client.DeleteResource(netscaler.Linkset.Type(), linksetNameEscaped)
+	err := client.DeleteResource(service.Linkset.Type(), linksetNameEscaped)
 	if err != nil {
 		return err
 	}
@@ -116,7 +116,7 @@ func deleteSingleLinksetInterfaceBinding(d *schema.ResourceData, meta interface{
 	log.Printf("args is %v", args)
 	linksetNameEscaped := url.QueryEscape(url.QueryEscape(linksetName))
 
-	if err := client.DeleteResourceWithArgs(netscaler.Linkset_interface_binding.Type(), linksetNameEscaped, args); err != nil {
+	if err := client.DeleteResourceWithArgs(service.Linkset_interface_binding.Type(), linksetNameEscaped, args); err != nil {
 		log.Printf("[DEBUG]  citrixadc-provider: Error deleting interface binding %v\n", ifnum)
 		return err
 	}
@@ -133,7 +133,7 @@ func addSingleLinksetInterfaceBinding(d *schema.ResourceData, meta interface{}, 
 	bindingStruct.Ifnum = ifnum
 
 	// We need to do a HTTP PUT hence the UpdateResource
-	if err := client.UpdateUnnamedResource(netscaler.Linkset_interface_binding.Type(), bindingStruct); err != nil {
+	if err := client.UpdateUnnamedResource(service.Linkset_interface_binding.Type(), bindingStruct); err != nil {
 		return err
 	}
 	return nil
@@ -167,7 +167,7 @@ func readLinksetInterfaceBindings(d *schema.ResourceData, meta interface{}) erro
 	// double encode value part as it contains `/`
 	linksetNameEscaped := url.QueryEscape(url.QueryEscape(linksetName))
 
-	bindings, _ := client.FindResourceArray(netscaler.Linkset_interface_binding.Type(), linksetNameEscaped)
+	bindings, _ := client.FindResourceArray(service.Linkset_interface_binding.Type(), linksetNameEscaped)
 	log.Printf("bindings %v\n", bindings)
 
 	processedBindings := make([]interface{}, len(bindings))

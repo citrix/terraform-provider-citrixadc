@@ -1,7 +1,7 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/netscaler"
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 
@@ -182,7 +182,7 @@ func createLbparameterFunc(d *schema.ResourceData, meta interface{}) error {
 		Lbhashfingers:                 d.Get("lbhashfingers").(int),
 	}
 
-	err := client.UpdateUnnamedResource(netscaler.Lbparameter.Type(), &lbparameter)
+	err := client.UpdateUnnamedResource(service.Lbparameter.Type(), &lbparameter)
 	if err != nil {
 		return err
 	}
@@ -202,7 +202,7 @@ func readLbparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	lbparameterName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading lbparameter state %s", lbparameterName)
-	data, err := client.FindResource(netscaler.Lbparameter.Type(), "")
+	data, err := client.FindResource(service.Lbparameter.Type(), "")
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing lbparameter state %s", lbparameterName)
 		d.SetId("")
@@ -350,7 +350,7 @@ func updateLbparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if hasChange {
-		err := client.UpdateUnnamedResource(netscaler.Lbparameter.Type(), &lbparameter)
+		err := client.UpdateUnnamedResource(service.Lbparameter.Type(), &lbparameter)
 		if err != nil {
 			return fmt.Errorf("Error updating lbparameter %s. %s", lbparameterName, err.Error())
 		}

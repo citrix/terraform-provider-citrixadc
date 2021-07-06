@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/transform"
+	"github.com/citrix/adc-nitro-go/resource/config/transform"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"fmt"
@@ -94,7 +94,7 @@ func createTransformactionFunc(d *schema.ResourceData, meta interface{}) error {
 		State:       d.Get("state").(string),
 	}
 
-	_, err := client.AddResource(netscaler.Transformaction.Type(), transformactionName, &transformactionNew)
+	_, err := client.AddResource(service.Transformaction.Type(), transformactionName, &transformactionNew)
 	if err != nil {
 		return err
 	}
@@ -113,7 +113,7 @@ func createTransformactionFunc(d *schema.ResourceData, meta interface{}) error {
 		State:            d.Get("state").(string),
 	}
 
-	_, err = client.UpdateResource(netscaler.Transformaction.Type(), transformactionName, &transformaction)
+	_, err = client.UpdateResource(service.Transformaction.Type(), transformactionName, &transformaction)
 	if err != nil {
 		return err
 	}
@@ -133,7 +133,7 @@ func readTransformactionFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	transformactionName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading transformaction state %s", transformactionName)
-	data, err := client.FindResource(netscaler.Transformaction.Type(), transformactionName)
+	data, err := client.FindResource(service.Transformaction.Type(), transformactionName)
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing transformaction state %s", transformactionName)
 		d.SetId("")
@@ -222,7 +222,7 @@ func updateTransformactionFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if hasChange {
-		_, err := client.UpdateResource(netscaler.Transformaction.Type(), transformactionName, &transformaction)
+		_, err := client.UpdateResource(service.Transformaction.Type(), transformactionName, &transformaction)
 		if err != nil {
 			return fmt.Errorf("Error updating transformaction %s", transformactionName)
 		}
@@ -234,7 +234,7 @@ func deleteTransformactionFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteTransformactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	transformactionName := d.Id()
-	err := client.DeleteResource(netscaler.Transformaction.Type(), transformactionName)
+	err := client.DeleteResource(service.Transformaction.Type(), transformactionName)
 	if err != nil {
 		return err
 	}

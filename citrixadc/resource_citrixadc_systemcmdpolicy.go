@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/system"
+	"github.com/citrix/adc-nitro-go/resource/config/system"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"fmt"
@@ -48,7 +48,7 @@ func createSystemcmdpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 		Policyname: d.Get("policyname").(string),
 	}
 
-	_, err := client.AddResource(netscaler.Systemcmdpolicy.Type(), systemcmdpolicyName, &systemcmdpolicy)
+	_, err := client.AddResource(service.Systemcmdpolicy.Type(), systemcmdpolicyName, &systemcmdpolicy)
 	if err != nil {
 		return err
 	}
@@ -68,7 +68,7 @@ func readSystemcmdpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	systemcmdpolicyName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading systemcmdpolicy state %s", systemcmdpolicyName)
-	data, err := client.FindResource(netscaler.Systemcmdpolicy.Type(), systemcmdpolicyName)
+	data, err := client.FindResource(service.Systemcmdpolicy.Type(), systemcmdpolicyName)
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing systemcmdpolicy state %s", systemcmdpolicyName)
 		d.SetId("")
@@ -106,7 +106,7 @@ func updateSystemcmdpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if hasChange {
-		_, err := client.UpdateResource(netscaler.Systemcmdpolicy.Type(), systemcmdpolicyName, &systemcmdpolicy)
+		_, err := client.UpdateResource(service.Systemcmdpolicy.Type(), systemcmdpolicyName, &systemcmdpolicy)
 		if err != nil {
 			return fmt.Errorf("Error updating systemcmdpolicy %s:%s", systemcmdpolicyName, err.Error())
 		}
@@ -118,7 +118,7 @@ func deleteSystemcmdpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSystemcmdpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	systemcmdpolicyName := d.Id()
-	err := client.DeleteResource(netscaler.Systemcmdpolicy.Type(), systemcmdpolicyName)
+	err := client.DeleteResource(service.Systemcmdpolicy.Type(), systemcmdpolicyName)
 	if err != nil {
 		return err
 	}

@@ -1,7 +1,8 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/netscaler"
+	"github.com/citrix/adc-nitro-go/service"
+
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 
@@ -384,7 +385,7 @@ func createNstcpparamFunc(d *schema.ResourceData, meta interface{}) error {
 		Wsval:                               d.Get("wsval").(string),
 	}
 
-	err := client.UpdateUnnamedResource(netscaler.Nstcpparam.Type(), &nstcpparam)
+	err := client.UpdateUnnamedResource(service.Nstcpparam.Type(), &nstcpparam)
 	if err != nil {
 		return err
 	}
@@ -404,7 +405,7 @@ func readNstcpparamFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	nstcpparamName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading nstcpparam state %s", nstcpparamName)
-	findParams := netscaler.FindParams{
+	findParams := service.FindParams{
 		ResourceType: "nstcpparam",
 	}
 	dataArr, err := client.FindResourceArrayWithParams(findParams)

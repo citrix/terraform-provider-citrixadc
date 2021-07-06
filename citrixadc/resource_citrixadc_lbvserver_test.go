@@ -17,18 +17,22 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/chiradeep/go-nitro/config/lb"
-	"github.com/chiradeep/go-nitro/netscaler"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
 	"log"
 	"os"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/citrix/adc-nitro-go/resource/config/lb"
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccLbvserver_basic(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -68,6 +72,7 @@ const testAccLbvserver_quicbridgeprofile = `
 		ipv46                 = "10.202.11.11"
 		lbmethod              = "TOKEN"
 		persistencetype       = "CUSTOMSERVERID"
+		rule = "QUIC.CONNECTIONID"
 		port                  = 8080
 		servicetype           = "QUIC_BRIDGE"
 		quicbridgeprofilename = citrixadc_quicbridgeprofile.demo_quicbridge.name
@@ -75,6 +80,9 @@ const testAccLbvserver_quicbridgeprofile = `
 `
 
 func TestAccLbvserver_quicbridgeprofile(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	if isCpxRun {
 		t.Skip("No support in CPX")
 	}
@@ -96,6 +104,9 @@ func TestAccLbvserver_quicbridgeprofile(t *testing.T) {
 }
 
 func TestAccLbvserver_snicerts(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { doPreChecks(t) },
 		Providers:    testAccProviders,
@@ -136,6 +147,9 @@ func TestAccLbvserver_snicerts(t *testing.T) {
 }
 
 func TestAccLbvserver_standalone_ciphersuites_mixed(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	if isCluster {
 		t.Skip("cluster ADC deployment")
 	}
@@ -173,6 +187,9 @@ func TestAccLbvserver_standalone_ciphersuites_mixed(t *testing.T) {
 }
 
 func TestAccLbvserver_cluster_ciphersuites(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -209,6 +226,9 @@ func TestAccLbvserver_cluster_ciphersuites(t *testing.T) {
 func TestAccLbvserver_cluster_ciphers(t *testing.T) {
 	if !isCluster {
 		t.Skip("standalone ADC deployment")
+	}
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
 	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -265,7 +285,7 @@ func testAccCheckLbvserverExist(n string, id *string) resource.TestCheckFunc {
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(netscaler.Lbvserver.Type(), rs.Primary.ID)
+		data, err := nsClient.FindResource(service.Lbvserver.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -291,7 +311,7 @@ func testAccCheckLbvserverDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(netscaler.Lbvserver.Type(), rs.Primary.ID)
+		_, err := nsClient.FindResource(service.Lbvserver.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("LB vserver %s still exists", rs.Primary.ID)
 		}
@@ -401,6 +421,9 @@ func testSslcertificateBindingsConfig(template string, sslcertkey string, snicer
 }
 
 func TestAccLbvserver_AssertNonUpdateableAttributes(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 
 	if tfAcc := os.Getenv("TF_ACC"); tfAcc == "" {
 		t.Skip("TF_ACC not set. Skipping acceptance test.")
@@ -413,7 +436,7 @@ func TestAccLbvserver_AssertNonUpdateableAttributes(t *testing.T) {
 
 	// Create resource
 	vserverName := "tf-acc-lb-vserver-name"
-	vserverType := netscaler.Lbvserver.Type()
+	vserverType := service.Lbvserver.Type()
 
 	// Defer deletion of actual resource
 	defer testHelperEnsureResourceDeletion(c, t, vserverType, vserverName, nil)
@@ -430,6 +453,9 @@ func TestAccLbvserver_AssertNonUpdateableAttributes(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// Remove servicetype since it is only valid on create
+	vserverInstance.Servicetype = ""
+
 	//port
 	vserverInstance.Port = 80
 	testHelperVerifyImmutabilityFunc(c, t, vserverType, vserverName, vserverInstance, "port")
@@ -438,7 +464,7 @@ func TestAccLbvserver_AssertNonUpdateableAttributes(t *testing.T) {
 	//servicetype
 	vserverInstance.Servicetype = "TCP"
 	testHelperVerifyImmutabilityFunc(c, t, vserverType, vserverName, vserverInstance, "servicetype")
-	vserverInstance.Servicetype = "HTTP"
+	vserverInstance.Servicetype = ""
 
 	//range
 	vserverInstance.Range = 10
@@ -480,6 +506,9 @@ resource "citrixadc_lbvserver" "tf_acc_lb_vserver" {
 `
 
 func TestAccLbvserver_enable_disable(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,

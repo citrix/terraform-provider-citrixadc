@@ -3,9 +3,9 @@ package citrixadc
 import (
 	"net/url"
 
-	"github.com/chiradeep/go-nitro/config/appfw"
+	"github.com/citrix/adc-nitro-go/resource/config/appfw"
 
-	"github.com/chiradeep/go-nitro/netscaler"
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"fmt"
@@ -73,7 +73,7 @@ func createAppfwprofileDenyurlBindingFunc(d *schema.ResourceData, meta interface
 		State:          d.Get("state").(string),
 	}
 
-	err := client.UpdateUnnamedResource(netscaler.Appfwprofile_denyurl_binding.Type(), &appfwprofileDenyurlBinding)
+	err := client.UpdateUnnamedResource(service.Appfwprofile_denyurl_binding.Type(), &appfwprofileDenyurlBinding)
 	if err != nil {
 		return err
 	}
@@ -104,8 +104,8 @@ func readAppfwprofileDenyurlBindingFunc(d *schema.ResourceData, meta interface{}
 
 	log.Printf("[DEBUG] citrixadc-provider: Reading appfwprofileDenyurlBinding state %s", bindingID)
 
-	findParams := netscaler.FindParams{
-		ResourceType: netscaler.Appfwprofile_denyurl_binding.Type(),
+	findParams := service.FindParams{
+		ResourceType: service.Appfwprofile_denyurl_binding.Type(),
 		ResourceName: profileName,
 	}
 	findParams.FilterMap = make(map[string]string)
@@ -157,7 +157,7 @@ func deleteAppfwprofileDenyurlBindingFunc(d *schema.ResourceData, meta interface
 	args := make([]string, 0)
 	args = append(args, fmt.Sprintf("denyurl:%v", url.QueryEscape(denyURL)))
 
-	err := client.DeleteResourceWithArgs(netscaler.Appfwprofile_denyurl_binding.Type(), profileName, args)
+	err := client.DeleteResourceWithArgs(service.Appfwprofile_denyurl_binding.Type(), profileName, args)
 	if err != nil {
 		return err
 	}

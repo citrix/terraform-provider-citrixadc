@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/ssl"
+	"github.com/citrix/adc-nitro-go/resource/config/ssl"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"fmt"
@@ -80,18 +80,18 @@ func createSslvserver_sslpolicy_bindingFunc(d *schema.ResourceData, meta interfa
 	// Use `,` as the separator since it is invalid character for adc entity strings
 	bindingId := fmt.Sprintf("%s,%s", vservername, policyname)
 
-	sslvserver_sslpolicy_binding := ssl.Sslvserversslpolicybinding{
+	sslvserver_sslpolicy_binding := ssl.Sslvserverpolicybinding{
 		Gotopriorityexpression: d.Get("gotopriorityexpression").(string),
 		Invoke:                 d.Get("invoke").(bool),
 		Labelname:              d.Get("labelname").(string),
 		Labeltype:              d.Get("labeltype").(string),
 		Policyname:             d.Get("policyname").(string),
-		Priority:               d.Get("priority").(int),
+		Priority:               uint32(d.Get("priority").(int)),
 		Type:                   d.Get("type").(string),
 		Vservername:            d.Get("vservername").(string),
 	}
 
-	err := client.UpdateUnnamedResource(netscaler.Sslvserver_sslpolicy_binding.Type(), &sslvserver_sslpolicy_binding)
+	err := client.UpdateUnnamedResource(service.Sslvserver_sslpolicy_binding.Type(), &sslvserver_sslpolicy_binding)
 	if err != nil {
 		return err
 	}
@@ -125,7 +125,7 @@ func readSslvserver_sslpolicy_bindingFunc(d *schema.ResourceData, meta interface
 	policyname := idSlice[1]
 
 	log.Printf("[DEBUG] citrixadc-provider: Reading sslvserver_sslpolicy_binding state %s", bindingId)
-	findParams := netscaler.FindParams{
+	findParams := service.FindParams{
 		ResourceType:             "sslvserver_sslpolicy_binding",
 		ResourceName:             vservername,
 		ResourceMissingErrorCode: 461,
@@ -200,7 +200,7 @@ func deleteSslvserver_sslpolicy_bindingFunc(d *schema.ResourceData, meta interfa
 		args = append(args, fmt.Sprintf("type:%v", v))
 	}
 
-	err := client.DeleteResourceWithArgs(netscaler.Sslvserver_sslpolicy_binding.Type(), vservername, args)
+	err := client.DeleteResourceWithArgs(service.Sslvserver_sslpolicy_binding.Type(), vservername, args)
 	if err != nil {
 		return err
 	}

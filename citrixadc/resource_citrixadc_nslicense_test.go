@@ -17,12 +17,16 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"testing"
 )
 
 func TestAccNslicense_basic(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	if isCpxRun {
 		t.Skip("ssh does not work correctly with CPX")
 	}
@@ -67,6 +71,6 @@ const testAccNslicense_basic = `
 resource "citrixadc_nslicense" "tf_license" {
 
     license_file = "CNS_V10000_SERVER_PLT_Retail.lic"
-    ssh_host_pubkey = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDaA2H70ONYk1JDPHmqKNoOYzLZeR8jNu252P63OsI+N1k4hHQUPeysV20vzeDqgtDOoOkb90By9ryRTjGDOzxers04B23+BM+gaTFp0ONNr8uCLNt5mtZXK6dp2JjYpysl3qmpDDZ4qYhoDikliL05+bO/3dEpK6kOo25DjwjHsJDK8HovAiLdHg7v6Y6PTbJseT/+pae+0P0/gBFY901cEeB/DJqzyH7Qd1lUuUroy9buROTVhkF5VdaaPQJK8YX2oH8ocoqQOHxrSfh3U0+OuboQSyle5MnFjO88yRJrRwpT1ooJGse3xWf/0Zd5/gbuZTzswqPen2x0JN3iIvpekKItcTEegy9JlVFPEtcLeO738uYJxJuSen2HECmtl9LFjtFkLRkC5/t7qZK3SCvkKaEF/ol2K53aOPd5P9K6mYtc9xJvgtX1gntuDMuxNZBoZCeX/+5dxL0SAro9bBY0ArwpnhAo7xYgdY7F7RsXvNBJuZZiZQvFJNqnFtteKbk="
+    ssh_host_pubkey = "AAAAB3NzaC1kc3MAAACBAJ2yRBTkiCIR94oYfCmabSKPi7EjyYS7FxLPV0j8zAsWtarS16UTiPyW+tTpd5I9HNJPqIkGKTLWw9DakXd+lyRnXAusOGXIfiV+wdyLn8hg/T/dZMA7r6QssIfIUza0Bqcjn7eCGStwOHzSgUH5qS9YmIlZuZ/hKOU3Zs0N7wF5AAAAFQC6iGTFqcADv83/ItKiHh+6pEWe2wAAAIB3pcTDxth1IASlwNgzm1HQYaOm5ttcGve468w3c97BpzEXCbiwObd6T8Ynt2GFMH2NHOFFqid4nRXvT2Ba5JlLYgyrDTU53J6eDxkXtBSuxTcMss0P6EEtcqOJzi1e+OZWFPKtxaIsKBtScBw+S/dNFkY4H+Eo5vl5/ChahdOchAAAAIBd4sHyDMVWzI6vG9Z/HYNM6los0fXqCL8ait+LpFN5+hOScdDKNgzIfM5md35ToV6cM28nPQL3bum3sLLO4R4o5Rqp3QFW82+mipswjzycNIgKy3gcSSuFA7ALivIsZUxqpyQYU7GyBKnkJsf5om0tcr7PawHL08CqJf0/mLXZcw=="
 }
 `

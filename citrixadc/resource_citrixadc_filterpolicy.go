@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/filter"
+	"github.com/citrix/adc-nitro-go/resource/config/filter"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"fmt"
@@ -55,7 +55,7 @@ func createFilterpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 		Rule:      d.Get("rule").(string),
 	}
 
-	_, err := client.AddResource(netscaler.Filterpolicy.Type(), filterpolicyName, &filterpolicy)
+	_, err := client.AddResource(service.Filterpolicy.Type(), filterpolicyName, &filterpolicy)
 	if err != nil {
 		return err
 	}
@@ -75,7 +75,7 @@ func readFilterpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	filterpolicyName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading filterpolicy state %s", filterpolicyName)
-	data, err := client.FindResource(netscaler.Filterpolicy.Type(), filterpolicyName)
+	data, err := client.FindResource(service.Filterpolicy.Type(), filterpolicyName)
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing filterpolicy state %s", filterpolicyName)
 		d.SetId("")
@@ -122,7 +122,7 @@ func updateFilterpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if hasChange {
-		_, err := client.UpdateResource(netscaler.Filterpolicy.Type(), filterpolicyName, &filterpolicy)
+		_, err := client.UpdateResource(service.Filterpolicy.Type(), filterpolicyName, &filterpolicy)
 		if err != nil {
 			return fmt.Errorf("Error updating filterpolicy %s", filterpolicyName)
 		}
@@ -134,7 +134,7 @@ func deleteFilterpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteFilterpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	filterpolicyName := d.Id()
-	err := client.DeleteResource(netscaler.Filterpolicy.Type(), filterpolicyName)
+	err := client.DeleteResource(service.Filterpolicy.Type(), filterpolicyName)
 	if err != nil {
 		return err
 	}

@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/chiradeep/go-nitro/netscaler"
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
@@ -53,9 +53,8 @@ const testAccSslpolicy_update = `
 `
 
 func TestAccSslpolicy_basic(t *testing.T) {
-	// TODO: Configure circleci to run against CPX13
-	if isCpxRun {
-		t.Skip("sslaction clientcertverification attribute not supported in CPX12")
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
 	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -104,7 +103,7 @@ func testAccCheckSslpolicyExist(n string, id *string) resource.TestCheckFunc {
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(netscaler.Sslpolicy.Type(), rs.Primary.ID)
+		data, err := nsClient.FindResource(service.Sslpolicy.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -130,7 +129,7 @@ func testAccCheckSslpolicyDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(netscaler.Sslpolicy.Type(), rs.Primary.ID)
+		_, err := nsClient.FindResource(service.Sslpolicy.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("SSL Policy %s still exists", rs.Primary.ID)
 		}

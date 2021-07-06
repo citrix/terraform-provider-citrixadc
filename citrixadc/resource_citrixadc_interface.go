@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/network"
+	"github.com/citrix/adc-nitro-go/resource/config/network"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"fmt"
@@ -182,7 +182,7 @@ func createInterfaceFunc(d *schema.ResourceData, meta interface{}) error {
 		Trunkmode:       d.Get("trunkmode").(string),
 	}
 
-	_, err := client.UpdateResource(netscaler.Interface.Type(), "", &Interface)
+	_, err := client.UpdateResource(service.Interface.Type(), "", &Interface)
 	if err != nil {
 		return fmt.Errorf("Error creating Interface %s. %s", interfaceId, err.Error())
 	}
@@ -203,7 +203,7 @@ func readInterfaceFunc(d *schema.ResourceData, meta interface{}) error {
 	interfaceId := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading Interface state %s", interfaceId)
 
-	array, _ := client.FindAllResources(netscaler.Interface.Type())
+	array, _ := client.FindAllResources(service.Interface.Type())
 
 	// Iterate over the retrieved addresses to find the particular interface id
 	foundInterface := false
@@ -390,7 +390,7 @@ func updateInterfaceFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if hasChange {
-		_, err := client.UpdateResource(netscaler.Interface.Type(), "", &Interface)
+		_, err := client.UpdateResource(service.Interface.Type(), "", &Interface)
 		if err != nil {
 			return fmt.Errorf("Error updating Interface %s. %s", interfaceId, err.Error())
 		}

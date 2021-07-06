@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"testing"
 )
 
 const testAccNsvpxparam_basic_step1 = `
@@ -65,6 +66,9 @@ resource "citrixadc_nsvpxparam" "tf_vpxparam1" {
 `
 
 func TestAccNsvpxparam_basic(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	if isCluster {
 		t.Skip("Use case is applicable for standalone VPX")
 	}
@@ -90,6 +94,9 @@ func TestAccNsvpxparam_basic(t *testing.T) {
 }
 
 func TestAccNsvpxparam_cluster(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
 	if !isCluster {
 		t.Skip("Use case is not applicable to non clustered VPX")
 	}

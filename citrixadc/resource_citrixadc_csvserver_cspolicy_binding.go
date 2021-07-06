@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/cs"
+	"github.com/citrix/adc-nitro-go/resource/config/cs"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"fmt"
@@ -85,7 +85,7 @@ func createCsvserver_cspolicy_bindingFunc(d *schema.ResourceData, meta interface
 	policyname := d.Get("policyname").(string)
 	bindingId := fmt.Sprintf("%s,%s", name, policyname)
 
-	csvserver_cspolicy_binding := cs.Csvservercspolicybinding{
+	csvserver_cspolicy_binding := cs.Csvserverpolicybinding{
 		Bindpoint:              d.Get("bindpoint").(string),
 		Gotopriorityexpression: d.Get("gotopriorityexpression").(string),
 		Invoke:                 d.Get("invoke").(bool),
@@ -93,11 +93,11 @@ func createCsvserver_cspolicy_bindingFunc(d *schema.ResourceData, meta interface
 		Labeltype:              d.Get("labeltype").(string),
 		Name:                   d.Get("name").(string),
 		Policyname:             d.Get("policyname").(string),
-		Priority:               d.Get("priority").(int),
+		Priority:               uint32(d.Get("priority").(int)),
 		Targetlbvserver:        d.Get("targetlbvserver").(string),
 	}
 
-	err := client.UpdateUnnamedResource(netscaler.Csvserver_cspolicy_binding.Type(), &csvserver_cspolicy_binding)
+	err := client.UpdateUnnamedResource(service.Csvserver_cspolicy_binding.Type(), &csvserver_cspolicy_binding)
 	if err != nil {
 		return err
 	}
@@ -131,7 +131,7 @@ func readCsvserver_cspolicy_bindingFunc(d *schema.ResourceData, meta interface{}
 	policyname := idSlice[1]
 
 	log.Printf("[DEBUG] citrixadc-provider: Reading csvserver_cspolicy_binding state %s", bindingId)
-	findParams := netscaler.FindParams{
+	findParams := service.FindParams{
 		ResourceType:             "csvserver_cspolicy_binding",
 		ResourceName:             name,
 		ResourceMissingErrorCode: 258,

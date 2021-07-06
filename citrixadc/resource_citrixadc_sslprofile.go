@@ -1,14 +1,14 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/ssl"
-
 	"bytes"
 	"fmt"
 	"log"
 	"strconv"
 
-	"github.com/chiradeep/go-nitro/netscaler"
+	"github.com/citrix/adc-nitro-go/resource/config/ssl"
+	"github.com/citrix/adc-nitro-go/service"
+
 	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -512,7 +512,7 @@ func createSslprofileFunc(d *schema.ResourceData, meta interface{}) error {
 		Alpnprotocol:                      d.Get("alpnprotocol").(string),
 	}
 
-	_, err := client.AddResource(netscaler.Sslprofile.Type(), sslprofileName, &sslprofile)
+	_, err := client.AddResource(service.Sslprofile.Type(), sslprofileName, &sslprofile)
 	if err != nil {
 		return err
 	}
@@ -540,7 +540,7 @@ func readSslprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	sslprofileName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading sslprofile state %s", sslprofileName)
-	data, err := client.FindResource(netscaler.Sslprofile.Type(), sslprofileName)
+	data, err := client.FindResource(service.Sslprofile.Type(), sslprofileName)
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing sslprofile state %s", sslprofileName)
 		d.SetId("")
@@ -945,7 +945,7 @@ func updateSslprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if hasChange {
-		_, err := client.UpdateResource(netscaler.Sslprofile.Type(), sslprofileName, &sslprofile)
+		_, err := client.UpdateResource(service.Sslprofile.Type(), sslprofileName, &sslprofile)
 		if err != nil {
 			return fmt.Errorf("Error updating sslprofile %s", sslprofileName)
 		}
@@ -971,7 +971,7 @@ func deleteSslprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSslprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	sslprofileName := d.Id()
-	err := client.DeleteResource(netscaler.Sslprofile.Type(), sslprofileName)
+	err := client.DeleteResource(service.Sslprofile.Type(), sslprofileName)
 	if err != nil {
 		return err
 	}
@@ -993,7 +993,7 @@ func deleteSingleSslprofileEcccurveBinding(d *schema.ResourceData, meta interfac
 
 	log.Printf("args is %v", args)
 
-	if err := client.DeleteResourceWithArgs(netscaler.Sslprofile_ecccurve_binding.Type(), sslprofileName, args); err != nil {
+	if err := client.DeleteResourceWithArgs(service.Sslprofile_ecccurve_binding.Type(), sslprofileName, args); err != nil {
 		log.Printf("[DEBUG]  citrixadc-provider: Error deleting EccCurve binding %v\n", sslprofileName)
 		return err
 	}
@@ -1010,7 +1010,7 @@ func addSingleSslprofileEcccurveBinding(d *schema.ResourceData, meta interface{}
 	bindingStruct.Ecccurvename = ecccurvename
 
 	// We need to do a HTTP PUT hence the UpdateResource
-	if _, err := client.UpdateResource(netscaler.Sslprofile_ecccurve_binding.Type(), bindingStruct.Name, bindingStruct); err != nil {
+	if _, err := client.UpdateResource(service.Sslprofile_ecccurve_binding.Type(), bindingStruct.Name, bindingStruct); err != nil {
 		return err
 	}
 	return nil
@@ -1020,7 +1020,7 @@ func getDefaultSslprofileEcccurveBindings(d *schema.ResourceData, meta interface
 	log.Printf("[DEBUG]  citrixadc-provider: In getDefaultSslprofileEcccurveBindings")
 	client := meta.(*NetScalerNitroClient).client
 	sslprofileName := d.Get("name").(string)
-	bindings, _ := client.FindResourceArray(netscaler.Sslprofile_ecccurve_binding.Type(), sslprofileName)
+	bindings, _ := client.FindResourceArray(service.Sslprofile_ecccurve_binding.Type(), sslprofileName)
 	log.Printf("bindings %v\n", bindings)
 
 	defaultSslprofileEcccurveBindings := make([]string, len(bindings))
@@ -1087,7 +1087,7 @@ func readSslprofileEcccurvebindings(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[DEBUG]  citrixadc-provider: In readSslprofileEcccurvebindings")
 	client := meta.(*NetScalerNitroClient).client
 	sslprofileName := d.Get("name").(string)
-	bindings, _ := client.FindResourceArray(netscaler.Sslprofile_ecccurve_binding.Type(), sslprofileName)
+	bindings, _ := client.FindResourceArray(service.Sslprofile_ecccurve_binding.Type(), sslprofileName)
 	log.Printf("bindings %v\n", bindings)
 
 	processedBindings := make([]interface{}, len(bindings))
@@ -1120,7 +1120,7 @@ func deleteSingleSslprofileCipherBinding(d *schema.ResourceData, meta interface{
 
 	log.Printf("args is %v", args)
 
-	if err := client.DeleteResourceWithArgs(netscaler.Sslprofile_sslcipher_binding.Type(), sslprofileName, args); err != nil {
+	if err := client.DeleteResourceWithArgs(service.Sslprofile_sslcipher_binding.Type(), sslprofileName, args); err != nil {
 		log.Printf("[DEBUG]  citrixadc-provider: Error deleting Cipher binding %v\n", binding)
 		return err
 	}
@@ -1133,7 +1133,7 @@ func addSingleSslprofileCipherBinding(d *schema.ResourceData, meta interface{}, 
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("Adding binding %v", binding)
 
-	bindingStruct := ssl.Sslprofilesslcipherbinding{}
+	bindingStruct := ssl.Sslprofilecipherbinding{}
 	bindingStruct.Name = d.Get("name").(string)
 
 	if d, ok := binding["ciphername"]; ok {
@@ -1141,11 +1141,11 @@ func addSingleSslprofileCipherBinding(d *schema.ResourceData, meta interface{}, 
 	}
 
 	if d, ok := binding["cipherpriority"]; ok {
-		bindingStruct.Cipherpriority = d.(int)
+		bindingStruct.Cipherpriority = uint32(d.(int))
 	}
 
 	// We need to do a HTTP PUT hence the UpdateResource
-	if _, err := client.UpdateResource(netscaler.Sslprofile_sslcipher_binding.Type(), bindingStruct.Name, bindingStruct); err != nil {
+	if _, err := client.UpdateResource(service.Sslprofile_sslcipher_binding.Type(), bindingStruct.Name, bindingStruct); err != nil {
 		return err
 	}
 	return nil
@@ -1155,7 +1155,7 @@ func getDefaultSslprofileCipherBindings(d *schema.ResourceData, meta interface{}
 	log.Printf("[DEBUG]  citrixadc-provider: In getDefaultSslprofileCipherBindings")
 	client := meta.(*NetScalerNitroClient).client
 	sslprofileName := d.Get("name").(string)
-	bindings, _ := client.FindResourceArray(netscaler.Sslprofile_sslcipher_binding.Type(), sslprofileName)
+	bindings, _ := client.FindResourceArray(service.Sslprofile_sslcipher_binding.Type(), sslprofileName)
 	log.Printf("bindings %v\n", bindings)
 
 	defaultSslprofileCipherBindings := make([]interface{}, len(bindings))
@@ -1232,7 +1232,7 @@ func readSslprofileCipherbindings(d *schema.ResourceData, meta interface{}) erro
 		return nil
 	}
 	sslprofileName := d.Get("name").(string)
-	bindings, _ := client.FindResourceArray(netscaler.Sslprofile_sslcipher_binding.Type(), sslprofileName)
+	bindings, _ := client.FindResourceArray(service.Sslprofile_sslcipher_binding.Type(), sslprofileName)
 	log.Printf("bindings %v\n", bindings)
 
 	processedBindings := make([]interface{}, len(bindings))

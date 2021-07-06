@@ -23,12 +23,15 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/chiradeep/go-nitro/netscaler"
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccNsacls_basic(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -70,7 +73,7 @@ func testAccCheckNsaclsExist(n string, id *string) resource.TestCheckFunc {
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		deviceAcls, err := nsClient.FindAllResources(netscaler.Nsacl.Type())
+		deviceAcls, err := nsClient.FindAllResources(service.Nsacl.Type())
 
 		if err != nil {
 			return err
@@ -122,6 +125,9 @@ func testAccCheckNsaclsExist(n string, id *string) resource.TestCheckFunc {
 }
 
 func TestAccNsacls_update(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -147,7 +153,7 @@ func TestAccNsacls_update(t *testing.T) {
 func testAccCheckNsaclsDestroy(s *terraform.State) error {
 
 	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-	deviceAcls, err := nsClient.FindAllResources(netscaler.Nsacl.Type())
+	deviceAcls, err := nsClient.FindAllResources(service.Nsacl.Type())
 	if err != nil {
 		return err
 	}
@@ -194,7 +200,7 @@ func testAccCheckNsaclsUpdateExist(n string, id *string) resource.TestCheckFunc 
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
 
-		deviceAcls, err := nsClient.FindAllResources(netscaler.Nsacl.Type())
+		deviceAcls, err := nsClient.FindAllResources(service.Nsacl.Type())
 		if err != nil {
 			return err
 		}

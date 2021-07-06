@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/appfw"
+	"github.com/citrix/adc-nitro-go/resource/config/appfw"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"log"
@@ -39,7 +39,7 @@ func createAppfwpolicylabelFunc(d *schema.ResourceData, meta interface{}) error 
 		Policylabeltype: d.Get("policylabeltype").(string),
 	}
 
-	_, err := client.AddResource(netscaler.Appfwpolicylabel.Type(), appfwpolicylabelName, &appfwpolicylabel)
+	_, err := client.AddResource(service.Appfwpolicylabel.Type(), appfwpolicylabelName, &appfwpolicylabel)
 	if err != nil {
 		return err
 	}
@@ -59,7 +59,7 @@ func readAppfwpolicylabelFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	appfwpolicylabelName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading appfwpolicylabel state %s", appfwpolicylabelName)
-	data, err := client.FindResource(netscaler.Appfwpolicylabel.Type(), appfwpolicylabelName)
+	data, err := client.FindResource(service.Appfwpolicylabel.Type(), appfwpolicylabelName)
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing appfwpolicylabel state %s", appfwpolicylabelName)
 		d.SetId("")
@@ -76,7 +76,7 @@ func deleteAppfwpolicylabelFunc(d *schema.ResourceData, meta interface{}) error 
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppfwpolicylabelFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appfwpolicylabelName := d.Id()
-	err := client.DeleteResource(netscaler.Appfwpolicylabel.Type(), appfwpolicylabelName)
+	err := client.DeleteResource(service.Appfwpolicylabel.Type(), appfwpolicylabelName)
 	if err != nil {
 		return err
 	}

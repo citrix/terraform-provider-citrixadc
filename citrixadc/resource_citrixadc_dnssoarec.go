@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/dns"
+	"github.com/citrix/adc-nitro-go/resource/config/dns"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"fmt"
@@ -103,7 +103,7 @@ func createDnssoarecFunc(d *schema.ResourceData, meta interface{}) error {
 		Type:         d.Get("type").(string),
 	}
 
-	_, err := client.AddResource(netscaler.Dnssoarec.Type(), dnssoarecId, &dnssoarec)
+	_, err := client.AddResource(service.Dnssoarec.Type(), dnssoarecId, &dnssoarec)
 	if err != nil {
 		return err
 	}
@@ -123,7 +123,7 @@ func readDnssoarecFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	dnssoarecName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading dnssoarec state %s", dnssoarecName)
-	data, err := client.FindResource(netscaler.Dnssoarec.Type(), dnssoarecName)
+	data, err := client.FindResource(service.Dnssoarec.Type(), dnssoarecName)
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing dnssoarec state %s", dnssoarecName)
 		d.SetId("")
@@ -217,7 +217,7 @@ func updateDnssoarecFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if hasChange {
-		_, err := client.UpdateResource(netscaler.Dnssoarec.Type(), dnssoarecId, &dnssoarec)
+		_, err := client.UpdateResource(service.Dnssoarec.Type(), dnssoarecId, &dnssoarec)
 		if err != nil {
 			return fmt.Errorf("Error updating dnssoarec %s. %s", dnssoarecId, err)
 		}
@@ -229,7 +229,7 @@ func deleteDnssoarecFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteDnssoarecFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnssoarecId := d.Id()
-	err := client.DeleteResource(netscaler.Dnssoarec.Type(), dnssoarecId)
+	err := client.DeleteResource(service.Dnssoarec.Type(), dnssoarecId)
 	if err != nil {
 		return err
 	}

@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/ns"
+	"github.com/citrix/adc-nitro-go/resource/config/ns"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 
@@ -196,7 +196,7 @@ func createNsparamFunc(d *schema.ResourceData, meta interface{}) error {
 		Useproxyport:              d.Get("useproxyport").(string),
 	}
 
-	err := client.UpdateUnnamedResource(netscaler.Nsparam.Type(), &nsparam)
+	err := client.UpdateUnnamedResource(service.Nsparam.Type(), &nsparam)
 	if err != nil {
 		return err
 	}
@@ -216,7 +216,7 @@ func readNsparamFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	nsparamName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading nsparam state %s", nsparamName)
-	data, err := client.FindResource(netscaler.Nsparam.Type(), "")
+	data, err := client.FindResource(service.Nsparam.Type(), "")
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing nsparam state %s", nsparamName)
 		d.SetId("")

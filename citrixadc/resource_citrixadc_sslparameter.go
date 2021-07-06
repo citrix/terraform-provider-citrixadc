@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/ssl"
+	"github.com/citrix/adc-nitro-go/resource/config/ssl"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 
@@ -181,7 +181,7 @@ func createSslparameterFunc(d *schema.ResourceData, meta interface{}) error {
 		Undefactiondata:          d.Get("undefactiondata").(string),
 	}
 
-	err := client.UpdateUnnamedResource(netscaler.Sslparameter.Type(), &sslparameter)
+	err := client.UpdateUnnamedResource(service.Sslparameter.Type(), &sslparameter)
 	if err != nil {
 		return fmt.Errorf("Error updating sslparameter")
 	}
@@ -200,7 +200,7 @@ func readSslparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSslparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading sslparameter state")
-	data, err := client.FindResource(netscaler.Sslparameter.Type(), "")
+	data, err := client.FindResource(service.Sslparameter.Type(), "")
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing sslparameter state")
 		d.SetId("")
@@ -363,7 +363,7 @@ func updateSslparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if hasChange {
-		err := client.UpdateUnnamedResource(netscaler.Sslparameter.Type(), &sslparameter)
+		err := client.UpdateUnnamedResource(service.Sslparameter.Type(), &sslparameter)
 		if err != nil {
 			return fmt.Errorf("Error updating sslparameter: %s", err.Error())
 		}

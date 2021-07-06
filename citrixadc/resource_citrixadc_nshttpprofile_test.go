@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/chiradeep/go-nitro/netscaler"
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
@@ -38,6 +38,9 @@ const testAccNshttpprofile_update = `
 `
 
 func TestAccNshttpprofile_basic(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -83,7 +86,7 @@ func testAccCheckNshttpprofileExist(n string, id *string) resource.TestCheckFunc
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(netscaler.Nshttpprofile.Type(), rs.Primary.ID)
+		data, err := nsClient.FindResource(service.Nshttpprofile.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -109,7 +112,7 @@ func testAccCheckNshttpprofileDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(netscaler.Nshttpprofile.Type(), rs.Primary.ID)
+		_, err := nsClient.FindResource(service.Nshttpprofile.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("NS HTTP Profile %s still exists", rs.Primary.ID)
 		}

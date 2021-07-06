@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/ns"
+	"github.com/citrix/adc-nitro-go/resource/config/ns"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 
@@ -241,7 +241,7 @@ func createNsaclFunc(d *schema.ResourceData, meta interface{}) error {
 		Vxlan:          d.Get("vxlan").(int),
 	}
 
-	_, err := client.AddResource(netscaler.Nsacl.Type(), nsaclName, &nsacl)
+	_, err := client.AddResource(service.Nsacl.Type(), nsaclName, &nsacl)
 	if err != nil {
 		return err
 	}
@@ -261,7 +261,7 @@ func readNsaclFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	nsaclName := d.Id()
 	log.Printf("[DEBUG] netscaler-provider: Reading nsacl state %s", nsaclName)
-	data, err := client.FindResource(netscaler.Nsacl.Type(), nsaclName)
+	data, err := client.FindResource(service.Nsacl.Type(), nsaclName)
 	if err != nil {
 		log.Printf("[WARN] netscaler-provider: Clearing nsacl state %s", nsaclName)
 		d.SetId("")
@@ -464,7 +464,7 @@ func updateNsaclFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if hasChange {
-		_, err := client.UpdateResource(netscaler.Nsacl.Type(), nsaclName, &nsacl)
+		_, err := client.UpdateResource(service.Nsacl.Type(), nsaclName, &nsacl)
 		if err != nil {
 			return fmt.Errorf("Error updating nsacl %s", nsaclName)
 		}
@@ -483,7 +483,7 @@ func deleteNsaclFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  netscaler-provider: In deleteNsaclFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nsaclName := d.Id()
-	err := client.DeleteResource(netscaler.Nsacl.Type(), nsaclName)
+	err := client.DeleteResource(service.Nsacl.Type(), nsaclName)
 	if err != nil {
 		return err
 	}
@@ -493,7 +493,7 @@ func deleteNsaclFunc(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func doNsaclStateChange(d *schema.ResourceData, client *netscaler.NitroClient) error {
+func doNsaclStateChange(d *schema.ResourceData, client *service.NitroClient) error {
 	log.Printf("[DEBUG]  netscaler-provider: In doServerStateChange")
 
 	// We need a new instance of the struct since
@@ -505,12 +505,12 @@ func doNsaclStateChange(d *schema.ResourceData, client *netscaler.NitroClient) e
 	newstate := d.Get("state")
 
 	if newstate == "ENABLED" {
-		err := client.ActOnResource(netscaler.Nsacl.Type(), nsacl, "enable")
+		err := client.ActOnResource(service.Nsacl.Type(), nsacl, "enable")
 		if err != nil {
 			return err
 		}
 	} else if newstate == "DISABLED" {
-		err := client.ActOnResource(netscaler.Nsacl.Type(), nsacl, "disable")
+		err := client.ActOnResource(service.Nsacl.Type(), nsacl, "disable")
 		if err != nil {
 			return err
 		}

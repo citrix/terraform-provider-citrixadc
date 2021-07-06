@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/ssl"
+	"github.com/citrix/adc-nitro-go/resource/config/ssl"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"fmt"
@@ -68,7 +68,7 @@ func createSslpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 		Undefaction: d.Get("undefaction").(string),
 	}
 
-	_, err := client.AddResource(netscaler.Sslpolicy.Type(), sslpolicyName, &sslpolicy)
+	_, err := client.AddResource(service.Sslpolicy.Type(), sslpolicyName, &sslpolicy)
 	if err != nil {
 		return err
 	}
@@ -88,7 +88,7 @@ func readSslpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	sslpolicyName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading sslpolicy state %s", sslpolicyName)
-	data, err := client.FindResource(netscaler.Sslpolicy.Type(), sslpolicyName)
+	data, err := client.FindResource(service.Sslpolicy.Type(), sslpolicyName)
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing sslpolicy state %s", sslpolicyName)
 		d.SetId("")
@@ -147,7 +147,7 @@ func updateSslpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if hasChange {
-		_, err := client.UpdateResource(netscaler.Sslpolicy.Type(), sslpolicyName, &sslpolicy)
+		_, err := client.UpdateResource(service.Sslpolicy.Type(), sslpolicyName, &sslpolicy)
 		if err != nil {
 			return fmt.Errorf("Error updating sslpolicy %s", sslpolicyName)
 		}
@@ -159,7 +159,7 @@ func deleteSslpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSslpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	sslpolicyName := d.Id()
-	err := client.DeleteResource(netscaler.Sslpolicy.Type(), sslpolicyName)
+	err := client.DeleteResource(service.Sslpolicy.Type(), sslpolicyName)
 	if err != nil {
 		return err
 	}

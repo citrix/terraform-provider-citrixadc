@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/audit"
+	"github.com/citrix/adc-nitro-go/resource/config/audit"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"fmt"
@@ -65,7 +65,7 @@ func createAuditmessageactionFunc(d *schema.ResourceData, meta interface{}) erro
 		Stringbuilderexpr: d.Get("stringbuilderexpr").(string),
 	}
 
-	_, err := client.AddResource(netscaler.Auditmessageaction.Type(), auditmessageactionName, &auditmessageaction)
+	_, err := client.AddResource(service.Auditmessageaction.Type(), auditmessageactionName, &auditmessageaction)
 	if err != nil {
 		return err
 	}
@@ -85,7 +85,7 @@ func readAuditmessageactionFunc(d *schema.ResourceData, meta interface{}) error 
 	client := meta.(*NetScalerNitroClient).client
 	auditmessageactionName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading auditmessageaction state %s", auditmessageactionName)
-	data, err := client.FindResource(netscaler.Auditmessageaction.Type(), auditmessageactionName)
+	data, err := client.FindResource(service.Auditmessageaction.Type(), auditmessageactionName)
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing auditmessageaction state %s", auditmessageactionName)
 		d.SetId("")
@@ -138,7 +138,7 @@ func updateAuditmessageactionFunc(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if hasChange {
-		_, err := client.UpdateResource(netscaler.Auditmessageaction.Type(), auditmessageactionName, &auditmessageaction)
+		_, err := client.UpdateResource(service.Auditmessageaction.Type(), auditmessageactionName, &auditmessageaction)
 		if err != nil {
 			return fmt.Errorf("Error updating auditmessageaction %s", auditmessageactionName)
 		}
@@ -150,7 +150,7 @@ func deleteAuditmessageactionFunc(d *schema.ResourceData, meta interface{}) erro
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAuditmessageactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	auditmessageactionName := d.Id()
-	err := client.DeleteResource(netscaler.Auditmessageaction.Type(), auditmessageactionName)
+	err := client.DeleteResource(service.Auditmessageaction.Type(), auditmessageactionName)
 	if err != nil {
 		return err
 	}

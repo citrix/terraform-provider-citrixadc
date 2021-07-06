@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/policy"
+	"github.com/citrix/adc-nitro-go/resource/config/policy"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"fmt"
@@ -60,7 +60,7 @@ func createPolicydataset_value_bindingFunc(d *schema.ResourceData, meta interfac
 		Value:   d.Get("value").(string),
 	}
 
-	err := client.UpdateUnnamedResource(netscaler.Policydataset_value_binding.Type(), &policydataset_value_binding)
+	err := client.UpdateUnnamedResource(service.Policydataset_value_binding.Type(), &policydataset_value_binding)
 	if err != nil {
 		return err
 	}
@@ -95,7 +95,7 @@ func readPolicydataset_value_bindingFunc(d *schema.ResourceData, meta interface{
 	value := idSlice[1]
 
 	log.Printf("[DEBUG] citrixadc-provider: Reading servicegroup_lbmonitor_binding state %s", valueBindingId)
-	findParams := netscaler.FindParams{
+	findParams := service.FindParams{
 		ResourceType:             "policydataset_value_binding",
 		ResourceName:             name,
 		ResourceMissingErrorCode: 2823,
@@ -151,7 +151,7 @@ func deletePolicydataset_value_bindingFunc(d *schema.ResourceData, meta interfac
 	client := meta.(*NetScalerNitroClient).client
 	args := make(map[string]string)
 	args["value"] = d.Get("value").(string)
-	err := client.DeleteResourceWithArgsMap(netscaler.Policydataset_value_binding.Type(), d.Get("name").(string), args)
+	err := client.DeleteResourceWithArgsMap(service.Policydataset_value_binding.Type(), d.Get("name").(string), args)
 	if err != nil {
 		return err
 	}

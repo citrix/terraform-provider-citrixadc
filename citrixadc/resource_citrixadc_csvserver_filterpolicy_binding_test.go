@@ -17,11 +17,14 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/chiradeep/go-nitro/netscaler"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+
+	"github.com/citrix/adc-nitro-go/service"
+
 	"strings"
 	"testing"
+
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 const testAccCsvserver_filterpolicy_binding_basic_step1 = `
@@ -71,6 +74,9 @@ resource "citrixadc_csvserver_filterpolicy_binding" "tf_bind" {
 `
 
 func TestAccCsvserver_filterpolicy_binding_basic(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -118,7 +124,7 @@ func testAccCheckCsvserver_filterpolicy_bindingExist(n string, id *string) resou
 		name := idSlice[0]
 		policyname := idSlice[1]
 
-		findParams := netscaler.FindParams{
+		findParams := service.FindParams{
 			ResourceType:             "csvserver_filterpolicy_binding",
 			ResourceName:             name,
 			ResourceMissingErrorCode: 258,
@@ -160,7 +166,7 @@ func testAccCheckCsvserver_filterpolicy_bindingDestroy(s *terraform.State) error
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(netscaler.Csvserver_filterpolicy_binding.Type(), rs.Primary.ID)
+		_, err := nsClient.FindResource(service.Csvserver_filterpolicy_binding.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("csvserver_filterpolicy_binding %s still exists", rs.Primary.ID)
 		}

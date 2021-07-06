@@ -1,9 +1,10 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/basic"
-	"github.com/chiradeep/go-nitro/config/gslb"
-	"github.com/chiradeep/go-nitro/netscaler"
+	"github.com/citrix/adc-nitro-go/resource/config/basic"
+	"github.com/citrix/adc-nitro-go/resource/config/gslb"
+	"github.com/citrix/adc-nitro-go/service"
+
 	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -298,7 +299,7 @@ func createGslbserviceFunc(d *schema.ResourceData, meta interface{}) error {
 		Weight:           d.Get("weight").(int),
 	}
 
-	_, err := client.AddResource(netscaler.Gslbservice.Type(), gslbserviceName, &gslbservice)
+	_, err := client.AddResource(service.Gslbservice.Type(), gslbserviceName, &gslbservice)
 	if err != nil {
 		return err
 	}
@@ -322,7 +323,7 @@ func readGslbserviceFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	gslbserviceName := d.Id()
 	log.Printf("[DEBUG] netscaler-provider: Reading gslbservice state %s", gslbserviceName)
-	data, err := client.FindResource(netscaler.Gslbservice.Type(), gslbserviceName)
+	data, err := client.FindResource(service.Gslbservice.Type(), gslbserviceName)
 	if err != nil {
 		log.Printf("[WARN] netscaler-provider: Clearing gslbservice state %s", gslbserviceName)
 		d.SetId("")
@@ -565,7 +566,7 @@ func updateGslbserviceFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if hasChange {
-		_, err := client.UpdateResource(netscaler.Gslbservice.Type(), gslbserviceName, &gslbservice)
+		_, err := client.UpdateResource(service.Gslbservice.Type(), gslbserviceName, &gslbservice)
 		if err != nil {
 			return fmt.Errorf("Error updating gslbservice %s", gslbserviceName)
 		}
@@ -592,7 +593,7 @@ func deleteGslbserviceFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  netscaler-provider: In deleteGslbserviceFunc")
 	client := meta.(*NetScalerNitroClient).client
 	gslbserviceName := d.Id()
-	err := client.DeleteResource(netscaler.Gslbservice.Type(), gslbserviceName)
+	err := client.DeleteResource(service.Gslbservice.Type(), gslbserviceName)
 	if err != nil {
 		return err
 	}
@@ -606,7 +607,7 @@ func deleteGslbserviceFunc(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func doGslbServiceStateChange(d *schema.ResourceData, client *netscaler.NitroClient) error {
+func doGslbServiceStateChange(d *schema.ResourceData, client *service.NitroClient) error {
 	log.Printf("[DEBUG]  netscaler-provider: In doGslbServiceStateChange")
 
 	// We need a new instance of the struct since
@@ -619,14 +620,14 @@ func doGslbServiceStateChange(d *schema.ResourceData, client *netscaler.NitroCli
 
 	// Enable action
 	if newstate == "ENABLED" {
-		err := client.ActOnResource(netscaler.Service.Type(), gslbService, "enable")
+		err := client.ActOnResource(service.Service.Type(), gslbService, "enable")
 		if err != nil {
 			return err
 		}
 	} else if newstate == "DISABLED" {
 		// Add attributes relevant to the disable operation
 		gslbService.Delay = d.Get("delay").(int)
-		err := client.ActOnResource(netscaler.Service.Type(), gslbService, "disable")
+		err := client.ActOnResource(service.Service.Type(), gslbService, "disable")
 		if err != nil {
 			return err
 		}
@@ -712,12 +713,12 @@ func addSingleLbmonitorBinding(d *schema.ResourceData, meta interface{}, binding
 
 	client := meta.(*NetScalerNitroClient).client
 
-	bindingStruct := gslb.Gslbservicelbmonitorbinding{}
+	bindingStruct := gslb.Gslbservicemonitorbinding{}
 	servicename := d.Get("servicename").(string)
 	bindingStruct.Servicename = servicename
 
 	if d, ok := binding["weight"]; ok {
-		bindingStruct.Weight = d.(int)
+		bindingStruct.Weight = uint32(d.(int))
 	}
 
 	if d, ok := binding["monitor_name"]; ok {

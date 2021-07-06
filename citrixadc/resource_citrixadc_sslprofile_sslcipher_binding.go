@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/ssl"
+	"github.com/citrix/adc-nitro-go/resource/config/ssl"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"fmt"
@@ -49,13 +49,13 @@ func createSslprofile_sslcipher_bindingFunc(d *schema.ResourceData, meta interfa
 	// Use `,` as the separator since it is invalid character for adc entity strings
 	bindingId := fmt.Sprintf("%s,%s", profileName, cipherName)
 
-	sslprofile_sslcipher_binding := ssl.Sslprofilesslcipherbinding{
+	sslprofile_sslcipher_binding := ssl.Sslprofilecipherbinding{
 		Ciphername:     d.Get("ciphername").(string),
-		Cipherpriority: d.Get("cipherpriority").(int),
+		Cipherpriority: uint32(d.Get("cipherpriority").(int)),
 		Name:           d.Get("name").(string),
 	}
 
-	err := client.UpdateUnnamedResource(netscaler.Sslprofile_sslcipher_binding.Type(), &sslprofile_sslcipher_binding)
+	err := client.UpdateUnnamedResource(service.Sslprofile_sslcipher_binding.Type(), &sslprofile_sslcipher_binding)
 	if err != nil {
 		return err
 	}
@@ -88,7 +88,7 @@ func readSslprofile_sslcipher_bindingFunc(d *schema.ResourceData, meta interface
 	profileName := idSlice[0]
 	cipherName := idSlice[1]
 
-	findParams := netscaler.FindParams{
+	findParams := service.FindParams{
 		ResourceType:             "sslprofile_sslcipher_binding",
 		ResourceName:             profileName,
 		ResourceMissingErrorCode: 3248,
@@ -155,7 +155,7 @@ func deleteSslprofile_sslcipher_bindingFunc(d *schema.ResourceData, meta interfa
 	args := make([]string, 0)
 	args = append(args, fmt.Sprintf("ciphername:%v", cipherName))
 
-	err := client.DeleteResourceWithArgs(netscaler.Sslprofile_sslcipher_binding.Type(), profileName, args)
+	err := client.DeleteResourceWithArgs(service.Sslprofile_sslcipher_binding.Type(), profileName, args)
 	if err != nil {
 		return err
 	}

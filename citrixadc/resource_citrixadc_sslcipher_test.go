@@ -20,7 +20,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/chiradeep/go-nitro/netscaler"
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
@@ -82,6 +82,9 @@ const testAccSslcipher_update = `
 `
 
 func TestAccSslcipher_basic(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -139,7 +142,7 @@ func testAccCheckSslcipherExist(n string, id *string) resource.TestCheckFunc {
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(netscaler.Sslcipher.Type(), rs.Primary.ID)
+		data, err := nsClient.FindResource(service.Sslcipher.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -166,7 +169,7 @@ func testAccCheckSslcipherCiphersuiteBinding(ciphergroupname string, ciphername 
 				return fmt.Errorf("No name is set")
 			}
 
-			bindings, _ := nsClient.FindResourceArray(netscaler.Sslcipher_sslciphersuite_binding.Type(), ciphergroupname)
+			bindings, _ := nsClient.FindResourceArray(service.Sslcipher_sslciphersuite_binding.Type(), ciphergroupname)
 			for _, binding := range bindings {
 				if binding["ciphername"].(string) == ciphername {
 					receivedpriority, _ := strconv.Atoi(binding["cipherpriority"].(string))
@@ -195,7 +198,7 @@ func testAccCheckSslcipherDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(netscaler.Sslcipher.Type(), rs.Primary.ID)
+		_, err := nsClient.FindResource(service.Sslcipher.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("sslciphergroup %s still exists", rs.Primary.ID)
 		}

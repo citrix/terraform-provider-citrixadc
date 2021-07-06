@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/chiradeep/go-nitro/netscaler"
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
@@ -74,6 +74,9 @@ const testAccIpset_name_changed = `
 `
 
 func TestAccIpset_no_bindings(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -96,6 +99,9 @@ func TestAccIpset_no_bindings(t *testing.T) {
 }
 
 func TestAccIpset_with_bindings(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -137,7 +143,7 @@ func testAccCheckIpsetExist(n string, id *string) resource.TestCheckFunc {
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(netscaler.Ipset.Type(), rs.Primary.ID)
+		data, err := nsClient.FindResource(service.Ipset.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -163,7 +169,7 @@ func testAccCheckIpsetDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(netscaler.Ipset.Type(), rs.Primary.ID)
+		_, err := nsClient.FindResource(service.Ipset.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("LB vserver %s still exists", rs.Primary.ID)
 		}
@@ -234,6 +240,9 @@ resource "citrixadc_nsip" "nsip2" {
 `
 
 func TestAccIpset_ipv4_swaps(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	if isCpxRun {
 		t.Skip("No support in CPX")
 	}
@@ -271,7 +280,7 @@ resource "citrixadc_csvserver" "test_csvserver" {
 resource "citrixadc_ipset" "tf_ipset" {
   name = "tf_test_ipset"
   nsip6binding = [
-	format("%s/0", split("/", citrixadc_nsip6.tf_nsip1.ipv6address)[0]),
+	citrixadc_nsip6.tf_nsip1.ipv6address
   ]
 
 }
@@ -302,7 +311,7 @@ resource "citrixadc_csvserver" "test_csvserver" {
 resource "citrixadc_ipset" "tf_ipset" {
   name = "tf_test_ipset"
   nsip6binding = [
-	format("%s/0", split("/", citrixadc_nsip6.tf_nsip2.ipv6address)[0]),
+	citrixadc_nsip6.tf_nsip2.ipv6address
   ]
 
 }
@@ -321,6 +330,9 @@ resource "citrixadc_nsip6" "tf_nsip2" {
 `
 
 func TestAccIpset_ipv6_swaps(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	if isCpxRun {
 		t.Skip("No support in CPX")
 	}

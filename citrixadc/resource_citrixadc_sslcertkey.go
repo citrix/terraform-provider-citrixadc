@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/ssl"
+	"github.com/citrix/adc-nitro-go/resource/config/ssl"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 
@@ -137,7 +137,7 @@ func createSslcertkeyFunc(d *schema.ResourceData, meta interface{}) error {
 		Password:           d.Get("password").(bool),
 	}
 
-	_, err := client.AddResource(netscaler.Sslcertkey.Type(), sslcertkeyName, &sslcertkey)
+	_, err := client.AddResource(service.Sslcertkey.Type(), sslcertkeyName, &sslcertkey)
 	if err != nil {
 		return err
 	}
@@ -166,7 +166,7 @@ func readSslcertkeyFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	sslcertkeyName := d.Id()
 	log.Printf("[DEBUG] netscaler-provider: Reading sslcertkey state %s", sslcertkeyName)
-	data, err := client.FindResource(netscaler.Sslcertkey.Type(), sslcertkeyName)
+	data, err := client.FindResource(service.Sslcertkey.Type(), sslcertkeyName)
 	if err != nil {
 		log.Printf("[WARN] netscaler-provider: Clearing sslcertkey state %s", sslcertkeyName)
 		d.SetId("")
@@ -260,7 +260,7 @@ func updateSslcertkeyFunc(d *schema.ResourceData, meta interface{}) error {
 
 	if hasUpdate {
 		sslcertkeyUpdate.Expirymonitor = d.Get("expirymonitor").(string) //always expected by NITRO API
-		_, err := client.UpdateResource(netscaler.Sslcertkey.Type(), sslcertkeyName, &sslcertkeyUpdate)
+		_, err := client.UpdateResource(service.Sslcertkey.Type(), sslcertkeyName, &sslcertkeyUpdate)
 		if err != nil {
 			return fmt.Errorf("Error updating sslcertkey %s", sslcertkeyName)
 		}
@@ -270,7 +270,7 @@ func updateSslcertkeyFunc(d *schema.ResourceData, meta interface{}) error {
 	sslcertkeyChange.Nodomaincheck = d.Get("nodomaincheck").(bool)
 	if hasChange {
 
-		_, err := client.ChangeResource(netscaler.Sslcertkey.Type(), sslcertkeyName, &sslcertkeyChange)
+		_, err := client.ChangeResource(service.Sslcertkey.Type(), sslcertkeyName, &sslcertkeyChange)
 		if err != nil {
 			return fmt.Errorf("Error changing sslcertkey %s", sslcertkeyName)
 		}
@@ -284,10 +284,10 @@ func updateSslcertkeyFunc(d *schema.ResourceData, meta interface{}) error {
 	return readSslcertkeyFunc(d, meta)
 }
 
-func handleLinkedCertificate(d *schema.ResourceData, client *netscaler.NitroClient) error {
+func handleLinkedCertificate(d *schema.ResourceData, client *service.NitroClient) error {
 	log.Printf("[DEBUG] netscaler-provider:  In handleLinkedCertificate")
 	sslcertkeyName := d.Get("certkey").(string)
-	data, err := client.FindResource(netscaler.Sslcertkey.Type(), sslcertkeyName)
+	data, err := client.FindResource(service.Sslcertkey.Type(), sslcertkeyName)
 	if err != nil {
 		log.Printf("[ERROR] netscaler-provider: Clearing sslcertkey state %s", sslcertkeyName)
 		d.SetId("")
@@ -318,7 +318,7 @@ func handleLinkedCertificate(d *schema.ResourceData, client *netscaler.NitroClie
 			Certkey:         data["certkey"].(string),
 			Linkcertkeyname: configuredLinkedCertKeyname.(string),
 		}
-		if err := client.ActOnResource(netscaler.Sslcertkey.Type(), &sslCertkey, "link"); err != nil {
+		if err := client.ActOnResource(service.Sslcertkey.Type(), &sslCertkey, "link"); err != nil {
 			log.Printf("[ERROR] netscaler-provider: Error linking certificate \"%v\"", err)
 			return err
 		}
@@ -328,9 +328,9 @@ func handleLinkedCertificate(d *schema.ResourceData, client *netscaler.NitroClie
 	return nil
 }
 
-func unlinkCertificate(d *schema.ResourceData, client *netscaler.NitroClient) error {
+func unlinkCertificate(d *schema.ResourceData, client *service.NitroClient) error {
 	sslcertkeyName := d.Get("certkey").(string)
-	data, err := client.FindResource(netscaler.Sslcertkey.Type(), sslcertkeyName)
+	data, err := client.FindResource(service.Sslcertkey.Type(), sslcertkeyName)
 	if err != nil {
 		log.Printf("[ERROR] netscaler-provider: Clearing sslcertkey state %s", sslcertkeyName)
 		d.SetId("")
@@ -345,7 +345,7 @@ func unlinkCertificate(d *schema.ResourceData, client *netscaler.NitroClient) er
 		sslCertkey := ssl.Sslcertkey{
 			Certkey: data["certkey"].(string),
 		}
-		if err := client.ActOnResource(netscaler.Sslcertkey.Type(), &sslCertkey, "unlink"); err != nil {
+		if err := client.ActOnResource(service.Sslcertkey.Type(), &sslCertkey, "unlink"); err != nil {
 			log.Printf("[ERROR] netscaler-provider: Error unlinking certificate \"%v\"", err)
 			return err
 		}
@@ -363,7 +363,7 @@ func deleteSslcertkeyFunc(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	sslcertkeyName := d.Id()
-	err := client.DeleteResource(netscaler.Sslcertkey.Type(), sslcertkeyName)
+	err := client.DeleteResource(service.Sslcertkey.Type(), sslcertkeyName)
 	if err != nil {
 		return err
 	}

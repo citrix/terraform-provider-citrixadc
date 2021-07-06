@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/lb"
+	"github.com/citrix/adc-nitro-go/resource/config/lb"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"fmt"
@@ -56,7 +56,7 @@ func createLbvserver_service_bindingFunc(d *schema.ResourceData, meta interface{
 		Weight:      d.Get("weight").(int),
 	}
 
-	_, err := client.AddResource(netscaler.Lbvserver_service_binding.Type(), name, &lbvserver_service_binding)
+	_, err := client.AddResource(service.Lbvserver_service_binding.Type(), name, &lbvserver_service_binding)
 	if err != nil {
 		return err
 	}
@@ -81,7 +81,7 @@ func readLbvserver_service_bindingFunc(d *schema.ResourceData, meta interface{})
 
 	log.Printf("[DEBUG] citrixadc-provider: Reading lbvserver_service_binding state %v", bindingId)
 
-	findParams := netscaler.FindParams{
+	findParams := service.FindParams{
 		ResourceType:             "lbvserver_service_binding",
 		ResourceName:             name,
 		ResourceMissingErrorCode: 258,

@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/system"
+	"github.com/citrix/adc-nitro-go/resource/config/system"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/schema"
 
@@ -105,7 +105,7 @@ func createSystemuserFunc(d *schema.ResourceData, meta interface{}) error {
 		Username:     username,
 	}
 
-	_, err := client.AddResource(netscaler.Systemuser.Type(), username, &systemuser)
+	_, err := client.AddResource(service.Systemuser.Type(), username, &systemuser)
 	if err != nil {
 		return err
 	}
@@ -130,7 +130,7 @@ func readSystemuserFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	systemuserName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading systemuser state %s", systemuserName)
-	data, err := client.FindResource(netscaler.Systemuser.Type(), systemuserName)
+	data, err := client.FindResource(service.Systemuser.Type(), systemuserName)
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing systemuser state %s", systemuserName)
 		d.SetId("")
@@ -209,7 +209,7 @@ func updateSystemuserFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if hasChange {
-		_, err := client.UpdateResource(netscaler.Systemuser.Type(), systemuserName, &systemuser)
+		_, err := client.UpdateResource(service.Systemuser.Type(), systemuserName, &systemuser)
 		if err != nil {
 			return fmt.Errorf("Error updating systemuser %s", systemuserName)
 		}
@@ -226,7 +226,7 @@ func deleteSystemuserFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSystemuserFunc")
 	client := meta.(*NetScalerNitroClient).client
 	systemuserName := d.Id()
-	err := client.DeleteResource(netscaler.Systemuser.Type(), systemuserName)
+	err := client.DeleteResource(service.Systemuser.Type(), systemuserName)
 	if err != nil {
 		return err
 	}
@@ -264,7 +264,7 @@ func addSingleCmdpolicyBinding(d *schema.ResourceData, meta interface{}, binding
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("Adding binding %v", binding)
 
-	bindingStruct := system.Systemusersystemcmdpolicybinding{}
+	bindingStruct := system.Systemusercmdpolicybinding{}
 	bindingStruct.Username = d.Get("username").(string)
 
 	if d, ok := binding["policyname"]; ok {
@@ -272,7 +272,7 @@ func addSingleCmdpolicyBinding(d *schema.ResourceData, meta interface{}, binding
 	}
 
 	if d, ok := binding["priority"]; ok {
-		bindingStruct.Priority = d.(int)
+		bindingStruct.Priority = uint32(d.(int))
 	}
 
 	// We need to do a HTTP PUT hence the UpdateResource

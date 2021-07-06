@@ -17,15 +17,19 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/chiradeep/go-nitro/config/basic"
-	"github.com/chiradeep/go-nitro/netscaler"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
 	"os"
 	"testing"
+
+	"github.com/citrix/adc-nitro-go/resource/config/basic"
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccServicegroup_basic(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -66,7 +70,7 @@ func testAccCheckServicegroupExist(n string, id *string) resource.TestCheckFunc 
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(netscaler.Servicegroup.Type(), rs.Primary.ID)
+		data, err := nsClient.FindResource(service.Servicegroup.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -92,7 +96,7 @@ func testAccCheckServicegroupDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(netscaler.Servicegroup.Type(), rs.Primary.ID)
+		_, err := nsClient.FindResource(service.Servicegroup.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("LB vserver %s still exists", rs.Primary.ID)
 		}
@@ -133,6 +137,9 @@ resource "citrixadc_servicegroup" "foo" {
 `
 
 func TestAccServicegroup_AssertNonUpdateableAttributes(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 
 	if tfAcc := os.Getenv("TF_ACC"); tfAcc == "" {
 		t.Skip("TF_ACC not set. Skipping acceptance test.")
@@ -145,7 +152,7 @@ func TestAccServicegroup_AssertNonUpdateableAttributes(t *testing.T) {
 
 	// Create resource
 	servicegroupName := "tf-acc-servicegroup-test"
-	servicegroupType := netscaler.Servicegroup.Type()
+	servicegroupType := service.Servicegroup.Type()
 
 	// Defer deletion of actual resource
 	defer testHelperEnsureResourceDeletion(c, t, servicegroupType, servicegroupName, nil)
@@ -180,11 +187,6 @@ func TestAccServicegroup_AssertNonUpdateableAttributes(t *testing.T) {
 	testHelperVerifyImmutabilityFunc(c, t, servicegroupType, servicegroupName, servicegroupInstance, "memberport")
 	servicegroupInstance.Memberport = 0
 
-	//riseapbrstatsmsgcode
-	servicegroupInstance.Riseapbrstatsmsgcode = 10
-	testHelperVerifyImmutabilityFunc(c, t, servicegroupType, servicegroupName, servicegroupInstance, "riseapbrstatsmsgcode")
-	servicegroupInstance.Riseapbrstatsmsgcode = 0
-
 	//includemembers
 	servicegroupInstance.Includemembers = true
 	testHelperVerifyImmutabilityFunc(c, t, servicegroupType, servicegroupName, servicegroupInstance, "includemembers")
@@ -217,6 +219,9 @@ resource "citrixadc_servicegroup" "tf_enable_disable_test_svcgroup" {
 `
 
 func TestAccServicegroup_enable_disable(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,

@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/lb"
+	"github.com/citrix/adc-nitro-go/resource/config/lb"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 
@@ -632,10 +632,10 @@ func createLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 		Validatecred:                   d.Get("validatecred").(string),
 		Vendorid:                       d.Get("vendorid").(int),
 		Vendorspecificvendorid:         d.Get("vendorspecificvendorid").(int),
-		Respcode:                       d.Get("respcode").([]interface{}),
+		Respcode:                       toStringList(d.Get("respcode").([]interface{})),
 	}
 
-	_, err := client.AddResource(netscaler.Lbmonitor.Type(), lbmonitorName, &lbmonitor)
+	_, err := client.AddResource(service.Lbmonitor.Type(), lbmonitorName, &lbmonitor)
 	if err != nil {
 		return err
 	}
@@ -656,7 +656,7 @@ func readLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 
 	lbmonitorName := d.Id()
 	log.Printf("[DEBUG] netscaler-provider: Reading lbmonitor state %s", lbmonitorName)
-	data, err := client.FindResource(netscaler.Lbmonitor.Type(), lbmonitorName)
+	data, err := client.FindResource(service.Lbmonitor.Type(), lbmonitorName)
 	if err != nil {
 		log.Printf("[WARN] netscaler-provider: Clearing lbmonitor state %s", lbmonitorName)
 		d.SetId("")
@@ -1268,7 +1268,7 @@ func updateLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("respcode") {
 		log.Printf("[DEBUG] netscaler-provider:  Respcode has changed for lbmonitor %s, starting update", lbmonitorName)
 		_, ok := d.GetOk("respcode")
-		respcode_val := d.Get("respcode").([]interface{})
+		respcode_val := toStringList(d.Get("respcode").([]interface{}))
 
 		if ok {
 			lbmonitor.Respcode = respcode_val
@@ -1277,7 +1277,7 @@ func updateLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if hasChange {
-		_, err := client.UpdateResource(netscaler.Lbmonitor.Type(), lbmonitorName, &lbmonitor)
+		_, err := client.UpdateResource(service.Lbmonitor.Type(), lbmonitorName, &lbmonitor)
 		if err != nil {
 			return fmt.Errorf("[ERROR] netscaler-provider: Error updating lbmonitor %s", lbmonitorName)
 		}
@@ -1295,7 +1295,7 @@ func deleteLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 	lbmonitorName := d.Id()
 	args := make([]string, 1, 1)
 	args[0] = "type:" + d.Get("type").(string)
-	err := client.DeleteResourceWithArgs(netscaler.Lbmonitor.Type(), lbmonitorName, args)
+	err := client.DeleteResourceWithArgs(service.Lbmonitor.Type(), lbmonitorName, args)
 	if err != nil {
 		return err
 	}

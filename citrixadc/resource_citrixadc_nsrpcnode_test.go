@@ -17,13 +17,17 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/chiradeep/go-nitro/netscaler"
+	"testing"
+
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"testing"
 )
 
 func TestAccNsrpcnode_basic(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
 	if isCpxRun {
 		t.Skip("Operation not permitted under CPX")
 	}
@@ -67,7 +71,7 @@ func testAccCheckNsrpcnodeExist(n string, id *string) resource.TestCheckFunc {
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(netscaler.Nsrpcnode.Type(), rs.Primary.ID)
+		data, err := nsClient.FindResource(service.Nsrpcnode.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -84,19 +88,19 @@ func testAccCheckNsrpcnodeExist(n string, id *string) resource.TestCheckFunc {
 const testAccNsrpcnode_basic_step1 = `
 
 resource "citrixadc_nsrpcnode" "tf_nsrpcnode" {
-    ipaddress = "10.78.60.201"
+    ipaddress = "10.222.74.146"
     password = "notnsroot"
     secure = "ON"
-    srcip = "10.78.60.201"
+    srcip = "10.222.74.146"
 }
 `
 
 const testAccNsrpcnode_basic_step2 = `
 
 resource "citrixadc_nsrpcnode" "tf_nsrpcnode" {
-    ipaddress = "10.78.60.201"
+    ipaddress = "10.222.74.146"
     password = "notnsroot"
     secure = "OFF"
-    srcip = "10.78.60.201"
+    srcip = "10.222.74.146"
 }
 `

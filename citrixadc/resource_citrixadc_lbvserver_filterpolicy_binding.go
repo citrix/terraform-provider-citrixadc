@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/lb"
+	"github.com/citrix/adc-nitro-go/resource/config/lb"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"fmt"
@@ -79,7 +79,7 @@ func createLbvserver_filterpolicy_bindingFunc(d *schema.ResourceData, meta inter
 	policyname := d.Get("policyname").(string)
 	bindingId := fmt.Sprintf("%s,%s", name, policyname)
 
-	lbvserver_filterpolicy_binding := lb.Lbvserverfilterpolicybinding{
+	lbvserver_filterpolicy_binding := lb.Lbvserverpolicybinding{
 		Bindpoint:              d.Get("bindpoint").(string),
 		Gotopriorityexpression: d.Get("gotopriorityexpression").(string),
 		Invoke:                 d.Get("invoke").(bool),
@@ -87,10 +87,10 @@ func createLbvserver_filterpolicy_bindingFunc(d *schema.ResourceData, meta inter
 		Labeltype:              d.Get("labeltype").(string),
 		Name:                   d.Get("name").(string),
 		Policyname:             d.Get("policyname").(string),
-		Priority:               d.Get("priority").(int),
+		Priority:               uint32(d.Get("priority").(int)),
 	}
 
-	err := client.UpdateUnnamedResource(netscaler.Lbvserver_filterpolicy_binding.Type(), &lbvserver_filterpolicy_binding)
+	err := client.UpdateUnnamedResource(service.Lbvserver_filterpolicy_binding.Type(), &lbvserver_filterpolicy_binding)
 	if err != nil {
 		return err
 	}
@@ -114,7 +114,7 @@ func readLbvserver_filterpolicy_bindingFunc(d *schema.ResourceData, meta interfa
 	policyname := idSlice[1]
 	log.Printf("[DEBUG] citrixadc-provider: Reading lbvserver_filterpolicy_binding state %s", bindingId)
 
-	findParams := netscaler.FindParams{
+	findParams := service.FindParams{
 		ResourceType:             "lbvserver_filterpolicy_binding",
 		ResourceName:             name,
 		ResourceMissingErrorCode: 258,
@@ -189,7 +189,7 @@ func deleteLbvserver_filterpolicy_bindingFunc(d *schema.ResourceData, meta inter
 		argsMap["priority"] = url.QueryEscape(fmt.Sprintf("%v", v))
 	}
 
-	err := client.DeleteResourceWithArgsMap(netscaler.Lbvserver_filterpolicy_binding.Type(), name, argsMap)
+	err := client.DeleteResourceWithArgsMap(service.Lbvserver_filterpolicy_binding.Type(), name, argsMap)
 	if err != nil {
 		return err
 	}

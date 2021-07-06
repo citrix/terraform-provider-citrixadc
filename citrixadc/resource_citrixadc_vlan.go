@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/network"
+	"github.com/citrix/adc-nitro-go/resource/config/network"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"fmt"
@@ -71,7 +71,7 @@ func createVlanFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	vlanIdStr := strconv.Itoa(vlanId)
-	_, err := client.AddResource(netscaler.Vlan.Type(), vlanIdStr, &vlan)
+	_, err := client.AddResource(service.Vlan.Type(), vlanIdStr, &vlan)
 	if err != nil {
 		return err
 	}
@@ -91,7 +91,7 @@ func readVlanFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	vlanIdStr := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading vlan state %s", vlanIdStr)
-	data, err := client.FindResource(netscaler.Vlan.Type(), vlanIdStr)
+	data, err := client.FindResource(service.Vlan.Type(), vlanIdStr)
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing vlan state %s", vlanIdStr)
 		d.SetId("")
@@ -145,7 +145,7 @@ func updateVlanFunc(d *schema.ResourceData, meta interface{}) error {
 
 	vlanIdStr := strconv.Itoa(vlanId)
 	if hasChange {
-		_, err := client.UpdateResource(netscaler.Vlan.Type(), vlanIdStr, &vlan)
+		_, err := client.UpdateResource(service.Vlan.Type(), vlanIdStr, &vlan)
 		if err != nil {
 			return fmt.Errorf("Error updating vlan %d", vlanId)
 		}
@@ -157,7 +157,7 @@ func deleteVlanFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteVlanFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vlanName := d.Id()
-	err := client.DeleteResource(netscaler.Vlan.Type(), vlanName)
+	err := client.DeleteResource(service.Vlan.Type(), vlanName)
 	if err != nil {
 		return err
 	}

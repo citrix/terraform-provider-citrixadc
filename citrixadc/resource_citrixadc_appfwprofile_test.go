@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/chiradeep/go-nitro/netscaler"
+	"testing"
+
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"testing"
 )
 
 const testAccAppfwprofile_add = `
@@ -95,6 +96,9 @@ const testAccAppfwprofile_update = `
 `
 
 func TestAccAppfwprofile_basic(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -139,7 +143,7 @@ func testAccCheckAppfwprofileExist(n string, id *string) resource.TestCheckFunc 
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(netscaler.Appfwprofile.Type(), rs.Primary.ID)
+		data, err := nsClient.FindResource(service.Appfwprofile.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -165,7 +169,7 @@ func testAccCheckAppfwprofileDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(netscaler.Appfwprofile.Type(), rs.Primary.ID)
+		_, err := nsClient.FindResource(service.Appfwprofile.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("LB vserver %s still exists", rs.Primary.ID)
 		}

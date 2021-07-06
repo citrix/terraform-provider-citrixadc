@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/lb"
+	"github.com/citrix/adc-nitro-go/resource/config/lb"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"fmt"
@@ -81,7 +81,7 @@ func createLbvserver_cmppolicy_bindingFunc(d *schema.ResourceData, meta interfac
 
 	bindingId := fmt.Sprintf("%s,%s", name, policyname)
 
-	lbvserver_cmppolicy_binding := lb.Lbvservercmppolicybinding{
+	lbvserver_cmppolicy_binding := lb.Lbvserverpolicybinding{
 		Bindpoint:              d.Get("bindpoint").(string),
 		Gotopriorityexpression: d.Get("gotopriorityexpression").(string),
 		Invoke:                 d.Get("invoke").(bool),
@@ -89,10 +89,10 @@ func createLbvserver_cmppolicy_bindingFunc(d *schema.ResourceData, meta interfac
 		Labeltype:              d.Get("labeltype").(string),
 		Name:                   d.Get("name").(string),
 		Policyname:             d.Get("policyname").(string),
-		Priority:               d.Get("priority").(int),
+		Priority:               uint32(d.Get("priority").(int)),
 	}
 
-	err := client.UpdateUnnamedResource(netscaler.Lbvserver_cmppolicy_binding.Type(), &lbvserver_cmppolicy_binding)
+	err := client.UpdateUnnamedResource(service.Lbvserver_cmppolicy_binding.Type(), &lbvserver_cmppolicy_binding)
 	if err != nil {
 		return err
 	}
@@ -118,7 +118,7 @@ func readLbvserver_cmppolicy_bindingFunc(d *schema.ResourceData, meta interface{
 	policyname := idSlice[1]
 	log.Printf("[DEBUG] citrixadc-provider: Reading lbvserver_cmppolicy_binding state %s", bindingId)
 
-	findParams := netscaler.FindParams{
+	findParams := service.FindParams{
 		ResourceType:             "lbvserver_cmppolicy_binding",
 		ResourceName:             name,
 		ResourceMissingErrorCode: 258,
@@ -194,7 +194,7 @@ func deleteLbvserver_cmppolicy_bindingFunc(d *schema.ResourceData, meta interfac
 		argsMap["priority"] = url.QueryEscape(fmt.Sprintf("%v", v))
 	}
 
-	err := client.DeleteResourceWithArgsMap(netscaler.Lbvserver_cmppolicy_binding.Type(), name, argsMap)
+	err := client.DeleteResourceWithArgsMap(service.Lbvserver_cmppolicy_binding.Type(), name, argsMap)
 	if err != nil {
 		return err
 	}

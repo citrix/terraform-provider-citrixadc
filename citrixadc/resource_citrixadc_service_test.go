@@ -17,15 +17,19 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/chiradeep/go-nitro/config/basic"
-	"github.com/chiradeep/go-nitro/netscaler"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
 	"os"
 	"testing"
+
+	"github.com/citrix/adc-nitro-go/resource/config/basic"
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccService_basic(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -67,7 +71,7 @@ func testAccCheckServiceExist(n string, id *string) resource.TestCheckFunc {
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(netscaler.Service.Type(), rs.Primary.ID)
+		data, err := nsClient.FindResource(service.Service.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -93,7 +97,7 @@ func testAccCheckServiceDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(netscaler.Service.Type(), rs.Primary.ID)
+		_, err := nsClient.FindResource(service.Service.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("LB vserver %s still exists", rs.Primary.ID)
 		}
@@ -128,6 +132,9 @@ resource "citrixadc_service" "foo" {
 `
 
 func TestAccService_AssertNonUpdateableAttributes(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 
 	if tfAcc := os.Getenv("TF_ACC"); tfAcc == "" {
 		t.Skip("TF_ACC not set. Skipping acceptance test.")
@@ -140,7 +147,7 @@ func TestAccService_AssertNonUpdateableAttributes(t *testing.T) {
 
 	// Create resource
 	serviceName := "tf-acc-service-test"
-	serviceType := netscaler.Service.Type()
+	serviceType := service.Service.Type()
 
 	// Defer deletion of actual resource
 	defer testHelperEnsureResourceDeletion(c, t, serviceType, serviceName, nil)
@@ -197,11 +204,6 @@ func TestAccService_AssertNonUpdateableAttributes(t *testing.T) {
 	testHelperVerifyImmutabilityFunc(c, t, serviceType, serviceName, serviceInstance, "td")
 	serviceInstance.Td = 0
 
-	//riseapbrstatsmsgcode
-	serviceInstance.Riseapbrstatsmsgcode = 2
-	testHelperVerifyImmutabilityFunc(c, t, serviceType, serviceName, serviceInstance, "riseapbrstatsmsgcode")
-	serviceInstance.Riseapbrstatsmsgcode = 0
-
 }
 
 const testAccServiceEnableDisable_enabled = `
@@ -257,6 +259,9 @@ resource "citrixadc_service" "tf_acc_service" {
 `
 
 func TestAccService_enable_disable(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -288,6 +293,9 @@ func TestAccService_enable_disable(t *testing.T) {
 }
 
 func TestAccService_sslservice(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,

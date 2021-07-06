@@ -20,13 +20,16 @@ import (
 	"os"
 	"testing"
 
-	"github.com/chiradeep/go-nitro/config/gslb"
-	"github.com/chiradeep/go-nitro/netscaler"
+	"github.com/citrix/adc-nitro-go/resource/config/gslb"
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccGslbvserver_basic(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -69,7 +72,7 @@ func testAccCheckGslbvserverExist(n string, id *string) resource.TestCheckFunc {
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(netscaler.Gslbvserver.Type(), rs.Primary.ID)
+		data, err := nsClient.FindResource(service.Gslbvserver.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -95,7 +98,7 @@ func testAccCheckGslbvserverDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(netscaler.Gslbvserver.Type(), rs.Primary.ID)
+		_, err := nsClient.FindResource(service.Gslbvserver.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("GSLB vserver %s still exists", rs.Primary.ID)
 		}
@@ -125,6 +128,9 @@ resource "citrixadc_gslbvserver" "foo" {
 `
 
 func TestAccGslbvserver_AssertNonUpdateableAttributes(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 
 	if tfAcc := os.Getenv("TF_ACC"); tfAcc == "" {
 		t.Skip("TF_ACC not set. Skipping acceptance test.")
@@ -137,7 +143,7 @@ func TestAccGslbvserver_AssertNonUpdateableAttributes(t *testing.T) {
 
 	// Create resource
 	serverName := "tf-acc-glsb-vserver-test"
-	serverType := netscaler.Gslbvserver.Type()
+	serverType := service.Gslbvserver.Type()
 
 	// Defer deletion of actual resource
 	defer testHelperEnsureResourceDeletion(c, t, serverType, serverName, nil)
@@ -178,6 +184,9 @@ resource "citrixadc_gslbvserver" "tf_test_acc_gslbvsever" {
 `
 
 func TestAccGslbvserver_enable_disable(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,

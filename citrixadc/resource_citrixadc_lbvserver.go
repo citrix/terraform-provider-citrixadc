@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/ssl"
+	"github.com/citrix/adc-nitro-go/resource/config/ssl"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 
@@ -734,7 +734,7 @@ func createLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	sslcertkey, sok := d.GetOk("sslcertkey")
 	if sok {
-		exists := client.ResourceExists(netscaler.Sslcertkey.Type(), sslcertkey.(string))
+		exists := client.ResourceExists(service.Sslcertkey.Type(), sslcertkey.(string))
 		if !exists {
 			return fmt.Errorf("[ERROR] netscaler-provider: Specified ssl cert key does not exist on netscaler!")
 		}
@@ -849,21 +849,21 @@ func createLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		Quicbridgeprofilename:              d.Get("quicbridgeprofilename").(string),
 	}
 
-	_, err := client.AddResource(netscaler.Lbvserver.Type(), lbvserverName, &lbvserver)
+	_, err := client.AddResource(service.Lbvserver.Type(), lbvserverName, &lbvserver)
 	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: could not add resource %s of type %s", netscaler.Lbvserver.Type(), lbvserverName)
+		log.Printf("[ERROR] netscaler-provider: could not add resource %s of type %s", service.Lbvserver.Type(), lbvserverName)
 		return err
 	}
 	if sok { //ssl cert is specified
-		binding := ssl.Sslvserversslcertkeybinding{
+		binding := ssl.Sslvservercertkeybinding{
 			Vservername: lbvserverName,
 			Certkeyname: sslcertkey.(string),
 		}
 		log.Printf("[INFO] netscaler-provider:  Binding ssl cert %s to lbvserver %s", sslcertkey, lbvserverName)
-		err = client.BindResource(netscaler.Sslvserver.Type(), lbvserverName, netscaler.Sslcertkey.Type(), sslcertkey.(string), &binding)
+		err = client.BindResource(service.Sslvserver.Type(), lbvserverName, service.Sslcertkey.Type(), sslcertkey.(string), &binding)
 		if err != nil {
 			log.Printf("[ERROR] netscaler-provider:  Failed to bind ssl cert %s to lbvserver %s", sslcertkey, lbvserverName)
-			err2 := client.DeleteResource(netscaler.Lbvserver.Type(), lbvserverName)
+			err2 := client.DeleteResource(service.Lbvserver.Type(), lbvserverName)
 			if err2 != nil {
 				log.Printf("[ERROR] netscaler-provider:  Failed to delete lbvserver %s after bind to ssl cert failed", lbvserverName)
 				return fmt.Errorf("[ERROR] netscaler-provider:  Failed to delete lbvserver %s after bind to ssl cert failed", lbvserverName)
@@ -897,10 +897,10 @@ func createLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 			Sslprofile:  sslprofile.(string),
 		}
 		log.Printf("[INFO] netscaler-provider:  Binding ssl profile %s to lbvserver %s", sslprofile, lbvserverName)
-		_, err := client.UpdateResource(netscaler.Sslvserver.Type(), lbvserverName, &sslvserver)
+		_, err := client.UpdateResource(service.Sslvserver.Type(), lbvserverName, &sslvserver)
 		if err != nil {
 			log.Printf("[ERROR] netscaler-provider:  Failed to bind ssl profile %s to lbvserver %s", sslprofile, lbvserverName)
-			err2 := client.DeleteResource(netscaler.Lbvserver.Type(), lbvserverName)
+			err2 := client.DeleteResource(service.Lbvserver.Type(), lbvserverName)
 			if err2 != nil {
 				log.Printf("[ERROR] netscaler-provider:  Failed to delete lbvserver %s after bind to ssl profile failed", lbvserverName)
 				return fmt.Errorf("[ERROR] netscaler-provider:  Failed to delete lbvserver %s after bind to ssl profile failed", lbvserverName)
@@ -929,7 +929,7 @@ func readLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	lbvserverName := d.Id()
 	log.Printf("[DEBUG] netscaler-provider: Reading lbvserver state %s", lbvserverName)
-	data, err := client.FindResource(netscaler.Lbvserver.Type(), lbvserverName)
+	data, err := client.FindResource(service.Lbvserver.Type(), lbvserverName)
 	if err != nil {
 		log.Printf("[WARN] netscaler-provider: Clearing lbvserver state %s", lbvserverName)
 		d.SetId("")
@@ -1045,7 +1045,7 @@ func readLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	dataSsl, _ := client.FindResource(netscaler.Sslvserver.Type(), lbvserverName)
+	dataSsl, _ := client.FindResource(service.Sslvserver.Type(), lbvserverName)
 	d.Set("sslprofile", dataSsl["sslprofile"])
 
 	// Avoid duplicate listing of ciphersuites in standalone
@@ -1587,7 +1587,7 @@ func updateLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		oldSslcertkey, _ := d.GetChange("sslcertkey")
 		oldSslcertkeyName := oldSslcertkey.(string)
 		if oldSslcertkeyName != "" {
-			err := client.UnbindResource(netscaler.Sslvserver.Type(), lbvserverName, netscaler.Sslcertkey.Type(), oldSslcertkeyName, "certkeyname")
+			err := client.UnbindResource(service.Sslvserver.Type(), lbvserverName, service.Sslcertkey.Type(), oldSslcertkeyName, "certkeyname")
 			if err != nil {
 				return fmt.Errorf("[ERROR] netscaler-provider: Error unbinding sslcertkey from lbvserver %s", oldSslcertkeyName)
 			}
@@ -1596,7 +1596,7 @@ func updateLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if hasChange {
-		_, err := client.UpdateResource(netscaler.Lbvserver.Type(), lbvserverName, &lbvserver)
+		_, err := client.UpdateResource(service.Lbvserver.Type(), lbvserverName, &lbvserver)
 		if err != nil {
 			return fmt.Errorf("[ERROR] netscaler-provider: Error updating lbvserver %s", lbvserverName)
 		}
@@ -1606,12 +1606,12 @@ func updateLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	if sslcertkeyChanged && sslcertkeyName != "" {
 		//Binding has to be updated
 		//rebind
-		binding := ssl.Sslvserversslcertkeybinding{
+		binding := ssl.Sslvservercertkeybinding{
 			Vservername: lbvserverName,
 			Certkeyname: sslcertkeyName,
 		}
 		log.Printf("[INFO] netscaler-provider:  Binding ssl cert %s to lbvserver %s", sslcertkeyName, lbvserverName)
-		err := client.BindResource(netscaler.Sslvserver.Type(), lbvserverName, netscaler.Sslcertkey.Type(), sslcertkeyName, &binding)
+		err := client.BindResource(service.Sslvserver.Type(), lbvserverName, service.Sslcertkey.Type(), sslcertkeyName, &binding)
 		if err != nil {
 			log.Printf("[ERROR] netscaler-provider:  Failed to bind ssl cert %s to lbvserver %s", sslcertkeyName, lbvserverName)
 			return fmt.Errorf("[ERROR] netscaler-provider:  Failed to bind ssl cert %s to lbvserver %s", sslcertkeyName, lbvserverName)
@@ -1648,7 +1648,7 @@ func updateLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 				Vservername: lbvserverName,
 				Sslprofile:  "true",
 			}
-			err := client.ActOnResource(netscaler.Sslvserver.Type(), &sslvserver, "unset")
+			err := client.ActOnResource(service.Sslvserver.Type(), &sslvserver, "unset")
 			if err != nil {
 				return fmt.Errorf("[ERROR] netscaler-provider: Error unbinding ssl profile from lbvserver %s", lbvserverName)
 			}
@@ -1658,7 +1658,7 @@ func updateLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 				Sslprofile:  sslprofileName,
 			}
 			log.Printf("[INFO] netscaler-provider:  Binding ssl profile %s to lbvserver %s", sslprofileName, lbvserverName)
-			_, err := client.UpdateResource(netscaler.Sslvserver.Type(), lbvserverName, &sslvserver)
+			_, err := client.UpdateResource(service.Sslvserver.Type(), lbvserverName, &sslvserver)
 			if err != nil {
 				log.Printf("[ERROR] netscaler-provider:  Failed to bind ssl profile %s to lbvserver %s", sslprofileName, lbvserverName)
 				return fmt.Errorf("[ERROR] netscaler-provider:  Failed to bind ssl profile %s to lbvserver %s", sslprofileName, lbvserverName)
@@ -1686,7 +1686,7 @@ func deleteLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] netscaler-provider:  In deleteLbvserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lbvserverName := d.Id()
-	err := client.DeleteResource(netscaler.Lbvserver.Type(), lbvserverName)
+	err := client.DeleteResource(service.Lbvserver.Type(), lbvserverName)
 	if err != nil {
 		return err
 	}
@@ -1696,7 +1696,7 @@ func deleteLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func doLbvserverStateChange(d *schema.ResourceData, client *netscaler.NitroClient) error {
+func doLbvserverStateChange(d *schema.ResourceData, client *service.NitroClient) error {
 	log.Printf("[DEBUG]  netscaler-provider: In doLbvserverStateChange")
 
 	// We need a new instance of the struct since
@@ -1709,13 +1709,13 @@ func doLbvserverStateChange(d *schema.ResourceData, client *netscaler.NitroClien
 
 	// Enable action
 	if newstate == "ENABLED" {
-		err := client.ActOnResource(netscaler.Lbvserver.Type(), lbvserver, "enable")
+		err := client.ActOnResource(service.Lbvserver.Type(), lbvserver, "enable")
 		if err != nil {
 			return err
 		}
 	} else if newstate == "DISABLED" {
 		// Add attributes relevant to the disable operation
-		err := client.ActOnResource(netscaler.Lbvserver.Type(), lbvserver, "disable")
+		err := client.ActOnResource(service.Lbvserver.Type(), lbvserver, "disable")
 		if err != nil {
 			return err
 		}

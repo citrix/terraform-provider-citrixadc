@@ -2,13 +2,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"log"
 
-	"github.com/chiradeep/go-nitro/config/ns"
-	"github.com/chiradeep/go-nitro/netscaler"
+	"github.com/citrix/adc-nitro-go/resource/config/ns"
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
-
-	"log"
 )
 
 func resourceCitrixAdcNsconfigUpdate() *schema.Resource {
@@ -57,10 +56,10 @@ func createNsconfigUpdateFunc(d *schema.ResourceData, meta interface{}) error {
 	nsconfig.Ipaddress = d.Get("ipaddress").(string)
 	nsconfig.Netmask = d.Get("netmask").(string)
 	nsconfig.Nsvlan = d.Get("nsvlan").(int)
-	nsconfig.Ifnum = getIfnumValue(d)
+	nsconfig.Ifnum = toStringList(getIfnumValue(d))
 	nsconfig.Tagged = d.Get("tagged").(string)
 
-	err := client.UpdateUnnamedResource(netscaler.Nsconfig.Type(), &nsconfig)
+	err := client.UpdateUnnamedResource(service.Nsconfig.Type(), &nsconfig)
 	if err != nil {
 		return err
 	}
@@ -80,7 +79,7 @@ func readNsconfigUpdateFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	nsconfigName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading nsconfig state %s", nsconfigName)
-	data, err := client.FindResource(netscaler.Nsconfig.Type(), "")
+	data, err := client.FindResource(service.Nsconfig.Type(), "")
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing nsconfig state %s", nsconfigName)
 		d.SetId("")
@@ -136,12 +135,12 @@ func updateNsconfigUpdateFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if hasNsvlanChanged || hasIfnumChanged || hasTaggedChanged {
 		nsconfig.Nsvlan = d.Get("nsvlan").(int)
-		nsconfig.Ifnum = getIfnumValue(d)
+		nsconfig.Ifnum = toStringList(getIfnumValue(d))
 		nsconfig.Tagged = d.Get("tagged").(string)
 	}
 
 	if hasIPChanged || hasNetmaskChanged || hasNsvlanChanged || hasIfnumChanged || hasTaggedChanged {
-		err := client.UpdateUnnamedResource(netscaler.Nsconfig.Type(), &nsconfig)
+		err := client.UpdateUnnamedResource(service.Nsconfig.Type(), &nsconfig)
 		if err != nil {
 			return fmt.Errorf("Error updating nsconfig %s", nsconfigName)
 		}

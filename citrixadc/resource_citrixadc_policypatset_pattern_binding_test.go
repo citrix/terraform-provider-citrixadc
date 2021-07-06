@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/chiradeep/go-nitro/netscaler"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
 	"strings"
 	"testing"
+
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 const testAccPolicypatset_pattern_binding_basic_step1 = `
@@ -53,6 +54,9 @@ resource "citrixadc_policypatset_pattern_binding" "tf_bind" {
 `
 
 func TestAccPolicypatset_pattern_binding_basic(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -102,7 +106,7 @@ func testAccCheckPolicypatset_pattern_bindingExist(n string, id *string) resourc
 		name := idSlice[0]
 		stringText := idSlice[1]
 
-		findParams := netscaler.FindParams{
+		findParams := service.FindParams{
 			ResourceType:             "policypatset_pattern_binding",
 			ResourceName:             name,
 			ResourceMissingErrorCode: 2823,
@@ -144,7 +148,7 @@ func testAccCheckPolicypatset_pattern_bindingDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(netscaler.Policypatset_pattern_binding.Type(), rs.Primary.ID)
+		_, err := nsClient.FindResource(service.Policypatset_pattern_binding.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("policypatset_pattern_binding %s still exists", rs.Primary.ID)
 		}

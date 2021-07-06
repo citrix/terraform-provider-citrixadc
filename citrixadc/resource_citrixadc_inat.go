@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/network"
+	"github.com/citrix/adc-nitro-go/resource/config/network"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 
@@ -113,7 +113,7 @@ func createInatFunc(d *schema.ResourceData, meta interface{}) error {
 		Usnip:        d.Get("usnip").(string),
 	}
 
-	_, err := client.AddResource(netscaler.Inat.Type(), inatName, &inat)
+	_, err := client.AddResource(service.Inat.Type(), inatName, &inat)
 	if err != nil {
 		fmt.Printf("[DEBUG] netscaler-provider add inat failed, name=%s", inatName)
 		return err
@@ -134,7 +134,7 @@ func readInatFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	inatName := d.Id()
 	log.Printf("[DEBUG] netscaler-provider: Reading inat state %s", inatName)
-	data, err := client.FindResource(netscaler.Inat.Type(), inatName)
+	data, err := client.FindResource(service.Inat.Type(), inatName)
 	if err != nil {
 		log.Printf("[WARN] netscaler-provider: Clearing inat state %s", inatName)
 		d.SetId("")
@@ -224,7 +224,7 @@ func updateInatFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if hasChange {
-		_, err := client.UpdateResource(netscaler.Inat.Type(), inatName, &inat)
+		_, err := client.UpdateResource(service.Inat.Type(), inatName, &inat)
 		if err != nil {
 			return fmt.Errorf("Error updating inat %s", inatName)
 		}
@@ -236,7 +236,7 @@ func deleteInatFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  netscaler-provider: In deleteInatFunc")
 	client := meta.(*NetScalerNitroClient).client
 	inatName := d.Id()
-	err := client.DeleteResource(netscaler.Inat.Type(), inatName)
+	err := client.DeleteResource(service.Inat.Type(), inatName)
 	if err != nil {
 		return err
 	}

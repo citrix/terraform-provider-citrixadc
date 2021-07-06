@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/policy"
+	"github.com/citrix/adc-nitro-go/resource/config/policy"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"fmt"
@@ -52,7 +52,7 @@ func createPolicystringmap_pattern_bindingFunc(d *schema.ResourceData, meta inte
 		Value: d.Get("value").(string),
 	}
 
-	_, err := client.AddResource(netscaler.Policystringmap_pattern_binding.Type(), name, &policystringmap_pattern_binding)
+	_, err := client.AddResource(service.Policystringmap_pattern_binding.Type(), name, &policystringmap_pattern_binding)
 	if err != nil {
 		return err
 	}
@@ -76,7 +76,7 @@ func readPolicystringmap_pattern_bindingFunc(d *schema.ResourceData, meta interf
 	key := idSlice[1]
 	log.Printf("[DEBUG] citrixadc-provider: Reading policystringmap_pattern_binding state %s", bindingId)
 
-	findParams := netscaler.FindParams{
+	findParams := service.FindParams{
 		ResourceType:             "policystringmap_pattern_binding",
 		ResourceName:             name,
 		ResourceMissingErrorCode: 258,

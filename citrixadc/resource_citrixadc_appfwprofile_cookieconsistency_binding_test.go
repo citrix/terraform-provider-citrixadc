@@ -20,7 +20,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/chiradeep/go-nitro/netscaler"
+	"github.com/citrix/adc-nitro-go/service"
+
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
@@ -65,6 +66,9 @@ const testAccAppfwprofile_cookieconsistency_binding_basic = `
 `
 
 func TestAccAppfwprofile_cookieconsistency_binding_basic(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -107,8 +111,8 @@ func testAccCheckAppfwprofile_cookieconsistency_bindingExist(n string, id *strin
 		appFwName := idSlice[0]
 		cookieconsistency := idSlice[1]
 
-		findParams := netscaler.FindParams{
-			ResourceType:             netscaler.Appfwprofile_cookieconsistency_binding.Type(),
+		findParams := service.FindParams{
+			ResourceType:             service.Appfwprofile_cookieconsistency_binding.Type(),
 			ResourceName:             appFwName,
 			ResourceMissingErrorCode: 258,
 		}
@@ -150,7 +154,7 @@ func testAccCheckAppfwprofile_cookieconsistency_bindingDestroy(s *terraform.Stat
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(netscaler.Appfwprofile_cookieconsistency_binding.Type(), rs.Primary.ID)
+		_, err := nsClient.FindResource(service.Appfwprofile_cookieconsistency_binding.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("appfwprofile_cookieconsistency_binding %s still exists", rs.Primary.ID)
 		}

@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/gslb"
+	"github.com/citrix/adc-nitro-go/resource/config/gslb"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 
@@ -117,7 +117,7 @@ func createGslbsiteFunc(d *schema.ResourceData, meta interface{}) error {
 		Triggermonitor:         d.Get("triggermonitor").(string),
 	}
 
-	_, err := client.AddResource(netscaler.Gslbsite.Type(), gslbsiteName, &gslbsite)
+	_, err := client.AddResource(service.Gslbsite.Type(), gslbsiteName, &gslbsite)
 	if err != nil {
 		return err
 	}
@@ -137,7 +137,7 @@ func readGslbsiteFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	gslbsiteName := d.Id()
 	log.Printf("[DEBUG] netscaler-provider: Reading gslbsite state %s", gslbsiteName)
-	data, err := client.FindResource(netscaler.Gslbsite.Type(), gslbsiteName)
+	data, err := client.FindResource(service.Gslbsite.Type(), gslbsiteName)
 	if err != nil {
 		log.Printf("[WARN] netscaler-provider: Clearing gslbsite state %s", gslbsiteName)
 		d.SetId("")
@@ -232,7 +232,7 @@ func updateGslbsiteFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if hasChange {
-		_, err := client.UpdateResource(netscaler.Gslbsite.Type(), gslbsiteName, &gslbsite)
+		_, err := client.UpdateResource(service.Gslbsite.Type(), gslbsiteName, &gslbsite)
 		if err != nil {
 			return fmt.Errorf("Error updating gslbsite %s", gslbsiteName)
 		}
@@ -244,7 +244,7 @@ func deleteGslbsiteFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  netscaler-provider: In deleteGslbsiteFunc")
 	client := meta.(*NetScalerNitroClient).client
 	gslbsiteName := d.Id()
-	err := client.DeleteResource(netscaler.Gslbsite.Type(), gslbsiteName)
+	err := client.DeleteResource(service.Gslbsite.Type(), gslbsiteName)
 	if err != nil {
 		return err
 	}

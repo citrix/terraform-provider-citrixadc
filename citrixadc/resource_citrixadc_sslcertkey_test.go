@@ -17,15 +17,19 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/chiradeep/go-nitro/config/ssl"
-	"github.com/chiradeep/go-nitro/netscaler"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
 	"os"
 	"testing"
+
+	"github.com/citrix/adc-nitro-go/resource/config/ssl"
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccSslcertkey_basic(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { doSslcertkeyPreChecks(t) },
 		Providers:    testAccProviders,
@@ -68,7 +72,7 @@ func testAccCheckSslcertkeyExist(n string, id *string) resource.TestCheckFunc {
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(netscaler.Sslcertkey.Type(), rs.Primary.ID)
+		data, err := nsClient.FindResource(service.Sslcertkey.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -94,7 +98,7 @@ func testAccCheckSslcertkeyDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(netscaler.Sslcertkey.Type(), rs.Primary.ID)
+		_, err := nsClient.FindResource(service.Sslcertkey.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("SSL certkey %s still exists", rs.Primary.ID)
 		}
@@ -145,6 +149,9 @@ resource "citrixadc_sslcertkey" "foo" {
 `
 
 func TestAccSslcertkey_linkcert(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { doSslcertkeyPreChecks(t) },
 		Providers:    testAccProviders,
@@ -272,6 +279,9 @@ resource "citrixadc_sslcertkey" "intermediate" {
 `
 
 func TestAccSslcertkey_AssertNonUpdateableAttributes(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 
 	if tfAcc := os.Getenv("TF_ACC"); tfAcc == "" {
 		t.Skip("TF_ACC not set. Skipping acceptance test.")
@@ -284,7 +294,7 @@ func TestAccSslcertkey_AssertNonUpdateableAttributes(t *testing.T) {
 
 	// Create resource
 	certkeyName := "tf-acc-certkey-test"
-	certkeyType := netscaler.Sslcertkey.Type()
+	certkeyType := service.Sslcertkey.Type()
 
 	// Defer deletion of actual resource
 	defer testHelperEnsureResourceDeletion(c, t, certkeyType, certkeyName, nil)

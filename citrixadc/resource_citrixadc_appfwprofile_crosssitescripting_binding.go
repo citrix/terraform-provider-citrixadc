@@ -3,10 +3,10 @@ package citrixadc
 import (
 	"net/url"
 
-	"github.com/chiradeep/go-nitro/config/appfw"
+	"github.com/citrix/adc-nitro-go/resource/config/appfw"
 
 	"fmt"
-	"github.com/chiradeep/go-nitro/netscaler"
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform/helper/schema"
 	"log"
 	"strings"
@@ -113,7 +113,7 @@ func createAppfwprofile_crosssitescripting_bindingFunc(d *schema.ResourceData, m
 		State:              d.Get("state").(string),
 	}
 
-	_, err := client.AddResource(netscaler.Appfwprofile_crosssitescripting_binding.Type(), appFwName, &appfwprofile_crosssitescripting_binding)
+	_, err := client.AddResource(service.Appfwprofile_crosssitescripting_binding.Type(), appFwName, &appfwprofile_crosssitescripting_binding)
 	if err != nil {
 		return err
 	}
@@ -138,8 +138,8 @@ func readAppfwprofile_crosssitescripting_bindingFunc(d *schema.ResourceData, met
 	crosssitescripting := idSlice[1]
 	log.Printf("[DEBUG] citrixadc-provider: Reading appfwprofile_crosssitescripting_binding state %s", bindingId)
 
-	findParams := netscaler.FindParams{
-		ResourceType:             netscaler.Appfwprofile_crosssitescripting_binding.Type(),
+	findParams := service.FindParams{
+		ResourceType:             service.Appfwprofile_crosssitescripting_binding.Type(),
 		ResourceName:             appFwName,
 		ResourceMissingErrorCode: 258,
 	}
@@ -208,7 +208,7 @@ func deleteAppfwprofile_crosssitescripting_bindingFunc(d *schema.ResourceData, m
 	args["crosssitescripting"] = crosssitescripting
 	args["formactionurl_xss"] = url.QueryEscape(d.Get("formactionurl_xss").(string))
 	args["as_scan_location_xss"] = d.Get("as_scan_location_xss").(string)
-	err := client.DeleteResourceWithArgsMap(netscaler.Appfwprofile_crosssitescripting_binding.Type(), appFwName, args)
+	err := client.DeleteResourceWithArgsMap(service.Appfwprofile_crosssitescripting_binding.Type(), appFwName, args)
 	if err != nil {
 		return err
 	}

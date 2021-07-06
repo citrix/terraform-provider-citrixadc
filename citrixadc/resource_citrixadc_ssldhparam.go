@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/ssl"
+	"github.com/citrix/adc-nitro-go/resource/config/ssl"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"log"
@@ -47,7 +47,7 @@ func createSsldhparamFunc(d *schema.ResourceData, meta interface{}) error {
 		Gen:    d.Get("gen").(string),
 	}
 
-	err := client.ActOnResource(netscaler.Ssldhparam.Type(), &ssldhparam, "create")
+	err := client.ActOnResource(service.Ssldhparam.Type(), &ssldhparam, "create")
 	if err != nil {
 		return err
 	}

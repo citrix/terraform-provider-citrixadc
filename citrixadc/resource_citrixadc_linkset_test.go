@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/chiradeep/go-nitro/netscaler"
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
@@ -41,6 +41,9 @@ const testAccLinkset_update_with_binding = `
 `
 
 func TestAccLinkset_basic(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
 	if isCpxRun {
 		t.Skip("clustering not supported in CPX")
 	}
@@ -85,7 +88,7 @@ func testAccCheckLinksetExist(n string, id *string) resource.TestCheckFunc {
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(netscaler.Linkset.Type(), rs.Primary.ID)
+		data, err := nsClient.FindResource(service.Linkset.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -111,7 +114,7 @@ func testAccCheckLinksetDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(netscaler.Linkset.Type(), rs.Primary.ID)
+		_, err := nsClient.FindResource(service.Linkset.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("Linset ID %s still exists", rs.Primary.ID)
 		}

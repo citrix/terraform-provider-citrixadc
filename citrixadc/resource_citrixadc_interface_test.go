@@ -17,13 +17,17 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/chiradeep/go-nitro/netscaler"
+	"testing"
+
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"testing"
 )
 
 func TestAccInterface_basic(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	if isCpxRun {
 		t.Skip("skipping test CPX has different interface numbering")
 	}
@@ -68,7 +72,7 @@ func testAccCheckInterfaceExist(n string, id *string, interfaceId string) resour
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
 
-		array, _ := nsClient.FindAllResources(netscaler.Interface.Type())
+		array, _ := nsClient.FindAllResources(service.Interface.Type())
 
 		// Iterate over the retrieved addresses to find the particular interface id
 		foundInterface := false

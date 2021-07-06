@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/ns"
+	"github.com/citrix/adc-nitro-go/resource/config/ns"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"fmt"
@@ -243,7 +243,7 @@ func createNshttpprofileFunc(d *schema.ResourceData, meta interface{}) error {
 		Websocket:                 d.Get("websocket").(string),
 	}
 
-	_, err := client.AddResource(netscaler.Nshttpprofile.Type(), nshttpprofileName, &nshttpprofile)
+	_, err := client.AddResource(service.Nshttpprofile.Type(), nshttpprofileName, &nshttpprofile)
 	if err != nil {
 		return err
 	}
@@ -263,7 +263,7 @@ func readNshttpprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	nshttpprofileName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading nshttpprofile state %s", nshttpprofileName)
-	data, err := client.FindResource(netscaler.Nshttpprofile.Type(), nshttpprofileName)
+	data, err := client.FindResource(service.Nshttpprofile.Type(), nshttpprofileName)
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing nshttpprofile state %s", nshttpprofileName)
 		d.SetId("")
@@ -496,7 +496,7 @@ func updateNshttpprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if hasChange {
-		_, err := client.UpdateResource(netscaler.Nshttpprofile.Type(), nshttpprofileName, &nshttpprofile)
+		_, err := client.UpdateResource(service.Nshttpprofile.Type(), nshttpprofileName, &nshttpprofile)
 		if err != nil {
 			return fmt.Errorf("Error updating nshttpprofile %s", nshttpprofileName)
 		}
@@ -508,7 +508,7 @@ func deleteNshttpprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNshttpprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nshttpprofileName := d.Id()
-	err := client.DeleteResource(netscaler.Nshttpprofile.Type(), nshttpprofileName)
+	err := client.DeleteResource(service.Nshttpprofile.Type(), nshttpprofileName)
 	if err != nil {
 		return err
 	}

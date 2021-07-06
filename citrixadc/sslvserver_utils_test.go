@@ -2,11 +2,12 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/chiradeep/go-nitro/netscaler"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
 	"log"
 	"strings"
+
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func testCiphersConfig(resourceTemplate string, ciphers []string) string {
@@ -43,7 +44,7 @@ func testCheckCiphersEqualToActual(ciphers []string, vserverName string) resourc
 	return func(s *terraform.State) error {
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
 		// Check existence of ciphers in correct order
-		cipherBindings, err := nsClient.FindResourceArray(netscaler.Sslvserver_sslcipher_binding.Type(), vserverName)
+		cipherBindings, err := nsClient.FindResourceArray(service.Sslvserver_sslcipher_binding.Type(), vserverName)
 		if err != nil && len(cipherBindings) != 0 {
 			log.Printf("Error retrieving cipher resource array")
 			return err
@@ -70,7 +71,7 @@ func testCheckCiphersuitesEqualToActual(ciphersuites []string, vserverName strin
 	return func(s *terraform.State) error {
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
 		// Check existence of ciphers in correct order
-		ciphersuiteBindings, err := nsClient.FindResourceArray(netscaler.Sslvserver_sslciphersuite_binding.Type(), vserverName)
+		ciphersuiteBindings, err := nsClient.FindResourceArray(service.Sslvserver_sslciphersuite_binding.Type(), vserverName)
 		if err != nil && len(ciphersuiteBindings) != 0 {
 			log.Printf("Error retrieving ciphersuite resource array")
 			return err

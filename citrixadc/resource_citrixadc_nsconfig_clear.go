@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/ns"
+	"github.com/citrix/adc-nitro-go/resource/config/ns"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"log"
@@ -52,7 +52,7 @@ func createNsconfigClearFunc(d *schema.ResourceData, meta interface{}) error {
 		Rbaconfig: d.Get("rbaconfig").(string),
 	}
 
-	err := client.ActOnResource(netscaler.Nsconfig.Type(), &nsconfig, "clear")
+	err := client.ActOnResource(service.Nsconfig.Type(), &nsconfig, "clear")
 	if err != nil {
 		return err
 	}

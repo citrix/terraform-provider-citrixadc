@@ -17,12 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/chiradeep/go-nitro/netscaler"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
 	"strconv"
 	"strings"
 	"testing"
+
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 const testAccServicegroup_servicegroupmember_binding_ipv4_step1 = `
@@ -48,6 +49,9 @@ resource "citrixadc_servicegroup" "tf_servicegroup" {
 `
 
 func TestAccServicegroup_servicegroupmember_binding_ipv4(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -93,6 +97,9 @@ resource "citrixadc_servicegroup" "tf_servicegroup" {
 `
 
 func TestAccServicegroup_servicegroupmember_binding_ipv6(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -149,6 +156,9 @@ resource "citrixadc_server" "tf_server" {
 `
 
 func TestAccServicegroup_servicegroupmember_binding_server_no_port(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -205,6 +215,9 @@ resource "citrixadc_server" "tf_server" {
 `
 
 func TestAccServicegroup_servicegroupmember_binding_server_with_port(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -262,7 +275,7 @@ func testAccCheckServicegroup_servicegroupmember_bindingExist(n string, id *stri
 			}
 		}
 
-		findParams := netscaler.FindParams{
+		findParams := service.FindParams{
 			ResourceType:             "servicegroup_servicegroupmember_binding",
 			ResourceName:             servicegroupname,
 			ResourceMissingErrorCode: 258,
@@ -317,7 +330,7 @@ func testAccCheckServicegroup_servicegroupmember_binding_not_exists(bindingId st
 			}
 		}
 
-		findParams := netscaler.FindParams{
+		findParams := service.FindParams{
 			ResourceType:             "servicegroup_servicegroupmember_binding",
 			ResourceName:             servicegroupname,
 			ResourceMissingErrorCode: 258,
@@ -372,7 +385,7 @@ func testAccCheckServicegroup_servicegroupmember_bindingDestroy(s *terraform.Sta
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(netscaler.Servicegroup_servicegroupmember_binding.Type(), rs.Primary.ID)
+		_, err := nsClient.FindResource(service.Servicegroup_servicegroupmember_binding.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("servicegroup_servicegroupmember_binding %s still exists", rs.Primary.ID)
 		}

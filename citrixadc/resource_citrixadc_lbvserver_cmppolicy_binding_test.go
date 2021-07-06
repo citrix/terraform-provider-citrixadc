@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/chiradeep/go-nitro/netscaler"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
 	"strings"
 	"testing"
+
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 const testAccLbvserver_cmppolicy_binding_basic_step1 = `
@@ -75,6 +76,9 @@ resource "citrixadc_lbvserver_cmppolicy_binding" "tf_bind" {
 `
 
 func TestAccLbvserver_cmppolicy_binding_basic(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -123,7 +127,7 @@ func testAccCheckLbvserver_cmppolicy_bindingExist(n string, id *string) resource
 		name := idSlice[0]
 		policyname := idSlice[1]
 
-		findParams := netscaler.FindParams{
+		findParams := service.FindParams{
 			ResourceType:             "lbvserver_cmppolicy_binding",
 			ResourceName:             name,
 			ResourceMissingErrorCode: 258,
@@ -165,7 +169,7 @@ func testAccCheckLbvserver_cmppolicy_bindingDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(netscaler.Lbvserver_cmppolicy_binding.Type(), rs.Primary.ID)
+		_, err := nsClient.FindResource(service.Lbvserver_cmppolicy_binding.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("lbvserver_cmppolicy_binding %s still exists", rs.Primary.ID)
 		}

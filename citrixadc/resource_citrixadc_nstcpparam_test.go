@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/chiradeep/go-nitro/netscaler"
+	"testing"
+
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"testing"
 )
 
 const testAccNstcpparam_basic = `
@@ -239,6 +240,9 @@ resource "citrixadc_nstcpparam" "tf_tcpparam" {
 `
 
 func TestAccNstcpparam_basic(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -289,7 +293,7 @@ func testAccCheckNstcpparamExist(n string, id *string) resource.TestCheckFunc {
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(netscaler.Nstcpparam.Type(), "")
+		data, err := nsClient.FindResource(service.Nstcpparam.Type(), "")
 
 		if err != nil {
 			return err
@@ -308,7 +312,7 @@ func testAccCheckTcpparamMapvalues(mapData map[string]string) resource.TestCheck
 
 		client := testAccProvider.Meta().(*NetScalerNitroClient).client
 
-		findParams := netscaler.FindParams{
+		findParams := service.FindParams{
 			ResourceType: "nstcpparam",
 		}
 		dataArr, err := client.FindResourceArrayWithParams(findParams)
@@ -345,7 +349,7 @@ func testAccCheckNstcpparamDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(netscaler.Nstcpparam.Type(), rs.Primary.ID)
+		_, err := nsClient.FindResource(service.Nstcpparam.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("nstcpparam %s still exists", rs.Primary.ID)
 		}

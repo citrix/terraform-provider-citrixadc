@@ -1,8 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/ssl"
-	"github.com/chiradeep/go-nitro/netscaler"
+	"github.com/citrix/adc-nitro-go/resource/config/ssl"
+	"github.com/citrix/adc-nitro-go/service"
+
 	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/schema"
 
@@ -24,7 +25,7 @@ func syncCiphersuites(d *schema.ResourceData, meta interface{}, vserverName stri
 		log.Printf("Configured ciphersuites %v", ciphersuites)
 	}
 
-	ciphersuiteBindings, err = client.FindResourceArray(netscaler.Sslvserver_sslciphersuite_binding.Type(), vserverName)
+	ciphersuiteBindings, err = client.FindResourceArray(service.Sslvserver_sslciphersuite_binding.Type(), vserverName)
 
 	// When cipher suites are not set and they do not exist there is no sync
 	if !ok && len(ciphersuiteBindings) == 0 {
@@ -55,7 +56,7 @@ func syncCiphersuites(d *schema.ResourceData, meta interface{}, vserverName stri
 		ciphername := ciphersuiteBinding["ciphername"].(string)
 		argsMap := map[string]string{"ciphername": ciphername}
 		log.Printf("Will delete ciphername %v from vserver %v", ciphername, vserverName)
-		err := client.DeleteResourceWithArgsMap(netscaler.Sslvserver_sslciphersuite_binding.Type(), vserverName, argsMap)
+		err := client.DeleteResourceWithArgsMap(service.Sslvserver_sslciphersuite_binding.Type(), vserverName, argsMap)
 		if err != nil {
 			log.Printf("Error deleting ciphersuite %v from vserver %v", ciphername, vserverName)
 			return err
@@ -65,11 +66,11 @@ func syncCiphersuites(d *schema.ResourceData, meta interface{}, vserverName stri
 	// Then add all configured bindings
 	ciphersuiteslice := ciphersuites.([]interface{})
 	for _, ciphername := range ciphersuiteslice {
-		resource := ssl.Sslvserversslciphersuitebinding{
+		resource := ssl.Sslvserverciphersuitebinding{
 			Vservername: vserverName,
 			Ciphername:  ciphername.(string),
 		}
-		_, err = client.AddResource(netscaler.Sslvserver_sslciphersuite_binding.Type(), vserverName, resource)
+		_, err = client.AddResource(service.Sslvserver_sslciphersuite_binding.Type(), vserverName, resource)
 		if err != nil {
 			log.Printf("Error binding ciphersuite %v to vserver %v", ciphername, vserverName)
 			return err
@@ -83,7 +84,7 @@ func setCiphersuiteData(d *schema.ResourceData, meta interface{}, vserverName st
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] In setCiphersuiteData")
 
-	ciphersuiteBindings, err := client.FindResourceArray(netscaler.Sslvserver_sslciphersuite_binding.Type(), vserverName)
+	ciphersuiteBindings, err := client.FindResourceArray(service.Sslvserver_sslciphersuite_binding.Type(), vserverName)
 	if err != nil && len(ciphersuiteBindings) != 0 {
 		log.Printf("Error retrieving ciphersuite resource array")
 		return err
@@ -109,7 +110,7 @@ func syncCiphers(d *schema.ResourceData, meta interface{}, vserverName string) e
 		log.Printf("Configured ciphers %v", ciphers)
 	}
 
-	findParams := netscaler.FindParams{
+	findParams := service.FindParams{
 		ResourceType:             "sslvserver_sslcipher_binding",
 		ResourceName:             vserverName,
 		ResourceMissingErrorCode: 258,
@@ -149,7 +150,7 @@ func syncCiphers(d *schema.ResourceData, meta interface{}, vserverName string) e
 		cipheraliasname := cipherBinding["cipheraliasname"].(string)
 		argsMap := map[string]string{"ciphername": cipheraliasname}
 		log.Printf("Will delete cipheraliasname %v from vserver %v", cipheraliasname, vserverName)
-		err := client.DeleteResourceWithArgsMap(netscaler.Sslvserver_sslcipher_binding.Type(), vserverName, argsMap)
+		err := client.DeleteResourceWithArgsMap(service.Sslvserver_sslcipher_binding.Type(), vserverName, argsMap)
 		if err != nil {
 			log.Printf("Error deleting cipheraliasname %v from vserver %v", cipheraliasname, vserverName)
 			return err
@@ -159,11 +160,11 @@ func syncCiphers(d *schema.ResourceData, meta interface{}, vserverName string) e
 	// Then add all configured bindings
 	cipherslice := ciphers.([]interface{})
 	for _, cipheraliasname := range cipherslice {
-		resource := ssl.Sslvserversslciphersuitebinding{
+		resource := ssl.Sslvserverciphersuitebinding{
 			Vservername: vserverName,
 			Ciphername:  cipheraliasname.(string),
 		}
-		_, err = client.AddResource(netscaler.Sslvserver_sslcipher_binding.Type(), vserverName, resource)
+		_, err = client.AddResource(service.Sslvserver_sslcipher_binding.Type(), vserverName, resource)
 		if err != nil {
 			log.Printf("Error binding cipher %v to vserver %v", cipheraliasname, vserverName)
 			return err
@@ -177,7 +178,7 @@ func setCipherData(d *schema.ResourceData, meta interface{}, vserverName string)
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] In setCipherData")
 
-	cipherBindings, err := client.FindResourceArray(netscaler.Sslvserver_sslcipher_binding.Type(), vserverName)
+	cipherBindings, err := client.FindResourceArray(service.Sslvserver_sslcipher_binding.Type(), vserverName)
 	if err != nil && len(cipherBindings) != 0 {
 		log.Printf("Error retrieving cipher resource array")
 		return err
@@ -267,7 +268,7 @@ func syncSnisslcert(d *schema.ResourceData, meta interface{}, sslvserverName str
 	for _, snisslcertkey := range todelete {
 
 		args := map[string]string{"certkeyname": snisslcertkey, "snicert": "true"}
-		err := client.DeleteResourceWithArgsMap(netscaler.Sslvserver_sslcertkey_binding.Type(), sslvserverName, args)
+		err := client.DeleteResourceWithArgsMap(service.Sslvserver_sslcertkey_binding.Type(), sslvserverName, args)
 		if err != nil {
 			return fmt.Errorf("[ERROR] netscaler-provider: Error unbinding sni sslcertkey from sslvserver %s", snisslcertkey)
 		}
@@ -276,16 +277,16 @@ func syncSnisslcert(d *schema.ResourceData, meta interface{}, sslvserverName str
 
 	// Do the bindings
 	for _, snisslcertkey := range toadd {
-		binding := ssl.Sslvserversslcertkeybinding{
+		binding := ssl.Sslvservercertkeybinding{
 			Vservername: sslvserverName,
 			Certkeyname: snisslcertkey,
 			Snicert:     true,
 		}
 		log.Printf("[INFO] netscaler-provider:  Binding sni ssl cert %s to sslvserver %s", snisslcertkey, sslvserverName)
-		err := client.BindResource(netscaler.Sslvserver.Type(), sslvserverName, netscaler.Sslcertkey.Type(), snisslcertkey, &binding)
+		err := client.BindResource(service.Sslvserver.Type(), sslvserverName, service.Sslcertkey.Type(), snisslcertkey, &binding)
 		if err != nil {
 			log.Printf("[ERROR] netscaler-provider:  Failed to bind sni ssl cert %s to sslvserver %s", snisslcertkey, sslvserverName)
-			err2 := client.DeleteResource(netscaler.Lbvserver.Type(), sslvserverName)
+			err2 := client.DeleteResource(service.Lbvserver.Type(), sslvserverName)
 			if err2 != nil {
 				log.Printf("[ERROR] netscaler-provider:  Failed to delete sslvserver %s after bind to sni ssl cert failed", sslvserverName)
 				return fmt.Errorf("[ERROR] netscaler-provider:  Failed to delete sslvserver %s after bind to sni ssl cert failed", sslvserverName)
@@ -304,7 +305,7 @@ func snisslcertkeysExist(snisslcertkeys, meta interface{}) error {
 	missingKeys := make([]string, 0, len(allkeys))
 	for _, certkey := range allkeys {
 		log.Printf("[DEBUG] checking existence of sslcertkey %v", certkey)
-		exists := client.ResourceExists(netscaler.Sslcertkey.Type(), certkey.(string))
+		exists := client.ResourceExists(service.Sslcertkey.Type(), certkey.(string))
 		if !exists {
 			missingKeys = append(missingKeys, certkey.(string))
 		}
@@ -319,7 +320,7 @@ func snisslcertkeysExist(snisslcertkeys, meta interface{}) error {
 func readSslcerts(d *schema.ResourceData, meta interface{}, sslvserverName string) error {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSslcerts")
 	client := meta.(*NetScalerNitroClient).client
-	bindings, err := client.FindAllBoundResources(netscaler.Sslvserver.Type(), sslvserverName, netscaler.Sslcertkey.Type())
+	bindings, err := client.FindAllBoundResources(service.Sslvserver.Type(), sslvserverName, service.Sslcertkey.Type())
 	if err != nil {
 		log.Printf("[WARN] netscaler-provider: sslvserver binding to ssl error %s", sslvserverName)
 		return nil
@@ -389,7 +390,7 @@ func readSslpolicyBindings(d *schema.ResourceData, meta interface{}, sslvserverN
 		return nil
 	}
 
-	findParams := netscaler.FindParams{
+	findParams := service.FindParams{
 		ResourceType:             "sslvserver_sslpolicy_binding",
 		ResourceName:             sslvserverName,
 		ResourceMissingErrorCode: 258,
@@ -413,13 +414,19 @@ func readSslpolicyBindings(d *schema.ResourceData, meta interface{}, sslvserverN
 		processedBindingEntry := make(map[string]interface{})
 		processedBindingEntry["gotopriorityexpression"] = singleBinding["gotopriorityexpression"].(string)
 		processedBindingEntry["invoke"] = singleBinding["invoke"].(bool)
-		processedBindingEntry["labelname"] = singleBinding["labelname"].(string)
-		processedBindingEntry["labeltype"] = singleBinding["labeltype"].(string)
+		if _, ok := singleBinding["labelname"]; ok {
+			processedBindingEntry["labelname"] = singleBinding["labelname"].(string)
+		}
+		if _, ok := singleBinding["labeltype"]; ok {
+			processedBindingEntry["labeltype"] = singleBinding["labeltype"].(string)
+		}
 		processedBindingEntry["policyname"] = singleBinding["policyname"].(string)
 		if processedBindingEntry["priority"], err = strconv.Atoi(singleBinding["priority"].(string)); err != nil {
 			return err
 		}
-		processedBindingEntry["type"] = singleBinding["type"].(string)
+		if _, ok := singleBinding["type"]; ok {
+			processedBindingEntry["type"] = singleBinding["type"].(string)
+		}
 		processedBindings = append(processedBindings, processedBindingEntry)
 	}
 
@@ -471,7 +478,7 @@ func addSingleSslpolicyBinding(d *schema.ResourceData, meta interface{}, binding
 
 	client := meta.(*NetScalerNitroClient).client
 
-	bindingStruct := ssl.Sslvserversslpolicybinding{}
+	bindingStruct := ssl.Sslvserverpolicybinding{}
 	bindingStruct.Vservername = sslvserverName
 
 	if val, ok := binding["gotopriorityexpression"]; ok {
@@ -495,7 +502,7 @@ func addSingleSslpolicyBinding(d *schema.ResourceData, meta interface{}, binding
 	}
 
 	if val, ok := binding["priority"]; ok {
-		bindingStruct.Priority = val.(int)
+		bindingStruct.Priority = uint32(val.(int))
 	}
 
 	if val, ok := binding["type"]; ok {

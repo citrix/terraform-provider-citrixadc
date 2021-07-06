@@ -1,10 +1,11 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/gslb"
+	"github.com/citrix/adc-nitro-go/resource/config/gslb"
+	"github.com/citrix/adc-nitro-go/service"
+
 	"github.com/mitchellh/mapstructure"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 
@@ -352,7 +353,7 @@ func createGslbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		Weight:                 d.Get("weight").(int),
 	}
 
-	_, err := client.AddResource(netscaler.Gslbvserver.Type(), gslbvserverName, &gslbvserver)
+	_, err := client.AddResource(service.Gslbvserver.Type(), gslbvserverName, &gslbvserver)
 	if err != nil {
 		return err
 	}
@@ -389,7 +390,7 @@ func readGslbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	gslbvserverName := d.Id()
 	log.Printf("[DEBUG] netscaler-provider: Reading gslbvserver state %s", gslbvserverName)
-	data, err := client.FindResource(netscaler.Gslbvserver.Type(), gslbvserverName)
+	data, err := client.FindResource(service.Gslbvserver.Type(), gslbvserverName)
 	if err != nil {
 		log.Printf("[WARN] netscaler-provider: Clearing gslbvserver state %s", gslbvserverName)
 		d.SetId("")
@@ -436,14 +437,14 @@ func readGslbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("v6persistmasklen", data["v6persistmasklen"])
 	d.Set("weight", data["weight"])
 
-	data2, _ := client.FindResourceArray(netscaler.Gslbvserver_domain_binding.Type(), gslbvserverName)
+	data2, _ := client.FindResourceArray(service.Gslbvserver_domain_binding.Type(), gslbvserverName)
 	domainBindings := make([]map[string]interface{}, len(data2))
 	for i, binding := range data2 {
 		domainBindings[i] = binding
 	}
 	d.Set("domain", domainBindings)
 
-	data3, _ := client.FindResourceArray(netscaler.Gslbvserver_gslbservice_binding.Type(), gslbvserverName)
+	data3, _ := client.FindResourceArray(service.Gslbvserver_gslbservice_binding.Type(), gslbvserverName)
 	svcBindings := make([]map[string]interface{}, len(data3))
 	for i, binding := range data3 {
 		svcBindings[i] = binding
@@ -659,7 +660,7 @@ func updateGslbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if hasChange {
-		_, err := client.UpdateResource(netscaler.Gslbvserver.Type(), gslbvserverName, &gslbvserver)
+		_, err := client.UpdateResource(service.Gslbvserver.Type(), gslbvserverName, &gslbvserver)
 		if err != nil {
 			return fmt.Errorf("Error updating gslbvserver %s", gslbvserverName)
 		}
@@ -759,7 +760,7 @@ func deleteGslbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		domain := val.(map[string]interface{})
 		_ = unbindDomain(gslbvserverName, domain, meta)
 	}
-	err := client.DeleteResource(netscaler.Gslbvserver.Type(), gslbvserverName)
+	err := client.DeleteResource(service.Gslbvserver.Type(), gslbvserverName)
 	if err != nil {
 		return err
 	}
@@ -777,7 +778,7 @@ func bindDomainToVserver(vserver string, domain map[string]interface{}, meta int
 	mapstructure.Decode(domain, &binding)
 	binding.Name = vserver
 	log.Printf("[INFO] netscaler-provider:  Binding domain %s to gslb vserver %s", domainname, vserver)
-	_, err := client.AddResource(netscaler.Gslbvserver_domain_binding.Type(), domainname, &binding)
+	_, err := client.AddResource(service.Gslbvserver_domain_binding.Type(), domainname, &binding)
 
 	return err
 }
@@ -787,30 +788,30 @@ func unbindDomain(gslbvserverName string, domain map[string]interface{}, meta in
 	domainname := domain["domainname"].(string)
 	args := map[string]string{"domainname": domainname}
 	log.Printf("[INFO] netscaler-provider:  Deleting binding of domain %s to gslb vserver %s", domainname, gslbvserverName)
-	return client.DeleteResourceWithArgsMap(netscaler.Gslbvserver_domain_binding.Type(), gslbvserverName, args)
+	return client.DeleteResourceWithArgsMap(service.Gslbvserver_domain_binding.Type(), gslbvserverName, args)
 }
 
-func bindGslbServiceToVserver(vserver string, service map[string]interface{}, meta interface{}) error {
+func bindGslbServiceToVserver(vserver string, svc map[string]interface{}, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
-	servicename := service["servicename"].(string)
-	binding := gslb.Gslbvservergslbservicebinding{}
-	mapstructure.Decode(service, &binding)
+	servicename := svc["servicename"].(string)
+	binding := gslb.Gslbvserverservicebinding{}
+	mapstructure.Decode(svc, &binding)
 	binding.Name = vserver
-	log.Printf("[INFO] netscaler-provider:  Binding service %s to gslb vserver %s", servicename, vserver)
-	_, err := client.AddResource(netscaler.Gslbvserver_gslbservice_binding.Type(), servicename, &binding)
+	log.Printf("[INFO] netscaler-provider:  Binding svc %s to gslb vserver %s", servicename, vserver)
+	_, err := client.AddResource(service.Gslbvserver_gslbservice_binding.Type(), servicename, &binding)
 
 	return err
 }
 
-func unbindGslbService(gslbvserverName string, service map[string]interface{}, meta interface{}) error {
+func unbindGslbService(gslbvserverName string, svc map[string]interface{}, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
-	servicename := service["servicename"].(string)
+	servicename := svc["servicename"].(string)
 	args := map[string]string{"servicename": servicename}
-	log.Printf("[INFO] netscaler-provider:  Deleting binding of service %s to gslb vserver %s", servicename, gslbvserverName)
-	return client.DeleteResourceWithArgsMap(netscaler.Gslbvserver_gslbservice_binding.Type(), gslbvserverName, args)
+	log.Printf("[INFO] netscaler-provider:  Deleting binding of svc %s to gslb vserver %s", servicename, gslbvserverName)
+	return client.DeleteResourceWithArgsMap(service.Gslbvserver_gslbservice_binding.Type(), gslbvserverName, args)
 }
 
-func doGslbvserverStateChange(d *schema.ResourceData, client *netscaler.NitroClient) error {
+func doGslbvserverStateChange(d *schema.ResourceData, client *service.NitroClient) error {
 	log.Printf("[DEBUG]  netscaler-provider: In doServerStateChange")
 
 	// We need a new instance of the struct since
@@ -822,12 +823,12 @@ func doGslbvserverStateChange(d *schema.ResourceData, client *netscaler.NitroCli
 	newstate := d.Get("state")
 
 	if newstate == "ENABLED" {
-		err := client.ActOnResource(netscaler.Gslbvserver.Type(), gslbvserver, "enable")
+		err := client.ActOnResource(service.Gslbvserver.Type(), gslbvserver, "enable")
 		if err != nil {
 			return err
 		}
 	} else if newstate == "DISABLED" {
-		err := client.ActOnResource(netscaler.Gslbvserver.Type(), gslbvserver, "disable")
+		err := client.ActOnResource(service.Gslbvserver.Type(), gslbvserver, "disable")
 		if err != nil {
 			return err
 		}

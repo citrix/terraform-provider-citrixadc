@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/policy"
+	"github.com/citrix/adc-nitro-go/resource/config/policy"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"fmt"
@@ -62,7 +62,7 @@ func createPolicyexpressionFunc(d *schema.ResourceData, meta interface{}) error 
 		Value:                 d.Get("value").(string),
 	}
 
-	_, err := client.AddResource(netscaler.Policyexpression.Type(), policyexpressionName, &policyexpression)
+	_, err := client.AddResource(service.Policyexpression.Type(), policyexpressionName, &policyexpression)
 	if err != nil {
 		return err
 	}
@@ -82,7 +82,7 @@ func readPolicyexpressionFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	policyexpressionName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading policyexpression state %s", policyexpressionName)
-	data, err := client.FindResource(netscaler.Policyexpression.Type(), policyexpressionName)
+	data, err := client.FindResource(service.Policyexpression.Type(), policyexpressionName)
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing policyexpression state %s", policyexpressionName)
 		d.SetId("")
@@ -135,7 +135,7 @@ func updatePolicyexpressionFunc(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if hasChange {
-		_, err := client.UpdateResource(netscaler.Policyexpression.Type(), policyexpressionName, &policyexpression)
+		_, err := client.UpdateResource(service.Policyexpression.Type(), policyexpressionName, &policyexpression)
 		if err != nil {
 			return fmt.Errorf("Error updating policyexpression %s: %s", policyexpressionName, err.Error())
 		}
@@ -147,7 +147,7 @@ func deletePolicyexpressionFunc(d *schema.ResourceData, meta interface{}) error 
 	log.Printf("[DEBUG]  citrixadc-provider: In deletePolicyexpressionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policyexpressionName := d.Id()
-	err := client.DeleteResource(netscaler.Policyexpression.Type(), policyexpressionName)
+	err := client.DeleteResource(service.Policyexpression.Type(), policyexpressionName)
 	if err != nil {
 		return err
 	}

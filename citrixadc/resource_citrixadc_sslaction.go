@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/ssl"
+	"github.com/citrix/adc-nitro-go/resource/config/ssl"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"log"
@@ -226,7 +226,7 @@ func createSslactionFunc(d *schema.ResourceData, meta interface{}) error {
 		Ssllogprofile:          d.Get("ssllogprofile").(string),
 	}
 
-	_, err := client.AddResource(netscaler.Sslaction.Type(), sslactionName, &sslaction)
+	_, err := client.AddResource(service.Sslaction.Type(), sslactionName, &sslaction)
 	if err != nil {
 		return err
 	}
@@ -246,7 +246,7 @@ func readSslactionFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	sslactionName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading sslaction state %s", sslactionName)
-	data, err := client.FindResource(netscaler.Sslaction.Type(), sslactionName)
+	data, err := client.FindResource(service.Sslaction.Type(), sslactionName)
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing sslaction state %s", sslactionName)
 		d.SetId("")
@@ -290,7 +290,7 @@ func deleteSslactionFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSslactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	sslactionName := d.Id()
-	err := client.DeleteResource(netscaler.Sslaction.Type(), sslactionName)
+	err := client.DeleteResource(service.Sslaction.Type(), sslactionName)
 	if err != nil {
 		return err
 	}

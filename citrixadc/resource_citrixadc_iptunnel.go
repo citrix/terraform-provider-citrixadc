@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/network"
+	"github.com/citrix/adc-nitro-go/resource/config/network"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"log"
@@ -93,7 +93,7 @@ func createIptunnelFunc(d *schema.ResourceData, meta interface{}) error {
 		Vlan:             d.Get("vlan").(int),
 	}
 
-	_, err := client.AddResource(netscaler.Iptunnel.Type(), iptunnelName, &iptunnel)
+	_, err := client.AddResource(service.Iptunnel.Type(), iptunnelName, &iptunnel)
 	if err != nil {
 		return err
 	}
@@ -113,7 +113,7 @@ func readIptunnelFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	iptunnelName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading iptunnel state %s", iptunnelName)
-	data, err := client.FindResource(netscaler.Iptunnel.Type(), iptunnelName)
+	data, err := client.FindResource(service.Iptunnel.Type(), iptunnelName)
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing iptunnel state %s", iptunnelName)
 		d.SetId("")
@@ -136,7 +136,7 @@ func deleteIptunnelFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteIptunnelFunc")
 	client := meta.(*NetScalerNitroClient).client
 	iptunnelName := d.Id()
-	err := client.DeleteResource(netscaler.Iptunnel.Type(), iptunnelName)
+	err := client.DeleteResource(service.Iptunnel.Type(), iptunnelName)
 	if err != nil {
 		return err
 	}

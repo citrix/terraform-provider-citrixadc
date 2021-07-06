@@ -3,9 +3,9 @@ package citrixadc
 import (
 	"strings"
 
-	"github.com/chiradeep/go-nitro/config/lb"
+	"github.com/citrix/adc-nitro-go/resource/config/lb"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"fmt"
@@ -76,7 +76,7 @@ func createLbvserver_appfwpolicy_bindingFunc(d *schema.ResourceData, meta interf
 	appfwPolicyName := d.Get("policyname").(string)
 	bindingId := fmt.Sprintf("%s,%s", lbvserverName, appfwPolicyName)
 
-	lbvserver_appfwpolicy_binding := lb.Lbvserverappfwpolicybinding{
+	lbvserver_appfwpolicy_binding := lb.Lbvserverpolicybinding{
 		Bindpoint:              d.Get("bindpoint").(string),
 		Gotopriorityexpression: d.Get("gotopriorityexpression").(string),
 		Invoke:                 d.Get("invoke").(bool),
@@ -84,10 +84,10 @@ func createLbvserver_appfwpolicy_bindingFunc(d *schema.ResourceData, meta interf
 		Labeltype:              d.Get("labeltype").(string),
 		Name:                   lbvserverName,
 		Policyname:             appfwPolicyName,
-		Priority:               d.Get("priority").(int),
+		Priority:               uint32(d.Get("priority").(int)),
 	}
 
-	_, err := client.AddResource(netscaler.Lbvserver_appfwpolicy_binding.Type(), lbvserverName, &lbvserver_appfwpolicy_binding)
+	_, err := client.AddResource(service.Lbvserver_appfwpolicy_binding.Type(), lbvserverName, &lbvserver_appfwpolicy_binding)
 	if err != nil {
 		return err
 	}
@@ -113,8 +113,8 @@ func readLbvserver_appfwpolicy_bindingFunc(d *schema.ResourceData, meta interfac
 	appfwPolicyName := idSlice[1]
 	log.Printf("[DEBUG] citrixadc-provider: Reading lbvserver_appfwpolicy_binding state %s", bindingId)
 
-	findParams := netscaler.FindParams{
-		ResourceType:             netscaler.Lbvserver_appfwpolicy_binding.Type(),
+	findParams := service.FindParams{
+		ResourceType:             service.Lbvserver_appfwpolicy_binding.Type(),
 		ResourceName:             lbvserverName,
 		ResourceMissingErrorCode: 258,
 	}
@@ -178,7 +178,7 @@ func deleteLbvserver_appfwpolicy_bindingFunc(d *schema.ResourceData, meta interf
 
 	args := make(map[string]string)
 	args["policyname"] = appfwPolicyName
-	err := client.DeleteResourceWithArgsMap(netscaler.Lbvserver_appfwpolicy_binding.Type(), lbvserverName, args)
+	err := client.DeleteResourceWithArgsMap(service.Lbvserver_appfwpolicy_binding.Type(), lbvserverName, args)
 	if err != nil {
 		return err
 	}

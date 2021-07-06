@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/lb"
+	"github.com/citrix/adc-nitro-go/resource/config/lb"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"fmt"
@@ -77,7 +77,7 @@ func createLbvserver_transformpolicy_bindingFunc(d *schema.ResourceData, meta in
 	name := d.Get("name").(string)
 	policyname := d.Get("policyname").(string)
 	bindingId := fmt.Sprintf("%s,%s", name, policyname)
-	lbvserver_transformpolicy_binding := lb.Lbvservertransformpolicybinding{
+	lbvserver_transformpolicy_binding := lb.Lbvserverpolicybinding{
 		Bindpoint:              d.Get("bindpoint").(string),
 		Gotopriorityexpression: d.Get("gotopriorityexpression").(string),
 		Invoke:                 d.Get("invoke").(bool),
@@ -85,10 +85,10 @@ func createLbvserver_transformpolicy_bindingFunc(d *schema.ResourceData, meta in
 		Labeltype:              d.Get("labeltype").(string),
 		Name:                   d.Get("name").(string),
 		Policyname:             d.Get("policyname").(string),
-		Priority:               d.Get("priority").(int),
+		Priority:               uint32(d.Get("priority").(int)),
 	}
 
-	err := client.UpdateUnnamedResource(netscaler.Lbvserver_transformpolicy_binding.Type(), &lbvserver_transformpolicy_binding)
+	err := client.UpdateUnnamedResource(service.Lbvserver_transformpolicy_binding.Type(), &lbvserver_transformpolicy_binding)
 	if err != nil {
 		return err
 	}
@@ -113,7 +113,7 @@ func readLbvserver_transformpolicy_bindingFunc(d *schema.ResourceData, meta inte
 
 	log.Printf("[DEBUG] citrixadc-provider: Reading lbvserver_transformpolicy_binding state %v", bindingId)
 
-	findParams := netscaler.FindParams{
+	findParams := service.FindParams{
 		ResourceType:             "lbvserver_transformpolicy_binding",
 		ResourceName:             name,
 		ResourceMissingErrorCode: 258,

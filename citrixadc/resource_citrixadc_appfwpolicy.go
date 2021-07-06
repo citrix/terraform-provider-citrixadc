@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/appfw"
+	"github.com/citrix/adc-nitro-go/resource/config/appfw"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"fmt"
@@ -66,7 +66,7 @@ func createAppfwpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 		Rule:        d.Get("rule").(string),
 	}
 
-	_, err := client.AddResource(netscaler.Appfwpolicy.Type(), appfwpolicyName, &appfwpolicy)
+	_, err := client.AddResource(service.Appfwpolicy.Type(), appfwpolicyName, &appfwpolicy)
 	if err != nil {
 		return err
 	}
@@ -86,7 +86,7 @@ func readAppfwpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	appfwpolicyName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading appfwpolicy state %s", appfwpolicyName)
-	data, err := client.FindResource(netscaler.Appfwpolicy.Type(), appfwpolicyName)
+	data, err := client.FindResource(service.Appfwpolicy.Type(), appfwpolicyName)
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing appfwpolicy state %s", appfwpolicyName)
 		d.SetId("")
@@ -145,7 +145,7 @@ func updateAppfwpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if hasChange {
-		_, err := client.UpdateResource(netscaler.Appfwpolicy.Type(), appfwpolicyName, &appfwpolicy)
+		_, err := client.UpdateResource(service.Appfwpolicy.Type(), appfwpolicyName, &appfwpolicy)
 		if err != nil {
 			return fmt.Errorf("Error updating appfwpolicy %s", appfwpolicyName)
 		}
@@ -157,7 +157,7 @@ func deleteAppfwpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppfwpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appfwpolicyName := d.Id()
-	err := client.DeleteResource(netscaler.Appfwpolicy.Type(), appfwpolicyName)
+	err := client.DeleteResource(service.Appfwpolicy.Type(), appfwpolicyName)
 	if err != nil {
 		return err
 	}

@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/basic"
+	"github.com/citrix/adc-nitro-go/resource/config/basic"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"fmt"
@@ -128,7 +128,7 @@ func createServicegroup_servicegroupmember_bindingFunc(d *schema.ResourceData, m
 		Weight:           d.Get("weight").(int),
 	}
 
-	err := client.UpdateUnnamedResource(netscaler.Servicegroup_servicegroupmember_binding.Type(), &servicegroup_servicegroupmember_binding)
+	err := client.UpdateUnnamedResource(service.Servicegroup_servicegroupmember_binding.Type(), &servicegroup_servicegroupmember_binding)
 	if err != nil {
 		return err
 	}
@@ -167,7 +167,7 @@ func readServicegroup_servicegroupmember_bindingFunc(d *schema.ResourceData, met
 
 	log.Printf("[DEBUG] citrixadc-provider: Reading servicegroup_servicegroupmember_binding state %v", bindingId)
 
-	findParams := netscaler.FindParams{
+	findParams := service.FindParams{
 		ResourceType:             "servicegroup_servicegroupmember_binding",
 		ResourceName:             servicegroupname,
 		ResourceMissingErrorCode: 258,

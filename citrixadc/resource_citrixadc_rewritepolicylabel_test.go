@@ -17,13 +17,17 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/chiradeep/go-nitro/netscaler"
+	"testing"
+
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"testing"
 )
 
 func TestAccRewritepolicylabel_basic(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -59,7 +63,7 @@ func testAccCheckRewritepolicylabelExist(n string, id *string) resource.TestChec
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(netscaler.Rewritepolicylabel.Type(), rs.Primary.ID)
+		data, err := nsClient.FindResource(service.Rewritepolicylabel.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -85,7 +89,7 @@ func testAccCheckRewritepolicylabelDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(netscaler.Rewritepolicylabel.Type(), rs.Primary.ID)
+		_, err := nsClient.FindResource(service.Rewritepolicylabel.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("LB vserver %s still exists", rs.Primary.ID)
 		}

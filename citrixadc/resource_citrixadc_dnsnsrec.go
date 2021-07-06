@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/dns"
+	"github.com/citrix/adc-nitro-go/resource/config/dns"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"fmt"
@@ -55,7 +55,7 @@ func createDnsnsrecFunc(d *schema.ResourceData, meta interface{}) error {
 		Ttl:        d.Get("ttl").(int),
 	}
 
-	_, err := client.AddResource(netscaler.Dnsnsrec.Type(), "", &dnsnsrec)
+	_, err := client.AddResource(service.Dnsnsrec.Type(), "", &dnsnsrec)
 	if err != nil {
 		return err
 	}
@@ -78,7 +78,7 @@ func readDnsnsrecFunc(d *schema.ResourceData, meta interface{}) error {
 	idSlice := strings.SplitN(dnsnsrecId, ",", 2)
 	domain := idSlice[0]
 	nameserver := idSlice[1]
-	findParams := netscaler.FindParams{
+	findParams := service.FindParams{
 		ResourceType: "dnsnsrec",
 	}
 	dataArr, err := client.FindResourceArrayWithParams(findParams)
@@ -120,7 +120,7 @@ func deleteDnsnsrecFunc(d *schema.ResourceData, meta interface{}) error {
 	nameserver := idSlice[1]
 	argsMap := make(map[string]string)
 	argsMap["nameserver"] = url.QueryEscape(nameserver)
-	err := client.DeleteResourceWithArgsMap(netscaler.Dnsnsrec.Type(), domain, argsMap)
+	err := client.DeleteResourceWithArgsMap(service.Dnsnsrec.Type(), domain, argsMap)
 	if err != nil {
 		return err
 	}

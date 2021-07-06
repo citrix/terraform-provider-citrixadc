@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/transform"
+	"github.com/citrix/adc-nitro-go/resource/config/transform"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"fmt"
@@ -62,7 +62,7 @@ func createTransformpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 		Rule:        d.Get("rule").(string),
 	}
 
-	_, err := client.AddResource(netscaler.Transformpolicy.Type(), transformpolicyName, &transformpolicy)
+	_, err := client.AddResource(service.Transformpolicy.Type(), transformpolicyName, &transformpolicy)
 	if err != nil {
 		return err
 	}
@@ -82,7 +82,7 @@ func readTransformpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	transformpolicyName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading transformpolicy state %s", transformpolicyName)
-	data, err := client.FindResource(netscaler.Transformpolicy.Type(), transformpolicyName)
+	data, err := client.FindResource(service.Transformpolicy.Type(), transformpolicyName)
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing transformpolicy state %s", transformpolicyName)
 		d.SetId("")
@@ -134,7 +134,7 @@ func updateTransformpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if hasChange {
-		_, err := client.UpdateResource(netscaler.Transformpolicy.Type(), transformpolicyName, &transformpolicy)
+		_, err := client.UpdateResource(service.Transformpolicy.Type(), transformpolicyName, &transformpolicy)
 		if err != nil {
 			return fmt.Errorf("Error updating transformpolicy %s", transformpolicyName)
 		}
@@ -146,7 +146,7 @@ func deleteTransformpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteTransformpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	transformpolicyName := d.Id()
-	err := client.DeleteResource(netscaler.Transformpolicy.Type(), transformpolicyName)
+	err := client.DeleteResource(service.Transformpolicy.Type(), transformpolicyName)
 	if err != nil {
 		return err
 	}

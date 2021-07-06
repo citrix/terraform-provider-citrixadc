@@ -60,28 +60,28 @@ github.com/bgentry/speakeasy
 github.com/blang/semver
 # github.com/bmatcuk/doublestar v1.1.5
 github.com/bmatcuk/doublestar
-# github.com/chiradeep/go-nitro v0.0.0-20210415084059-355fec1cd7ac
-github.com/chiradeep/go-nitro/config/appfw
-github.com/chiradeep/go-nitro/config/audit
-github.com/chiradeep/go-nitro/config/basic
-github.com/chiradeep/go-nitro/config/cluster
-github.com/chiradeep/go-nitro/config/cmp
-github.com/chiradeep/go-nitro/config/cs
-github.com/chiradeep/go-nitro/config/dns
-github.com/chiradeep/go-nitro/config/filter
-github.com/chiradeep/go-nitro/config/gslb
-github.com/chiradeep/go-nitro/config/lb
-github.com/chiradeep/go-nitro/config/network
-github.com/chiradeep/go-nitro/config/ns
-github.com/chiradeep/go-nitro/config/policy
-github.com/chiradeep/go-nitro/config/responder
-github.com/chiradeep/go-nitro/config/rewrite
-github.com/chiradeep/go-nitro/config/router
-github.com/chiradeep/go-nitro/config/ssl
-github.com/chiradeep/go-nitro/config/system
-github.com/chiradeep/go-nitro/config/transform
-github.com/chiradeep/go-nitro/config/utility
-github.com/chiradeep/go-nitro/netscaler
+# github.com/citrix/adc-nitro-go v0.0.0-20210706081452-0ff4869771a4
+github.com/citrix/adc-nitro-go/resource/config/appfw
+github.com/citrix/adc-nitro-go/resource/config/audit
+github.com/citrix/adc-nitro-go/resource/config/basic
+github.com/citrix/adc-nitro-go/resource/config/cluster
+github.com/citrix/adc-nitro-go/resource/config/cmp
+github.com/citrix/adc-nitro-go/resource/config/cs
+github.com/citrix/adc-nitro-go/resource/config/dns
+github.com/citrix/adc-nitro-go/resource/config/filter
+github.com/citrix/adc-nitro-go/resource/config/gslb
+github.com/citrix/adc-nitro-go/resource/config/lb
+github.com/citrix/adc-nitro-go/resource/config/network
+github.com/citrix/adc-nitro-go/resource/config/ns
+github.com/citrix/adc-nitro-go/resource/config/policy
+github.com/citrix/adc-nitro-go/resource/config/responder
+github.com/citrix/adc-nitro-go/resource/config/rewrite
+github.com/citrix/adc-nitro-go/resource/config/router
+github.com/citrix/adc-nitro-go/resource/config/ssl
+github.com/citrix/adc-nitro-go/resource/config/system
+github.com/citrix/adc-nitro-go/resource/config/transform
+github.com/citrix/adc-nitro-go/resource/config/utility
+github.com/citrix/adc-nitro-go/service
 # github.com/davecgh/go-spew v1.1.1
 github.com/davecgh/go-spew/spew
 # github.com/fatih/color v1.7.0
@@ -110,7 +110,7 @@ github.com/hashicorp/go-cleanhttp
 # github.com/hashicorp/go-getter v1.4.2-0.20200106182914-9813cbd4eb02
 github.com/hashicorp/go-getter
 github.com/hashicorp/go-getter/helper/url
-# github.com/hashicorp/go-hclog v0.9.2
+# github.com/hashicorp/go-hclog v0.16.1
 github.com/hashicorp/go-hclog
 # github.com/hashicorp/go-multierror v1.0.0
 github.com/hashicorp/go-multierror
@@ -210,9 +210,9 @@ github.com/hashicorp/yamux
 github.com/jmespath/go-jmespath
 # github.com/kr/fs v0.1.0
 github.com/kr/fs
-# github.com/mattn/go-colorable v0.1.1
+# github.com/mattn/go-colorable v0.1.4
 github.com/mattn/go-colorable
-# github.com/mattn/go-isatty v0.0.5
+# github.com/mattn/go-isatty v0.0.10
 github.com/mattn/go-isatty
 # github.com/mitchellh/cli v1.0.0
 github.com/mitchellh/cli
@@ -314,7 +314,7 @@ golang.org/x/oauth2/google
 golang.org/x/oauth2/internal
 golang.org/x/oauth2/jws
 golang.org/x/oauth2/jwt
-# golang.org/x/sys v0.0.0-20190804053845-51ab0e2deafa
+# golang.org/x/sys v0.0.0-20191008105621-543471e840be
 golang.org/x/sys/cpu
 golang.org/x/sys/unix
 # golang.org/x/text v0.3.2

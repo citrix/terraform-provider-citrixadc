@@ -1,18 +1,17 @@
 package citrixadc
 
 import (
-	"bytes"
-	"sort"
-	"strconv"
+	"github.com/citrix/adc-nitro-go/resource/config/ssl"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/config/ssl"
-
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/schema"
 
+	"bytes"
 	"fmt"
 	"log"
+	"sort"
+	"strconv"
 )
 
 func resourceCitrixAdcSslcipher() *schema.Resource {
@@ -63,7 +62,7 @@ func createSslcipherFunc(d *schema.ResourceData, meta interface{}) error {
 		Ciphergroupname: sslcipherGroupName,
 	}
 
-	_, err := client.AddResource(netscaler.Sslcipher.Type(), sslcipherGroupName, &sslcipher)
+	_, err := client.AddResource(service.Sslcipher.Type(), sslcipherGroupName, &sslcipher)
 	if err != nil {
 		return err
 	}
@@ -106,7 +105,7 @@ func readSslcipherFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	sslcipherGroupName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading sslcipher state %s", sslcipherGroupName)
-	data, err := client.FindResource(netscaler.Sslcipher.Type(), sslcipherGroupName)
+	data, err := client.FindResource(service.Sslcipher.Type(), sslcipherGroupName)
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing sslcipher state %s", sslcipherGroupName)
 		d.SetId("")
@@ -128,7 +127,7 @@ func deleteSslcipherFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSslcipherFunc")
 	client := meta.(*NetScalerNitroClient).client
 	sslcipherGroupName := d.Id()
-	err := client.DeleteResource(netscaler.Sslcipher.Type(), sslcipherGroupName)
+	err := client.DeleteResource(service.Sslcipher.Type(), sslcipherGroupName)
 	if err != nil {
 		return err
 	}
@@ -140,7 +139,7 @@ func deleteSslcipherFunc(d *schema.ResourceData, meta interface{}) error {
 
 type cipherPriority struct {
 	cipherName     string
-	cipherPriority int
+	cipherPriority uint32
 }
 
 type cipherPriorities []cipherPriority
@@ -156,7 +155,7 @@ func getSortedCipherBindigs(unsortedCipherBindings *schema.Set) cipherPriorities
 	for _, v := range unsortedCipherBindings.List() {
 		val := v.(map[string]interface{})
 		ciphername := val["ciphername"].(string)
-		cipherpriority := val["cipherpriority"].(int)
+		cipherpriority := uint32(val["cipherpriority"].(int))
 		cipher := cipherPriority{
 			cipherName:     ciphername,
 			cipherPriority: cipherpriority,
@@ -185,7 +184,7 @@ func deleteSingleSslCipherCipherSuiteBinding(d *schema.ResourceData, meta interf
 
 	log.Printf("args is %v", args)
 
-	if err := client.DeleteResourceWithArgs(netscaler.Sslcipher_sslciphersuite_binding.Type(), ciphergroupname, args); err != nil {
+	if err := client.DeleteResourceWithArgs(service.Sslcipher_sslciphersuite_binding.Type(), ciphergroupname, args); err != nil {
 		log.Printf("[DEBUG]  citrixadc-provider: Error deleting sslciphersuite binding %v\n", binding)
 		return err
 	}
@@ -198,13 +197,13 @@ func addSingleSslCipherCipherSuiteBinding(d *schema.ResourceData, meta interface
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("Adding binding %v", binding)
 
-	bindingStruct := ssl.Sslciphersslciphersuitebinding{}
+	bindingStruct := ssl.Sslcipherciphersuitebinding{}
 	bindingStruct.Ciphergroupname = d.Get("ciphergroupname").(string)
 	bindingStruct.Ciphername = binding.cipherName
 	bindingStruct.Cipherpriority = binding.cipherPriority
 
 	// We need to do a HTTP PUT hence the UpdateResource
-	if _, err := client.UpdateResource(netscaler.Sslcipher_sslciphersuite_binding.Type(), bindingStruct.Ciphergroupname, bindingStruct); err != nil {
+	if _, err := client.UpdateResource(service.Sslcipher_sslciphersuite_binding.Type(), bindingStruct.Ciphergroupname, bindingStruct); err != nil {
 		return err
 	}
 	return nil
@@ -214,7 +213,7 @@ func updateSslCipherCipherSuiteBindings(d *schema.ResourceData, meta interface{}
 	log.Printf("[DEBUG]  citrixadc-provider: In updateSslCipherCipherSuiteBindings")
 	client := meta.(*NetScalerNitroClient).client
 
-	findParams := netscaler.FindParams{
+	findParams := service.FindParams{
 		ResourceType: "sslcipher_sslciphersuite_binding",
 		ResourceName: d.Get("ciphergroupname").(string),
 	}
@@ -264,7 +263,7 @@ func readSslCipherCipherSuitebindings(d *schema.ResourceData, meta interface{}) 
 	log.Printf("[DEBUG]  citrixadc-provider: In readSslCipherCipherSuitebindings")
 	client := meta.(*NetScalerNitroClient).client
 	ciphergroupname := d.Get("ciphergroupname").(string)
-	bindings, _ := client.FindResourceArray(netscaler.Sslcipher_sslciphersuite_binding.Type(), ciphergroupname)
+	bindings, _ := client.FindResourceArray(service.Sslcipher_sslciphersuite_binding.Type(), ciphergroupname)
 	log.Printf("bindings %v\n", bindings)
 
 	processedBindings := make([]interface{}, len(bindings))

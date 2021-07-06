@@ -1,7 +1,7 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/netscaler"
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"errors"
@@ -271,7 +271,7 @@ func createNsip6Func(d *schema.ResourceData, meta interface{}) error {
 		Mptcpadvertise:              d.Get("mptcpadvertise").(string),
 	}
 
-	_, err := client.AddResource(netscaler.Nsip6.Type(), ipv6address, &nsip6)
+	_, err := client.AddResource(service.Nsip6.Type(), ipv6address, &nsip6)
 	if err != nil {
 		return err
 	}
@@ -291,7 +291,7 @@ func readNsip6Func(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	ipv6address := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading nsip6 state %s", ipv6address)
-	array, _ := client.FindAllResources(netscaler.Nsip6.Type())
+	array, _ := client.FindAllResources(service.Nsip6.Type())
 
 	// Iterate over the retrieved addresses to find the particular ipv6address
 	foundAddress := false
@@ -523,7 +523,7 @@ func updateNsip6Func(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if hasChange {
-		_, err := client.UpdateResource(netscaler.Nsip6.Type(), "", &nsip6)
+		_, err := client.UpdateResource(service.Nsip6.Type(), "", &nsip6)
 		if err != nil {
 			return fmt.Errorf("Error updating nsip6 %s", ipv6address)
 		}
@@ -540,7 +540,7 @@ func deleteNsip6Func(d *schema.ResourceData, meta interface{}) error {
 	if val, ok := d.GetOk("td"); ok {
 		argsMap["td"] = val.(string)
 	}
-	err := client.DeleteResourceWithArgsMap(netscaler.Nsip6.Type(), "", argsMap)
+	err := client.DeleteResourceWithArgsMap(service.Nsip6.Type(), "", argsMap)
 	if err != nil {
 		return err
 	}

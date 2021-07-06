@@ -1,15 +1,15 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/ns"
-
 	"fmt"
-	"github.com/chiradeep/go-nitro/netscaler"
+	"log"
+
+	"github.com/citrix/adc-nitro-go/resource/config/ns"
+	"github.com/citrix/adc-nitro-go/service"
+
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/mitchellh/mapstructure"
-
-	"log"
 )
 
 func resourceCitrixAdcNsacls() *schema.Resource {
@@ -175,7 +175,7 @@ func createNsaclsFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	nsacls := ns.Nsacls{}
-	err := client.ApplyResource(netscaler.Nsacls.Type(), &nsacls)
+	err := client.ApplyResource(service.Nsacls.Type(), &nsacls)
 	if err != nil {
 		return err
 	}
@@ -188,7 +188,7 @@ func createNsaclsFunc(d *schema.ResourceData, meta interface{}) error {
 func readNsaclsFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] netscaler-provider:  In readNsaclsFunc")
 	client := meta.(*NetScalerNitroClient).client
-	data, _ := client.FindAllResources(netscaler.Nsacl.Type())
+	data, _ := client.FindAllResources(service.Nsacl.Type())
 	acls := make([]map[string]interface{}, len(data))
 	for i, a := range data {
 		//acls[i] = a.(map[string]interface{})
@@ -256,7 +256,7 @@ func updateNsaclsFunc(d *schema.ResourceData, meta interface{}) error {
 		for _, val := range update {
 			acl := val
 			log.Printf("[DEBUG]  netscaler-provider: going to update acl %s", acl.Aclname)
-			//_, err := client.UpdateResource(netscaler.Nsacl.Type(), acl["aclname"].(string), &acl)
+			//_, err := client.UpdateResource(service.Nsacl.Type(), acl["aclname"].(string), &acl)
 			err := updateSingleAcl(acl, meta)
 			if err != nil {
 				log.Printf("[DEBUG]  netscaler-provider: error updating acl %s", acl.Aclname)
@@ -282,7 +282,7 @@ func updateNsaclsFunc(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 	nsacls := ns.Nsacls{}
-	err := client.ApplyResource(netscaler.Nsacls.Type(), &nsacls)
+	err := client.ApplyResource(service.Nsacls.Type(), &nsacls)
 
 	return err
 }
@@ -297,7 +297,7 @@ func deleteNsaclsFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	client := meta.(*NetScalerNitroClient).client
 	nsacls := ns.Nsacls{}
-	err := client.ApplyResource(netscaler.Nsacls.Type(), &nsacls)
+	err := client.ApplyResource(service.Nsacls.Type(), &nsacls)
 	d.SetId("")
 	return err
 }
@@ -373,7 +373,7 @@ func createSingleAcl(acl map[string]interface{}, meta interface{}) error {
 		Vlan:           acl["vlan"].(int),
 	}
 
-	_, err := client.AddResource(netscaler.Nsacl.Type(), nsaclName, &nsacl)
+	_, err := client.AddResource(service.Nsacl.Type(), nsaclName, &nsacl)
 	if err != nil {
 		return err
 	}
@@ -385,7 +385,7 @@ func deleteSingleAcl(acl map[string]interface{}, meta interface{}) error {
 	log.Printf("[DEBUG]  netscaler-provider: In deleteSingleAcl")
 	client := meta.(*NetScalerNitroClient).client
 	nsaclName := acl["aclname"].(string)
-	err := client.DeleteResource(netscaler.Nsacl.Type(), nsaclName)
+	err := client.DeleteResource(service.Nsacl.Type(), nsaclName)
 	if err != nil {
 		return err
 	}
@@ -417,7 +417,7 @@ func updateSingleAcl(acl ns.Nsacl, meta interface{}) error {
 		return fmt.Errorf("Error in nsacl spec %s cannot have srcportop without srcportval", nsaclName)
 	}
 
-	_, err := client.UpdateResource(netscaler.Nsacl.Type(), nsaclName, &acl)
+	_, err := client.UpdateResource(service.Nsacl.Type(), nsaclName, &acl)
 
 	return err
 }

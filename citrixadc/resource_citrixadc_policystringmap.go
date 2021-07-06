@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/policy"
+	"github.com/citrix/adc-nitro-go/resource/config/policy"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"fmt"
@@ -42,7 +42,7 @@ func createPolicystringmapFunc(d *schema.ResourceData, meta interface{}) error {
 		Name:    d.Get("name").(string),
 	}
 
-	_, err := client.AddResource(netscaler.Policystringmap.Type(), policystringmapName, &policystringmap)
+	_, err := client.AddResource(service.Policystringmap.Type(), policystringmapName, &policystringmap)
 	if err != nil {
 		return err
 	}
@@ -62,7 +62,7 @@ func readPolicystringmapFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	policystringmapName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading policystringmap state %s", policystringmapName)
-	data, err := client.FindResource(netscaler.Policystringmap.Type(), policystringmapName)
+	data, err := client.FindResource(service.Policystringmap.Type(), policystringmapName)
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing policystringmap state %s", policystringmapName)
 		d.SetId("")
@@ -96,7 +96,7 @@ func updatePolicystringmapFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if hasChange {
-		_, err := client.UpdateResource(netscaler.Policystringmap.Type(), policystringmapName, &policystringmap)
+		_, err := client.UpdateResource(service.Policystringmap.Type(), policystringmapName, &policystringmap)
 		if err != nil {
 			return fmt.Errorf("Error updating policystringmap %s", policystringmapName)
 		}
@@ -108,7 +108,7 @@ func deletePolicystringmapFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deletePolicystringmapFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policystringmapName := d.Id()
-	err := client.DeleteResource(netscaler.Policystringmap.Type(), policystringmapName)
+	err := client.DeleteResource(service.Policystringmap.Type(), policystringmapName)
 	if err != nil {
 		return err
 	}

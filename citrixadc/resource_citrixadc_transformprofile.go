@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/transform"
+	"github.com/citrix/adc-nitro-go/resource/config/transform"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"fmt"
@@ -54,7 +54,7 @@ func createTransformprofileFunc(d *schema.ResourceData, meta interface{}) error 
 		Type: d.Get("type").(string),
 	}
 
-	_, err := client.AddResource(netscaler.Transformprofile.Type(), transformprofileName, &transformprofileNew)
+	_, err := client.AddResource(service.Transformprofile.Type(), transformprofileName, &transformprofileNew)
 	if err != nil {
 		return err
 	}
@@ -80,7 +80,7 @@ func createTransformprofileFunc(d *schema.ResourceData, meta interface{}) error 
 		doUpdate = true
 	}
 	if doUpdate {
-		_, err := client.UpdateResource(netscaler.Transformprofile.Type(), transformprofileName, &transformprofile)
+		_, err := client.UpdateResource(service.Transformprofile.Type(), transformprofileName, &transformprofile)
 		if err != nil {
 			return err
 		}
@@ -101,7 +101,7 @@ func readTransformprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	transformprofileName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading transformprofile state %s", transformprofileName)
-	data, err := client.FindResource(netscaler.Transformprofile.Type(), transformprofileName)
+	data, err := client.FindResource(service.Transformprofile.Type(), transformprofileName)
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing transformprofile state %s", transformprofileName)
 		d.SetId("")
@@ -147,7 +147,7 @@ func updateTransformprofileFunc(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if hasChange {
-		_, err := client.UpdateResource(netscaler.Transformprofile.Type(), transformprofileName, &transformprofile)
+		_, err := client.UpdateResource(service.Transformprofile.Type(), transformprofileName, &transformprofile)
 		if err != nil {
 			return fmt.Errorf("Error updating transformprofile %s", transformprofileName)
 		}
@@ -159,7 +159,7 @@ func deleteTransformprofileFunc(d *schema.ResourceData, meta interface{}) error 
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteTransformprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	transformprofileName := d.Id()
-	err := client.DeleteResource(netscaler.Transformprofile.Type(), transformprofileName)
+	err := client.DeleteResource(service.Transformprofile.Type(), transformprofileName)
 	if err != nil {
 		return err
 	}

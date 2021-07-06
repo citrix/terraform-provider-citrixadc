@@ -17,9 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"testing"
 )
 
 func TestAccInstaller_basic(t *testing.T) {
@@ -28,6 +29,9 @@ func TestAccInstaller_basic(t *testing.T) {
 	}
 	if isCluster {
 		t.Skip("Install not available in Cluster")
+	}
+	if adcTestbed != "INSTALLER" {
+		t.Skipf("ADC testbed is %s. Expected INSTALLER.", adcTestbed)
 	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },

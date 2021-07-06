@@ -18,13 +18,17 @@ package citrixadc
 import (
 	"errors"
 	"fmt"
-	"github.com/chiradeep/go-nitro/netscaler"
+	"testing"
+
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"testing"
 )
 
 func TestAccNsip6_basic(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -62,6 +66,9 @@ const testAccNsip6_mptcpadvertise = `
 `
 
 func TestAccNsip6_mptcpadvertise(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	if isCpxRun {
 		t.Skip("No support in CPX")
 	}
@@ -102,7 +109,7 @@ func testAccCheckNsip6Exist(n string, id *string, ipv6address string) resource.T
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
 
-		array, _ := nsClient.FindAllResources(netscaler.Nsip6.Type())
+		array, _ := nsClient.FindAllResources(service.Nsip6.Type())
 
 		foundAddress := false
 		for _, item := range array {
@@ -131,7 +138,7 @@ func testAccCheckNsip6Destroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(netscaler.Nsip6.Type(), rs.Primary.ID)
+		_, err := nsClient.FindResource(service.Nsip6.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("LB vserver %s still exists", rs.Primary.ID)
 		}

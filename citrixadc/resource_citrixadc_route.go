@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/network"
+	"github.com/citrix/adc-nitro-go/resource/config/network"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"fmt"
@@ -125,7 +125,7 @@ func createRouteFunc(d *schema.ResourceData, meta interface{}) error {
 		Weight:     d.Get("weight").(int),
 	}
 
-	_, err := client.AddResource(netscaler.Route.Type(), route.Network, &route)
+	_, err := client.AddResource(service.Route.Type(), route.Network, &route)
 	if err != nil {
 		return err
 	}
@@ -149,8 +149,8 @@ func readRouteFunc(d *schema.ResourceData, meta interface{}) error {
 	argsMap["network"] = url.QueryEscape(d.Get("network").(string))
 	argsMap["netmask"] = url.QueryEscape(d.Get("netmask").(string))
 	argsMap["gateway"] = url.QueryEscape(d.Get("gateway").(string))
-	findParams := netscaler.FindParams{
-		ResourceType: netscaler.Route.Type(),
+	findParams := service.FindParams{
+		ResourceType: service.Route.Type(),
 		ArgsMap:      argsMap,
 	}
 	dataArray, err := client.FindResourceArrayWithParams(findParams)
@@ -279,7 +279,7 @@ func updateRouteFunc(d *schema.ResourceData, meta interface{}) error {
 		route.Network = d.Get("network").(string)
 		route.Netmask = d.Get("netmask").(string)
 		route.Gateway = d.Get("gateway").(string)
-		err := client.UpdateUnnamedResource(netscaler.Route.Type(), &route)
+		err := client.UpdateUnnamedResource(service.Route.Type(), &route)
 		if err != nil {
 			return fmt.Errorf("Error updating route %s", routeName)
 		}
@@ -296,7 +296,7 @@ func deleteRouteFunc(d *schema.ResourceData, meta interface{}) error {
 	argsMap["netmask"] = url.QueryEscape(d.Get("netmask").(string))
 	argsMap["gateway"] = url.QueryEscape(d.Get("gateway").(string))
 
-	err := client.DeleteResourceWithArgsMap(netscaler.Route.Type(), d.Get("network").(string), argsMap)
+	err := client.DeleteResourceWithArgsMap(service.Route.Type(), d.Get("network").(string), argsMap)
 	if err != nil {
 		return err
 	}

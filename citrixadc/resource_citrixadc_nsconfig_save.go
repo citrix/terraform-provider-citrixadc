@@ -1,9 +1,9 @@
 package citrixadc
 
 import (
-	"github.com/chiradeep/go-nitro/config/ns"
+	"github.com/citrix/adc-nitro-go/resource/config/ns"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 
@@ -122,7 +122,7 @@ func doSaveConfig(d *schema.ResourceData, meta interface{}) error {
 		All: d.Get("all").(bool),
 	}
 
-	err := client.ActOnResource(netscaler.Nsconfig.Type(), &nsconfig, "save")
+	err := client.ActOnResource(service.Nsconfig.Type(), &nsconfig, "save")
 	return err
 }
 

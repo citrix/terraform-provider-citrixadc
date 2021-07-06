@@ -4,13 +4,25 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/chiradeep/go-nitro/config/cs"
+	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/chiradeep/go-nitro/netscaler"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"log"
 )
+
+type Csvserverappfwpolicybinding struct {
+	Bindpoint              string `json:"bindpoint,omitempty"`
+	Gotopriorityexpression string `json:"gotopriorityexpression,omitempty"`
+	Invoke                 bool   `json:"invoke,omitempty"`
+	Labelname              string `json:"labelname,omitempty"`
+	Labeltype              string `json:"labeltype,omitempty"`
+	Name                   string `json:"name,omitempty"`
+	Policyname             string `json:"policyname,omitempty"`
+	Priority               int    `json:"priority,omitempty"`
+	Sc                     string `json:"sc,omitempty"`
+	Targetlbvserver        string `json:"targetlbvserver,omitempty"`
+}
 
 func resourceCitrixAdcCsvserver_appfwpolicy_binding() *schema.Resource {
 	return &schema.Resource{
@@ -82,7 +94,7 @@ func createCsvserver_appfwpolicy_bindingFunc(d *schema.ResourceData, meta interf
 	appfwPolicyName := d.Get("policyname").(string)
 	bindingId := fmt.Sprintf("%s,%s", csvserverName, appfwPolicyName)
 
-	csvserver_appfwpolicy_binding := cs.Csvserverappfwpolicybinding{
+	csvserver_appfwpolicy_binding := Csvserverappfwpolicybinding{
 		Bindpoint:              d.Get("bindpoint").(string),
 		Gotopriorityexpression: d.Get("gotopriorityexpression").(string),
 		Invoke:                 d.Get("invoke").(bool),
@@ -94,7 +106,7 @@ func createCsvserver_appfwpolicy_bindingFunc(d *schema.ResourceData, meta interf
 		Targetlbvserver:        d.Get("targetlbvserver").(string),
 	}
 
-	_, err := client.AddResource(netscaler.Csvserver_appfwpolicy_binding.Type(), csvserverName, &csvserver_appfwpolicy_binding)
+	_, err := client.AddResource(service.Csvserver_appfwpolicy_binding.Type(), csvserverName, &csvserver_appfwpolicy_binding)
 	if err != nil {
 		return err
 	}
@@ -120,8 +132,8 @@ func readCsvserver_appfwpolicy_bindingFunc(d *schema.ResourceData, meta interfac
 	appfwPolicyName := idSlice[1]
 	log.Printf("[DEBUG] citrixadc-provider: Reading csvserver_appfwpolicy_binding state %s", bindingId)
 
-	findParams := netscaler.FindParams{
-		ResourceType:             netscaler.Csvserver_appfwpolicy_binding.Type(),
+	findParams := service.FindParams{
+		ResourceType:             service.Csvserver_appfwpolicy_binding.Type(),
 		ResourceName:             csvserverName,
 		ResourceMissingErrorCode: 258,
 	}
@@ -186,7 +198,7 @@ func deleteCsvserver_appfwpolicy_bindingFunc(d *schema.ResourceData, meta interf
 
 	args := make(map[string]string)
 	args["policyname"] = appfwPolicyName
-	err := client.DeleteResourceWithArgsMap(netscaler.Csvserver_appfwpolicy_binding.Type(), csvserverName, args)
+	err := client.DeleteResourceWithArgsMap(service.Csvserver_appfwpolicy_binding.Type(), csvserverName, args)
 	if err != nil {
 		return err
 	}
