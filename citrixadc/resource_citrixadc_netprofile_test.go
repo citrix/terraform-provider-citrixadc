@@ -25,6 +25,9 @@ import (
 )
 
 func TestAccNetprofile_basic(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	if isCpxRun {
 		t.Skip("CPX 12.0 is outdated for this resource")
 	}

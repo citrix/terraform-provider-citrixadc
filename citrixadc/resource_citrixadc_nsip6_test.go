@@ -26,6 +26,9 @@ import (
 )
 
 func TestAccNsip6_basic(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -63,6 +66,9 @@ const testAccNsip6_mptcpadvertise = `
 `
 
 func TestAccNsip6_mptcpadvertise(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	if isCpxRun {
 		t.Skip("No support in CPX")
 	}

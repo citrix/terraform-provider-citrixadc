@@ -27,6 +27,9 @@ import (
 )
 
 func TestAccCsvserver_basic(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -54,6 +57,9 @@ func TestAccCsvserver_basic(t *testing.T) {
 func TestAccCsvserver_standalone_ciphersuites_mixed(t *testing.T) {
 	if isCluster {
 		t.Skip("cluster ADC deployment")
+	}
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
 	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -88,6 +94,9 @@ func TestAccCsvserver_standalone_ciphersuites_mixed(t *testing.T) {
 }
 
 func TestAccCsvserver_cluster_ciphersuites(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -124,6 +133,9 @@ func TestAccCsvserver_cluster_ciphersuites(t *testing.T) {
 func TestAccCsvserver_cluster_ciphers(t *testing.T) {
 	if !isCluster {
 		t.Skip("standalone ADC deployment")
+	}
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
 	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -246,6 +258,10 @@ func TestAccCsvserver_AssertNonUpdateableAttributes(t *testing.T) {
 		t.Skip("TF_ACC not set. Skipping acceptance test.")
 	}
 
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
+
 	c, err := testHelperInstantiateClient("", "", "", false)
 	if err != nil {
 		t.Fatalf("Failed to instantiate client. %v\n", err)
@@ -322,6 +338,9 @@ resource "citrixadc_csvserver" "tf_test_acc_csvserver" {
 `
 
 func TestAccCsvserver_enable_disable(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -401,6 +420,9 @@ const testAccCsvserver_binding_update = `
 `
 
 func TestAccCsvserver_lbvserverbinding(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -419,6 +441,9 @@ func TestAccCsvserver_lbvserverbinding(t *testing.T) {
 }
 
 func TestAccCsvserver_snicerts(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { doPreChecks(t) },
 		Providers:    testAccProviders,
@@ -491,6 +516,9 @@ func TestAccCsvserver_sslpolicy(t *testing.T) {
 	if isCpxRun {
 		t.Skip("TODO fix sslaction for CPX")
 	}
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { doPreChecks(t) },
 		Providers:    testAccProviders,
@@ -548,6 +576,7 @@ resource "citrixadc_csvserver" "tf_csvserver" {
   name        = "tf_csvserver"
   port        = 443
   servicetype = "SSL"
+  sslprofile = "ns_default_ssl_profile_frontend"
 
   sslpolicybinding {
      policyname = citrixadc_sslpolicy.tf_sslpolicy.name
@@ -587,6 +616,7 @@ resource "citrixadc_csvserver" "tf_csvserver" {
   name        = "tf_csvserver"
   port        = 443
   servicetype = "SSL"
+  sslprofile = "ns_default_ssl_profile_frontend"
 
   sslpolicybinding {
      policyname = citrixadc_sslpolicy.tf_sslpolicy.name
@@ -626,6 +656,7 @@ resource "citrixadc_csvserver" "tf_csvserver" {
   name        = "tf_csvserver"
   port        = 443
   servicetype = "SSL"
+  sslprofile = "ns_default_ssl_profile_frontend"
 
   sslpolicybinding {
      policyname = citrixadc_sslpolicy.tf_sslpolicy2.name
@@ -660,6 +691,7 @@ resource "citrixadc_csvserver" "tf_csvserver" {
   name        = "tf_csvserver"
   port        = 443
   servicetype = "SSL"
+  sslprofile = "ns_default_ssl_profile_frontend"
 
   sslpolicybinding {
      policyname = citrixadc_sslpolicy.tf_sslpolicy.name
@@ -678,6 +710,9 @@ resource "citrixadc_csvserver" "tf_csvserver" {
 func TestAccCsvserver_sslpolicy_cluster(t *testing.T) {
 	if !isCluster {
 		t.Skip("standalone ADC deployment")
+	}
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
 	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { doPreChecks(t) },

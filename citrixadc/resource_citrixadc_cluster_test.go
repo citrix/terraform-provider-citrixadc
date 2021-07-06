@@ -25,8 +25,8 @@ import (
 )
 
 func TestAccCluster_basic(t *testing.T) {
-	if isCpxRun {
-		t.Skip("clustering not supported in CPX")
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
 	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },

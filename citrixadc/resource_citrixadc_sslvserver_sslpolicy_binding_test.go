@@ -26,6 +26,9 @@ import (
 )
 
 func TestAccSslvserver_sslpolicy_binding_lbvserver(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -48,6 +51,9 @@ func TestAccSslvserver_sslpolicy_binding_lbvserver(t *testing.T) {
 }
 
 func TestAccSslvserver_sslpolicy_binding_csvserver(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,

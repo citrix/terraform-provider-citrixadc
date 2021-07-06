@@ -89,7 +89,7 @@ func createTransformactionFunc(d *schema.ResourceData, meta interface{}) error {
 	// Create does not support all attributes
 	transformactionNew := transform.Transformaction{
 		Name:        d.Get("name").(string),
-		Priority:    uint32(d.Get("priority").(int)),
+		Priority:    d.Get("priority").(int),
 		Profilename: d.Get("profilename").(string),
 		State:       d.Get("state").(string),
 	}
@@ -105,7 +105,7 @@ func createTransformactionFunc(d *schema.ResourceData, meta interface{}) error {
 		Cookiedomainfrom: d.Get("cookiedomainfrom").(string),
 		Cookiedomaininto: d.Get("cookiedomaininto").(string),
 		Name:             d.Get("name").(string),
-		Priority:         uint32(d.Get("priority").(int)),
+		Priority:         d.Get("priority").(int),
 		Requrlfrom:       d.Get("requrlfrom").(string),
 		Requrlinto:       d.Get("requrlinto").(string),
 		Resurlfrom:       d.Get("resurlfrom").(string),
@@ -187,7 +187,7 @@ func updateTransformactionFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("priority") {
 		log.Printf("[DEBUG]  citrixadc-provider: Priority has changed for transformaction %s, starting update", transformactionName)
-		transformaction.Priority = uint32(d.Get("priority").(int))
+		transformaction.Priority = d.Get("priority").(int)
 		hasChange = true
 	}
 	if d.HasChange("profilename") {

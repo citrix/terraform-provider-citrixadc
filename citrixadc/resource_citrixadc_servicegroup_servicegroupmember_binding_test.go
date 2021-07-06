@@ -49,6 +49,9 @@ resource "citrixadc_servicegroup" "tf_servicegroup" {
 `
 
 func TestAccServicegroup_servicegroupmember_binding_ipv4(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -94,6 +97,9 @@ resource "citrixadc_servicegroup" "tf_servicegroup" {
 `
 
 func TestAccServicegroup_servicegroupmember_binding_ipv6(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -150,6 +156,9 @@ resource "citrixadc_server" "tf_server" {
 `
 
 func TestAccServicegroup_servicegroupmember_binding_server_no_port(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -206,6 +215,9 @@ resource "citrixadc_server" "tf_server" {
 `
 
 func TestAccServicegroup_servicegroupmember_binding_server_with_port(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,

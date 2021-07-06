@@ -40,7 +40,9 @@ const testAccSslaction_check_forcenew = `
 `
 
 func TestAccSslaction_basic(t *testing.T) {
-	// TODO: Configure circleci to run against CPX13
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	if isCpxRun {
 		t.Skip("sslaction clientcertverification attribute not supported in CPX12")
 	}

@@ -75,6 +75,11 @@ func resourceCitrixAdcResponderpolicy() *schema.Resource {
 							Optional: true,
 							Computed: true,
 						},
+						"invoke": &schema.Schema{
+							Type:     schema.TypeBool,
+							Optional: true,
+							Computed: true,
+						},
 						"labelname": &schema.Schema{
 							Type:     schema.TypeString,
 							Optional: true,
@@ -92,6 +97,11 @@ func resourceCitrixAdcResponderpolicy() *schema.Resource {
 						},
 						"priority": &schema.Schema{
 							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
+						},
+						"type": &schema.Schema{
+							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
@@ -413,10 +423,13 @@ func addSingleGlobalBinding(d *schema.ResourceData, meta interface{}, binding ma
 
 	client := meta.(*NetScalerNitroClient).client
 
-	bindingStruct := responder.Responderpolicyglobalbinding{}
-	bindingStruct.Name = d.Get("name").(string)
+	bindingStruct := responder.Responderglobalpolicybinding{}
+	bindingStruct.Policyname = d.Get("name").(string)
 	if d, ok := binding["gotopriorityexpression"]; ok {
 		bindingStruct.Gotopriorityexpression = d.(string)
+	}
+	if d, ok := binding["invoke"]; ok {
+		bindingStruct.Invoke = d.(bool)
 	}
 	if d, ok := binding["labelname"]; ok {
 		log.Printf("Labelname %v\n", d)
@@ -428,6 +441,10 @@ func addSingleGlobalBinding(d *schema.ResourceData, meta interface{}, binding ma
 	}
 	if d, ok := binding["priority"]; ok {
 		bindingStruct.Priority = uint32(d.(int))
+	}
+	if d, ok := binding["type"]; ok {
+		log.Printf("Type %v\n", d)
+		bindingStruct.Type = d.(string)
 	}
 
 	if err := client.UpdateUnnamedResource("responderglobal_responderpolicy_binding", bindingStruct); err != nil {

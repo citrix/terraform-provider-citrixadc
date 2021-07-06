@@ -37,6 +37,9 @@ const testAccNsconfigSave_basic = `
 `
 
 func TestAccNsconfigSave_basic(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -109,6 +112,9 @@ func TestAccNsconfigSave_save_race_no_retry(t *testing.T) {
 }
 
 func TestAccNsconfigSave_save_race_retry(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccSaveRaceSetup(t) },
 		Providers: testAccProviders,

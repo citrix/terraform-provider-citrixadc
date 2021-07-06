@@ -55,7 +55,7 @@ func createAppfwfieldtypeFunc(d *schema.ResourceData, meta interface{}) error {
 		Comment:    d.Get("comment").(string),
 		Name:       appfwfieldtypeName,
 		Nocharmaps: d.Get("nocharmaps").(bool),
-		Priority:   uint32(d.Get("priority").(int)),
+		Priority:   d.Get("priority").(int),
 		Regex:      d.Get("regex").(string),
 	}
 
@@ -123,7 +123,7 @@ func updateAppfwfieldtypeFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("priority") {
 		log.Printf("[DEBUG]  citrixadc-provider: Priority has changed for appfwfieldtype %s, starting update", appfwfieldtypeName)
-		appfwfieldtype.Priority = uint32(d.Get("priority").(int))
+		appfwfieldtype.Priority = d.Get("priority").(int)
 		hasChange = true
 	}
 	// if d.HasChange("regex") {

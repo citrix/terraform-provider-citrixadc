@@ -70,7 +70,8 @@ func readLinksetFunc(d *schema.ResourceData, meta interface{}) error {
 	linksetName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading linkset state %s", linksetName)
 	// double encode value part as it contains `/`
-	linksetNameEscaped := url.QueryEscape(url.QueryEscape(linksetName))
+	//linksetNameEscaped := url.QueryEscape(url.QueryEscape(linksetName))
+	linksetNameEscaped := url.PathEscape(url.QueryEscape(linksetName))
 	data, err := client.FindResource(service.Linkset.Type(), linksetNameEscaped)
 
 	err = readLinksetInterfaceBindings(d, meta)

@@ -73,6 +73,9 @@ resource "citrixadc_lbvserver_servicegroup_binding" "tf_binding4" {
 `
 
 func TestAccLbvserver_servicegroup_binding_basic(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,

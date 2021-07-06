@@ -491,23 +491,23 @@ func createAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 		Name:                                       appfwprofileName,
 		Addcookieflags:                             d.Get("addcookieflags").(string),
 		Archivename:                                d.Get("archivename").(string),
-		Bufferoverflowmaxcookielength:              uint32(d.Get("bufferoverflowmaxcookielength").(int)),
-		Bufferoverflowmaxheaderlength:              uint32(d.Get("bufferoverflowmaxheaderlength").(int)),
-		Bufferoverflowmaxurllength:                 uint32(d.Get("bufferoverflowmaxurllength").(int)),
+		Bufferoverflowmaxcookielength:              d.Get("bufferoverflowmaxcookielength").(int),
+		Bufferoverflowmaxheaderlength:              d.Get("bufferoverflowmaxheaderlength").(int),
+		Bufferoverflowmaxurllength:                 d.Get("bufferoverflowmaxurllength").(int),
 		Canonicalizehtmlresponse:                   d.Get("canonicalizehtmlresponse").(string),
 		Checkrequestheaders:                        d.Get("checkrequestheaders").(string),
 		Comment:                                    d.Get("comment").(string),
 		Cookieencryption:                           d.Get("cookieencryption").(string),
 		Cookieproxying:                             d.Get("cookieproxying").(string),
 		Cookietransforms:                           d.Get("cookietransforms").(string),
-		Creditcardmaxallowed:                       uint32(d.Get("creditcardmaxallowed").(int)),
+		Creditcardmaxallowed:                       d.Get("creditcardmaxallowed").(int),
 		Creditcardxout:                             d.Get("creditcardxout").(string),
 		Crosssitescriptingcheckcompleteurls:        d.Get("crosssitescriptingcheckcompleteurls").(string),
 		Crosssitescriptingtransformunsafehtml:      d.Get("crosssitescriptingtransformunsafehtml").(string),
 		Customsettings:                             d.Get("customsettings").(string),
 		Defaultcharset:                             d.Get("defaultcharset").(string),
-		Defaultfieldformatmaxlength:                uint32(d.Get("defaultfieldformatmaxlength").(int)),
-		Defaultfieldformatminlength:                uint32(d.Get("defaultfieldformatminlength").(int)),
+		Defaultfieldformatmaxlength:                d.Get("defaultfieldformatmaxlength").(int),
+		Defaultfieldformatminlength:                d.Get("defaultfieldformatminlength").(int),
 		Defaultfieldformattype:                     d.Get("defaultfieldformattype").(string),
 		Defaults:                                   d.Get("defaults").(string),
 		Dosecurecreditcardlogging:                  d.Get("dosecurecreditcardlogging").(string),
@@ -515,7 +515,7 @@ func createAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 		Errorurl:                                   d.Get("errorurl").(string),
 		Excludefileuploadfromchecks:                d.Get("excludefileuploadfromchecks").(string),
 		Exemptclosureurlsfromsecuritychecks:        d.Get("exemptclosureurlsfromsecuritychecks").(string),
-		Fileuploadmaxnum:                           uint32(d.Get("fileuploadmaxnum").(int)),
+		Fileuploadmaxnum:                           d.Get("fileuploadmaxnum").(int),
 		Htmlerrorobject:                            d.Get("htmlerrorobject").(string),
 		Invalidpercenthandling:                     d.Get("invalidpercenthandling").(string),
 		Jsonerrorobject:                            d.Get("jsonerrorobject").(string),
@@ -523,8 +523,8 @@ func createAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 		Logeverypolicyhit:                          d.Get("logeverypolicyhit").(string),
 		Optimizepartialreqs:                        d.Get("optimizepartialreqs").(string),
 		Percentdecoderecursively:                   d.Get("percentdecoderecursively").(string),
-		Postbodylimit:                              uint64(d.Get("postbodylimit").(int)),
-		Postbodylimitsignature:                     uint32(d.Get("postbodylimitsignature").(int)),
+		Postbodylimit:                              d.Get("postbodylimit").(int),
+		Postbodylimitsignature:                     d.Get("postbodylimitsignature").(int),
 		Refererheadercheck:                         d.Get("refererheadercheck").(string),
 		Requestcontenttype:                         d.Get("requestcontenttype").(string),
 		Responsecontenttype:                        d.Get("responsecontenttype").(string),
@@ -729,17 +729,17 @@ func updateAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("bufferoverflowmaxcookielength") {
 		log.Printf("[DEBUG]  citrixadc-provider: Bufferoverflowmaxcookielength has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Bufferoverflowmaxcookielength = uint32(d.Get("bufferoverflowmaxcookielength").(int))
+		appfwprofile.Bufferoverflowmaxcookielength = d.Get("bufferoverflowmaxcookielength").(int)
 		hasChange = true
 	}
 	if d.HasChange("bufferoverflowmaxheaderlength") {
 		log.Printf("[DEBUG]  citrixadc-provider: Bufferoverflowmaxheaderlength has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Bufferoverflowmaxheaderlength = uint32(d.Get("bufferoverflowmaxheaderlength").(int))
+		appfwprofile.Bufferoverflowmaxheaderlength = d.Get("bufferoverflowmaxheaderlength").(int)
 		hasChange = true
 	}
 	if d.HasChange("bufferoverflowmaxurllength") {
 		log.Printf("[DEBUG]  citrixadc-provider: Bufferoverflowmaxurllength has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Bufferoverflowmaxurllength = uint32(d.Get("bufferoverflowmaxurllength").(int))
+		appfwprofile.Bufferoverflowmaxurllength = d.Get("bufferoverflowmaxurllength").(int)
 		hasChange = true
 	}
 	if d.HasChange("canonicalizehtmlresponse") {
@@ -774,7 +774,7 @@ func updateAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("creditcardmaxallowed") {
 		log.Printf("[DEBUG]  citrixadc-provider: Creditcardmaxallowed has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Creditcardmaxallowed = uint32(d.Get("creditcardmaxallowed").(int))
+		appfwprofile.Creditcardmaxallowed = d.Get("creditcardmaxallowed").(int)
 		hasChange = true
 	}
 	if d.HasChange("creditcardxout") {
@@ -804,12 +804,12 @@ func updateAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("defaultfieldformatmaxlength") {
 		log.Printf("[DEBUG]  citrixadc-provider: Defaultfieldformatmaxlength has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Defaultfieldformatmaxlength = uint32(d.Get("defaultfieldformatmaxlength").(int))
+		appfwprofile.Defaultfieldformatmaxlength = d.Get("defaultfieldformatmaxlength").(int)
 		hasChange = true
 	}
 	if d.HasChange("defaultfieldformatminlength") {
 		log.Printf("[DEBUG]  citrixadc-provider: Defaultfieldformatminlength has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Defaultfieldformatminlength = uint32(d.Get("defaultfieldformatminlength").(int))
+		appfwprofile.Defaultfieldformatminlength = d.Get("defaultfieldformatminlength").(int)
 		hasChange = true
 	}
 	if d.HasChange("defaultfieldformattype") {
@@ -849,7 +849,7 @@ func updateAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("fileuploadmaxnum") {
 		log.Printf("[DEBUG]  citrixadc-provider: Fileuploadmaxnum has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Fileuploadmaxnum = uint32(d.Get("fileuploadmaxnum").(int))
+		appfwprofile.Fileuploadmaxnum = d.Get("fileuploadmaxnum").(int)
 		hasChange = true
 	}
 	if d.HasChange("htmlerrorobject") {
@@ -894,12 +894,12 @@ func updateAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("postbodylimit") {
 		log.Printf("[DEBUG]  citrixadc-provider: Postbodylimit has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Postbodylimit = uint64(d.Get("postbodylimit").(int))
+		appfwprofile.Postbodylimit = d.Get("postbodylimit").(int)
 		hasChange = true
 	}
 	if d.HasChange("postbodylimitsignature") {
 		log.Printf("[DEBUG]  citrixadc-provider: Postbodylimitsignature has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Postbodylimitsignature = uint32(d.Get("postbodylimitsignature").(int))
+		appfwprofile.Postbodylimitsignature = d.Get("postbodylimitsignature").(int)
 		hasChange = true
 	}
 	if d.HasChange("refererheadercheck") {

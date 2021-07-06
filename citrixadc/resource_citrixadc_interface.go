@@ -156,28 +156,28 @@ func createInterfaceFunc(d *schema.ResourceData, meta interface{}) error {
 
 	Interface := network.Interface{
 		Autoneg:         d.Get("autoneg").(string),
-		Bandwidthhigh:   uint32(d.Get("bandwidthhigh").(int)),
-		Bandwidthnormal: uint32(d.Get("bandwidthnormal").(int)),
+		Bandwidthhigh:   d.Get("bandwidthhigh").(int),
+		Bandwidthnormal: d.Get("bandwidthnormal").(int),
 		Duplex:          d.Get("duplex").(string),
 		Flowctl:         d.Get("flowctl").(string),
 		Haheartbeat:     d.Get("haheartbeat").(string),
 		Hamonitor:       d.Get("hamonitor").(string),
 		Id:              d.Get("interface_id").(string),
 		Ifalias:         d.Get("ifalias").(string),
-		Lacpkey:         uint32(d.Get("lacpkey").(int)),
+		Lacpkey:         d.Get("lacpkey").(int),
 		Lacpmode:        d.Get("lacpmode").(string),
-		Lacppriority:    uint32(d.Get("lacppriority").(int)),
+		Lacppriority:    d.Get("lacppriority").(int),
 		Lacptimeout:     d.Get("lacptimeout").(string),
 		Lagtype:         d.Get("lagtype").(string),
 		Linkredundancy:  d.Get("linkredundancy").(string),
 		Lldpmode:        d.Get("lldpmode").(string),
-		Lrsetpriority:   uint32(d.Get("lrsetpriority").(int)),
-		Mtu:             uint32(d.Get("mtu").(int)),
-		Ringsize:        uint32(d.Get("ringsize").(int)),
+		Lrsetpriority:   d.Get("lrsetpriority").(int),
+		Mtu:             d.Get("mtu").(int),
+		Ringsize:        d.Get("ringsize").(int),
 		Ringtype:        d.Get("ringtype").(string),
 		Speed:           d.Get("speed").(string),
 		Tagall:          d.Get("tagall").(string),
-		Throughput:      uint32(d.Get("throughput").(int)),
+		Throughput:      d.Get("throughput").(int),
 		Trunk:           d.Get("trunk").(string),
 		Trunkmode:       d.Get("trunkmode").(string),
 	}
@@ -270,12 +270,12 @@ func updateInterfaceFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("bandwidthhigh") {
 		log.Printf("[DEBUG]  citrixadc-provider: Bandwidthhigh has changed for Interface %s, starting update", interfaceId)
-		Interface.Bandwidthhigh = uint32(d.Get("bandwidthhigh").(int))
+		Interface.Bandwidthhigh = d.Get("bandwidthhigh").(int)
 		hasChange = true
 	}
 	if d.HasChange("bandwidthnormal") {
 		log.Printf("[DEBUG]  citrixadc-provider: Bandwidthnormal has changed for Interface %s, starting update", interfaceId)
-		Interface.Bandwidthnormal = uint32(d.Get("bandwidthnormal").(int))
+		Interface.Bandwidthnormal = d.Get("bandwidthnormal").(int)
 		hasChange = true
 	}
 	if d.HasChange("duplex") {
@@ -310,7 +310,7 @@ func updateInterfaceFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("lacpkey") {
 		log.Printf("[DEBUG]  citrixadc-provider: Lacpkey has changed for Interface %s, starting update", interfaceId)
-		Interface.Lacpkey = uint32(d.Get("lacpkey").(int))
+		Interface.Lacpkey = d.Get("lacpkey").(int)
 		hasChange = true
 	}
 	if d.HasChange("lacpmode") {
@@ -320,7 +320,7 @@ func updateInterfaceFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("lacppriority") {
 		log.Printf("[DEBUG]  citrixadc-provider: Lacppriority has changed for Interface %s, starting update", interfaceId)
-		Interface.Lacppriority = uint32(d.Get("lacppriority").(int))
+		Interface.Lacppriority = d.Get("lacppriority").(int)
 		hasChange = true
 	}
 	if d.HasChange("lacptimeout") {
@@ -345,17 +345,17 @@ func updateInterfaceFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("lrsetpriority") {
 		log.Printf("[DEBUG]  citrixadc-provider: Lrsetpriority has changed for Interface %s, starting update", interfaceId)
-		Interface.Lrsetpriority = uint32(d.Get("lrsetpriority").(int))
+		Interface.Lrsetpriority = d.Get("lrsetpriority").(int)
 		hasChange = true
 	}
 	if d.HasChange("mtu") {
 		log.Printf("[DEBUG]  citrixadc-provider: Mtu has changed for Interface %s, starting update", interfaceId)
-		Interface.Mtu = uint32(d.Get("mtu").(int))
+		Interface.Mtu = d.Get("mtu").(int)
 		hasChange = true
 	}
 	if d.HasChange("ringsize") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ringsize has changed for Interface %s, starting update", interfaceId)
-		Interface.Ringsize = uint32(d.Get("ringsize").(int))
+		Interface.Ringsize = d.Get("ringsize").(int)
 		hasChange = true
 	}
 	if d.HasChange("ringtype") {
@@ -375,7 +375,7 @@ func updateInterfaceFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("throughput") {
 		log.Printf("[DEBUG]  citrixadc-provider: Throughput has changed for Interface %s, starting update", interfaceId)
-		Interface.Throughput = uint32(d.Get("throughput").(int))
+		Interface.Throughput = d.Get("throughput").(int)
 		hasChange = true
 	}
 	if d.HasChange("trunk") {

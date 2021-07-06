@@ -53,9 +53,8 @@ const testAccSslpolicy_update = `
 `
 
 func TestAccSslpolicy_basic(t *testing.T) {
-	// TODO: Configure circleci to run against CPX13
-	if isCpxRun {
-		t.Skip("sslaction clientcertverification attribute not supported in CPX12")
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
 	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },

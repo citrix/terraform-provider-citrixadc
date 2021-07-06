@@ -29,6 +29,9 @@ import (
 )
 
 func TestAccGslbservice_basic(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -136,6 +139,10 @@ func TestAccGslbservice_AssertNonUpdateableAttributes(t *testing.T) {
 		t.Skip("TF_ACC not set. Skipping acceptance test.")
 	}
 
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
+
 	c, err := testHelperInstantiateClient("", "", "", false)
 	if err != nil {
 		t.Fatalf("Failed to instantiate client. %v\n", err)
@@ -214,9 +221,9 @@ func TestAccGslbservice_AssertNonUpdateableAttributes(t *testing.T) {
 	serviceInstance.Ip = ""
 
 	//servername
-	serviceInstance.Servername = "other_server"
-	testHelperVerifyImmutabilityFunc(c, t, serviceType, serviceName, serviceInstance, "servername")
-	serviceInstance.Servername = ""
+	//serviceInstance.Servername = "other_server"
+	//testHelperVerifyImmutabilityFunc(c, t, serviceType, serviceName, serviceInstance, "servername")
+	//serviceInstance.Servername = ""
 
 	//servicetype
 	serviceInstance.Servicetype = "TCP"
@@ -288,6 +295,9 @@ resource "citrixadc_gslbservice" "tf_test_acc_gslbservice" {
 `
 
 func TestAccGslbservice_enable_disable(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -322,6 +332,9 @@ func TestAccGslbservice_enable_disable(t *testing.T) {
 }
 
 func TestAccGslbservice_lbmonitorbinding(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,

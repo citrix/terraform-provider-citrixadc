@@ -119,14 +119,14 @@ func createServerFunc(d *schema.ResourceData, meta interface{}) error {
 		Comment:            d.Get("comment").(string),
 		Domain:             d.Get("domain").(string),
 		Domainresolvenow:   d.Get("domainresolvenow").(bool),
-		Domainresolveretry: int32(d.Get("domainresolveretry").(int)),
+		Domainresolveretry: d.Get("domainresolveretry").(int),
 		Internal:           d.Get("internal").(bool),
 		Ipaddress:          d.Get("ipaddress").(string),
 		Ipv6address:        d.Get("ipv6address").(string),
 		Name:               d.Get("name").(string),
 		Querytype:          d.Get("querytype").(string),
 		State:              d.Get("state").(string),
-		Td:                 uint32(d.Get("td").(int)),
+		Td:                 d.Get("td").(int),
 		Translationip:      d.Get("translationip").(string),
 		Translationmask:    d.Get("translationmask").(string),
 	}
@@ -206,7 +206,7 @@ func updateServerFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("domainresolveretry") {
 		log.Printf("[DEBUG]  netscaler-provider: Domainresolveretry has changed for server %s, starting update", serverName)
-		server.Domainresolveretry = int32(d.Get("domainresolveretry").(int))
+		server.Domainresolveretry = d.Get("domainresolveretry").(int)
 		hasChange = true
 	}
 	if d.HasChange("internal") {
@@ -240,7 +240,7 @@ func updateServerFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("td") {
 		log.Printf("[DEBUG]  netscaler-provider: Td has changed for server %s, starting update", serverName)
-		server.Td = uint32(d.Get("td").(int))
+		server.Td = d.Get("td").(int)
 		hasChange = true
 	}
 	if d.HasChange("translationip") {
@@ -302,7 +302,7 @@ func doServerStateChange(d *schema.ResourceData, client *service.NitroClient) er
 		}
 	} else if newstate == "DISABLED" {
 		// Add attributes relevant to the disable operation
-		server.Delay = uint64(d.Get("delay").(int))
+		server.Delay = d.Get("delay").(int)
 		server.Graceful = d.Get("graceful").(string)
 		err := client.ActOnResource(service.Server.Type(), server, "disable")
 		if err != nil {

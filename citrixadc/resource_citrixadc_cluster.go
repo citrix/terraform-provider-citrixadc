@@ -344,7 +344,7 @@ func updateClusterFunc(d *schema.ResourceData, meta interface{}) error {
 	clid := strconv.Itoa(d.Get("clid").(int))
 
 	clusterinstance := cluster.Clusterinstance{
-		Clid: uint32(d.Get("clid").(int)),
+		Clid: d.Get("clid").(int),
 	}
 	hasChange := false
 	clusterNodegroupChanged := false
@@ -355,17 +355,17 @@ func updateClusterFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("clid") {
 		log.Printf("[DEBUG]  citrixadc-provider: Clid has changed for clusterinstance %s, starting update", clid)
-		clusterinstance.Clid = uint32(d.Get("clid").(int))
+		clusterinstance.Clid = d.Get("clid").(int)
 		hasChange = true
 	}
 	if d.HasChange("deadinterval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Deadinterval has changed for clusterinstance %s, starting update", clid)
-		clusterinstance.Deadinterval = uint64(d.Get("deadinterval").(int))
+		clusterinstance.Deadinterval = d.Get("deadinterval").(int)
 		hasChange = true
 	}
 	if d.HasChange("hellointerval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Hellointerval has changed for clusterinstance %s, starting update", clid)
-		clusterinstance.Hellointerval = uint32(d.Get("hellointerval").(int))
+		clusterinstance.Hellointerval = d.Get("hellointerval").(int)
 		hasChange = true
 	}
 	if d.HasChange("inc") {
@@ -722,9 +722,9 @@ func createFirstClusterNode(d *schema.ResourceData, meta interface{}) error {
 
 	clusterinstance := cluster.Clusterinstance{
 		Backplanebasedview:         d.Get("backplanebasedview").(string),
-		Clid:                       uint32(d.Get("clid").(int)),
-		Deadinterval:               uint64(d.Get("deadinterval").(int)),
-		Hellointerval:              uint32(d.Get("hellointerval").(int)),
+		Clid:                       d.Get("clid").(int),
+		Deadinterval:               d.Get("deadinterval").(int),
+		Hellointerval:              d.Get("hellointerval").(int),
 		Inc:                        d.Get("inc").(string),
 		Nodegroup:                  d.Get("nodegroup").(string),
 		Preemption:                 d.Get("preemption").(string),
@@ -747,7 +747,7 @@ func createFirstClusterNode(d *schema.ResourceData, meta interface{}) error {
 
 		clusternodegroup := cluster.Clusternodegroup{
 			Name:     nodegroupData["name"].(string),
-			Priority: uint32(nodegroupData["priority"].(int)),
+			Priority: nodegroupData["priority"].(int),
 			State:    nodegroupData["state"].(string),
 			Sticky:   nodegroupData["sticky"].(string),
 			Strict:   nodegroupData["strict"].(string),
@@ -764,11 +764,11 @@ func createFirstClusterNode(d *schema.ResourceData, meta interface{}) error {
 	clusternode := cluster.Clusternode{
 		Backplane:            firstNode["backplane"].(string),
 		Clearnodegroupconfig: firstNode["clearnodegroupconfig"].(string),
-		Delay:                uint32(firstNode["delay"].(int)),
+		Delay:                firstNode["delay"].(int),
 		Ipaddress:            firstNode["ipaddress"].(string),
 		Nodegroup:            firstNode["nodegroup"].(string),
-		Nodeid:               uint32(firstNode["nodeid"].(int)),
-		Priority:             uint32(firstNode["priority"].(int)),
+		Nodeid:               firstNode["nodeid"].(int),
+		Priority:             firstNode["priority"].(int),
 		State:                firstNode["state"].(string),
 		Tunnelmode:           firstNode["tunnelmode"].(string),
 	}
@@ -794,7 +794,7 @@ func createFirstClusterNode(d *schema.ResourceData, meta interface{}) error {
 
 	// Enable cluster instance on first node
 	clusterinstanceEnabler := cluster.Clusterinstance{
-		Clid: uint32(d.Get("clid").(int)),
+		Clid: d.Get("clid").(int),
 	}
 	err = nodeClient.ActOnResource("clusterinstance", &clusterinstanceEnabler, "enable")
 	if err != nil {
@@ -1038,7 +1038,7 @@ func updateSingleClusterNodegroup(d *schema.ResourceData, meta interface{}, node
 
 	clusternodegroup := cluster.Clusternodegroup{
 		Name:     nodegroupData["name"].(string),
-		Priority: uint32(nodegroupData["priority"].(int)),
+		Priority: nodegroupData["priority"].(int),
 		State:    nodegroupData["state"].(string),
 		Sticky:   nodegroupData["sticky"].(string),
 		Strict:   nodegroupData["strict"].(string),
@@ -1071,7 +1071,7 @@ func addSingleClusterNodegroup(d *schema.ResourceData, meta interface{}, nodegro
 
 	clusternodegroup := cluster.Clusternodegroup{
 		Name:     nodegroupData["name"].(string),
-		Priority: uint32(nodegroupData["priority"].(int)),
+		Priority: nodegroupData["priority"].(int),
 		State:    nodegroupData["state"].(string),
 		Sticky:   nodegroupData["sticky"].(string),
 		Strict:   nodegroupData["strict"].(string),
@@ -1337,11 +1337,11 @@ func addSingleClusterNode(d *schema.ResourceData, meta interface{}, nodeData map
 	clusternode := cluster.Clusternode{
 		Backplane:            nodeData["backplane"].(string),
 		Clearnodegroupconfig: nodeData["clearnodegroupconfig"].(string),
-		Delay:                uint32(nodeData["delay"].(int)),
+		Delay:                nodeData["delay"].(int),
 		Ipaddress:            nodeData["ipaddress"].(string),
 		Nodegroup:            nodeData["nodegroup"].(string),
-		Nodeid:               uint32(nodeData["nodeid"].(int)),
-		Priority:             uint32(nodeData["priority"].(int)),
+		Nodeid:               nodeData["nodeid"].(int),
+		Priority:             nodeData["priority"].(int),
 		State:                nodeData["state"].(string),
 		Tunnelmode:           nodeData["tunnelmode"].(string),
 	}
@@ -1482,9 +1482,9 @@ func updateSingleClusterNode(d *schema.ResourceData, meta interface{}, nodeData 
 	// Only include attributes that can be present in HTTP PUT operation
 	clusternode := cluster.Clusternode{
 		Backplane:  nodeData["backplane"].(string),
-		Delay:      uint32(nodeData["delay"].(int)),
-		Nodeid:     uint32(nodeData["nodeid"].(int)),
-		Priority:   uint32(nodeData["priority"].(int)),
+		Delay:      nodeData["delay"].(int),
+		Nodeid:     nodeData["nodeid"].(int),
+		Priority:   nodeData["priority"].(int),
 		State:      nodeData["state"].(string),
 		Tunnelmode: nodeData["tunnelmode"].(string),
 	}

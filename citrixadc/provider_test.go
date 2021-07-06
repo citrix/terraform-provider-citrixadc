@@ -15,6 +15,7 @@ var testAccProvider *schema.Provider
 
 var isCpxRun bool
 var isCluster bool
+var adcTestbed string
 
 func init() {
 	log.Printf("[DEBUG]  citrixadc-provider-test: In init")
@@ -27,6 +28,12 @@ func init() {
 	isCpxRun = strings.Contains(nsUrl, "localhost")
 
 	isCluster = testIsTargetAdcCluster()
+
+	var exists bool
+	adcTestbed, exists = os.LookupEnv("ADC_TESTBED")
+	if !exists {
+		adcTestbed = "UNSPECIFIED"
+	}
 }
 
 func TestProvider(t *testing.T) {

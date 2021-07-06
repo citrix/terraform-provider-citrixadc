@@ -27,6 +27,9 @@ import (
 )
 
 func TestAccSslcertkey_basic(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { doSslcertkeyPreChecks(t) },
 		Providers:    testAccProviders,
@@ -146,6 +149,9 @@ resource "citrixadc_sslcertkey" "foo" {
 `
 
 func TestAccSslcertkey_linkcert(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { doSslcertkeyPreChecks(t) },
 		Providers:    testAccProviders,
@@ -273,6 +279,9 @@ resource "citrixadc_sslcertkey" "intermediate" {
 `
 
 func TestAccSslcertkey_AssertNonUpdateableAttributes(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 
 	if tfAcc := os.Getenv("TF_ACC"); tfAcc == "" {
 		t.Skip("TF_ACC not set. Skipping acceptance test.")

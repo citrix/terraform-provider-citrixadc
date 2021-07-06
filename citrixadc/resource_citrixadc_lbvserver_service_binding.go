@@ -53,7 +53,7 @@ func createLbvserver_service_bindingFunc(d *schema.ResourceData, meta interface{
 	lbvserver_service_binding := lb.Lbvserverservicebinding{
 		Name:        d.Get("name").(string),
 		Servicename: d.Get("servicename").(string),
-		Weight:      uint32(d.Get("weight").(int)),
+		Weight:      d.Get("weight").(int),
 	}
 
 	_, err := client.AddResource(service.Lbvserver_service_binding.Type(), name, &lbvserver_service_binding)

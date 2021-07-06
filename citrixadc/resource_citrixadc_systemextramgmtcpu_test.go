@@ -17,12 +17,16 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"testing"
 )
 
 func TestAccSystemextramgmtcpu_basic(t *testing.T) {
+	if adcTestbed != "STANDALONE_12CORES" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_12CORES.", adcTestbed)
+	}
 	if isCpxRun {
 		t.Skip("CPX does not support the feature")
 		// TODO actually we need a VPX with 12 cores licensed to test this resource

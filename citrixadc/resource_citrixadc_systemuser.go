@@ -98,10 +98,10 @@ func createSystemuserFunc(d *schema.ResourceData, meta interface{}) error {
 	systemuser := system.Systemuser{
 		Externalauth: d.Get("externalauth").(string),
 		Logging:      d.Get("logging").(string),
-		Maxsession:   uint32(d.Get("maxsession").(int)),
+		Maxsession:   d.Get("maxsession").(int),
 		Password:     d.Get("password").(string),
 		Promptstring: d.Get("promptstring").(string),
-		Timeout:      uint64(d.Get("timeout").(int)),
+		Timeout:      d.Get("timeout").(int),
 		Username:     username,
 	}
 
@@ -189,7 +189,7 @@ func updateSystemuserFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("maxsession") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxsession has changed for systemuser %s, starting update", systemuserName)
-		systemuser.Maxsession = uint32(d.Get("maxsession").(int))
+		systemuser.Maxsession = d.Get("maxsession").(int)
 		hasChange = true
 	}
 	if d.HasChange("password") {
@@ -204,7 +204,7 @@ func updateSystemuserFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("timeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Timeout has changed for systemuser %s, starting update", systemuserName)
-		systemuser.Timeout = uint64(d.Get("timeout").(int))
+		systemuser.Timeout = d.Get("timeout").(int)
 		hasChange = true
 	}
 

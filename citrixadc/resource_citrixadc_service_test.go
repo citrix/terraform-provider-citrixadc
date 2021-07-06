@@ -27,6 +27,9 @@ import (
 )
 
 func TestAccService_basic(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -129,6 +132,9 @@ resource "citrixadc_service" "foo" {
 `
 
 func TestAccService_AssertNonUpdateableAttributes(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 
 	if tfAcc := os.Getenv("TF_ACC"); tfAcc == "" {
 		t.Skip("TF_ACC not set. Skipping acceptance test.")
@@ -253,6 +259,9 @@ resource "citrixadc_service" "tf_acc_service" {
 `
 
 func TestAccService_enable_disable(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -284,6 +293,9 @@ func TestAccService_enable_disable(t *testing.T) {
 }
 
 func TestAccService_sslservice(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,

@@ -75,6 +75,11 @@ func resourceCitrixAdcRewritepolicy() *schema.Resource {
 							Optional: true,
 							Computed: true,
 						},
+						"invoke": &schema.Schema{
+							Type:     schema.TypeBool,
+							Optional: true,
+							Computed: true,
+						},
 						"labelname": &schema.Schema{
 							Type:     schema.TypeString,
 							Optional: true,
@@ -92,6 +97,11 @@ func resourceCitrixAdcRewritepolicy() *schema.Resource {
 						},
 						"priority": &schema.Schema{
 							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
+						},
+						"type": &schema.Schema{
+							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
@@ -404,10 +414,13 @@ func addSingleRewriteGlobalBinding(d *schema.ResourceData, meta interface{}, bin
 
 	client := meta.(*NetScalerNitroClient).client
 
-	bindingStruct := rewrite.Rewritepolicyglobalbinding{}
-	bindingStruct.Name = d.Get("name").(string)
+	bindingStruct := rewrite.Rewriteglobalpolicybinding{}
+	bindingStruct.Policyname = d.Get("name").(string)
 	if d, ok := binding["gotopriorityexpression"]; ok {
 		bindingStruct.Gotopriorityexpression = d.(string)
+	}
+	if d, ok := binding["invoke"]; ok {
+		bindingStruct.Invoke = d.(bool)
 	}
 	if d, ok := binding["labelname"]; ok {
 		log.Printf("Labelname %v\n", d)
@@ -419,6 +432,10 @@ func addSingleRewriteGlobalBinding(d *schema.ResourceData, meta interface{}, bin
 	}
 	if d, ok := binding["priority"]; ok {
 		bindingStruct.Priority = uint32(d.(int))
+	}
+	if d, ok := binding["type"]; ok {
+		log.Printf("Type %v\n", d)
+		bindingStruct.Type = d.(string)
 	}
 
 	if err := client.UpdateUnnamedResource("rewriteglobal_rewritepolicy_binding", bindingStruct); err != nil {

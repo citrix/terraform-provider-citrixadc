@@ -25,6 +25,9 @@ import (
 )
 
 func TestAccAuditsyslogpolicy_basic(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	if isCpxRun {
 		t.Skip("global binding causes issues with ADC version 12.0")
 	}

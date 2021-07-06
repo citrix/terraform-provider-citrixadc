@@ -26,9 +26,8 @@ import (
 )
 
 func TestAccSslprofile_sslcipher_binding_basic(t *testing.T) {
-
-	if isCpxRun {
-		t.Skip("Operation not permitted under CPX")
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
 	}
 
 	resource.Test(t, resource.TestCase{

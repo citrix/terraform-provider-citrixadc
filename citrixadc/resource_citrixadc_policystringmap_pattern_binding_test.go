@@ -66,6 +66,9 @@ resource "citrixadc_policystringmap_pattern_binding" "tf_bind2" {
 `
 
 func TestAccPolicystringmap_pattern_binding_basic(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,

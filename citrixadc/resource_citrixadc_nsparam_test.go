@@ -25,6 +25,9 @@ import (
 )
 
 func TestAccNsparam_basic(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -75,8 +78,8 @@ func testAccCheckNsparamExist(n string, id *string, expectedValues map[string]in
 			return fmt.Errorf("NS parameters %s not found", n)
 		}
 
-		if data["proxyprotocol"] != expectedValues["proxyprotocol"] {
-			return fmt.Errorf("Expected value for \"proxyprotocol\" differs. Expected: \"%v\", Retrieved \"%v\"", expectedValues["proxyprotocol"], data["proxyprotocol"])
+		if data["useproxyport"] != expectedValues["useproxyport"] {
+			return fmt.Errorf("Expected value for \"useproxyport\" differs. Expected: \"%v\", Retrieved \"%v\"", expectedValues["proxyprotocol"], data["proxyprotocol"])
 		}
 
 		if data["maxconn"] != expectedValues["maxconn"] {

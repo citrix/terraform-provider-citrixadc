@@ -155,27 +155,27 @@ func createSslparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	sslparameterName = resource.PrefixedUniqueId("tf-sslparameter-")
 
 	sslparameter := ssl.Sslparameter{
-		Crlmemorysizemb:          uint32(d.Get("crlmemorysizemb").(int)),
-		Cryptodevdisablelimit:    uint32(d.Get("cryptodevdisablelimit").(int)),
+		Crlmemorysizemb:          d.Get("crlmemorysizemb").(int),
+		Cryptodevdisablelimit:    d.Get("cryptodevdisablelimit").(int),
 		Defaultprofile:           d.Get("defaultprofile").(string),
 		Denysslreneg:             d.Get("denysslreneg").(string),
 		Dropreqwithnohostheader:  d.Get("dropreqwithnohostheader").(string),
-		Encrypttriggerpktcount:   uint32(d.Get("encrypttriggerpktcount").(int)),
+		Encrypttriggerpktcount:   d.Get("encrypttriggerpktcount").(int),
 		Heterogeneoussslhw:       d.Get("heterogeneoussslhw").(string),
 		Hybridfipsmode:           d.Get("hybridfipsmode").(string),
 		Insertcertspace:          d.Get("insertcertspace").(string),
 		Insertionencoding:        d.Get("insertionencoding").(string),
 		Ndcppcompliancecertcheck: d.Get("ndcppcompliancecertcheck").(string),
-		Ocspcachesize:            uint32(d.Get("ocspcachesize").(int)),
-		Pushenctriggertimeout:    uint32(d.Get("pushenctriggertimeout").(int)),
-		Pushflag:                 uint32(d.Get("pushflag").(int)),
+		Ocspcachesize:            d.Get("ocspcachesize").(int),
+		Pushenctriggertimeout:    d.Get("pushenctriggertimeout").(int),
+		Pushflag:                 d.Get("pushflag").(int),
 		Quantumsize:              d.Get("quantumsize").(string),
 		Sendclosenotify:          d.Get("sendclosenotify").(string),
 		Snihttphostmatch:         d.Get("snihttphostmatch").(string),
-		Softwarecryptothreshold:  uint32(d.Get("softwarecryptothreshold").(int)),
+		Softwarecryptothreshold:  d.Get("softwarecryptothreshold").(int),
 		Sslierrorcache:           d.Get("sslierrorcache").(string),
-		Sslimaxerrorcachemem:     uint32(d.Get("sslimaxerrorcachemem").(int)),
-		Ssltriggertimeout:        uint32(d.Get("ssltriggertimeout").(int)),
+		Sslimaxerrorcachemem:     d.Get("sslimaxerrorcachemem").(int),
+		Ssltriggertimeout:        d.Get("ssltriggertimeout").(int),
 		Strictcachecks:           d.Get("strictcachecks").(string),
 		Undefactioncontrol:       d.Get("undefactioncontrol").(string),
 		Undefactiondata:          d.Get("undefactiondata").(string),
@@ -243,12 +243,12 @@ func updateSslparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	hasChange := false
 	if d.HasChange("crlmemorysizemb") {
 		log.Printf("[DEBUG]  citrixadc-provider: Crlmemorysizemb has changed for sslparameter, starting update")
-		sslparameter.Crlmemorysizemb = uint32(d.Get("crlmemorysizemb").(int))
+		sslparameter.Crlmemorysizemb = d.Get("crlmemorysizemb").(int)
 		hasChange = true
 	}
 	if d.HasChange("cryptodevdisablelimit") {
 		log.Printf("[DEBUG]  citrixadc-provider: Cryptodevdisablelimit has changed for sslparameter, starting update")
-		sslparameter.Cryptodevdisablelimit = uint32(d.Get("cryptodevdisablelimit").(int))
+		sslparameter.Cryptodevdisablelimit = d.Get("cryptodevdisablelimit").(int)
 		hasChange = true
 	}
 	if d.HasChange("defaultprofile") {
@@ -268,7 +268,7 @@ func updateSslparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("encrypttriggerpktcount") {
 		log.Printf("[DEBUG]  citrixadc-provider: Encrypttriggerpktcount has changed for sslparameter, starting update")
-		sslparameter.Encrypttriggerpktcount = uint32(d.Get("encrypttriggerpktcount").(int))
+		sslparameter.Encrypttriggerpktcount = d.Get("encrypttriggerpktcount").(int)
 		hasChange = true
 	}
 	if d.HasChange("heterogeneoussslhw") {
@@ -298,17 +298,17 @@ func updateSslparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("ocspcachesize") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ocspcachesize has changed for sslparameter, starting update")
-		sslparameter.Ocspcachesize = uint32(d.Get("ocspcachesize").(int))
+		sslparameter.Ocspcachesize = d.Get("ocspcachesize").(int)
 		hasChange = true
 	}
 	if d.HasChange("pushenctriggertimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Pushenctriggertimeout has changed for sslparameter, starting update")
-		sslparameter.Pushenctriggertimeout = uint32(d.Get("pushenctriggertimeout").(int))
+		sslparameter.Pushenctriggertimeout = d.Get("pushenctriggertimeout").(int)
 		hasChange = true
 	}
 	if d.HasChange("pushflag") {
 		log.Printf("[DEBUG]  citrixadc-provider: Pushflag has changed for sslparameter, starting update")
-		sslparameter.Pushflag = uint32(d.Get("pushflag").(int))
+		sslparameter.Pushflag = d.Get("pushflag").(int)
 		hasChange = true
 	}
 	if d.HasChange("quantumsize") {
@@ -328,7 +328,7 @@ func updateSslparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("softwarecryptothreshold") {
 		log.Printf("[DEBUG]  citrixadc-provider: Softwarecryptothreshold has changed for sslparameter, starting update")
-		sslparameter.Softwarecryptothreshold = uint32(d.Get("softwarecryptothreshold").(int))
+		sslparameter.Softwarecryptothreshold = d.Get("softwarecryptothreshold").(int)
 		hasChange = true
 	}
 	if d.HasChange("sslierrorcache") {
@@ -338,12 +338,12 @@ func updateSslparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("sslimaxerrorcachemem") {
 		log.Printf("[DEBUG]  citrixadc-provider: Sslimaxerrorcachemem has changed for sslparameter, starting update")
-		sslparameter.Sslimaxerrorcachemem = uint32(d.Get("sslimaxerrorcachemem").(int))
+		sslparameter.Sslimaxerrorcachemem = d.Get("sslimaxerrorcachemem").(int)
 		hasChange = true
 	}
 	if d.HasChange("ssltriggertimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ssltriggertimeout has changed for sslparameter, starting update")
-		sslparameter.Ssltriggertimeout = uint32(d.Get("ssltriggertimeout").(int))
+		sslparameter.Ssltriggertimeout = d.Get("ssltriggertimeout").(int)
 		hasChange = true
 	}
 	if d.HasChange("strictcachecks") {

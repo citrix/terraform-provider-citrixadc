@@ -76,7 +76,7 @@ func createSystemgroupFunc(d *schema.ResourceData, meta interface{}) error {
 	systemgroup := system.Systemgroup{
 		Groupname:    d.Get("groupname").(string),
 		Promptstring: d.Get("promptstring").(string),
-		Timeout:      uint64(d.Get("timeout").(int)),
+		Timeout:      d.Get("timeout").(int),
 	}
 
 	_, err := client.AddResource(service.Systemgroup.Type(), systemgroupName, &systemgroup)
@@ -151,7 +151,7 @@ func updateSystemgroupFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("timeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Timeout has changed for systemgroup %s, starting update", systemgroupName)
-		systemgroup.Timeout = uint64(d.Get("timeout").(int))
+		systemgroup.Timeout = d.Get("timeout").(int)
 		hasChange = true
 	}
 

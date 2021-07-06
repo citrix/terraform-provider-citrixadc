@@ -90,7 +90,7 @@ func createIptunnelFunc(d *schema.ResourceData, meta interface{}) error {
 		Protocol:         d.Get("protocol").(string),
 		Remote:           d.Get("remote").(string),
 		Remotesubnetmask: d.Get("remotesubnetmask").(string),
-		Vlan:             uint32(d.Get("vlan").(int)),
+		Vlan:             d.Get("vlan").(int),
 	}
 
 	_, err := client.AddResource(service.Iptunnel.Type(), iptunnelName, &iptunnel)

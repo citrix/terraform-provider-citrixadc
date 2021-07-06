@@ -106,7 +106,7 @@ func createInatFunc(d *schema.ResourceData, meta interface{}) error {
 		Proxyip:      d.Get("proxyip").(string),
 		Publicip:     d.Get("publicip").(string),
 		Tcpproxy:     d.Get("tcpproxy").(string),
-		Td:           uint32(d.Get("td").(int)),
+		Td:           d.Get("td").(int),
 		Tftp:         d.Get("tftp").(string),
 		Useproxyport: d.Get("useproxyport").(string),
 		Usip:         d.Get("usip").(string),
@@ -199,7 +199,7 @@ func updateInatFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("td") {
 		log.Printf("[DEBUG]  netscaler-provider: Td has changed for inat %s, starting update", inatName)
-		inat.Td = uint32(d.Get("td").(int))
+		inat.Td = d.Get("td").(int)
 		hasChange = true
 	}
 	if d.HasChange("tftp") {

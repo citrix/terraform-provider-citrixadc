@@ -85,9 +85,9 @@ func createNscapacityFunc(d *schema.ResourceData, meta interface{}) error {
 
 	nscapacityId := resource.PrefixedUniqueId("tf-nscapacity-")
 	nscapacity := ns.Nscapacity{
-		Bandwidth: uint32(d.Get("bandwidth").(int)),
+		Bandwidth: d.Get("bandwidth").(int),
 		Edition:   d.Get("edition").(string),
-		Nodeid:    uint32(d.Get("nodeid").(int)),
+		Nodeid:    d.Get("nodeid").(int),
 		Platform:  d.Get("platform").(string),
 		Unit:      d.Get("unit").(string),
 		Vcpu:      d.Get("vcpu").(bool),

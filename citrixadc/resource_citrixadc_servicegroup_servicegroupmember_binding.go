@@ -116,16 +116,16 @@ func createServicegroup_servicegroupmember_bindingFunc(d *schema.ResourceData, m
 
 	servicegroup_servicegroupmember_binding := basic.Servicegroupservicegroupmemberbinding{
 		Customserverid:   d.Get("customserverid").(string),
-		Dbsttl:           uint64(d.Get("dbsttl").(int)),
-		Hashid:           uint32(d.Get("hashid").(int)),
+		Dbsttl:           d.Get("dbsttl").(int),
+		Hashid:           d.Get("hashid").(int),
 		Ip:               d.Get("ip").(string),
 		Nameserver:       d.Get("nameserver").(string),
-		Port:             int32(d.Get("port").(int)),
-		Serverid:         uint32(d.Get("serverid").(int)),
+		Port:             d.Get("port").(int),
+		Serverid:         d.Get("serverid").(int),
 		Servername:       d.Get("servername").(string),
 		Servicegroupname: d.Get("servicegroupname").(string),
 		State:            d.Get("state").(string),
-		Weight:           uint32(d.Get("weight").(int)),
+		Weight:           d.Get("weight").(int),
 	}
 
 	err := client.UpdateUnnamedResource(service.Servicegroup_servicegroupmember_binding.Type(), &servicegroup_servicegroupmember_binding)

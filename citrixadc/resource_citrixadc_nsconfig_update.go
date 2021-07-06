@@ -55,7 +55,7 @@ func createNsconfigUpdateFunc(d *schema.ResourceData, meta interface{}) error {
 	nsconfig := ns.Nsconfig{}
 	nsconfig.Ipaddress = d.Get("ipaddress").(string)
 	nsconfig.Netmask = d.Get("netmask").(string)
-	nsconfig.Nsvlan = uint32(d.Get("nsvlan").(int))
+	nsconfig.Nsvlan = d.Get("nsvlan").(int)
 	nsconfig.Ifnum = toStringList(getIfnumValue(d))
 	nsconfig.Tagged = d.Get("tagged").(string)
 
@@ -134,7 +134,7 @@ func updateNsconfigUpdateFunc(d *schema.ResourceData, meta interface{}) error {
 		nsconfig.Netmask = d.Get("netmask").(string)
 	}
 	if hasNsvlanChanged || hasIfnumChanged || hasTaggedChanged {
-		nsconfig.Nsvlan = uint32(d.Get("nsvlan").(int))
+		nsconfig.Nsvlan = d.Get("nsvlan").(int)
 		nsconfig.Ifnum = toStringList(getIfnumValue(d))
 		nsconfig.Tagged = d.Get("tagged").(string)
 	}

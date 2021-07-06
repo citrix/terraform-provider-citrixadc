@@ -52,7 +52,7 @@ func createDnsnsrecFunc(d *schema.ResourceData, meta interface{}) error {
 	dnsnsrec := dns.Dnsnsrec{
 		Domain:     d.Get("domain").(string),
 		Nameserver: d.Get("nameserver").(string),
-		Ttl:        uint64(d.Get("ttl").(int)),
+		Ttl:        d.Get("ttl").(int),
 	}
 
 	_, err := client.AddResource(service.Dnsnsrec.Type(), "", &dnsnsrec)

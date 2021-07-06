@@ -25,6 +25,9 @@ import (
 )
 
 func TestAccNslicenseserver_basic(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	if isCpxRun {
 		t.Skip("Feature not supported in CPX")
 	}
@@ -107,7 +110,7 @@ func testAccCheckNslicenseserverDestroy(s *terraform.State) error {
 
 const testAccNslicenseserver_basic = `
 resource "citrixadc_nslicenseserver" "tf_licenseserver" {
-    servername = "10.78.60.200"
+    servername = "10.222.74.142"
     port = 27000
 }
 `

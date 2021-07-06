@@ -25,6 +25,9 @@ import (
 )
 
 func TestAccReboot_basic(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	if isCluster {
 		t.Skip("Cluster does not support reboot operation")
 	}

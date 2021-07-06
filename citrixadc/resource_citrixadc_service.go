@@ -354,45 +354,45 @@ func createServiceFunc(d *schema.ResourceData, meta interface{}) error {
 		Cip:                          d.Get("cip").(string),
 		Cipheader:                    d.Get("cipheader").(string),
 		Cka:                          d.Get("cka").(string),
-		Cleartextport:                int32(d.Get("cleartextport").(int)),
-		Clttimeout:                   uint64(d.Get("clttimeout").(int)),
+		Cleartextport:                d.Get("cleartextport").(int),
+		Clttimeout:                   d.Get("clttimeout").(int),
 		Cmp:                          d.Get("cmp").(string),
 		Comment:                      d.Get("comment").(string),
 		Contentinspectionprofilename: d.Get("contentinspectionprofilename").(string),
 		Customserverid:               d.Get("customserverid").(string),
 		Dnsprofilename:               d.Get("dnsprofilename").(string),
 		Downstateflush:               d.Get("downstateflush").(string),
-		Hashid:                       uint32(d.Get("hashid").(int)),
+		Hashid:                       d.Get("hashid").(int),
 		Healthmonitor:                d.Get("healthmonitor").(string),
 		Httpprofilename:              d.Get("httpprofilename").(string),
 		Internal:                     d.Get("internal").(bool),
 		Ip:                           d.Get("ip").(string),
 		Ipaddress:                    d.Get("ipaddress").(string),
-		Maxbandwidth:                 uint32(d.Get("maxbandwidth").(int)),
-		Maxclient:                    uint32(d.Get("maxclient").(int)),
-		Maxreq:                       uint32(d.Get("maxreq").(int)),
+		Maxbandwidth:                 d.Get("maxbandwidth").(int),
+		Maxclient:                    d.Get("maxclient").(int),
+		Maxreq:                       d.Get("maxreq").(int),
 		Monconnectionclose:           d.Get("monconnectionclose").(string),
 		Monitornamesvc:               d.Get("monitornamesvc").(string),
-		Monthreshold:                 uint32(d.Get("monthreshold").(int)),
+		Monthreshold:                 d.Get("monthreshold").(int),
 		Netprofile:                   d.Get("netprofile").(string),
 		Pathmonitor:                  d.Get("pathmonitor").(string),
 		Pathmonitorindv:              d.Get("pathmonitorindv").(string),
-		Port:                         int32(d.Get("port").(int)),
+		Port:                         d.Get("port").(int),
 		Processlocal:                 d.Get("processlocal").(string),
 		Rtspsessionidremap:           d.Get("rtspsessionidremap").(string),
 		Sc:                           d.Get("sc").(string),
-		Serverid:                     uint32(d.Get("serverid").(int)),
+		Serverid:                     d.Get("serverid").(int),
 		Servername:                   d.Get("servername").(string),
 		Servicetype:                  d.Get("servicetype").(string),
 		Sp:                           d.Get("sp").(string),
 		State:                        d.Get("state").(string),
-		Svrtimeout:                   uint64(d.Get("svrtimeout").(int)),
+		Svrtimeout:                   d.Get("svrtimeout").(int),
 		Tcpb:                         d.Get("tcpb").(string),
 		Tcpprofilename:               d.Get("tcpprofilename").(string),
-		Td:                           uint32(d.Get("td").(int)),
+		Td:                           d.Get("td").(int),
 		Useproxyport:                 d.Get("useproxyport").(string),
 		Usip:                         d.Get("usip").(string),
-		Weight:                       uint32(d.Get("weight").(int)),
+		Weight:                       d.Get("weight").(int),
 	}
 
 	_, err := client.AddResource(service.Service.Type(), serviceName, &svc)
@@ -629,12 +629,12 @@ func updateServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("cleartextport") {
 		log.Printf("[DEBUG] netscaler-provider:  Cleartextport has changed for service %s, starting update", serviceName)
-		svc.Cleartextport = int32(d.Get("cleartextport").(int))
+		svc.Cleartextport = d.Get("cleartextport").(int)
 		hasChange = true
 	}
 	if d.HasChange("clttimeout") {
 		log.Printf("[DEBUG] netscaler-provider:  Clttimeout has changed for service %s, starting update", serviceName)
-		svc.Clttimeout = uint64(d.Get("clttimeout").(int))
+		svc.Clttimeout = d.Get("clttimeout").(int)
 		hasChange = true
 	}
 	if d.HasChange("cmp") {
@@ -669,7 +669,7 @@ func updateServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("hashid") {
 		log.Printf("[DEBUG] netscaler-provider:  Hashid has changed for service %s, starting update", serviceName)
-		svc.Hashid = uint32(d.Get("hashid").(int))
+		svc.Hashid = d.Get("hashid").(int)
 		hasChange = true
 	}
 	if d.HasChange("healthmonitor") {
@@ -699,17 +699,17 @@ func updateServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("maxbandwidth") {
 		log.Printf("[DEBUG] netscaler-provider:  Maxbandwidth has changed for service %s, starting update", serviceName)
-		svc.Maxbandwidth = uint32(d.Get("maxbandwidth").(int))
+		svc.Maxbandwidth = d.Get("maxbandwidth").(int)
 		hasChange = true
 	}
 	if d.HasChange("maxclient") {
 		log.Printf("[DEBUG] netscaler-provider:  Maxclient has changed for service %s, starting update", serviceName)
-		svc.Maxclient = uint32(d.Get("maxclient").(int))
+		svc.Maxclient = d.Get("maxclient").(int)
 		hasChange = true
 	}
 	if d.HasChange("maxreq") {
 		log.Printf("[DEBUG] netscaler-provider:  Maxreq has changed for service %s, starting update", serviceName)
-		svc.Maxreq = uint32(d.Get("maxreq").(int))
+		svc.Maxreq = d.Get("maxreq").(int)
 		hasChange = true
 	}
 	if d.HasChange("monconnectionclose") {
@@ -724,7 +724,7 @@ func updateServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("monthreshold") {
 		log.Printf("[DEBUG] netscaler-provider:  Monthreshold has changed for service %s, starting update", serviceName)
-		svc.Monthreshold = uint32(d.Get("monthreshold").(int))
+		svc.Monthreshold = d.Get("monthreshold").(int)
 		hasChange = true
 	}
 	if d.HasChange("name") {
@@ -749,7 +749,7 @@ func updateServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("port") {
 		log.Printf("[DEBUG] netscaler-provider:  Port has changed for service %s, starting update", serviceName)
-		svc.Port = int32(d.Get("port").(int))
+		svc.Port = d.Get("port").(int)
 		hasChange = true
 	}
 	if d.HasChange("processlocal") {
@@ -769,7 +769,7 @@ func updateServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("serverid") {
 		log.Printf("[DEBUG] netscaler-provider:  Serverid has changed for service %s, starting update", serviceName)
-		svc.Serverid = uint32(d.Get("serverid").(int))
+		svc.Serverid = d.Get("serverid").(int)
 		hasChange = true
 	}
 	if d.HasChange("servername") {
@@ -793,7 +793,7 @@ func updateServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("svrtimeout") {
 		log.Printf("[DEBUG] netscaler-provider:  Svrtimeout has changed for service %s, starting update", serviceName)
-		svc.Svrtimeout = uint64(d.Get("svrtimeout").(int))
+		svc.Svrtimeout = d.Get("svrtimeout").(int)
 		hasChange = true
 	}
 	if d.HasChange("tcpb") {
@@ -808,7 +808,7 @@ func updateServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("td") {
 		log.Printf("[DEBUG] netscaler-provider:  Td has changed for service %s, starting update", serviceName)
-		svc.Td = uint32(d.Get("td").(int))
+		svc.Td = d.Get("td").(int)
 		hasChange = true
 	}
 	if d.HasChange("useproxyport") {
@@ -823,7 +823,7 @@ func updateServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("weight") {
 		log.Printf("[DEBUG] netscaler-provider:  Weight has changed for service %s, starting update", serviceName)
-		svc.Weight = uint32(d.Get("weight").(int))
+		svc.Weight = d.Get("weight").(int)
 		hasChange = true
 	}
 	if d.HasChange("lbmonitor") {
@@ -958,7 +958,7 @@ func doServiceStateChange(d *schema.ResourceData, client *service.NitroClient) e
 		}
 	} else if newstate == "DISABLED" {
 		// Add attributes relevant to the disable operation
-		svc.Delay = uint64(d.Get("delay").(int))
+		svc.Delay = d.Get("delay").(int)
 		svc.Graceful = d.Get("graceful").(string)
 		err := client.ActOnResource(service.Service.Type(), svc, "disable")
 		if err != nil {

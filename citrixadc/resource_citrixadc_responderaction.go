@@ -85,7 +85,7 @@ func createResponderactionFunc(d *schema.ResourceData, meta interface{}) error {
 		Htmlpage:           d.Get("htmlpage").(string),
 		Name:               d.Get("name").(string),
 		Reasonphrase:       d.Get("reasonphrase").(string),
-		Responsestatuscode: uint32(d.Get("responsestatuscode").(int)),
+		Responsestatuscode: d.Get("responsestatuscode").(int),
 		Target:             d.Get("target").(string),
 		Type:               d.Get("type").(string),
 	}
@@ -166,7 +166,7 @@ func updateResponderactionFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("responsestatuscode") {
 		log.Printf("[DEBUG]  citrixadc-provider: Responsestatuscode has changed for responderaction %s, starting update", responderactionName)
-		responderaction.Responsestatuscode = uint32(d.Get("responsestatuscode").(int))
+		responderaction.Responsestatuscode = d.Get("responsestatuscode").(int)
 		hasChange = true
 	}
 	if d.HasChange("target") {

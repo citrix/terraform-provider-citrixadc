@@ -131,7 +131,7 @@ func createSslcertkeyFunc(d *schema.ResourceData, meta interface{}) error {
 		// Nodomaincheck is not an object attribute but a flag for the change operation
 		// of the resource
 		Nodomaincheck:      false,
-		Notificationperiod: uint32(d.Get("notificationperiod").(int)),
+		Notificationperiod: d.Get("notificationperiod").(int),
 		Ocspstaplingcache:  d.Get("ocspstaplingcache").(bool),
 		Passplain:          d.Get("passplain").(string),
 		Password:           d.Get("password").(bool),
@@ -214,7 +214,7 @@ func updateSslcertkeyFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("notificationperiod") {
 		log.Printf("[DEBUG] netscaler-provider:  Notificationperiod has changed for sslcertkey %s, starting update", sslcertkeyName)
-		sslcertkeyUpdate.Notificationperiod = uint32(d.Get("notificationperiod").(int))
+		sslcertkeyUpdate.Notificationperiod = d.Get("notificationperiod").(int)
 		hasUpdate = true
 	}
 	if d.HasChange("cert") {

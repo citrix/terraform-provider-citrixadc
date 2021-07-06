@@ -54,7 +54,7 @@ func createIpsetFunc(d *schema.ResourceData, meta interface{}) error {
 
 	ipset := network.Ipset{
 		Name: d.Get("name").(string),
-		Td:   uint32(d.Get("td").(int)),
+		Td:   d.Get("td").(int),
 	}
 
 	_, err := client.AddResource(service.Ipset.Type(), ipsetName, &ipset)

@@ -41,6 +41,9 @@ const testAccLinkset_update_with_binding = `
 `
 
 func TestAccLinkset_basic(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
 	if isCpxRun {
 		t.Skip("clustering not supported in CPX")
 	}

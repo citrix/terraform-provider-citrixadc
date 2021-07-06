@@ -38,8 +38,8 @@ const testAccSslparameter_basic_update = `
 `
 
 func TestAccSslparameter_basic(t *testing.T) {
-	if isCpxRun {
-		t.Skip("sslparameter failing in CPX12.0. Skipping for now!")
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
 	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },

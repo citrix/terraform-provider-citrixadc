@@ -68,7 +68,7 @@ func createPolicypatset_pattern_bindingFunc(d *schema.ResourceData, meta interfa
 		Charset: d.Get("charset").(string),
 		Comment: d.Get("comment").(string),
 		Feature: d.Get("feature").(string),
-		Index:   uint32(d.Get("index").(int)),
+		Index:   d.Get("index").(int),
 		Name:    d.Get("name").(string),
 		String:  d.Get("string").(string),
 	}

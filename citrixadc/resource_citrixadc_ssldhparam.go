@@ -42,7 +42,7 @@ func createSsldhparamFunc(d *schema.ResourceData, meta interface{}) error {
 	ssldhparamName := d.Get("dhfile").(string)
 
 	ssldhparam := ssl.Ssldhparam{
-		Bits:   uint32(d.Get("bits").(int)),
+		Bits:   d.Get("bits").(int),
 		Dhfile: ssldhparamName,
 		Gen:    d.Get("gen").(string),
 	}

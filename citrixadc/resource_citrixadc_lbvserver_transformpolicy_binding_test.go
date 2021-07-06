@@ -82,6 +82,9 @@ resource "citrixadc_lbvserver_transformpolicy_binding" "tf_binding" {
 `
 
 func TestAccLbvserver_transformpolicy_binding_basic(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,

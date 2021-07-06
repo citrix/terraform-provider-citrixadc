@@ -55,7 +55,7 @@ func createPolicydataset_value_bindingFunc(d *schema.ResourceData, meta interfac
 
 	policydataset_value_binding := policy.Policydatasetvaluebinding{
 		Comment: d.Get("comment").(string),
-		Index:   uint32(d.Get("index").(int)),
+		Index:   d.Get("index").(int),
 		Name:    d.Get("name").(string),
 		Value:   d.Get("value").(string),
 	}

@@ -51,8 +51,8 @@ func createNslicenseserverFunc(d *schema.ResourceData, meta interface{}) error {
 
 	nslicenseserver := ns.Nslicenseserver{
 		Forceupdateip: d.Get("forceupdateip").(bool),
-		Nodeid:        uint32(d.Get("nodeid").(int)),
-		Port:          uint32(d.Get("port").(int)),
+		Nodeid:        d.Get("nodeid").(int),
+		Port:          d.Get("port").(int),
 		Servername:    d.Get("servername").(string),
 	}
 

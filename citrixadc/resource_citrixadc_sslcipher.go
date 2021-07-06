@@ -155,7 +155,7 @@ func getSortedCipherBindigs(unsortedCipherBindings *schema.Set) cipherPriorities
 	for _, v := range unsortedCipherBindings.List() {
 		val := v.(map[string]interface{})
 		ciphername := val["ciphername"].(string)
-		cipherpriority := val["cipherpriority"].(uint32)
+		cipherpriority := uint32(val["cipherpriority"].(int))
 		cipher := cipherPriority{
 			cipherName:     ciphername,
 			cipherPriority: cipherpriority,

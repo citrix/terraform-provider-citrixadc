@@ -414,13 +414,19 @@ func readSslpolicyBindings(d *schema.ResourceData, meta interface{}, sslvserverN
 		processedBindingEntry := make(map[string]interface{})
 		processedBindingEntry["gotopriorityexpression"] = singleBinding["gotopriorityexpression"].(string)
 		processedBindingEntry["invoke"] = singleBinding["invoke"].(bool)
-		processedBindingEntry["labelname"] = singleBinding["labelname"].(string)
-		processedBindingEntry["labeltype"] = singleBinding["labeltype"].(string)
+		if _, ok := singleBinding["labelname"]; ok {
+			processedBindingEntry["labelname"] = singleBinding["labelname"].(string)
+		}
+		if _, ok := singleBinding["labeltype"]; ok {
+			processedBindingEntry["labeltype"] = singleBinding["labeltype"].(string)
+		}
 		processedBindingEntry["policyname"] = singleBinding["policyname"].(string)
 		if processedBindingEntry["priority"], err = strconv.Atoi(singleBinding["priority"].(string)); err != nil {
 			return err
 		}
-		processedBindingEntry["type"] = singleBinding["type"].(string)
+		if _, ok := singleBinding["type"]; ok {
+			processedBindingEntry["type"] = singleBinding["type"].(string)
+		}
 		processedBindings = append(processedBindings, processedBindingEntry)
 	}
 

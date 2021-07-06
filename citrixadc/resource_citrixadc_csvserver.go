@@ -464,10 +464,10 @@ func createCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		Backupvserver:           d.Get("backupvserver").(string),
 		Cacheable:               d.Get("cacheable").(string),
 		Casesensitive:           d.Get("casesensitive").(string),
-		Clttimeout:              uint64(d.Get("clttimeout").(int)),
+		Clttimeout:              d.Get("clttimeout").(int),
 		Comment:                 d.Get("comment").(string),
 		Cookiedomain:            d.Get("cookiedomain").(string),
-		Cookietimeout:           uint32(d.Get("cookietimeout").(int)),
+		Cookietimeout:           d.Get("cookietimeout").(int),
 		Dbprofilename:           d.Get("dbprofilename").(string),
 		Disableprimaryondown:    d.Get("disableprimaryondown").(string),
 		Dnsprofilename:          d.Get("dnsprofilename").(string),
@@ -483,39 +483,39 @@ func createCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		Ipv46:                   d.Get("ipv46").(string),
 		L2conn:                  d.Get("l2conn").(string),
 		Listenpolicy:            d.Get("listenpolicy").(string),
-		Listenpriority:          uint32(d.Get("listenpriority").(int)),
+		Listenpriority:          d.Get("listenpriority").(int),
 		Mssqlserverversion:      d.Get("mssqlserverversion").(string),
-		Mysqlcharacterset:       uint32(d.Get("mysqlcharacterset").(int)),
-		Mysqlprotocolversion:    uint32(d.Get("mysqlprotocolversion").(int)),
-		Mysqlservercapabilities: uint32(d.Get("mysqlservercapabilities").(int)),
+		Mysqlcharacterset:       d.Get("mysqlcharacterset").(int),
+		Mysqlprotocolversion:    d.Get("mysqlprotocolversion").(int),
+		Mysqlservercapabilities: d.Get("mysqlservercapabilities").(int),
 		Mysqlserverversion:      d.Get("mysqlserverversion").(string),
 		Netprofile:              d.Get("netprofile").(string),
 		Oracleserverversion:     d.Get("oracleserverversion").(string),
-		Persistenceid:           uint32(d.Get("persistenceid").(int)),
-		Port:                    int32(d.Get("port").(int)),
+		Persistenceid:           d.Get("persistenceid").(int),
+		Port:                    d.Get("port").(int),
 		Precedence:              d.Get("precedence").(string),
 		Push:                    d.Get("push").(string),
 		Pushlabel:               d.Get("pushlabel").(string),
 		Pushmulticlients:        d.Get("pushmulticlients").(string),
 		Pushvserver:             d.Get("pushvserver").(string),
-		Range:                   uint32(d.Get("range").(int)),
+		Range:                   d.Get("range").(int),
 		Redirectportrewrite:     d.Get("redirectportrewrite").(string),
 		Redirecturl:             d.Get("redirecturl").(string),
 		Rhistate:                d.Get("rhistate").(string),
 		Rtspnat:                 d.Get("rtspnat").(string),
 		Servicetype:             d.Get("servicetype").(string),
-		Sitedomainttl:           uint64(d.Get("sitedomainttl").(int)),
+		Sitedomainttl:           d.Get("sitedomainttl").(int),
 		Sobackupaction:          d.Get("sobackupaction").(string),
 		Somethod:                d.Get("somethod").(string),
 		Sopersistence:           d.Get("sopersistence").(string),
-		Sopersistencetimeout:    uint32(d.Get("sopersistencetimeout").(int)),
-		Sothreshold:             uint32(d.Get("sothreshold").(int)),
+		Sopersistencetimeout:    d.Get("sopersistencetimeout").(int),
+		Sothreshold:             d.Get("sothreshold").(int),
 		State:                   d.Get("state").(string),
 		Stateupdate:             d.Get("stateupdate").(string),
 		Targettype:              d.Get("targettype").(string),
 		Tcpprofilename:          d.Get("tcpprofilename").(string),
-		Td:                      uint32(d.Get("td").(int)),
-		Ttl:                     uint64(d.Get("ttl").(int)),
+		Td:                      d.Get("td").(int),
+		Ttl:                     d.Get("ttl").(int),
 		Vipheader:               d.Get("vipheader").(string),
 	}
 
@@ -789,7 +789,7 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("clttimeout") {
 		log.Printf("[DEBUG] netscaler-provider:  Clttimeout has changed for csvserver %s, starting update", csvserverName)
-		csvserver.Clttimeout = uint64(d.Get("clttimeout").(int))
+		csvserver.Clttimeout = d.Get("clttimeout").(int)
 		hasChange = true
 	}
 	if d.HasChange("comment") {
@@ -804,7 +804,7 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("cookietimeout") {
 		log.Printf("[DEBUG]  netscaler-provider: Cookietimeout has changed for csvserver %s, starting update", csvserverName)
-		csvserver.Cookietimeout = uint32(d.Get("cookietimeout").(int))
+		csvserver.Cookietimeout = d.Get("cookietimeout").(int)
 		hasChange = true
 	}
 	if d.HasChange("dbprofilename") {
@@ -884,7 +884,7 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("listenpriority") {
 		log.Printf("[DEBUG] netscaler-provider:  Listenpriority has changed for csvserver %s, starting update", csvserverName)
-		csvserver.Listenpriority = uint32(d.Get("listenpriority").(int))
+		csvserver.Listenpriority = d.Get("listenpriority").(int)
 		hasChange = true
 	}
 	if d.HasChange("mssqlserverversion") {
@@ -894,17 +894,17 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("mysqlcharacterset") {
 		log.Printf("[DEBUG] netscaler-provider:  Mysqlcharacterset has changed for csvserver %s, starting update", csvserverName)
-		csvserver.Mysqlcharacterset = uint32(d.Get("mysqlcharacterset").(int))
+		csvserver.Mysqlcharacterset = d.Get("mysqlcharacterset").(int)
 		hasChange = true
 	}
 	if d.HasChange("mysqlprotocolversion") {
 		log.Printf("[DEBUG] netscaler-provider:  Mysqlprotocolversion has changed for csvserver %s, starting update", csvserverName)
-		csvserver.Mysqlprotocolversion = uint32(d.Get("mysqlprotocolversion").(int))
+		csvserver.Mysqlprotocolversion = d.Get("mysqlprotocolversion").(int)
 		hasChange = true
 	}
 	if d.HasChange("mysqlservercapabilities") {
 		log.Printf("[DEBUG] netscaler-provider:  Mysqlservercapabilities has changed for csvserver %s, starting update", csvserverName)
-		csvserver.Mysqlservercapabilities = uint32(d.Get("mysqlservercapabilities").(int))
+		csvserver.Mysqlservercapabilities = d.Get("mysqlservercapabilities").(int)
 		hasChange = true
 	}
 	if d.HasChange("mysqlserverversion") {
@@ -929,12 +929,12 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("persistenceid") {
 		log.Printf("[DEBUG]  netscaler-provider: Persistenceid has changed for csvserver %s, starting update", csvserverName)
-		csvserver.Persistenceid = uint32(d.Get("persistenceid").(int))
+		csvserver.Persistenceid = d.Get("persistenceid").(int)
 		hasChange = true
 	}
 	if d.HasChange("port") {
 		log.Printf("[DEBUG] netscaler-provider:  Port has changed for csvserver %s, starting update", csvserverName)
-		csvserver.Port = int32(d.Get("port").(int))
+		csvserver.Port = d.Get("port").(int)
 		hasChange = true
 	}
 	if d.HasChange("precedence") {
@@ -964,7 +964,7 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("range") {
 		log.Printf("[DEBUG] netscaler-provider:  Range has changed for csvserver %s, starting update", csvserverName)
-		csvserver.Range = uint32(d.Get("range").(int))
+		csvserver.Range = d.Get("range").(int)
 		hasChange = true
 	}
 	if d.HasChange("redirectportrewrite") {
@@ -994,7 +994,7 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("sitedomainttl") {
 		log.Printf("[DEBUG]  netscaler-provider: Sitedomainttl has changed for csvserver %s, starting update", csvserverName)
-		csvserver.Sitedomainttl = uint64(d.Get("sitedomainttl").(int))
+		csvserver.Sitedomainttl = d.Get("sitedomainttl").(int)
 		hasChange = true
 	}
 	if d.HasChange("sobackupaction") {
@@ -1014,12 +1014,12 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("sopersistencetimeout") {
 		log.Printf("[DEBUG] netscaler-provider:  Sopersistencetimeout has changed for csvserver %s, starting update", csvserverName)
-		csvserver.Sopersistencetimeout = uint32(d.Get("sopersistencetimeout").(int))
+		csvserver.Sopersistencetimeout = d.Get("sopersistencetimeout").(int)
 		hasChange = true
 	}
 	if d.HasChange("sothreshold") {
 		log.Printf("[DEBUG] netscaler-provider:  Sothreshold has changed for csvserver %s, starting update", csvserverName)
-		csvserver.Sothreshold = uint32(d.Get("sothreshold").(int))
+		csvserver.Sothreshold = d.Get("sothreshold").(int)
 		hasChange = true
 	}
 	if d.HasChange("state") {
@@ -1043,12 +1043,12 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("td") {
 		log.Printf("[DEBUG] netscaler-provider:  Td has changed for csvserver %s, starting update", csvserverName)
-		csvserver.Td = uint32(d.Get("td").(int))
+		csvserver.Td = d.Get("td").(int)
 		hasChange = true
 	}
 	if d.HasChange("ttl") {
 		log.Printf("[DEBUG]  netscaler-provider: Ttl has changed for csvserver %s, starting update", csvserverName)
-		csvserver.Ttl = uint64(d.Get("ttl").(int))
+		csvserver.Ttl = d.Get("ttl").(int)
 		hasChange = true
 	}
 	if d.HasChange("vipheader") {
