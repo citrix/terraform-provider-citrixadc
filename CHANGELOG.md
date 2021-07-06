@@ -1,3 +1,9 @@
+## 1.3.0 (July 6, 2021)
+
+ENHANCEMENTS
+
+* Migrate NITRO library to citrix/adc-nitro-go
+
 ## 1.2.0 (June 30, 2021)
 
 FEATURES
