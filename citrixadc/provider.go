@@ -192,6 +192,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_vlan":                                    resourceCitrixAdcVlan(),
 		"citrixadc_vlan_interface_binding":                  resourceCitrixAdcVlan_interface_binding(),
 		"citrixadc_vlan_nsip_binding":                       resourceCitrixAdcVlan_nsip_binding(),
+		"citrixadc_nsmode":                                  resourceCitrixAdcNsmode(),
 	}
 }
 
