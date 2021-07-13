@@ -41,7 +41,7 @@ type nsip struct {
 	Ospfareaval                 int         `json:"ospfareaval,omitempty"`
 	Ospflsatype                 string      `json:"ospflsatype,omitempty"`
 	Ownerdownresponse           string      `json:"ownerdownresponse,omitempty"`
-	Ownernode                   int         `json:"ownernode,omitempty"`
+	Ownernode                   string      `json:"ownernode,omitempty"`
 	Restrictaccess              string      `json:"restrictaccess,omitempty"`
 	Rip                         string      `json:"rip,omitempty"`
 	Riserhimsgcode              int         `json:"riserhimsgcode,omitempty"`
@@ -183,7 +183,7 @@ func resourceCitrixAdcNsip() *schema.Resource {
 				Computed: true,
 			},
 			"ownernode": &schema.Schema{
-				Type:     schema.TypeInt,
+				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
@@ -295,7 +295,7 @@ func createNsipFunc(d *schema.ResourceData, meta interface{}) error {
 		Ospfarea:                    d.Get("ospfarea").(int),
 		Ospflsatype:                 d.Get("ospflsatype").(string),
 		Ownerdownresponse:           d.Get("ownerdownresponse").(string),
-		Ownernode:                   d.Get("ownernode").(int),
+		Ownernode:                   d.Get("ownernode").(string),
 		Restrictaccess:              d.Get("restrictaccess").(string),
 		Rip:                         d.Get("rip").(string),
 		Snmp:                        d.Get("snmp").(string),
@@ -497,7 +497,7 @@ func updateNsipFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("ownernode") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ownernode has changed for nsip %s, starting update", ipaddress)
-		nsip.Ownernode = d.Get("ownernode").(int)
+		nsip.Ownernode = d.Get("ownernode").(string)
 		hasChange = true
 	}
 	if d.HasChange("restrictaccess") {
