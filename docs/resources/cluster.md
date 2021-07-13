@@ -164,6 +164,11 @@ Cluster node supports the following:
 * `username` - (Optional) Defines the username that will be used by the NITRO API for authentication. Defaults to the value of the same argument of the provider currently in effect.
 * `password` - (Required) Defines the password that will be used by the NITRO API for authentication. Defaults to the value of the same argument of the provider currently in effect.
 * `insecure_skip_verify` - (Optional) Boolean variable that defines if an error should be thrown if the target ADC's TLS certificate is not trusted. When `true` the error will be ignored. When `false` such an error will cause the failure of any provider operation. Defaults to `false`.
+* `addsnip` - (Optional) Boolean variable that determines if a node SNIP should be added to the CLIP before joining the cluster.
+* `snip_ipaddress` - (Optional) Node SNIP address to add to the CLIP. Applied only when `addsnip=true`.
+* `snip_netmask` - (Optional) Node SNIP netmask to add to the CLIP. Applied only when `addsnip=true`.
+* `vtysh_enable` - (Optional) Boolean variable that determines if vtysh commands should be applied to the CLIP before node joins the custer.
+* `vtysh` - (Optional) Vtysh commands to add to the CLIP before node joins the cluster. Applied only when `vtysh_enable=true`.
 
 Cluster nodegroup supports the following:
 

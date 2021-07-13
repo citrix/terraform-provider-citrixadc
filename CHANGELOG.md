@@ -1,3 +1,21 @@
+## 1.4.0 (July 13, 2021)
+
+FEATURES
+
+* **New Resource** `vlan_nsip_binding`
+* **New Resource** `vlan_interface_binding`
+* **New Resource** `nsmode`
+
+ENHANCEMENTS
+
+* Extra cluster configuration options. Now a SNIP and vtysh commands can be added per node added to the cluster.
+* Update to latest adc-nitro-go library.
+
+BUG FIXES
+
+* Correct the way the `route` resource is read from the ADC. Now takes into account the `ownergroup` attribute.
+* Correct `ownernode` argument of `nsip` resource to TypeString. Now ownernode will be applied correctly.
+
 ## 1.3.0 (July 6, 2021)
 
 ENHANCEMENTS

@@ -30,7 +30,7 @@ import (
 )
 
 // Idempotent flag can't be added for these resources
-var idempotentInvalidResources = []string{"login", "logout", "reboot", "shutdown", "ping", "ping6", "traceroute", "traceroute6", "install", "appfwjsoncontenttype", "appfwxmlcontenttype", "dnsnsrec", "transformaction"}
+var idempotentInvalidResources = []string{"login", "logout", "reboot", "shutdown", "ping", "ping6", "traceroute", "traceroute6", "install", "appfwjsoncontenttype", "appfwxmlcontenttype", "dnsnsrec", "transformaction", "route"}
 
 // HTTP Headers to be masked and not shown in logs
 var headersToBeMasked = []string{"X-NITRO-USER", "X-NITRO-PASS", "Set-Cookie"}

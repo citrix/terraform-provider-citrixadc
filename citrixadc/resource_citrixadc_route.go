@@ -144,14 +144,10 @@ func readRouteFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] citrixadc-provider:  In readRouteFunc")
 	client := meta.(*NetScalerNitroClient).client
 	routeName := d.Id()
+
 	log.Printf("[DEBUG] citrixadc-provider: Reading route state %s", routeName)
-	argsMap := make(map[string]string)
-	argsMap["network"] = url.QueryEscape(d.Get("network").(string))
-	argsMap["netmask"] = url.QueryEscape(d.Get("netmask").(string))
-	argsMap["gateway"] = url.QueryEscape(d.Get("gateway").(string))
 	findParams := service.FindParams{
 		ResourceType: service.Route.Type(),
-		ArgsMap:      argsMap,
 	}
 	dataArray, err := client.FindResourceArrayWithParams(findParams)
 	if err != nil {
@@ -165,11 +161,36 @@ func readRouteFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	if len(dataArray) > 1 {
-		return fmt.Errorf("multiple entries found for route")
+	foundIndex := -1
+	for i, route := range dataArray {
+		match := true
+		if route["network"] != d.Get("network").(string) {
+			match = false
+		}
+		if route["netmask"] != d.Get("netmask").(string) {
+			match = false
+		}
+		if route["gateway"] != d.Get("gateway").(string) {
+			match = false
+		}
+		if val, ok := d.GetOk("ownergroup"); ok {
+			if route["ownergroup"] != val.(string) {
+				match = false
+			}
+		}
+		if match {
+			foundIndex = i
+			break
+		}
+	}
+	if foundIndex == -1 {
+		log.Printf("[DEBUG] citrixadc-provider: FindResourceArrayWithParams route not found in array")
+		log.Printf("[WARN] citrixadc-provider: Clearing route state %s", routeName)
+		d.SetId("")
+		return nil
 	}
 
-	data := dataArray[0]
+	data := dataArray[foundIndex]
 
 	d.Set("advertise", data["advertise"])
 	d.Set("cost", data["cost"])
@@ -295,8 +316,11 @@ func deleteRouteFunc(d *schema.ResourceData, meta interface{}) error {
 	argsMap["network"] = url.QueryEscape(d.Get("network").(string))
 	argsMap["netmask"] = url.QueryEscape(d.Get("netmask").(string))
 	argsMap["gateway"] = url.QueryEscape(d.Get("gateway").(string))
+	if val, ok := d.GetOk("ownergroup"); ok {
+		argsMap["ownergroup"] = url.QueryEscape(val.(string))
+	}
 
-	err := client.DeleteResourceWithArgsMap(service.Route.Type(), d.Get("network").(string), argsMap)
+	err := client.DeleteResourceWithArgsMap(service.Route.Type(), "", argsMap)
 	if err != nil {
 		return err
 	}
