@@ -3,6 +3,7 @@ package citrixadc
 import (
 	"github.com/citrix/adc-nitro-go/resource/config/cluster"
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
+	"github.com/citrix/adc-nitro-go/resource/config/router"
 	"github.com/citrix/adc-nitro-go/service"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
@@ -255,6 +256,33 @@ func resourceCitrixAdcCluster() *schema.Resource {
 							Optional:    true,
 							Description: "Ignore validity of endpoint TLS certificate if true",
 							Default:     false,
+						},
+						// Flags for adding node SNIP to CLIP before joining
+						"snip_netmask": &schema.Schema{
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: false,
+						},
+						"snip_ipaddress": &schema.Schema{
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: false,
+						},
+						"addsnip": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						// Optional VTYSH commands
+						"vtysh_enable": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"vtysh": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},
@@ -1350,6 +1378,38 @@ func addSingleClusterNode(d *schema.ResourceData, meta interface{}, nodeData map
 	_, err := client.AddResource("clusternode", strconv.FormatUint(uint64(clusternode.Nodeid), 10), &clusternode)
 	if err != nil {
 		return err
+	}
+
+	// Register node ip to the CLIP if flag is set
+	if nodeData["addsnip"].(bool) {
+		nodeNsip := nsip{
+			Ownernode:  strconv.Itoa(nodeData["nodeid"].(int)),
+			Ipaddress:  nodeData["snip_ipaddress"].(string),
+			Mgmtaccess: "ENABLED",
+			Netmask:    nodeData["snip_netmask"].(string),
+			Type:       "SNIP",
+		}
+		log.Printf("[DEBUG]  citrixadc-provider: registering node ip %v", nodeNsip)
+		_, err := client.AddResource(service.Nsip.Type(), nodeData["ipaddress"].(string), &nodeNsip)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Do the VTYSH commands if flag is set
+	if nodeData["vtysh_enable"].(bool) {
+		cmdList := nodeData["vtysh"].([]interface{})
+		for _, val := range cmdList {
+			vtyshCmdString := val.(string)
+
+			routerdynamicrouting := router.Routerdynamicrouting{
+				Commandstring: vtyshCmdString,
+			}
+			err := client.ActOnResource("routerdynamicrouting", &routerdynamicrouting, "apply")
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	// Instantiate node client
