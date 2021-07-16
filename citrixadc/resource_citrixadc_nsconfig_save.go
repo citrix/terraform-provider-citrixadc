@@ -17,7 +17,7 @@ func resourceCitrixAdcNsconfigSave() *schema.Resource {
 		SchemaVersion: 1,
 		Create:        createNsconfigSaveFunc,
 		Read:          schema.Noop,
-		Delete:        schema.Noop,
+		Delete:        deleteNsconfigSaveFunc,
 		Schema: map[string]*schema.Schema{
 			"all": &schema.Schema{
 				Type:     schema.TypeBool,
@@ -51,6 +51,12 @@ func resourceCitrixAdcNsconfigSave() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "10s",
+				ForceNew: true,
+			},
+			"save_on_destroy": &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 				ForceNew: true,
 			},
 		},
@@ -140,4 +146,63 @@ func saveConfigPoll(d *schema.ResourceData, meta interface{}) resource.StateRefr
 			return "saved", "saved", nil
 		}
 	}
+}
+
+func deleteNsconfigSaveFunc(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[DEBUG]  citrixadc-provider: In deleteNsconfigSaveFunc")
+
+	if !d.Get("save_on_destroy").(bool) {
+		log.Printf("[DEBUG]  citrixadc-provider: No save_on_destroy")
+		d.SetId("")
+		return nil
+	}
+	// Fallthrough
+
+	err := doSaveConfig(d, meta)
+
+	if err != nil {
+		if !strings.Contains(err.Error(), "\"errorcode\": 293") {
+			return err
+		}
+		// Fallthrough
+
+		// Check concurrent save flag
+		if !d.Get("concurrent_save_ok").(bool) {
+			return err
+		}
+		// Fallthrough
+
+		concurrentSaveRetries := d.Get("concurrent_save_retries").(int)
+
+		// Do retries only when it is a non zero value
+		if concurrentSaveRetries > 0 {
+
+			// Do retries
+			var concurrent_save_interval time.Duration
+			if concurrent_save_interval, err = time.ParseDuration(d.Get("concurrent_save_interval").(string)); err != nil {
+				return err
+			}
+
+			var concurrent_save_timeout time.Duration
+			if concurrent_save_timeout, err = time.ParseDuration(d.Get("concurrent_save_timeout").(string)); err != nil {
+				return err
+			}
+			stateConf := &resource.StateChangeConf{
+				Pending:        []string{"saving"},
+				Target:         []string{"saved"},
+				Refresh:        saveConfigPoll(d, meta),
+				PollInterval:   concurrent_save_interval,
+				Delay:          concurrent_save_interval,
+				Timeout:        concurrent_save_timeout,
+				NotFoundChecks: concurrentSaveRetries,
+			}
+
+			_, err = stateConf.WaitForState()
+			if err != nil {
+				return err
+			}
+		}
+	}
+	d.SetId("")
+	return nil
 }
