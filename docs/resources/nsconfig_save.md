@@ -25,6 +25,7 @@ resource "citrixadc_nsconfig_save" "tf_ns_save" {
 * `concurrent_save_retries` - (Optional) Number of retries after which we throw an error for the concurrent save error code.
 * `concurrent_save_timeout` - (Optional) Time period after which we throw an error for the concurrent save error code.
 * `concurrent_save_interval` - (Optional) Time period between tries to save the resource when processing the save error workflow.
+* `save_on_destroy` - (Optional) Boolean flag. If set to `true` then the save configuration operation will be applied during the destroy operation. Defaults to `false`.
 
 
 ## Attribute Reference
