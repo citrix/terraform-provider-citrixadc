@@ -1,3 +1,9 @@
+## 1.5.0 (July 16, 2021)
+
+ENHANCEMENTS
+
+* add `save_on_destroy` option in `nsconfig_save` resrouce
+
 ## 1.4.0 (July 13, 2021)
 
 FEATURES
