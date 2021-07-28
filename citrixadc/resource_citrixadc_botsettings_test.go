@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"testing"
 
-	
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
@@ -79,13 +78,13 @@ func TestAccBotsettings_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBotsettingsExist("citrixadc_botsettings.default", nil),
 					resource.TestCheckResourceAttr("citrixadc_botsettings.default", "sessiontimeout", "950"),
-                                        resource.TestCheckResourceAttr("citrixadc_botsettings.default", "proxyport", "80"),
-                                        resource.TestCheckResourceAttr("citrixadc_botsettings.default", "sessioncookiename", "citrixbotid"),
-                                        resource.TestCheckResourceAttr("citrixadc_botsettings.default", "dfprequestlimit", "3"),
-                                        resource.TestCheckResourceAttr("citrixadc_botsettings.default", "signatureautoupdate", "ON"),
-                                        resource.TestCheckResourceAttr("citrixadc_botsettings.default", "trapurlautogenerate", "ON"),
-                                        resource.TestCheckResourceAttr("citrixadc_botsettings.default", "trapurlinterval", "3800"),
-                                        resource.TestCheckResourceAttr("citrixadc_botsettings.default", "trapurllength", "33"),
+					resource.TestCheckResourceAttr("citrixadc_botsettings.default", "proxyport", "80"),
+					resource.TestCheckResourceAttr("citrixadc_botsettings.default", "sessioncookiename", "citrixbotid"),
+					resource.TestCheckResourceAttr("citrixadc_botsettings.default", "dfprequestlimit", "3"),
+					resource.TestCheckResourceAttr("citrixadc_botsettings.default", "signatureautoupdate", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_botsettings.default", "trapurlautogenerate", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_botsettings.default", "trapurlinterval", "3800"),
+					resource.TestCheckResourceAttr("citrixadc_botsettings.default", "trapurllength", "33"),
 				),
 			},
 		},

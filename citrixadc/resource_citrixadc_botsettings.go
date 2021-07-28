@@ -18,9 +18,6 @@ func resourceCitrixAdcBotsettings() *schema.Resource {
 		Read:          readBotsettingsFunc,
 		Update:        updateBotsettingsFunc,
 		Delete:        deleteBotsettingsFunc, // Thought botsettings resource donot have DELETE operation, it is required to set ID to "" d.SetID("") to maintain terraform state
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
-		},
 		Schema: map[string]*schema.Schema{
 			"defaultprofile": &schema.Schema{
 				Type:     schema.TypeString,
@@ -67,34 +64,21 @@ func resourceCitrixAdcBotsettings() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"builtin": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"feature": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
 			"trapurlautogenerate": &schema.Schema{
-                                Type:     schema.TypeString,
-                                Optional: true,
-                                Computed: true,
-                        },
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"trapurlinterval": &schema.Schema{
-                                Type:     schema.TypeInt,
-                                Optional: true,
-                                Computed: true,
-                        },
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
 			"trapurllength": &schema.Schema{
-                                Type:     schema.TypeInt,
-                                Optional: true,
-                                Computed: true,
-                        },
-
-
-
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -108,18 +92,18 @@ func createBotsettingsFunc(d *schema.ResourceData, meta interface{}) error {
 	botsettingsName = resource.PrefixedUniqueId("tf-botsettings")
 
 	botsettings := bot.Botsettings{
-		Defaultprofile:           d.Get("defaultprofile").(string),
-		Javascriptname:           d.Get("javascriptname").(string),
-		Sessiontimeout:           d.Get("sessiontimeout").(int),
-		Sessioncookiename:        d.Get("sessioncookiename").(string),
-		Dfprequestlimit:          d.Get("dfprequestlimit").(int),
-		Signatureautoupdate:      d.Get("signatureautoupdate").(string),
-		Signatureurl:             d.Get("signatureurl").(string),
-		Proxyserver:              d.Get("proxyserver").(string),
-		Proxyport:                d.Get("proxyport").(int),
-		Trapurlautogenerate:      d.Get("trapurlautogenerate").(string),
-	        Trapurlinterval:          d.Get("trapurlinterval").(int),
-		Trapurllength:		  d.Get("trapurllength").(int),
+		Defaultprofile:      d.Get("defaultprofile").(string),
+		Javascriptname:      d.Get("javascriptname").(string),
+		Sessiontimeout:      d.Get("sessiontimeout").(int),
+		Sessioncookiename:   d.Get("sessioncookiename").(string),
+		Dfprequestlimit:     d.Get("dfprequestlimit").(int),
+		Signatureautoupdate: d.Get("signatureautoupdate").(string),
+		Signatureurl:        d.Get("signatureurl").(string),
+		Proxyserver:         d.Get("proxyserver").(string),
+		Proxyport:           d.Get("proxyport").(int),
+		Trapurlautogenerate: d.Get("trapurlautogenerate").(string),
+		Trapurlinterval:     d.Get("trapurlinterval").(int),
+		Trapurllength:       d.Get("trapurllength").(int),
 	}
 
 	err := client.UpdateUnnamedResource("botsettings", &botsettings)
@@ -186,7 +170,7 @@ func updateBotsettingsFunc(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG]  citrixadc-provider: Sessiontimeout has changed for botsettings, starting update")
 		botsettings.Sessiontimeout = d.Get("sessiontimeout").(int)
 		hasChange = true
-        }
+	}
 	if d.HasChange("sessioncookiename") {
 		log.Printf("[DEBUG]  citrixadc-provider: Sessioncookiename has changed for botsettings, starting update")
 		botsettings.Sessioncookiename = d.Get("sessioncookiename").(string)
@@ -197,7 +181,7 @@ func updateBotsettingsFunc(d *schema.ResourceData, meta interface{}) error {
 		botsettings.Dfprequestlimit = d.Get("dfprequestlimit").(int)
 		hasChange = true
 	}
-	if d.HasChange("signatureautoupdate"){
+	if d.HasChange("signatureautoupdate") {
 		log.Printf("[DEBUG]  citrixadc-provider: Signatureautoupdate has changed for botsettings, starting update")
 		botsettings.Signatureautoupdate = d.Get("signatureautoupdate").(string)
 		hasChange = true
@@ -221,18 +205,17 @@ func updateBotsettingsFunc(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG]  citrixadc-provider: Trapurlautogenerate has changed for botsettings, starting update")
 		botsettings.Trapurlautogenerate = d.Get("trapurlautogenerate").(string)
 		hasChange = true
-	}	
+	}
 	if d.HasChange("trapurlinterval") {
-                log.Printf("[DEBUG]  citrixadc-provider: Trapurlinterval has changed for botsettings, starting update")
-                botsettings.Trapurlinterval = d.Get("trapurlinterval").(int)
-                hasChange = true
+		log.Printf("[DEBUG]  citrixadc-provider: Trapurlinterval has changed for botsettings, starting update")
+		botsettings.Trapurlinterval = d.Get("trapurlinterval").(int)
+		hasChange = true
 	}
 	if d.HasChange("trapurllength") {
-                log.Printf("[DEBUG]  citrixadc-provider: Trapurllength has changed for botsettings, starting update")
-                botsettings.Trapurllength = d.Get("trapurllength").(int)
-                hasChange = true
-	}	
-
+		log.Printf("[DEBUG]  citrixadc-provider: Trapurllength has changed for botsettings, starting update")
+		botsettings.Trapurllength = d.Get("trapurllength").(int)
+		hasChange = true
+	}
 
 	if hasChange {
 		err := client.UpdateUnnamedResource("botsettings", &botsettings)

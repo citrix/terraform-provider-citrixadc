@@ -1,5 +1,5 @@
 ---
-subcategory: "bot"
+subcategory: "Bot"
 ---
 
 # Resource: botsettings
@@ -11,12 +11,13 @@ The botsettings  resource is used to create and update the ADC BOT settings.
 
 ```hcl
 resource "citrixadc_botsettings" "default" {
-sessiontimeout= "900"
-proxyport = "8080"
-sessioncookiename = "citrix_bot_id"
-trapurlinterval = "3600"
-trapurllength = "32"
+  sessiontimeout      = "900"
+  proxyport           = "8080"
+  sessioncookiename   = "citrix_bot_id"
+  trapurlinterval     = "3600"
+  trapurllength       = "32"
 }
+
 
 ```
 
@@ -40,12 +41,8 @@ trapurllength = "32"
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the botsettings. It has the same value as the `name` attribute.
+* `id` - The id of the botsettings.It is a unique string prefixed with "tf-botsettings".
 
-
-## Import
-
-A botsettings can be imported using its name, e.g.
 
 ```shell
 terraform import citrixadc_csaction.tf_csaction tf_csaction
