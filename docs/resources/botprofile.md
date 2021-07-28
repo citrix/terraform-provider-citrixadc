@@ -23,7 +23,7 @@ resource "citrixadc_botprofile" "tf_botprofile_name" {
 
 ## Argument Reference
 
-* `name` - (Optional) Name for the profile. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.), pound (#), space ( ), at (@), equals (=), colon (:), and underscore (_) characters. Cannot be changed after the profile is added. The following requirement applies only to the Citrix ADC CLI: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my profile" or 'my profile').
+* `name` - (Required) Name for the profile. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.), pound (#), space ( ), at (@), equals (=), colon (:), and underscore (_) characters. Cannot be changed after the profile is added. The following requirement applies only to the Citrix ADC CLI: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my profile" or 'my profile').
 * `signature` - (Optional) Name of object containing bot static signature details.
 * `errorurl` - (Optional) URL that Bot protection uses as the Error URL.
 * `trapurl` - (Optional) URL that Bot protection uses as the Trap URL.
