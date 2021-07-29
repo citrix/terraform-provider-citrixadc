@@ -2,7 +2,6 @@ package citrixadc
 
 import (
 	"github.com/citrix/adc-nitro-go/resource/config/bot"
-	"github.com/citrix/adc-nitro-go/service"
 
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -68,7 +67,7 @@ func resourceCitrixAdcBotprofile() *schema.Resource {
 				Computed: true,
 			},
 			"devicefingerprintaction": &schema.Schema{
-				Type:     schema.TypeList, // ?
+				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 				Computed: true,
@@ -84,7 +83,7 @@ func resourceCitrixAdcBotprofile() *schema.Resource {
 				Computed: true,
 			},
 			"trapaction": &schema.Schema{
-				Type:     schema.TypeList, // ?
+				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 				Computed: true,
@@ -108,6 +107,7 @@ func createBotprofileFunc(d *schema.ResourceData, meta interface{}) error {
 		botprofileName = resource.PrefixedUniqueId("tf-botprofile-")
 		d.Set("name", botprofileName)
 	}
+	botprofileName = d.Get("name").(string)
 	botprofile := bot.Botprofile{
 		Name:                    d.Get("name").(string),
 		Signature:               d.Get("signature").(string),
@@ -167,7 +167,6 @@ func readBotprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("bot_enable_tps", data["bot_enable_tps"])
 
 	return nil
-
 }
 
 func updateBotprofileFunc(d *schema.ResourceData, meta interface{}) error {
@@ -178,8 +177,6 @@ func updateBotprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	botprofile := bot.Botprofile{
 		Name: d.Get("name").(string),
 	}
-
-	stateChange := false
 
 	hasChange := false
 
@@ -225,8 +222,8 @@ func updateBotprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("devicefingerprintaction") {
 		log.Printf("[DEBUG]  netscaler-provider: Devicefingerprintaction has changed for botprofile %s, starting update", botprofileName)
-		botprofile.Devicefingerprintaction = d.Get("devicefingerprintaction").([]string)
 		hasChange = true
+		botprofile.Devicefingerprintaction = toStringList(d.Get("devicefingerprintaction").([]interface{}))
 	}
 	if d.HasChange("bot_enable_ip_reputation") {
 		log.Printf("[DEBUG]  netscaler-provider: Bot_enable_ip_reputation has changed for botprofile %s, starting update", botprofileName)
@@ -240,8 +237,8 @@ func updateBotprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("trapaction") {
 		log.Printf("[DEBUG]  netscaler-provider: Trapaction has changed for botprofile %s, starting update", botprofileName)
-		botprofile.Trapaction = d.Get("trapaction").([]string)
 		hasChange = true
+		botprofile.Trapaction = toStringList(d.Get("trapaction").([]interface{}))
 	}
 	if d.HasChange("bot_enable_tps") {
 		log.Printf("[DEBUG]  netscaler-provider: Bot_enable_tps has changed for botprofile %s, starting update", botprofileName)
@@ -255,12 +252,7 @@ func updateBotprofileFunc(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("Error updating botprofile %s", botprofileName)
 		}
 	}
-	if stateChange {
-		err := doBotprofileStateChange(d, client)
-		if err != nil {
-			return fmt.Errorf("Error enabling/disabling botprofile %s", botprofileName)
-		}
-	}
+
 	return readBotprofileFunc(d, meta)
 }
 
@@ -274,36 +266,6 @@ func deleteBotprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId("")
-
-	return nil
-}
-
-func doBotprofileStateChange(d *schema.ResourceData, client *service.NitroClient) error {
-	log.Printf("[DEBUG]  netscaler-provider: In doBotprofileStateChange")
-
-	// We need a new instance of the struct since
-	// ActOnResource will fail if we put in superfluous attributes
-	botprofile := bot.Botprofile{
-		Name: d.Get("name").(string),
-	}
-
-	newstate := d.Get("state")
-
-	// Enable action
-	if newstate == "ENABLED" {
-		err := client.ActOnResource("botprofile", botprofile, "enable")
-		if err != nil {
-			return err
-		}
-	} else if newstate == "DISABLED" {
-		// Add attributes relevant to the disable operation
-		err := client.ActOnResource("botprofile", botprofile, "disable")
-		if err != nil {
-			return err
-		}
-	} else {
-		return fmt.Errorf("\"%s\" is not a valid state. Use (\"ENABLED\", \"DISABLED\").", newstate)
-	}
 
 	return nil
 }

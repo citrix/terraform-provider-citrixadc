@@ -36,16 +36,37 @@ func TestAccBotprofile_basic(t *testing.T) {
 			resource.TestStep{
 				Config: testAccBotprofile_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBotprofileExist("citrixadc_botprofile.foo", nil),
+					testAccCheckBotprofileExist("citrixadc_botprofile.tf_botprofile", nil),
 					testAccCheckUserAgent(),
 				),
 			},
-			// update botprofile comment
+			// update botprofile actions
 			resource.TestStep{
-				Config: testAccBotprofile_update,
+				Config: testAccBotprofile_update_actions,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBotprofileExist("citrixadc_botprofile.foo", nil),
-					resource.TestCheckResourceAttr("citrixadc_botprofile.foo", "comment", "Botprofile comment 2"),
+					testAccCheckBotprofileExist("citrixadc_botprofile.tf_botprofile", nil),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_botprofile", "devicefingerprintaction.0", "LOG"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_botprofile", "devicefingerprintaction.1", "DROP"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_botprofile", "trapaction.0", "LOG"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_botprofile", "trapaction.1", "DROP"),
+					testAccCheckUserAgent(),
+				),
+			},
+			// update botprofile properties
+			resource.TestStep{
+				Config: testAccBotprofile_update_properties,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBotprofileExist("citrixadc_botprofile.tf_botprofile", nil),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_botprofile", "errorurl", "http://www.citrix.com/products/citrix-adc/"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_botprofile", "trapurl", "/http://www.citrix.com/products/citrix-adc/"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_botprofile", "comment", "tf_botprofile comment 1"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_botprofile", "bot_enable_white_list", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_botprofile", "bot_enable_black_list", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_botprofile", "bot_enable_rate_limit", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_botprofile", "devicefingerprint", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_botprofile", "bot_enable_ip_reputation", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_botprofile", "trap", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_botprofile", "bot_enable_tps", "OFF"),
 					testAccCheckUserAgent(),
 				),
 			},
@@ -110,17 +131,43 @@ func testAccCheckBotprofileDestroy(s *terraform.State) error {
 }
 
 const testAccBotprofile_basic = `
-resource "citrixadc_botprofile" "foo" {
-	name = "test_Botprofile"
-	comment = "Botprofile comment 1"
+resource "citrixadc_botprofile" "tf_botprofile" {
+	name = "tf_botprofile"
+	errorurl = "http://www.citrix.com"
+	trapurl = "/http://www.citrix.com"
+	comment = "tf_botprofile comment"
 	bot_enable_white_list = "ON"
+	bot_enable_black_list = "ON"
+	bot_enable_rate_limit = "ON"
 	devicefingerprint = "ON"
+	devicefingerprintaction = ["LOG", "RESET"]
+	bot_enable_ip_reputation = "ON"
+	trap = "ON"
+	trapaction = ["LOG", "RESET"]
+	bot_enable_tps = "ON"
 }
 `
 
-const testAccBotprofile_update = `
-resource "citrixadc_botprofile" "foo" {
-	name = "test_Botprofile"
-	comment = "Botprofile comment 2"
+const testAccBotprofile_update_actions = `
+resource "citrixadc_botprofile" "tf_botprofile" {
+	name = "tf_botprofile"
+	devicefingerprintaction = ["LOG", "DROP"]
+	trapaction = ["LOG", "DROP"]
+}
+`
+
+const testAccBotprofile_update_properties = `
+resource "citrixadc_botprofile" "tf_botprofile" {
+	name = "tf_botprofile"
+	errorurl = "http://www.citrix.com/products/citrix-adc/"
+	trapurl = "/http://www.citrix.com/products/citrix-adc/"
+	comment = "tf_botprofile comment 1"
+	bot_enable_white_list = "OFF"
+	bot_enable_black_list = "OFF"
+	bot_enable_rate_limit = "OFF"
+	devicefingerprint = "OFF"
+	bot_enable_ip_reputation = "OFF"
+	trap = "OFF"
+	bot_enable_tps = "OFF"
 }
 `

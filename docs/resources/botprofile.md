@@ -45,3 +45,10 @@ In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the botprofile. It has the same value as the `name` attribute.
 
+## Import
+
+A <resource> can be imported using its name, e.g.
+
+```shell
+terraform import citrixadc_botprofile.tf_botprofile tf_botprofile
+```
