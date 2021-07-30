@@ -72,8 +72,6 @@ github.com/cheggaaa/pb v1.0.27/go.mod h1:pQciLPpbU0oxA0h+VJYYLxO+XeDQb5pZijXscXH
 github.com/chzyer/logex v1.1.10/go.mod h1:+Ywpsq7O8HXn0nuIou7OrIPyXbp3wmkHB+jjWRnGsAI=
 github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e/go.mod h1:nSuG5e5PlCu98SY8svDHJxuZscDgtXS6KTTbou5AhLI=
 github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1/go.mod h1:Q3SI9o4m/ZMnBNeIyt5eFwwo7qiLfzFZmjNmxjkiQlU=
-github.com/citrix/adc-nitro-go v0.0.0-20210706081452-0ff4869771a4 h1:fRZI2/P0fma04RFwT/dQuA+nitBuJG/GgBIzLtLum0s=
-github.com/citrix/adc-nitro-go v0.0.0-20210706081452-0ff4869771a4/go.mod h1:1SPLFfIOtWnKiNWEuLhRqGrEi6VxGkXt4gpWa+mhaCg=
 github.com/citrix/adc-nitro-go v0.0.0-20210709140558-a367b67b58f6 h1:XHeiJRcBJ5dePgCtgeJDKjr7T2PVJB4JHrl/aAIq/pk=
 github.com/citrix/adc-nitro-go v0.0.0-20210709140558-a367b67b58f6/go.mod h1:1SPLFfIOtWnKiNWEuLhRqGrEi6VxGkXt4gpWa+mhaCg=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
