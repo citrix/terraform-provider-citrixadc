@@ -195,7 +195,6 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_vlan_nsip_binding":                       resourceCitrixAdcVlan_nsip_binding(),
 		"citrixadc_nsmode":                                  resourceCitrixAdcNsmode(),
 		"citrixadc_botprofile":                              resourceCitrixAdcBotprofile(),
-		// "citrixadc_botpolicylabel":                          resourceCitrixAdcBotpolicylabel(),
 	}
 }
 

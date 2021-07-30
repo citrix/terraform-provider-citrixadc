@@ -11,7 +11,6 @@ The Botprofile resource is used to create a collection of profile settings to co
 
 ```hcl
 resource "citrixadc_botprofile" "tf_botprofile_name" {
-
   name                   = "botprofile_name"
   comment                = "My botprofile"
   bot_enable_white_list  = "ON"
@@ -47,8 +46,8 @@ In addition to the arguments, the following attributes are available:
 
 ## Import
 
-A <resource> can be imported using its name, e.g.
+A botprofile can be imported using its name, e.g.
 
 ```shell
-terraform import citrixadc_botprofile.tf_botprofile tf_botprofile
+terraform import citrixadc_botprofile.tf_botprofile botprofile_name
 ```
