@@ -3,7 +3,6 @@ package citrixadc
 import (
 	"github.com/citrix/adc-nitro-go/resource/config/bot"
 
-	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"fmt"
@@ -100,14 +99,8 @@ func resourceCitrixAdcBotprofile() *schema.Resource {
 func createBotprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  netscaler-provider: In createBotprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
-	var botprofileName string
-	if v, ok := d.GetOk("name"); ok {
-		botprofileName = v.(string)
-	} else {
-		botprofileName = resource.PrefixedUniqueId("tf-botprofile-")
-		d.Set("name", botprofileName)
-	}
-	botprofileName = d.Get("name").(string)
+
+	botprofileName := d.Get("name").(string)
 	botprofile := bot.Botprofile{
 		Name:                    d.Get("name").(string),
 		Signature:               d.Get("signature").(string),
