@@ -1,0 +1,134 @@
+/*
+Copyright 2016 Citrix Systems, Inc
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+package citrixadc
+
+import (
+	"fmt"
+	"strings"
+	"testing"
+
+	"github.com/citrix/adc-nitro-go/service"
+
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
+)
+
+const testAccLbmonitor_metric_binding_basic = `
+resource citrixadc_lbmonitor_metric_binding tf_acclbmonitor_metric_binding {
+	monitorname = "mload2"
+	metric = "metric2"
+	metricthreshold = 100
+   } 
+`
+
+func TestAccLbmonitor_metric_binding_basic(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLbmonitor_metric_bindingDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccLbmonitor_metric_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbmonitor_metric_bindingExist("citrixadc_lbmonitor_metric_binding.tf_acclbmonitor_metric_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor_metric_binding.tf_acclbmonitor_metric_binding", "monitorname", "mload2"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor_metric_binding.tf_acclbmonitor_metric_binding", "metric", "metric2"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor_metric_binding.tf_acclbmonitor_metric_binding", "metricthreshold", "100"),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckLbmonitor_metric_bindingExist(n string, id *string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No lb monitor metric binding name is set")
+		}
+
+		if id != nil {
+			if *id != "" && *id != rs.Primary.ID {
+				return fmt.Errorf("Resource ID has changed!")
+			}
+
+			*id = rs.Primary.ID
+		}
+
+		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+
+		bindingId := rs.Primary.ID
+		idSlice := strings.SplitN(bindingId, ",", 2)
+		lbmonitorName := idSlice[0]
+		metricName := idSlice[1]
+
+		findParams := service.FindParams{
+			ResourceType:             "lbmonitor_metric_binding",
+			ResourceName:             lbmonitorName,
+			ResourceMissingErrorCode: 258,
+		}
+		dataArr, err := nsClient.FindResourceArrayWithParams(findParams)
+
+		// Unexpected error
+		if err != nil {
+			return err
+		}
+
+		// Iterate through results to find the one with the right metric name
+		foundIndex := -1
+		for i, v := range dataArr {
+			if v["metric"].(string) == metricName {
+				foundIndex = i
+				break
+			}
+		}
+		// Resource is missing
+		if foundIndex == -1 {
+			return fmt.Errorf("Cannot find lbmonitor_metric_binding ID %v", bindingId)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckLbmonitor_metric_bindingDestroy(s *terraform.State) error {
+	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "citrixadc_lbmonitor_metric_binding" {
+			continue
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No name is set")
+		}
+
+		_, err := nsClient.FindResource("lbmonitor_metric_binding", rs.Primary.ID)
+		if err == nil {
+			return fmt.Errorf("LB monitor metric binding %s still exists", rs.Primary.ID)
+		}
+
+	}
+
+	return nil
+}

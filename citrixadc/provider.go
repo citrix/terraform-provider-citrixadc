@@ -79,6 +79,7 @@ func providerSchema() map[string]*schema.Schema {
 func providerResources() map[string]*schema.Resource {
 	return map[string]*schema.Resource{
 		"citrixadc_botsettings":                             resourceCitrixAdcBotsettings(),
+		"citrixadc_lbmonitor_metric_binding":                resourceCitrixAdcLbmonitor_metric_binding(),
 		"citrixadc_lbvserver":                               resourceCitrixAdcLbvserver(),
 		"citrixadc_service":                                 resourceCitrixAdcService(),
 		"citrixadc_csvserver":                               resourceCitrixAdcCsvserver(),
