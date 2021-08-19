@@ -198,6 +198,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_botprofile":                              resourceCitrixAdcBotprofile(),
 		"citrixadc_botpolicylabel":                          resourceCitrixAdcBotpolicylabel(),
 		"citrixadc_lbsipparameters":                         resourceCitrixAdcLbsipparameters(),
+		"citrixadc_lbprofile":                               resourceCitrixAdcLbprofile(),
 	}
 }
 
