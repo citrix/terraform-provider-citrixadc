@@ -213,6 +213,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_lbvserver_videooptimizationpacingpolicy_binding":    resourceCitrixAdcLbvserver_videooptimizationpacingpolicy_binding(),
 		"citrixadc_lbvserver_spilloverpolicy_binding":                  resourceCitrixAdcLbvserver_spilloverpolicy_binding(),
 		"citrixadc_lbvserver_dnspolicy64_binding":                      resourceCitrixAdcLbvserver_dnspolicy64_binding(),
+		"citrixadc_lbmonitor_sslcertkey_binding":                       resourceCitrixAdcLbmonitor_sslcertkey_binding(),
 	}
 }
 
