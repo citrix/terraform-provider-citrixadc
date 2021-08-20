@@ -22,20 +22,12 @@ func resourceCitrixAdcLbvserver_analyticsprofile_binding() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"analyticsprofile": &schema.Schema{
 				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Required: true,
 				ForceNew: true,
 			},
 			"name": &schema.Schema{
 				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"__count": &schema.Schema{
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
+				Required: true,
 				ForceNew: true,
 			},
 		},

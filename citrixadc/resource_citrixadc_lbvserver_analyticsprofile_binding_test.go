@@ -27,10 +27,16 @@ import (
 
 const testAccLbvserver_analyticsprofile_binding_basic = `
 resource "citrixadc_lbvserver_analyticsprofile_binding" "foo" {
-	name = "test-server"
+	name = citrixadc_lbvserver.test_server.name
     analyticsprofile = "ns_analytics_global_profile"
 
 }
+
+resource "citrixadc_lbvserver" "test_server" {
+	name = "test_server"
+	servicetype = "HTTP"
+}
+
 `
 
 func TestAccLbvserver_analyticsprofile_binding_basic(t *testing.T) {
