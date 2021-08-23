@@ -25,6 +25,10 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+/*To create AppQoE policies through CLI:
+add appqoe action appqoe-act-primd -priority MEDIUM
+add appqoe policy appqoe-pol-primd -rule HTTP.REQ.HEADER("User-Agent").CONTAINS("Android") -action appqoe-act-primd
+*/
 const testAccLbvserver_appqoepolicy_binding_basic = `
 resource "citrixadc_lbvserver_appqoepolicy_binding" "foo" {
     name = "test-server"
