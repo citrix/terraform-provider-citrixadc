@@ -7,6 +7,7 @@ import (
 
 	"fmt"
 	"log"
+	"net/url"
 	"strings"
 )
 
@@ -177,10 +178,17 @@ func deleteLbvserver_contentinspectionpolicy_bindingFunc(d *schema.ResourceData,
 	lbvserverName := idSlice[0]
 	policyName := idSlice[1]
 
-	args := make([]string, 0)
-	args = append(args, fmt.Sprintf("policyname: %s", policyName))
+	argsMap := make(map[string]string)
+	argsMap["policyname"] = url.QueryEscape(policyName)
 
-	err := client.DeleteResourceWithArgs("lbvserver_contentinspectionpolicy_binding", lbvserverName, args)
+	if v, ok := d.GetOk("bindpoint"); ok {
+		argsMap["bindpoint"] = url.QueryEscape(v.(string))
+	}
+
+	if v, ok := d.GetOk("priority"); ok {
+		argsMap["priority"] = url.QueryEscape(fmt.Sprintf("%v", v))
+	}
+	err := client.DeleteResourceWithArgsMap("lbvserver_contentinspectionpolicy_binding", lbvserverName, argsMap)
 	if err != nil {
 		return err
 	}
