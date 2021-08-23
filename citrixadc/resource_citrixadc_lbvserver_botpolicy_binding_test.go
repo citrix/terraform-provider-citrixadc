@@ -38,7 +38,7 @@ resource citrixadc_lbvserver_botpolicy_binding demo_lbvserver_botpolicy_binding 
 	invoke                 = true         # boolean
   }
   
-  resource "citrixadc_lbvserver" "demo_lb" {
+  resource "citrixadc_lbvserver" "demo_lb1" {
 	name        = "demo_lb1"
 	servicetype = "HTTP"
   }

@@ -4,7 +4,6 @@ resource citrixadc_lbvserver_botpolicy_binding demo_lbvserver_botpolicy_binding 
   labeltype              = "reqvserver" # Possible values = reqvserver, resvserver, policylabel
   labelname              = citrixadc_lbvserver.demo_lb.name
   priority               = 100
-  bindpoint              = "REQUEST" # Possible values = REQUEST, RESPONSE
   gotopriorityexpression = "END"
   invoke                 = true         # boolean
 }
