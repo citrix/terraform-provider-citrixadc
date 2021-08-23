@@ -210,6 +210,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_lbvserver_tmtrafficpolicy_binding":                  resourceCitrixAdcLbvserver_tmtrafficpolicy_binding(),
 		"citrixadc_lbvserver_feopolicy_binding":                        resourceCitrixAdcLbvserver_feopolicy_binding(),
 		"citrixadc_lbvserver_videooptimizationdetectionpolicy_binding": resourceCitrixAdcLbvserver_videooptimizationdetectionpolicy_binding(),
+		"citrixadc_lbvserver_videooptimizationpacingpolicy_binding":    resourceCitrixAdcLbvserver_videooptimizationpacingpolicy_binding(),
 	}
 }
 
