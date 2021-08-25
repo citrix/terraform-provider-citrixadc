@@ -25,7 +25,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-const testAccLbvserver_auditsyslogpolicy_binding_basic = `
+const testAccLbvserver_auditsyslogpolicy_binding_basic_step1 = `
 resource "citrixadc_lbvserver" "tf_lbvserver3" {
 name        = "tf_lbvserver3"
 servicetype = "HTTP"
@@ -55,6 +55,29 @@ resource "citrixadc_lbvserver_auditsyslogpolicy_binding" "demo" {
 }
 `
 
+const testAccLbvserver_auditsyslogpolicy_binding_basic_step2 = `
+resource "citrixadc_lbvserver" "tf_lbvserver3" {
+name        = "tf_lbvserver3"
+servicetype = "HTTP"
+}
+
+resource "citrixadc_auditsyslogaction" "tf_syslogaction2" {
+	name = "tf_syslogaction2"
+	serverip = "10.124.67.93"
+	loglevel = [
+		"ERROR",
+		"NOTICE",
+	]
+}
+
+resource "citrixadc_auditsyslogpolicy" "tf_syslogpolicy2" {
+	name = "tf_syslogpolicy2"
+	rule = "true"
+	action = citrixadc_auditsyslogaction.tf_syslogaction2.name
+
+}
+`
+
 func TestAccLbvserver_auditsyslogpolicy_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -62,9 +85,15 @@ func TestAccLbvserver_auditsyslogpolicy_binding_basic(t *testing.T) {
 		CheckDestroy: testAccCheckLbvserver_auditsyslogpolicy_bindingDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccLbvserver_auditsyslogpolicy_binding_basic,
+				Config: testAccLbvserver_auditsyslogpolicy_binding_basic_step1,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLbvserver_auditsyslogpolicy_bindingExist("citrixadc_lbvserver_auditsyslogpolicy_binding.demo", nil),
+				),
+			},
+			resource.TestStep{
+				Config: testAccLbvserver_auditsyslogpolicy_binding_basic_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserver_auditsyslogpolicy_bindingNotExist("citrixadc_lbvserver_auditsyslogpolicy_binding.demo", "tf_lbvserver3,tf_syslogaction2"),
 				),
 			},
 		},
@@ -127,7 +156,47 @@ func testAccCheckLbvserver_auditsyslogpolicy_bindingExist(n string, id *string) 
 		return nil
 	}
 }
+func testAccCheckLbvserver_auditsyslogpolicy_bindingNotExist(n string, id string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client := testAccProvider.Meta().(*NetScalerNitroClient).client
 
+		if !strings.Contains(id, ",") {
+			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
+		}
+
+		idSlice := strings.SplitN(id, ",", 2)
+
+		name := idSlice[0]
+		policyname := idSlice[1]
+
+		findParams := service.FindParams{
+			ResourceType:             "lbvserver_auditsyslogpolicy_binding",
+			ResourceName:             name,
+			ResourceMissingErrorCode: 258,
+		}
+		dataArr, err := client.FindResourceArrayWithParams(findParams)
+
+		// Unexpected error
+		if err != nil {
+			return err
+		}
+
+		// Iterate through results to find the one with the right monitor name
+		found := false
+		for _, v := range dataArr {
+			if v["policyname"].(string) == policyname {
+				found = true
+				break
+			}
+		}
+
+		if found {
+			return fmt.Errorf("lbvserver_auditsyslogpolicy_binding %s not deleted", n)
+		}
+
+		return nil
+	}
+}
 func testAccCheckLbvserver_auditsyslogpolicy_bindingDestroy(s *terraform.State) error {
 	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
 
