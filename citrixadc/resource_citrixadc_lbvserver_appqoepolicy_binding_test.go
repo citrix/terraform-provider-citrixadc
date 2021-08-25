@@ -51,7 +51,10 @@ resource "citrixadc_lbvserver" "tf_lbvserver" {
 }
 `
 
-func testAccLbvserver_appqoepolicy_binding_basic(t *testing.T) {
+func TestAccLbvserver_appqoepolicy_binding_basic(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -66,7 +69,7 @@ func testAccLbvserver_appqoepolicy_binding_basic(t *testing.T) {
 			resource.TestStep{
 				Config: testAccLbvserver_appqoepolicy_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLbvserver_appqoepolicy_bindingDeleted("citrixadc_lbvserver_appqoepolicy_binding.foo", "tf_lbvserver,appqoe-pol-primd"),
+					testAccCheckLbvserver_appqoepolicy_bindingNotExist("citrixadc_lbvserver_appqoepolicy_binding.foo", "tf_lbvserver,appqoe-pol-primd"),
 				),
 			},
 		},
@@ -130,7 +133,7 @@ func testAccCheckLbvserver_appqoepolicy_bindingExist(n string, id *string) resou
 	}
 }
 
-func testAccCheckLbvserver_appqoepolicy_bindingDeleted(n string, id string) resource.TestCheckFunc {
+func testAccCheckLbvserver_appqoepolicy_bindingNotExist(n string, id string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		client := testAccProvider.Meta().(*NetScalerNitroClient).client
 
