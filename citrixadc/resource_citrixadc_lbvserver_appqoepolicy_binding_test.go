@@ -29,9 +29,14 @@ import (
 add appqoe action appqoe-act-primd -priority MEDIUM
 add appqoe policy appqoe-pol-primd -rule HTTP.REQ.HEADER("User-Agent").CONTAINS("Android") -action appqoe-act-primd
 */
-const testAccLbvserver_appqoepolicy_binding_basic = `
+const testAccLbvserver_appqoepolicy_binding_basic_step1 = `
+resource "citrixadc_lbvserver" "tf_lbvserver" {
+	name        = "tf_lbvserver"
+	servicetype = "HTTP"
+}
+  
 resource "citrixadc_lbvserver_appqoepolicy_binding" "foo" {
-    name = "test-server"
+    name = citrixadc_lbvserver.tf_lbvserver.name
     policyname = "appqoe-pol-primd"
     bindpoint = "REQUEST"
     gotopriorityexpression = "END"
@@ -39,16 +44,29 @@ resource "citrixadc_lbvserver_appqoepolicy_binding" "foo" {
 }
 `
 
-func TestAccLbvserver_appqoepolicy_binding_basic(t *testing.T) {
+const testAccLbvserver_appqoepolicy_binding_basic_step2 = `
+resource "citrixadc_lbvserver" "tf_lbvserver" {
+	name        = "tf_lbvserver"
+	servicetype = "HTTP"
+}
+`
+
+func testAccLbvserver_appqoepolicy_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLbvserver_appqoepolicy_bindingDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccLbvserver_appqoepolicy_binding_basic,
+				Config: testAccLbvserver_appqoepolicy_binding_basic_step1,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLbvserver_appqoepolicy_bindingExist("citrixadc_lbvserver_appqoepolicy_binding.foo", nil),
+				),
+			},
+			resource.TestStep{
+				Config: testAccLbvserver_appqoepolicy_binding_basic_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserver_appqoepolicy_bindingDeleted("citrixadc_lbvserver_appqoepolicy_binding.foo", "tf_lbvserver,appqoe-pol-primd"),
 				),
 			},
 		},
@@ -106,6 +124,48 @@ func testAccCheckLbvserver_appqoepolicy_bindingExist(n string, id *string) resou
 
 		if !found {
 			return fmt.Errorf("lbvserver_appqoepolicy_binding %s not found", n)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckLbvserver_appqoepolicy_bindingDeleted(n string, id string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+
+		if !strings.Contains(id, ",") {
+			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
+		}
+
+		idSlice := strings.SplitN(id, ",", 2)
+
+		name := idSlice[0]
+		policyname := idSlice[1]
+
+		findParams := service.FindParams{
+			ResourceType:             "lbvserver_appqoepolicy_binding",
+			ResourceName:             name,
+			ResourceMissingErrorCode: 258,
+		}
+		dataArr, err := client.FindResourceArrayWithParams(findParams)
+
+		// Unexpected error
+		if err != nil {
+			return err
+		}
+
+		// Iterate through results to find the one with the right monitor name
+		found := false
+		for _, v := range dataArr {
+			if v["policyname"].(string) == policyname {
+				found = true
+				break
+			}
+		}
+
+		if found {
+			return fmt.Errorf("lbvserver_appqoepolicy_binding %s not deleted", n)
 		}
 
 		return nil
