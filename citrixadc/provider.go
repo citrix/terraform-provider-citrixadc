@@ -85,6 +85,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_botsettings":                               resourceCitrixAdcBotsettings(),
 		"citrixadc_botpolicy":                                 resourceCitrixAdcBotpolicy(),
 		"citrixadc_lbvserver_analyticsprofile_binding":        resourceCitrixAdcLbvserver_analyticsprofile_binding(),
+		"citrixadc_lbvserver_appqoepolicy_binding":            resourceCitrixAdcLbvserver_appqoepolicy_binding(),
 		"citrixadc_lbmonitor_metric_binding":                  resourceCitrixAdcLbmonitor_metric_binding(),
 		"citrixadc_lbvserver":                                 resourceCitrixAdcLbvserver(),
 		"citrixadc_service":                                   resourceCitrixAdcService(),
