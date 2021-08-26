@@ -222,6 +222,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_lbgroup":                                            resourceCitrixAdcLbgroup(),
 		"citrixadc_lbgroup_lbvserver_binding":                          resourceCitrixAdcLbgroup_lbvserver_binding(),
 		"citrixadc_ssldtlsprofile":                                     resourceCitrixAdcSsldtlsprofile(),
+		"citrixadc_sslocspresponder":                                   resourceCitrixAdcSslocspresponder(),
 	}
 }
 
