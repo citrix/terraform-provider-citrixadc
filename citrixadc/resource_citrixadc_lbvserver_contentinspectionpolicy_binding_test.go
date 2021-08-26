@@ -46,6 +46,15 @@ resource "citrixadc_lbvserver" "tf_lbvserver" {
 }
 `
 
+const testAccLbvserver_contentispectionpolicy_binding_basic_step2 = `
+	resource "citrixadc_lbvserver" "tf_lbvserver" {
+		name        = "tf_lbvserver"
+		ipv46       = "10.10.10.33"
+		port        = 80
+		servicetype = "HTTP"
+	}
+`
+
 func TestAccLbvserver_contentinspectionpolicy_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -56,6 +65,12 @@ func TestAccLbvserver_contentinspectionpolicy_binding_basic(t *testing.T) {
 				Config: testAccLbvserver_contentinspectionpolicy_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLbvserver_contentinspectionpolicy_bindingExist("citrixadc_lbvserver_contentinspectionpolicy_binding.tf_lbvserver_contentinspectionpolicy_binding", nil),
+				),
+			},
+			resource.TestStep{
+				Config: testAccLbvserver_contentispectionpolicy_binding_basic_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserver_contentispectionpolicy_bindingNotExist("citrixadc_lbvserver_contentinspectionpolicy_binding.tf_lbvserver_contentinspectionpolicy_binding", "tf_lbvserver,tf_contentinspectionpolicy"),
 				),
 			},
 		},
@@ -113,6 +128,47 @@ func testAccCheckLbvserver_contentinspectionpolicy_bindingExist(n string, id *st
 
 		if !found {
 			return fmt.Errorf("lbvserver_contentinspectionpolicy_binding %s not found", n)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckLbvserver_contentispectionpolicy_bindingNotExist(n string, id string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+
+		if !strings.Contains(id, ",") {
+			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
+		}
+		idSlice := strings.SplitN(id, ",", 2)
+
+		lbvserverName := idSlice[0]
+		policyName := idSlice[1]
+
+		findParams := service.FindParams{
+			ResourceType:             "lbvserver_contentinspectionpolicy_binding",
+			ResourceName:             lbvserverName,
+			ResourceMissingErrorCode: 258,
+		}
+		dataArr, err := client.FindResourceArrayWithParams(findParams)
+
+		// Unexpected error
+		if err != nil {
+			return err
+		}
+
+		// Iterate through results to find the one with the right policy name
+		found := false
+		for _, v := range dataArr {
+			if v["policyname"].(string) == policyName {
+				found = true
+				break
+			}
+		}
+
+		if found {
+			return fmt.Errorf("lbvserver_contentinspectionpolicy_binding %s was found, but is should have been destroyed", n)
 		}
 
 		return nil
