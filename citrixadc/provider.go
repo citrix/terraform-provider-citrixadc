@@ -204,6 +204,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_lbsipparameters":                           resourceCitrixAdcLbsipparameters(),
 		"citrixadc_lbprofile":                                 resourceCitrixAdcLbprofile(),
 		"citrixadc_lbvserver_contentinspectionpolicy_binding": resourceCitrixAdcLbvserver_contentinspectionpolicy_binding(),
+		"citrixadc_lbvserver_tmtrafficpolicy_binding":         resourceCitrixAdcLbvserver_tmtrafficpolicy_binding(),
 	}
 }
 
