@@ -1,0 +1,281 @@
+package citrixadc
+
+import (
+	"github.com/citrix/adc-nitro-go/resource/config/ssl"
+
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
+
+	"fmt"
+	"log"
+)
+
+func resourceCitrixAdcSslservicegroup() *schema.Resource {
+	return &schema.Resource{
+		SchemaVersion: 1,
+		Create:        createSslservicegroupFunc,
+		Read:          readSslservicegroupFunc,
+		Update:        updateSslservicegroupFunc,
+		Delete:        deleteSslservicegroupFunc,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
+		Schema: map[string]*schema.Schema{
+			"commonname": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"ocspstapling": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"sendclosenotify": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"serverauth": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"servicegroupname": &schema.Schema{
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"sessreuse": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"sesstimeout": &schema.Schema{
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"snienable": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"ssl3": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"sslprofile": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"strictsigdigestcheck": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"tls1": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"tls11": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"tls12": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"tls13": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+		},
+	}
+}
+
+func createSslservicegroupFunc(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[DEBUG]  citrixadc-provider: In createSslservicegroupFunc")
+	client := meta.(*NetScalerNitroClient).client
+
+	var sslservicegroupName string
+	if v, ok := d.GetOk("servicegroupname"); ok {
+		sslservicegroupName = v.(string)
+	} else {
+		sslservicegroupName = resource.PrefixedUniqueId("tf-servicegroup-")
+		d.Set("servicegroupname", sslservicegroupName)
+	}
+
+	sslservicegroup := ssl.Sslservicegroup{
+		Commonname:           d.Get("commonname").(string),
+		Ocspstapling:         d.Get("ocspstapling").(string),
+		Sendclosenotify:      d.Get("sendclosenotify").(string),
+		Serverauth:           d.Get("serverauth").(string),
+		Servicegroupname:     d.Get("servicegroupname").(string),
+		Sessreuse:            d.Get("sessreuse").(string),
+		Sesstimeout:          d.Get("sesstimeout").(int),
+		Snienable:            d.Get("snienable").(string),
+		Ssl3:                 d.Get("ssl3").(string),
+		Sslprofile:           d.Get("sslprofile").(string),
+		Strictsigdigestcheck: d.Get("strictsigdigestcheck").(string),
+		Tls1:                 d.Get("tls1").(string),
+		Tls11:                d.Get("tls11").(string),
+		Tls12:                d.Get("tls12").(string),
+		Tls13:                d.Get("tls13").(string),
+	}
+
+	_, err := client.UpdateResource(service.Sslservicegroup.Type(), sslservicegroupName, &sslservicegroup)
+	if err != nil {
+		return fmt.Errorf("Error updating sslservicegroup")
+	}
+
+	d.SetId(sslservicegroupName)
+
+	err = readSslservicegroupFunc(d, meta)
+	if err != nil {
+		log.Printf("[ERROR] netscaler-provider: ?? we just created this sslservicegroup but we can't read it ??")
+		return nil
+	}
+	return nil
+}
+
+func readSslservicegroupFunc(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[DEBUG] citrixadc-provider:  In readSslservicegroupFunc")
+	client := meta.(*NetScalerNitroClient).client
+	log.Printf("[DEBUG] citrixadc-provider: Reading sslservicegroup state")
+	servicegroupname := d.Id()
+	data, err := client.FindResource(service.Sslservicegroup.Type(), servicegroupname)
+	if err != nil {
+		log.Printf("[WARN] citrixadc-provider: Clearing sslservicegroup state")
+		d.SetId("")
+		return nil
+	}
+	d.Set("servicegroupname", data["servicegroupname"])
+	d.Set("commonname", data["commonname"])
+	d.Set("ocspstapling", data["ocspstapling"])
+	d.Set("sendclosenotify", data["sendclosenotify"])
+	d.Set("serverauth", data["serverauth"])
+	d.Set("servicegroupname", data["servicegroupname"])
+	d.Set("sessreuse", data["sessreuse"])
+	d.Set("sesstimeout", data["sesstimeout"])
+	d.Set("snienable", data["snienable"])
+	d.Set("ssl3", data["ssl3"])
+	d.Set("sslprofile", data["sslprofile"])
+	d.Set("strictsigdigestcheck", data["strictsigdigestcheck"])
+	d.Set("tls1", data["tls1"])
+	d.Set("tls11", data["tls11"])
+	d.Set("tls12", data["tls12"])
+	d.Set("tls13", data["tls13"])
+
+	return nil
+
+}
+
+func updateSslservicegroupFunc(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[DEBUG]  citrixadc-provider: In updateSslservicegroupFunc")
+	client := meta.(*NetScalerNitroClient).client
+	servicegroupname := d.Get("servicegroupname").(string)
+
+	sslservicegroup := ssl.Sslservicegroup{
+		Servicegroupname: d.Get("servicegroupname").(string),
+	}
+	hasChange := false
+
+	if d.HasChange("commonname") {
+		log.Printf("[DEBUG]  citrixadc-provider: Commonname has changed for sslservicegroup  %s, starting update", servicegroupname)
+		sslservicegroup.Commonname = d.Get("commonname").(string)
+		hasChange = true
+	}
+	if d.HasChange("ocspstapling") {
+		log.Printf("[DEBUG]  citrixadc-provider: Ocspstapling has changed for sslservicegroup  %s, starting update", servicegroupname)
+		sslservicegroup.Ocspstapling = d.Get("ocspstapling").(string)
+		hasChange = true
+	}
+	if d.HasChange("sendclosenotify") {
+		log.Printf("[DEBUG]  citrixadc-provider: Sendclosenotify has changed for sslservicegroup  %s, starting update", servicegroupname)
+		sslservicegroup.Sendclosenotify = d.Get("sendclosenotify").(string)
+		hasChange = true
+	}
+	if d.HasChange("serverauth") {
+		log.Printf("[DEBUG]  citrixadc-provider: Serverauth has changed for sslservicegroup  %s, starting update", servicegroupname)
+		sslservicegroup.Serverauth = d.Get("serverauth").(string)
+		hasChange = true
+	}
+	if d.HasChange("servicegroupname") {
+		log.Printf("[DEBUG]  citrixadc-provider: Servicegroupname has changed for sslservicegroup  %s, starting update", servicegroupname)
+		sslservicegroup.Servicegroupname = d.Get("servicegroupname").(string)
+		hasChange = true
+	}
+	if d.HasChange("sessreuse") {
+		log.Printf("[DEBUG]  citrixadc-provider: Sessreuse has changed for sslservicegroup  %s, starting update", servicegroupname)
+		sslservicegroup.Sessreuse = d.Get("sessreuse").(string)
+		hasChange = true
+	}
+	if d.HasChange("sesstimeout") {
+		log.Printf("[DEBUG]  citrixadc-provider: Sesstimeout has changed for sslservicegroup  %s, starting update", servicegroupname)
+		sslservicegroup.Sesstimeout = d.Get("sesstimeout").(int)
+		hasChange = true
+	}
+	if d.HasChange("snienable") {
+		log.Printf("[DEBUG]  citrixadc-provider: Snienable has changed for sslservicegroup  %s, starting update", servicegroupname)
+		sslservicegroup.Snienable = d.Get("snienable").(string)
+		hasChange = true
+	}
+	if d.HasChange("ssl3") {
+		log.Printf("[DEBUG]  citrixadc-provider: Ssl3 has changed for sslservicegroup  %s, starting update", servicegroupname)
+		sslservicegroup.Ssl3 = d.Get("ssl3").(string)
+		hasChange = true
+	}
+	if d.HasChange("sslprofile") {
+		log.Printf("[DEBUG]  citrixadc-provider: Sslprofile has changed for sslservicegroup  %s, starting update", servicegroupname)
+		sslservicegroup.Sslprofile = d.Get("sslprofile").(string)
+		hasChange = true
+	}
+	if d.HasChange("strictsigdigestcheck") {
+		log.Printf("[DEBUG]  citrixadc-provider: Strictsigdigestcheck has changed for sslservicegroup  %s, starting update", servicegroupname)
+		sslservicegroup.Strictsigdigestcheck = d.Get("strictsigdigestcheck").(string)
+		hasChange = true
+	}
+	if d.HasChange("tls1") {
+		log.Printf("[DEBUG]  citrixadc-provider: Tls1 has changed for sslservicegroup  %s, starting update", servicegroupname)
+		sslservicegroup.Tls1 = d.Get("tls1").(string)
+		hasChange = true
+	}
+	if d.HasChange("tls11") {
+		log.Printf("[DEBUG]  citrixadc-provider: Tls11 has changed for sslservicegroup  %s, starting update", servicegroupname)
+		sslservicegroup.Tls11 = d.Get("tls11").(string)
+		hasChange = true
+	}
+	if d.HasChange("tls12") {
+		log.Printf("[DEBUG]  citrixadc-provider: Tls12 has changed for sslservicegroup  %s, starting update", servicegroupname)
+		sslservicegroup.Tls12 = d.Get("tls12").(string)
+		hasChange = true
+	}
+	if d.HasChange("tls13") {
+		log.Printf("[DEBUG]  citrixadc-provider: Tls13 has changed for sslservicegroup  %s, starting update", servicegroupname)
+		sslservicegroup.Tls13 = d.Get("tls13").(string)
+		hasChange = true
+	}
+
+	if hasChange {
+		_, err := client.UpdateResource(service.Sslservicegroup.Type(), servicegroupname, &sslservicegroup)
+		if err != nil {
+			return fmt.Errorf("Error updating sslservicegroup %s", servicegroupname)
+		}
+	}
+	return readSslservicegroupFunc(d, meta)
+}
+
+func deleteSslservicegroupFunc(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[DEBUG]  citrixadc-provider: In deleteSslservicegroupFunc")
+	// sslservicegroup does not have DELETE operation, but this function is required to set the ID to ""
+	d.SetId("")
+	return nil
+}

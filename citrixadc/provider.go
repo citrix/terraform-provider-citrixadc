@@ -249,6 +249,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_policyhttpcallout":                                  resourceCitrixAdcPolicyhttpcallout(),
 		"citrixadc_policymap":                                          resourceCitrixAdcPolicymap(),
 		"citrixadc_policyparam":                                        resourceCitrixAdcPolicyparam(),
+		"citrixadc_sslservicegroup":                                    resourceCitrixAdcSslservicegroup(),
 	}
 }
 
