@@ -253,6 +253,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_rewriteparam":                                       resourceCitrixAdcRewriteparam(),
 		"citrixadc_rewritepolicylabel_rewritepolicy_binding":           resourceCitrixAdcRewritepolicylabel_rewritepolicy_binding(),
 		"citrixadc_sslservicegroup_ecccurve_binding":                   resourceCitrixAdcSslservicegroup_ecccurve_binding(),
+		"citrixadc_sslvserver_ecccurve_binding":                        resourceCitrixAdcSslvserver_ecccurve_binding(),
 	}
 }
 
