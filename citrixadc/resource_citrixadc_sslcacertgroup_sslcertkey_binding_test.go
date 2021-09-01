@@ -39,7 +39,6 @@ func doSslcacertgroup_sslcertkey_bindingPreChecks(t *testing.T) {
 		t.Fatalf("Failed to instantiate client. %v\n", err)
 	}
 
-	//c := testAccProvider.Meta().(*NetScalerNitroClient)
 	for _, filename := range uploads {
 		err := uploadTestdataFile(c, t, filename, "/var/tmp")
 		if err != nil {
