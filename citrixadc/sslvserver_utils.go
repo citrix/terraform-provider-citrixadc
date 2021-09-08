@@ -84,6 +84,11 @@ func setCiphersuiteData(d *schema.ResourceData, meta interface{}, vserverName st
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] In setCiphersuiteData")
 
+	if _, ok := d.GetOk("ciphersuites"); !ok {
+		log.Printf("ciphersuites not defined. Skipping reading from remote state.")
+		return nil
+	}
+
 	ciphersuiteBindings, err := client.FindResourceArray(service.Sslvserver_sslciphersuite_binding.Type(), vserverName)
 	if err != nil && len(ciphersuiteBindings) != 0 {
 		log.Printf("Error retrieving ciphersuite resource array")
