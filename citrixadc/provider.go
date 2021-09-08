@@ -219,6 +219,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_lbvserver_cachepolicy_binding":                      resourceCitrixAdcLbvserver_cachepolicy_binding(),
 		"citrixadc_lbroute":                                            resourceCitrixAdcLbroute(),
 		"citrixadc_lbgroup":                                            resourceCitrixAdcLbgroup(),
+		"citrixadc_lbgroup_lbvserver_binding":                          resourceCitrixAdcLbgroup_lbvserver_binding(),
 	}
 }
 
