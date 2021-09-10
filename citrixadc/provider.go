@@ -240,6 +240,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_csvserver_cachepolicy_binding":                      resourceCitrixAdcCsvserver_cachepolicy_binding(),
 		"citrixadc_csvserver_contentinspectionpolicy_binding":          resourceCitrixAdcCsvserver_contentinspectionpolicy_binding(),
 		"citrixadc_csvserver_feopolicy_binding":                        resourceCitrixAdcCsvserver_feopolicy_binding(),
+		"citrixadc_csvserver_gslbvserver_binding":                      resourceCitrixAdcCsvserver_gslbvserver_binding(),
 	}
 }
 
