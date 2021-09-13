@@ -248,6 +248,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_csvserver_vpnvserver_binding":                       resourceCitrixAdcCsvserver_vpnvserver_binding(),
 		"citrixadc_policyhttpcallout":                                  resourceCitrixAdcPolicyhttpcallout(),
 		"citrixadc_policymap":                                          resourceCitrixAdcPolicymap(),
+		"citrixadc_policyparam":                                        resourceCitrixAdcPolicyparam(),
 	}
 }
 
