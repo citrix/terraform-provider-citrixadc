@@ -1,3 +1,36 @@
+## 1.6.0 (September 14, 2021)
+
+FEATURES
+
+* **New Resource** `botpolicy`
+* **New Resource** `botpolicylabel`
+* **New Resource** `botprofile`
+* **New Resource** `botsettings`
+* **New Resource** `lbgroup`
+* **New Resource** `lbgroup_lbvserver_binding`
+* **New Resource** `lbmetrictable`
+* **New Resource** `lbmonitor_metric_binding`
+* **New Resource** `lbmonitor_sslcertkey_binding`
+* **New Resource** `lbprofile`
+* **New Resource** `lbroute`
+* **New Resource** `lbroute6`
+* **New Resource** `lbsipparameters`
+* **New Resource** `lbvserver_analyticsprofile_binding`
+* **New Resource** `lbvserver_appflowpolicy_binding`
+* **New Resource** `lbvserver_appqoepolicy_binding`
+* **New Resource** `lbvserver_auditsyslogpolicy_binding`
+* **New Resource** `lbvserver_authorizationpolicy_binding`
+* **New Resource** `lbvserver_botpolicy_binding`
+* **New Resource** `lbvserver_cachepolicy_binding`
+* **New Resource** `lbvserver_contentinspectionpolicy_binding`
+* **New Resource** `lbvserver_dnspolicy64_binding`
+* **New Resource** `lbvserver_feopolicy_binding`
+* **New Resource** `lbvserver_spilloverpolicy_binding`
+* **New Resource** `lbvserver_tmtrafficpolicy_binding`
+* **New Resource** `lbvserver_videooptimizationdetectionpolicy_binding`
+* **New Resource** `lbvserver_videooptimizationpacingpolicy_binding`
+* **New Resource** `sslcacertgroup`
+
 ## 1.5.0 (July 16, 2021)
 
 ENHANCEMENTS
