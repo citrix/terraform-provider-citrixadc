@@ -26,10 +26,21 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+// Need the following cli commands since no resource yet exists
+// add lb metricTable tab1
+// bind metrictable tab1 metric1 1.3.6.1.4.1.5951.4.1.1.8.0
+
 const testAccLbmonitor_metric_binding_basic = `
+
+resource "citrixadc_lbmonitor" "tfmonitor1" {
+  monitorname = "tf-monitor1"
+  type        = "LOAD"
+  metrictable = "tab1"
+}
+
 resource citrixadc_lbmonitor_metric_binding tf_acclbmonitor_metric_binding {
-	monitorname = "mload2"
-	metric = "metric2"
+	monitorname = citrixadc_lbmonitor.tfmonitor1.monitorname
+	metric = "metric1"
 	metricthreshold = 100
    } 
 `
@@ -47,8 +58,8 @@ func TestAccLbmonitor_metric_binding_basic(t *testing.T) {
 				Config: testAccLbmonitor_metric_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLbmonitor_metric_bindingExist("citrixadc_lbmonitor_metric_binding.tf_acclbmonitor_metric_binding", nil),
-					resource.TestCheckResourceAttr("citrixadc_lbmonitor_metric_binding.tf_acclbmonitor_metric_binding", "monitorname", "mload2"),
-					resource.TestCheckResourceAttr("citrixadc_lbmonitor_metric_binding.tf_acclbmonitor_metric_binding", "metric", "metric2"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor_metric_binding.tf_acclbmonitor_metric_binding", "monitorname", "tf-monitor1"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor_metric_binding.tf_acclbmonitor_metric_binding", "metric", "metric1"),
 					resource.TestCheckResourceAttr("citrixadc_lbmonitor_metric_binding.tf_acclbmonitor_metric_binding", "metricthreshold", "100"),
 				),
 			},
