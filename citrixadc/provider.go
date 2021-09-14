@@ -80,6 +80,7 @@ func providerResources() map[string]*schema.Resource {
 	return map[string]*schema.Resource{
 		"citrixadc_lbmetrictable":                                      resourceCitrixAdcLbmetrictable(),
 		"citrixadc_lbroute6":                                           resourceCitrixAdcLbroute6(),
+		"citrixadc_sslpolicylabel":                                     resourceCitrixAdcSslpolicylabel(),
 		"citrixadc_lbvserver_botpolicy_binding":                        resourceCitrixAdcLbvserver_botpolicy_binding(),
 		"citrixadc_lbvserver_auditsyslogpolicy_binding":                resourceCitrixAdcLbvserver_auditsyslogpolicy_binding(),
 		"citrixadc_sslcacertgroup":                                     resourceCitrixAdcSslcacertgroup(),
