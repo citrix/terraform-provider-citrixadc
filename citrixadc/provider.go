@@ -225,6 +225,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_ssldtlsprofile":                                     resourceCitrixAdcSsldtlsprofile(),
 		"citrixadc_sslocspresponder":                                   resourceCitrixAdcSslocspresponder(),
 		"citrixadc_csparameter":                                        resourceCitrixAdcCsparameter(),
+		"citrixadc_cspolicylabel":                                      resourceCitrixAdcCspolicylabel(),
 	}
 }
 
