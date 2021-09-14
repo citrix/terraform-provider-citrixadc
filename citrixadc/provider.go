@@ -238,6 +238,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_csvserver_auditnslogpolicy_binding":                 resourceCitrixAdcCsvserver_auditnslogpolicy_binding(),
 		"citrixadc_csvserver_authorizationpolicy_binding":              resourceCitrixAdcCsvserver_authorizationpolicy_binding(),
 		"citrixadc_csvserver_cachepolicy_binding":                      resourceCitrixAdcCsvserver_cachepolicy_binding(),
+		"citrixadc_csvserver_contentinspectionpolicy_binding":          resourceCitrixAdcCsvserver_contentinspectionpolicy_binding(),
 	}
 }
 
