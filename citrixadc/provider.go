@@ -251,6 +251,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_policyparam":                                        resourceCitrixAdcPolicyparam(),
 		"citrixadc_sslservicegroup":                                    resourceCitrixAdcSslservicegroup(),
 		"citrixadc_rewriteparam":                                       resourceCitrixAdcRewriteparam(),
+		"citrixadc_rewritepolicylabel_rewritepolicy_binding":           resourceCitrixAdcRewritepolicylabel_rewritepolicy_binding(),
 	}
 }
 
