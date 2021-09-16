@@ -20,8 +20,8 @@ import (
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"testing"
 	"strings"
+	"testing"
 )
 
 const testAccCsvserver_cachepolicy_binding_basic = `
