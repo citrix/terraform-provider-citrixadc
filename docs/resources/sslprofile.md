@@ -87,7 +87,7 @@ resource "citrixadc_sslprofile" "tf_sslprofile" {
 * `ciphername` - (Optional) The cipher group/alias/individual cipher configuration.
 * `cipherpriority` - (Optional) cipher priority.
 * `strictsigdigestcheck` - (Optional) Parameter indicating to check whether peer entity certificate during TLS1.2 handshake is signed with one of signature-hash combination supported by Citrix ADC. Possible values: [ ENABLED, DISABLED ]
-* `ecccurvebindings` - (Optional) A set of ECC curve names to be bound to this SSL profile.
+* `ecccurvebindings` - (Required) A set of ECC curve names to be bound to this SSL profile.
 * `cipherbindings` - (Optional) A set of ciphersuite bindings to be bound to this SSL profile. Documented below.
 
 A cipherbindings block supports the following:
