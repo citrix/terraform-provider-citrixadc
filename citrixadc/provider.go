@@ -256,6 +256,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_sslservicegroup_ecccurve_binding":                   resourceCitrixAdcSslservicegroup_ecccurve_binding(),
 		"citrixadc_sslvserver_ecccurve_binding":                        resourceCitrixAdcSslvserver_ecccurve_binding(),
 		"citrixadc_responderpolicylabel_responderpolicy_binding":       resourceCitrixAdcResponderpolicylabel_responderpolicy_binding(),
+		"citrixadc_responderparam":                                     resourceCitrixAdcResponderparam(),
 	}
 }
 
