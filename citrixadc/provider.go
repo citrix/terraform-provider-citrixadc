@@ -260,6 +260,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_responderparam":                                     resourceCitrixAdcResponderparam(),
 		"citrixadc_vpneula":                                            resourceCitrixAdcVpneula(),
 		"citrixadc_vpnclientlessaccesspolicy":                          resourceCitrixAdcVpnclientlessaccesspolicy(),
+		"citrixadc_vpnalwaysonprofile":                                 resourceCitrixAdcVpnalwaysonprofile(),
 	}
 }
 
