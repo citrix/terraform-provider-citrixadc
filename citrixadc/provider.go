@@ -79,6 +79,7 @@ func providerSchema() map[string]*schema.Schema {
 func providerResources() map[string]*schema.Resource {
 	return map[string]*schema.Resource{
 		"citrixadc_lbmetrictable":                                      resourceCitrixAdcLbmetrictable(),
+		"citrixadc_sslservice_sslcertkey_binding":                      resourceCitrixAdcSslservice_sslcertkey_binding(),
 		"citrixadc_sslservice_sslciphersuite_binding":                  resourceCitrixAdcSslservice_sslciphersuite_binding(),
 		"citrixadc_sslservice_ecccurve_binding":                        resourceCitrixAdcSslservice_ecccurve_binding(),
 		"citrixadc_sslservice":                                         resourceCitrixAdcSslservice(),
