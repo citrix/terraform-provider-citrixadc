@@ -83,6 +83,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_sslservice_sslciphersuite_binding":                  resourceCitrixAdcSslservice_sslciphersuite_binding(),
 		"citrixadc_sslservice_ecccurve_binding":                        resourceCitrixAdcSslservice_ecccurve_binding(),
 		"citrixadc_sslservice":                                         resourceCitrixAdcSslservice(),
+		"citrixadc_sslfipskey":                                         resourceCitrixAdcSslfipskey(),
 		"citrixadc_sslcacertgroup_sslcertkey_binding":                  resourceCitrixAdcSslcacertgroup_sslcertkey_binding(),
 		"citrixadc_lbroute6":                                           resourceCitrixAdcLbroute6(),
 		"citrixadc_sslpolicylabel":                                     resourceCitrixAdcSslpolicylabel(),
