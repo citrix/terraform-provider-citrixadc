@@ -267,6 +267,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_rewriteglobal_rewritepolicy_binding":                resourceCitrixAdcRewriteglobal_rewritepolicy_binding(),
 		"citrixadc_vpnformssoaction":                                   resourceCitrixAdcVpnformssoaction(),
 		"citrixadc_vpnglobal_appcontroller_binding":                    resourceCitrixAdcVpnglobal_appcontroller_binding(),
+		"citrixadc_vpnclientlessaccessprofile":                         resourceCitrixAdcVpnclientlessaccessprofile(),
 	}
 }
 
