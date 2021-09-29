@@ -28,12 +28,18 @@ const testAccNshttpprofile_add = `
 	resource "citrixadc_nshttpprofile" "foo" {
 		name  = "tf_httpprofile"
 		http2 = "ENABLED"
+        markrfc7230noncompliantinval = "ENABLED"
+        markhttpheaderextrawserror = "ENABLED"
+        dropinvalreqs = "ENABLED"
 	}  
 `
 const testAccNshttpprofile_update = `
 	resource "citrixadc_nshttpprofile" "foo" {
 		name  = "tf_httpprofile"
 		http2 = "DISABLED"
+        markrfc7230noncompliantinval = "DISABLED"
+        markhttpheaderextrawserror = "DISABLED"
+        dropinvalreqs = "DISABLED"
 	}  
 `
 
@@ -52,6 +58,9 @@ func TestAccNshttpprofile_basic(t *testing.T) {
 					testAccCheckNshttpprofileExist("citrixadc_nshttpprofile.foo", nil),
 					resource.TestCheckResourceAttr("citrixadc_nshttpprofile.foo", "name", "tf_httpprofile"),
 					resource.TestCheckResourceAttr("citrixadc_nshttpprofile.foo", "http2", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nshttpprofile.foo", "markrfc7230noncompliantinval", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nshttpprofile.foo", "markhttpheaderextrawserror", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nshttpprofile.foo", "dropinvalreqs", "ENABLED"),
 				),
 			},
 			resource.TestStep{
@@ -60,6 +69,9 @@ func TestAccNshttpprofile_basic(t *testing.T) {
 					testAccCheckNshttpprofileExist("citrixadc_nshttpprofile.foo", nil),
 					resource.TestCheckResourceAttr("citrixadc_nshttpprofile.foo", "name", "tf_httpprofile"),
 					resource.TestCheckResourceAttr("citrixadc_nshttpprofile.foo", "http2", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nshttpprofile.foo", "markrfc7230noncompliantinval", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nshttpprofile.foo", "markhttpheaderextrawserror", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nshttpprofile.foo", "dropinvalreqs", "DISABLED"),
 				),
 			},
 		},
