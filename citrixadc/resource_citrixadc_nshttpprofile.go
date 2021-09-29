@@ -21,17 +21,17 @@ func resourceCitrixAdcNshttpprofile() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
 			"adpttimeout": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
 			"altsvc": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"altsvcvalue": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -71,7 +71,27 @@ func resourceCitrixAdcNshttpprofile() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"grpcholdlimit": &schema.Schema{
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"grpcholdtimeout": &schema.Schema{
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"grpclengthdelimitation": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"http2": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"http2altsvcframe": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -86,12 +106,22 @@ func resourceCitrixAdcNshttpprofile() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"http2initialconnwindowsize": &schema.Schema{
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
 			"http2initialwindowsize": &schema.Schema{
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
 			"http2maxconcurrentstreams": &schema.Schema{
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"http2maxemptyframespermin": &schema.Schema{
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -106,6 +136,21 @@ func resourceCitrixAdcNshttpprofile() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"http2maxpingframespermin": &schema.Schema{
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"http2maxresetframespermin": &schema.Schema{
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"http2maxsettingsframespermin": &schema.Schema{
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
 			"http2minseverconn": &schema.Schema{
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -113,6 +158,26 @@ func resourceCitrixAdcNshttpprofile() *schema.Resource {
 			},
 			"http2strictcipher": &schema.Schema{
 				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"http3": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"http3maxheaderblockedstreams": &schema.Schema{
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"http3maxheaderfieldsectionsize": &schema.Schema{
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"http3maxheadertablesize": &schema.Schema{
+				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
@@ -127,6 +192,16 @@ func resourceCitrixAdcNshttpprofile() *schema.Resource {
 				Computed: true,
 			},
 			"markhttp09inval": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"markhttpheaderextrawserror": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"markrfc7230noncompliantinval": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -155,6 +230,11 @@ func resourceCitrixAdcNshttpprofile() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
+			},
+			"name": &schema.Schema{
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 			"persistentetag": &schema.Schema{
 				Type:     schema.TypeString,
@@ -206,41 +286,57 @@ func createNshttpprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	nshttpprofileName := d.Get("name").(string)
 
 	nshttpprofile := ns.Nshttpprofile{
-		Name:                      nshttpprofileName,
-		Adpttimeout:               d.Get("adpttimeout").(string),
-		Altsvc:                    d.Get("altsvc").(string),
-		Apdexcltresptimethreshold: d.Get("apdexcltresptimethreshold").(int),
-		Clientiphdrexpr:           d.Get("clientiphdrexpr").(string),
-		Cmponpush:                 d.Get("cmponpush").(string),
-		Conmultiplex:              d.Get("conmultiplex").(string),
-		Dropextracrlf:             d.Get("dropextracrlf").(string),
-		Dropextradata:             d.Get("dropextradata").(string),
-		Dropinvalreqs:             d.Get("dropinvalreqs").(string),
-		Http2:                     d.Get("http2").(string),
-		Http2direct:               d.Get("http2direct").(string),
-		Http2headertablesize:      d.Get("http2headertablesize").(int),
-		Http2initialwindowsize:    d.Get("http2initialwindowsize").(int),
-		Http2maxconcurrentstreams: d.Get("http2maxconcurrentstreams").(int),
-		Http2maxframesize:         d.Get("http2maxframesize").(int),
-		Http2maxheaderlistsize:    d.Get("http2maxheaderlistsize").(int),
-		Http2minseverconn:         d.Get("http2minseverconn").(int),
-		Http2strictcipher:         d.Get("http2strictcipher").(string),
-		Incomphdrdelay:            d.Get("incomphdrdelay").(int),
-		Markconnreqinval:          d.Get("markconnreqinval").(string),
-		Markhttp09inval:           d.Get("markhttp09inval").(string),
-		Marktracereqinval:         d.Get("marktracereqinval").(string),
-		Maxheaderlen:              d.Get("maxheaderlen").(int),
-		Maxreq:                    d.Get("maxreq").(int),
-		Maxreusepool:              d.Get("maxreusepool").(int),
-		Minreusepool:              d.Get("minreusepool").(int),
-		Persistentetag:            d.Get("persistentetag").(string),
-		Reqtimeout:                d.Get("reqtimeout").(int),
-		Reqtimeoutaction:          d.Get("reqtimeoutaction").(string),
-		Reusepooltimeout:          d.Get("reusepooltimeout").(int),
-		Rtsptunnel:                d.Get("rtsptunnel").(string),
-		Spdy:                      d.Get("spdy").(string),
-		Weblog:                    d.Get("weblog").(string),
-		Websocket:                 d.Get("websocket").(string),
+		Adpttimeout:                    d.Get("adpttimeout").(string),
+		Altsvc:                         d.Get("altsvc").(string),
+		Altsvcvalue:                    d.Get("altsvcvalue").(string),
+		Apdexcltresptimethreshold:      d.Get("apdexcltresptimethreshold").(int),
+		Clientiphdrexpr:                d.Get("clientiphdrexpr").(string),
+		Cmponpush:                      d.Get("cmponpush").(string),
+		Conmultiplex:                   d.Get("conmultiplex").(string),
+		Dropextracrlf:                  d.Get("dropextracrlf").(string),
+		Dropextradata:                  d.Get("dropextradata").(string),
+		Dropinvalreqs:                  d.Get("dropinvalreqs").(string),
+		Grpcholdlimit:                  d.Get("grpcholdlimit").(int),
+		Grpcholdtimeout:                d.Get("grpcholdtimeout").(int),
+		Grpclengthdelimitation:         d.Get("grpclengthdelimitation").(string),
+		Http2:                          d.Get("http2").(string),
+		Http2altsvcframe:               d.Get("http2altsvcframe").(string),
+		Http2direct:                    d.Get("http2direct").(string),
+		Http2headertablesize:           d.Get("http2headertablesize").(int),
+		Http2initialconnwindowsize:     d.Get("http2initialconnwindowsize").(int),
+		Http2initialwindowsize:         d.Get("http2initialwindowsize").(int),
+		Http2maxconcurrentstreams:      d.Get("http2maxconcurrentstreams").(int),
+		Http2maxemptyframespermin:      d.Get("http2maxemptyframespermin").(int),
+		Http2maxframesize:              d.Get("http2maxframesize").(int),
+		Http2maxheaderlistsize:         d.Get("http2maxheaderlistsize").(int),
+		Http2maxpingframespermin:       d.Get("http2maxpingframespermin").(int),
+		Http2maxresetframespermin:      d.Get("http2maxresetframespermin").(int),
+		Http2maxsettingsframespermin:   d.Get("http2maxsettingsframespermin").(int),
+		Http2minseverconn:              d.Get("http2minseverconn").(int),
+		Http2strictcipher:              d.Get("http2strictcipher").(string),
+		Http3:                          d.Get("http3").(string),
+		Http3maxheaderblockedstreams:   d.Get("http3maxheaderblockedstreams").(int),
+		Http3maxheaderfieldsectionsize: d.Get("http3maxheaderfieldsectionsize").(int),
+		Http3maxheadertablesize:        d.Get("http3maxheadertablesize").(int),
+		Incomphdrdelay:                 d.Get("incomphdrdelay").(int),
+		Markconnreqinval:               d.Get("markconnreqinval").(string),
+		Markhttp09inval:                d.Get("markhttp09inval").(string),
+		Markhttpheaderextrawserror:     d.Get("markhttpheaderextrawserror").(string),
+		Markrfc7230noncompliantinval:   d.Get("markrfc7230noncompliantinval").(string),
+		Marktracereqinval:              d.Get("marktracereqinval").(string),
+		Maxheaderlen:                   d.Get("maxheaderlen").(int),
+		Maxreq:                         d.Get("maxreq").(int),
+		Maxreusepool:                   d.Get("maxreusepool").(int),
+		Minreusepool:                   d.Get("minreusepool").(int),
+		Name:                           d.Get("name").(string),
+		Persistentetag:                 d.Get("persistentetag").(string),
+		Reqtimeout:                     d.Get("reqtimeout").(int),
+		Reqtimeoutaction:               d.Get("reqtimeoutaction").(string),
+		Reusepooltimeout:               d.Get("reusepooltimeout").(int),
+		Rtsptunnel:                     d.Get("rtsptunnel").(string),
+		Spdy:                           d.Get("spdy").(string),
+		Weblog:                         d.Get("weblog").(string),
+		Websocket:                      d.Get("websocket").(string),
 	}
 
 	_, err := client.AddResource(service.Nshttpprofile.Type(), nshttpprofileName, &nshttpprofile)
@@ -272,6 +368,7 @@ func readNshttpprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", data["name"])
 	d.Set("adpttimeout", data["adpttimeout"])
 	d.Set("altsvc", data["altsvc"])
+	d.Set("altsvcvalue", data["altsvcvalue"])
 	d.Set("apdexcltresptimethreshold", data["apdexcltresptimethreshold"])
 	d.Set("clientiphdrexpr", data["clientiphdrexpr"])
 	d.Set("cmponpush", data["cmponpush"])
@@ -279,18 +376,33 @@ func readNshttpprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("dropextracrlf", data["dropextracrlf"])
 	d.Set("dropextradata", data["dropextradata"])
 	d.Set("dropinvalreqs", data["dropinvalreqs"])
+	d.Set("grpcholdlimit", data["grpcholdlimit"])
+	d.Set("grpcholdtimeout", data["grpcholdtimeout"])
+	d.Set("grpclengthdelimitation", data["grpclengthdelimitation"])
 	d.Set("http2", data["http2"])
+	d.Set("http2altsvcframe", data["http2altsvcframe"])
 	d.Set("http2direct", data["http2direct"])
 	d.Set("http2headertablesize", data["http2headertablesize"])
+	d.Set("http2initialconnwindowsize", data["http2initialconnwindowsize"])
 	d.Set("http2initialwindowsize", data["http2initialwindowsize"])
 	d.Set("http2maxconcurrentstreams", data["http2maxconcurrentstreams"])
+	d.Set("http2maxemptyframespermin", data["http2maxemptyframespermin"])
 	d.Set("http2maxframesize", data["http2maxframesize"])
 	d.Set("http2maxheaderlistsize", data["http2maxheaderlistsize"])
+	d.Set("http2maxpingframespermin", data["http2maxpingframespermin"])
+	d.Set("http2maxresetframespermin", data["http2maxresetframespermin"])
+	d.Set("http2maxsettingsframespermin", data["http2maxsettingsframespermin"])
 	d.Set("http2minseverconn", data["http2minseverconn"])
 	d.Set("http2strictcipher", data["http2strictcipher"])
+	d.Set("http3", data["http3"])
+	d.Set("http3maxheaderblockedstreams", data["http3maxheaderblockedstreams"])
+	d.Set("http3maxheaderfieldsectionsize", data["http3maxheaderfieldsectionsize"])
+	d.Set("http3maxheadertablesize", data["http3maxheadertablesize"])
 	d.Set("incomphdrdelay", data["incomphdrdelay"])
 	d.Set("markconnreqinval", data["markconnreqinval"])
 	d.Set("markhttp09inval", data["markhttp09inval"])
+	d.Set("markhttpheaderextrawserror", data["markhttpheaderextrawserror"])
+	d.Set("markrfc7230noncompliantinval", data["markrfc7230noncompliantinval"])
 	d.Set("marktracereqinval", data["marktracereqinval"])
 	d.Set("maxheaderlen", data["maxheaderlen"])
 	d.Set("maxreq", data["maxreq"])
@@ -329,6 +441,11 @@ func updateNshttpprofileFunc(d *schema.ResourceData, meta interface{}) error {
 		nshttpprofile.Altsvc = d.Get("altsvc").(string)
 		hasChange = true
 	}
+	if d.HasChange("altsvcvalue") {
+		log.Printf("[DEBUG]  citrixadc-provider: Altsvcvalue has changed for nshttpprofile %s, starting update", nshttpprofileName)
+		nshttpprofile.Altsvcvalue = d.Get("altsvcvalue").(string)
+		hasChange = true
+	}
 	if d.HasChange("apdexcltresptimethreshold") {
 		log.Printf("[DEBUG]  citrixadc-provider: Apdexcltresptimethreshold has changed for nshttpprofile %s, starting update", nshttpprofileName)
 		nshttpprofile.Apdexcltresptimethreshold = d.Get("apdexcltresptimethreshold").(int)
@@ -364,9 +481,29 @@ func updateNshttpprofileFunc(d *schema.ResourceData, meta interface{}) error {
 		nshttpprofile.Dropinvalreqs = d.Get("dropinvalreqs").(string)
 		hasChange = true
 	}
+	if d.HasChange("grpcholdlimit") {
+		log.Printf("[DEBUG]  citrixadc-provider: Grpcholdlimit has changed for nshttpprofile %s, starting update", nshttpprofileName)
+		nshttpprofile.Grpcholdlimit = d.Get("grpcholdlimit").(int)
+		hasChange = true
+	}
+	if d.HasChange("grpcholdtimeout") {
+		log.Printf("[DEBUG]  citrixadc-provider: Grpcholdtimeout has changed for nshttpprofile %s, starting update", nshttpprofileName)
+		nshttpprofile.Grpcholdtimeout = d.Get("grpcholdtimeout").(int)
+		hasChange = true
+	}
+	if d.HasChange("grpclengthdelimitation") {
+		log.Printf("[DEBUG]  citrixadc-provider: Grpclengthdelimitation has changed for nshttpprofile %s, starting update", nshttpprofileName)
+		nshttpprofile.Grpclengthdelimitation = d.Get("grpclengthdelimitation").(string)
+		hasChange = true
+	}
 	if d.HasChange("http2") {
 		log.Printf("[DEBUG]  citrixadc-provider: Http2 has changed for nshttpprofile %s, starting update", nshttpprofileName)
 		nshttpprofile.Http2 = d.Get("http2").(string)
+		hasChange = true
+	}
+	if d.HasChange("http2altsvcframe") {
+		log.Printf("[DEBUG]  citrixadc-provider: Http2altsvcframe has changed for nshttpprofile %s, starting update", nshttpprofileName)
+		nshttpprofile.Http2altsvcframe = d.Get("http2altsvcframe").(string)
 		hasChange = true
 	}
 	if d.HasChange("http2direct") {
@@ -379,6 +516,11 @@ func updateNshttpprofileFunc(d *schema.ResourceData, meta interface{}) error {
 		nshttpprofile.Http2headertablesize = d.Get("http2headertablesize").(int)
 		hasChange = true
 	}
+	if d.HasChange("http2initialconnwindowsize") {
+		log.Printf("[DEBUG]  citrixadc-provider: Http2initialconnwindowsize has changed for nshttpprofile %s, starting update", nshttpprofileName)
+		nshttpprofile.Http2initialconnwindowsize = d.Get("http2initialconnwindowsize").(int)
+		hasChange = true
+	}
 	if d.HasChange("http2initialwindowsize") {
 		log.Printf("[DEBUG]  citrixadc-provider: Http2initialwindowsize has changed for nshttpprofile %s, starting update", nshttpprofileName)
 		nshttpprofile.Http2initialwindowsize = d.Get("http2initialwindowsize").(int)
@@ -387,6 +529,11 @@ func updateNshttpprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("http2maxconcurrentstreams") {
 		log.Printf("[DEBUG]  citrixadc-provider: Http2maxconcurrentstreams has changed for nshttpprofile %s, starting update", nshttpprofileName)
 		nshttpprofile.Http2maxconcurrentstreams = d.Get("http2maxconcurrentstreams").(int)
+		hasChange = true
+	}
+	if d.HasChange("http2maxemptyframespermin") {
+		log.Printf("[DEBUG]  citrixadc-provider: Http2maxemptyframespermin has changed for nshttpprofile %s, starting update", nshttpprofileName)
+		nshttpprofile.Http2maxemptyframespermin = d.Get("http2maxemptyframespermin").(int)
 		hasChange = true
 	}
 	if d.HasChange("http2maxframesize") {
@@ -399,6 +546,21 @@ func updateNshttpprofileFunc(d *schema.ResourceData, meta interface{}) error {
 		nshttpprofile.Http2maxheaderlistsize = d.Get("http2maxheaderlistsize").(int)
 		hasChange = true
 	}
+	if d.HasChange("http2maxpingframespermin") {
+		log.Printf("[DEBUG]  citrixadc-provider: Http2maxpingframespermin has changed for nshttpprofile %s, starting update", nshttpprofileName)
+		nshttpprofile.Http2maxpingframespermin = d.Get("http2maxpingframespermin").(int)
+		hasChange = true
+	}
+	if d.HasChange("http2maxresetframespermin") {
+		log.Printf("[DEBUG]  citrixadc-provider: Http2maxresetframespermin has changed for nshttpprofile %s, starting update", nshttpprofileName)
+		nshttpprofile.Http2maxresetframespermin = d.Get("http2maxresetframespermin").(int)
+		hasChange = true
+	}
+	if d.HasChange("http2maxsettingsframespermin") {
+		log.Printf("[DEBUG]  citrixadc-provider: Http2maxsettingsframespermin has changed for nshttpprofile %s, starting update", nshttpprofileName)
+		nshttpprofile.Http2maxsettingsframespermin = d.Get("http2maxsettingsframespermin").(int)
+		hasChange = true
+	}
 	if d.HasChange("http2minseverconn") {
 		log.Printf("[DEBUG]  citrixadc-provider: Http2minseverconn has changed for nshttpprofile %s, starting update", nshttpprofileName)
 		nshttpprofile.Http2minseverconn = d.Get("http2minseverconn").(int)
@@ -407,6 +569,26 @@ func updateNshttpprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("http2strictcipher") {
 		log.Printf("[DEBUG]  citrixadc-provider: Http2strictcipher has changed for nshttpprofile %s, starting update", nshttpprofileName)
 		nshttpprofile.Http2strictcipher = d.Get("http2strictcipher").(string)
+		hasChange = true
+	}
+	if d.HasChange("http3") {
+		log.Printf("[DEBUG]  citrixadc-provider: Http3 has changed for nshttpprofile %s, starting update", nshttpprofileName)
+		nshttpprofile.Http3 = d.Get("http3").(string)
+		hasChange = true
+	}
+	if d.HasChange("http3maxheaderblockedstreams") {
+		log.Printf("[DEBUG]  citrixadc-provider: Http3maxheaderblockedstreams has changed for nshttpprofile %s, starting update", nshttpprofileName)
+		nshttpprofile.Http3maxheaderblockedstreams = d.Get("http3maxheaderblockedstreams").(int)
+		hasChange = true
+	}
+	if d.HasChange("http3maxheaderfieldsectionsize") {
+		log.Printf("[DEBUG]  citrixadc-provider: Http3maxheaderfieldsectionsize has changed for nshttpprofile %s, starting update", nshttpprofileName)
+		nshttpprofile.Http3maxheaderfieldsectionsize = d.Get("http3maxheaderfieldsectionsize").(int)
+		hasChange = true
+	}
+	if d.HasChange("http3maxheadertablesize") {
+		log.Printf("[DEBUG]  citrixadc-provider: Http3maxheadertablesize has changed for nshttpprofile %s, starting update", nshttpprofileName)
+		nshttpprofile.Http3maxheadertablesize = d.Get("http3maxheadertablesize").(int)
 		hasChange = true
 	}
 	if d.HasChange("incomphdrdelay") {
@@ -422,6 +604,16 @@ func updateNshttpprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("markhttp09inval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Markhttp09inval has changed for nshttpprofile %s, starting update", nshttpprofileName)
 		nshttpprofile.Markhttp09inval = d.Get("markhttp09inval").(string)
+		hasChange = true
+	}
+	if d.HasChange("markhttpheaderextrawserror") {
+		log.Printf("[DEBUG]  citrixadc-provider: Markhttpheaderextrawserror has changed for nshttpprofile %s, starting update", nshttpprofileName)
+		nshttpprofile.Markhttpheaderextrawserror = d.Get("markhttpheaderextrawserror").(string)
+		hasChange = true
+	}
+	if d.HasChange("markrfc7230noncompliantinval") {
+		log.Printf("[DEBUG]  citrixadc-provider: Markrfc7230noncompliantinval has changed for nshttpprofile %s, starting update", nshttpprofileName)
+		nshttpprofile.Markrfc7230noncompliantinval = d.Get("markrfc7230noncompliantinval").(string)
 		hasChange = true
 	}
 	if d.HasChange("marktracereqinval") {
