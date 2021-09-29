@@ -1,3 +1,59 @@
+## 1.7.0 (September 29, 2021)
+
+FEATURES
+
+* **New Resource** `csparameter`
+* **New Resource** `cspolicylabel`
+* **New Resource** `csvserver_analyticsprofile_binding`
+* **New Resource** `csvserver_appqoepolicy_binding`
+* **New Resource** `csvserver_auditnslogpolicy_binding`
+* **New Resource** `csvserver_auditsyslogpolicy_binding`
+* **New Resource** `csvserver_authorizationpolicy_binding`
+* **New Resource** `csvserver_botpolicy_binding`
+* **New Resource** `csvserver_cachepolicy_binding`
+* **New Resource** `csvserver_contentinspectionpolicy_binding`
+* **New Resource** `csvserver_feopolicy_binding`
+* **New Resource** `csvserver_gslbvserver_binding`
+* **New Resource** `csvserver_spilloverpolicy_binding`
+* **New Resource** `csvserver_tmtrafficpolicy_binding`
+* **New Resource** `csvserver_vpnvserver_binding`
+* **New Resource** `policyhttpcallout`
+* **New Resource** `policymap`
+* **New Resource** `policyparam`
+* **New Resource** `responderparam`
+* **New Resource** `responderpolicylabel_responderpolicy_binding`
+* **New Resource** `rewriteglobal_rewritepolicy_binding`
+* **New Resource** `rewriteparam`
+* **New Resource** `rewritepolicylabel_rewritepolicy_binding`
+* **New Resource** `sslcacertgroup_sslcertkey_binding`
+* **New Resource** `ssldtlsprofile`
+* **New Resource** `sslfipskey`
+* **New Resource** `ssllogprofile`
+* **New Resource** `sslocspresponder`
+* **New Resource** `sslpolicylabel`
+* **New Resource** `sslpolicylabel_sslpolicy_binding`
+* **New Resource** `sslprofile_sslcertkey_binding`
+* **New Resource** `sslservice`
+* **New Resource** `sslservice_ecccurve_binding`
+* **New Resource** `sslservice_sslcertkey_binding`
+* **New Resource** `sslservice_sslciphersuite_binding`
+* **New Resource** `sslservicegroup`
+* **New Resource** `sslservicegroup_ecccurve_binding`
+* **New Resource** `sslservicegroup_sslcertkey_binding`
+* **New Resource** `sslvserver`
+* **New Resource** `sslvserver_ecccurve_binding`
+* **New Resource** `sslvserver_sslciphersuite_binding`
+* **New Resource** `vpnalwaysonprofile`
+* **New Resource** `vpnclientlessaccesspolicy`
+* **New Resource** `vpnclientlessaccessprofile`
+* **New Resource** `vpneula`
+* **New Resource** `vpnformssoaction`
+* **New Resource** `vpnglobal_appcontroller_binding`
+
+ENHANCEMENTS
+
+* Update nshttpprofile resource to include latest options
+
 ## 1.6.0 (September 14, 2021)
 
 FEATURES
