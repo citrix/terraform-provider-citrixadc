@@ -240,6 +240,74 @@ func TestAccServicegroup_servicegroupmember_binding_server_with_port(t *testing.
 	})
 }
 
+const testAccServicegroup_servicegroupmember_binding_mixed_bindings_step1 = `
+resource "citrixadc_server" "tf_server" {
+    name = "tf_server"
+    domain = "example.com"
+    querytype = "SRV"
+}
+
+resource "citrixadc_servicegroup" "tf_servicegroup" {
+  servicegroupname = "tf_servicegroup"
+  servicetype      = "HTTP"
+  autoscale = "DNS"
+}
+
+resource "citrixadc_servicegroup_servicegroupmember_binding" "tf_binding" {
+    servicegroupname = citrixadc_servicegroup.tf_servicegroup.servicegroupname
+    servername = citrixadc_server.tf_server.name
+}
+
+resource "citrixadc_servicegroup_servicegroupmember_binding" "tf_binding2" {
+    servicegroupname = citrixadc_servicegroup.tf_servicegroup.servicegroupname
+    ip = "10.78.22.33"
+    port = 80
+}
+`
+const testAccServicegroup_servicegroupmember_binding_mixed_bindings_step2 = `
+resource "citrixadc_server" "tf_server" {
+    name = "tf_server"
+    domain = "example.com"
+    querytype = "SRV"
+}
+
+resource "citrixadc_servicegroup" "tf_servicegroup" {
+  servicegroupname = "tf_servicegroup"
+  servicetype      = "HTTP"
+  autoscale = "DNS"
+}
+
+`
+
+func TestAccServicegroup_servicegroupmember_binding_mixed_bindings(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServicegroup_servicegroupmember_bindingDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccServicegroup_servicegroupmember_binding_mixed_bindings_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServicegroup_servicegroupmember_bindingExist("citrixadc_servicegroup_servicegroupmember_binding.tf_binding", nil),
+					testAccCheckServicegroup_servicegroupmember_bindingExist("citrixadc_servicegroup_servicegroupmember_binding.tf_binding2", nil),
+					testAccCheckServicegroup_servicegroupmember_binding_not_exists("tf_servicegroup,tf_server", true),
+					testAccCheckServicegroup_servicegroupmember_binding_not_exists("tf_servicegroup,10.78.22.33,80", true),
+				),
+			},
+			resource.TestStep{
+				Config: testAccServicegroup_servicegroupmember_binding_mixed_bindings_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServicegroup_servicegroupmember_binding_not_exists("tf_servicegroup,tf_server", false),
+					testAccCheckServicegroup_servicegroupmember_binding_not_exists("tf_servicegroup,10.78.22.33,80", false),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckServicegroup_servicegroupmember_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
