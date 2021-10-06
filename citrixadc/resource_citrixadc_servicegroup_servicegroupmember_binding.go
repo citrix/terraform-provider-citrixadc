@@ -191,7 +191,7 @@ func readServicegroup_servicegroupmember_bindingFunc(d *schema.ResourceData, met
 	// Iterate through results to find the one with the right policy name
 	foundIndex := -1
 	for i, v := range dataArr {
-		if port != 0 {
+		if port != 0 && v["port"] != nil {
 			portEqual := int(v["port"].(float64)) == port
 			servernameEqual := v["servername"] == servername
 			if servernameEqual && portEqual {
