@@ -18,6 +18,9 @@ func resourceCitrixAdcServicegroup_servicegroupmember_binding() *schema.Resource
 		Create:        createServicegroup_servicegroupmember_bindingFunc,
 		Read:          readServicegroup_servicegroupmember_bindingFunc,
 		Delete:        deleteServicegroup_servicegroupmember_bindingFunc,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"customserverid": &schema.Schema{
 				Type:     schema.TypeString,
