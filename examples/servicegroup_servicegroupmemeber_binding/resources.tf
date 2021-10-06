@@ -4,6 +4,11 @@ resource "citrixadc_server" "tf_server" {
     querytype = "SRV"
 }
 
+resource "citrixadc_server" "tf_server2" {
+    name = "tf_server2"
+    ipaddress = "10.22.33.44"
+}
+
 resource "citrixadc_servicegroup" "tf_servicegroup" {
   servicegroupname = "tf_servicegroup"
   servicetype      = "HTTP"
@@ -18,5 +23,11 @@ resource "citrixadc_servicegroup_servicegroupmember_binding" "tf_binding" {
 resource "citrixadc_servicegroup_servicegroupmember_binding" "tf_binding2" {
     servicegroupname = citrixadc_servicegroup.tf_servicegroup.servicegroupname
     ip = "10.78.22.33"
+    port = 80
+}
+
+resource "citrixadc_servicegroup_servicegroupmember_binding" "tf_binding3" {
+    servicegroupname = citrixadc_servicegroup.tf_servicegroup.servicegroupname
+    servername = citrixadc_server.tf_server2.name
     port = 80
 }

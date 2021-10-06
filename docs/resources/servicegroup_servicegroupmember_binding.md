@@ -44,3 +44,22 @@ resource "citrixadc_servicegroup_servicegroupmember_binding" "tf_binding" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the servicegroup\_servicegroupmember\_binding. It is the concatenation of three components separated by comma. First component is the `servicegroupname`. Second component is the `ip` or the `servername` attribute. Last optional component is the `port` attribute.
+
+## Import
+
+A servicegroup\_servicegroupmember\_binding can be imported using its id.
+
+The id is either a 3-tuple consisting of the servicegroup name, the ip address or server name and the port separated by comma.
+
+In case of a server that port is not applicable for the binding, the id is a 2-tuple consisting of the servicegroup name and the server name separated by comma.
+
+```shell
+# 3 tuple with ip address
+terraform import citrixadc_servicegroup_servicegroupmember_binding.tf_binding tf_servicegroup,10.78.22.33,80
+
+# 3 tuple with server name
+terraform import citrixadc_servicegroup_servicegroupmember_binding.tf_binding tf_servicegroup,servername,80
+
+# 2 tuple
+terraform import citrixadc_servicegroup_servicegroupmember_binding.tf_binding tf_servicegroup,servername_no_port
+```

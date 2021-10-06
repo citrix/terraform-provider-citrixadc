@@ -18,6 +18,9 @@ func resourceCitrixAdcServicegroup_servicegroupmember_binding() *schema.Resource
 		Create:        createServicegroup_servicegroupmember_bindingFunc,
 		Read:          readServicegroup_servicegroupmember_bindingFunc,
 		Delete:        deleteServicegroup_servicegroupmember_bindingFunc,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"customserverid": &schema.Schema{
 				Type:     schema.TypeString,
@@ -191,7 +194,7 @@ func readServicegroup_servicegroupmember_bindingFunc(d *schema.ResourceData, met
 	// Iterate through results to find the one with the right policy name
 	foundIndex := -1
 	for i, v := range dataArr {
-		if port != 0 {
+		if port != 0 && v["port"] != nil {
 			portEqual := int(v["port"].(float64)) == port
 			servernameEqual := v["servername"] == servername
 			if servernameEqual && portEqual {
