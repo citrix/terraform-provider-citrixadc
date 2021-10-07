@@ -80,6 +80,8 @@ github.com/citrix/adc-nitro-go v0.0.0-20211006101952-f6f231c44527 h1:lSbB2zBLe8l
 github.com/citrix/adc-nitro-go v0.0.0-20211006101952-f6f231c44527/go.mod h1:DL1n+MgO15981ahrt+CsQVv43yyUrTdigPq3dIxydD8=
 github.com/citrix/adc-nitro-go v0.0.0-20211006111023-08dc0c591961 h1:8CG8THiols8U21bqNO8fMwUXFi956MYXc+J25Gq3J6E=
 github.com/citrix/adc-nitro-go v0.0.0-20211006111023-08dc0c591961/go.mod h1:DL1n+MgO15981ahrt+CsQVv43yyUrTdigPq3dIxydD8=
+github.com/citrix/adc-nitro-go v0.0.0-20211007121022-6a764018d8e2 h1:7WPVhlHKNBfPUeIeLGiqy4O/qVcUO1cqXuR8T7RAO/g=
+github.com/citrix/adc-nitro-go v0.0.0-20211007121022-6a764018d8e2/go.mod h1:DL1n+MgO15981ahrt+CsQVv43yyUrTdigPq3dIxydD8=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
 github.com/coreos/bbolt v1.3.0/go.mod h1:iRUV2dpdMOn7Bo10OQBFzIJO9kkE559Wcmn+qkEiiKk=
 github.com/coreos/etcd v3.3.10+incompatible/go.mod h1:uF7uidLiAD3TWHmW31ZFd/JWoc32PjwdhPthX9715RE=

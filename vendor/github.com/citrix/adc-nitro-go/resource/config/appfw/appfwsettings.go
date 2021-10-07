@@ -40,7 +40,7 @@ type Appfwsettings struct {
 	/**
 	* Maximum amount of time (in seconds) that the application firewall allows a user session to remain active, regardless of user activity. After this time, the user session is terminated. Before continuing to use the protected web site, the user must establish a new session by opening a designated start URL.
 	*/
-	Sessionlifetime int `json:"sessionlifetime,omitempty"`
+	Sessionlifetime int `json:"sessionlifetime"` // Zero is a valid value
 	/**
 	* Name of the session cookie that the application firewall uses to track user sessions. 
 		Must begin with a letter or number, and can consist of from 1 to 31 letters, numbers, and the hyphen (-) and underscore (_) symbols.
@@ -91,7 +91,7 @@ type Appfwsettings struct {
 	/**
 	* Maximum number of sessions that the application firewall allows to be active, regardless of user activity. After the max_limit reaches, No more user session will be created .
 	*/
-	Sessionlimit int `json:"sessionlimit,omitempty"`
+	Sessionlimit int `json:"sessionlimit"` // Zero is a valid value
 	/**
 	*  flag to define action on malformed requests that application firewall cannot parse
 	*/
