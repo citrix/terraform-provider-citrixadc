@@ -844,7 +844,12 @@ func updateServiceFunc(d *schema.ResourceData, meta interface{}) error {
 		//First we unbind from lb monitor
 		oldLbmonitor, _ := d.GetChange("lbmonitor")
 		oldLbmonitorName := oldLbmonitor.(string)
-		if oldLbmonitorName != "" {
+
+		// Default monitors cannot be unbound
+		// Instead they are replaced when the new monitor is bound
+		oldMonitorIsDefault := oldLbmonitorName == "ping-default" || oldLbmonitorName == "tcp-default"
+
+		if oldLbmonitorName != "" && !oldMonitorIsDefault {
 			err := client.UnbindResource(service.Lbmonitor.Type(), oldLbmonitorName, service.Service.Type(), serviceName, "servicename")
 			if err != nil {
 				return fmt.Errorf("[ERROR] netscaler-provider: Error unbinding lbmonitor from service %s", oldLbmonitorName)
@@ -873,7 +878,12 @@ func updateServiceFunc(d *schema.ResourceData, meta interface{}) error {
 		}
 		log.Printf("[DEBUG] netscaler-provider: service has been updated  service %s ", serviceName)
 	}
-	if lbmonitorChanged && lbmonitorName != "" {
+
+	// Default monitors cannot be explicitely bound
+	// Instead they are bound upon the unbind of the last non default monitor from the service
+	newMonitorIsDefault := lbmonitorName == "ping-default" || lbmonitorName == "tcp-default"
+
+	if lbmonitorChanged && lbmonitorName != "" && !newMonitorIsDefault {
 		//Binding has to be updated
 		//rebind
 		binding := lb.Lbmonitorservicebinding{
