@@ -332,3 +332,84 @@ resource "citrixadc_service" "test_service" {
 	commonname = "test.com"
 }
 `
+
+func TestAccService_rebind_default_monitor(t *testing.T) {
+	if adcTestbed != "STANDALONE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServiceDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccService_rebind_default_monitor_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExist("citrixadc_service.test_service", nil),
+					resource.TestCheckResourceAttr("citrixadc_service.test_service", "lbmonitor", "tcp-default"),
+				),
+			},
+			resource.TestStep{
+				Config: testAccService_rebind_default_monitor_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExist("citrixadc_service.test_service", nil),
+					resource.TestCheckResourceAttr("citrixadc_service.test_service", "lbmonitor", "tf_monitor"),
+				),
+			},
+			resource.TestStep{
+				Config: testAccService_rebind_default_monitor_step3,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExist("citrixadc_service.test_service", nil),
+					resource.TestCheckResourceAttr("citrixadc_service.test_service", "lbmonitor", "tcp-default"),
+				),
+			},
+		},
+	})
+}
+
+const testAccService_rebind_default_monitor_step1 = `
+resource "citrixadc_lbmonitor" "tf_monitor" {
+	monitorname = "tf_monitor"
+	type = "HTTP"
+}
+
+resource "citrixadc_service" "test_service" {
+    servicetype = "HTTP"
+    name = "test_service"
+    ipaddress = "10.77.33.22"
+    ip = "10.77.33.22"
+    port = "80"
+}
+`
+
+const testAccService_rebind_default_monitor_step2 = `
+resource "citrixadc_lbmonitor" "tf_monitor" {
+	monitorname = "tf_monitor"
+	type = "HTTP"
+}
+
+resource "citrixadc_service" "test_service" {
+    servicetype = "HTTP"
+    name = "test_service"
+    ipaddress = "10.77.33.22"
+    ip = "10.77.33.22"
+    port = "80"
+    lbmonitor = citrixadc_lbmonitor.tf_monitor.monitorname
+}
+`
+
+const testAccService_rebind_default_monitor_step3 = `
+resource "citrixadc_lbmonitor" "tf_monitor" {
+	monitorname = "tf_monitor"
+	type = "HTTP"
+}
+
+resource "citrixadc_service" "test_service" {
+    servicetype = "HTTP"
+    name = "test_service"
+    ipaddress = "10.77.33.22"
+    ip = "10.77.33.22"
+    port = "80"
+    lbmonitor = "tcp-default"
+}
+`
