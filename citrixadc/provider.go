@@ -19,6 +19,7 @@ import (
 	"log"
 	"sync"
 
+	"github.com/citrix/adc-nitro-go/resource/config/ns"
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
@@ -72,6 +73,18 @@ func providerSchema() map[string]*schema.Schema {
 			Optional:    true,
 			Description: "Target NS ip. When defined username, password and endpoint must refer to MAS.",
 			DefaultFunc: schema.EnvDefaultFunc("_MPS_API_PROXY_MANAGED_INSTANCE_IP", ""),
+		},
+		"do_login": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Description: "Perform the login operation and acquire a session token to be used for subsequent requests.",
+			DefaultFunc: schema.EnvDefaultFunc("NS_DO_LOGIN", false),
+		},
+		"partition": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Partition to target",
+			DefaultFunc: schema.EnvDefaultFunc("NS_PARTITION", nil),
 		},
 	}
 }
@@ -295,6 +308,20 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	client, err := service.NewNitroClientFromParams(params)
 	if err != nil {
 		return nil, err
+	}
+
+	if d.Get("do_login").(bool) {
+		client.Login()
+	}
+
+	if partition, ok := d.GetOk("partition"); ok {
+		nspartition := ns.Nspartition{
+			Partitionname: partition.(string),
+		}
+		err := client.ActOnResource("nspartition", &nspartition, "Switch")
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	c.client = client
