@@ -18,6 +18,7 @@ resource "citrixadc_servicegroup" "tf_servicegroup" {
 resource "citrixadc_servicegroup_servicegroupmember_binding" "tf_binding" {
     servicegroupname = citrixadc_servicegroup.tf_servicegroup.servicegroupname
     servername = citrixadc_server.tf_server.name
+    disable_read = true
 }
 
 resource "citrixadc_servicegroup_servicegroupmember_binding" "tf_binding2" {

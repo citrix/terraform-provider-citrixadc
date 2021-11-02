@@ -89,6 +89,12 @@ func resourceCitrixAdcServicegroup_servicegroupmember_binding() *schema.Resource
 				Computed: true,
 				ForceNew: true,
 			},
+			"disable_read": &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -149,6 +155,11 @@ func createServicegroup_servicegroupmember_bindingFunc(d *schema.ResourceData, m
 func readServicegroup_servicegroupmember_bindingFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] citrixadc-provider:  In readServicegroup_servicegroupmember_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
+
+	// Skip reading when flag is set
+	if d.Get("disable_read").(bool) {
+		return nil
+	}
 
 	bindingId := d.Id()
 	idSlice := strings.SplitN(bindingId, ",", 3)
