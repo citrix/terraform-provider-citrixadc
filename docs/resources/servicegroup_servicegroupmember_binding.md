@@ -37,6 +37,7 @@ resource "citrixadc_servicegroup_servicegroupmember_binding" "tf_binding" {
 * `nameserver` - (Optional) Specify the nameserver to which the query for bound domain needs to be sent. If not specified, use the global nameserver.
 * `dbsttl` - (Optional) Specify the TTL for DNS record for domain based service.The default value of ttl is 0 which indicates to use the TTL received in DNS response for monitors.
 * `servicegroupname` - (Required) Name of the service group.
+* `disable_read` - (Optional) When set to true the read operation is skipped. Useful when the read operation will cause errors such as the binding of an dns query server.
 
 
 ## Attribute Reference
