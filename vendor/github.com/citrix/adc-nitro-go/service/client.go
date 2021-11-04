@@ -111,6 +111,7 @@ func NewNitroClientFromParams(params NitroParams) (*NitroClient, error) {
 					RootCAs:    caCertPool,
 					ServerName: params.ServerName,
 				},
+				Proxy: http.ProxyFromEnvironment,
 			}
 			c.client = &http.Client{Transport: tr}
 		} else {
@@ -118,7 +119,10 @@ func NewNitroClientFromParams(params NitroParams) (*NitroClient, error) {
 		}
 	} else {
 		tr := &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+			},
+			Proxy: http.ProxyFromEnvironment,
 		}
 		c.client = &http.Client{Transport: tr}
 	}
