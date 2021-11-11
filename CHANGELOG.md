@@ -1,3 +1,24 @@
+## 1.8.0 (November 11, 2021)
+
+FEATURES
+
+* **New Resource** `filterglobal_filterpolicy_binding`
+* **New Resource** `dnsparameter`
+* **New Resource** `appfwsettings`
+* **New Resource** `responderhtmlpage`
+
+ENHANCEMENTS
+
+* Add import operation for `servicegroup_servicegroupmemeber_binding` resource
+* Implement login operation and partition targetting in provider
+* Introduce no read flag in servicegroup member binding
+* Enable use of proxy through HTTP\_PROXY and HTTPS\_PROXY environment variables
+
+BUG FIXES
+
+* Fix port logic error in `servicegroup_servicegroupmemeber_binding` resource
+* Fix default lb monitor handling in `service` resource
+
 ## 1.7.0 (September 29, 2021)
 
 FEATURES
