@@ -1,3 +1,9 @@
+## 1.9.0 (January 11, 2022)
+
+FEATURES
+
+* **New Resource** `authorizationpolicy`
+
 ## 1.8.0 (November 11, 2021)
 
 FEATURES
