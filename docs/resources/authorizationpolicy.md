@@ -25,7 +25,7 @@ resource "citrixadc_authorizationpolicy" "authorize2" {
 
 ## Argument Reference
 
-* `name` - (Optional) Name for the new authorization policy.  Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Cannot be changed after the authorization policy is added.  The following requirement applies only to the Citrix ADC CLI: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my authorization policy" or 'my authorization policy').
+* `name` - (Required) Name for the new authorization policy.  Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Cannot be changed after the authorization policy is added.  The following requirement applies only to the Citrix ADC CLI: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my authorization policy" or 'my authorization policy').
 * `rule` - (Optional) Name of the Citrix ADC named rule, or an expression, that the policy uses to perform the authentication.
 * `action` - (Optional) Action to perform if the policy matches: either allow or deny the request.
 
