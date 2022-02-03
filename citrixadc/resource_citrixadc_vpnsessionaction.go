@@ -4,7 +4,6 @@ import (
 	"github.com/citrix/adc-nitro-go/resource/config/vpn"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"fmt"
@@ -407,13 +406,7 @@ func resourceCitrixAdcVpnsessionaction() *schema.Resource {
 func createVpnsessionactionFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createVpnsessionactionFunc")
 	client := meta.(*NetScalerNitroClient).client
-	var vpnsessionactionName string
-	if v, ok := d.GetOk("name"); ok {
-		vpnsessionactionName = v.(string)
-	} else {
-		vpnsessionactionName = resource.PrefixedUniqueId("tf-vpnsessionaction-")
-		d.Set("name", vpnsessionactionName)
-	}
+	vpnsessionactionName := d.Get("name").(string)
 	vpnsessionaction := vpn.Vpnsessionaction{
 		Advancedclientlessvpnmode:  d.Get("advancedclientlessvpnmode").(string),
 		Allowedlogingroups:         d.Get("allowedlogingroups").(string),
