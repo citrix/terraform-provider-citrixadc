@@ -1,5 +1,5 @@
 resource "citrixadc_csaction" "tf_csaction" {
-  name            = "tf_test_csaction2"
+  name            = "tf_test_csaction1"
   targetlbvserver = citrixadc_lbvserver.tf_image_lb.name
   comment         = "Forwards image requests to the image_lb"
 }
