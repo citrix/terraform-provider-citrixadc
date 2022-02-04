@@ -500,14 +500,6 @@ func createVpnsessionactionFunc(d *schema.ResourceData, meta interface{}) error 
 	return nil
 }
 
-func toIntegerList(a []interface{}) []int {
-	b := make([]int, len(a))
-	for i := range a {
-		b[i] = a[i].(int)
-	}
-	return b
-}
-
 func readVpnsessionactionFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] citrixadc-provider:  In readVpnsessionactionFunc")
 	client := meta.(*NetScalerNitroClient).client

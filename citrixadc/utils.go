@@ -29,3 +29,11 @@ func toStringList(in []interface{}) []string {
 	}
 	return out
 }
+
+func toIntegerList(in []interface{}) []int {
+	out := make([]int, len(in))
+	for i := range in {
+		out[i] = in[i].(int)
+	}
+	return out
+}
