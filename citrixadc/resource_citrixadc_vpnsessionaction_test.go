@@ -23,7 +23,7 @@ import (
 	"testing"
 )
 
-const testAccVpnsessionaction_basic = `
+const testAccVpnsessionaction_add = `
 
 	resource "citrixadc_vpnsessionaction" "foo" {
 		name 					   = "newsession"
@@ -38,10 +38,10 @@ const testAccVpnsessionaction_basic = `
   		
 	}
 `
-const testAccVpnsessionaction_basic1 = `
+const testAccVpnsessionaction_update = `
 
 	resource "citrixadc_vpnsessionaction" "foo" {
-		name 					   = "sessionaction1"
+		name 					   = "newsession"
 		sesstimeout                = "20"
 	 	defaultauthorizationaction = "DENY"
 	  	transparentinterception    = "ON"
@@ -61,19 +61,21 @@ func TestAccVpnsessionaction_basic(t *testing.T) {
 		CheckDestroy: testAccCheckVpnsessionactionDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccVpnsessionaction_basic,
+				Config: testAccVpnsessionaction_add,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnsessionactionExist("citrixadc_vpnsessionaction.foo", nil),
 					resource.TestCheckResourceAttr("citrixadc_vpnsessionaction.foo", "name", "newsession"),
 					resource.TestCheckResourceAttr("citrixadc_vpnsessionaction.foo", "sesstimeout", "10"),
+					resource.TestCheckResourceAttr("citrixadc_vpnsessionaction.foo", "defaultauthorizationaction", "ALLOW"),
 				),
 			},
 			resource.TestStep{
-				Config: testAccVpnsessionaction_basic1,
+				Config: testAccVpnsessionaction_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnsessionactionExist("citrixadc_vpnsessionaction.foo", nil),
-					resource.TestCheckResourceAttr("citrixadc_vpnsessionaction.foo", "name", "sessionaction1"),
+					resource.TestCheckResourceAttr("citrixadc_vpnsessionaction.foo", "name", "newsession"),
 					resource.TestCheckResourceAttr("citrixadc_vpnsessionaction.foo", "sesstimeout", "20"),
+					resource.TestCheckResourceAttr("citrixadc_vpnsessionaction.foo", "clientidletimeout", "20"),
 				),
 			},
 		},

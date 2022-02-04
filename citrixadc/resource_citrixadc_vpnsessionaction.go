@@ -21,6 +21,11 @@ func resourceCitrixAdcVpnsessionaction() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
 			"advancedclientlessvpnmode": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -238,11 +243,6 @@ func resourceCitrixAdcVpnsessionaction() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
-			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
 			},
 			"netmask": {
 				Type:     schema.TypeString,
@@ -822,11 +822,6 @@ func updateVpnsessionactionFunc(d *schema.ResourceData, meta interface{}) error 
 	if d.HasChange("macpluginupgrade") {
 		log.Printf("[DEBUG]  citrixadc-provider: Macpluginupgrade has changed for vpnsessionaction %s, starting update", vpnsessionactionName)
 		vpnsessionaction.Macpluginupgrade = d.Get("macpluginupgrade").(string)
-		hasChange = true
-	}
-	if d.HasChange("name") {
-		log.Printf("[DEBUG]  citrixadc-provider: Name has changed for vpnsessionaction %s, starting update", vpnsessionactionName)
-		vpnsessionaction.Name = d.Get("name").(string)
 		hasChange = true
 	}
 	if d.HasChange("netmask") {

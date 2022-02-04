@@ -26,6 +26,7 @@ resource "citrixadc_vpnsessionaction" "tf_sessionaction" {
 
 ## Argument Reference
 
+* `name` - (Required) Name for the Citrix Gateway profile (action). Must begin with an ASCII alphabetic or underscore (_) character, and must consist only of ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Cannot be changed after the profile is created.  The following requirement applies only to the Citrix ADC CLI: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my action" or 'my action').
 * `advancedclientlessvpnmode` - (Optional) Option to enable/disable Advanced ClientlessVpnMode. Additionaly, it can be set to STRICT to block Classic ClientlessVpnMode while in AdvancedClientlessMode.
 * `allowedlogingroups` - (Optional) Specify groups that have permission to log on to Citrix Gateway. Users who do not belong to this group or groups are denied access even if they have valid credentials.
 * `allprotocolproxy` - (Optional) IP address of the proxy server to use for all protocols supported by Citrix Gateway.
@@ -69,7 +70,6 @@ resource "citrixadc_vpnsessionaction" "tf_sessionaction" {
 * `loginscript` - (Optional) Path to the logon script that is run when a session is established. Separate multiple scripts by using comma. A "$" in the path signifies that the word following the "$" is an environment variable.
 * `logoutscript` - (Optional) Path to the logout script. Separate multiple scripts by using comma. A "$" in the path signifies that the word following the "$" is an environment variable.
 * `macpluginupgrade` - (Optional) Option to set plugin upgrade behaviour for Mac
-* `name` - (Required) Name for the Citrix Gateway profile (action). Must begin with an ASCII alphabetic or underscore (_) character, and must consist only of ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Cannot be changed after the profile is created.  The following requirement applies only to the Citrix ADC CLI: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my action" or 'my action').
 * `netmask` - (Optional) The netmask for the spoofed ip address
 * `ntdomain` - (Optional) Single sign-on domain to use for single sign-on to applications in the internal network. This setting can be overwritten by the domain that users specify at the time of logon or by the domain that the authentication server returns.
 * `pcoipprofilename` - (Optional) Name of the PCOIP profile associated with the session action. The builtin profile named none can be used to explicitly disable PCOIP for the session action.
