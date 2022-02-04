@@ -417,7 +417,7 @@ func createVpnsessionactionFunc(d *schema.ResourceData, meta interface{}) error 
 		Citrixreceiverhome:         d.Get("citrixreceiverhome").(string),
 		Clientchoices:              d.Get("clientchoices").(string),
 		Clientcleanupprompt:        d.Get("clientcleanupprompt").(string),
-		Clientconfiguration:        toStringList(d.Get("clientconfiguration").([]interface{})), //5
+		Clientconfiguration:        toStringList(d.Get("clientconfiguration").([]interface{})),
 		Clientdebug:                d.Get("clientdebug").(string),
 		Clientidletimeout:          d.Get("clientidletimeout").(int),
 		Clientlessmodeurlencoding:  d.Get("clientlessmodeurlencoding").(string),
@@ -432,14 +432,14 @@ func createVpnsessionactionFunc(d *schema.ResourceData, meta interface{}) error 
 		Dnsvservername:             d.Get("dnsvservername").(string),
 		Emailhome:                  d.Get("emailhome").(string),
 		Epaclienttype:              d.Get("epaclienttype").(string),
-		Forcecleanup:               toStringList(d.Get("forcecleanup").([]interface{})), //6
+		Forcecleanup:               toStringList(d.Get("forcecleanup").([]interface{})),
 		Forcedtimeout:              d.Get("forcedtimeout").(int),
 		Forcedtimeoutwarning:       d.Get("forcedtimeoutwarning").(int),
 		Fqdnspoofedip:              d.Get("fqdnspoofedip").(string),
 		Ftpproxy:                   d.Get("ftpproxy").(string),
 		Gopherproxy:                d.Get("gopherproxy").(string),
 		Homepage:                   d.Get("homepage").(string),
-		Httpport:                   toIntegerList(d.Get("httpport").([]interface{})), //4
+		Httpport:                   toIntegerList(d.Get("httpport").([]interface{})),
 		Httpproxy:                  d.Get("httpproxy").(string),
 		Icaproxy:                   d.Get("icaproxy").(string),
 		Iconwithreceiver:           d.Get("iconwithreceiver").(string),
@@ -648,7 +648,7 @@ func updateVpnsessionactionFunc(d *schema.ResourceData, meta interface{}) error 
 	}
 	if d.HasChange("clientconfiguration") {
 		log.Printf("[DEBUG]  citrixadc-provider: Clientconfiguration has changed for vpnsessionaction %s, starting update", vpnsessionactionName)
-		vpnsessionaction.Clientconfiguration = toStringList(d.Get("clientconfiguration").([]interface{})) //3
+		vpnsessionaction.Clientconfiguration = toStringList(d.Get("clientconfiguration").([]interface{}))
 		hasChange = true
 	}
 	if d.HasChange("clientdebug") {
@@ -723,7 +723,7 @@ func updateVpnsessionactionFunc(d *schema.ResourceData, meta interface{}) error 
 	}
 	if d.HasChange("forcecleanup") {
 		log.Printf("[DEBUG]  citrixadc-provider: Forcecleanup has changed for vpnsessionaction %s, starting update", vpnsessionactionName)
-		vpnsessionaction.Forcecleanup = toStringList(d.Get("forcecleanup").([]interface{})) //2
+		vpnsessionaction.Forcecleanup = toStringList(d.Get("forcecleanup").([]interface{})) 
 		hasChange = true
 	}
 	if d.HasChange("forcedtimeout") {
@@ -758,7 +758,7 @@ func updateVpnsessionactionFunc(d *schema.ResourceData, meta interface{}) error 
 	}
 	if d.HasChange("httpport") {
 		log.Printf("[DEBUG]  citrixadc-provider: Httpport has changed for vpnsessionaction %s, starting update", vpnsessionactionName)
-		vpnsessionaction.Httpport = toIntegerList(d.Get("httpport").([]interface{})) //1
+		vpnsessionaction.Httpport = toIntegerList(d.Get("httpport").([]interface{})) 
 		hasChange = true
 	}
 	if d.HasChange("httpproxy") {
