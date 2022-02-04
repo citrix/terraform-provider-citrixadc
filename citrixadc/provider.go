@@ -287,6 +287,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_responderhtmlpage":                                  resourceCitrixAdcResponderhtmlpage(),
 		"citrixadc_authorizationpolicy":                                resourceCitrixAdcAuthorizationpolicy(),
 		"citrixadc_vpnurl":                                             resourceCitrixAdcVpnurl(),
+		"citrixadc_vpnsessionaction":                                   resourceCitrixAdcVpnsessionaction(),
 	}
 }
 
