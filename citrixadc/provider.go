@@ -299,6 +299,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_authenticationldapaction":                           resourceCitrixAdcAuthenticationldapaction(),
 		"citrixadc_vpnglobal_sslcertkey_binding":                       resourceCitrixAdcVpnglobal_sslcertkey_binding(),
 		"citrixadc_vpngobal_vpntrafficpolicy_binding":                  resourceCitrixAdcVpnglobal_vpntrafficpolicy_binding(),
+		"citrixadc_vpnglobal_vpnsessionpolicy_binding":                 resourceCitrixAdcVpnglobal_vpnsessionpolicy_binding(),
 	}
 }
 
