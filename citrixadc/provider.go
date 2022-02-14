@@ -293,6 +293,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_vpntrafficaction":                                   resourceCitrixAdcVpntrafficaction(),
 		"citrixadc_vpnurlaction":                                       resourceCitrixAdcVpnurlaction(),
 		"citrixadc_vpnvserver_vpnsessionpolicy_binding":                resourceCitrixAdcVpnvserver_vpnsessionpolicy_binding(),
+		"citrixadc_vpntrafficpolicy":                                   resourceCitrixAdcVpntrafficpolicy(),
 	}
 }
 
