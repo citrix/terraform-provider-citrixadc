@@ -11,9 +11,9 @@ The authenticationldapaction resource is used to create LDAP action resource.
 
 ```hcl
 resource "citrixadc_authenticationldapaction" "tf_authenticationldapaction" {
-  name   = "ldapaction"
-  serverip = "1.2.3.4"
-	serverport = 8080
+  name       = "ldapaction"
+  serverip   = "1.2.3.4"
+  serverport = 8080
 }
 ```
 
