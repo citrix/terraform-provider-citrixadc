@@ -63,6 +63,7 @@ github.com/bmatcuk/doublestar
 # github.com/citrix/adc-nitro-go v0.0.0-20211104111136-706d0b293cc2
 github.com/citrix/adc-nitro-go/resource/config/appfw
 github.com/citrix/adc-nitro-go/resource/config/audit
+github.com/citrix/adc-nitro-go/resource/config/authentication
 github.com/citrix/adc-nitro-go/resource/config/authorization
 github.com/citrix/adc-nitro-go/resource/config/basic
 github.com/citrix/adc-nitro-go/resource/config/bot
