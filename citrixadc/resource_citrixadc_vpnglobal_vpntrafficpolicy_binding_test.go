@@ -1,0 +1,190 @@
+/*
+Copyright 2016 Citrix Systems, Inc
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+package citrixadc
+
+import (
+	"fmt"
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
+	"testing"
+)
+
+const testAccVpnglobal_vpntrafficpolicy_binding_basic = `
+
+	resource "citrixadc_vpntrafficaction" "foo" {
+		fta   = "ON"
+		hdx   = "ON"
+		name  = "Testingaction"
+		qual  = "tcp"
+		sso   = "ON"
+	}
+	resource "citrixadc_vpntrafficpolicy" "tf_vpntrafficpolicy" {
+		name   = "tf_vpntrafficpolicy"
+		rule   = "HTTP.REQ.HEADER(\"User-Agent\").CONTAINS(\"CitrixReceiver\").NOT"
+		action = citrixadc_vpntrafficaction.foo.name
+	}
+	resource "citrixadc_vpngobal_vpntrafficpolicy_binding" "tf_bind" {
+		policyname = citrixadc_vpntrafficpolicy.tf_vpntrafficpolicy.name
+		priority   = 20
+	}
+`
+
+const testAccVpnglobal_vpntrafficpolicy_binding_basic_step2 = `
+	# Keep the above bound resources without the actual binding to check proper deletion
+	resource "citrixadc_vpntrafficaction" "foo" {
+		fta   = "ON"
+		hdx   = "ON"
+		name  = "Testingaction"
+		qual  = "tcp"
+		sso   = "ON"
+	}
+	resource "citrixadc_vpntrafficpolicy" "tf_vpntrafficpolicy" {
+		name   = "tf_vpntrafficpolicy"
+		rule   = "HTTP.REQ.HEADER(\"User-Agent\").CONTAINS(\"CitrixReceiver\").NOT"
+		action = citrixadc_vpntrafficaction.foo.name
+	}
+`
+func TestAccVpnglobal_vpntrafficpolicy_binding_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckVpnglobal_vpntrafficpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccVpnglobal_vpntrafficpolicy_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_vpntrafficpolicy_bindingExist("citrixadc_vpngobal_vpntrafficpolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpngobal_vpntrafficpolicy_binding.tf_bind", "policyname", "tf_vpntrafficpolicy"),
+					resource.TestCheckResourceAttr("citrixadc_vpngobal_vpntrafficpolicy_binding.tf_bind", "priority", "20"),
+				),
+			},
+			resource.TestStep{
+				Config: testAccVpnglobal_vpntrafficpolicy_binding_basic_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_vpntrafficpolicy_bindingNotExist("citrixadc_vpngobal_vpntrafficpolicy_binding.tf_bind", "policyname"),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckVpnglobal_vpntrafficpolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No vpnglobal_vpntrafficpolicy_binding id is set")
+		}
+
+		if id != nil {
+			if *id != "" && *id != rs.Primary.ID {
+				return fmt.Errorf("Resource ID has changed!")
+			}
+
+			*id = rs.Primary.ID
+		}
+
+		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+
+		policyname := rs.Primary.ID
+
+		findParams := service.FindParams{
+			ResourceType:             "vpnglobal_vpntrafficpolicy_binding",
+			ResourceMissingErrorCode: 258,
+		}
+		dataArr, err := client.FindResourceArrayWithParams(findParams)
+
+		// Unexpected error
+		if err != nil {
+			return err
+		}
+
+		// Iterate through results to find the one with the matching secondIdComponent
+		found := false
+		for _, v := range dataArr {
+			if v["policyname"].(string) == policyname {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			return fmt.Errorf("vpnglobal_vpntrafficpolicy_binding %s not found", n)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckVpnglobal_vpntrafficpolicy_bindingNotExist(n string, id string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+
+		policyname := id
+
+		findParams := service.FindParams{
+			ResourceType:             "vpnglobal_vpntrafficpolicy_binding",
+			ResourceMissingErrorCode: 258,
+		}
+		dataArr, err := client.FindResourceArrayWithParams(findParams)
+
+		// Unexpected error
+		if err != nil {
+			return err
+		}
+
+		// Iterate through results to hopefully not find the one with the matching secondIdComponent
+		found := false
+		for _, v := range dataArr {
+			if v["policyname"].(string) == policyname {
+				found = true
+				break
+			}
+		}
+
+		if found {
+			return fmt.Errorf("vpnglobal_vpntrafficpolicy_binding %s was found, but it should have been destroyed", n)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckVpnglobal_vpntrafficpolicy_bindingDestroy(s *terraform.State) error {
+	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "citrixadc_vpnglobal_vpntrafficpolicy_binding" {
+			continue
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No name is set")
+		}
+
+		_, err := nsClient.FindResource(service.Vpnglobal_vpntrafficpolicy_binding.Type(), rs.Primary.ID)
+		if err == nil {
+			return fmt.Errorf("vpnglobal_vpntrafficpolicy_binding %s still exists", rs.Primary.ID)
+		}
+
+	}
+
+	return nil
+}
