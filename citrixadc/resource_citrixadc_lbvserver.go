@@ -1040,6 +1040,12 @@ func readLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 	}
+	// Set state according to curstate
+	if data["curstate"] == "OUT OF SERVICE" {
+		d.Set("state", "DISABLED")
+	} else {
+		d.Set("state", "ENABLED")
+	}
 
 	if err := readSslpolicyBindings(d, meta, lbvserverName); err != nil {
 		return err
