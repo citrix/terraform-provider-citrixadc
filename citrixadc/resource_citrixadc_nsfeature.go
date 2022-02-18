@@ -226,6 +226,11 @@ func resourceCitrixAdcNsfeature() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"apigateway": &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -274,6 +279,7 @@ var featureList = [...]string{
 	"cqa",
 	"ci",
 	"bot",
+	"apigateway",
 }
 
 func createNsfeatureFunc(d *schema.ResourceData, meta interface{}) error {
