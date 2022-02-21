@@ -314,6 +314,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_vpnglobal_vpnurlpolicy_binding":                         resourceCitrixAdcVpnglobal_vpnurlpolicy_binding(),
 		"citrixadc_vpnglobal_vpneula_binding":                              resourceCitrixAdcVpnglobal_vpneula_binding(),
 		"citrixadc_vpnvserver_authenticationldappolicy_binding":            resourceCitrixAdcVpnvserver_authenticationldappolicy_binding(),
+		"citrixadc_vpnvserver_authenticationradiuspolicy_binding":          resourceCitrixAdcVpnvserver_authenticationradiuspolicy_binding(),
 	}
 }
 
