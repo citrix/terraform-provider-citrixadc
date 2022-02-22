@@ -1,3 +1,35 @@
+## 1.10.0 (February 22, 2022)
+
+FEATURES
+
+* **New Resource** `vpnurl`
+* **New Resource** `vpnsessionaction`
+* **New Resource** `vpnvserver`
+* **New Resource** `vpnsessionpolicy`
+* **New Resource** `vpntrafficaction`
+* **New Resource** `vpnurlaction`
+* **New Resource** `vpnvserver_vpnsessionpolicy_binding`
+* **New Resource** `vpntrafficpolicy`
+* **New Resource** `vpnurlpolicy`
+* **New Resource** `authenticationvserver`
+* **New Resource** `authenticationldapaction`
+* **New Resource** `vpnglobal_sslcertkey_binding`
+* **New Resource** `vpnglobal_vpntrafficpolicy_binding`
+* **New Resource** `vpnglobal_vpnsessionpolicy_binding`
+* **New Resource** `authenticationauthnprofile`
+* **New Resource** `authenticationpolicylabel`
+* **New Resource** `authenticationpolicy`
+* **New Resource** `authenticationvserver_authenticationpolicy_binding`
+* **New Resource** `authenticationpolicylabel_authenticationpolicy_binding`
+
+ENHANCEMENTS
+
+* Add apigateway feature in `nsfeature` resource.
+
+BUG FIXES
+
+* Fix resource `lbvserver` to calculate server state correctly.
+
 ## 1.9.0 (January 11, 2022)
 
 FEATURES
