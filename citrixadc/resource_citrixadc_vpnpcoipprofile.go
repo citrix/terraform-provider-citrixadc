@@ -29,7 +29,6 @@ func resourceCitrixAdcVpnpcoipprofile() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
-				ForceNew: true,
 			},
 			"icvverification": &schema.Schema{
 				Type:     schema.TypeString,
@@ -102,6 +101,11 @@ func updateVpnpcoipprofileFunc(d *schema.ResourceData, meta interface{}) error {
 		Name: d.Get("name").(string),
 	}
 	hasChange := false
+	if d.HasChange("conserverurl") {
+		log.Printf("[DEBUG]  citrixadc-provider: Conserverurl has changed for vpnpcoipprofile %s, starting update", vpnpcoipprofileName)
+		vpnpcoipprofile.Conserverurl = d.Get("conserverurl").(string)
+		hasChange = true
+	}
 	if d.HasChange("icvverification") {
 		log.Printf("[DEBUG]  citrixadc-provider: Icvverification has changed for vpnpcoipprofile %s, starting update", vpnpcoipprofileName)
 		vpnpcoipprofile.Icvverification = d.Get("icvverification").(string)
