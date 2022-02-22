@@ -3,7 +3,7 @@ module github.com/citrix/terraform-provider-citrixadc
 go 1.13
 
 require (
-	github.com/citrix/adc-nitro-go v0.0.0-20211104111136-706d0b293cc2
+	github.com/citrix/adc-nitro-go v0.0.0-20220222085618-9b168eab39b0
 	github.com/hashicorp/terraform v0.12.20
 	github.com/hashicorp/terraform-plugin-sdk v1.6.0
 	github.com/mitchellh/mapstructure v1.1.2
