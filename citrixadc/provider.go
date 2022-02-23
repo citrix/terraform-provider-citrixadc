@@ -311,6 +311,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_vpnpcoipvserverprofile":                                 resourceCitrixAdcVpnpcoipvserverprofile(),
 		"citrixadc_vpnpcoipprofile":                                        resourceCitrixAdcVpnpcoipprofile(),
 		"citrixadc_vpnglobal_vpnurl_binding":                               resourceCitrixAdcVpnglobal_vpnurl_binding(),
+		"citrixadc_vpnglobal_vpnurlpolicy_binding":                         resourceCitrixAdcVpnglobal_vpnurlpolicy_binding(),
 	}
 }
 
