@@ -318,6 +318,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_vpnnexthopserver":                                       resourceCitrixAdcVpnnexthopserver(),
 		"citrixadc_vpnportaltheme":                                         resourceCitrixAdcVpnportaltheme(),
 		"citrixadc_vpnsamlssoprofile":                                      resourceCitrixAdcVpnsamlssoprofile(),
+		"citrixadc_vpnglobal_auditsyslogpolicy_binding":                    resourceCitrixAdcVpnglobal_auditsyslogpolicy_binding(),
 	}
 }
 
