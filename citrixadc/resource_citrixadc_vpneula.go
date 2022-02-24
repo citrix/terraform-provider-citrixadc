@@ -67,7 +67,6 @@ func readVpneulaFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	d.Set("name", data["name"])
-	d.Set("name", data["name"])
 
 	return nil
 
