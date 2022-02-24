@@ -46,6 +46,7 @@ var idempotentInvalidResources = []string{
 	"transformaction",
 	"route",
 	"lbroute6",
+	"vpnnexthopserver",
 }
 
 // HTTP Headers to be masked and not shown in logs
