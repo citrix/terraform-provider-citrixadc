@@ -1,0 +1,609 @@
+package citrixadc
+
+import (
+	"github.com/citrix/adc-nitro-go/resource/config/authentication"
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform/helper/schema"
+
+	"fmt"
+	"log"
+)
+
+func resourceCitrixAdcAuthenticationoauthaction() *schema.Resource {
+	return &schema.Resource{
+		SchemaVersion: 1,
+		Create:        createAuthenticationoauthactionFunc,
+		Read:          readAuthenticationoauthactionFunc,
+		Update:        updateAuthenticationoauthactionFunc,
+		Delete:        deleteAuthenticationoauthactionFunc,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
+		Schema: map[string]*schema.Schema{
+			"name": &schema.Schema{
+				Type:     schema.TypeString,
+				Required: true,
+				Computed: false,
+				ForceNew: true,
+			},
+			"authorizationendpoint": &schema.Schema{
+				Type:     schema.TypeString,
+				Required: true,
+				Computed: false,
+			},
+			"clientid": &schema.Schema{
+				Type:     schema.TypeString,
+				Required: true,
+				Computed: false,
+			},
+			"clientsecret": &schema.Schema{
+				Type:     schema.TypeString,
+				Required: true,
+				Computed: false,
+			},
+			"tokenendpoint": &schema.Schema{
+				Type:     schema.TypeString,
+				Required: true,
+				Computed: false,
+			},
+			"allowedalgorithms": &schema.Schema{
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Optional: true,
+				Computed: true,
+			},
+			"attribute1": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"attribute10": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"attribute11": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"attribute12": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"attribute13": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"attribute14": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"attribute15": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"attribute16": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"attribute2": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"attribute3": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"attribute4": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"attribute5": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"attribute6": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"attribute7": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"attribute8": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"attribute9": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"attributes": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"audience": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"authentication": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"certendpoint": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"certfilepath": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"defaultauthenticationgroup": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"granttype": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"graphendpoint": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"idtokendecryptendpoint": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"introspecturl": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"issuer": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"metadataurl": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"oauthtype": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"pkce": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"refreshinterval": &schema.Schema{
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"resourceuri": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"skewtime": &schema.Schema{
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"tenantid": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"tokenendpointauthmethod": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"userinfourl": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"usernamefield": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+		},
+	}
+}
+
+func createAuthenticationoauthactionFunc(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[DEBUG]  citrixadc-provider: In createAuthenticationoauthactionFunc")
+	client := meta.(*NetScalerNitroClient).client
+	authenticationoauthactionName := d.Get("name").(string)
+	authenticationoauthaction := authentication.Authenticationoauthaction{
+		Allowedalgorithms:          toStringList(d.Get("allowedalgorithms").([]interface{})),
+		Attribute1:                 d.Get("attribute1").(string),
+		Attribute10:                d.Get("attribute10").(string),
+		Attribute11:                d.Get("attribute11").(string),
+		Attribute12:                d.Get("attribute12").(string),
+		Attribute13:                d.Get("attribute13").(string),
+		Attribute14:                d.Get("attribute14").(string),
+		Attribute15:                d.Get("attribute15").(string),
+		Attribute16:                d.Get("attribute16").(string),
+		Attribute2:                 d.Get("attribute2").(string),
+		Attribute3:                 d.Get("attribute3").(string),
+		Attribute4:                 d.Get("attribute4").(string),
+		Attribute5:                 d.Get("attribute5").(string),
+		Attribute6:                 d.Get("attribute6").(string),
+		Attribute7:                 d.Get("attribute7").(string),
+		Attribute8:                 d.Get("attribute8").(string),
+		Attribute9:                 d.Get("attribute9").(string),
+		Attributes:                 d.Get("attributes").(string),
+		Audience:                   d.Get("audience").(string),
+		Authentication:             d.Get("authentication").(string),
+		Authorizationendpoint:      d.Get("authorizationendpoint").(string),
+		Certendpoint:               d.Get("certendpoint").(string),
+		Certfilepath:               d.Get("certfilepath").(string),
+		Clientid:                   d.Get("clientid").(string),
+		Clientsecret:               d.Get("clientsecret").(string),
+		Defaultauthenticationgroup: d.Get("defaultauthenticationgroup").(string),
+		Granttype:                  d.Get("granttype").(string),
+		Graphendpoint:              d.Get("graphendpoint").(string),
+		Idtokendecryptendpoint:     d.Get("idtokendecryptendpoint").(string),
+		Introspecturl:              d.Get("introspecturl").(string),
+		Issuer:                     d.Get("issuer").(string),
+		Metadataurl:                d.Get("metadataurl").(string),
+		Name:                       d.Get("name").(string),
+		Oauthtype:                  d.Get("oauthtype").(string),
+		Pkce:                       d.Get("pkce").(string),
+		Refreshinterval:            d.Get("refreshinterval").(int),
+		Resourceuri:                d.Get("resourceuri").(string),
+		Skewtime:                   d.Get("skewtime").(int),
+		Tenantid:                   d.Get("tenantid").(string),
+		Tokenendpoint:              d.Get("tokenendpoint").(string),
+		Tokenendpointauthmethod:    d.Get("tokenendpointauthmethod").(string),
+		Userinfourl:                d.Get("userinfourl").(string),
+		Usernamefield:              d.Get("usernamefield").(string),
+	}
+
+	_, err := client.AddResource(service.Authenticationoauthaction.Type(), authenticationoauthactionName, &authenticationoauthaction)
+	if err != nil {
+		return err
+	}
+
+	d.SetId(authenticationoauthactionName)
+
+	err = readAuthenticationoauthactionFunc(d, meta)
+	if err != nil {
+		log.Printf("[ERROR] netscaler-provider: ?? we just created this authenticationoauthaction but we can't read it ?? %s", authenticationoauthactionName)
+		return nil
+	}
+	return nil
+}
+
+func readAuthenticationoauthactionFunc(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[DEBUG] citrixadc-provider:  In readAuthenticationoauthactionFunc")
+	client := meta.(*NetScalerNitroClient).client
+	authenticationoauthactionName := d.Id()
+	log.Printf("[DEBUG] citrixadc-provider: Reading authenticationoauthaction state %s", authenticationoauthactionName)
+	data, err := client.FindResource(service.Authenticationoauthaction.Type(), authenticationoauthactionName)
+	if err != nil {
+		log.Printf("[WARN] citrixadc-provider: Clearing authenticationoauthaction state %s", authenticationoauthactionName)
+		d.SetId("")
+		return nil
+	}
+	d.Set("name", data["name"])
+	d.Set("allowedalgorithms", data["allowedalgorithms"])
+	d.Set("attribute1", data["attribute1"])
+	d.Set("attribute10", data["attribute10"])
+	d.Set("attribute11", data["attribute11"])
+	d.Set("attribute12", data["attribute12"])
+	d.Set("attribute13", data["attribute13"])
+	d.Set("attribute14", data["attribute14"])
+	d.Set("attribute15", data["attribute15"])
+	d.Set("attribute16", data["attribute16"])
+	d.Set("attribute2", data["attribute2"])
+	d.Set("attribute3", data["attribute3"])
+	d.Set("attribute4", data["attribute4"])
+	d.Set("attribute5", data["attribute5"])
+	d.Set("attribute6", data["attribute6"])
+	d.Set("attribute7", data["attribute7"])
+	d.Set("attribute8", data["attribute8"])
+	d.Set("attribute9", data["attribute9"])
+	d.Set("attributes", data["attributes"])
+	d.Set("audience", data["audience"])
+	d.Set("authentication", data["authentication"])
+	d.Set("authorizationendpoint", data["authorizationendpoint"])
+	d.Set("certendpoint", data["certendpoint"])
+	d.Set("certfilepath", data["certfilepath"])
+	d.Set("clientid", data["clientid"])
+	//d.Set("clientsecret", data["clientsecret"]) It returns different value
+	d.Set("defaultauthenticationgroup", data["defaultauthenticationgroup"])
+	d.Set("granttype", data["granttype"])
+	d.Set("graphendpoint", data["graphendpoint"])
+	d.Set("idtokendecryptendpoint", data["idtokendecryptendpoint"])
+	d.Set("introspecturl", data["introspecturl"])
+	d.Set("issuer", data["issuer"])
+	d.Set("metadataurl", data["metadataurl"])
+	d.Set("name", data["name"])
+	d.Set("oauthtype", data["oauthtype"])
+	d.Set("pkce", data["pkce"])
+	d.Set("refreshinterval", data["refreshinterval"])
+	d.Set("resourceuri", data["resourceuri"])
+	d.Set("skewtime", data["skewtime"])
+	d.Set("tenantid", data["tenantid"])
+	d.Set("tokenendpoint", data["tokenendpoint"])
+	d.Set("tokenendpointauthmethod", data["tokenendpointauthmethod"])
+	d.Set("userinfourl", data["userinfourl"])
+	d.Set("usernamefield", data["usernamefield"])
+
+	return nil
+
+}
+
+func updateAuthenticationoauthactionFunc(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[DEBUG]  citrixadc-provider: In updateAuthenticationoauthactionFunc")
+	client := meta.(*NetScalerNitroClient).client
+	authenticationoauthactionName := d.Get("name").(string)
+
+	authenticationoauthaction := authentication.Authenticationoauthaction{
+		Name: d.Get("name").(string),
+	}
+	hasChange := false
+	if d.HasChange("allowedalgorithms") {
+		log.Printf("[DEBUG]  citrixadc-provider: Allowedalgorithms has changed for authenticationoauthaction %s, starting update", authenticationoauthactionName)
+		authenticationoauthaction.Allowedalgorithms = toStringList(d.Get("allowedalgorithms").([]interface{}))
+		hasChange = true
+	}
+	if d.HasChange("attribute1") {
+		log.Printf("[DEBUG]  citrixadc-provider: Attribute1 has changed for authenticationoauthaction %s, starting update", authenticationoauthactionName)
+		authenticationoauthaction.Attribute1 = d.Get("attribute1").(string)
+		hasChange = true
+	}
+	if d.HasChange("attribute10") {
+		log.Printf("[DEBUG]  citrixadc-provider: Attribute10 has changed for authenticationoauthaction %s, starting update", authenticationoauthactionName)
+		authenticationoauthaction.Attribute10 = d.Get("attribute10").(string)
+		hasChange = true
+	}
+	if d.HasChange("attribute11") {
+		log.Printf("[DEBUG]  citrixadc-provider: Attribute11 has changed for authenticationoauthaction %s, starting update", authenticationoauthactionName)
+		authenticationoauthaction.Attribute11 = d.Get("attribute11").(string)
+		hasChange = true
+	}
+	if d.HasChange("attribute12") {
+		log.Printf("[DEBUG]  citrixadc-provider: Attribute12 has changed for authenticationoauthaction %s, starting update", authenticationoauthactionName)
+		authenticationoauthaction.Attribute12 = d.Get("attribute12").(string)
+		hasChange = true
+	}
+	if d.HasChange("attribute13") {
+		log.Printf("[DEBUG]  citrixadc-provider: Attribute13 has changed for authenticationoauthaction %s, starting update", authenticationoauthactionName)
+		authenticationoauthaction.Attribute13 = d.Get("attribute13").(string)
+		hasChange = true
+	}
+	if d.HasChange("attribute14") {
+		log.Printf("[DEBUG]  citrixadc-provider: Attribute14 has changed for authenticationoauthaction %s, starting update", authenticationoauthactionName)
+		authenticationoauthaction.Attribute14 = d.Get("attribute14").(string)
+		hasChange = true
+	}
+	if d.HasChange("attribute15") {
+		log.Printf("[DEBUG]  citrixadc-provider: Attribute15 has changed for authenticationoauthaction %s, starting update", authenticationoauthactionName)
+		authenticationoauthaction.Attribute15 = d.Get("attribute15").(string)
+		hasChange = true
+	}
+	if d.HasChange("attribute16") {
+		log.Printf("[DEBUG]  citrixadc-provider: Attribute16 has changed for authenticationoauthaction %s, starting update", authenticationoauthactionName)
+		authenticationoauthaction.Attribute16 = d.Get("attribute16").(string)
+		hasChange = true
+	}
+	if d.HasChange("attribute2") {
+		log.Printf("[DEBUG]  citrixadc-provider: Attribute2 has changed for authenticationoauthaction %s, starting update", authenticationoauthactionName)
+		authenticationoauthaction.Attribute2 = d.Get("attribute2").(string)
+		hasChange = true
+	}
+	if d.HasChange("attribute3") {
+		log.Printf("[DEBUG]  citrixadc-provider: Attribute3 has changed for authenticationoauthaction %s, starting update", authenticationoauthactionName)
+		authenticationoauthaction.Attribute3 = d.Get("attribute3").(string)
+		hasChange = true
+	}
+	if d.HasChange("attribute4") {
+		log.Printf("[DEBUG]  citrixadc-provider: Attribute4 has changed for authenticationoauthaction %s, starting update", authenticationoauthactionName)
+		authenticationoauthaction.Attribute4 = d.Get("attribute4").(string)
+		hasChange = true
+	}
+	if d.HasChange("attribute5") {
+		log.Printf("[DEBUG]  citrixadc-provider: Attribute5 has changed for authenticationoauthaction %s, starting update", authenticationoauthactionName)
+		authenticationoauthaction.Attribute5 = d.Get("attribute5").(string)
+		hasChange = true
+	}
+	if d.HasChange("attribute6") {
+		log.Printf("[DEBUG]  citrixadc-provider: Attribute6 has changed for authenticationoauthaction %s, starting update", authenticationoauthactionName)
+		authenticationoauthaction.Attribute6 = d.Get("attribute6").(string)
+		hasChange = true
+	}
+	if d.HasChange("attribute7") {
+		log.Printf("[DEBUG]  citrixadc-provider: Attribute7 has changed for authenticationoauthaction %s, starting update", authenticationoauthactionName)
+		authenticationoauthaction.Attribute7 = d.Get("attribute7").(string)
+		hasChange = true
+	}
+	if d.HasChange("attribute8") {
+		log.Printf("[DEBUG]  citrixadc-provider: Attribute8 has changed for authenticationoauthaction %s, starting update", authenticationoauthactionName)
+		authenticationoauthaction.Attribute8 = d.Get("attribute8").(string)
+		hasChange = true
+	}
+	if d.HasChange("attribute9") {
+		log.Printf("[DEBUG]  citrixadc-provider: Attribute9 has changed for authenticationoauthaction %s, starting update", authenticationoauthactionName)
+		authenticationoauthaction.Attribute9 = d.Get("attribute9").(string)
+		hasChange = true
+	}
+	if d.HasChange("attributes") {
+		log.Printf("[DEBUG]  citrixadc-provider: Attributes has changed for authenticationoauthaction %s, starting update", authenticationoauthactionName)
+		authenticationoauthaction.Attributes = d.Get("attributes").(string)
+		hasChange = true
+	}
+	if d.HasChange("audience") {
+		log.Printf("[DEBUG]  citrixadc-provider: Audience has changed for authenticationoauthaction %s, starting update", authenticationoauthactionName)
+		authenticationoauthaction.Audience = d.Get("audience").(string)
+		hasChange = true
+	}
+	if d.HasChange("authentication") {
+		log.Printf("[DEBUG]  citrixadc-provider: Authentication has changed for authenticationoauthaction %s, starting update", authenticationoauthactionName)
+		authenticationoauthaction.Authentication = d.Get("authentication").(string)
+		hasChange = true
+	}
+	if d.HasChange("authorizationendpoint") {
+		log.Printf("[DEBUG]  citrixadc-provider: Authorizationendpoint has changed for authenticationoauthaction %s, starting update", authenticationoauthactionName)
+		authenticationoauthaction.Authorizationendpoint = d.Get("authorizationendpoint").(string)
+		hasChange = true
+	}
+	if d.HasChange("certendpoint") {
+		log.Printf("[DEBUG]  citrixadc-provider: Certendpoint has changed for authenticationoauthaction %s, starting update", authenticationoauthactionName)
+		authenticationoauthaction.Certendpoint = d.Get("certendpoint").(string)
+		hasChange = true
+	}
+	if d.HasChange("certfilepath") {
+		log.Printf("[DEBUG]  citrixadc-provider: Certfilepath has changed for authenticationoauthaction %s, starting update", authenticationoauthactionName)
+		authenticationoauthaction.Certfilepath = d.Get("certfilepath").(string)
+		hasChange = true
+	}
+	if d.HasChange("clientid") {
+		log.Printf("[DEBUG]  citrixadc-provider: Clientid has changed for authenticationoauthaction %s, starting update", authenticationoauthactionName)
+		authenticationoauthaction.Clientid = d.Get("clientid").(string)
+		hasChange = true
+	}
+	if d.HasChange("clientsecret") {
+		log.Printf("[DEBUG]  citrixadc-provider: Clientsecret has changed for authenticationoauthaction %s, starting update", authenticationoauthactionName)
+		authenticationoauthaction.Clientsecret = d.Get("clientsecret").(string)
+		hasChange = true
+	}
+	if d.HasChange("defaultauthenticationgroup") {
+		log.Printf("[DEBUG]  citrixadc-provider: Defaultauthenticationgroup has changed for authenticationoauthaction %s, starting update", authenticationoauthactionName)
+		authenticationoauthaction.Defaultauthenticationgroup = d.Get("defaultauthenticationgroup").(string)
+		hasChange = true
+	}
+	if d.HasChange("granttype") {
+		log.Printf("[DEBUG]  citrixadc-provider: Granttype has changed for authenticationoauthaction %s, starting update", authenticationoauthactionName)
+		authenticationoauthaction.Granttype = d.Get("granttype").(string)
+		hasChange = true
+	}
+	if d.HasChange("graphendpoint") {
+		log.Printf("[DEBUG]  citrixadc-provider: Graphendpoint has changed for authenticationoauthaction %s, starting update", authenticationoauthactionName)
+		authenticationoauthaction.Graphendpoint = d.Get("graphendpoint").(string)
+		hasChange = true
+	}
+	if d.HasChange("idtokendecryptendpoint") {
+		log.Printf("[DEBUG]  citrixadc-provider: Idtokendecryptendpoint has changed for authenticationoauthaction %s, starting update", authenticationoauthactionName)
+		authenticationoauthaction.Idtokendecryptendpoint = d.Get("idtokendecryptendpoint").(string)
+		hasChange = true
+	}
+	if d.HasChange("introspecturl") {
+		log.Printf("[DEBUG]  citrixadc-provider: Introspecturl has changed for authenticationoauthaction %s, starting update", authenticationoauthactionName)
+		authenticationoauthaction.Introspecturl = d.Get("introspecturl").(string)
+		hasChange = true
+	}
+	if d.HasChange("issuer") {
+		log.Printf("[DEBUG]  citrixadc-provider: Issuer has changed for authenticationoauthaction %s, starting update", authenticationoauthactionName)
+		authenticationoauthaction.Issuer = d.Get("issuer").(string)
+		hasChange = true
+	}
+	if d.HasChange("metadataurl") {
+		log.Printf("[DEBUG]  citrixadc-provider: Metadataurl has changed for authenticationoauthaction %s, starting update", authenticationoauthactionName)
+		authenticationoauthaction.Metadataurl = d.Get("metadataurl").(string)
+		hasChange = true
+	}
+	if d.HasChange("oauthtype") {
+		log.Printf("[DEBUG]  citrixadc-provider: Oauthtype has changed for authenticationoauthaction %s, starting update", authenticationoauthactionName)
+		authenticationoauthaction.Oauthtype = d.Get("oauthtype").(string)
+		hasChange = true
+	}
+	if d.HasChange("pkce") {
+		log.Printf("[DEBUG]  citrixadc-provider: Pkce has changed for authenticationoauthaction %s, starting update", authenticationoauthactionName)
+		authenticationoauthaction.Pkce = d.Get("pkce").(string)
+		hasChange = true
+	}
+	if d.HasChange("refreshinterval") {
+		log.Printf("[DEBUG]  citrixadc-provider: Refreshinterval has changed for authenticationoauthaction %s, starting update", authenticationoauthactionName)
+		authenticationoauthaction.Refreshinterval = d.Get("refreshinterval").(int)
+		hasChange = true
+	}
+	if d.HasChange("resourceuri") {
+		log.Printf("[DEBUG]  citrixadc-provider: Resourceuri has changed for authenticationoauthaction %s, starting update", authenticationoauthactionName)
+		authenticationoauthaction.Resourceuri = d.Get("resourceuri").(string)
+		hasChange = true
+	}
+	if d.HasChange("skewtime") {
+		log.Printf("[DEBUG]  citrixadc-provider: Skewtime has changed for authenticationoauthaction %s, starting update", authenticationoauthactionName)
+		authenticationoauthaction.Skewtime = d.Get("skewtime").(int)
+		hasChange = true
+	}
+	if d.HasChange("tenantid") {
+		log.Printf("[DEBUG]  citrixadc-provider: Tenantid has changed for authenticationoauthaction %s, starting update", authenticationoauthactionName)
+		authenticationoauthaction.Tenantid = d.Get("tenantid").(string)
+		hasChange = true
+	}
+	if d.HasChange("tokenendpoint") {
+		log.Printf("[DEBUG]  citrixadc-provider: Tokenendpoint has changed for authenticationoauthaction %s, starting update", authenticationoauthactionName)
+		authenticationoauthaction.Tokenendpoint = d.Get("tokenendpoint").(string)
+		hasChange = true
+	}
+	if d.HasChange("tokenendpointauthmethod") {
+		log.Printf("[DEBUG]  citrixadc-provider: Tokenendpointauthmethod has changed for authenticationoauthaction %s, starting update", authenticationoauthactionName)
+		authenticationoauthaction.Tokenendpointauthmethod = d.Get("tokenendpointauthmethod").(string)
+		hasChange = true
+	}
+	if d.HasChange("userinfourl") {
+		log.Printf("[DEBUG]  citrixadc-provider: Userinfourl has changed for authenticationoauthaction %s, starting update", authenticationoauthactionName)
+		authenticationoauthaction.Userinfourl = d.Get("userinfourl").(string)
+		hasChange = true
+	}
+	if d.HasChange("usernamefield") {
+		log.Printf("[DEBUG]  citrixadc-provider: Usernamefield has changed for authenticationoauthaction %s, starting update", authenticationoauthactionName)
+		authenticationoauthaction.Usernamefield = d.Get("usernamefield").(string)
+		hasChange = true
+	}
+
+	if hasChange {
+		_, err := client.UpdateResource(service.Authenticationoauthaction.Type(), authenticationoauthactionName, &authenticationoauthaction)
+		if err != nil {
+			return fmt.Errorf("Error updating authenticationoauthaction %s", authenticationoauthactionName)
+		}
+	}
+	return readAuthenticationoauthactionFunc(d, meta)
+}
+
+func deleteAuthenticationoauthactionFunc(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[DEBUG]  citrixadc-provider: In deleteAuthenticationoauthactionFunc")
+	client := meta.(*NetScalerNitroClient).client
+	authenticationoauthactionName := d.Id()
+	err := client.DeleteResource(service.Authenticationoauthaction.Type(), authenticationoauthactionName)
+	if err != nil {
+		return err
+	}
+
+	d.SetId("")
+	return nil
+}
