@@ -322,6 +322,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_vpnglobal_vpnintranetapplication_binding":               resourceCitrixAdcVpnglobal_vpnintranetapplication_binding(),
 		"citrixadc_vpnvserver_auditsyslogpolicy_binding":                   resourceCitrixAdcVpnvserver_auditsyslogpolicy_binding(),
 		"citrixadc_vpnvserver_auditnslogpolicy_binding":                    resourceCitrixAdcVpnvserver_auditnslogpolicy_binding(),
+		"citrixadc_vpnvserver_appflowpolicy_binding":                       resourceCitrixAdcVpnvserver_appflowpolicy_binding(),
 	}
 }
 
