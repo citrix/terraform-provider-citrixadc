@@ -208,11 +208,8 @@ func installerInstancePoll(d *schema.ResourceData, meta interface{}) resource.St
 		log.Printf("[DEBUG] citrixadc-provider: In installerInstancePoll")
 		err := installerPollLicense(d, meta)
 		if err != nil {
-			if err.Error() == "Timeout" {
-				return nil, "unreachable", nil
-			} else {
-				return nil, "unreachable", err
-			}
+			log.Printf("[DEBUG] citrixadc-provider: Unreachable: %v", err.Error())
+			return nil, "unreachable", nil
 		}
 		log.Printf("[DEBUG] citrixadc-provider: Returning \"reachable\"")
 		return "reachable", "reachable", nil
