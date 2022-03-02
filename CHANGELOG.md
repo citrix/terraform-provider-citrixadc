@@ -1,3 +1,38 @@
+## 1.11.0 (March 2, 2022)
+
+FEATURES
+
+* **New Resource** `vpnglobal_authenticationldappolicy_binding`
+* **New Resource** `vpnglobal_authenticationlocalpolicy_binding`
+* **New Resource** `vpnintranetapplication`
+* **New Resource** `vpnpcoipvserverprofile`
+* **New Resource** `vpnpcoipprofile`
+* **New Resource** `vpnglobal_vpnurl_binding`
+* **New Resource** `vpnglobal_vpnurlpolicy_binding`
+* **New Resource** `vpnglobal_vpneula_binding`
+* **New Resource** `vpnvserver_authenticationldappolicy_binding`
+* **New Resource** `vpnvserver_authenticationradiuspolicy_binding`
+* **New Resource** `vpnnexthopserver`
+* **New Resource** `vpnportaltheme`
+* **New Resource** `vpnsamlssoprofile`
+* **New Resource** `vpnglobal_auditsyslogpolicy_binding`
+* **New Resource** `vpnglobal_vpnintranetapplication_binding`
+* **New Resource** `vpnvserver_auditsyslogpolicy_binding`
+* **New Resource** `vpnvserver_auditnslogpolicy_binding`
+* **New Resource** `vpnvserver_appflowpolicy_binding`
+* **New Resource** `vpnvserver_analyticsprofile_binding`
+* **New Resource** `vpnvserver_vpneula_binding`
+* **New Resource** `vpnvserver_vpnintranetapplication_binding`
+* **New Resource** `vpnvserver_vpnnexthopserver_binding`
+* **New Resource** `vpnvserver_vpnportaltheme_binding`
+* **New Resource** `vpnvserver_vpntrafficpolicy_binding`
+* **New Resource** `hafailover`
+
+
+BUG FIXES
+
+* Fix resource `service` to calculate service state correctly.
+
 ## 1.10.0 (February 22, 2022)
 
 FEATURES
