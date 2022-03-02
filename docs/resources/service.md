@@ -82,6 +82,10 @@ resource "citrixadc_service" "tf_service" {
 * `riseapbrstatsmsgcode` - (Optional)
 * `accessdown` - (Optional) 
 * `appflowlog` - (Optional)
+* `wait_until_disabled` - (Optional) Boolean flag to signify if the resource will wait for the service to be in a disabled state after the disable operation has been issued.
+* `disabled_timeout` - (Optional) Time period to wait for the service to be in a disabled state after the disable operation.
+* `disabled_poll_delay` - (Optional) Time period to wait before the first poll for the disabled state read.
+* `disabled_poll_interval` - (Optional) Time period for disabled state read poll interval between tries.
 
 
 ## Attribute Reference

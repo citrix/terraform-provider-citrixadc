@@ -229,6 +229,7 @@ resource "citrixadc_service" "tf_acc_service" {
   state = "ENABLED"
   graceful = "YES"
   delay = 60
+  wait_until_disabled = true
 }
 `
 
@@ -255,6 +256,7 @@ resource "citrixadc_service" "tf_acc_service" {
   state = "DISABLED"
   graceful = "YES"
   delay = 60
+  wait_until_disabled = true
 }
 `
 
