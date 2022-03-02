@@ -3,6 +3,7 @@ package citrixadc
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/citrix/adc-nitro-go/resource/config/basic"
 	"github.com/citrix/adc-nitro-go/resource/config/lb"
@@ -311,6 +312,27 @@ func resourceCitrixAdcService() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			// Wait for disabled state parameters
+			"wait_until_disabled": &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
+			"disabled_timeout": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "2m",
+			},
+			"disabled_poll_delay": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "2s",
+			},
+			"disabled_poll_interval": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "5s",
+			},
 		},
 	}
 }
@@ -536,6 +558,13 @@ func readServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("useproxyport", data["useproxyport"])
 	d.Set("usip", data["usip"])
 	d.Set("weight", data["weight"])
+
+	// Set state according to svrstate
+	if data["svrstate"] == "OUT OF SERVICE" {
+		d.Set("state", "DISABLED")
+	} else {
+		d.Set("state", "ENABLED")
+	}
 
 	var boundVserver string
 	if _, ok := d.GetOk("lbvserver"); ok {
@@ -974,6 +1003,10 @@ func doServiceStateChange(d *schema.ResourceData, client *service.NitroClient) e
 		if err != nil {
 			return err
 		}
+		// Wait for state change
+		if d.Get("wait_until_disabled").(bool) {
+			serviceWaitDisableState(d, client)
+		}
 	} else {
 		return fmt.Errorf("\"%s\" is not a valid state. Use (\"ENABLED\", \"DISABLED\").", newstate)
 	}
@@ -1037,4 +1070,55 @@ func syncSslservice(d *schema.ResourceData, client *service.NitroClient) error {
 	}
 
 	return nil
+}
+
+func serviceWaitDisableState(d *schema.ResourceData, client *service.NitroClient) error {
+	log.Printf("[DEBUG] citrixadc-provider: In serviceWaitDisableState")
+
+	var err error
+	var timeout time.Duration
+	if timeout, err = time.ParseDuration(d.Get("disabled_timeout").(string)); err != nil {
+		return err
+	}
+
+	var poll_interval time.Duration
+	if poll_interval, err = time.ParseDuration(d.Get("disabled_poll_interval").(string)); err != nil {
+		return err
+	}
+
+	var poll_delay time.Duration
+	if poll_delay, err = time.ParseDuration(d.Get("disabled_poll_delay").(string)); err != nil {
+		return err
+	}
+	stateConf := &resource.StateChangeConf{
+		Pending:      []string{"enabled"},
+		Target:       []string{"disabled"},
+		Refresh:      serviceStatePoll(d, client),
+		Timeout:      timeout,
+		PollInterval: poll_interval,
+		Delay:        poll_delay,
+	}
+
+	_, err = stateConf.WaitForState()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func serviceStatePoll(d *schema.ResourceData, client *service.NitroClient) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		log.Printf("[DEBUG] citrixadc-provider: In serviceStatePoll")
+		serviceName := d.Id()
+		data, err := client.FindResource(service.Service.Type(), serviceName)
+		if err != nil {
+			return nil, "", err
+		}
+		if data["svrstate"] == "OUT OF SERVICE" {
+			return "disabled", "disabled", nil
+		} else {
+			return "enabled", "enabled", nil
+		}
+	}
 }
