@@ -36,9 +36,10 @@ type NetScalerNitroClient struct {
 
 func Provider() terraform.ResourceProvider {
 	return &schema.Provider{
-		Schema:        providerSchema(),
-		ResourcesMap:  providerResources(),
-		ConfigureFunc: providerConfigure,
+		Schema:         providerSchema(),
+		ResourcesMap:   providerResources(),
+		DataSourcesMap: providerDataSources(),
+		ConfigureFunc:  providerConfigure,
 	}
 }
 
@@ -86,6 +87,12 @@ func providerSchema() map[string]*schema.Schema {
 			Description: "Partition to target",
 			DefaultFunc: schema.EnvDefaultFunc("NS_PARTITION", nil),
 		},
+	}
+}
+
+func providerDataSources() map[string]*schema.Resource {
+	return map[string]*schema.Resource{
+		"citrixadc_nsversion": dataSourceCitrixAdcNsversion(),
 	}
 }
 
