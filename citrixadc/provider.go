@@ -339,6 +339,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_hafailover":                                             resourceCitrixAdcHafailover(),
 		"citrixadc_vpnvserver_vpnurl_binding":                              resourceCitrixAdcVpnvserver_vpnurl_binding(),
 		"citrixadc_vpnvserver_rewritepolicy_binding":                       resourceCitrixAdcVpnvserver_rewritepolicy_binding(),
+		"citrixadc_vpnvserver_responderpolicy_binding":                     resourceCitrixAdcVpnvserver_responderpolicy_binding(),
 	}
 }
 
