@@ -1,3 +1,14 @@
+## 1.12.0 (March 15, 2022)
+
+FEATURES
+
+* **New Data Source** `nsversion`
+* **New Resource** `vpnvserver_vpnurl_binding`
+* **New Resource** `vpnvserver_rewritepolicy_binding`
+* **New Resource** `vpnvserver_responderpolicy_binding`
+* **New Resource** `vpnvserver_cspolicy_binding`
+* **New Resource** `authenticationoauthaction`
+
 ## 1.11.0 (March 2, 2022)
 
 FEATURES
