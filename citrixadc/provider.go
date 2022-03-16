@@ -345,6 +345,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_authenticationldappolicy":                               resourceCitrixAdcAuthenticationldappolicy(),
 		"citrixadc_authenticationlocalpolicy":                              resourceCitrixAdcAuthenticationlocalpolicy(),
 		"citrixadc_authenticationnoauthaction":                             resourceCitrixAdcAuthenticationnoauthaction(),
+		"citrixadc_authenticationsamlaction":                               resourceCitrixAdcAuthenticationsamlaction(),
 	}
 }
 
