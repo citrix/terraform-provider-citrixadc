@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"net/url"
 )
 
 func resourceCitrixAdcVpnvserver_appcontroller_binding() *schema.Resource {
@@ -132,8 +133,7 @@ func deleteVpnvserver_appcontroller_bindingFunc(d *schema.ResourceData, meta int
 	appcontroller := idSlice[1]
 
 	args := make([]string, 0)
-	args = append(args, fmt.Sprintf("appcontroller:%s", appcontroller))
-
+	args = append(args, fmt.Sprintf("appcontroller:%v", url.QueryEscape(appcontroller)))
 	err := client.DeleteResourceWithArgs(service.Vpnvserver_appcontroller_binding.Type(), name, args)
 	if err != nil {
 		return err

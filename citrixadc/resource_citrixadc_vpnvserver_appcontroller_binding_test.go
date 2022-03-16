@@ -65,7 +65,7 @@ func TestAccVpnvserver_appcontroller_binding_basic(t *testing.T) {
 			resource.TestStep{
 				Config: testAccVpnvserver_appcontroller_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpnvserver_appcontroller_bindingNotExist("citrixadc_vpnvserver_appcontroller_binding.tf_bind", "name,secondIdComponent"),
+					testAccCheckVpnvserver_appcontroller_bindingNotExist("citrixadc_vpnvserver_appcontroller_binding.tf_bind", "name,http://www.example.com"),
 				),
 			},
 		},
