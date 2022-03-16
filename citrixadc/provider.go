@@ -349,6 +349,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_vpnvserver_cachepolicy_binding":                         resourceCitrixAdcVpnvserver_cachepolicy_binding(),
 		"citrixadc_vpnvserver_appcontroller_binding":                       resourceCitrixAdcVpnvserver_appcontroller_binding(),
 		"citrixadc_authenticationepaaction":                                resourceCitrixAdcAuthenticationepaaction(),
+		"citrixadc_authenticationloginschema":                              resourceCitrixAdcAuthenticationloginschema(),
 	}
 }
 
