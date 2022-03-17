@@ -350,6 +350,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_vpnvserver_appcontroller_binding":                       resourceCitrixAdcVpnvserver_appcontroller_binding(),
 		"citrixadc_authenticationepaaction":                                resourceCitrixAdcAuthenticationepaaction(),
 		"citrixadc_authenticationloginschema":                              resourceCitrixAdcAuthenticationloginschema(),
+		"citrixadc_authenticationdfaaction":                                resourceCitrixAdcAuthenticationdfaaction(),
 	}
 }
 
