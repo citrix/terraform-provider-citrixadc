@@ -358,6 +358,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_authenticationwebauthaction":                            resourceCitrixAdcAuthenticationwebauthaction(),
 		"citrixadc_authenticationcaptchaaction":                            resourceCitrixAdcAuthenticationcaptchaaction(),
 		"citrixadc_authenticationradiuspolicy":                             resourceCitrixAdcAuthenticationradiuspolicy(),
+		"citrixadc_authenticationtacacsaction":                             resourceCitrixAdcAuthenticationtacacsaction(),
 	}
 }
 
