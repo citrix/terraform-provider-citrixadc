@@ -1,0 +1,416 @@
+package citrixadc
+
+import (
+	"github.com/citrix/adc-nitro-go/resource/config/authentication"
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform/helper/schema"
+
+	"fmt"
+	"log"
+)
+
+func resourceCitrixAdcAuthenticationtacacsaction() *schema.Resource {
+	return &schema.Resource{
+		SchemaVersion: 1,
+		Create:        createAuthenticationtacacsactionFunc,
+		Read:          readAuthenticationtacacsactionFunc,
+		Update:        updateAuthenticationtacacsactionFunc,
+		Delete:        deleteAuthenticationtacacsactionFunc,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
+		Schema: map[string]*schema.Schema{
+			"name": &schema.Schema{
+				Type:     schema.TypeString,
+				Required: true,
+				Computed: false,
+				ForceNew: true,
+			},
+			"accounting": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"attribute1": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"attribute10": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"attribute11": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"attribute12": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"attribute13": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"attribute14": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"attribute15": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"attribute16": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"attribute2": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"attribute3": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"attribute4": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"attribute5": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"attribute6": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"attribute7": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"attribute8": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"attribute9": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"attributes": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"auditfailedcmds": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"authorization": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"authtimeout": &schema.Schema{
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"defaultauthenticationgroup": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"groupattrname": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"serverip": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"serverport": &schema.Schema{
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"tacacssecret": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+		},
+	}
+}
+
+func createAuthenticationtacacsactionFunc(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[DEBUG]  citrixadc-provider: In createAuthenticationtacacsactionFunc")
+	client := meta.(*NetScalerNitroClient).client
+	authenticationtacacsactionName := d.Get("name").(string)
+	authenticationtacacsaction := authentication.Authenticationtacacsaction{
+		Accounting:                 d.Get("accounting").(string),
+		Attribute1:                 d.Get("attribute1").(string),
+		Attribute10:                d.Get("attribute10").(string),
+		Attribute11:                d.Get("attribute11").(string),
+		Attribute12:                d.Get("attribute12").(string),
+		Attribute13:                d.Get("attribute13").(string),
+		Attribute14:                d.Get("attribute14").(string),
+		Attribute15:                d.Get("attribute15").(string),
+		Attribute16:                d.Get("attribute16").(string),
+		Attribute2:                 d.Get("attribute2").(string),
+		Attribute3:                 d.Get("attribute3").(string),
+		Attribute4:                 d.Get("attribute4").(string),
+		Attribute5:                 d.Get("attribute5").(string),
+		Attribute6:                 d.Get("attribute6").(string),
+		Attribute7:                 d.Get("attribute7").(string),
+		Attribute8:                 d.Get("attribute8").(string),
+		Attribute9:                 d.Get("attribute9").(string),
+		Attributes:                 d.Get("attributes").(string),
+		Auditfailedcmds:            d.Get("auditfailedcmds").(string),
+		Authorization:              d.Get("authorization").(string),
+		Authtimeout:                d.Get("authtimeout").(int),
+		Defaultauthenticationgroup: d.Get("defaultauthenticationgroup").(string),
+		Groupattrname:              d.Get("groupattrname").(string),
+		Name:                       d.Get("name").(string),
+		Serverip:                   d.Get("serverip").(string),
+		Serverport:                 d.Get("serverport").(int),
+		Tacacssecret:               d.Get("tacacssecret").(string),
+	}
+
+	_, err := client.AddResource(service.Authenticationtacacsaction.Type(), authenticationtacacsactionName, &authenticationtacacsaction)
+	if err != nil {
+		return err
+	}
+
+	d.SetId(authenticationtacacsactionName)
+
+	err = readAuthenticationtacacsactionFunc(d, meta)
+	if err != nil {
+		log.Printf("[ERROR] netscaler-provider: ?? we just created this authenticationtacacsaction but we can't read it ?? %s", authenticationtacacsactionName)
+		return nil
+	}
+	return nil
+}
+
+func readAuthenticationtacacsactionFunc(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[DEBUG] citrixadc-provider:  In readAuthenticationtacacsactionFunc")
+	client := meta.(*NetScalerNitroClient).client
+	authenticationtacacsactionName := d.Id()
+	log.Printf("[DEBUG] citrixadc-provider: Reading authenticationtacacsaction state %s", authenticationtacacsactionName)
+	data, err := client.FindResource(service.Authenticationtacacsaction.Type(), authenticationtacacsactionName)
+	if err != nil {
+		log.Printf("[WARN] citrixadc-provider: Clearing authenticationtacacsaction state %s", authenticationtacacsactionName)
+		d.SetId("")
+		return nil
+	}
+	d.Set("accounting", data["accounting"])
+	d.Set("attribute1", data["attribute1"])
+	d.Set("attribute10", data["attribute10"])
+	d.Set("attribute11", data["attribute11"])
+	d.Set("attribute12", data["attribute12"])
+	d.Set("attribute13", data["attribute13"])
+	d.Set("attribute14", data["attribute14"])
+	d.Set("attribute15", data["attribute15"])
+	d.Set("attribute16", data["attribute16"])
+	d.Set("attribute2", data["attribute2"])
+	d.Set("attribute3", data["attribute3"])
+	d.Set("attribute4", data["attribute4"])
+	d.Set("attribute5", data["attribute5"])
+	d.Set("attribute6", data["attribute6"])
+	d.Set("attribute7", data["attribute7"])
+	d.Set("attribute8", data["attribute8"])
+	d.Set("attribute9", data["attribute9"])
+	d.Set("attributes", data["attributes"])
+	d.Set("auditfailedcmds", data["auditfailedcmds"])
+	d.Set("authorization", data["authorization"])
+	d.Set("authtimeout", data["authtimeout"])
+	d.Set("defaultauthenticationgroup", data["defaultauthenticationgroup"])
+	d.Set("groupattrname", data["groupattrname"])
+	d.Set("name", data["name"])
+	d.Set("serverip", data["serverip"])
+	d.Set("serverport", data["serverport"])
+	d.Set("tacacssecret", data["tacacssecret"])
+
+	return nil
+
+}
+
+func updateAuthenticationtacacsactionFunc(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[DEBUG]  citrixadc-provider: In updateAuthenticationtacacsactionFunc")
+	client := meta.(*NetScalerNitroClient).client
+	authenticationtacacsactionName := d.Get("name").(string)
+
+	authenticationtacacsaction := authentication.Authenticationtacacsaction{
+		Name: d.Get("name").(string),
+	}
+	hasChange := false
+	if d.HasChange("accounting") {
+		log.Printf("[DEBUG]  citrixadc-provider: Accounting has changed for authenticationtacacsaction %s, starting update", authenticationtacacsactionName)
+		authenticationtacacsaction.Accounting = d.Get("accounting").(string)
+		hasChange = true
+	}
+	if d.HasChange("attribute1") {
+		log.Printf("[DEBUG]  citrixadc-provider: Attribute1 has changed for authenticationtacacsaction %s, starting update", authenticationtacacsactionName)
+		authenticationtacacsaction.Attribute1 = d.Get("attribute1").(string)
+		hasChange = true
+	}
+	if d.HasChange("attribute10") {
+		log.Printf("[DEBUG]  citrixadc-provider: Attribute10 has changed for authenticationtacacsaction %s, starting update", authenticationtacacsactionName)
+		authenticationtacacsaction.Attribute10 = d.Get("attribute10").(string)
+		hasChange = true
+	}
+	if d.HasChange("attribute11") {
+		log.Printf("[DEBUG]  citrixadc-provider: Attribute11 has changed for authenticationtacacsaction %s, starting update", authenticationtacacsactionName)
+		authenticationtacacsaction.Attribute11 = d.Get("attribute11").(string)
+		hasChange = true
+	}
+	if d.HasChange("attribute12") {
+		log.Printf("[DEBUG]  citrixadc-provider: Attribute12 has changed for authenticationtacacsaction %s, starting update", authenticationtacacsactionName)
+		authenticationtacacsaction.Attribute12 = d.Get("attribute12").(string)
+		hasChange = true
+	}
+	if d.HasChange("attribute13") {
+		log.Printf("[DEBUG]  citrixadc-provider: Attribute13 has changed for authenticationtacacsaction %s, starting update", authenticationtacacsactionName)
+		authenticationtacacsaction.Attribute13 = d.Get("attribute13").(string)
+		hasChange = true
+	}
+	if d.HasChange("attribute14") {
+		log.Printf("[DEBUG]  citrixadc-provider: Attribute14 has changed for authenticationtacacsaction %s, starting update", authenticationtacacsactionName)
+		authenticationtacacsaction.Attribute14 = d.Get("attribute14").(string)
+		hasChange = true
+	}
+	if d.HasChange("attribute15") {
+		log.Printf("[DEBUG]  citrixadc-provider: Attribute15 has changed for authenticationtacacsaction %s, starting update", authenticationtacacsactionName)
+		authenticationtacacsaction.Attribute15 = d.Get("attribute15").(string)
+		hasChange = true
+	}
+	if d.HasChange("attribute16") {
+		log.Printf("[DEBUG]  citrixadc-provider: Attribute16 has changed for authenticationtacacsaction %s, starting update", authenticationtacacsactionName)
+		authenticationtacacsaction.Attribute16 = d.Get("attribute16").(string)
+		hasChange = true
+	}
+	if d.HasChange("attribute2") {
+		log.Printf("[DEBUG]  citrixadc-provider: Attribute2 has changed for authenticationtacacsaction %s, starting update", authenticationtacacsactionName)
+		authenticationtacacsaction.Attribute2 = d.Get("attribute2").(string)
+		hasChange = true
+	}
+	if d.HasChange("attribute3") {
+		log.Printf("[DEBUG]  citrixadc-provider: Attribute3 has changed for authenticationtacacsaction %s, starting update", authenticationtacacsactionName)
+		authenticationtacacsaction.Attribute3 = d.Get("attribute3").(string)
+		hasChange = true
+	}
+	if d.HasChange("attribute4") {
+		log.Printf("[DEBUG]  citrixadc-provider: Attribute4 has changed for authenticationtacacsaction %s, starting update", authenticationtacacsactionName)
+		authenticationtacacsaction.Attribute4 = d.Get("attribute4").(string)
+		hasChange = true
+	}
+	if d.HasChange("attribute5") {
+		log.Printf("[DEBUG]  citrixadc-provider: Attribute5 has changed for authenticationtacacsaction %s, starting update", authenticationtacacsactionName)
+		authenticationtacacsaction.Attribute5 = d.Get("attribute5").(string)
+		hasChange = true
+	}
+	if d.HasChange("attribute6") {
+		log.Printf("[DEBUG]  citrixadc-provider: Attribute6 has changed for authenticationtacacsaction %s, starting update", authenticationtacacsactionName)
+		authenticationtacacsaction.Attribute6 = d.Get("attribute6").(string)
+		hasChange = true
+	}
+	if d.HasChange("attribute7") {
+		log.Printf("[DEBUG]  citrixadc-provider: Attribute7 has changed for authenticationtacacsaction %s, starting update", authenticationtacacsactionName)
+		authenticationtacacsaction.Attribute7 = d.Get("attribute7").(string)
+		hasChange = true
+	}
+	if d.HasChange("attribute8") {
+		log.Printf("[DEBUG]  citrixadc-provider: Attribute8 has changed for authenticationtacacsaction %s, starting update", authenticationtacacsactionName)
+		authenticationtacacsaction.Attribute8 = d.Get("attribute8").(string)
+		hasChange = true
+	}
+	if d.HasChange("attribute9") {
+		log.Printf("[DEBUG]  citrixadc-provider: Attribute9 has changed for authenticationtacacsaction %s, starting update", authenticationtacacsactionName)
+		authenticationtacacsaction.Attribute9 = d.Get("attribute9").(string)
+		hasChange = true
+	}
+	if d.HasChange("attributes") {
+		log.Printf("[DEBUG]  citrixadc-provider: Attributes has changed for authenticationtacacsaction %s, starting update", authenticationtacacsactionName)
+		authenticationtacacsaction.Attributes = d.Get("attributes").(string)
+		hasChange = true
+	}
+	if d.HasChange("auditfailedcmds") {
+		log.Printf("[DEBUG]  citrixadc-provider: Auditfailedcmds has changed for authenticationtacacsaction %s, starting update", authenticationtacacsactionName)
+		authenticationtacacsaction.Auditfailedcmds = d.Get("auditfailedcmds").(string)
+		hasChange = true
+	}
+	if d.HasChange("authorization") {
+		log.Printf("[DEBUG]  citrixadc-provider: Authorization has changed for authenticationtacacsaction %s, starting update", authenticationtacacsactionName)
+		authenticationtacacsaction.Authorization = d.Get("authorization").(string)
+		hasChange = true
+	}
+	if d.HasChange("authtimeout") {
+		log.Printf("[DEBUG]  citrixadc-provider: Authtimeout has changed for authenticationtacacsaction %s, starting update", authenticationtacacsactionName)
+		authenticationtacacsaction.Authtimeout = d.Get("authtimeout").(int)
+		hasChange = true
+	}
+	if d.HasChange("defaultauthenticationgroup") {
+		log.Printf("[DEBUG]  citrixadc-provider: Defaultauthenticationgroup has changed for authenticationtacacsaction %s, starting update", authenticationtacacsactionName)
+		authenticationtacacsaction.Defaultauthenticationgroup = d.Get("defaultauthenticationgroup").(string)
+		hasChange = true
+	}
+	if d.HasChange("groupattrname") {
+		log.Printf("[DEBUG]  citrixadc-provider: Groupattrname has changed for authenticationtacacsaction %s, starting update", authenticationtacacsactionName)
+		authenticationtacacsaction.Groupattrname = d.Get("groupattrname").(string)
+		hasChange = true
+	}
+	if d.HasChange("serverip") {
+		log.Printf("[DEBUG]  citrixadc-provider: Serverip has changed for authenticationtacacsaction %s, starting update", authenticationtacacsactionName)
+		authenticationtacacsaction.Serverip = d.Get("serverip").(string)
+		hasChange = true
+	}
+	if d.HasChange("serverport") {
+		log.Printf("[DEBUG]  citrixadc-provider: Serverport has changed for authenticationtacacsaction %s, starting update", authenticationtacacsactionName)
+		authenticationtacacsaction.Serverport = d.Get("serverport").(int)
+		hasChange = true
+	}
+	if d.HasChange("tacacssecret") {
+		log.Printf("[DEBUG]  citrixadc-provider: Tacacssecret has changed for authenticationtacacsaction %s, starting update", authenticationtacacsactionName)
+		authenticationtacacsaction.Tacacssecret = d.Get("tacacssecret").(string)
+		hasChange = true
+	}
+
+	if hasChange {
+		_, err := client.UpdateResource(service.Authenticationtacacsaction.Type(), authenticationtacacsactionName, &authenticationtacacsaction)
+		if err != nil {
+			return fmt.Errorf("Error updating authenticationtacacsaction %s", authenticationtacacsactionName)
+		}
+	}
+	return readAuthenticationtacacsactionFunc(d, meta)
+}
+
+func deleteAuthenticationtacacsactionFunc(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[DEBUG]  citrixadc-provider: In deleteAuthenticationtacacsactionFunc")
+	client := meta.(*NetScalerNitroClient).client
+	authenticationtacacsactionName := d.Id()
+	err := client.DeleteResource(service.Authenticationtacacsaction.Type(), authenticationtacacsactionName)
+	if err != nil {
+		return err
+	}
+
+	d.SetId("")
+
+	return nil
+}
