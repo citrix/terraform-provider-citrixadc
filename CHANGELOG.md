@@ -1,3 +1,60 @@
+## 1.13.0 (March 31, 2022)
+
+FEATURES
+
+* **New Resource** `authenticationldappolicy`
+* **New Resource** `authenticationlocalpolicy`
+* **New Resource** `authenticationnoauthaction`
+* **New Resource** `authenticationsamlaction`
+* **New Resource** `vpnvserver_cachepolicy_binding`
+* **New Resource** `vpnvserver_appcontroller_binding`
+* **New Resource** `authenticationepaaction`
+* **New Resource** `authenticationloginschema`
+* **New Resource** `authenticationdfaaction`
+* **New Resource** `authenticationsamlpolicy`
+* **New Resource** `authenticationradiusaction`
+* **New Resource** `authenticationdfapolicy`
+* **New Resource** `authenticationemailaction`
+* **New Resource** `authenticationwebauthaction`
+* **New Resource** `authenticationcaptchaaction`
+* **New Resource** `authenticationradiuspolicy`
+* **New Resource** `authenticationtacacsaction`
+* **New Resource** `authenticationstorefrontauthaction`
+* **New Resource** `authenticationwebauthpolicy`
+* **New Resource** `authenticationcitrixauthaction`
+* **New Resource** `authenticationtacacspolicy`
+* **New Resource** `authenticationoauthidpprofile`
+* **New Resource** `authenticationcertaction`
+* **New Resource** `authenticationpushservice`
+* **New Resource** `authenticationoauthidppolicy`
+* **New Resource** `authenticationcertpolicy`
+* **New Resource** `authenticationnegotiateaction`
+* **New Resource** `authenticationloginschemapolicy`
+* **New Resource** `vpnvserver_authenticationdfapolicy_binding`
+* **New Resource** `vpnglobal_vpnnexthopserver_binding`
+* **New Resource** `vpnglobal_vpnportaltheme_binding`
+* **New Resource** `vpnglobal_authenticationcertpolicy_binding`
+* **New Resource** `vpnglobal_authenticationradiuspolicy_binding`
+* **New Resource** `vpnglobal_authenticationsamlpolicy_binding`
+* **New Resource** `vpnglobal_authenticationtacacspolicy_binding`
+* **New Resource** `vpnvserver_authenticationcertpolicy_binding`
+* **New Resource** `vpnvserver_authenticationlocalpolicy_binding`
+* **New Resource** `vpnvserver_authenticationsamlpolicy_binding`
+* **New Resource** `vpnvserver_authenticationtacacspolicy_binding`
+* **New Resource** `vpnvserver_authenticationwebauthpolicy_binding`
+* **New Resource** `authenticationvserver_vpnportaltheme_binding`
+* **New Resource** `authenticationvserver_authenticationwebauthpolicy_binding`
+* **New Resource** `authenticationvserver_authenticationcertpolicy_binding`
+* **New Resource** `authenticationvserver_rewritepolicy_binding`
+* **New Resource** `authenticationvserver_authenticationldappolicy_binding`
+* **New Resource** `authenticationvserver_auditsyslogpolicy_binding`
+* **New Resource** `authenticationvserver_authenticationsamlpolicy_binding`
+* **New Resource** `authenticationvserver_authenticationtacacspolicy_binding`
+* **New Resource** `authenticationvserver_authenticationlocalpolicy_binding`
+* **New Resource** `authenticationvserver_cspolicy_binding`
+* **New Resource** `authenticationvserver_responderpolicy_binding`
+* **New Resource** `authenticationvserver_authenticationradiuspolicy_binding`
+
 ## 1.12.0 (March 15, 2022)
 
 FEATURES
