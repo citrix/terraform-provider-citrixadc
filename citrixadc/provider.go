@@ -400,6 +400,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_vpnglobal_sharefileserver_binding":                         resourceCitrixAdcVpnglobal_sharefileserver_binding(),
 		"citrixadc_vpnglobal_vpnclientlessaccesspolicy_binding":               resourceCitrixAdcVpnglobal_vpnclientlessaccesspolicy_binding(),
 		"citrixadc_vpnvserver_intranetip_binding":                             resourceCitrixAdcVpnvserver_intranetip_binding(),
+		"citrixadc_vpnvserver_sharefileserver_binding":                        resourceCitrixAdcVpnvserver_sharefileserver_binding(),
 	}
 }
 
