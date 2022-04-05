@@ -403,6 +403,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_vpnvserver_sharefileserver_binding":                        resourceCitrixAdcVpnvserver_sharefileserver_binding(),
 		"citrixadc_authenticationnegotiatepolicy":                             resourceCitrixAdcAuthenticationnegotiatepolicy(),
 		"citrixadc_vpnvserver_aaapreauthenticationpolicy_binding":             resourceCitrixAdcVpnvserver_aaapreauthenticationpolicy_binding(),
+		"citrixadc_vpnvserver_icapolicy_binding":                              resourceCitrixAdcVpnvserver_icapolicy_binding(),
 	}
 }
 
