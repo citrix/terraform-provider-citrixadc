@@ -1,0 +1,633 @@
+workflow:
+
+  server:
+    lifecycle: object
+    endpoint: server
+    primary_id_attribute: name
+    resource_missing_errorcode: 258
+    allow_recreate: true
+    non_updateable_attributes:
+      - domain
+      - state
+      - ipv6address
+      - td
+      - querytype
+      - delay
+      - graceful
+      - Internal
+      - newname
+
+  service:
+    lifecycle: object
+    endpoint: service
+    primary_id_attribute: name
+    resource_missing_errorcode: 344
+    allow_recreate: true
+    non_updateable_attributes:
+      - ip
+      - servername
+      - servicetype
+      - port
+      - cleartextport
+      - cachetype
+      - state
+      - td
+      - delay
+      - graceful
+      - all
+      - Internal
+      - newname
+
+  servicegroup:
+    lifecycle: object
+    endpoint: servicegroup
+    primary_id_attribute: servicegroupname
+    resource_missing_errorcode: 258
+    allow_recreate: true
+    non_updateable_attributes:
+      - servicetype
+      - cachetype
+      - td
+      - state
+      - memberport
+      - delay
+      - graceful
+      - includemembers
+      - newname
+
+  service_lbmonitor_binding:
+    lifecycle: binding
+    endpoint: service_lbmonitor_binding
+    bound_resource_missing_errorcode: 258
+    primary_id_attribute: name
+    secondary_id_attribute: monitor_name
+    delete_id_attributes:
+      - monitor_name
+
+  servicegroup_lbmonitor_binding:
+    lifecycle: binding
+    endpoint: servicegroup_lbmonitor_binding
+    bound_resource_missing_errorcode: 351
+    primary_id_attribute: servicegroupname
+    secondary_id_attribute: monitor_name
+    delete_id_attributes:
+      - monitor_name
+      - port
+
+  lbgroup:
+    lifecycle: object
+    endpoint: lbgroup
+    primary_id_attribute: name
+    resource_missing_errorcode: 258
+    allow_recreate: true
+    non_updateable_attributes:
+      - newname
+
+  lbgroup_lbvserver_binding:
+    lifecycle: binding
+    endpoint: lbgroup_lbvserver_binding
+    bound_resource_missing_errorcode: 258
+    primary_id_attribute: name
+    secondary_id_attribute: vservername
+    delete_id_attributes:
+      - vservername
+
+  lbvserver:
+    lifecycle: object
+    endpoint: lbvserver
+    primary_id_attribute: name
+    resource_missing_errorcode: 258
+    allow_recreate: true
+    non_updateable_attributes:
+      - servicetype
+      - port
+      - range
+      - state
+      - td
+      - redirurlflags
+      - newname
+
+  lbvserver_analyticsprofile_binding:
+    lifecycle: binding
+    endpoint: lbvserver_analyticsprofile_binding
+    bound_resource_missing_errorcode: 258
+    primary_id_attribute: name
+    secondary_id_attribute: analyticsprofile
+    delete_id_attributes:
+      - analyticsprofile
+
+  lbvserver_appflowpolicy_binding:
+    lifecycle: binding
+    endpoint: lbvserver_appflowpolicy_binding
+    bound_resource_missing_errorcode: 258
+    primary_id_attribute: name
+    secondary_id_attribute: policyname
+    delete_id_attributes:
+      - policyname
+      - priority
+      - bindpoint
+
+  lbvserver_appfwpolicy_binding:
+    lifecycle: binding
+    endpoint: lbvserver_appfwpolicy_binding
+    bound_resource_missing_errorcode: 258
+    primary_id_attribute: name
+    secondary_id_attribute: policyname
+    delete_id_attributes:
+      - policyname
+      - priority
+      - bindpoint
+
+  lbvserver_appqoepolicy_binding:
+    lifecycle: binding
+    endpoint: lbvserver_appqoepolicy_binding
+    bound_resource_missing_errorcode: 258
+    primary_id_attribute: name
+    secondary_id_attribute: policyname
+    delete_id_attributes:
+      - policyname
+      - priority
+      - bindpoint
+
+  lbvserver_auditnslogpolicy_binding:
+    lifecycle: binding
+    endpoint: lbvserver_auditnslogpolicy_binding
+    bound_resource_missing_errorcode: 258
+    primary_id_attribute: name
+    secondary_id_attribute: policyname
+    delete_id_attributes:
+      - policyname
+      - priority
+      - bindpoint
+
+  lbvserver_auditsyslogpolicy_binding:
+    lifecycle: binding
+    endpoint: lbvserver_auditsyslogpolicy_binding
+    bound_resource_missing_errorcode: 258
+    primary_id_attribute: name
+    secondary_id_attribute: policyname
+    delete_id_attributes:
+      - policyname
+      - priority
+      - bindpoint
+
+  lbvserver_authorizationpolicy_binding:
+    lifecycle: binding
+    endpoint: lbvserver_authorizationpolicy_binding
+    bound_resource_missing_errorcode: 258
+    primary_id_attribute: name
+    secondary_id_attribute: policyname
+    delete_id_attributes:
+      - policyname
+      - priority
+      - bindpoint
+
+  lbvserver_cachepolicy_binding:
+    lifecycle: binding
+    endpoint: lbvserver_cachepolicy_binding
+    bound_resource_missing_errorcode: 258
+    primary_id_attribute: name
+    secondary_id_attribute: policyname
+    delete_id_attributes:
+      - policyname
+      - priority
+      - bindpoint
+
+  lbvserver_cmppolicy_binding:
+    lifecycle: binding
+    endpoint: lbvserver_cmppolicy_binding
+    bound_resource_missing_errorcode: 258
+    primary_id_attribute: name
+    secondary_id_attribute: policyname
+    delete_id_attributes:
+      - policyname
+      - priority
+      - bindpoint
+
+  lbvserver_csvserver_binding:
+    lifecycle: binding
+    endpoint: lbvserver_csvserver_binding
+    bound_resource_missing_errorcode: 258
+    primary_id_attribute: name
+    delete_id_attributes: []
+
+  lbvserver_dnspolicy64_binding:
+    lifecycle: binding
+    endpoint: lbvserver_dnspolicy64_binding
+    bound_resource_missing_errorcode: 258
+    primary_id_attribute: name
+    secondary_id_attribute: policyname
+    delete_id_attributes:
+      - policyname
+      - priority
+      - bindpoint
+
+  lbvserver_feopolicy_binding:
+    lifecycle: binding
+    endpoint: lbvserver_feopolicy_binding
+    bound_resource_missing_errorcode: 258
+    primary_id_attribute: name
+    secondary_id_attribute: policyname
+    delete_id_attributes:
+      - policyname
+      - priority
+      - bindpoint
+
+  lbvserver_filterpolicy_binding:
+    lifecycle: binding
+    endpoint: lbvserver_filterpolicy_binding
+    bound_resource_missing_errorcode: 258
+    primary_id_attribute: name
+    secondary_id_attribute: policyname
+    delete_id_attributes:
+      - policyname
+      - priority
+      - bindpoint
+
+  lbvserver_pqpolicy_binding:
+    lifecycle: binding
+    endpoint: lbvserver_pqpolicy_binding
+    bound_resource_missing_errorcode: 258
+    primary_id_attribute: name
+    secondary_id_attribute: policyname
+    delete_id_attributes:
+      - policyname
+      - priority
+      - bindpoint
+
+  lbvserver_responderpolicy_binding:
+    lifecycle: binding
+    endpoint: lbvserver_responderpolicy_binding
+    bound_resource_missing_errorcode: 258
+    primary_id_attribute: name
+    secondary_id_attribute: policyname
+    delete_id_attributes:
+      - policyname
+      - priority
+      - bindpoint
+
+  lbvserver_rewritepolicy_binding:
+    lifecycle: binding
+    endpoint: lbvserver_rewritepolicy_binding
+    bound_resource_missing_errorcode: 258
+    primary_id_attribute: name
+    secondary_id_attribute: policyname
+    delete_id_attributes:
+      - policyname
+      - priority
+      - bindpoint
+
+  lbvserver_scpolicy_binding:
+    lifecycle: binding
+    endpoint: lbvserver_scpolicy_binding
+    bound_resource_missing_errorcode: 258
+    primary_id_attribute: name
+    secondary_id_attribute: policyname
+    delete_id_attributes:
+      - policyname
+      - priority
+      - bindpoint
+
+  lbvserver_servicegroupmember_binding:
+    lifecycle: binding
+    endpoint: lbvserver_servicegroupmember_binding
+    bound_resource_missing_errorcode: 258
+    primary_id_attribute: name
+    delete_id_attributes: []
+
+  lbvserver_servicegroup_binding:
+    lifecycle: binding
+    endpoint: lbvserver_servicegroup_binding
+    bound_resource_missing_errorcode: 258
+    primary_id_attribute: name
+    secondary_id_attribute: servicegroupname
+    delete_id_attributes:
+      - servicegroupname
+      - servicename
+
+  lbvserver_service_binding:
+    lifecycle: binding
+    endpoint: lbvserver_service_binding
+    bound_resource_missing_errorcode: 258
+    primary_id_attribute: name
+    secondary_id_attribute: servicename
+    delete_id_attributes:
+      - servicename
+      - servicegroupname
+
+  lbvserver_spilloverpolicy_binding:
+    lifecycle: binding
+    endpoint: lbvserver_spilloverpolicy_binding
+    bound_resource_missing_errorcode: 258
+    primary_id_attribute: name
+    secondary_id_attribute: policyname
+    delete_id_attributes:
+      - policyname
+      - bindpoint
+      - priority
+
+  lbvserver_transformpolicy_binding:
+    lifecycle: binding
+    endpoint: lbvserver_transformpolicy_binding
+    bound_resource_missing_errorcode: 258
+    primary_id_attribute: name
+    secondary_id_attribute: policyname
+    delete_id_attributes:
+      - policyname
+      - priority
+      - bindpoint
+
+  lbvserver_contentinspectionpolicy_binding:
+    lifecycle: binding
+    endpoint: lbvserver_contentinspectionpolicy_binding
+    bound_resource_missing_errorcode: 258
+    primary_id_attribute: name
+    secondary_id_attribute: policyname
+    delete_id_attributes:
+      - policyname
+      - priority
+      - bindpoint
+
+  lbvserver_videooptimizationdetectionpolicy_binding:
+    lifecycle: binding
+    endpoint: lbvserver_videooptimizationdetectionpolicy_binding
+    bound_resource_missing_errorcode: 258
+    primary_id_attribute: name
+    secondary_id_attribute: policyname
+    delete_id_attributes:
+      - policyname
+      - priority
+      - bindpoint
+
+  lbvserver_videooptimizationpacingpolicy_binding:
+    lifecycle: binding
+    endpoint: lbvserver_videooptimizationpacingpolicy_binding
+    bound_resource_missing_errorcode: 258
+    primary_id_attribute: name
+    secondary_id_attribute: policyname
+    delete_id_attributes:
+      - policyname
+      - priority
+      - bindpoint
+
+  lbmetrictable:
+    lifecycle: object
+    endpoint: lbmetrictable
+    primary_id_attribute: metrictable
+    resource_missing_errorcode: 258
+    allow_recreate: true
+    non_updateable_attributes: []
+
+  lbmetrictable_metric_binding:
+    lifecycle: binding
+    endpoint: lbmetrictable_metric_binding
+    bound_resource_missing_errorcode: 258
+    primary_id_attribute: metrictable
+    secondary_id_attribute: metric
+    delete_id_attributes:
+      - metric
+
+  lbmonitor:
+    lifecycle: object
+    endpoint: lbmonitor
+    primary_id_attribute: monitorname
+    resource_missing_errorcode: 258
+    allow_recreate: true
+    non_updateable_attributes:
+      - servicename
+      - servicegroupname
+    delete_id_attributes:
+      - type
+      - respcode
+
+  lbmonitor_metric_binding:
+    lifecycle: binding
+    endpoint: lbmonitor_metric_binding
+    bound_resource_missing_errorcode: 258
+    primary_id_attribute: monitorname
+    secondary_id_attribute: metric
+    delete_id_attributes:
+      - metric
+
+  lbmonitor_sslcertkey_binding:
+    lifecycle: binding
+    endpoint: lbmonitor_sslcertkey_binding
+    bound_resource_missing_errorcode: 258
+    primary_id_attribute: monitorname
+    secondary_id_attribute: certkeyname
+    delete_id_attributes:
+      - certkeyname
+      - ca
+
+  lbprofile:
+    lifecycle: object
+    endpoint: lbprofile
+    primary_id_attribute: lbprofilename
+    resource_missing_errorcode: 3574
+    allow_recreate: true
+    non_updateable_attributes: []
+
+  lbroute:
+    lifecycle: non_updateable_object
+    endpoint: lbroute
+    primary_id_attribute: network
+    resource_missing_errorcode: 258
+    delete_id_attributes:
+      - netmask
+      - td
+
+  lbroute6:
+    lifecycle: non_updateable_object
+    endpoint: lbroute6
+    primary_id_attribute: network
+    resource_missing_errorcode: 258
+    delete_id_attributes:
+      - td
+
+  csvserver_rewritepolicy_binding:
+    lifecycle: binding
+    endpoint: csvserver_rewritepolicy_binding
+    bound_resource_missing_errorcode: 258
+    primary_id_attribute: name
+    secondary_id_attribute: policyname
+    delete_id_attributes:
+      - policyname
+      - priority
+      - bindpoint
+
+  spilloverpolicy:
+    lifecycle: object
+    endpoint: spilloverpolicy
+    primary_id_attribute: name
+    resource_missing_errorcode: 2054
+    allow_recreate: true
+    non_updateable_attributes:
+      - newname
+
+  rewriteaction:
+    lifecycle: object
+    endpoint: rewriteaction
+    primary_id_attribute: name
+    resource_missing_errorcode: 538
+    allow_recreate: true
+    non_updateable_attributes:
+      - type
+      - newname
+
+  rewritepolicy:
+    lifecycle: object
+    endpoint: rewritepolicy
+    primary_id_attribute: name
+    resource_missing_errorcode: 2054
+    allow_recreate: true
+    non_updateable_attributes:
+      - newname
+
+  sslvserver_sslcertkey_binding:
+    lifecycle: binding
+    endpoint: sslvserver_sslcertkey_binding
+    bound_resource_missing_errorcode: 461
+    primary_id_attribute: vservername
+    secondary_id_attribute: certkeyname
+    delete_id_attributes:
+      - certkeyname
+      - crlcheck
+      - ocspcheck
+      - ca
+      - snicert
+
+  sslvserver_sslcipher_binding:
+    lifecycle: binding
+    endpoint: sslvserver_sslcipher_binding
+    bound_resource_missing_errorcode: 461
+    primary_id_attribute: vservername
+    secondary_id_attribute: ciphername
+    delete_id_attributes:
+      - ciphername
+
+  sslvserver:
+    lifecycle: object
+    endpoint: sslvserver
+    primary_id_attribute: vservername
+    resource_missing_errorcode: 461
+    allow_recreate: true
+    non_updateable_attributes: []
+
+  sslprofile:
+    lifecycle: object
+    endpoint: sslprofile
+    primary_id_attribute: name
+    resource_missing_errorcode: 3248
+    allow_recreate: true
+    non_updateable_attributes:
+      - sslprofiletype
+
+  sslprofile_sslcipher_binding:
+    lifecycle: binding
+    endpoint: sslprofile_sslcipher_binding
+    bound_resource_missing_errorcode: 3248
+    primary_id_attribute: name
+    secondary_id_attribute: ciphername
+    delete_id_attributes:
+      - ciphername
+
+  sslcipher:
+    lifecycle: object
+    endpoint: sslcipher
+    primary_id_attribute: ciphergroupname
+    resource_missing_errorcode: 258
+    allow_recreate: true
+    non_updateable_attributes:
+      - ciphgrpalias
+      - sslprofile
+
+  sslparameter:
+    lifecycle: parameter_object
+    endpoint: sslparameter
+
+  policypatset:
+    lifecycle: non_updateable_object
+    endpoint: policypatset
+    primary_id_attribute: name
+    resource_missing_errorcode: 2823
+    delete_id_attributes: []
+
+  policypatset_pattern_binding:
+    lifecycle: binding
+    endpoint: policypatset_pattern_binding
+    bound_resource_missing_errorcode: 2823
+    primary_id_attribute: name
+    secondary_id_attribute: String
+    delete_id_attributes:
+      - String
+
+  transformprofile:
+    lifecycle: object
+    endpoint: transformprofile
+    primary_id_attribute: name
+    resource_missing_errorcode: 258
+    allow_recreate: true
+    non_updateable_attributes: []
+
+  transformaction:
+    lifecycle: object
+    endpoint: transformaction
+    primary_id_attribute: name
+    resource_missing_errorcode: 258
+    allow_recreate: true
+    non_updateable_attributes:
+      - profilename
+
+  transformpolicy:
+    lifecycle: object
+    endpoint: transformpolicy
+    primary_id_attribute: name
+    resource_missing_errorcode: 2054
+    allow_recreate: true
+    non_updateable_attributes:
+      - newname
+
+  dnssoarec:
+    lifecycle: object
+    endpoint: dnssoarec
+    primary_id_attribute: domain
+    resource_missing_errorcode: 258
+    allow_recreate: true
+    non_updateable_attributes:
+      - ecssubnet
+      - type
+      - nodeid
+
+  ntpserver:
+    lifecycle: object_by_args
+    endpoint: ntpserver
+    resource_missing_errorcode: 258
+    allow_recreate: true
+    non_updateable_attributes: []
+    delete_id_attributes:
+      - servername
+      - serverip
+
+  ntpparam:
+    lifecycle: parameter_object
+    endpoint: ntpparam
+
+  snmpmanager:
+    lifecycle: object_by_args
+    endpoint: snmpmanager
+    resource_missing_errorcode: 258
+    allow_recreate: true
+    non_updateable_attributes: []
+    delete_id_attributes:
+      - ipaddress
+      - netmask
+
+  systemuser:
+    lifecycle: object
+    endpoint: systemuser
+    primary_id_attribute: username
+    resource_missing_errorcode: 2626
+    allow_recreate: true
+    skip_attributes:
+      - password
+    non_updateable_attributes: []
