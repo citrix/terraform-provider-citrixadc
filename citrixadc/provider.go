@@ -426,6 +426,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_vpnvserver_authenticationsamlidppolicy_binding":                resourceCitrixAdcVpnvserver_authenticationsamlidppolicy_binding(),
 		"citrixadc_authenticationvserver_authenticationsamlidppolicy_binding":     resourceCitrixAdcAuthenticationvserver_authenticationsamlidppolicy_binding(),
 		"citrixadc_authenticationvserver_cachepolicy_binding":                     resourceCitrixAdcAuthenticationvserver_cachepolicy_binding(),
+		"citrixadc_vxlan":                                                         resourceCitrixAdcVxlan(),
 	}
 }
 
