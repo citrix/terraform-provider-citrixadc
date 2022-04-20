@@ -1,5 +1,5 @@
 ---
-subcategory: "vpn"
+subcategory: "Vpn"
 ---
 
 # Resource: vpnvserver_authenticationcertpolicy_binding

@@ -1,5 +1,5 @@
 ---
-subcategory: "vpnnexthopserver"
+subcategory: "Vpn"
 ---
 
 # Resource: vpnnexthopserver
