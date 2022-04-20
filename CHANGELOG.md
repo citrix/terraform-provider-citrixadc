@@ -1,3 +1,58 @@
+## 1.14.0 (April 20, 2022)
+
+FEATURES
+
+* **New Resource** `authenticationvserver_auditnslogpolicy_binding`
+* **New Resource** `vpnglobal_domain_binding`
+* **New Resource** `vpnglobal_intranetip_binding`
+* **New Resource** `vpnglobal_sharefileserver_binding`
+* **New Resource** `vpnglobal_vpnclientlessaccesspolicy_binding`
+* **New Resource** `vpnvserver_intranetip_binding`
+* **New Resource** `vpnvserver_sharefileserver_binding`
+* **New Resource** `authenticationnegotiatepolicy`
+* **New Resource** `vpnvserver_aaapreauthenticationpolicy_binding`
+* **New Resource** `vpnvserver_icapolicy_binding`
+* **New Resource** `authenticationvserver_authenticationloginschemapolicy_binding`
+* **New Resource** `vpnvserver_authenticationnegotiatepolicy_binding`
+* **New Resource** `authenticationvserver_authenticationnegotiatepolicy_binding`
+* **New Resource** `vpnvserver_authenticationoauthidppolicy_binding`
+* **New Resource** `authenticationsamlidpprofile`
+* **New Resource** `authenticationvserver_tmsessionpolicy_binding`
+* **New Resource** `authenticationvserver_authenticationoauthidppolicy_binding`
+* **New Resource** `vpnvserver_vpnurlpolicy_binding`
+* **New Resource** `systemglobal_authenticationldappolicy_binding`
+* **New Resource** `vpnvserver_feopolicy_binding`
+* **New Resource** `authenticationsamlidppolicy`
+* **New Resource** `vpnvserver_authenticationloginschemapolicy_binding`
+* **New Resource** `vpnvserver_vpnclientlessaccesspolicy_binding`
+* **New Resource** `vpnparameter`
+* **New Resource** `vpnvserver_staserver_binding`
+* **New Resource** `vpnglobal_staserver_binding`
+* **New Resource** `vpnglobal_authenticationnegotiatepolicy_binding`
+* **New Resource** `vpnglobal_intranetip6_binding`
+* **New Resource** `vpnvserver_intranetip6_binding`
+* **New Resource** `vpnvserver_authenticationsamlidppolicy_binding`
+* **New Resource** `authenticationvserver_authenticationsamlidppolicy_binding`
+* **New Resource** `authenticationvserver_cachepolicy_binding`
+* **New Resource** `vxlan`
+* **New Resource** `vxlanvlanmap`
+* **New Resource** `appfwconfidfield`
+* **New Resource** `vxlan_nsip_binding`
+* **New Resource** `vxlan_nsip6_binding`
+* **New Resource** `vxlanvlanmap_vxlan_binding`
+* **New Resource** `botpolicylabel_botpolicy_binding`
+* **New Resource** `botprofile_captcha_binding`
+* **New Resource** `botprofile_tps_binding`
+* **New Resource** `botprofile_trapinsertionurl_binding`
+* **New Resource** `botprofile_logexpression_binding`
+* **New Resource** `botprofile_whitelist_binding`
+* **New Resource** `filteraction`
+
+BUG FIXES
+
+* Fixed erroneous category `vpnnexthopserever` documentation
+* Fixed erroneous category `vpnvserver_authenticationcertpolicy_binding` documentation
+
 ## 1.13.0 (March 31, 2022)
 
 FEATURES
