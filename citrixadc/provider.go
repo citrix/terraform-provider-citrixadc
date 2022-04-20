@@ -430,6 +430,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_vxlanvlanmap":                                                  resourceCitrixAdcVxlanvlanmap(),
 		"citrixadc_appfwconfidfield":                                              resourceCitrixAdcAppfwconfidfield(),
 		"citrixadc_vxlan_nsip_binding":                                            resourceCitrixAdcVxlan_nsip_binding(),
+		"citrixadc_vxlan_nsip6_binding":                                           resourceCitrixAdcVxlan_nsip6_binding(),
 	}
 }
 
