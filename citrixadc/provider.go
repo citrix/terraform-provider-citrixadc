@@ -434,6 +434,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_vxlanvlanmap_vxlan_binding":                                    resourceCitrixAdcVxlanvlanmap_vxlan_binding(),
 		"citrixadc_botpolicylabel_botpolicy_binding":                              resourceCitrixAdcBotpolicylabel_botpolicy_binding(),
 		"citrixadc_botprofile_captcha_binding":                                    resourceCitrixAdcBotprofile_captcha_binding(),
+		"citrixadc_botprofile_tps_binding":                                        resourceCitrixAdcBotprofile_tps_binding(),
 	}
 }
 
