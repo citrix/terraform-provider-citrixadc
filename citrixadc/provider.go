@@ -439,6 +439,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_botprofile_logexpression_binding":                              resourceCitrixAdcBotprofile_logexpression_binding(),
 		"citrixadc_botprofile_whitelist_binding":                                  resourceCitrixAdcBotprofile_whitelist_binding(),
 		"citrixadc_filteraction":                                                  resourceCitrixAdcFilteraction(),
+		"citrixadc_vxlan_srcip_binding":                                           resourceCitrixAdcVxlan_srcip_binding(),
 	}
 }
 
