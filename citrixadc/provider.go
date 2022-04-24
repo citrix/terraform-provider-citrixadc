@@ -464,6 +464,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_appfwprofile_xmlsqlinjection_binding":                          resourceCitrixAdcAppfwprofile_xmlsqlinjection_binding(),
 		"citrixadc_appfwprofile_fieldconsistency_binding":                         resourceCitrixAdcAppfwprofile_fieldconsistency_binding(),
 		"citrixadc_appfwprofile_jsonxssurl_binding":                               resourceCitrixAdcAppfwprofile_jsonxssurl_binding(),
+		"citrixadc_appfwprofile_logexpression_binding":                            resourceCitrixAdcAppfwprofile_logexpression_binding(),
 	}
 }
 
