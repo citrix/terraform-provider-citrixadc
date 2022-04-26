@@ -1,0 +1,20 @@
+{
+    "enable_bot_profiles": "TRUE",
+    "bot_profiles": [
+        {
+            "version": "2.1",
+            "name": "a.pr-cy.ru",
+            "drop": "TRUE",
+            "redirect": "FALSE",
+            "reset": "FALSE",
+            "id": "1",
+            "type": "Bad Bot",
+            "category": "Crawler",
+            "log": "TRUE",
+            "enabled": "TRUE",
+            "developer": "Mirafox"
+        }
+    ],
+    "version": "6.0",
+    "schema_version": "2.0"
+}
