@@ -444,6 +444,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_botprofile_blacklist_binding":                                  resourceCitrixAdcBotprofile_blacklist_binding(),
 		"citrixadc_botprofile_ratelimit_binding":                                  resourceCitrixAdcBotprofile_ratelimit_binding(),
 		"citrixadc_botglobal_botpolicy_binding":                                   resourceCitrixAdcBotglobal_botpolicy_binding(),
+		"citrixadc_appfwprofile_contenttype_binding":                              resourceCitrixAdcAppfwprofile_contenttype_binding(),
 	}
 }
 
