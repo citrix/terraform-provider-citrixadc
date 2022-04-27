@@ -452,6 +452,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_appfwglobal_auditnslogpolicy_binding":                          resourceCitrixAdcAppfwglobal_auditnslogpolicy_binding(),
 		"citrixadc_appfwprofile_creditcardnumber_binding":                         resourceCitrixAdcAppfwprofile_creditcardnumber_binding(),
 		"citrixadc_appfwpolicylabel_appfwpolicy_binding":                          resourceCitrixAdcAppfwpolicylabel_appfwpolicy_binding(),
+		"citrixadc_appfwprofile_cmdinjection_binding":                             resourceCitrixAdcAppfwprofile_cmdinjection_binding(),
 	}
 }
 
