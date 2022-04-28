@@ -457,6 +457,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_appfwprofile_fieldformat_binding":                              resourceCitrixAdcAppfwprofile_fieldformat_binding(),
 		"citrixadc_appfwprofile_safeobject_binding":                               resourceCitrixAdcAppfwprofile_safeobject_binding(),
 		"citrixadc_appfwprofile_xmlwsiurl_binding":                                resourceCitrixAdcAppfwprofile_xmlwsiurl_binding(),
+		"citrixadc_appfwprofile_jsoncmdurl_binding":                               resourceCitrixAdcAppfwprofile_jsoncmdurl_binding(),
 	}
 }
 
