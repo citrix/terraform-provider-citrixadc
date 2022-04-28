@@ -48,6 +48,8 @@ var idempotentInvalidResources = []string{
 	"lbroute6",
 	"vpnnexthopserver",
 	"sslcertificatechain",
+	"appfwurlencodedformcontenttype",
+	"bridgetable",
 }
 
 // HTTP Headers to be masked and not shown in logs
