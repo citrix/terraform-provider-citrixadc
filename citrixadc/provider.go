@@ -470,6 +470,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_appfwprofile_xmlattachmenturl_binding":                         resourceCitrixAdcAppfwprofile_xmlattachmenturl_binding(),
 		"citrixadc_appfwprofile_trustedlearningclients_binding":                   resourceCitrixAdcAppfwprofile_trustedlearningclients_binding(),
 		"citrixadc_appfwprofile_xmldosurl_binding":                                resourceCitrixAdcAppfwprofile_xmldosurl_binding(),
+		"citrixadc_nitro_resource":                                                resourceCitrixAdcNintroResource(),
 	}
 }
 
