@@ -473,6 +473,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_nitro_resource":                                                resourceCitrixAdcNintroResource(),
 		"citrixadc_appfwprofile_xmlvalidationurl_binding":                         resourceCitrixAdcAppfwprofile_xmlvalidationurl_binding(),
 		"citrixadc_appfwsignatures":                                               resourceCitrixAdcAppfwsignatures(),
+		"citrixadc_appfwlearningsettings":                                         resourceCitrixAdcAppfwlearningsettings(),
 	}
 }
 
