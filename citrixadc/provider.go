@@ -478,6 +478,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_appfwxmlerrorpage":                                             resourceCitrixAdcAppfwxmlerrorpage(),
 		"citrixadc_location":                                                      resourceCitrixAdcLocation(),
 		"citrixadc_service_dospolicy_binding":                                     resourceCitrixAdcService_dospolicy_binding(),
+		"citrixadc_fis":                                                           resourceCitrixAdcFis(),
 	}
 }
 
