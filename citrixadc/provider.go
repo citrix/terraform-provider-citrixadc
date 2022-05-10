@@ -479,6 +479,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_location":                                                      resourceCitrixAdcLocation(),
 		"citrixadc_service_dospolicy_binding":                                     resourceCitrixAdcService_dospolicy_binding(),
 		"citrixadc_fis":                                                           resourceCitrixAdcFis(),
+		"citrixadc_vrid":                                                          resourceCitrixAdcVrid(),
 	}
 }
 
