@@ -485,6 +485,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_service_lbmonitor_binding":                                     resourceCitrixAdcService_lbmonitor_binding(),
 		"citrixadc_vrid6":                                                         resourceCitrixAdcVrid6(),
 		"citrixadc_forwardingsession":                                             resourceCitrixAdcForwardingsession(),
+		"citrixadc_netbridge":                                                     resourceCitrixAdcNetbridge(),
 	}
 }
 
