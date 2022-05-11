@@ -15,6 +15,7 @@ Learn more about Citrix ADC Automation [here](https://docs.citrix.com/en-us/citr
 * [Navigating Repository](#navigating-the-repository)
 * [Installating Terraform and Citrix ADC Provider](#installation)
 * [Get Started on using terraform to configure Citrix ADC](#get-started-on-configuring-adc-through-terraform)
+* [Generic nitro\_resource](#generic-nitro-resource)
 * Usage Guidelines
   - [Understanding Provider Configuration](#understanding-provider-configuration)
   - [Understanding Resource Configuration](#resource-configuration)
@@ -151,6 +152,15 @@ terraform-provider-citrixadc/examples/simple_server$ terraform apply
 As you see above, terraform successfully created server with name test_server3 and given ipaddress on your target ADC. You can validate it by going to ADC GUI, and navigating to Traffic Management -> Load Balancing -> Servers. 
 
 _Similary repeat steps 1-6 for different resource configurations on Citrix ADC. Also refer to [general guidelines on configuring ADC](#general-guidelines-on-configuring-adc)_
+
+## Generic nitro resource
+
+The provider contains a generic NITRO API resource.
+
+Its intention is to encapsulate multiple NTIRO API endpoints in a single resource so that it is more convenient to manage
+and add API endpoints under the management of the Terraform network.
+
+There are some limitations to this resource's use so make sure to read it in the [resource documentation](docs/resources/nitro_resource.md).
 
 
 ## Usage Guidelines
