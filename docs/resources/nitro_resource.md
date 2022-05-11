@@ -15,6 +15,18 @@ Browse through the workflows.yaml file to see what endpoints are available.
 
 The workflows.yaml file can be found [here](https://github.com/citrix/terraform-provider-citrixadc/blob/master/citrixadc/testdata/workflows.yaml).
 
+## Limitations
+
+nitro\_resource does come with some limitations.
+
+The comparison of each attribute value is dependent on the string representation of the specific attribute.
+
+As such complex attribute values such as lists or maps cannot be reliably compared and hence are not supported.
+
+Also if the value provided in the configuration has any difference with the string representation returned by the
+NITRO API a false update will be issued on subsequent resource executions. To avoid this make sure the attribute
+is written just as the string representation of the NITRO API retrieved value.
+
 
 ## Example usage
 
