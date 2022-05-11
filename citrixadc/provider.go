@@ -483,6 +483,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_netprofile_natrule_binding":                                    resourceCitrixAdcNetprofile_natrule_binding(),
 		"citrixadc_radiusnode":                                                    resourceCitrixAdcRadiusnode(),
 		"citrixadc_service_lbmonitor_binding":                                     resourceCitrixAdcService_lbmonitor_binding(),
+		"citrixadc_vrid6":                                                         resourceCitrixAdcVrid6(),
 	}
 }
 
