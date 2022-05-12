@@ -490,6 +490,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_rnatglobal_auditsyslogpolicy_binding":                          resourceCitrixAdcRnatglobal_auditsyslogpolicy_binding(),
 		"citrixadc_appfwjsonerrorpage":                                            resourceCitrixAdcAppfwjsonerrorpage(),
 		"citrixadc_nstimer":                                                       resourceCitrixAdcNstimer(),
+		"citrixadc_nslimitidentifier":                                             resourceCitrixAdcNslimitidentifier(),
 	}
 }
 
