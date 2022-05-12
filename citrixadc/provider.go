@@ -489,6 +489,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_netprofile_srcportset_binding":                                 resourceCitrixAdcNetprofile_srcportset_binding(),
 		"citrixadc_rnatglobal_auditsyslogpolicy_binding":                          resourceCitrixAdcRnatglobal_auditsyslogpolicy_binding(),
 		"citrixadc_appfwjsonerrorpage":                                            resourceCitrixAdcAppfwjsonerrorpage(),
+		"citrixadc_nstimer":                                                       resourceCitrixAdcNstimer(),
 	}
 }
 
