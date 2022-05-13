@@ -1,5 +1,5 @@
 ---
-subcategory: "Ns"
+subcategory: "NS"
 ---
 
 # Resource: nstimer
