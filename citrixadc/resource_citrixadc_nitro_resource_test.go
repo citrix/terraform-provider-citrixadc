@@ -19,6 +19,7 @@ package citrixadc
 import (
 	"fmt"
 	"io/ioutil"
+	"net/url"
 	"path"
 	"runtime"
 	"strings"
@@ -443,4 +444,200 @@ func testHelperReadWorkflowDict(workflow string) (map[interface{}]interface{}, e
 	}
 
 	return specificWorkflow.(map[interface{}]interface{}), nil
+}
+
+const testAccNitroResource_object_by_args_basic_step1 = `
+
+resource "citrixadc_nitro_resource" "tf_snmpmanager" {
+  workflows_file = "testdata/workflows.yaml"
+  workflow       = "snmpmanager"
+
+  attributes = {
+    domainresolveretry   = 10
+  }
+
+  non_updateable_attributes = {
+    ipaddress = "helo1234.com"
+  }
+}
+`
+const testAccNitroResource_object_by_args_basic_step2 = `
+
+resource "citrixadc_nitro_resource" "tf_snmpmanager" {
+  workflows_file = "testdata/workflows.yaml"
+  workflow       = "snmpmanager"
+
+  attributes = {
+    domainresolveretry   = 30
+  }
+
+  non_updateable_attributes = {
+    ipaddress = "helo1234.com"
+  }
+}
+`
+
+const testAccNitroResource_object_by_args_basic_step3 = `
+
+resource "citrixadc_nitro_resource" "tf_snmpmanager" {
+  workflows_file = "testdata/workflows.yaml"
+  workflow       = "snmpmanager"
+
+  attributes = {
+    domainresolveretry   = 30
+  }
+
+  non_updateable_attributes = {
+    ipaddress = "helo123456.com"
+  }
+}
+`
+
+func TestAccNitroResource_object_by_args_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckObjectByArgsDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccNitroResource_object_by_args_basic_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckObjectByArgsExists("citrixadc_nitro_resource.tf_snmpmanager", nil),
+					resource.TestCheckResourceAttr("citrixadc_nitro_resource.tf_snmpmanager", "non_updateable_attributes.ipaddress", "helo1234.com"),
+					resource.TestCheckResourceAttr("citrixadc_nitro_resource.tf_snmpmanager", "attributes.domainresolveretry", "10"),
+				),
+			},
+			resource.TestStep{
+				Config: testAccNitroResource_object_by_args_basic_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckObjectByArgsExists("citrixadc_nitro_resource.tf_snmpmanager", nil),
+					resource.TestCheckResourceAttr("citrixadc_nitro_resource.tf_snmpmanager", "non_updateable_attributes.ipaddress", "helo1234.com"),
+					resource.TestCheckResourceAttr("citrixadc_nitro_resource.tf_snmpmanager", "attributes.domainresolveretry", "30"),
+				),
+			},
+			resource.TestStep{
+				Config: testAccNitroResource_object_by_args_basic_step3,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckObjectByArgsExists("citrixadc_nitro_resource.tf_snmpmanager", nil),
+					resource.TestCheckResourceAttr("citrixadc_nitro_resource.tf_snmpmanager", "non_updateable_attributes.ipaddress", "helo123456.com"),
+					resource.TestCheckResourceAttr("citrixadc_nitro_resource.tf_snmpmanager", "attributes.domainresolveretry", "30"),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckObjectByArgsExists(n string, id *string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No object primary id is set")
+		}
+
+		if id != nil {
+			if *id != "" && *id != rs.Primary.ID {
+				return fmt.Errorf("Resource ID has changed!")
+			}
+
+			*id = rs.Primary.ID
+		}
+		workflowKey := rs.Primary.Attributes["workflow"]
+		wf, err := testHelperReadWorkflowDict(workflowKey)
+		_ = wf
+		if err != nil {
+			return err
+		}
+
+		primaryId := rs.Primary.ID
+		idItems := strings.Split(primaryId, ",")
+		argsMap := make(map[string]string)
+
+		for _, idItem := range idItems {
+			idSlice := strings.Split(idItem, ":")
+			key := url.QueryEscape(idSlice[0])
+			value := url.QueryEscape(idSlice[1])
+			argsMap[key] = value
+		}
+
+		findParams := service.FindParams{
+			ResourceType:             wf["endpoint"].(string),
+			ArgsMap:                  argsMap,
+			ResourceMissingErrorCode: wf["resource_missing_errorcode"].(int),
+		}
+
+		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		dataArr, err := client.FindResourceArrayWithParams(findParams)
+
+		// Unexpected error
+		if err != nil {
+			return fmt.Errorf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
+		}
+
+		if len(dataArr) == 0 {
+			return fmt.Errorf("[DEBUG] citrixadc-provider: FindResourceArrayWithParams returned empty array")
+		}
+
+		if len(dataArr) > 1 {
+			return fmt.Errorf("FindResourceArrayWithParams returned too many results")
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckObjectByArgsDestroy(s *terraform.State) error {
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "citrixadc_nitro_resource" {
+			continue
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No id is set")
+		}
+
+		workflowKey := rs.Primary.Attributes["workflow"]
+		wf, err := testHelperReadWorkflowDict(workflowKey)
+		_ = wf
+		if err != nil {
+			return err
+		}
+
+		primaryId := rs.Primary.ID
+		idItems := strings.Split(primaryId, ",")
+		argsMap := make(map[string]string)
+
+		for _, idItem := range idItems {
+			idSlice := strings.Split(idItem, ":")
+			key := url.QueryEscape(idSlice[0])
+			value := url.QueryEscape(idSlice[1])
+			argsMap[key] = value
+		}
+
+		findParams := service.FindParams{
+			ResourceType:             wf["endpoint"].(string),
+			ArgsMap:                  argsMap,
+			ResourceMissingErrorCode: wf["resource_missing_errorcode"].(int),
+		}
+
+		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		dataArr, err := client.FindResourceArrayWithParams(findParams)
+
+		// Unexpected error
+		if err != nil {
+			return fmt.Errorf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
+		}
+
+		if len(dataArr) != 0 {
+			return fmt.Errorf("[DEBUG] citrixadc-provider: FindResourceArrayWithParams returned empty array")
+		}
+
+		return nil
+
+	}
+
+	return nil
 }
