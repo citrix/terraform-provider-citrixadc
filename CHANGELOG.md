@@ -1,3 +1,62 @@
+## 1.15.0 (May 16, 2022)
+
+FEATURES
+
+* **New Resource** `vxlan_srcip_binding`
+* **New Resource** `botprofile_ipreputation_binding`
+* **New Resource** `botprofile_blacklist_binding`
+* **New Resource** `botprofile_ratelimit_binding`
+* **New Resource** `botglobal_botpolicy_binding`
+* **New Resource** `appfwprofile_contenttype_binding`
+* **New Resource** `appfwprofile_excluderescontenttype_binding`
+* **New Resource** `appfwglobal_appfwpolicy_binding`
+* **New Resource** `appfwprofile_csrftag_binding`
+* **New Resource** `appfwglobal_auditsyslogpolicy_binding`
+* **New Resource** `appfwglobal_auditnslogpolicy_binding`
+* **New Resource** `appfwprofile_creditcardnumber_binding`
+* **New Resource** `appfwpolicylabel_appfwpolicy_binding`
+* **New Resource** `appfwprofile_cmdinjection_binding`
+* **New Resource** `appfwprofile_xmlxss_binding`
+* **New Resource** `appfwprofile_fieldformat_binding`
+* **New Resource** `appfwprofile_safeobject_binding`
+* **New Resource** `appfwprofile_xmlwsiurl_binding`
+* **New Resource** `appfwprofile_jsoncmdurl_binding`
+* **New Resource** `botsignature`
+* **New Resource** `appfwurlencodedformcontenttype`
+* **New Resource** `appfwprofile_jsonsqlurl_binding`
+* **New Resource** `appfwprofile_xmlsqlinjection_binding`
+* **New Resource** `appfwprofile_fieldconsistency_binding`
+* **New Resource** `appfwprofile_jsonxssurl_binding`
+* **New Resource** `appfwprofile_logexpression_binding`
+* **New Resource** `appfwprofile_fileuploadtype_binding`
+* **New Resource** `appfwprofile_jsondosurl_binding`
+* **New Resource** `appfwprofile_xmlattachmenturl_binding`
+* **New Resource** `appfwprofile_trustedlearningclients_binding`
+* **New Resource** `appfwprofile_xmldosurl_binding`
+* **New Resource** `nitro_resource`
+* **New Resource** `appfwprofile_xmlvalidationurl_binding`
+* **New Resource** `appfwsignatures`
+* **New Resource** `appfwlearningsettings`
+* **New Resource** `appfwhtmlerrorpage`
+* **New Resource** `appfwxmlerrorpage`
+* **New Resource** `location`
+* **New Resource** `service_dospolicy_binding`
+* **New Resource** `fis`
+* **New Resource** `vrid`
+* **New Resource** `netprofile_natrule_binding`
+* **New Resource** `radiusnode`
+* **New Resource** `service_lbmonitor_binding`
+* **New Resource** `vrid6`
+* **New Resource** `forwardingsession`
+* **New Resource** `netbridge`
+* **New Resource** `netprofile_srcportset_binding`
+* **New Resource** `rnatglobal_auditsyslogpolicy_binding`
+* **New Resource** `appfwjsonerrorpage`
+* **New Resource** `nstimer`
+* **New Resource** `nslimitidentifier`
+* **New Resource** `nshmackey`
+
+
 ## 1.14.0 (April 20, 2022)
 
 FEATURES
