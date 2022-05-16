@@ -622,6 +622,27 @@ workflow:
       - ipaddress
       - netmask
 
+  snmptrap:
+    lifecycle: object_by_args
+    endpoint: snmptrap
+    resource_missing_errorcode: 258
+    allow_recreate: true
+    non_updateable_attributes: []
+    delete_id_attributes:
+      - trapdestination
+      - trapclass
+      - version
+
+  snmpcommunity:
+    lifecycle: object
+    endpoint: snmpcommunity
+    primary_id_attribute: communityname
+    resource_missing_errorcode: 258
+    allow_recreate: true
+    non_updateable_attributes:
+      - communityname
+      - permissions
+
   systemuser:
     lifecycle: object
     endpoint: systemuser

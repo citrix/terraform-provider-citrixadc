@@ -3,6 +3,7 @@ package citrixadc
 import (
 	"fmt"
 	"io/ioutil"
+	"net/url"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -70,6 +71,9 @@ func createNitroResourceFunc(d *schema.ResourceData, meta interface{}) error {
 	case "binding":
 		err := createBindingFunc(d, meta, workflow)
 		return err
+	case "object_by_args":
+		err := createObjectByArgsFunc(d, meta, workflow)
+		return err
 	default:
 		return fmt.Errorf("Lifecycle \"%v\" does not have a create function", workflow["lifecycle"])
 	}
@@ -97,6 +101,9 @@ func readNitroResourceFunc(d *schema.ResourceData, meta interface{}) error {
 	case "binding":
 		err := readBindingFunc(d, meta, workflow)
 		return err
+	case "object_by_args":
+		err := readObjectByArgsFunc(d, meta, workflow)
+		return err
 	default:
 		return fmt.Errorf("Lifecycle \"%v\" does not have a read function", workflow["lifecycle"])
 	}
@@ -115,6 +122,9 @@ func updateNitroResourceFunc(d *schema.ResourceData, meta interface{}) error {
 	switch workflow["lifecycle"] {
 	case "object":
 		err := updateObjectFunc(d, meta, workflow)
+		return err
+	case "object_by_args":
+		err := updateObjectByArgsFunc(d, meta, workflow)
 		return err
 	default:
 		return fmt.Errorf("Lifecycle \"%v\" does not have an update function", workflow["lifecycle"])
@@ -141,6 +151,9 @@ func deleteNitroResourceFunc(d *schema.ResourceData, meta interface{}) error {
 		return err
 	case "binding":
 		err := deleteBindingFunc(d, meta, workflow)
+		return err
+	case "object_by_args":
+		err := deleteObjectByArgsFunc(d, meta, workflow)
 		return err
 	default:
 		return fmt.Errorf("Lifecycle \"%v\" does not have a delete function", workflow["lifecycle"])
@@ -378,6 +391,150 @@ func deleteBindingFunc(d *schema.ResourceData, meta interface{}, workflow map[in
 
 	d.SetId("")
 
+	return nil
+}
+
+func createObjectByArgsFunc(d *schema.ResourceData, meta interface{}, workflow map[interface{}]interface{}) error {
+	log.Printf("[DEBUG]  netscaler-provider: In createObjectByArgsFunc")
+
+	client := meta.(*NetScalerNitroClient).client
+
+	deleteIdAttributes := workflow["delete_id_attributes"].([]interface{})
+	idSlice := make([]string, 0, 0)
+
+	for _, deleteIdAttribute := range deleteIdAttributes {
+		attributeValue := getConfiguredValue(d, deleteIdAttribute)
+		if attributeValue != nil {
+			idItem := fmt.Sprintf("%s:%s", deleteIdAttribute, attributeValue)
+			idSlice = append(idSlice, idItem)
+		}
+	}
+
+	if len(idSlice) == 0 {
+		return fmt.Errorf("Configured object does not contain any id attribute")
+	}
+
+	idString := strings.Join(idSlice, ",")
+
+	object := getConfiguredMap(d)
+
+	_, err := client.AddResource(workflow["endpoint"].(string), "", &object)
+
+	if err != nil {
+		return err
+	}
+
+	d.SetId(idString)
+
+	err = readObjectByArgsFunc(d, meta, workflow)
+	if err != nil {
+		return fmt.Errorf("Error when reading created object %s", err)
+	}
+
+	return nil
+}
+
+func readObjectByArgsFunc(d *schema.ResourceData, meta interface{}, workflow map[interface{}]interface{}) error {
+	log.Printf("[DEBUG]  netscaler-provider: In readObjectByArgsFunc")
+	client := meta.(*NetScalerNitroClient).client
+
+	primaryId := d.Id()
+	idItems := strings.Split(primaryId, ",")
+	argsMap := make(map[string]string)
+
+	for _, idItem := range idItems {
+		idSlice := strings.Split(idItem, ":")
+		key := url.QueryEscape(idSlice[0])
+		value := url.QueryEscape(idSlice[1])
+		argsMap[key] = value
+	}
+
+	findParams := service.FindParams{
+		ResourceType:             workflow["endpoint"].(string),
+		ArgsMap:                  argsMap,
+		ResourceMissingErrorCode: workflow["resource_missing_errorcode"].(int),
+	}
+
+	dataArr, err := client.FindResourceArrayWithParams(findParams)
+
+	// Unexpected error
+	if err != nil {
+		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
+		return err
+	}
+
+	if len(dataArr) == 0 {
+		log.Printf("[DEBUG] citrixadc-provider: FindResourceArrayWithParams returned empty array")
+		log.Printf("[WARN] citrixadc-provider: Clearing nitro resource state %s", primaryId)
+		d.SetId("")
+		return nil
+	}
+
+	if len(dataArr) > 1 {
+		return fmt.Errorf("FindResourceArrayWithParams returned too many results")
+	}
+
+	data := dataArr[0]
+	setConfiguredAttributes(d, data, workflow)
+
+	return nil
+}
+
+func updateObjectByArgsFunc(d *schema.ResourceData, meta interface{}, workflow map[interface{}]interface{}) error {
+	log.Printf("[DEBUG]  netscaler-provider: In updateObjectByArgsFunc")
+
+	client := meta.(*NetScalerNitroClient).client
+
+	var object map[string]interface{}
+	nitroObject := make(map[string]interface{})
+
+	// The map copy will work for simple values
+	if v, ok := d.GetOk("attributes"); ok {
+		object = v.(map[string]interface{})
+		for k, v := range object {
+			nitroObject[k] = v
+		}
+	}
+
+	for _, key := range workflow["delete_id_attributes"].([]interface{}) {
+		value := getConfiguredValue(d, key)
+		if value == nil {
+			continue
+		}
+		// Add primary ids even if defined in non_updateable_attributes
+		if _, ok := nitroObject[key.(string)]; !ok {
+			nitroObject[key.(string)] = value
+		}
+	}
+
+	err := client.UpdateUnnamedResource(workflow["endpoint"].(string), &nitroObject)
+	if err != nil {
+		return fmt.Errorf("Error updating object %s", err)
+	}
+
+	return readObjectByArgsFunc(d, meta, workflow)
+}
+
+func deleteObjectByArgsFunc(d *schema.ResourceData, meta interface{}, workflow map[interface{}]interface{}) error {
+	log.Printf("[DEBUG]  netscaler-provider: In deleteObjectByArgsFunc")
+	client := meta.(*NetScalerNitroClient).client
+	primaryId := d.Id()
+	idItems := strings.Split(primaryId, ",")
+	argsMap := make(map[string]string)
+
+	for _, idItem := range idItems {
+		idSlice := strings.Split(idItem, ":")
+		key := url.QueryEscape(idSlice[0])
+		value := url.QueryEscape(idSlice[1])
+		argsMap[key] = value
+	}
+
+	err := client.DeleteResourceWithArgsMap(workflow["endpoint"].(string), "", argsMap)
+	if err != nil {
+		return err
+	}
+
+	d.SetId("")
 	return nil
 }
 
