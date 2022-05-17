@@ -496,6 +496,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_nspartition":                                                   resourceCitrixAdcNspartition(),
 		"citrixadc_nsvariable":                                                    resourceCitrixAdcNsvariable(),
 		"citrixadc_nsappflowcollector":                                            resourceCitrixAdcNsappflowcollector(),
+		"citrixadc_nsicapprofile":                                                 resourceCitrixAdcNsicapprofile(),
 	}
 }
 
