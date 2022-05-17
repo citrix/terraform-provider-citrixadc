@@ -494,6 +494,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_nshmackey":                                                     resourceCitrixAdcNshmackey(),
 		"citrixadc_nsservicepath":                                                 resourceCitrixAdcNsservicepath(),
 		"citrixadc_nspartition":                                                   resourceCitrixAdcNspartition(),
+		"citrixadc_nsvariable":                                                    resourceCitrixAdcNsvariable(),
 	}
 }
 
