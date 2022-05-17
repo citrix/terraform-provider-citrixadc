@@ -499,6 +499,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_nsicapprofile":                                                 resourceCitrixAdcNsicapprofile(),
 		"citrixadc_nsxmlnamespace":                                                resourceCitrixAdcNsxmlnamespace(),
 		"citrixadc_nstrafficdomain":                                               resourceCitrixAdcNstrafficdomain(),
+		"citrixadc_nsencryptionkey":                                               resourceCitrixAdcNsencryptionkey(),
 	}
 }
 
