@@ -492,6 +492,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_nstimer":                                                       resourceCitrixAdcNstimer(),
 		"citrixadc_nslimitidentifier":                                             resourceCitrixAdcNslimitidentifier(),
 		"citrixadc_nshmackey":                                                     resourceCitrixAdcNshmackey(),
+		"citrixadc_nsservicepath":                                                 resourceCitrixAdcNsservicepath(),
 	}
 }
 
