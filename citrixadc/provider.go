@@ -504,6 +504,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_nssimpleacl":                                                   resourceCitrixAdcNssimpleacl(),
 		"citrixadc_mapbmr":                                                        resourceCitrixAdcMapbmr(),
 		"citrixadc_nssimpleacl6":                                                  resourceCitrixAdcNssimpleacl6(),
+		"citrixadc_mapdmr":                                                        resourceCitrixAdcMapdmr(),
 	}
 }
 
