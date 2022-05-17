@@ -498,6 +498,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_nsappflowcollector":                                            resourceCitrixAdcNsappflowcollector(),
 		"citrixadc_nsicapprofile":                                                 resourceCitrixAdcNsicapprofile(),
 		"citrixadc_nsxmlnamespace":                                                resourceCitrixAdcNsxmlnamespace(),
+		"citrixadc_nstrafficdomain":                                               resourceCitrixAdcNstrafficdomain(),
 	}
 }
 
