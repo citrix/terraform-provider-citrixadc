@@ -500,6 +500,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_nsxmlnamespace":                                                resourceCitrixAdcNsxmlnamespace(),
 		"citrixadc_nstrafficdomain":                                               resourceCitrixAdcNstrafficdomain(),
 		"citrixadc_nsencryptionkey":                                               resourceCitrixAdcNsencryptionkey(),
+		"citrixadc_nsservicefunction":                                             resourceCitrixAdcNsservicefunction(),
 	}
 }
 
