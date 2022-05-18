@@ -510,6 +510,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_nsconsoleloginprompt":                                          resourceCitrixAdcNsconsoleloginprompt(),
 		"citrixadc_extendedmemoryparam":                                           resourceCitrixAdcExtendedmemoryparam(),
 		"citrixadc_appfwmultipartformcontenttype":                                 resourceCitrixAdcAppfwmultipartformcontenttype(),
+		"citrixadc_locationparameter":                                             resourceCitrixAdcLocationparameter(),
 	}
 }
 
