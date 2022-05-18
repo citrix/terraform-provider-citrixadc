@@ -513,6 +513,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_locationparameter":                                             resourceCitrixAdcLocationparameter(),
 		"citrixadc_nstrafficdomain_vlan_binding":                                  resourceCitrixAdcNstrafficdomain_vlan_binding(),
 		"citrixadc_nsservicepath_nsservicefunction_binding":                       resourceCitrixAdcNsservicepath_nsservicefunction_binding(),
+		"citrixadc_nsdiameter":                                                    resourceCitrixAdcNsdiameter(),
 	}
 }
 
