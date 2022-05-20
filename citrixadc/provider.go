@@ -511,6 +511,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_extendedmemoryparam":                                           resourceCitrixAdcExtendedmemoryparam(),
 		"citrixadc_appfwmultipartformcontenttype":                                 resourceCitrixAdcAppfwmultipartformcontenttype(),
 		"citrixadc_locationparameter":                                             resourceCitrixAdcLocationparameter(),
+		"citrixadc_nstrafficdomain_vlan_binding":                                  resourceCitrixAdcNstrafficdomain_vlan_binding(),
 	}
 }
 
