@@ -799,6 +799,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_rdpclientprofile": 											   resourceCitrixAdcRdpclientprofile(),
 		"citrixadc_rdpserverprofile": 											   resourceCitrixAdcRdpserverprofile(),
 		"citrixadc_reputationsettings": 										   resourceCitrixAdcReputationsettings(),
+		"citrixadc_nsweblogparam":												   resourceCitrixAdcNsweblogparam(),
 	}
 }
 
