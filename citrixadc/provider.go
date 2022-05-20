@@ -507,6 +507,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_mapdmr":                                                        resourceCitrixAdcMapdmr(),
 		"citrixadc_appfwwsdl":                                                     resourceCitrixAdcAppfwwsdl(),
 		"citrixadc_nsspparams":                                                    resourceCitrixAdcNsspparams(),
+		"citrixadc_nsconsoleloginprompt":                                          resourceCitrixAdcNsconsoleloginprompt(),
 	}
 }
 
