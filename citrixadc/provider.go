@@ -521,6 +521,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_nsassignment":                                                  resourceCitrixAdcNsassignment(),
 		"citrixadc_appfwxmlschema":                                                resourceCitrixAdcAppfwxmlschema(),
 		"citrixadc_nsratecontrol":                                                 resourceCitrixAdcNsratecontrol(),
+		"citrixadc_l4param":                                                       resourceCitrixAdcL4param(),
 	}
 }
 
