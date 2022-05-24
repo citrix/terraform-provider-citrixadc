@@ -23,18 +23,18 @@ type Nsratecontrol struct {
 	/**
 	* Number of SYNs permitted per 10 milliseconds.
 	*/
-	Tcpthreshold int `json:"tcpthreshold,omitempty"`
+	Tcpthreshold int `json:"tcpthreshold"` // Zero is acceptable value
 	/**
 	* Number of UDP packets permitted per 10 milliseconds.
 	*/
-	Udpthreshold int `json:"udpthreshold,omitempty"`
+	Udpthreshold int `json:"udpthreshold"` // Zero is acceptable value
 	/**
 	* Number of ICMP packets permitted per 10 milliseconds.
 	*/
-	Icmpthreshold int `json:"icmpthreshold,omitempty"`
+	Icmpthreshold int `json:"icmpthreshold"` // Zero is acceptable value
 	/**
 	* The number of TCP RST packets permitted per 10 milli second. zero means rate control is disabled and 0xffffffff means every thing is rate controlled
 	*/
-	Tcprstthreshold int `json:"tcprstthreshold,omitempty"`
+	Tcprstthreshold int `json:"tcprstthreshold"` // Zero is acceptable value
 
 }
