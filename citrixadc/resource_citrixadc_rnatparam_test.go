@@ -40,7 +40,7 @@ func TestAccRnatparam_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRnatparamDestroy,
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			resource.TestStep{
 				Config: testAccRnatparam_add,
@@ -94,26 +94,4 @@ func testAccCheckRnatparamExist(n string, id *string) resource.TestCheckFunc {
 
 		return nil
 	}
-}
-
-func testAccCheckRnatparamDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "citrixadc_rnatparam" {
-			continue
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No name is set")
-		}
-
-		_, err := nsClient.FindResource(service.Rnatparam.Type(), rs.Primary.ID)
-		if err == nil {
-			return fmt.Errorf("rnatparam %s still exists", rs.Primary.ID)
-		}
-
-	}
-
-	return nil
 }
