@@ -40,7 +40,7 @@ func TestAccL4param_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckL4paramDestroy,
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			resource.TestStep{
 				Config: testAccL4param_add,
@@ -94,26 +94,4 @@ func testAccCheckL4paramExist(n string, id *string) resource.TestCheckFunc {
 
 		return nil
 	}
-}
-
-func testAccCheckL4paramDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "citrixadc_l4param" {
-			continue
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No name is set")
-		}
-
-		_, err := nsClient.FindResource(service.L4param.Type(), rs.Primary.ID)
-		if err == nil {
-			return fmt.Errorf("l4param %s still exists", rs.Primary.ID)
-		}
-
-	}
-
-	return nil
 }
