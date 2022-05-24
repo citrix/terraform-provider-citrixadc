@@ -40,7 +40,7 @@ func TestAccArpparam_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckArpparamDestroy,
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			resource.TestStep{
 				Config: testAccArpparam_add,
@@ -94,26 +94,4 @@ func testAccCheckArpparamExist(n string, id *string) resource.TestCheckFunc {
 
 		return nil
 	}
-}
-
-func testAccCheckArpparamDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "citrixadc_arpparam" {
-			continue
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No name is set")
-		}
-
-		_, err := nsClient.FindResource(service.Arpparam.Type(), rs.Primary.ID)
-		if err == nil {
-			return fmt.Errorf("arpparam %s still exists", rs.Primary.ID)
-		}
-
-	}
-
-	return nil
 }
