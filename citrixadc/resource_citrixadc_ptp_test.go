@@ -38,7 +38,7 @@ func TestAccPtp_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckPtpDestroy,
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			resource.TestStep{
 				Config: testAccPtp_add,
@@ -90,26 +90,4 @@ func testAccCheckPtpExist(n string, id *string) resource.TestCheckFunc {
 
 		return nil
 	}
-}
-
-func testAccCheckPtpDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "citrixadc_ptp" {
-			continue
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No name is set")
-		}
-
-		_, err := nsClient.FindResource(service.Ptp.Type(), rs.Primary.ID)
-		if err == nil {
-			return fmt.Errorf("ptp %s still exists", rs.Primary.ID)
-		}
-
-	}
-
-	return nil
 }
