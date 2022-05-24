@@ -519,6 +519,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_nsdhcpparams":                                                  resourceCitrixAdcNsdhcpparams(),
 		"citrixadc_nstrafficdomain_vxlan_binding":                                 resourceCitrixAdcNstrafficdomain_vxlan_binding(),
 		"citrixadc_nsassignment":                                                  resourceCitrixAdcNsassignment(),
+		"citrixadc_appfwxmlschema":                                                resourceCitrixAdcAppfwxmlschema(),
 	}
 }
 
