@@ -44,7 +44,7 @@ func TestAccVridparam_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckVridparamDestroy,
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			resource.TestStep{
 				Config: testAccVridparam_add,
@@ -100,26 +100,4 @@ func testAccCheckVridparamExist(n string, id *string) resource.TestCheckFunc {
 
 		return nil
 	}
-}
-
-func testAccCheckVridparamDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "citrixadc_vridparam" {
-			continue
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No name is set")
-		}
-
-		_, err := nsClient.FindResource(service.Vridparam.Type(), rs.Primary.ID)
-		if err == nil {
-			return fmt.Errorf("vridparam %s still exists", rs.Primary.ID)
-		}
-
-	}
-
-	return nil
 }
