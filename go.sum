@@ -92,8 +92,8 @@ github.com/citrix/adc-nitro-go v0.0.0-20220427105137-09473797f37d h1:j6xKhzh/OWs
 github.com/citrix/adc-nitro-go v0.0.0-20220427105137-09473797f37d/go.mod h1:DL1n+MgO15981ahrt+CsQVv43yyUrTdigPq3dIxydD8=
 github.com/citrix/adc-nitro-go v0.0.0-20220516122238-96d325ea9f36 h1:8R+4CFUzogpgTbG0xFPNP6DnDjvZNF+KIOt7h6DFsU0=
 github.com/citrix/adc-nitro-go v0.0.0-20220516122238-96d325ea9f36/go.mod h1:DL1n+MgO15981ahrt+CsQVv43yyUrTdigPq3dIxydD8=
-github.com/citrix/adc-nitro-go v0.0.0-20220519133358-e442a580b519 h1:DTuLoOnxOtsw7qoYA0xsFHFTZHAeVLIAuPuqVzNauY4=
-github.com/citrix/adc-nitro-go v0.0.0-20220519133358-e442a580b519/go.mod h1:DL1n+MgO15981ahrt+CsQVv43yyUrTdigPq3dIxydD8=
+github.com/citrix/adc-nitro-go v0.0.0-20220524084947-893dcc4a6841 h1:H3FbGDnhJ04Pv1CWTiTWYue09rxqkZZSjj57n23b570=
+github.com/citrix/adc-nitro-go v0.0.0-20220524084947-893dcc4a6841/go.mod h1:DL1n+MgO15981ahrt+CsQVv43yyUrTdigPq3dIxydD8=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
 github.com/coreos/bbolt v1.3.0/go.mod h1:iRUV2dpdMOn7Bo10OQBFzIJO9kkE559Wcmn+qkEiiKk=
 github.com/coreos/etcd v3.3.10+incompatible/go.mod h1:uF7uidLiAD3TWHmW31ZFd/JWoc32PjwdhPthX9715RE=
