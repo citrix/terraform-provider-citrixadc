@@ -527,6 +527,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_ptp":                                                           resourceCitrixAdcPtp(),
 		"citrixadc_nshttpparam":                                                   resourceCitrixAdcNshttpparam(),
 		"citrixadc_mapdomain":                                                     resourceCitrixAdcMapdomain(),
+		"citrixadc_mapbmr_bmrv4network_binding":                                   resourceCitrixAdcMapbmr_bmrv4network_binding(),
 	}
 }
 
