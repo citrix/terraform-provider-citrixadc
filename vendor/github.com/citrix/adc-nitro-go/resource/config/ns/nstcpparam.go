@@ -28,7 +28,7 @@ type Nstcpparam struct {
 	* Factor used to calculate the new window size.
 		This argument is needed only when the window scaling is enabled.
 	*/
-	Wsval int `json:"wsval,omitempty"`
+	Wsval int `json:"wsval"` // Zero is a valid value
 	/**
 	* Enable or disable Selective ACKnowledgement (SACK).
 	*/
@@ -68,7 +68,7 @@ type Nstcpparam struct {
 	/**
 	* Maximum size of out-of-order packets queue. A value of 0 means no limit.
 	*/
-	Oooqsize int `json:"oooqsize,omitempty"`
+	Oooqsize int `json:"oooqsize"` // Zero is a valid value
 	/**
 	* Send immediate positive acknowledgement (ACK) on receipt of TCP packets with PUSH flag.
 	*/
@@ -76,7 +76,7 @@ type Nstcpparam struct {
 	/**
 	* Maximum number of TCP packets allowed per maximum segment size (MSS).
 	*/
-	Maxpktpermss int `json:"maxpktpermss,omitempty"`
+	Maxpktpermss int `json:"maxpktpermss"` // Zero is a valid value
 	/**
 	* Maximum limit on the number of packets that should be retransmitted on receiving a partial ACK.
 	*/
@@ -152,11 +152,11 @@ type Nstcpparam struct {
 	/**
 	* The timeout value in seconds for idle mptcp subflows. If this timeout is not set, idle subflows are cleared after cltTimeout of vserver
 	*/
-	Mptcpsftimeout int `json:"mptcpsftimeout,omitempty"`
+	Mptcpsftimeout int `json:"mptcpsftimeout"` // Zero is a valid value
 	/**
 	* The minimum idle time value in seconds for idle mptcp subflows after which the sublow is replaced by new incoming subflow if maximum subflow limit is reached. The priority for replacement is given to those subflow without any transaction
 	*/
-	Mptcpsfreplacetimeout int `json:"mptcpsfreplacetimeout,omitempty"`
+	Mptcpsfreplacetimeout int `json:"mptcpsfreplacetimeout"` // Zero is a valid value
 	/**
 	* Maximum number of subflow connections supported in established state per mptcp connection.
 	*/
@@ -164,11 +164,11 @@ type Nstcpparam struct {
 	/**
 	* Maximum number of subflow connections supported in pending join state per mptcp connection.
 	*/
-	Mptcpmaxpendingsf int `json:"mptcpmaxpendingsf,omitempty"`
+	Mptcpmaxpendingsf int `json:"mptcpmaxpendingsf"` // Zero is a valid value
 	/**
 	* Maximum system level pending join connections allowed.
 	*/
-	Mptcppendingjointhreshold int `json:"mptcppendingjointhreshold,omitempty"`
+	Mptcppendingjointhreshold int `json:"mptcppendingjointhreshold"` // Zero is a valid value
 	/**
 	* Number of RTO's at subflow level, after which MPCTP should start using other subflow.
 	*/
@@ -200,7 +200,7 @@ type Nstcpparam struct {
 	/**
 	* Timeout in seconds after which a new TFO Key is computed for generating TFO Cookie. If zero, the same key is used always. If timeout is less than 120seconds, NS defaults to 120seconds timeout.
 	*/
-	Tcpfastopencookietimeout int `json:"tcpfastopencookietimeout,omitempty"`
+	Tcpfastopencookietimeout int `json:"tcpfastopencookietimeout"` // Zero is a valid value
 	/**
 	* Timeout for the server to function in syncookie mode after the synattack. This is valid if TCP syncookie is disabled on the profile and server acts in non syncookie mode by default.
 	*/

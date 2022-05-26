@@ -60,7 +60,7 @@ github.com/bgentry/speakeasy
 github.com/blang/semver
 # github.com/bmatcuk/doublestar v1.1.5
 github.com/bmatcuk/doublestar
-# github.com/citrix/adc-nitro-go v0.0.0-20220524084947-893dcc4a6841
+# github.com/citrix/adc-nitro-go v0.0.0-20220525123422-4910c7113775
 github.com/citrix/adc-nitro-go/resource/config/appfw
 github.com/citrix/adc-nitro-go/resource/config/audit
 github.com/citrix/adc-nitro-go/resource/config/authentication
