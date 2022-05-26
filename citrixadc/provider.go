@@ -531,6 +531,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_vridparam":                                                     resourceCitrixAdcVridparam(),
 		"citrixadc_bridgegroup":                                                   resourceCitrixAdcBridgegroup(),
 		"citrixadc_bridgegroup_vlan_binding":                                      resourceCitrixAdcBridgegroup_vlan_binding(),
+		"citrixadc_nspartition_bridgegroup_binding":                               resourceCitrixAdcNspartition_bridgegroup_binding(),
 	}
 }
 
