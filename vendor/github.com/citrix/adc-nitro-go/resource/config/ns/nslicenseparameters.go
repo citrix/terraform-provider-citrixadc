@@ -23,7 +23,7 @@ type Nslicenseparameters struct {
 	/**
 	* If ADC remains in grace for the configured hours then first grace alert will be raised
 	*/
-	Alert1gracetimeout int `json:"alert1gracetimeout,omitempty"`
+	Alert1gracetimeout int `json:"alert1gracetimeout"` // Zero is a valid value
 	/**
 	* If ADC remains in grace for the configured hours then major grace alert will be raised
 	*/
