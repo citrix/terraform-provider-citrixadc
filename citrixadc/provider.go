@@ -538,6 +538,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_nslicenseparameters":                                           resourceCitrixAdcNslicenseparameters(),
 		"citrixadc_bridgegroup_nsip_binding":                                      resourceCitrixAdcBridgegroup_nsip_binding(),
 		"citrixadc_bridgegroup_nsip6_binding":                                     resourceCitrixAdcBridgegroup_nsip6_binding(),
+		"citrixadc_appalgparam":                                                   resourceCitrixAdcAppalgparam(),
 	}
 }
 
