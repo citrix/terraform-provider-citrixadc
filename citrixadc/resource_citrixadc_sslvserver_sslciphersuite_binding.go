@@ -82,7 +82,7 @@ func readSslvserver_sslciphersuite_bindingFunc(d *schema.ResourceData, meta inte
 	findParams := service.FindParams{
 		ResourceType:             "sslvserver_sslciphersuite_binding",
 		ResourceName:             vservername,
-		ResourceMissingErrorCode: 258,
+		ResourceMissingErrorCode: 461,
 	}
 	dataArr, err := client.FindResourceArrayWithParams(findParams)
 
