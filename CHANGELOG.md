@@ -1,3 +1,60 @@
+## 1.16.0 (June 1, 2022)
+
+FEATURES
+
+* **New Resource** `nsservicepath`
+* **New Resource** `nspartition`
+* **New Resource** `nsvariable`
+* **New Resource** `nsappflowcollector`
+* **New Resource** `nsicapprofile`
+* **New Resource** `nsxmlnamespace`
+* **New Resource** `nstrafficdomain`
+* **New Resource** `nsencryptionkey`
+* **New Resource** `nsservicefunction`
+* **New Resource** `nssimpleacl`
+* **New Resource** `mapbmr`
+* **New Resource** `nssimpleacl6`
+* **New Resource** `mapdmr`
+* **New Resource** `appfwwsdl`
+* **New Resource** `nsspparams`
+* **New Resource** `nsconsoleloginprompt`
+* **New Resource** `extendedmemoryparam`
+* **New Resource** `appfwmultipartformcontenttype`
+* **New Resource** `locationparameter`
+* **New Resource** `nstrafficdomain_vlan_binding`
+* **New Resource** `nsservicepath_nsservicefunction_binding`
+* **New Resource** `nsdiameter`
+* **New Resource** `nspartition_vxlan_binding`
+* **New Resource** `nspartition_vlan_binding`
+* **New Resource** `nsdhcpparams`
+* **New Resource** `nstrafficdomain_vxlan_binding`
+* **New Resource** `nsassignment`
+* **New Resource** `appfwxmlschema`
+* **New Resource** `nsratecontrol`
+* **New Resource** `l4param`
+* **New Resource** `arpparam`
+* **New Resource** `rnatparam`
+* **New Resource** `ptp`
+* **New Resource** `nshttpparam`
+* **New Resource** `mapdomain`
+* **New Resource** `mapbmr_bmrv4network_binding`
+* **New Resource** `vridparam`
+* **New Resource** `bridgegroup`
+* **New Resource** `bridgegroup_vlan_binding`
+* **New Resource** `nspartition_bridgegroup_binding`
+* **New Resource** `nstrafficdomain_bridgegroup_binding`
+* **New Resource** `nat64param`
+* **New Resource** `nslicenseparameters`
+* **New Resource** `bridgegroup_nsip_binding`
+* **New Resource** `bridgegroup_nsip6_binding`
+
+* **New Data Source** `sslcipher_sslvserver_bindings`
+
+BUG FIXES
+
+* Fixed resource missing errorcode in `sslvserver_sslciphersuite_binding`
+
+
 ## 1.15.0 (May 16, 2022)
 
 FEATURES
