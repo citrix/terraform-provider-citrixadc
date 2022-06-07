@@ -545,6 +545,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_nstcpbufparam":                                                 resourceCitrixAdcNstcpbufparam(),
 		"citrixadc_ip6tunnel":                                                     resourceCitrixAdcIp6tunnel(),
 		"citrixadc_rsskeytype":                                                    resourceCitrixAdcRsskeytype(),
+		"citrixadc_nat64":                                                         resourceCitrixAdcNat64(),
 	}
 }
 
