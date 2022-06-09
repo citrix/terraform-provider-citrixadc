@@ -31,7 +31,7 @@ type Nsparam struct {
 	/**
 	* Maximum number of requests that the system can pass on a particular connection between the appliance and a server attached to it. Setting this value to 0 allows an unlimited number of requests to be passed. This value is overridden by the maximum number of requests configured on the individual service.
 	*/
-	Maxreq int `json:"maxreq,omitempty"`
+	Maxreq int `json:"maxreq"` // Zero is a valid value
 	/**
 	* Enable or disable the insertion of the actual client IP address into the HTTP header request passed from the client to one, some, or all servers attached to the system. The passed address can then be accessed through a minor modification to the server.
 		* If the CIP header is specified, it will be used as the client IP header.
@@ -45,7 +45,7 @@ type Nsparam struct {
 	/**
 	* Version of the cookie inserted by the system.
 	*/
-	Cookieversion string `json:"cookieversion,omitempty"`
+	Cookieversion string `json:"cookieversion"` // Zero is a valid value
 	/**
 	* Enable or disable secure flag for persistence cookie.
 	*/
@@ -73,11 +73,11 @@ type Nsparam struct {
 	/**
 	* Percentage of shared quota to be granted at a time for maxClient.
 	*/
-	Grantquotamaxclient int `json:"grantquotamaxclient,omitempty"`
+	Grantquotamaxclient int `json:"grantquotamaxclient"` // Zero is a valid value
 	/**
 	* Percentage of maxClient to be given to PEs.
 	*/
-	Exclusivequotamaxclient int `json:"exclusivequotamaxclient,omitempty"`
+	Exclusivequotamaxclient int `json:"exclusivequotamaxclient"` // Zero is a valid value
 	/**
 	* Percentage of shared quota to be granted at a time for spillover.
 	*/
@@ -85,7 +85,7 @@ type Nsparam struct {
 	/**
 	* Percentage of maximum limit to be given to PEs.
 	*/
-	Exclusivequotaspillover int `json:"exclusivequotaspillover,omitempty"`
+	Exclusivequotaspillover int `json:"exclusivequotaspillover"` // Zero is a valid value
 	/**
 	* Enable/Disable use_proxy_port setting
 	*/
