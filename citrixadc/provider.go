@@ -549,6 +549,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_netbridge_iptunnel_binding":                                    resourceCitrixAdcNetbridge_iptunnel_binding(),
 		"citrixadc_dnsprofile":                                                    resourceCitrixAdcDnsprofile(),
 		"citrixadc_mapdomain_mapbmr_binding":                                      resourceCitrixAdcMapdomain_mapbmr_binding(),
+		"citrixadc_netbridge_vlan_binding":                                        resourceCitrixAdcNetbridge_vlan_binding(),
 	}
 }
 
