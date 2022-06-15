@@ -58,7 +58,7 @@ You can download it from this [page](https://releases.hashicorp.com/terraform/).
 First step is to install Terraform CLI. Refer the https://learn.hashicorp.com/tutorials/terraform/install-cli for installing Terraform CLI. 
 
 ### **Step 2. Installing Citrix ADC Provider:**
-The Terraform provider for Citrix ADC is  available through terraform.registry.io
+The Terraform provider for Citrix ADC is available through terraform.registry.io
 If you wish to have a local version instead of the release within the registry you can follow the installation instructions below.
 
 #### **Follow below steps to install citrix adc provider for Terraform CLI version < 0.13**
