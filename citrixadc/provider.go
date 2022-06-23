@@ -557,6 +557,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_dnspolicylabel":                                                resourceCitrixAdcDnspolicylabel(),
 		"citrixadc_dnsptrrec":                                                     resourceCitrixAdcDnsptrrec(),
 		"citrixadc_ip6tunnelparam":                                                resourceCitrixAdcIp6tunnelparam(),
+		"citrixadc_dnstxtrec":													   resourceCitrixAdcDnstxtrec(),
 	}
 }
 
