@@ -26,12 +26,12 @@ resource "citrixadc_dnsview" "tf_dnsview" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the tf_dnsview. It has the same value as the `viewname` attribute.
+* `id` - The id of the dnsview. It has the same value as the `viewname` attribute.
 
 
 ## Import
 
-A tf_dnsview can be imported using its name, e.g.
+A dnsview can be imported using its name, e.g.
 
 ```shell
 terraform import citrixadc_dnsview.tf_dnsview view3
