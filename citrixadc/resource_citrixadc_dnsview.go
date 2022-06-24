@@ -63,7 +63,6 @@ func readDnsviewFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	d.Set("viewname", data["viewname"])
-	d.Set("viewname", data["viewname"])
 
 	return nil
 

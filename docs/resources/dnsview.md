@@ -2,9 +2,9 @@
 subcategory: "DNS"
 ---
 
-# Resource: tf_dnsview
+# Resource: dnsview
 
-The tf_dnsview resource is used to create DNS view.
+The dnsview resource is used to create DNS view.
 
 
 ## Example usage
