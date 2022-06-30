@@ -47,6 +47,12 @@ func dataSourceCitrixAdcNitroInfo() *schema.Resource {
 					},
 				},
 			},
+			"nitro_object": &schema.Schema{
+				Type:     schema.TypeMap,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Optional: true,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -58,8 +64,8 @@ func dataSourceCitrixAdcNitroInfoRead(d *schema.ResourceData, meta interface{}) 
 	switch workflowMap["lifecycle"].(string) {
 	case "binding_list":
 		err = dataSourceCitrixAdcNitroInfoBindingListRead(d, meta)
-	case "binding":
-		err = dataSourceCitrixAdcNitroInfoBindingRead(d, meta)
+	case "object_by_name":
+		err = dataSourceCitrixAdcNitroInfoObjectByNameRead(d, meta)
 	default:
 		err = fmt.Errorf("Lifecycle %s is not implemented", workflowMap["lifecycle"].(string))
 	}
@@ -117,10 +123,57 @@ func dataSourceCitrixAdcNitroInfoBindingListRead(d *schema.ResourceData, meta in
 	return nil
 }
 
-func dataSourceCitrixAdcNitroInfoBindingRead(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[DEBUG] citrixadc-provider:  In dataSourceCitrixAdcNitroInfoBindingListRead")
+func dataSourceCitrixAdcNitroInfoObjectByNameRead(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[DEBUG] citrixadc-provider:  In dataSourceCitrixAdcNitroInfoObjectByNameRead")
 	client := meta.(*NetScalerNitroClient).client
-	_ = client
+	workflowMap := d.Get("workflow").(map[string]interface{})
+	primaryId := d.Get("primary_id").(string)
+	missingErrorCode, err := strconv.Atoi(workflowMap["bound_resource_missing_errorcode"].(string))
+	if err != nil {
+		return err
+	}
+	findParams := service.FindParams{
+		ResourceType:             workflowMap["endpoint"].(string),
+		ResourceName:             primaryId,
+		ResourceMissingErrorCode: missingErrorCode,
+	}
+
+	dataArr, err := client.FindResourceArrayWithParams(findParams)
+	log.Printf("dataArr %v ", dataArr)
+	if err != nil {
+		if strings.Contains(err.Error(), workflowMap["bound_resource_missing_errorcode"].(string)) {
+			id := resource.PrefixedUniqueId("nitro-info-")
+			d.SetId(id)
+			emptyMap := make(map[string]interface{})
+			d.Set("nitro_object", emptyMap)
+			return nil
+		} else {
+			return err
+		}
+	}
+	// Fallthrough
+
+	if len(dataArr) > 1 {
+		return fmt.Errorf("Too many results %d", len(dataArr))
+	}
+
+	id := resource.PrefixedUniqueId("nitro-info-")
+	d.SetId(id)
+
+	outputMap := make(map[string]string)
+
+	if len(dataArr) == 0 {
+		d.Set("nitro_object", outputMap)
+		return nil
+	}
+	// Fallthrough
+
+	data := dataArr[0]
+	for k, v := range data {
+		outputMap[k] = fmt.Sprintf("%v", v)
+
+	}
+	d.Set("nitro_object", outputMap)
 
 	return nil
 }

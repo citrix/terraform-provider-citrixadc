@@ -74,10 +74,10 @@ func TestAccNitroInfo_binding_list(t *testing.T) {
 	})
 }
 
-func TestTerratestNitroInfoBinding(t *testing.T) {
-	// retryable errors in terraform testing.
+func TestTerratestNitroInfoBindingList(t *testing.T) {
+
 	terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
-		TerraformDir: "../examples/nitro_info",
+		TerraformDir: "../examples/nitro_info/binding_list",
 	})
 
 	defer terraform.Destroy(t, terraformOptions)
@@ -88,4 +88,19 @@ func TestTerratestNitroInfoBinding(t *testing.T) {
 	output := terraform.OutputList(t, terraformOptions, "object_output")
 	emptyList := []string{"tf_csvserver", "tf_lbvserver"}
 	assert.Equal(t, emptyList, output)
+}
+
+func TestTerratestNitroInfoObjectByName(t *testing.T) {
+
+	terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
+		TerraformDir: "../examples/nitro_info/object_by_name",
+	})
+
+	defer terraform.Destroy(t, terraformOptions)
+
+	terraform.InitAndApply(t, terraformOptions)
+	terraform.RunTerraformCommand(t, terraformOptions, "refresh")
+
+	output := terraform.Output(t, terraformOptions, "nitro_object_length")
+	assert.Equal(t, "33", output)
 }
