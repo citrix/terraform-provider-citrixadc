@@ -1,0 +1,4 @@
+---
+lifecycle: binding_list
+endpoint: server_gslbservice_binding
+bound_resource_missing_errorcode: 258
