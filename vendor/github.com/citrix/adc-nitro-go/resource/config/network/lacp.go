@@ -27,7 +27,7 @@ type Lacp struct {
 	/**
 	* The owner node in a cluster for which we want to set the lacp priority. Owner node can vary from 0 to 31. Ownernode value of 254 is used for Cluster.
 	*/
-	Ownernode int `json:"ownernode,omitempty"`
+	Ownernode int `json:"ownernode"` // Zero is a valid value
 
 	//------- Read only Parameter ---------;
 
