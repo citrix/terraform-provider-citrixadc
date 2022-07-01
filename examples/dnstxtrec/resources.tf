@@ -1,10 +1,8 @@
 resource "citrixadc_dnstxtrec" "dnstxtrec" {
-  domain = "example1.com"
+  domain = "asoighewgoadfa.net"
   string = [
-    "block",
-    "log",
-    "stats"
-  ]
+                "v=spf1 a mxrec include:websitewelcome.com ~all"
+            ]
   ttl = 3600
 }
 

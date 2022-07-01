@@ -6,6 +6,7 @@ import (
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform/helper/schema"
 
+	"fmt"
 	"log"
 	"net/url"
 )
@@ -31,29 +32,8 @@ func resourceCitrixAdcDnstxtrec() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"ecssubnet": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"nodeid": &schema.Schema{
-				Type:     schema.TypeInt,
-				Optional: true,
-				ForceNew: true,
-			},
-			"recordid": &schema.Schema{
-				Type:     schema.TypeInt,
-				Optional: true,
-				ForceNew: true,
-			},
-			
 			"ttl": &schema.Schema{
 				Type:     schema.TypeInt,
-				Optional: true,
-				ForceNew: true,
-			},
-			"type": &schema.Schema{
-				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
@@ -67,12 +47,8 @@ func createDnstxtrecFunc(d *schema.ResourceData, meta interface{}) error {
 	dnstxtrecName := d.Get("domain").(string)
 	dnstxtrec := dns.Dnstxtrec{
 		Domain:    dnstxtrecName,
-		Ecssubnet: d.Get("ecssubnet").(string),
-		Nodeid:    d.Get("nodeid").(int),
-		Recordid:  d.Get("recordid").(int),
 		String:    toStringList(d.Get("string").([]interface{})),
 		Ttl:       d.Get("ttl").(int),
-		Type:      d.Get("type").(string),
 	}
 
 	_, err := client.AddResource(service.Dnstxtrec.Type(), dnstxtrecName, &dnstxtrec)
@@ -101,13 +77,10 @@ func readDnstxtrecFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
+
 	d.Set("domain", data["domain"])
-	d.Set("ecssubnet", data["ecssubnet"])
-	d.Set("nodeid", data["nodeid"])
-	d.Set("recordid", data["recordid"])
-	d.Set("string", data["string"])
+	d.Set("string", data["String"])
 	d.Set("ttl", data["ttl"])
-	d.Set("type", data["type"])
 
 	return nil
 
@@ -117,12 +90,17 @@ func deleteDnstxtrecFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteDnstxtrecFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnstxtrecName := d.Id()
+	data, err := client.FindResource(service.Dnstxtrec.Type(), dnstxtrecName)
+	if err != nil {
+		log.Printf("[WARN] citrixadc-provider: Clearing dnstxtrec state %s", dnstxtrecName)
+		d.SetId("")
+		return nil
+	}
 	argsMap := make(map[string]string)
-	argsMap["string"] = url.QueryEscape(d.Get("string").(string))
-	argsMap["recordid"] = url.QueryEscape(d.Get("recordid").(int))
-	argsMap["ecssubnet"] = url.QueryEscape(d.Get("ecssubnet").(string))
+	argsMap["recordid"] = fmt.Sprintf("%v",data["recordid"])
+	argsMap["domain"] = url.QueryEscape(d.Id())
 
-	err := client.DeleteResourceWithArgsMap(service.Dnstxtrec.Type(), dnstxtrecName, argsMap)
+	err = client.DeleteResourceWithArgsMap(service.Dnstxtrec.Type(), dnstxtrecName, argsMap)
 	if err != nil {
 		return err
 	}

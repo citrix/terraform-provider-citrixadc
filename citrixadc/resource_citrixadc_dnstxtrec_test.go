@@ -25,15 +25,13 @@ import (
 
 const testAccDnstxtrec_basic = `
 
-	resource "citrixadc_dnstxtrec" "tf_dnstxtrec" {
+	resource "citrixadc_dnstxtrec" "dnstxtrec" {
 		
-		domain = "example.com"
-		string = [
-		  "block",
-		  "log",
-		  "stats"
-		]
-		ttl = "3600"
+		domain = "asoighewgoadfa.net"
+  		string = [
+                "v=spf1 a mxrec include:websitewelcome.com ~all"
+            ]
+  		ttl = 3600
 	}
 `
 
@@ -47,9 +45,9 @@ func TestAccDnstxtrec_basic(t *testing.T) {
 				Config: testAccDnstxtrec_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDnstxtrecExist("citrixadc_dnstxtrec.dnstxtrec", nil),
-					resource.TestCheckResourceAttr("citrixadc_dnstxtrec.dnstxtrec", "domain", "example.com"),
-					resource.TestCheckResourceAttr("citrixadc_dnstxtrec.dnstxtrec", "string", "[\"block\",\"log\",\"stats\"]"),
-					resource.TestCheckResourceAttr("citrixadc_dnstxtrec.dnstxtrec", "domain", "example.com"),
+					resource.TestCheckResourceAttr("citrixadc_dnstxtrec.dnstxtrec", "domain", "asoighewgoadfa.net"),
+					//resource.TestCheckResourceAttr("citrixadc_dnstxtrec.dnstxtrec", "string", "[\"v=spf1 a mxrec include:websitewelcome.com ~all\"]"),
+					resource.TestCheckResourceAttr("citrixadc_dnstxtrec.dnstxtrec", "ttl", "3600"),
 
 				),
 			},
