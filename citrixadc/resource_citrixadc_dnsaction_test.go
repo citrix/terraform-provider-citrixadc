@@ -28,28 +28,9 @@ const testAccDnsaction_add = `
 
 resource "citrixadc_dnsaction" "dnsaction" {
 	actionname       = "tf_action1"
-	actiontype       = "ViewName"
-	ipaddress        = ["192.0.2.20","192.0.2.56","198.51.100.10"]
-	ttl              = 3600
-	viewname         = "view1"
-	preferredloclist = ["NA.tx.ns1.*.*.*","NA.tx.ns2.*.*.*","NA.tx.ns3.*.*.*"]
+	actiontype       = "Rewrite_Response"
+	ipaddress        = ["192.0.2.20","192.0.2.56","198.51.130.10"]
 	dnsprofilename   = "tf_profile1"
-  
-  }
-`
-
-const testAccDnsaction_update = `
-
-
-resource "citrixadc_dnsaction" "dnsaction" {
-	actionname       = "tf_action1"
-	actiontype       = "noop"
-	ipaddress        = ["192.0.2.20","192.0.2.56","198.51.100.10"]
-	ttl              = 3601
-	viewname         = "view1"
-	preferredloclist = ["NA.tx.ns1.*.*.*","NA.tx.ns2.*.*.*","NA.tx.ns3.*.*.*"]
-	dnsprofilename   = "tf_profile1"
-  
   }
 `
 
@@ -63,20 +44,9 @@ func TestAccDnsaction_basic(t *testing.T) {
 				Config: testAccDnsaction_add,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDnsactionExist("citrixadc_dnsaction.dnsaction", nil),
-					resource.TestCheckResourceAttr("citrixadc_dnsaction.dnscation", "actionname", "tf_action1"),
-					resource.TestCheckResourceAttr("citrixadc_dnsaction.dnscation","actiontype", "ViewName"),
-					resource.TestCheckResourceAttr("citrixadc_dnsaction.dnscation","viewname", "view1"),
-					resource.TestCheckResourceAttr("citrixadc_dnsaction.dnscation","dnsprofilename", "tf_profile1"),
-				),
-			},
-			resource.TestStep{
-				Config: testAccDnsaction_update,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDnsactionExist("citrixadc_dnsaction.dnsaction", nil),
-					resource.TestCheckResourceAttr("citrixadc_dnsaction.dnscation", "actionname", "tf_action1"),
-					resource.TestCheckResourceAttr("citrixadc_dnsaction.dnscation","actiontype", "noop"),
-					resource.TestCheckResourceAttr("citrixadc_dnsaction.dnscation","viewname", "view1"),
-					resource.TestCheckResourceAttr("citrixadc_dnsaction.dnscation","dnsprofilename", "tf_profile1"),
+					resource.TestCheckResourceAttr("citrixadc_dnsaction.dnsaction", "actionname", "tf_action1"),
+					resource.TestCheckResourceAttr("citrixadc_dnsaction.dnsaction","actiontype", "Rewrite_Response"),
+					resource.TestCheckResourceAttr("citrixadc_dnsaction.dnsaction","dnsprofilename", "tf_profile1"),
 				),
 			},
 		},

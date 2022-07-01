@@ -11,15 +11,12 @@ The dnsaction resource is used to create DNS action.
 
 ```hcl
 resource "citrixadc_dnsaction" "dnsaction" {
-	actionname       = "tf_action1"
-	actiontype       = "ViewName"
-	ipaddress        = ["192.0.2.20","192.0.2.56","198.51.100.10"]
-	ttl              = 3600
-	viewname         = "view1"
-	preferredloclist = ["NA.tx.ns1.*.*.*","NA.tx.ns2.*.*.*","NA.tx.ns3.*.*.*"]
-	dnsprofilename   = "tf_profile1"
-  
-  }
+  actionname       = "tf_action1"
+  actiontype       = "Rewrite_Response"
+  ipaddress        = ["192.0.2.20","192.0.2.56","198.51.130.10"]
+  dnsprofilename   = "tf_profile1"
+
+}
 ```
 
 
@@ -46,5 +43,5 @@ In addition to the arguments, the following attributes are available:
 A dnsaction can be imported using its name, e.g.
 
 ```shell
-terraform import citrixadc_dnsaction.dnssaction tf_action1
+terraform import citrixadc_dnsaction.dnsaction tf_action1
 ```
