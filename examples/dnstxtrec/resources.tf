@@ -1,11 +1,11 @@
-resource "citrixadc_dnstxtrec" "tf_dnstxtrec" {
-  domain = "example.com"
+resource "citrixadc_dnstxtrec" "dnstxtrec" {
+  domain = "example1.com"
   string = [
     "block",
     "log",
     "stats"
   ]
-  ttl = "3600"
+  ttl = 3600
 }
 
 

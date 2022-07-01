@@ -1,23 +1,31 @@
 ---
-subcategory: "<fillme>"
+subcategory: DNS
 ---
 
-# Resource: <fillme>
+# Resource: dnstxtrec
 
-The <resource> resource is used to create <fillme>.
+The dnstxtrec resource is used to create DNS txtrec.
 
 
 ## Example usage
 
 ```hcl
-<fillme>
+resource "citrixadc_dnstxtrec" "dnstxtrec" {
+  domain = "example1.com"
+  string = [
+    "block",
+    "log",
+    "stats"
+  ]
+  ttl = 3600
+}
 ```
 
 
 ## Argument Reference
 
-* `String` - (Optional) Information to store in the TXT resource record. Enclose the string in single or double quotation marks. A TXT resource record can contain up to six strings, each of which can contain up to 255 characters. If you want to add a string of more than 255 characters, evaluate whether splitting it into two or more smaller strings, subject to the six-string limit, works for you.
-* `domain` - (Optional) Name of the domain for the TXT record.
+* `String` - (Required) Information to store in the TXT resource record. Enclose the string in single or double quotation marks. A TXT resource record can contain up to six strings, each of which can contain up to 255 characters. If you want to add a string of more than 255 characters, evaluate whether splitting it into two or more smaller strings, subject to the six-string limit, works for you.
+* `domain` - (Required) Name of the domain for the TXT record.
 * `ecssubnet` - (Optional) Subnet for which the cached TXT record need to be removed.
 * `nodeid` - (Optional) Unique number that identifies the cluster node.
 * `recordid` - (Optional) Unique, internally generated record ID. View the details of the TXT record to obtain its record ID. Mutually exclusive with the string parameter.
@@ -29,13 +37,13 @@ The <resource> resource is used to create <fillme>.
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the <fillme>. It has the same value as the `name` attribute.
+* `id` - The id of the dnstxtrec. It has the same value as the `domain` attribute.
 
 
 ## Import
 
-A <resource> can be imported using its name, e.g.
+A dnstxtrec can be imported using its name, e.g.
 
 ```shell
-terraform import citrixadc_csaction.tf_csaction tf_csaction
+terraform import citrixadc_dnstxtrec.dnstxtrec example
 ```
