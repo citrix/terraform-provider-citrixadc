@@ -21,29 +21,18 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 	"testing"
+	"net/url"
 )
 
 const testAccDnsnaptrrec_basic = `
 
-
-	resource "citrixadc_dnsnaptrrec" "foo" {
-		
-		
-
-		domain = "Fillme"
-		ecssubnet = "Fillme"
-		flags = "Fillme"
-		nodeid = "Fillme"
-		order = "Fillme"
-		preference = "Fillme"
-		recordid = "Fillme"
-		regexp = "Fillme"
-		replacement = "Fillme"
-		services = "Fillme"
-		ttl = "Fillme"
-		type = "Fillme"
-		
-	}
+resource "citrixadc_dnsnaptrrec" "dnsnaptrrec" {
+	domain     = "example.com"
+	order      = 10
+	preference = 2
+	ttl        = 3600
+	replacement = "example1.com"
+  }
 `
 
 func TestAccDnsnaptrrec_basic(t *testing.T) {
@@ -55,7 +44,12 @@ func TestAccDnsnaptrrec_basic(t *testing.T) {
 			resource.TestStep{
 				Config: testAccDnsnaptrrec_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDnsnaptrrecExist("citrixadc_dnsnaptrrec.foo", nil),
+					testAccCheckDnsnaptrrecExist("citrixadc_dnsnaptrrec.dnsnaptrrec", nil),
+					resource.TestCheckResourceAttr("citrixadc_dnsnaptrrec.dnsnaptrrec", "domain", "example.com"),
+					resource.TestCheckResourceAttr("citrixadc_dnsnaptrrec.dnsnaptrrec", "order", "10"),
+					resource.TestCheckResourceAttr("citrixadc_dnsnaptrrec.dnsnaptrrec", "preference", "2"),
+					resource.TestCheckResourceAttr("citrixadc_dnsnaptrrec.dnsnaptrrec", "ttl", "3600"),
+					resource.TestCheckResourceAttr("citrixadc_dnsnaptrrec.dnsnaptrrec", "replacement", "example1.com"),
 				),
 			},
 		},
@@ -108,7 +102,15 @@ func testAccCheckDnsnaptrrecDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Dnsnaptrrec.Type(), rs.Primary.ID)
+		argsMap := make(map[string]string)
+		argsMap["fieldname"] = url.QueryEscape(rs.Primary.Attributes["fieldname"])
+		argsMap["url"] = url.QueryEscape(rs.Primary.Attributes["url"])
+		findParams := service.FindParams{
+			ResourceType: service.Dnsnaptrrec.Type(),
+			ArgsMap:      argsMap,
+		}
+		_, err := nsClient.FindResourceArrayWithParams(findParams)
+
 		if err == nil {
 			return fmt.Errorf("dnsnaptrrec %s still exists", rs.Primary.ID)
 		}
