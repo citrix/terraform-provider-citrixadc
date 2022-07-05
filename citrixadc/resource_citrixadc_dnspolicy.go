@@ -21,16 +21,6 @@ func resourceCitrixAdcDnspolicy() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"rule": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-				Computed: false,
-			},
 			"actionname": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -51,6 +41,11 @@ func resourceCitrixAdcDnspolicy() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"name": &schema.Schema{
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
 			"preferredlocation": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -61,6 +56,11 @@ func resourceCitrixAdcDnspolicy() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 				Computed: true,
+			},
+			"rule": &schema.Schema{
+				Type:     schema.TypeString,
+				Required: true,
+				Computed: false,
 			},
 			"viewname": &schema.Schema{
 				Type:     schema.TypeString,
@@ -80,7 +80,7 @@ func createDnspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 		Cachebypass:       d.Get("cachebypass").(string),
 		Drop:              d.Get("drop").(string),
 		Logaction:         d.Get("logaction").(string),
-		Name:              d.Get("name").(string),
+		Name:              dnspolicyName,
 		Preferredlocation: d.Get("preferredlocation").(string),
 		Preferredloclist:  toStringList(d.Get("preferredloclist").([]interface{})),
 		Rule:              d.Get("rule").(string),
@@ -118,6 +118,7 @@ func readDnspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("cachebypass", data["cachebypass"])
 	d.Set("drop", data["drop"])
 	d.Set("logaction", data["logaction"])
+	d.Set("name", data["name"])
 	d.Set("preferredlocation", data["preferredlocation"])
 	d.Set("preferredloclist", data["preferredloclist"])
 	d.Set("rule", data["rule"])

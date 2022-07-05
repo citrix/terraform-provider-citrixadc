@@ -24,23 +24,20 @@ import (
 )
 
 const testAccDnspolicy_add = `
-
-
 resource "citrixadc_dnspolicy" "dnspolicy" {
-	name = "policy1"
-	rule = "dns.req.question.type.ne(aaaa)"
-	drop = "YES"  
- }
+	name = "policy_A"
+	rule = "CLIENT.IP.SRC.IN_SUBNET(1.1.1.1/24)"
+	drop = "YES"
+  }
 `
 const testAccDnspolicy_update = `
-
-
 resource "citrixadc_dnspolicy" "dnspolicy" {
-	name = "policy1"
+	name = "policy_A"
 	rule = "dns.req.question.type.ne(aaaa)"
-    drop = "NO"
- }
+	drop = "NO"
+  }
 `
+
 func TestAccDnspolicy_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -51,19 +48,20 @@ func TestAccDnspolicy_basic(t *testing.T) {
 				Config: testAccDnspolicy_add,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDnspolicyExist("citrixadc_dnspolicy.dnspolicy", nil),
-					resource.TestCheckResourceAttr("citrixadc_dnspolicy.dnspolicy", "name", "policy1"),
-					resource.TestCheckResourceAttr("citrixadc_dnspolicy.dnspolicy", "rule", "dns.req.question.type.ne(aaaa)"),
+					resource.TestCheckResourceAttr("citrixadc_dnspolicy.dnspolicy", "name", "policy_A"),
+					resource.TestCheckResourceAttr("citrixadc_dnspolicy.dnspolicy", "rule", "CLIENT.IP.SRC.IN_SUBNET(1.1.1.1/24)"),
 					resource.TestCheckResourceAttr("citrixadc_dnspolicy.dnspolicy", "drop", "YES"),
-
 				),
 			},
 			resource.TestStep{
 				Config: testAccDnspolicy_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDnspolicyExist("citrixadc_dnspolicy.dnspolicy", nil),
-					resource.TestCheckResourceAttr("citrixadc_dnspolicy.dnspolicy", "name", "policy1"),
+					resource.TestCheckResourceAttr("citrixadc_dnspolicy.dnspolicy", "name", "policy_A"),
 					resource.TestCheckResourceAttr("citrixadc_dnspolicy.dnspolicy", "rule", "dns.req.question.type.ne(aaaa)"),
 					resource.TestCheckResourceAttr("citrixadc_dnspolicy.dnspolicy", "drop", "NO"),
+
+
 				),
 			},
 		},
