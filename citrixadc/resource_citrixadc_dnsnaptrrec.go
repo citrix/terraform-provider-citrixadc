@@ -6,7 +6,9 @@ import (
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform/helper/schema"
 
+	"fmt"
 	"log"
+	"net/url"
 )
 
 func resourceCitrixAdcDnsnaptrrec() *schema.Resource {
@@ -46,7 +48,7 @@ func resourceCitrixAdcDnsnaptrrec() *schema.Resource {
 			},
 			"preference": &schema.Schema{
 				Type:     schema.TypeInt,
-				Required : true,
+				Required: true,
 				ForceNew: true,
 			},
 			"recordid": &schema.Schema{
@@ -86,7 +88,7 @@ func resourceCitrixAdcDnsnaptrrec() *schema.Resource {
 func createDnsnaptrrecFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createDnsnaptrrecFunc")
 	client := meta.(*NetScalerNitroClient).client
-	dnsnaptrrecName := d.Get("domain").(string) 
+	dnsnaptrrecName := d.Get("domain").(string)
 	dnsnaptrrec := dns.Dnsnaptrrec{
 		Domain:      d.Get("domain").(string),
 		Ecssubnet:   d.Get("ecssubnet").(string),
@@ -145,17 +147,34 @@ func readDnsnaptrrecFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-
-
 func deleteDnsnaptrrecFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteDnsnaptrrecFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnsnaptrrecName := d.Id()
-	err := client.DeleteResource(service.Dnsnaptrrec.Type(), dnsnaptrrecName)
+	data, err := client.FindResource(service.Dnsnaptrrec.Type(), dnsnaptrrecName)
+	if err != nil {
+		log.Printf("[WARN] citrixadc-provider: Clearing dnsnaptrrec state %s", dnsnaptrrecName)
+		d.SetId("")
+		return nil
+	}
+
+	argsMap := make(map[string]string)
+	argsMap["ecssubnet"] = url.QueryEscape(data["ecssubnet"].(string))
+	argsMap["flags"] = url.QueryEscape(data["flags"].(string))
+	argsMap["services"] = url.QueryEscape(data["services"].(string))
+	if _, ok := d.GetOk(data["regexp"].(string)); ok {
+		argsMap["regexp"] = url.QueryEscape(data["regexp"].(string))
+	} else {
+		argsMap["replacement"] = url.QueryEscape(data["replacement"].(string))
+	}
+	argsMap["recordid"] = fmt.Sprintf("%v", data["recordid"])
+	argsMap["order"] = fmt.Sprintf("%v", data["order"])
+	argsMap["preference"] = fmt.Sprintf("%v", data["preference"])
+
+	err = client.DeleteResourceWithArgsMap(service.Dnsnaptrrec.Type(), dnsnaptrrecName, argsMap)
 	if err != nil {
 		return err
 	}
-
 	d.SetId("")
 
 	return nil
