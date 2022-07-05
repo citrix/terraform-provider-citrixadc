@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 	"testing"
-	"net/url"
 )
 
 const testAccDnsnaptrrec_basic = `
@@ -102,14 +101,7 @@ func testAccCheckDnsnaptrrecDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		argsMap := make(map[string]string)
-		argsMap["fieldname"] = url.QueryEscape(rs.Primary.Attributes["fieldname"])
-		argsMap["url"] = url.QueryEscape(rs.Primary.Attributes["url"])
-		findParams := service.FindParams{
-			ResourceType: service.Dnsnaptrrec.Type(),
-			ArgsMap:      argsMap,
-		}
-		_, err := nsClient.FindResourceArrayWithParams(findParams)
+		_, err := nsClient.FindResource(service.Dnsnaptrrec.Type(), rs.Primary.ID)
 
 		if err == nil {
 			return fmt.Errorf("dnsnaptrrec %s still exists", rs.Primary.ID)
