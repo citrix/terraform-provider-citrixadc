@@ -553,7 +553,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_bridgetable":                                                   resourceCitrixAdcBridgetable(),
 		"citrixadc_dnsview":													   resourceCitrixAdcDnsview(),
 		"citrixadc_dnsnaptrrec":												   resourceCitrixAdcDnsnaptrrec(),
-	}
+de	}
 }
 
 func providerConfigure(d *schema.ResourceData) (interface{}, error) {

@@ -8,7 +8,6 @@ import (
 
 	"fmt"
 	"log"
-	"net/url"
 )
 
 func resourceCitrixAdcDnsnaptrrec() *schema.Resource {
@@ -157,20 +156,12 @@ func deleteDnsnaptrrecFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
-
 	argsMap := make(map[string]string)
-	argsMap["ecssubnet"] = url.QueryEscape(data["ecssubnet"].(string))
-	argsMap["flags"] = url.QueryEscape(data["flags"].(string))
-	argsMap["services"] = url.QueryEscape(data["services"].(string))
-	if _, ok := d.GetOk(data["regexp"].(string)); ok {
-		argsMap["regexp"] = url.QueryEscape(data["regexp"].(string))
-	} else {
-		argsMap["replacement"] = url.QueryEscape(data["replacement"].(string))
+	
+	if _, ok :=  data["recordid"]; ok{
+		argsMap["recordid"] = fmt.Sprintf("%v", data["recordid"])
 	}
-	argsMap["recordid"] = fmt.Sprintf("%v", data["recordid"])
-	argsMap["order"] = fmt.Sprintf("%v", data["order"])
-	argsMap["preference"] = fmt.Sprintf("%v", data["preference"])
-
+	
 	err = client.DeleteResourceWithArgsMap(service.Dnsnaptrrec.Type(), dnsnaptrrecName, argsMap)
 	if err != nil {
 		return err
