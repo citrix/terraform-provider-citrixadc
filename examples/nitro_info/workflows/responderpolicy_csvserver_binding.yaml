@@ -1,0 +1,4 @@
+---
+lifecycle: binding_list
+endpoint: responderpolicy_csvserver_binding
+bound_resource_missing_errorcode: 2054

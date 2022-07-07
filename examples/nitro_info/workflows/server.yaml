@@ -1,0 +1,4 @@
+---
+lifecycle: object_by_name
+endpoint: server
+bound_resource_missing_errorcode: 258

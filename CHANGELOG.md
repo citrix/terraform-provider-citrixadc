@@ -1,3 +1,29 @@
+## 1.17.0 (June 30, 2022)
+
+FEATURES
+
+* **New Resource** `appalgparam`
+* **New Resource** `iptunnelparam`
+* **New Resource** `nsacl6`
+* **New Resource** `nspbr6`
+* **New Resource** `nstcpbufparam`
+* **New Resource** `ip6tunnel`
+* **New Resource** `rsskeytype`
+* **New Resource** `nat64`
+* **New Resource** `netbridge_iptunnel_binding`
+* **New Resource** `dnsprofile`
+* **New Resource** `mapdomain_mapbmr_binding`
+* **New Resource** `netbridge_vlan_binding`
+* **New Resource** `bridgetable`
+* **New Resource** `dnsview`
+
+* **New Data Source** `nitro_info`
+
+BUG FIXES
+
+* Fixed `lbvserver` resource to accept zero value for `timeout` attribute.
+
+
 ## 1.16.0 (June 1, 2022)
 
 FEATURES
