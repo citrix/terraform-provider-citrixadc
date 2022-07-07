@@ -547,6 +547,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_rsskeytype":                                                    resourceCitrixAdcRsskeytype(),
 		"citrixadc_nat64":                                                         resourceCitrixAdcNat64(),
 		"citrixadc_netbridge_iptunnel_binding":                                    resourceCitrixAdcNetbridge_iptunnel_binding(),
+		"citrixadc_dnsaddrec":													   resourceCitrixAdcDnsaddrec(),
 	}
 }
 
