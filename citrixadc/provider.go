@@ -94,6 +94,7 @@ func providerDataSources() map[string]*schema.Resource {
 	return map[string]*schema.Resource{
 		"citrixadc_nsversion":                     dataSourceCitrixAdcNsversion(),
 		"citrixadc_sslcipher_sslvserver_bindings": dataSourceCitrixAdcSslcipherSslvserverBindings(),
+		"citrixadc_nitro_info":                    dataSourceCitrixAdcNitroInfo(),
 	}
 }
 
@@ -551,8 +552,16 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_mapdomain_mapbmr_binding":                                      resourceCitrixAdcMapdomain_mapbmr_binding(),
 		"citrixadc_netbridge_vlan_binding":                                        resourceCitrixAdcNetbridge_vlan_binding(),
 		"citrixadc_bridgetable":                                                   resourceCitrixAdcBridgetable(),
-		"citrixadc_dnsview":													   resourceCitrixAdcDnsview(),
-		"citrixadc_dnscnamerec":												   resourceCitrixAdcDnscnamerec(),					
+		"citrixadc_dnsview":													                             resourceCitrixAdcDnsview(),
+		"citrixadc_dnscnamerec":												                           resourceCitrixAdcDnscnamerec(),					
+		"citrixadc_dnsview":													                             resourceCitrixAdcDnsview(),
+		"citrixadc_dnsaaaarec":													                           resourceCitrixAdcDnsaaaarec(),
+		"citrixadc_dnsview":                                                       resourceCitrixAdcDnsview(),
+		"citrixadc_dnssuffix":                                                     resourceCitrixAdcDnssuffix(),
+		"citrixadc_dnspolicylabel":                                                resourceCitrixAdcDnspolicylabel(),
+		"citrixadc_dnsptrrec":                                                     resourceCitrixAdcDnsptrrec(),
+		"citrixadc_ip6tunnelparam":                                                resourceCitrixAdcIp6tunnelparam(),
+		"citrixadc_dnstxtrec":                                                     resourceCitrixAdcDnstxtrec(),
 	}
 }
 
