@@ -553,6 +553,8 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_netbridge_vlan_binding":                                        resourceCitrixAdcNetbridge_vlan_binding(),
 		"citrixadc_bridgetable":                                                   resourceCitrixAdcBridgetable(),
 		"citrixadc_dnsview":													                             resourceCitrixAdcDnsview(),
+		"citrixadc_dnscnamerec":												                           resourceCitrixAdcDnscnamerec(),					
+		"citrixadc_dnsview":													                             resourceCitrixAdcDnsview(),
 		"citrixadc_dnsaaaarec":													                           resourceCitrixAdcDnsaaaarec(),
 		"citrixadc_dnsview":                                                       resourceCitrixAdcDnsview(),
 		"citrixadc_dnssuffix":                                                     resourceCitrixAdcDnssuffix(),
