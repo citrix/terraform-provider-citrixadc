@@ -1,0 +1,4 @@
+---
+lifecycle: object_by_name
+endpoint: sslcertkey
+bound_resource_missing_errorcode: 1540
