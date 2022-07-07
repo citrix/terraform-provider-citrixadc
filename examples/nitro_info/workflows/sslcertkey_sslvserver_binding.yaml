@@ -1,0 +1,4 @@
+---
+lifecycle: binding_list
+endpoint: sslcertkey_sslvserver_binding
+bound_resource_missing_errorcode: 1540
