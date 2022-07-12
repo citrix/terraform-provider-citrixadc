@@ -2,7 +2,6 @@ package citrixadc
 
 import (
 	"github.com/citrix/adc-nitro-go/resource/config/gslb"
-	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"fmt"
@@ -172,7 +171,7 @@ func resourceCitrixAdcGslbservicegroup() *schema.Resource {
 func createGslbservicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createGslbservicegroupFunc")
 	client := meta.(*NetScalerNitroClient).client
-	gslbservicegroupName := d.GetOk("servicegroupname").(string)
+	gslbservicegroupName := d.Get("servicegroupname").(string)
 
 	gslbservicegroup := gslb.Gslbservicegroup{
 		Appflowlog:       d.Get("appflowlog").(string),
