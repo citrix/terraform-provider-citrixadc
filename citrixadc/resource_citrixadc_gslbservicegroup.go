@@ -2,7 +2,6 @@ package citrixadc
 
 import (
 	"github.com/citrix/adc-nitro-go/resource/config/gslb"
-
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 
