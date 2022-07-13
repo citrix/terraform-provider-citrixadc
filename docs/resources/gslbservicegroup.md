@@ -44,7 +44,6 @@ resource "citrixadc_gslbsite" "site_local" {
 * `maxclient` - (Optional) Maximum number of simultaneous open connections for the GSLB service group.
 * `monitor_name_svc` - (Optional) Name of the monitor bound to the GSLB service group. Used to assign a weight to the monitor.
 * `monthreshold` - (Optional) Minimum sum of weights of the monitors that are bound to this GSLB service. Used to determine whether to mark a GSLB service as UP or DOWN.
-* `newname` - (Optional) New name for the GSLB service group.
 * `port` - (Optional) Server port number.
 * `publicip` - (Optional) The public IP address that a NAT device translates to the GSLB service's private IP address. Optional.
 * `publicport` - (Optional) The public port associated with the GSLB service's public IP address. The port is mapped to the service's private port number. Applicable to the local GSLB service. Optional.

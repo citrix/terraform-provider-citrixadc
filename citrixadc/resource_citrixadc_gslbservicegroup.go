@@ -110,11 +110,6 @@ func resourceCitrixAdcGslbservicegroup() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"newname": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
 			"port": &schema.Schema{
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -177,13 +172,8 @@ func resourceCitrixAdcGslbservicegroup() *schema.Resource {
 func createGslbservicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createGslbservicegroupFunc")
 	client := meta.(*NetScalerNitroClient).client
-	var gslbservicegroupName string
-	if v, ok := d.GetOk("servicegroupname"); ok {
-		gslbservicegroupName = v.(string)
-	} else {
-		gslbservicegroupName = resource.PrefixedUniqueId("tf-gslbservicegroup-")
-		d.Set("servicegroupname", gslbservicegroupName)
-	}
+	gslbservicegroupName := d.GetOk("servicegroupname").(string)
+
 	gslbservicegroup := gslb.Gslbservicegroup{
 		Appflowlog:       d.Get("appflowlog").(string),
 		Autoscale:        d.Get("autoscale").(string),
@@ -202,7 +192,6 @@ func createGslbservicegroupFunc(d *schema.ResourceData, meta interface{}) error 
 		Maxclient:        d.Get("maxclient").(int),
 		Monitornamesvc:   d.Get("monitornamesvc").(string),
 		Monthreshold:     d.Get("monthreshold").(int),
-		Newname:          d.Get("newname").(string),
 		Port:             d.Get("port").(int),
 		Publicip:         d.Get("publicip").(string),
 		Publicport:       d.Get("publicport").(int),
@@ -261,7 +250,6 @@ func readGslbservicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("maxclient", data["maxclient"])
 	d.Set("monitornamesvc", data["monitornamesvc"])
 	d.Set("monthreshold", data["monthreshold"])
-	d.Set("newname", data["newname"])
 	d.Set("port", data["port"])
 	d.Set("publicip", data["publicip"])
 	d.Set("publicport", data["publicport"])
@@ -371,11 +359,6 @@ func updateGslbservicegroupFunc(d *schema.ResourceData, meta interface{}) error 
 	if d.HasChange("monthreshold") {
 		log.Printf("[DEBUG]  citrixadc-provider: Monthreshold has changed for gslbservicegroup %s, starting update", gslbservicegroupName)
 		gslbservicegroup.Monthreshold = d.Get("monthreshold").(int)
-		hasChange = true
-	}
-	if d.HasChange("newname") {
-		log.Printf("[DEBUG]  citrixadc-provider: Newname has changed for gslbservicegroup %s, starting update", gslbservicegroupName)
-		gslbservicegroup.Newname = d.Get("newname").(string)
 		hasChange = true
 	}
 	if d.HasChange("port") {
