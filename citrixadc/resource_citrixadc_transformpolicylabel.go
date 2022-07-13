@@ -24,11 +24,6 @@ func resourceCitrixAdcTransformpolicylabel() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"newname": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
 			"policylabeltype": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
@@ -44,7 +39,6 @@ func createTransformpolicylabelFunc(d *schema.ResourceData, meta interface{}) er
 	transformpolicylabelName := d.Get("labelname").(string)
 	transformpolicylabel := transform.Transformpolicylabel{
 		Labelname:       transformpolicylabelName,
-		Newname:         d.Get("newname").(string),
 		Policylabeltype: d.Get("policylabeltype").(string),
 	}
 
@@ -75,7 +69,6 @@ func readTransformpolicylabelFunc(d *schema.ResourceData, meta interface{}) erro
 		return nil
 	}
 	d.Set("labelname", data["labelname"])
-	d.Set("newname", data["newname"])
 	d.Set("policylabeltype", data["policylabeltype"])
 
 	return nil

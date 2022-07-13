@@ -20,7 +20,6 @@ resource "citrixadc_transformpolicylabel" "transformpolicylabel" {
 ## Argument Reference
 
 * `labelname` - (Required) Name for the policy label. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Can be changed after the URL Transformation policy label is added.  The following requirement applies only to the Citrix ADC CLI: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, my transform policylabel or my transform policylabel).
-* `newname` - (Optional) New name for the policy label. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters.  The following requirement applies only to the Citrix ADC CLI: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, my transform policylabel or my transform policylabel).
 * `policylabeltype` - (Required) Types of transformations allowed by the policies bound to the label. For URL transformation, always http_req (HTTP Request).
 
 
