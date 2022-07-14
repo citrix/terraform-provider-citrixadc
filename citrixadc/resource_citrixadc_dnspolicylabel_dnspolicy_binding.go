@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"strconv"
 )
 
 func resourceCitrixAdcDnspolicylabel_dnspolicy_binding() *schema.Resource {
@@ -168,15 +169,14 @@ func deleteDnspolicylabel_dnspolicy_bindingFunc(d *schema.ResourceData, meta int
 	bindingId := d.Id()
 	idSlice := strings.SplitN(bindingId, ",", 2)
 
-	// name := idSlice[0]
+	name := idSlice[0]
 	policyname := idSlice[1]
 
 	args := make([]string, 0)
-	if val, ok := d.GetOk("priority"); ok {
-		args = append(args, fmt.Sprintf("priority:%d", val.(int)))
-	}	
+	args = append(args, fmt.Sprintf("policyname:%s", policyname))
+	args = append(args, fmt.Sprintf("priority:%s", strconv.Itoa(d.Get("priority").(int))))
 
-	err := client.DeleteResourceWithArgs(service.Dnspolicylabel_dnspolicy_binding.Type(), policyname, args)
+	err := client.DeleteResourceWithArgs(service.Dnspolicylabel_dnspolicy_binding.Type(), name, args)
 	if err != nil {
 		return err
 	}
