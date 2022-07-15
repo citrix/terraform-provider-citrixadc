@@ -114,7 +114,7 @@ func createGslbparameterFunc(d *schema.ResourceData, meta interface{}) error {
 		Gslbsyncmode:          d.Get("gslbsyncmode").(string),
 		Ldnsentrytimeout:      d.Get("ldnsentrytimeout").(int),
 		Ldnsmask:              d.Get("ldnsmask").(string),
-		Ldnsprobeorder:        d.Get("ldnsprobeorder").([]interface{}),
+		Ldnsprobeorder:        d.Get("ldnsprobeorder").([]string),
 		Mepkeepalivetimeout:   d.Get("mepkeepalivetimeout").(int),
 		Rtttolerance:          d.Get("rtttolerance").(int),
 		Svcstatelearningtime:  d.Get("svcstatelearningtime").(int),
@@ -127,7 +127,6 @@ func createGslbparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(gslbparameterName)
-
 	err = readGslbparameterFunc(d, meta)
 	if err != nil {
 		log.Printf("[ERROR] netscaler-provider: ?? we just updated this gslbparameter but we can't read it ?? ")
@@ -219,7 +218,7 @@ func updateGslbparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("ldnsprobeorder") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ldnsprobeorder has changed for gslbparameter, starting update")
-		gslbparameter.Ldnsprobeorder = d.Get("ldnsprobeorder").([]interface{}) //TODO: Ask if this is correct
+		gslbparameter.Ldnsprobeorder = d.Get("ldnsprobeorder").([]string) //TODO: Ask if this is correct
 		hasChange = true
 	}
 	if d.HasChange("mepkeepalivetimeout") {
