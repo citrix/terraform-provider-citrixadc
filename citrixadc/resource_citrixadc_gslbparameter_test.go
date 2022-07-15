@@ -37,7 +37,7 @@ const testAccGslbparameter_update = `
 resource "citrixadc_gslbparameter" "tf_gslbparameter" {
 	ldnsentrytimeout = 70
 	rtttolerance     = 8
-	ldnsmask         = "4"
+	ldnsmask         = "255.255.255.254"
   }
 `
 
@@ -63,7 +63,7 @@ func TestAccGslbparameter_basic(t *testing.T) {
 					testAccCheckSslparameterExist("citrixadc_gslbparameter.tf_gslbparameter", nil),
 					resource.TestCheckResourceAttr("citrixadc_gslbparameter.tf_gslbparameter", "ldnsentrytimeout" , "70"),
 					resource.TestCheckResourceAttr("citrixadc_gslbparameter.tf_gslbparameter", "rtttolerance" , "8"),
-					resource.TestCheckResourceAttr("citrixadc_gslbparameter.tf_gslbparameter", "ldnsmask" , "4"),
+					resource.TestCheckResourceAttr("citrixadc_gslbparameter.tf_gslbparameter", "ldnsmask" , "255.255.255.254"),
 				),
 			},
 		},
