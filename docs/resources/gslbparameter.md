@@ -10,7 +10,12 @@ The gslbparameter resource is used to create gslbparameter.
 ## Example usage
 
 ```hcl
-<fillme>
+resource "citrixadc_gslbparameter" "tf_gslbparameter" {
+  ldnsentrytimeout = 50
+  rtttolerance     = 10
+  ldnsmask         = "255.255.255.255"
+}
+
 ```
 
 
@@ -36,13 +41,5 @@ The gslbparameter resource is used to create gslbparameter.
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the gslbparameter. It has the same value as the `name` attribute.
+* `id` - The id of the gslbparameter. It is a unique string prefixed with "tf-gslbparameter-"
 
-
-## Import
-
-A gslbparameter can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_csaction.tf_csaction tf_csaction
-```
