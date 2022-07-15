@@ -100,9 +100,7 @@ func resourceCitrixAdcGslbparameter() *schema.Resource {
 func createGslbparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createGslbparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
-	var gslbparameterName string  //Should I delete this?
-	
-	gslbparameterName = resource.PrefixedUniqueId("tf-gslbparameter-")
+	gslbparameterName := resource.PrefixedUniqueId("tf-gslbparameter-")
 
 	gslbparameter := gslb.Gslbparameter{
 		Automaticconfigsync:   d.Get("automaticconfigsync").(string),
@@ -114,7 +112,7 @@ func createGslbparameterFunc(d *schema.ResourceData, meta interface{}) error {
 		Gslbsyncmode:          d.Get("gslbsyncmode").(string),
 		Ldnsentrytimeout:      d.Get("ldnsentrytimeout").(int),
 		Ldnsmask:              d.Get("ldnsmask").(string),
-		Ldnsprobeorder:        d.Get("ldnsprobeorder").([]string),
+		Ldnsprobeorder:        toStringList(d.Get("ldnsprobeorder").([]interface{})),
 		Mepkeepalivetimeout:   d.Get("mepkeepalivetimeout").(int),
 		Rtttolerance:          d.Get("rtttolerance").(int),
 		Svcstatelearningtime:  d.Get("svcstatelearningtime").(int),
@@ -218,7 +216,7 @@ func updateGslbparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("ldnsprobeorder") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ldnsprobeorder has changed for gslbparameter, starting update")
-		gslbparameter.Ldnsprobeorder = d.Get("ldnsprobeorder").([]string) //TODO: Ask if this is correct
+		gslbparameter.Ldnsprobeorder = toStringList(d.Get("ldnsprobeorder").([]interface{})) //TODO: Ask if this is correct
 		hasChange = true
 	}
 	if d.HasChange("mepkeepalivetimeout") {

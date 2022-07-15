@@ -36,16 +36,12 @@ const testAccGslbparameter_update = `
 
 resource "citrixadc_gslbparameter" "tf_gslbparameter" {
 	ldnsentrytimeout = 70
-	rtttolerance     = 8.2
-	ldnsmask         = "0.0.0.0"
+	rtttolerance     = 8
+	ldnsmask         = "4"
   }
 `
 
 func TestAccGslbparameter_basic(t *testing.T) {
-	//TODO: Ask about this block of code
-	// if adcTestbed != "STANDALONE" {
-	// 	t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed) Should I add this?
-	// }
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -56,7 +52,7 @@ func TestAccGslbparameter_basic(t *testing.T) {
 				Config: testAccGslbparameter_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGslbparameterExist("citrixadc_gslbparameter.tf_gslbparameter", nil),
-					resource.TestCheckResourceAttr("citrixadc_gslbparameter.tf_gslbparameter", "ldnsentrytimeout" , "50.2"),
+					resource.TestCheckResourceAttr("citrixadc_gslbparameter.tf_gslbparameter", "ldnsentrytimeout" , "50"),
 					resource.TestCheckResourceAttr("citrixadc_gslbparameter.tf_gslbparameter", "rtttolerance" , "6"),
 					resource.TestCheckResourceAttr("citrixadc_gslbparameter.tf_gslbparameter", "ldnsmask" , "255.255.255.255"),
 				),
@@ -64,10 +60,10 @@ func TestAccGslbparameter_basic(t *testing.T) {
 			resource.TestStep{
 				Config: testAccGslbparameter_update,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSslparameterExist("citrixadc_sslparameter.tf_gslbparameter", nil),
+					testAccCheckSslparameterExist("citrixadc_gslbparameter.tf_gslbparameter", nil),
 					resource.TestCheckResourceAttr("citrixadc_gslbparameter.tf_gslbparameter", "ldnsentrytimeout" , "70"),
-					resource.TestCheckResourceAttr("citrixadc_gslbparameter.tf_gslbparameter", "rtttolerance" , "8.2"),
-					resource.TestCheckResourceAttr("citrixadc_gslbparameter.tf_gslbparameter", "ldnsmask" , "0.0.0.0"),
+					resource.TestCheckResourceAttr("citrixadc_gslbparameter.tf_gslbparameter", "rtttolerance" , "8"),
+					resource.TestCheckResourceAttr("citrixadc_gslbparameter.tf_gslbparameter", "ldnsmask" , "4"),
 				),
 			},
 		},
@@ -95,7 +91,7 @@ func testAccCheckGslbparameterExist(n string, id *string) resource.TestCheckFunc
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Gslbparameter.Type(), rs.Primary.ID)
+		data, err := nsClient.FindResource(service.Gslbparameter.Type(), "")
 
 		if err != nil {
 			return err
