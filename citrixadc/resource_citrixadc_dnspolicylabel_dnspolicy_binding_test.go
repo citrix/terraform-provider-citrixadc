@@ -30,32 +30,33 @@ resource "citrixadc_dnspolicy" "dnspolicy" {
 	name = "policy_A"
 	rule = "CLIENT.IP.SRC.IN_SUBNET(1.1.1.1/24)"
 	drop = "YES"
-}
-resource "citrixadc_dnspolicylabel" "dnspolicylabel" {
-  labelname = "blue_label"
-  transform = "dns_req"
-
-}
-resource "citrixadc_dnspolicylabel_dnspolicy_binding" "dnspolicylabel_dnspolicy_binding" {
-  labelname = citrixadc_dnspolicylabel.dnspolicylabel.labelname
-  policyname = citrixadc_dnspolicy.dnspolicy.name
-  priority = 2
-
-}
+  }
+  resource "citrixadc_dnspolicylabel" "dnspolicylabel" {
+	labelname = "blue_label"
+	transform = "dns_req"
+  
+  }
+  resource "citrixadc_dnspolicylabel_dnspolicy_binding" "dnspolicylabel_dnspolicy_binding" {
+	labelname  = citrixadc_dnspolicylabel.dnspolicylabel.labelname
+	policyname = citrixadc_dnspolicy.dnspolicy.name
+	priority   = 10
+  
+  }
+  
 
 `
 
 const testAccDnspolicylabel_dnspolicy_binding_basic_step2 = `
-	resource "citrixadc_dnspolicy" "dnspolicy" {
-		name = "policy_A"
-		rule = "CLIENT.IP.SRC.IN_SUBNET(1.1.1.1/24)"
-		drop = "YES"
-	}
-	resource "citrixadc_dnspolicylabel" "dnspolicylabel" {
-	  labelname = "blue_label"
-	  transform = "dns_req"
-	
-	}
+resource "citrixadc_dnspolicy" "dnspolicy" {
+	name = "policy_A"
+	rule = "CLIENT.IP.SRC.IN_SUBNET(1.1.1.1/24)"
+	drop = "YES"
+  }
+  resource "citrixadc_dnspolicylabel" "dnspolicylabel" {
+	labelname = "blue_label"
+	transform = "dns_req"
+  
+  }
 `
 
 func TestAccDnspolicylabel_dnspolicy_binding_basic(t *testing.T) {
@@ -73,7 +74,7 @@ func TestAccDnspolicylabel_dnspolicy_binding_basic(t *testing.T) {
 			resource.TestStep{
 				Config: testAccDnspolicylabel_dnspolicy_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDnspolicylabel_dnspolicy_bindingNotExist("citrixadc_dnspolicylabel_dnspolicy_binding.dnspolicylabel_dnspolicy_binding", "labelname,policyname"),
+					testAccCheckDnspolicylabel_dnspolicy_bindingNotExist("citrixadc_dnspolicylabel_dnspolicy_binding.dnspolicylabel_dnspolicy_binding", "blue_label,policy_A"),
 				),
 			},
 		},

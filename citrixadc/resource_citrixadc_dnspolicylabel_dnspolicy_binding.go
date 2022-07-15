@@ -21,6 +21,24 @@ func resourceCitrixAdcDnspolicylabel_dnspolicy_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
+			"policyname": &schema.Schema{
+				Type:     schema.TypeString,
+				Required: true,
+				Computed: false,
+				ForceNew: true,
+			},
+			"priority": &schema.Schema{
+				Type:     schema.TypeInt,
+				Required: true,
+				Computed: false,
+				ForceNew: true,
+			},
+			"labelname": &schema.Schema{
+				Type:     schema.TypeString,
+				Required: true,
+				Computed: false,
+				ForceNew: true,
+			},
 			"gotopriorityexpression": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -39,28 +57,10 @@ func resourceCitrixAdcDnspolicylabel_dnspolicy_binding() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"labelname": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-				Computed: false,
-				ForceNew: true,
-			},
 			"labeltype": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
-				ForceNew: true,
-			},
-			"policyname": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-				Computed: false,
-				ForceNew: true,
-			},
-			"priority": &schema.Schema{
-				Type:     schema.TypeInt,
-				Required: true,
-				Computed: false,
 				ForceNew: true,
 			},
 		},
@@ -83,7 +83,7 @@ func createDnspolicylabel_dnspolicy_bindingFunc(d *schema.ResourceData, meta int
 		Priority:               d.Get("priority").(int),
 	}
 
-	_, err := client.AddResource(service.Dnspolicylabel_dnspolicy_binding.Type(), bindingId, &dnspolicylabel_dnspolicy_binding)
+	err := client.UpdateUnnamedResource(service.Dnspolicylabel_dnspolicy_binding.Type(), &dnspolicylabel_dnspolicy_binding)
 	if err != nil {
 		return err
 	}
@@ -169,14 +169,14 @@ func deleteDnspolicylabel_dnspolicy_bindingFunc(d *schema.ResourceData, meta int
 	bindingId := d.Id()
 	idSlice := strings.SplitN(bindingId, ",", 2)
 
-	name := idSlice[0]
+	labelname := idSlice[0]
 	policyname := idSlice[1]
 
 	args := make([]string, 0)
 	args = append(args, fmt.Sprintf("policyname:%s", policyname))
 	args = append(args, fmt.Sprintf("priority:%s", strconv.Itoa(d.Get("priority").(int))))
 
-	err := client.DeleteResourceWithArgs(service.Dnspolicylabel_dnspolicy_binding.Type(), name, args)
+	err := client.DeleteResourceWithArgs(service.Dnspolicylabel_dnspolicy_binding.Type(), labelname, args)
 	if err != nil {
 		return err
 	}
