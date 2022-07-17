@@ -96,7 +96,6 @@ func resourceCitrixAdcGslbparameter() *schema.Resource {
 		},
 	}
 }
-//TODO: I changed create to update basically #124
 func createGslbparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createGslbparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
@@ -137,7 +136,7 @@ func readGslbparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] citrixadc-provider:  In readGslbparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading gslbparameter state ")
-	data, err := client.FindResource(service.Gslbparameter.Type(), "") //TODO: is this correct?
+	data, err := client.FindResource(service.Gslbparameter.Type(), "") 
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing gslbparameter state ")
 		d.SetId("")
@@ -216,7 +215,7 @@ func updateGslbparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("ldnsprobeorder") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ldnsprobeorder has changed for gslbparameter, starting update")
-		gslbparameter.Ldnsprobeorder = toStringList(d.Get("ldnsprobeorder").([]interface{})) //TODO: Ask if this is correct
+		gslbparameter.Ldnsprobeorder = toStringList(d.Get("ldnsprobeorder").([]interface{}))
 		hasChange = true
 	}
 	if d.HasChange("mepkeepalivetimeout") {
@@ -230,7 +229,7 @@ func updateGslbparameterFunc(d *schema.ResourceData, meta interface{}) error {
 		hasChange = true
 	}
 	if d.HasChange("svcstatelearningtime") {
-		log.Printf("[DEBUG]  citrixadc-provider: Svcstatelearningtime has changed for gslbparameter, starting update")  //TODO: ask about this change "[DEBUG]  citrixadc-provider: Svcstatelearningtime has changed for gslbparameter %s, starting update", gslbparameterName
+		log.Printf("[DEBUG]  citrixadc-provider: Svcstatelearningtime has changed for gslbparameter, starting update")
 		gslbparameter.Svcstatelearningtime = d.Get("svcstatelearningtime").(int)
 		hasChange = true
 	}
