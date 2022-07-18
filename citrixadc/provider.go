@@ -550,6 +550,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_netbridge_iptunnel_binding":                                    resourceCitrixAdcNetbridge_iptunnel_binding(),
 		"citrixadc_dnsaddrec":                                                     resourceCitrixAdcDnsaddrec(),
 		"citrixadc_dnspolicy":                                                     resourceCitrixAdcDnspolicy(),
+		"citrixadc_dnsglobal_dnspolicy_binding":                                   resourceCitrixAdcDnsglobal_dnspolicy_binding(),
 		"citrixadc_dnsaction":                                                     resourceCitrixAdcDnsaction(),
 		"citrixadc_dnsprofile":                                                    resourceCitrixAdcDnsprofile(),
 		"citrixadc_mapdomain_mapbmr_binding":                                      resourceCitrixAdcMapdomain_mapbmr_binding(),
@@ -569,7 +570,13 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_ip6tunnelparam":                                                resourceCitrixAdcIp6tunnelparam(),
 		"citrixadc_dnszone":                                                       resourceCitrixAdcDnszone(),
 		"citrixadc_dnstxtrec":                                                     resourceCitrixAdcDnstxtrec(),
-		"citrixadc_gslbparameter":												   resourceCitrixAdcGslbparameter(),
+		"citrixadc_gslbparameter":                                                 resourceCitrixAdcGslbparameter(),
+		"citrixadc_transformglobal_transformpolicy_binding":                       resourceCitrixAdcTransformglobal_transformpolicy_binding(),
+		"citrixadc_transformpolicylabel":                                          resourceCitrixAdcTransformpolicylabel(),
+		"citrixadc_transformpolicylabel_transformpolicy_binding":                  resourceCitrixAdcTransformpolicylabel_transformpolicy_binding(),
+		"citrixadc_authorizationpolicylabel_authorizationpolicy_binding":          resourceCitrixAdcAuthorizationpolicylabel_authorizationpolicy_binding(),
+		"citrixadc_gslbservicegroup":                                              resourceCitrixAdcGslbservicegroup(),
+		"citrixadc_authorizationpolicylabel":                                      resourceCitrixAdcAuthorizationpolicylabel(),
 	}
 }
 
