@@ -4,7 +4,6 @@ import (
 	"github.com/citrix/adc-nitro-go/resource/config/dns"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"fmt"
@@ -104,18 +103,12 @@ func resourceCitrixAdcDnskey() *schema.Resource {
 func createDnskeyFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createDnskeyFunc")
 	client := meta.(*NetScalerNitroClient).client
-	var dnskeyName string
-	if v, ok := d.GetOk("keyname"); ok {
-		dnskeyName = v.(string)
-	} else {
-		dnskeyName = resource.PrefixedUniqueId("tf-dnskey-")
-		d.Set("keyname", dnskeyName)
-	}
+	dnskeyName := d.Get("keyname").(string)
 	dnskey := dns.Dnskey{
 		Algorithm:          d.Get("algorithm").(string),
 		Expires:            d.Get("expires").(int),
 		Filenameprefix:     d.Get("filenameprefix").(string),
-		Keyname:            d.Get("keyname").(string),
+		Keyname:            dnskeyName,
 		Keysize:            d.Get("keysize").(int),
 		Keytype:            d.Get("keytype").(string),
 		Notificationperiod: d.Get("notificationperiod").(int),
@@ -155,7 +148,6 @@ func readDnskeyFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
-	d.Set("keyname", data["keyname"])
 	d.Set("algorithm", data["algorithm"])
 	d.Set("expires", data["expires"])
 	d.Set("filenameprefix", data["filenameprefix"])
@@ -200,11 +192,6 @@ func updateDnskeyFunc(d *schema.ResourceData, meta interface{}) error {
 		dnskey.Filenameprefix = d.Get("filenameprefix").(string)
 		hasChange = true
 	}
-	if d.HasChange("keyname") {
-		log.Printf("[DEBUG]  citrixadc-provider: Keyname has changed for dnskey %s, starting update", dnskeyName)
-		dnskey.Keyname = d.Get("keyname").(string)
-		hasChange = true
-	}
 	if d.HasChange("keysize") {
 		log.Printf("[DEBUG]  citrixadc-provider: Keysize has changed for dnskey %s, starting update", dnskeyName)
 		dnskey.Keysize = d.Get("keysize").(int)
@@ -223,16 +210,6 @@ func updateDnskeyFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("password") {
 		log.Printf("[DEBUG]  citrixadc-provider: Password has changed for dnskey %s, starting update", dnskeyName)
 		dnskey.Password = d.Get("password").(string)
-		hasChange = true
-	}
-	if d.HasChange("privatekey") {
-		log.Printf("[DEBUG]  citrixadc-provider: Privatekey has changed for dnskey %s, starting update", dnskeyName)
-		dnskey.Privatekey = d.Get("privatekey").(string)
-		hasChange = true
-	}
-	if d.HasChange("publickey") {
-		log.Printf("[DEBUG]  citrixadc-provider: Publickey has changed for dnskey %s, starting update", dnskeyName)
-		dnskey.Publickey = d.Get("publickey").(string)
 		hasChange = true
 	}
 	if d.HasChange("src") {
