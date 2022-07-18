@@ -583,6 +583,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_gslbservicegroup_lbmonitor_binding":                            resourceCitrixAdcGslbservicegroup_lbmonitor_binding(),
 		"citrixadc_gslbvserver_spilloverpolicy_binding":                           resourceCitrixAdcGslbvserver_spilloverpolicy_binding(),
 		"citrixadc_gslbservice_dnsview_binding":                                   resourceCitrixAdcGslbservice_dnsview_binding(),
+		"citrixadc_gslbvserver_gslbservice_binding":                               resourceCitrixAdcGslbvserver_gslbservice_binding(),
 	}
 }
 
