@@ -39,7 +39,7 @@ In addition to the arguments, the following attributes are available:
 
 ## Import
 
-A dnsnameserver can be imported using its name, e.g.
+A dnsnameserver can be imported using its ip or dnsvservername, e.g.
 
 ```shell
 terraform import citrixadc_dnsnameserver.dnsnameserver 192.0.2.0
