@@ -561,7 +561,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_dnsaction64":										           resourceCitrixAdcDnsaction64(),
 		"citrixadc_dnssrvrec": 									                   resourceCitrixAdcDnssrvrec(),
 		"citrixadc_dnsnaptrrec":								                   resourceCitrixAdcDnsnaptrrec(),
-		"citrixadc_dnscnamerec":												   resourceCitrixAdcDnscnamerec(),					
+		"citrixadc_dnscnamerec":												   resourceCitrixAdcDnscnamerec(),
 		"citrixadc_dnsaaaarec":													   resourceCitrixAdcDnsaaaarec(),
 		"citrixadc_dnssuffix":                                                     resourceCitrixAdcDnssuffix(),
 		"citrixadc_dnspolicylabel":                                                resourceCitrixAdcDnspolicylabel(),
@@ -570,6 +570,11 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_dnszone":										               resourceCitrixAdcDnszone(),
 		"citrixadc_dnstxtrec":                                                     resourceCitrixAdcDnstxtrec(),
 		"citrixadc_transformglobal_transformpolicy_binding":					   resourceCitrixAdcTransformglobal_transformpolicy_binding(),
+		"citrixadc_transformpolicylabel":                                          resourceCitrixAdcTransformpolicylabel(),
+		"citrixadc_transformpolicylabel_transformpolicy_binding":                  resourceCitrixAdcTransformpolicylabel_transformpolicy_binding(),
+		"citrixadc_authorizationpolicylabel_authorizationpolicy_binding":          resourceCitrixAdcAuthorizationpolicylabel_authorizationpolicy_binding(),
+		"citrixadc_gslbservicegroup":                                              resourceCitrixAdcGslbservicegroup(),
+		"citrixadc_authorizationpolicylabel":                                      resourceCitrixAdcAuthorizationpolicylabel(),
 	}
 }
 
