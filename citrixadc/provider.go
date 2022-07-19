@@ -577,7 +577,8 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_authorizationpolicylabel_authorizationpolicy_binding":          resourceCitrixAdcAuthorizationpolicylabel_authorizationpolicy_binding(),
 		"citrixadc_gslbservicegroup":                                              resourceCitrixAdcGslbservicegroup(),
 		"citrixadc_authorizationpolicylabel":                                      resourceCitrixAdcAuthorizationpolicylabel(),
-		"citrixadc_gslbservice_lbmonitor_binding":    										   resourceCitrixAdcGslbservice_lbmonitor_binding(),
+		"citrixadc_gslbservice_lbmonitor_binding":                                 resourceCitrixAdcGslbservice_lbmonitor_binding(),
+		"citrixadc_gslbvserver_domain_binding":                                    resourceCitrixAdcGslbvserver_domain_binding(),
 	}
 }
 
