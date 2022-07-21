@@ -46,7 +46,6 @@ resource "citrixadc_crvserver" "crvserver" {
 * `listenpriority` - (Optional) Priority of the listen policy specified by the Listen Policy parameter. The lower the number, higher the priority.
 * `map` - (Optional) Obsolete.
 * `netprofile` - (Optional) Name of the network profile containing network configurations for the cache redirection virtual server.
-* `newname` - (Optional) New name for the cache redirection virtual server. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at sign (@), equal sign (=), and hyphen (-) characters. If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my name" or 'my name').
 * `onpolicymatch` - (Optional) Redirect requests that match the policy to either the cache or the origin server, as specified. Note: For this option to work, you must set the cache redirection type to POLICY.
 * `originusip` - (Optional) Use the client's IP address as the source IP address in requests sent to the origin server.   Note: You can enable this parameter to implement fully transparent CR deployment.
 * `port` - (Optional) Port number of the virtual server.
