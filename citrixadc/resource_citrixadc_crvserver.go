@@ -151,11 +151,6 @@ func resourceCitrixAdcCrvserver() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"newname": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
 			"onpolicymatch": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -300,7 +295,6 @@ func createCrvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		Map:                      d.Get("map").(string),
 		Name:                     crvserverName,
 		Netprofile:               d.Get("netprofile").(string),
-		Newname:                  d.Get("newname").(string),
 		Onpolicymatch:            d.Get("onpolicymatch").(string),
 		Originusip:               d.Get("originusip").(string),
 		Port:                     d.Get("port").(int),
@@ -377,7 +371,6 @@ func readCrvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("map", data["map"])
 	d.Set("name", data["name"])
 	d.Set("netprofile", data["netprofile"])
-	d.Set("newname", data["newname"])
 	d.Set("onpolicymatch", data["onpolicymatch"])
 	d.Set("originusip", data["originusip"])
 	d.Set("port", data["port"])
@@ -534,11 +527,6 @@ func updateCrvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("netprofile") {
 		log.Printf("[DEBUG]  citrixadc-provider: Netprofile has changed for crvserver %s, starting update", crvserverName)
 		crvserver.Netprofile = d.Get("netprofile").(string)
-		hasChange = true
-	}
-	if d.HasChange("newname") {
-		log.Printf("[DEBUG]  citrixadc-provider: Newname has changed for crvserver %s, starting update", crvserverName)
-		crvserver.Newname = d.Get("newname").(string)
 		hasChange = true
 	}
 	if d.HasChange("onpolicymatch") {

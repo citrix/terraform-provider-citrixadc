@@ -570,6 +570,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_dnszone":                                                       resourceCitrixAdcDnszone(),
 		"citrixadc_dnstxtrec":                                                     resourceCitrixAdcDnstxtrec(),
 		"citrixadc_crvserver":                                                     resourceCitrixAdcCrvserver(),
+		"citrixadc_crvserver_cspolicy_binding":									   resourceCitrixAdcCrvserver_cspolicy_binding(),
 	}
 }
 
