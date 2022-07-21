@@ -570,6 +570,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_ip6tunnelparam":                                                resourceCitrixAdcIp6tunnelparam(),
 		"citrixadc_dnszone":                                                       resourceCitrixAdcDnszone(),
 		"citrixadc_dnstxtrec":                                                     resourceCitrixAdcDnstxtrec(),
+		"citrixadc_crpolicy":                                                      resourceCitrixAdcCrpolicy(),
 		"citrixadc_gslbparameter":                                                 resourceCitrixAdcGslbparameter(),
 		"citrixadc_transformglobal_transformpolicy_binding":                       resourceCitrixAdcTransformglobal_transformpolicy_binding(),
 		"citrixadc_transformpolicylabel":                                          resourceCitrixAdcTransformpolicylabel(),
