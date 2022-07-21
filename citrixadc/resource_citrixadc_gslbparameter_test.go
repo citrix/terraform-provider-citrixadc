@@ -60,7 +60,7 @@ func TestAccGslbparameter_basic(t *testing.T) {
 			resource.TestStep{
 				Config: testAccGslbparameter_update,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSslparameterExist("citrixadc_gslbparameter.tf_gslbparameter", nil),
+					testAccCheckGslbparameterExist("citrixadc_gslbparameter.tf_gslbparameter", nil),
 					resource.TestCheckResourceAttr("citrixadc_gslbparameter.tf_gslbparameter", "ldnsentrytimeout" , "70"),
 					resource.TestCheckResourceAttr("citrixadc_gslbparameter.tf_gslbparameter", "rtttolerance" , "8"),
 					resource.TestCheckResourceAttr("citrixadc_gslbparameter.tf_gslbparameter", "ldnsmask" , "255.255.255.254"),
@@ -105,24 +105,3 @@ func testAccCheckGslbparameterExist(n string, id *string) resource.TestCheckFunc
 	}
 }
 
-func testAccCheckGslbparameterDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "citrixadc_gslbparameter" {
-			continue
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No name is set")
-		}
-
-		_, err := nsClient.FindResource(service.Gslbparameter.Type(), rs.Primary.ID)
-		if err == nil {
-			return fmt.Errorf("gslbparameter %s still exists", rs.Primary.ID)
-		}
-
-	}
-
-	return nil
-}
