@@ -25,6 +25,7 @@ import (
 )
 
 const testAccCrvserver_icapolicy_binding_basic = `
+
 # Since the icapolicy resource is not yet available on Terraform,
 # the tf_icapolicy policy must be created by hand in order for the script to run correctly.
 # You can do that by using the following Citrix ADC cli commands:
@@ -39,7 +40,6 @@ resource "citrixadc_crvserver_icapolicy_binding" "crvserver_icapolicy_binding" {
   name       = citrixadc_crvserver.crvserver.name
   policyname = "tf_icapolicy"
   priority   = 1
-  bindpoint  = "RESPONSE"
 }
 `
 

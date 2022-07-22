@@ -12,5 +12,4 @@ resource "citrixadc_crvserver_icapolicy_binding" "crvserver_icapolicy_binding" {
   name       = citrixadc_crvserver.crvserver.name
   policyname = "tf_icapolicy"
   priority   = 1
-  bindpoint  = "RESPONSE"
 }
