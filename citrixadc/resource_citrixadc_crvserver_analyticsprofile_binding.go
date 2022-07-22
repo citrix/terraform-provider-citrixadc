@@ -43,11 +43,11 @@ func createCrvserver_analyticsprofile_bindingFunc(d *schema.ResourceData, meta i
 	analyticsprofile := d.Get("analyticsprofile")
 	bindingId := fmt.Sprintf("%s,%s", name, analyticsprofile)
 	crvserver_analyticsprofile_binding := cr.Crvserveranalyticsprofilebinding{
-		Analyticsprofile: d.Get("analyticsprofile").(string),
-		Name:             d.Get("name").(string),
+		Analyticsprofile: analyticsprofile.(string),
+		Name:             name.(string),
 	}
 
-	_, err := client.AddResource(service.Crvserver_analyticsprofile_binding.Type(), bindingId, &crvserver_analyticsprofile_binding)
+	err := client.UpdateUnnamedResource("crvserver_analyticsprofile_binding", &crvserver_analyticsprofile_binding)
 	if err != nil {
 		return err
 	}
@@ -134,7 +134,7 @@ func deleteCrvserver_analyticsprofile_bindingFunc(d *schema.ResourceData, meta i
 	args := make([]string, 0)
 	args = append(args, fmt.Sprintf("analyticsprofile:%s", analyticsprofile))
 
-	err := client.DeleteResourceWithArgs(service.Crvserver_analyticsprofile_binding.Type(), name, args)
+	err := client.DeleteResourceWithArgs("crvserver_analyticsprofile_binding", name, args)
 	if err != nil {
 		return err
 	}
