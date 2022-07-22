@@ -87,6 +87,7 @@ github.com/citrix/adc-nitro-go/resource/config/basic
 github.com/citrix/adc-nitro-go/resource/config/bot
 github.com/citrix/adc-nitro-go/resource/config/cluster
 github.com/citrix/adc-nitro-go/resource/config/cmp
+github.com/citrix/adc-nitro-go/resource/config/cr
 github.com/citrix/adc-nitro-go/resource/config/cs
 github.com/citrix/adc-nitro-go/resource/config/dns
 github.com/citrix/adc-nitro-go/resource/config/filter
