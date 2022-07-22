@@ -8,7 +8,6 @@ resource "citrixadc_crvserver" "crvserver" {
   arp         = "OFF"
 }
 resource "citrixadc_crvserver_analyticsprofile_binding" "crvserver_analyticsprofile_binding" {
-  name             = citrixadc_crvserver.crvserver.name
+  name        = citrixadc_crvserver.crvserver.name
   analyticsprofile = "new_profile"
-  count            = 10
 }

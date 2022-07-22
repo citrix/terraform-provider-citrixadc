@@ -26,15 +26,24 @@ import (
 
 const testAccCrvserver_analyticsprofile_binding_basic = `
 
-	resource "citrixadc_crvserver_analyticsprofile_binding" "tf_crvserver_analyticsprofile_binding" {
-		analyticsprofile = "Fillme"
-        name = "Fillme"
-        
-	}
+resource "citrixadc_crvserver" "crvserver" {
+	name        = "my_vserver"
+	servicetype = "HTTP"
+	arp         = "OFF"
+  }
+  resource "citrixadc_crvserver_analyticsprofile_binding" "crvserver_analyticsprofile_binding" {
+	name        = citrixadc_crvserver.crvserver.name
+	analyticsprofile = "new_profile"
+  }
 `
 
 const testAccCrvserver_analyticsprofile_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
+	resource "citrixadc_crvserver" "crvserver" {
+		name        = "my_vserver"
+		servicetype = "HTTP"
+		arp         = "OFF"
+	  }
 `
 
 func TestAccCrvserver_analyticsprofile_binding_basic(t *testing.T) {
@@ -46,13 +55,13 @@ func TestAccCrvserver_analyticsprofile_binding_basic(t *testing.T) {
 			resource.TestStep{
 				Config: testAccCrvserver_analyticsprofile_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrvserver_analyticsprofile_bindingExist("citrixadc_crvserver_analyticsprofile_binding.tf_crvserver_analyticsprofile_binding", nil),
+					testAccCheckCrvserver_analyticsprofile_bindingExist("citrixadc_crvserver_analyticsprofile_binding.crvserver_analyticsprofile_binding", nil),
 				),
 			},
 			resource.TestStep{
 				Config: testAccCrvserver_analyticsprofile_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrvserver_analyticsprofile_bindingNotExist("citrixadc_crvserver_analyticsprofile_binding.tf_crvserver_analyticsprofile_binding", "name,secondIdComponent"),
+					testAccCheckCrvserver_analyticsprofile_bindingNotExist("citrixadc_crvserver_analyticsprofile_binding.crvserver_analyticsprofile_binding", "my_vserver,new_profile"),
 				),
 			},
 		},
@@ -85,7 +94,7 @@ func testAccCheckCrvserver_analyticsprofile_bindingExist(n string, id *string) r
 		idSlice := strings.SplitN(bindingId, ",", 2)
 
 		name := idSlice[0]
-		secondIdComponent := idSlice[1]
+		analyticsprofile := idSlice[1]
 
 		findParams := service.FindParams{
 			ResourceType:             "crvserver_analyticsprofile_binding",
@@ -99,10 +108,10 @@ func testAccCheckCrvserver_analyticsprofile_bindingExist(n string, id *string) r
 			return err
 		}
 
-		// Iterate through results to find the one with the matching secondIdComponent
+		// Iterate through results to find the one with the matching analyticsprofile
 		found := false
 		for _, v := range dataArr {
-			if v["secondIdComponent"].(string) == secondIdComponent {
+			if v["analyticsprofile"].(string) == analyticsprofile {
 				found = true
 				break
 			}
@@ -126,7 +135,7 @@ func testAccCheckCrvserver_analyticsprofile_bindingNotExist(n string, id string)
 		idSlice := strings.SplitN(id, ",", 2)
 
 		name := idSlice[0]
-		secondIdComponent := idSlice[1]
+		analyticsprofile := idSlice[1]
 
 		findParams := service.FindParams{
 			ResourceType:             "crvserver_analyticsprofile_binding",
@@ -140,10 +149,10 @@ func testAccCheckCrvserver_analyticsprofile_bindingNotExist(n string, id string)
 			return err
 		}
 
-		// Iterate through results to hopefully not find the one with the matching secondIdComponent
+		// Iterate through results to hopefully not find the one with the matching analyticsprofile
 		found := false
 		for _, v := range dataArr {
-			if v["secondIdComponent"].(string) == secondIdComponent {
+			if v["analyticsprofile"].(string) == analyticsprofile {
 				found = true
 				break
 			}
@@ -169,7 +178,7 @@ func testAccCheckCrvserver_analyticsprofile_bindingDestroy(s *terraform.State) e
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Crvserver_analyticsprofile_binding.Type(), rs.Primary.ID)
+		_, err := nsClient.FindResource("crvserver_analyticsprofile_binding", rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("crvserver_analyticsprofile_binding %s still exists", rs.Primary.ID)
 		}
