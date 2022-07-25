@@ -61,13 +61,13 @@ func TestAccCmppolicy_global_binding_basic(t *testing.T) {
 			{
 				Config: testAccCmppolicy_global_binding_basic_step1,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCmppolicyglobalbindingExist("citrixadc_cmppolicy.tf_cmpglobal_binding", nil),
+					testAccCheckCmppolicyglobalbindingExist("citrixadc_cmpglobal_binding.tf_cmpglobal_binding", nil),
 				),
 			},
 			{
 				Config: testAccCmppolicy_global_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCmppolicyglobalbindingExist("citrixadc_cmppolicy.tf_cmpglobal_binding", nil),
+					testAccCheckCmppolicyglobalbindingExist("citrixadc_cmpglobal_binding.tf_cmpglobal_binding", nil),
 				),
 			},
 		},
