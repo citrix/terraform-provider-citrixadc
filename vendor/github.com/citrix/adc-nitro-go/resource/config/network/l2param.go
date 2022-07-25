@@ -23,11 +23,11 @@ type L2param struct {
 	/**
 	* When mbf_instant_learning is enabled, learn any changes in peer's MAC after this time interval, which is in 10ms ticks.
 	*/
-	Mbfpeermacupdate int `json:"mbfpeermacupdate,omitempty"`
+	Mbfpeermacupdate int `json:"mbfpeermacupdate"` // Zero is a valid value
 	/**
 	* Maximum bridge collision for loop detection 
 	*/
-	Maxbridgecollision int `json:"maxbridgecollision,omitempty"`
+	Maxbridgecollision int `json:"maxbridgecollision"` // Zero is a valid value
 	/**
 	* Set/reset proxy ARP in bridge group deployment
 	*/
