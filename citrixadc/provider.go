@@ -212,6 +212,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_filterpolicy":                                                  resourceCitrixAdcFilterpolicy(),
 		"citrixadc_lbvserver_filterpolicy_binding":                                resourceCitrixAdcLbvserver_filterpolicy_binding(),
 		"citrixadc_csvserver_filterpolicy_binding":                                resourceCitrixAdcCsvserver_filterpolicy_binding(),
+		"citrixadc_cmpglobal_binding":                                             resourceCitrixAdcCmpglobal_binding(),
 		"citrixadc_cmppolicy":                                                     resourceCitrixAdcCmppolicy(),
 		"citrixadc_lbvserver_cmppolicy_binding":                                   resourceCitrixAdcLbvserver_cmppolicy_binding(),
 		"citrixadc_csvserver_cmppolicy_binding":                                   resourceCitrixAdcCsvserver_cmppolicy_binding(),
@@ -590,7 +591,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_gslbvserver_spilloverpolicy_binding":                           resourceCitrixAdcGslbvserver_spilloverpolicy_binding(),
 		"citrixadc_gslbservice_dnsview_binding":                                   resourceCitrixAdcGslbservice_dnsview_binding(),
 		"citrixadc_gslbvserver_gslbservice_binding":                               resourceCitrixAdcGslbvserver_gslbservice_binding(),
-		"citrixadc_crvserver_crpolicy_binding":									   resourceCitrixAdcCrvserver_crpolicy_binding(),
+		"citrixadc_crvserver_crpolicy_binding":                                    resourceCitrixAdcCrvserver_crpolicy_binding(),
 	}
 }
 
