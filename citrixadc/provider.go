@@ -558,7 +558,6 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_netbridge_vlan_binding":                                        resourceCitrixAdcNetbridge_vlan_binding(),
 		"citrixadc_bridgetable":                                                   resourceCitrixAdcBridgetable(),
 		"citrixadc_dnsview":                                                       resourceCitrixAdcDnsview(),
-		"citrixadc_dnsnameserver":                                                 resourceCitrixAdcDnsnameserver(),
 		"citrixadc_dnsmxrec":                                                      resourceCitrixAdcDnsmxrec(),
 		"citrixadc_dnspolicy64":                                                   resourceCitrixAdcDnspolicy64(),
 		"citrixadc_dnsaction64":                                                   resourceCitrixAdcDnsaction64(),
@@ -566,6 +565,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_dnsnaptrrec":                                                   resourceCitrixAdcDnsnaptrrec(),
 		"citrixadc_dnscnamerec":                                                   resourceCitrixAdcDnscnamerec(),
 		"citrixadc_dnsaaaarec":                                                    resourceCitrixAdcDnsaaaarec(),
+		"citrixadc_dnsnameserver":                                                 resourceCitrixAdcDnsnameserver(),
 		"citrixadc_dnskey":                                                        resourceCitrixAdcDnskey(),
 		"citrixadc_dnssuffix":                                                     resourceCitrixAdcDnssuffix(),
 		"citrixadc_dnspolicylabel":                                                resourceCitrixAdcDnspolicylabel(),
@@ -591,6 +591,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_gslbvserver_spilloverpolicy_binding":                           resourceCitrixAdcGslbvserver_spilloverpolicy_binding(),
 		"citrixadc_gslbservice_dnsview_binding":                                   resourceCitrixAdcGslbservice_dnsview_binding(),
 		"citrixadc_gslbvserver_gslbservice_binding":                               resourceCitrixAdcGslbvserver_gslbservice_binding(),
+		"citrixadc_crvserver_responderpolicy_binding":                             resourceCitrixAdcCrvserver_responderpolicy_binding(),
 		"citrixadc_crvserver_crpolicy_binding":                                    resourceCitrixAdcCrvserver_crpolicy_binding(),
 	}
 }
