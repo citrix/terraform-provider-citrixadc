@@ -611,6 +611,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_appflowaction":                                                 resourceCitrixAdcAppflowaction(),
 		"citrixadc_appflowpolicy":                                                 resourceCitrixAdcAppflowpolicy(),
 		"citrixadc_appflowaction_analyticsprofile_binding":                        resourceCitrixAdcAppflowaction_analyticsprofile_binding(),
+		"citrixadc_appflowpolicylabel_appflowpolicy_binding":                      resourceCitrixAdcAppflowpolicylabel_appflowpolicy_binding(),
 	}
 }
 
