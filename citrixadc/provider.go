@@ -571,9 +571,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_dnsptrrec":                                                     resourceCitrixAdcDnsptrrec(),
 		"citrixadc_ip6tunnelparam":                                                resourceCitrixAdcIp6tunnelparam(),
 		"citrixadc_dnszone":                                                       resourceCitrixAdcDnszone(),
-		"citrixadc_dnstxtrec":                                                     resourceCitrixAdcDnstxtrec(),
 		"citrixadc_dnspolicylabel_dnspolicy_binding":                              resourceCitrixAdcDnspolicylabel_dnspolicy_binding(),
-		"citrixadc_crvserver":                                                     resourceCitrixAdcCrvserver(),
 		"citrixadc_crvserver_appfwpolicy_binding":                                 resourceCitrixAdcCrvserver_appfwpolicy_binding(),
 		"citrixadc_crpolicy":                                                      resourceCitrixAdcCrpolicy(),
 		"citrixadc_gslbparameter":                                                 resourceCitrixAdcGslbparameter(),
@@ -601,6 +599,9 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_crvserver_analyticsprofile_binding":                            resourceCitrixAdcCrvserver_analyticsprofile_binding(),
 		"citrixadc_crvserver_appqoepolicy_binding":                                resourceCitrixAdcCrvserver_appqoepolicy_binding(),
 		"citrixadc_crvserver_filterpolicy_binding":                                resourceCitrixAdcCrvserver_filterpolicy_binding(),
+		"citrixadc_dnstxtrec":                                                     resourceCitrixAdcDnstxtrec(),
+		"citrixadc_crvserver":                                                     resourceCitrixAdcCrvserver(),
+		"citrixadc_crvserver_cspolicy_binding":                                    resourceCitrixAdcCrvserver_cspolicy_binding(),
 	}
 }
 
