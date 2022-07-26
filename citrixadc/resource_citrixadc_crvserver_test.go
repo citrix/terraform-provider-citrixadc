@@ -37,7 +37,7 @@ const testAccCrvserver_update = `
 
 
 resource "citrixadc_crvserver" "crvserver" {
-    name = "my_vserver1"
+    name = "my_vserver"
     servicetype = "HTTP"
     arp = "ON"
 }
@@ -53,7 +53,7 @@ func TestAccCrvserver_basic(t *testing.T) {
 				Config: testAccCrvserver_add,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrvserverExist("citrixadc_crvserver.crvserver", nil),
-					resource.TestCheckResourceAttr("citrixadc_crvserver.crvserver", "name", "my_vserver1"),
+					resource.TestCheckResourceAttr("citrixadc_crvserver.crvserver", "name", "my_vserver"),
 					resource.TestCheckResourceAttr("citrixadc_crvserver.crvserver", "servicetype", "HTTP"),
 					resource.TestCheckResourceAttr("citrixadc_crvserver.crvserver", "arp", "OFF"),
 
@@ -63,7 +63,7 @@ func TestAccCrvserver_basic(t *testing.T) {
 				Config: testAccCrvserver_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrvserverExist("citrixadc_crvserver.crvserver", nil),
-					resource.TestCheckResourceAttr("citrixadc_crvserver.crvserver", "name", "my_vserver1"),
+					resource.TestCheckResourceAttr("citrixadc_crvserver.crvserver", "name", "my_vserver"),
 					resource.TestCheckResourceAttr("citrixadc_crvserver.crvserver", "servicetype", "HTTP"),
 					resource.TestCheckResourceAttr("citrixadc_crvserver.crvserver", "arp", "ON"),
 
