@@ -1,3 +1,57 @@
+## 1.18.0 (July 26, 2022)
+
+FEATURES
+
+* **New Resource** `dnssuffix `
+* **New Resource** `dnspolicylabel`
+* **New Resource** `dnsptrrec`
+* **New Resource** `ip6tunnelparam`
+* **New Resource** `dnstxtrec`
+* **New Resource** `dnscnamerec`
+* **New Resource** `dnsnaptrrec`
+* **New Resource** `dnssrvrec`
+* **New Resource** `dnsaction`
+* **New Resource** `dnsaction64`
+* **New Resource** `dnszone`
+* **New Resource** `dnspolicy`
+* **New Resource** `dnsaddrec`
+* **New Resource** `dnspolicy64`
+* **New Resource** `dnsmxrec`
+* **New Resource** `authorizationpolicylabel`
+* **New Resource** `transformpolicylabel`
+* **New Resource** `gslbservicegroup`
+* **New Resource** `authorizationpolicylabel_authorizationpolicy_binding`
+* **New Resource** `transformpolicylabel_policy_binding`
+* **New Resource** `transformglobal_transformpolicy_binding`
+* **New Resource** `transformpolicylabel_policy_binding`
+* **New Resource** `gslbparameter`
+* **New Resource** `gslbservice_lbmonitor_binding`
+* **New Resource** `gslbvserver_domain_binding`
+* **New Resource** `gslbvserver_gslbservicegroup_binding`
+* **New Resource** `gslbservicegroup_lbmonitor_binding`
+* **New Resource** `gslbvserver_spilloverpolicy_binding`
+* **New Resource** `gslbservice_dnsview_binding`
+* **New Resource** `gslbvserver_gslbservice_binding`
+* **New Resource** `crpolicy`
+* **New Resource** `crvserver`
+* **New Resource** `crvserver_appfwpolicy_binding`
+* **New Resource** `dnskey`
+* **New Resource** `dnspolicylabel_dnspolicy_binding`
+* **New Resource** `crvserver_crpolicy_binding`
+* **New Resource** `crvserver_responderpolicy_binding`
+* **New Resource** `crvserver_rewritepolicy_binding`
+* **New Resource** `crvserver_appflowpolicy_binding`
+
+ENHANCEMENTS
+
+* Rearranged examples folders in github repository
+* Added example with secure CS vserver
+* Update HA pair upgrade script
+
+BUG FIXES
+
+* Fix glsbservicegroup to retrieve servicegroupname correctly.
+
 ## 1.17.0 (June 30, 2022)
 
 FEATURES
