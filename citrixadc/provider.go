@@ -597,6 +597,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_crvserver_feopolicy_binding":                                   resourceCitrixAdcCrvserver_feopolicy_binding(),
 		"citrixadc_crvserver_cmppolicy_binding":                                   resourceCitrixAdcCrvserver_cmppolicy_binding(),
 		"citrixadc_crvserver_cachepolicy_binding":                                 resourceCitrixAdcCrvserver_cachepolicy_binding(),
+		"citrixadc_crvserver_icapolicy_binding":                                   resourceCitrixAdcCrvserver_icapolicy_binding(),
 	}
 }
 
