@@ -615,6 +615,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_appflowglobal_appflowpolicy_binding":                           resourceCitrixAdcAppflowglobal_appflowpolicy_binding(),
 		"citrixadc_snmptrap":                                                      resourceCitrixAdcSnmptrap(),
 		"citrixadc_snmpview":                                                      resourceCitrixAdcSnmpview(),
+		"citrixadc_snmpgroup":                                                     resourceCitrixAdcSnmpgroup(),
 	}
 }
 
