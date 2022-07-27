@@ -617,6 +617,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_snmpview":                                                      resourceCitrixAdcSnmpview(),
 		"citrixadc_snmpgroup":                                                     resourceCitrixAdcSnmpgroup(),
 		"citrixadc_snmpuser":                                                      resourceCitrixAdcSnmpuser(),
+		"citrixadc_snmpengineid":                                                  resourceCitrixAdcSnmpengineid(),
 	}
 }
 
