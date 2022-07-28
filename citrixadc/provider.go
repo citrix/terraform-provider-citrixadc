@@ -623,6 +623,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_snmpmanager":                                                   resourceCitrixAdcSnmpmanager(),
 		"citrixadc_snmpalarm":                                                     resourceCitrixAdcSnmpalarm(),
 		"citrixadc_ntpserver":                                                     resourceCitrixAdcNtpserver(),
+		"citrixadc_systemparameter":                                               resourceCitrixAdcSystemparameter(),
 	}
 }
 
