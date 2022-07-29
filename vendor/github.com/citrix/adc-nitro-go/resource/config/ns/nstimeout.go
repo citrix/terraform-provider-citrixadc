@@ -27,43 +27,43 @@ type Nstimeout struct {
 	/**
 	* Client idle timeout (in seconds). If zero, the service-type default value is taken when service is created.
 	*/
-	Client int `json:"client,omitempty"`
+	Client int `json:"client"`
 	/**
 	* Server idle timeout (in seconds).  If zero, the service-type default value is taken when service is created.
 	*/
-	Server int `json:"server,omitempty"`
+	Server int `json:"server"`
 	/**
 	* Global idle timeout, in seconds, for client connections of HTTP service type. This value is over ridden by the client timeout that is configured on individual entities.
 	*/
-	Httpclient int `json:"httpclient,omitempty"`
+	Httpclient int `json:"httpclient"`
 	/**
 	* Global idle timeout, in seconds, for server connections of HTTP service type. This value is over ridden by the server timeout that is configured on individual entities.
 	*/
-	Httpserver int `json:"httpserver,omitempty"`
+	Httpserver int `json:"httpserver"`
 	/**
 	* Global idle timeout, in seconds, for non-HTTP client connections of TCP service type. This value is over ridden by the client timeout that is configured on individual entities.
 	*/
-	Tcpclient int `json:"tcpclient,omitempty"`
+	Tcpclient int `json:"tcpclient"`
 	/**
 	* Global idle timeout, in seconds, for non-HTTP server connections of TCP service type. This value is over ridden by the server timeout that is configured on entities.
 	*/
-	Tcpserver int `json:"tcpserver,omitempty"`
+	Tcpserver int `json:"tcpserver"`
 	/**
 	* Global idle timeout, in seconds, for non-TCP client connections. This value is over ridden by the client timeout that is configured on individual entities.
 	*/
-	Anyclient int `json:"anyclient,omitempty"`
+	Anyclient int `json:"anyclient"`
 	/**
 	* Global idle timeout, in seconds, for non TCP server connections. This value is over ridden by the server timeout that is configured on individual entities.
 	*/
-	Anyserver int `json:"anyserver,omitempty"`
+	Anyserver int `json:"anyserver"`
 	/**
 	* Global idle timeout, in seconds, for TCP client connections. This value takes precedence over  entity level timeout settings (vserver/service). This is applicable only to transport protocol TCP.
 	*/
-	Anytcpclient int `json:"anytcpclient,omitempty"`
+	Anytcpclient int `json:"anytcpclient"`
 	/**
 	* Global idle timeout, in seconds, for TCP server connections. This value takes precedence over entity level timeout settings ( vserver/service). This is applicable only to transport protocol TCP.
 	*/
-	Anytcpserver int `json:"anytcpserver,omitempty"`
+	Anytcpserver int `json:"anytcpserver"`
 	/**
 	* Idle timeout, in seconds, for connections that are in TCP half-closed state.
 	*/
@@ -79,7 +79,7 @@ type Nstimeout struct {
 	/**
 	* Timer interval, in seconds, for abruptly terminated TCP NATPCB connections.
 	*/
-	Reducedrsttimeout int `json:"reducedrsttimeout,omitempty"`
+	Reducedrsttimeout int `json:"reducedrsttimeout"`
 	/**
 	* Timer interval, in seconds, for new TCP NATPCB connections on which no data was received.
 	*/
