@@ -606,6 +606,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_crvserver_lbvserver_binding":                                   resourceCitrixAdcCrvserver_lbvserver_binding(),
 		"citrixadc_appflowcollector":                                              resourceCitrixAdcAppflowcollector(),
 		"citrixadc_appflowparam":                                                  resourceCitrixAdcAppflowparam(),
+		"citrixadc_appflowpolicylabel":                                            resourceCitrixAdcAppflowpolicylabel(),
 	}
 }
 
