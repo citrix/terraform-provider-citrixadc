@@ -10,4 +10,5 @@ resource "citrixadc_policydataset_value_binding" "tf_value" {
   for_each = var.inputdata
   value    = each.key
   index    = each.value["index"]
+  endrange = each.value["endrange"]
 }

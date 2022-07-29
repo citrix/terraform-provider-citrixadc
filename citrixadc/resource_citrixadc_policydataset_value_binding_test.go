@@ -147,12 +147,14 @@ resource "citrixadc_policydataset_value_binding" "tf_value1" {
 
   value    = 100
   index    = 111
+  endrange = 150
 }
 
 resource "citrixadc_policydataset_value_binding" "tf_value2" {
   name = citrixadc_policydataset.tf_dataset.name
 
   value    = 200
+  endrange = 250
 }
 `
 
@@ -168,6 +170,7 @@ resource "citrixadc_policydataset_value_binding" "tf_value1" {
 
   value    = 100
   index    = 111
+  endrange = 160
 }
 
 resource "citrixadc_policydataset_value_binding" "tf_value3" {
@@ -188,6 +191,7 @@ resource "citrixadc_policydataset_value_binding" "tf_value3" {
   name = citrixadc_policydataset.tf_dataset.name
 
   value    = 300
-  index  = 333
+  index    = 333
+  endrange = 360
 }
 `

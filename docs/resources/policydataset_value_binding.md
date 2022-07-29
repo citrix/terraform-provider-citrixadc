@@ -21,6 +21,7 @@ resource "citrixadc_policydataset_value_binding" "tf_value1" {
 
   value    = 100
   index    = 111
+  endrange = 160
 }
 
 resource "citrixadc_policydataset_value_binding" "tf_value2" {
@@ -33,10 +34,11 @@ resource "citrixadc_policydataset_value_binding" "tf_value2" {
 
 ## Argument Reference
 
-* `value` - (Optional) Value of the specified type that is associated with the dataset.
+* `name` - (Required) Name of the dataset to which to bind the value.
+* `value` - (Required) Value of the specified type that is associated with the dataset.
 * `index` - (Optional) The index of the value (ipv4, ipv6, number) associated with the set.
+* `endrange` - (Optional) The dataset entry is a range from <value> through <end_range>, inclusive.
 * `comment` - (Optional) Any comments to preserve information about this dataset or a data bound to this dataset.
-* `name` - (Optional) Name of the dataset to which to bind the value.
 
 
 ## Attribute Reference

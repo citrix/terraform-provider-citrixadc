@@ -40,6 +40,11 @@ func resourceCitrixAdcPolicydataset_value_binding() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"endrange": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -58,6 +63,7 @@ func createPolicydataset_value_bindingFunc(d *schema.ResourceData, meta interfac
 		Index:   d.Get("index").(int),
 		Name:    d.Get("name").(string),
 		Value:   d.Get("value").(string),
+		Endrange:d.Get("endrange").(string),
 	}
 
 	err := client.UpdateUnnamedResource(service.Policydataset_value_binding.Type(), &policydataset_value_binding)
@@ -141,6 +147,7 @@ func readPolicydataset_value_bindingFunc(d *schema.ResourceData, meta interface{
 	d.Set("index", data["index"])
 	d.Set("name", data["name"])
 	d.Set("value", data["value"])
+	d.Set("endrange", data["endrange"])
 
 	return nil
 
@@ -151,6 +158,9 @@ func deletePolicydataset_value_bindingFunc(d *schema.ResourceData, meta interfac
 	client := meta.(*NetScalerNitroClient).client
 	args := make(map[string]string)
 	args["value"] = d.Get("value").(string)
+	if val, ok := d.GetOk("endrange"); ok {
+		args["endrange"] = val.(string)
+	}
 	err := client.DeleteResourceWithArgsMap(service.Policydataset_value_binding.Type(), d.Get("name").(string), args)
 	if err != nil {
 		return err
