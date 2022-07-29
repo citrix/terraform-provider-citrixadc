@@ -1,3 +1,18 @@
+## 1.19.0 (July 29, 2022)
+
+FEATURES
+
+* **New Resource** `dnsnameserver`
+* **New Resource** `crvserver_spilloverpolicy_binding`
+* **New Resource** `crvserver_cspolicy_binding`
+* **New Resource** `crvserver_filterpolicy_binding`
+* **New Resource** `crvserver_appqoepolicy_bind`
+* **New Resource** `crvserver_analyticsprofile_binding`
+* **New Resource** `crvserver_icapolicy_binding`
+* **New Resource** `crvserver_cachepolicy_binding`
+* **New Resource** `crvserver_cmppolicy_binding`
+* **New Resource** `crvserver_feopolicy_binding`
+
 ## 1.18.0 (July 26, 2022)
 
 FEATURES
