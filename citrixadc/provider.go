@@ -631,6 +631,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_clusternodegroup_lbvserver_binding":                            resourceCitrixAdcClusternodegroup_lbvserver_binding(),
 		"citrixadc_clusternodegroup_clusternode_binding":                          resourceCitrixAdcClusternodegroup_clusternode_binding(),
 		"citrixadc_clusternodegroup_csvserver_binding":                            resourceCitrixAdcClusternodegroup_csvserver_binding(),
+		"citrixadc_clusternodegroup_crvserver_binding":                            resourceCitrixAdcClusternodegroup_crvserver_binding(),
 	}
 }
 
