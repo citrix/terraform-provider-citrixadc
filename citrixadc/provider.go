@@ -640,6 +640,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_clusternodegroup_vpnvserver_binding":                           resourceCitrixAdcClusternodegroup_vpnvserver_binding(),
 		"citrixadc_clusternodegroup_streamidentifier_binding":                     resourceCitrixAdcClusternodegroup_streamidentifier_binding(),
 		"citrixadc_clusternode_routemonitor_binding":                              resourceCitrixAdcClusternode_routemonitor_binding(),
+		"citrixadc_clusternodegroup_authenticationvserver_binding": 			   resourceCitrixAdcClusternodegroup_authenticationvserver_binding(),
 	}
 }
 
