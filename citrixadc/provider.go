@@ -648,6 +648,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_nslicenseproxyserver":                                          resourceCitrixAdcNslicenseproxyserver(),
 		"citrixadc_snmpcommunity":                                                 resourceCitrixAdcSnmpcommunity(),
 		"citrixadc_lacp": 														   resourceCitrixAdcLacp(),
+		"citrixadc_route6": 													   resourceCitrixAdcRoute6(),
 	}
 }
 
