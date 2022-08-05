@@ -626,6 +626,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_systemparameter":                                               resourceCitrixAdcSystemparameter(),
 		"citrixadc_nstimeout":                                                     resourceCitrixAdcNstimeout(),
 		"citrixadc_clusternodegroup":                                              resourceCitrixAdcClusternodegroup(),
+		"citrixadc_cmpglobal_cmppolicy_binding": 								   resourceCitrixAdcCmpglobal_cmppolicy_binding(),
 	}
 }
 
