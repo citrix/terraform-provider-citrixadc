@@ -1,3 +1,32 @@
+## 1.20.0 (August 05, 2022)
+
+FEATURES
+
+* **New Resource** `clusternodegroup_gslbsite_binding`
+* **New Resource** `cmpglobal_cmppolicy_binding`
+* **New Resource** `clusternodegroup`
+* **New Resource** `nstimeout`
+* **New Resource** `systemparameter`
+* **New Resource** `ntpserver`
+* **New Resource** `snmpalarm`
+* **New Resource** `snmpmanager`
+* **New Resource** `snmpmib`
+* **New Resource** `snmpoption`
+* **New Resource** `snmpengineid`
+* **New Resource** `snmpuser`
+* **New Resource** `snmpgroup`
+* **New Resource** `snmpview`
+* **New Resource** `snmptrap`
+* **New Resource** `appflowglobal_appflowpolicy_binding`
+* **New Resource** `appflowpolicylabel_appflowpolicy_binding`
+* **New Resource** `appflowaction_analyticsprofile_binding`
+* **New Resource** `appflowpolicy`
+* **New Resource** `appflowaction`
+* **New Resource** `crvserver_policymap_binding`
+* **New Resource** `appflowpolicylabel`
+* **New Resource** `appflowparam`
+* **New Resource** `appflowcollector`
+
 ## 1.19.0 (July 29, 2022)
 
 FEATURES
