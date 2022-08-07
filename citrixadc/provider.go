@@ -636,6 +636,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_clusterinstance":                                               resourceCitrixAdcClusterinstance(),
 		"citrixadc_clusternodegroup_service_binding":                              resourceCitrixAdcClusternodegroup_service_binding(),
 		"citrixadc_clusternode":                                                   resourceCitrixAdcClusternode(),
+		"citrixadc_clusternodegroup_nslimitidentifier_binding":                    resourceCitrixAdcClusternodegroup_nslimitidentifier_binding(),
 	}
 }
 
