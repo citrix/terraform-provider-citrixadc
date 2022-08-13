@@ -642,6 +642,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_clusternode_routemonitor_binding":                              resourceCitrixAdcClusternode_routemonitor_binding(),
 		"citrixadc_clusternodegroup_authenticationvserver_binding":                resourceCitrixAdcClusternodegroup_authenticationvserver_binding(),
 		"citrixadc_responderglobal_responderpolicy_binding":                       resourceCitrixAdcResponderglobal_responderpolicy_binding(),
+		"citrixadc_nscqaparam":                                                    resourceCitrixAdcNscqaparam(),
 	}
 }
 
