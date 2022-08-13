@@ -644,7 +644,8 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_responderglobal_responderpolicy_binding":                       resourceCitrixAdcResponderglobal_responderpolicy_binding(),
 		"citrixadc_nscqaparam":                                                    resourceCitrixAdcNscqaparam(),
 		"citrixadc_nshostname":                                                    resourceCitrixAdcNshostname(),
-		"citrixadc_nsencryptionparams": 										   resourceCitrixAdcNsencryptionparams(),
+		"citrixadc_nsencryptionparams":                                            resourceCitrixAdcNsencryptionparams(),
+		"citrixadc_nslicenseproxyserver":                                          resourceCitrixAdcNslicenseproxyserver(),
 	}
 }
 
