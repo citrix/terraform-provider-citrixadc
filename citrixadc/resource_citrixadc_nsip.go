@@ -3,7 +3,6 @@ package citrixadc
 import (
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"fmt"
@@ -75,6 +74,18 @@ func resourceCitrixAdcNsip() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
+			"ipaddress": &schema.Schema{
+				Type:     schema.TypeString,
+				Required: true,
+				Computed: false,
+				ForceNew: true,
+			},
+			"netmask": &schema.Schema{
+				Type:     schema.TypeString,
+				Required: true,
+				Computed: false,
+				ForceNew: true,
+			},
 			"advertiseondefaultpartition": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -135,12 +146,6 @@ func resourceCitrixAdcNsip() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"ipaddress": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
 			"metric": &schema.Schema{
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -150,12 +155,6 @@ func resourceCitrixAdcNsip() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
-			},
-			"netmask": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
 			},
 			"networkroute": &schema.Schema{
 				Type:     schema.TypeString,
@@ -267,12 +266,8 @@ func createNsipFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNsipFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var ipaddress string
-	if v, ok := d.GetOk("ipaddress"); ok {
-		ipaddress = v.(string)
-	} else {
-		ipaddress = resource.PrefixedUniqueId("tf-nsip-")
-		d.Set("ipaddress", ipaddress)
-	}
+	ipaddress = d.Get("ipaddress").(string)
+
 	nsip := nsip{
 		Advertiseondefaultpartition: d.Get("advertiseondefaultpartition").(string),
 		Arp:                         d.Get("arp").(string),
@@ -338,7 +333,6 @@ func readNsipFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
-	d.Set("name", data["name"])
 	d.Set("advertiseondefaultpartition", data["advertiseondefaultpartition"])
 	d.Set("arp", data["arp"])
 	d.Set("arpresponse", data["arpresponse"])
@@ -450,11 +444,6 @@ func updateNsipFunc(d *schema.ResourceData, meta interface{}) error {
 		nsip.Icmpresponse = d.Get("icmpresponse").(string)
 		hasChange = true
 	}
-	if d.HasChange("ipaddress") {
-		log.Printf("[DEBUG]  citrixadc-provider: Ipaddress has changed for nsip %s, starting update", ipaddress)
-		nsip.Ipaddress = d.Get("ipaddress").(string)
-		hasChange = true
-	}
 	if d.HasChange("metric") {
 		log.Printf("[DEBUG]  citrixadc-provider: Metric has changed for nsip %s, starting update", ipaddress)
 		nsip.Metric = d.Get("metric").(int)
@@ -463,11 +452,6 @@ func updateNsipFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("mgmtaccess") {
 		log.Printf("[DEBUG]  citrixadc-provider: Mgmtaccess has changed for nsip %s, starting update", ipaddress)
 		nsip.Mgmtaccess = d.Get("mgmtaccess").(string)
-		hasChange = true
-	}
-	if d.HasChange("netmask") {
-		log.Printf("[DEBUG]  citrixadc-provider: Netmask has changed for nsip %s, starting update", ipaddress)
-		nsip.Netmask = d.Get("netmask").(string)
 		hasChange = true
 	}
 	if d.HasChange("networkroute") {
