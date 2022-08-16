@@ -676,6 +676,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_aaaparameter": 											       resourceCitrixAdcAaaparameter(),
 		"citrixadc_aaapreauthenticationpolicy": 								   resourceCitrixAdcAaapreauthenticationpolicy(),
 		"citrixadc_aaapreauthenticationparameter": 								   resourceCitrixAdcAaapreauthenticationparameter(),
+		"citrixadc_aaagroup": 													   resourceCitrixAdcAaagroup(),
 	}
 }
 
