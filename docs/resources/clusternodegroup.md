@@ -10,7 +10,10 @@ The clusternodegroup resource is used to create clusternodegroup.
 ## Example usage
 
 ```hcl
-<fillme>
+resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+    name   = "my_clusternode"
+    strict = "NO"
+}
 ```
 
 

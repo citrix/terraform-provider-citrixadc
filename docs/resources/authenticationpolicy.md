@@ -4,7 +4,7 @@ subcategory: "Authentication"
 
 # Resource: authenticationpolicy
 
-The authenticationpolicy resource is used to create <fillme>.
+The authenticationpolicy resource is used to create Authentication Policy.
 
 
 ## Example usage
