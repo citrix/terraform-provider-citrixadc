@@ -1,5 +1,5 @@
 ---
-subcategory: "<fillme>"
+subcategory: "Cluster"
 ---
 
 # Resource: clusternodegroup_gslbsite_binding
