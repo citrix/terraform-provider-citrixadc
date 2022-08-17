@@ -58,9 +58,10 @@ You can download it from this [page](https://releases.hashicorp.com/terraform/).
 First step is to install Terraform CLI. Refer the https://learn.hashicorp.com/tutorials/terraform/install-cli for installing Terraform CLI. 
 
 ### **Step 2. Installing Citrix ADC Provider:**
-Terraform provider for Citrix ADC is not available through terrform.registry.io as of now. Hence users have to install the provider manually.
+The Terraform provider for Citrix ADC is available through terraform.registry.io
+If you wish to have a local version instead of the release within the registry you can follow the installation instructions below.
 
-#### **Follow below steps to install citrix adc provider for Terraform CLI version < 13.0**
+#### **Follow below steps to install citrix adc provider for Terraform CLI version < 0.13**
 1. Download the citrix adc terraform binary in your local machine where you have terraform installed from the [Releases section of the github repo](https://github.com/citrix/terraform-provider-citrixadc/releases).Untar the files and you can find the binary file terraform-provider-ctxadc.
 
 2. Edit .terraformrc for the base directory of plugins:
@@ -70,7 +71,7 @@ plugin_cache_dir = "/home/user/.terraform.d/plugins"
 3. Copy terrafom-provider-citrixadc binary in appropriate location - `$plugin_cache_dir/<platform>/terraform-provider-citrixadc`.
 e.g. `/home/user/.terraform.d/plugins/linux_amd64/terraform-provider-citrixadc`
 
-#### **Follow below steps to install citrix adc provider for Terraform CLI version >13.0**
+#### **Follow below steps to install the Citrix ADC provider for Terraform CLI version >0.13**
 1. Download the citrix adc terraform binary in your local machine where you have terraform installed from the [Releases section of the github repo](https://github.com/citrix/terraform-provider-citrixadc/releases).Untar the files and you can find the binary file terraform-provider-ctxadc.
 
 2. Create a following directory in your local machine and save the citrix adc terraform binary. e.g. in Ubuntu machine. Note that the directory structure has to be same as below, you can edit the version -0.12.43 to the citrix adc version you downloaded.
@@ -98,7 +99,7 @@ Lets configure a simple server in citrix ADC.
 cd terraform-provider-citrixadc/examples/simple_server/
 ```
 **Step-2** : Provider.tf contains the details of the target Citrix ADC.Edit the `simple_server/provider.tf` as follows and add details of your target adc.
-For **terraform version > 13.0** edit the provider.tf as follows
+For **terraform version > 0.13** edit the provider.tf as follows
 ```
 terraform {
     required_providers {
@@ -113,7 +114,7 @@ provider "citrixadc" {
   password = "PasswordOfYourADC"
  }
 ```
-For **terraform version < 13.0**, edit the `provider.tf` as follows
+For **terraform version < 0.13**, edit the `provider.tf` as follows
 ```
 provider "citrixadc" {
   endpoint = "http://10.1.1.3:80"
