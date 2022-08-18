@@ -662,6 +662,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_ipset_nsip6_binding":                                           resourceCitrixAdcIpset_nsip6_binding(),
 		"citrixadc_nd6ravariables_onlinkipv6prefix_binding":                       resourceCitrixAdcNd6ravariables_onlinkipv6prefix_binding(),
 		"citrixadc_netbridge_nsip_binding":                                        resourceCitrixAdcNetbridge_nsip_binding(),
+		"citrixadc_netbridge_nsip6_binding": 									   resourceCitrixAdcNetbridge_nsip6_binding(),
 	}
 }
 
