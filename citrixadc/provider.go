@@ -706,6 +706,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_systemgroup_nspartition_binding": 						       resourceCitrixAdcSystemgroup_nspartition_binding(),
 		"citrixadc_aaaradiusparams": 											   resourceCitrixAdcAaaradiusparams(),
 		"citrixadc_systemglobal_authenticationlocalpolicy_binding": 			   resourceCitrixAdcSystemglobal_authenticationlocalpolicy_binding(),
+		"citrixadc_systemglobal_auditnslogpolicy_binding": 		      			   resourceCitrixAdcSystemglobal_auditnslogpolicy_binding(),
 	}
 }
 
