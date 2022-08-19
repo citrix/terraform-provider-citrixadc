@@ -700,6 +700,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_aaagroup_aaauser_binding": 									   resourceCitrixAdcAaagroup_aaauser_binding(),
 		"citrixadc_aaagroup_auditnslogpolicy_binding": 							   resourceCitrixAdcAaagroup_auditnslogpolicy_binding(),
 		"citrixadc_aaauser_vpnurl_binding": 									   resourceCitrixAdcAaauser_vpnurl_binding(),
+		"citrixadc_systemglobal_authenticationradiuspolicy_binding": 			   resourceCitrixAdcSystemglobal_authenticationradiuspolicy_binding(),
 	}
 }
 
