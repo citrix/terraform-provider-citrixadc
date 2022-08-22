@@ -710,6 +710,8 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_systemglobal_authenticationtatacspolicy_binding": 			   resourceCitrixAdcSystemglobal_authenticationtacacspolicy_binding(),
 		"citrixadc_aaauser_intranetip6_binding": 								   resourceCitrixAdcAaauser_intranetip6_binding(),
 		"citrixadc_systemcollectionparam": 										   resourceCitrixAdcSystemcollectionparam(),
+		"citrixadc_systembackup": 												   resourceCitrixAdcSystembackup(),
+		"citrixadc_systembackup_restore": 										   resourceCitrixAdcSystembackupRestore(),
 	}
 }
 
