@@ -715,6 +715,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_cmppolicylabel": 											   resourceCitrixAdcCmppolicylabel(),
 		"citrixadc_cmpaction": 													   resourceCitrixAdcCmpaction(),
 		"citrixadc_cmpparameter": 												   resourceCitrixAdcCmpparameter(),
+		"citrixadc_cmppolicylabel_cmppolicy_binding": 							   resourceCitrixAdcCmppolicylabel_cmppolicy_binding(),
 	}
 }
 
