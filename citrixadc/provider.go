@@ -721,6 +721,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_icalatencyprofile": 										       resourceCitrixAdcIcalatencyprofile(),
 		"citrixadc_ntpparam": 													   resourceCitrixAdcNtpparam(),
 		"citrixadc_icapolicy": 												  	   resourceCitrixAdcIcapolicy(),
+		"citrixadc_icaglobal_icapolicy_binding": 								   resourceCitrixAdcIcaglobal_icapolicy_binding(),
 	}
 }
 
