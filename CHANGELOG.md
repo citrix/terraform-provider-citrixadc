@@ -1,3 +1,114 @@
+## 1.21.0 (Aug 25, 2022)
+
+FEATURES
+
+* **New Resource** tmsessionparameter
+* **New Resource** tmglobal_auditnslogpolicy_binding
+* **New Resource** tmglobal_auditsyslogpolicy_binding
+* **New Resource** icaglobal_icapolicy_binding
+* **New Resource** icapolicy
+* **New Resource** ntpparam
+* **New Resource** icalatencyprofile
+* **New Resource** icaaccessprofile
+* **New Resource** icaaction
+* **New Resource** cmppolicylabel_cmppolicy_binding
+* **New Resource** cmpparameter
+* **New Resource** cmpaction
+* **New Resource** cmppolicylabel
+* **New Resource** systembackup
+* **New Resource** systemcollectionparam
+* **New Resource** aaauser_intranetip6_binding
+* **New Resource** systemglobal_authenticationtacacspolicy_binding
+* **New Resource** systemglobal_auditnslogpolicy_binding
+* **New Resource** systemglobal_authenticationlocalpolicy_binding
+* **New Resource** aaaradiusparams
+* **New Resource** systemgroup_nspartition_binding
+* **New Resource** systemuser_nspartition_binding
+* **New Resource** systemglobal_authenticationpolicy_binding
+* **New Resource** systemglobal_authenticationradiuspolicy_binding
+* **New Resource** aaauser_vpnurl_binding
+* **New Resource** aaagroup_auditnslogpolicy_binding
+* **New Resource** aaagroup_aaauser_binding
+* **New Resource** aaauser_intranetip_binding
+* **New Resource** aaagroup_intranetip_binding
+* **New Resource** aaagroup_vpnintranetapplication_binding
+* **New Resource** aaauser_vpnurlpolicy_binding
+* **New Resource** aaagroup_auditsyslogpolicy_binding
+* **New Resource** aaagroup_vpnsessionpolicy_binding
+* **New Resource** aaauser_tmsessionpolicy_binding
+* **New Resource** aaauser_auditsyslogpolicy_binding
+* **New Resource** aaauser_vpntrafficpolicy_binding
+* **New Resource** aaagroup_tmsessionpolicy_binding
+* **New Resource** aaauser_vpnsessionpolicy_binding
+* **New Resource** aaagroup_vpnurlpolicy_binding
+* **New Resource** aaagroup_vpntrafficpolicy_binding
+* **New Resource** aaauser_authorizationpolicy_binding
+* **New Resource** aaagroup_vpnurl_binding
+* **New Resource** aaauser_vpnintranetapplication_binding
+* **New Resource** aaauser_auditnslogpolicy_binding
+* **New Resource** aaagroup_authorizationpolicy_binding
+* **New Resource** aaakcdaccount
+* **New Resource** aaatacacsparams
+* **New Resource** aaagroup
+* **New Resource** aaapreauthenticationparameter
+* **New Resource** aaapreauthenticationpolicy
+* **New Resource** aaaparameter
+* **New Resource** aaauser
+* **New Resource** aaaotpparameter
+* **New Resource** aaassoprofile
+* **New Resource** vlan_nsip6_binding
+* **New Resource** aaacertparams
+* **New Resource** aaaldapparams
+* **New Resource** vlan_channel_binding
+* **New Resource** onlinkipv6prefix
+* **New Resource** rnat6_nsip6_binding
+* **New Resource** rnat_nsip_binding
+* **New Resource** netbridge_nsip6_binding
+* **New Resource** netbridge_nsip_binding
+* **New Resource** nd6ravariables_onlinkipv6prefix_binding
+* **New Resource** ipset_nsip6_binding
+* **New Resource** ipset_nsip_binding
+* **New Resource** ipv6
+* **New Resource** inatparam
+* **New Resource** rnat6
+* **New Resource** l2param
+* **New Resource** nd6ravariables
+* **New Resource** arp
+* **New Resource** l3param
+* **New Resource** nspbr
+* **New Resource** nd6
+* **New Resource** route6
+* **New Resource** lacp
+* **New Resource** snmpcommunity
+* **New Resource** nslicenseproxyserver
+* **New Resource** nsencryptionparams
+* **New Resource** nshostname
+* **New Resource** nscqaparam
+* **New Resource** responderglobal_responderpolicy_binding
+* **New Resource** clusternodegroup_authenticationvserver_binding
+* **New Resource** clusternode_routemonitor_binding
+* **New Resource** clusternodegroup_streamidentifier_binding
+* **New Resource** clusternodegroup_vpnvserver_binding
+* **New Resource** clusternodegroup_nslimitidentifier_binding
+* **New Resource** clusternode
+* **New Resource** clusternodegroup_service_binding
+* **New Resource** clusterinstance
+* **New Resource** clusternodegroup_gslbvserver_binding
+* **New Resource** clusternodegroup_crvserver_binding
+* **New Resource** clusternodegroup_csvserver_binding
+* **New Resource** clusternodegroup_clusternode_binding
+* **New Resource** clusternodegroup_lbvserver_binding
+
+ENHANCEMENTS
+
+* **Documentation Update**
+* Update issue templates for issues and PRs
+
+BUG FIXES
+
+* **Bug Fix** Removed duplicate entry
+* Fixed nsip resource with Required attributes
+
 ## 1.20.0 (August 05, 2022)
 
 FEATURES
