@@ -106,6 +106,7 @@ github.com/citrix/adc-nitro-go/resource/config/router
 github.com/citrix/adc-nitro-go/resource/config/snmp
 github.com/citrix/adc-nitro-go/resource/config/ssl
 github.com/citrix/adc-nitro-go/resource/config/system
+github.com/citrix/adc-nitro-go/resource/config/tm
 github.com/citrix/adc-nitro-go/resource/config/transform
 github.com/citrix/adc-nitro-go/resource/config/utility
 github.com/citrix/adc-nitro-go/resource/config/vpn
