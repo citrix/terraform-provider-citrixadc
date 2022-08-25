@@ -724,6 +724,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_icaglobal_icapolicy_binding": 								   resourceCitrixAdcIcaglobal_icapolicy_binding(),
 		"citrixadc_tmglobal_auditsyslogpolicy_binding": 						   resourceCitrixAdcTmglobal_auditsyslogpolicy_binding(),
 		"citrixadc_tmglobal_auditnslogpolicy_binding": 							   resourceCitrixAdcTmglobal_auditnslogpolicy_binding(),
+		"citrixadc_tmsessionparameter": 										   resourceCitrixAdcTmsessionparameter(),
 	}
 }
 
