@@ -53,6 +53,7 @@ var idempotentInvalidResources = []string{
 	"appfwmultipartformcontenttype",
 	"snmptrap",
 	"dnsmxrec",
+	"dnstxtrec",
 }
 
 // HTTP Headers to be masked and not shown in logs
