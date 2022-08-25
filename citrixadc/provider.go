@@ -708,6 +708,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_systemglobal_authenticationlocalpolicy_binding": 			   resourceCitrixAdcSystemglobal_authenticationlocalpolicy_binding(),
 		"citrixadc_systemglobal_auditnslogpolicy_binding": 		      			   resourceCitrixAdcSystemglobal_auditnslogpolicy_binding(),
 		"citrixadc_systemglobal_authenticationtatacspolicy_binding": 			   resourceCitrixAdcSystemglobal_authenticationtacacspolicy_binding(),
+		"citrixadc_aaauser_intranetip6_binding": 								   resourceCitrixAdcAaauser_intranetip6_binding(),
 	}
 }
 
