@@ -713,6 +713,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_systembackup": 												   resourceCitrixAdcSystembackup(),
 		"citrixadc_systembackup_restore": 										   resourceCitrixAdcSystembackupRestore(),
 		"citrixadc_cmppolicylabel": 											   resourceCitrixAdcCmppolicylabel(),
+		"citrixadc_cmpaction": 													   resourceCitrixAdcCmpaction(),
 	}
 }
 
