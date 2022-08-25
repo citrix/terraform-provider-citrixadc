@@ -751,6 +751,7 @@ func providerResources() map[string]*schema.Resource {
 
 		"citrixadc_hanode":														   resourceCitrixAdcHanode(),
 		"citrixadc_admparameter": 												   resourceCitrixAdcAdmparameter(),
+		"citrixadc_tmtrafficaction":											   resourceCitrixAdcTmtrafficaction(),
 	}
 }
 
