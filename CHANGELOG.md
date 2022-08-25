@@ -1,3 +1,9 @@
+## 1.22.0 (Aug 25, 2022)
+
+BUG FIXES
+
+* Fixed vendor module dependencies
+
 ## 1.21.0 (Aug 25, 2022)
 
 FEATURES
