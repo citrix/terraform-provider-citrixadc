@@ -719,6 +719,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_icaaction": 													   resourceCitrixAdcIcaaction(),
 		"citrixadc_icaaccessprofile": 											   resourceCitrixAdcIcaaccessprofile(),
 		"citrixadc_icalatencyprofile": 										       resourceCitrixAdcIcalatencyprofile(),
+		"citrixadc_ntpparam": 													   resourceCitrixAdcNtpparam(),
 	}
 }
 
