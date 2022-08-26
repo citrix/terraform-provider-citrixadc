@@ -680,6 +680,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_aaatacacsparams": 											   resourceCitrixAdcAaatacacsparams(),
 		"citrixadc_aaakcdaccount": 												   resourceCitrixAdcAaakcdaccount(),
 		"citrixadc_smppuser": 													   resourceCitrixAdcSmppuser(),
+		"citrixadc_spilloverpolicy":											   resourceCitrixAdcSpilloverpolicy(),
 	}
 }
 
