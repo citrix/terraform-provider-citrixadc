@@ -679,7 +679,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_aaagroup": 													   resourceCitrixAdcAaagroup(),
 		"citrixadc_aaatacacsparams": 											   resourceCitrixAdcAaatacacsparams(),
 		"citrixadc_aaakcdaccount": 												   resourceCitrixAdcAaakcdaccount(),
-	}
+		"citrixadc_autoscalepolicy": 											   resourceCitrixAdcAutoscalepolicy(),	}
 }
 
 func providerConfigure(d *schema.ResourceData) (interface{}, error) {
