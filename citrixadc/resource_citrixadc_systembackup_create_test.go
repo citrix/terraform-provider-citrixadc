@@ -23,33 +23,34 @@ import (
 	"testing"
 )
 
-const testAccSystembackup_basic = `
+const testAccSystembackupCreate_basic = `
 
 
-resource "citrixadc_systembackup" "tf_systembackup" {
-	filename         = "my_restore_file.tgz"
+resource "citrixadc_systembackup_create" "tf_systembackup_create" {
+	filename         = "my_backup_file"
+	level            = "basic"
+	uselocaltimezone = "true"
   }
-  
   
 `
 
-func TestAccSystembackup_basic(t *testing.T) {
+func TestAccSystembackupCreate_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckSystembackupDestroy,
+		CheckDestroy: testAccCheckSystembackupCreateDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccSystembackup_basic,
+				Config: testAccSystembackupCreate_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSystembackupExist("citrixadc_systembackup.tf_systembackup", nil),
+					testAccCheckSystembackupCreateExist("citrixadc_systembackup_create.tf_systembackup_create", nil),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckSystembackupExist(n string, id *string) resource.TestCheckFunc {
+func testAccCheckSystembackupCreateExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -69,7 +70,7 @@ func testAccCheckSystembackupExist(n string, id *string) resource.TestCheckFunc 
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Systembackup.Type(), rs.Primary.Attributes["filename"])
+		data, err := nsClient.FindResource(service.Systembackup.Type(), rs.Primary.Attributes["filename"] + ".tgz")
 
 		if err != nil {
 			return err
@@ -84,7 +85,7 @@ func testAccCheckSystembackupExist(n string, id *string) resource.TestCheckFunc 
 }
 
 
-func testAccCheckSystembackupDestroy(s *terraform.State) error {
+func testAccCheckSystembackupCreateDestroy(s *terraform.State) error {
 	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
 
 	for _, rs := range s.RootModule().Resources {
@@ -96,7 +97,7 @@ func testAccCheckSystembackupDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Systembackup.Type(), rs.Primary.Attributes["filename"])
+		_, err := nsClient.FindResource(service.Systembackup.Type(), rs.Primary.Attributes["filename"] + ".tgz")
 		if err == nil {
 			return fmt.Errorf("systembackup %s still exists", rs.Primary.ID)
 		}

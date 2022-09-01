@@ -23,13 +23,10 @@ import (
 )
 
 const testAccSystembackupRestore_basic = `
-
-
-resource "citrixadc_systembackup_restore" "tf_systembackup_restore" {
-	filename         = "my_restore_file.tgz"
-	level            = "basic"
-	uselocaltimezone = "true"
-  }
+	resource "citrixadc_systembackup_restore" "tf_systembackup_restore" {
+		filename   = "my_restore_file.tgz"
+		skipbackup = "false"
+	}
   
 `
 

@@ -20,10 +20,6 @@ resource "citrixadc_systembackup_restore" "tf_systembackup_restore" {
 ## Argument Reference
 
 * `filename` - (Required) Name of the backup file(*.tgz) to be restored. Maximum length =  63
-* `uselocaltimezone` - (Optional) This option will create backup file with local timezone timestamp.
-* `level` - (Optional) Level of data to be backed up. Possible values: [ basic, full ]
-* `includekernel` - (Optional) Use this option to add kernel in the backup file. Possible values: [ NO, YES ]
-* `comment` - (Optional) Comment specified at the time of creation of the backup file(*.tgz).
 * `skipbackup` - (Optional) Use this option to skip taking backup during restore operation.
 
 
