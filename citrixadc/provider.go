@@ -736,6 +736,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_interfacepair": 												   resourceCitrixAdcInterfacepair(),
 		"citrixadc_channel": 													   resourceCitrixAdcChannel(),
 		"citrixadc_userprotocol": 												   resourceCitrixAdcUserprotocol(),
+		"citrixadc_uservserver": 												   resourceCitrixAdcUservserver(),
 	}
 }
 
