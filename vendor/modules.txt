@@ -80,6 +80,8 @@ github.com/blang/semver
 github.com/bmatcuk/doublestar
 # github.com/citrix/adc-nitro-go v0.0.0-20220729103504-dcff5ad76fcd
 github.com/citrix/adc-nitro-go/resource/config/aaa
+github.com/citrix/adc-nitro-go/resource/config/adm
+github.com/citrix/adc-nitro-go/resource/config/analytics
 github.com/citrix/adc-nitro-go/resource/config/appflow
 github.com/citrix/adc-nitro-go/resource/config/appfw
 github.com/citrix/adc-nitro-go/resource/config/audit
@@ -98,6 +100,7 @@ github.com/citrix/adc-nitro-go/resource/config/ha
 github.com/citrix/adc-nitro-go/resource/config/ica
 github.com/citrix/adc-nitro-go/resource/config/ipsec
 github.com/citrix/adc-nitro-go/resource/config/lb
+github.com/citrix/adc-nitro-go/resource/config/lsn
 github.com/citrix/adc-nitro-go/resource/config/network
 github.com/citrix/adc-nitro-go/resource/config/ns
 github.com/citrix/adc-nitro-go/resource/config/ntp
