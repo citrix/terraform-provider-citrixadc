@@ -750,6 +750,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_feoaction": 													   resourceCitrixAdcFeoaction(),
 
 		"citrixadc_hanode":														   resourceCitrixAdcHanode(),
+		"citrixadc_admparameter": 												   resourceCitrixAdcAdmparameter(),
 	}
 }
 
