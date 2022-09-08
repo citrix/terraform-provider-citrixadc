@@ -745,6 +745,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_feoglobal_feopolicy_binding": 								   resourceCitrixAdcFeoglobal_feopolicy_binding(),
 		"citrixadc_feopolicy": 													   resourceCitrixAdcFeopolicy(),
 		"citrixadc_ipsecalgprofile": 											   resourceCitrixAdcIpsecalgprofile(),
+		"citrixadc_dbdbprofile": 												   resourceCitrixAdcDbdbprofile(),
 	}
 }
 
