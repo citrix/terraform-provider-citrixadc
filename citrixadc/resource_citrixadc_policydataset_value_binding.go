@@ -17,6 +17,9 @@ func resourceCitrixAdcPolicydataset_value_binding() *schema.Resource {
 		Create:        createPolicydataset_value_bindingFunc,
 		Read:          readPolicydataset_value_bindingFunc,
 		Delete:        deletePolicydataset_value_bindingFunc,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"comment": &schema.Schema{
 				Type:     schema.TypeString,
