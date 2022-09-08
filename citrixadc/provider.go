@@ -749,6 +749,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_auditnslogglobal_auditnslogpolicy_binding": 					   resourceCitrixAdcAuditnslogglobal_auditnslogpolicy_binding(),
 		"citrixadc_feoaction": 													   resourceCitrixAdcFeoaction(),
 
+		"citrixadc_hanode":														   resourceCitrixAdcHanode(),
 	}
 }
 
