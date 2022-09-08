@@ -731,6 +731,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_tmtrafficpolicy": 											   resourceCitrixAdcTmtrafficpolicy(),
 		"citrixadc_ipsecparameter": 											   resourceCitrixAdcIpsecparameter(),							
 		"citrixadc_tmglobal_tmtrafficpolicy_binding": 							   resourceCitrixAdcTmglobal_tmtrafficpolicy_binding(),
+		"citrixadc_tmsamlssoprofile":											   resourceCitrixAdcTmsamlssoprofile(),
 	}
 }
 
