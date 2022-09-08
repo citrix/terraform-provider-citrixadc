@@ -753,6 +753,8 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_tmtrafficaction":											   resourceCitrixAdcTmtrafficaction(),
 		"citrixadc_auditsyslogglobal_auditsyslogpolicy_binding": 				   resourceCitrixAdcAuditsyslogglobal_auditsyslogpolicy_binding(),
 		"citrixadc_systembackup_create": 										   resourceCitrixAdcSystemCreatebackup(),
+		"citrixadc_locationfile": 												   resourceCitrixAdcLocationfile(),
+		"citrixadc_locationfile_import": 										   resourceCitrixAdcLocationImportfile(),
 	}
 }
 
