@@ -12,17 +12,17 @@ The nsip resource is used to create nsip, snip and vip, ipv4 addresses for the A
 ```hcl
 resource "citrixadc_nsip" "tf_nsip" {
     ipaddress = "192.168.2.55"
-    type = "VIP"
-    netmask = "255.255.255.0"
-    icmp = "ENABLED"
+    type      = "VIP"
+    netmask   = "255.255.255.0"
+    icmp      = "ENABLED"
 }
 ```
 
 
 ## Argument Reference
 
-* `ipaddress` - (Optional) IPv4 address to create on the Citrix ADC. Cannot be changed after the IP address is created.
-* `netmask` - (Optional) Subnet mask associated with the IP address.
+* `ipaddress` - (Required) IPv4 address to create on the Citrix ADC. Cannot be changed after the IP address is created.
+* `netmask` - (Required) Subnet mask associated with the IP address.
 * `type` - (Optional) Type of the IP address to create on the Citrix ADC. Cannot be changed after the IP address is created. The following are the different types of Citrix ADC owned IP addresses: * A Subnet IP (SNIP) address is used by the Citrix ADC to communicate with the servers. The Citrix ADC also uses the subnet IP address when generating its own packets, such as packets related to dynamic routing protocols, or to send monitor probes to check the health of the servers. * A Virtual IP (VIP) address is the IP address associated with a virtual server. It is the IP address to which clients connect. An appliance managing a wide range of traffic may have many VIPs configured. Some of the attributes of the VIP address are customized to meet the requirements of the virtual server. * A GSLB site IP (GSLBIP) address is associated with a GSLB site. It is not mandatory to specify a GSLBIP address when you initially configure the Citrix ADC. A GSLBIP address is used only when you create a GSLB site. * A Cluster IP (CLIP) address is the management address of the cluster. All cluster configurations must be performed by accessing the cluster through this IP address. Possible values: [ SNIP, VIP, NSIP, GSLBsiteIP, CLIP ]
 * `arp` - (Optional) Respond to ARP requests for this IP address. Possible values: [ ENABLED, DISABLED ]
 * `icmp` - (Optional) Respond to ICMP requests for this IP address. Possible values: [ ENABLED, DISABLED ]
@@ -68,7 +68,7 @@ In addition to the arguments, the following attributes are available:
 
 ## Import
 
-A nsip can be imported using its name, e.g.
+A nsip can be imported using its ipaddress, e.g.
 
 ```shell
 terraform import citrixadc_nsip.tf_nsip 192.168.2.55
