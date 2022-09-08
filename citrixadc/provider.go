@@ -741,6 +741,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_auditsyslogparams": 										       resourceCitrixAdcAuditsyslogparams(),
 		"citrixadc_auditnslogparams": 											   resourceCitrixAdcAuditnslogparams(),
 		"citrixadc_analyticsprofile": 											   resourceCitrixAdcAnalyticsprofile(),
+		"citrixadc_lldpparam": 													   resourceCitrixAdcLldpparam(),
 	}
 }
 
