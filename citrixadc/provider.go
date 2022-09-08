@@ -729,6 +729,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_tmsessionpolicy": 											   resourceCitrixAdcTmsessionpolicy(),
 		"citrixadc_tmsessionaction": 											   resourceCitrixAdcTmsessionaction(),
 		"citrixadc_tmtrafficpolicy": 											   resourceCitrixAdcTmtrafficpolicy(),
+		"citrixadc_ipsecparameter": 											   resourceCitrixAdcIpsecparameter(),							
 	}
 }
 
