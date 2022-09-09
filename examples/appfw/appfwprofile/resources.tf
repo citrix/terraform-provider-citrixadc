@@ -28,4 +28,9 @@ resource citrixadc_appfwprofile demo_appfw {
     xmlvalidationaction = ["none"]
     xmlwsiaction = ["none"]
     xmlxssaction = ["none"]
+    postbodylimitaction= ["block", "stats"]
+    bufferoverflowmaxquerylength = 100
+    cookiehijackingaction = ["none"]
+    infercontenttypexmlpayloadaction = ["none"]
+    cmdinjectionaction = ["none"]
 }
