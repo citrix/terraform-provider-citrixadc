@@ -684,6 +684,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_autoscaleprofile": 											   resourceCitrixAdcAutoscaleprofile(),
 		"citrixadc_auditnslogpolicy":											   resourceCitrixAdcAuditnslogpolicy(),
 		"citrixadc_cachepolicylabel":											   resourceCitrixAdcCachepolicylabel(),
+		"citrixadc_auditnslogaction":											   resourceCitrixAdcAuditnslogaction(),
 	}
 }
 
