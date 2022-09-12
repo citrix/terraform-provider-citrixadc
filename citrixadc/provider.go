@@ -770,6 +770,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_lsnclient": 													   resourceCitrixAdcLsnclient(),
 		"citrixadc_lsnappsattributes": 											   resourceCitrixAdcLsnappsattributes(),
 		"citrixadc_lsngroup": 													   resourceCitrixAdcLsngroup(),
+		"citrixadc_lsnappsprofile": 											   resourceCitrixAdcLsnappsprofile(),
 	}
 }
 
