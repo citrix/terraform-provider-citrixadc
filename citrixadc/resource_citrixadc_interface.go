@@ -145,6 +145,11 @@ func resourceCitrixAdcInterface() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"state": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -263,6 +268,7 @@ func updateInterfaceFunc(d *schema.ResourceData, meta interface{}) error {
 		Id: d.Get("interface_id").(string),
 	}
 	hasChange := false
+	stateChange := false
 	if d.HasChange("autoneg") {
 		log.Printf("[DEBUG]  citrixadc-provider: Autoneg has changed for Interface %s, starting update", interfaceId)
 		Interface.Autoneg = d.Get("autoneg").(string)
@@ -388,6 +394,16 @@ func updateInterfaceFunc(d *schema.ResourceData, meta interface{}) error {
 		Interface.Trunkmode = d.Get("trunkmode").(string)
 		hasChange = true
 	}
+	if d.HasChange("state") {
+		log.Printf("[DEBUG]  citrixadc-provider: State has changed for Interface %s, starting update", interfaceId)
+		stateChange = true
+	}
+	if stateChange {
+		err := doInterfaceStateChange(d, client)
+		if err != nil {
+			return err
+		}
+	}
 
 	if hasChange {
 		_, err := client.UpdateResource(service.Interface.Type(), "", &Interface)
@@ -398,6 +414,33 @@ func updateInterfaceFunc(d *schema.ResourceData, meta interface{}) error {
 	return readInterfaceFunc(d, meta)
 }
 
+func doInterfaceStateChange(d *schema.ResourceData, client *service.NitroClient) error {
+	log.Printf("[DEBUG]  netscaler-provider: In doLbvserverStateChange")
+
+	Interface := network.Interface{
+	Id:              d.Get("interface_id").(string),
+	}
+
+	newstate := d.Get("state").(string)
+
+	// Enable action
+	if newstate == "ENABLED" {
+		err := client.ActOnResource(service.Interface.Type(), Interface, "enable")
+		if err != nil {
+			return err
+		}
+	} else if newstate == "DISABLED" {
+		// Add attributes relevant to the disable operation
+		err := client.ActOnResource(service.Interface.Type(), Interface, "disable")
+		if err != nil {
+			return err
+		}
+	} else {
+		return fmt.Errorf("\"%s\" is not a valid state. Use (\"ENABLED\", \"DISABLED\").", newstate)
+	}
+
+	return nil
+}
 func deleteInterfaceFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteInterfaceFunc")
 	// We cannot really delete the interface.
