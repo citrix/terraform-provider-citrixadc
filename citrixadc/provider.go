@@ -773,6 +773,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_lsnappsprofile": 											   resourceCitrixAdcLsnappsprofile(),
 		"citrixadc_lsnlogprofile": 												   resourceCitrixAdcLsnlogprofile(),
 		"citrixadc_lsnpool": 													   resourceCitrixAdcLsnpool(),
+		"citrixadc_lsnrtspalgprofile": 										       resourceCitrixAdcLsnrtspalgprofile(),
 	}
 }
 
