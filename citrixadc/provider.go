@@ -758,6 +758,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_feoparameter": 												   resourceCitrixAdcFeoparameter(),
 		"citrixadc_appqoepolicy": 												   resourceCitrixAdcAppqoepolicy(),
 		"citrixadc_appqoecustomresp": 											   resourceCitrixAdcAppqoecustomresp(),
+		"citrixadc_appqoeparameter": 											   resourceCitrixAdcAppqoeparameter(),
 	}
 }
 
