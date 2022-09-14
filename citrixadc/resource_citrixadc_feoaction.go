@@ -6,6 +6,7 @@ import (
 
 	"fmt"
 	"log"
+	"strconv"
 )
 
 func resourceCitrixAdcFeoaction() *schema.Resource {
@@ -25,7 +26,7 @@ func resourceCitrixAdcFeoaction() *schema.Resource {
 				ForceNew: true,
 			},
 			"cachemaxage": &schema.Schema{
-				Type:     schema.TypeInt,
+				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
@@ -143,11 +144,12 @@ func createFeoactionFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createFeoactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	feoactionName := d.Get("name").(string)
-	
+
 	feoaction := make(map[string]interface{})
 
 	if v, ok := d.GetOkExists("cachemaxage"); ok {
-		feoaction["cachemaxage"] = v.(int)
+		val, _ := strconv.Atoi(v.(string))
+		feoaction["cachemaxage"] = val
 	}
 	if v, ok := d.GetOk("clientsidemeasurements"); ok {
 		feoaction["clientsidemeasurements"] = v.(bool)
@@ -279,7 +281,8 @@ func updateFeoactionFunc(d *schema.ResourceData, meta interface{}) error {
 	hasChange := false
 	if d.HasChange("cachemaxage") {
 		log.Printf("[DEBUG]  citrixadc-provider: Cachemaxage has changed for feoaction %s, starting update", feoactionName)
-		feoaction.Cachemaxage = d.Get("cachemaxage").(int)
+		val, _ := strconv.Atoi(d.Get("cachemaxage").(string))
+		feoaction.Cachemaxage = val
 		hasChange = true
 	}
 	if d.HasChange("clientsidemeasurements") {

@@ -748,7 +748,6 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_dbdbprofile": 												   resourceCitrixAdcDbdbprofile(),
 		"citrixadc_auditnslogglobal_auditnslogpolicy_binding": 					   resourceCitrixAdcAuditnslogglobal_auditnslogpolicy_binding(),
 		"citrixadc_feoaction": 													   resourceCitrixAdcFeoaction(),
-
 		"citrixadc_hanode":														   resourceCitrixAdcHanode(),
 		"citrixadc_admparameter": 												   resourceCitrixAdcAdmparameter(),
 		"citrixadc_tmtrafficaction":											   resourceCitrixAdcTmtrafficaction(),
