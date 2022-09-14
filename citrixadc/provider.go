@@ -755,6 +755,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_systembackup_create": 										   resourceCitrixAdcSystemCreatebackup(),
 		"citrixadc_locationfile": 												   resourceCitrixAdcLocationfile(),
 		"citrixadc_locationfile_import": 										   resourceCitrixAdcLocationImportfile(),
+		"citrixadc_feoparameter": 												   resourceCitrixAdcFeoparameter(),
 	}
 }
 
@@ -780,7 +781,6 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	if d.Get("do_login").(bool) {
 		client.Login()
 	}
