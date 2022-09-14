@@ -273,6 +273,35 @@ func resourceCitrixAdcAppfwprofile() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"postbodylimitaction": &schema.Schema{
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"bufferoverflowmaxquerylength": &schema.Schema{
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"cookiehijackingaction": &schema.Schema{
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"infercontenttypexmlpayloadaction": &schema.Schema{
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"cmdinjectionaction": &schema.Schema{
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"streaming": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -489,6 +518,11 @@ func createAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 
 	appfwprofile := appfw.Appfwprofile{
 		Name:                                       appfwprofileName,
+		Postbodylimitaction:                        toStringList(d.Get("postbodylimitaction").([]interface{})),
+		Bufferoverflowmaxquerylength:               d.Get("bufferoverflowmaxquerylength").(int),
+		Cookiehijackingaction:    					toStringList(d.Get("cookiehijackingaction").([]interface{})),
+		Infercontenttypexmlpayloadaction:   		toStringList(d.Get("infercontenttypexmlpayloadaction").([]interface{})),
+		Cmdinjectionaction: 						toStringList(d.Get("cmdinjectionaction").([]interface{})),
 		Addcookieflags:                             d.Get("addcookieflags").(string),
 		Archivename:                                d.Get("archivename").(string),
 		Bufferoverflowmaxcookielength:              d.Get("bufferoverflowmaxcookielength").(int),
@@ -610,6 +644,11 @@ func readAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	d.Set("name", data["name"])
+	d.Set("postbodylimitaction", data["postbodylimitaction"])
+	d.Set("bufferoverflowmaxquerylength", data["bufferoverflowmaxquerylength"])
+	d.Set("cookiehijackingaction", data["cookiehijackingaction"])
+	d.Set("infercontenttypexmlpayloadaction", data["infercontenttypexmlpayloadaction"])
+	d.Set("cmdinjectionaction", data["cmdinjectionaction"])
 	d.Set("addcookieflags", data["addcookieflags"])
 	d.Set("archivename", data["archivename"])
 	d.Set("bufferoverflowmaxcookielength", data["bufferoverflowmaxcookielength"])
@@ -717,6 +756,31 @@ func updateAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 		Name: d.Get("name").(string),
 	}
 	hasChange := false
+	if d.HasChange("postbodylimitaction") {
+		log.Printf("[DEBUG]  citrixadc-provider: postbodylimitaction has changed for appfwprofile %s, starting update", appfwprofileName)
+		appfwprofile.Postbodylimitaction = toStringList(d.Get("postbodylimitaction").([]interface{}))
+		hasChange = true
+	}
+	if d.HasChange("bufferoverflowmaxquerylength") {
+		log.Printf("[DEBUG]  citrixadc-provider: bufferoverflowmaxquerylength has changed for appfwprofile %s, starting update", appfwprofileName)
+		appfwprofile.Bufferoverflowmaxquerylength = d.Get("bufferoverflowmaxquerylength").(int)
+		hasChange = true
+	}
+	if d.HasChange("cookiehijackingaction") {
+		log.Printf("[DEBUG]  citrixadc-provider: cookiehijackingaction has changed for appfwprofile %s, starting update", appfwprofileName)
+		appfwprofile.Cookiehijackingaction = toStringList(d.Get("cookiehijackingaction").([]interface{}))
+		hasChange = true
+	}
+	if d.HasChange("infercontenttypexmlpayloadaction") {
+		log.Printf("[DEBUG]  citrixadc-provider: infercontenttypexmlpayloadaction has changed for appfwprofile %s, starting update", appfwprofileName)
+		appfwprofile.Infercontenttypexmlpayloadaction = toStringList(d.Get("infercontenttypexmlpayloadaction").([]interface{}))
+		hasChange = true
+	}
+	if d.HasChange("cmdinjectionaction") {
+		log.Printf("[DEBUG]  citrixadc-provider: cmdinjectionaction has changed for appfwprofile %s, starting update", appfwprofileName)
+		appfwprofile.Cmdinjectionaction = toStringList(d.Get("cmdinjectionaction").([]interface{}))
+		hasChange = true
+	}
 	if d.HasChange("addcookieflags") {
 		log.Printf("[DEBUG]  citrixadc-provider: Addcookieflags has changed for appfwprofile %s, starting update", appfwprofileName)
 		appfwprofile.Addcookieflags = d.Get("addcookieflags").(string)
