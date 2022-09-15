@@ -794,6 +794,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_hanode_routemonitor_binding": 								   resourceCitrixAdcHanode_routemonitor_binding(),
 		"citrixadc_hanode_routemonitor6_binding": 								   resourceCitrixAdcHanode_routemonitor6_binding(),
 		"citrixadc_contentinspectionaction": 									   resourceCitrixAdcContentinspectionaction(),
+		"citrixadc_pcpserver": 													   resourceCitrixAdcPcpserver(),
 	}
 }
 
