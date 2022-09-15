@@ -127,6 +127,8 @@ github.com/citrix/adc-nitro-go v0.0.0-20220729103504-dcff5ad76fcd h1:ENwxK15F0u+
 github.com/citrix/adc-nitro-go v0.0.0-20220729103504-dcff5ad76fcd/go.mod h1:DL1n+MgO15981ahrt+CsQVv43yyUrTdigPq3dIxydD8=
 github.com/citrix/adc-nitro-go v0.0.0-20220907093116-0f9fcbfd3f14 h1:4w295DwcZR7SfAJUnDLpQ72kke6y8EJ2l+D/8ctoEiE=
 github.com/citrix/adc-nitro-go v0.0.0-20220907093116-0f9fcbfd3f14/go.mod h1:DL1n+MgO15981ahrt+CsQVv43yyUrTdigPq3dIxydD8=
+github.com/citrix/adc-nitro-go v0.0.0-20220909112717-34ceba3d2193 h1:OqT6fnKVHEXE+Qf24TA1XogouIHHJr4bCvg0vwL2Gq4=
+github.com/citrix/adc-nitro-go v0.0.0-20220909112717-34ceba3d2193/go.mod h1:DL1n+MgO15981ahrt+CsQVv43yyUrTdigPq3dIxydD8=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
 github.com/cockroachdb/datadriven v0.0.0-20190809214429-80d97fb3cbaa/go.mod h1:zn76sxSg3SzpJ0PPJaLDCu+Bu0Lg3sKTORVIj19EIF8=
 github.com/containerd/containerd v1.3.0/go.mod h1:bC6axHOhabU15QhwfG7w5PipXdVtMXFTttgp+kVtyUA=
