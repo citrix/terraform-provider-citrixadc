@@ -1,3 +1,89 @@
+## 1.23.0 (Sept 15, 2022)
+
+FEATURES
+
+* **New Resource** rdpserverprofile
+* **New Resource** rdpclientprofile
+* **New Resource** pcpprofile
+* **New Resource** pcpserver
+* **New Resource** contentinspectionaction
+* **New Resource** hanode_routemonitor6_binding
+* **New Resource** hanode_routemonitor_binding
+* **New Resource** streamidentifier
+* **New Resource** lsngroup_lsnpool_binding
+* **New Resource** lsngroup_lsnlogprofile_binding
+* **New Resource** lsngroup_lsnhttphdrlogprofile_binding
+* **New Resource** lsngroup_lsnappsprofile_binding
+* **New Resource** lsnclient_nsacl6_binding
+* **New Resource** lsnclient_nsacl_binding
+* **New Resource** lsnclient_network6_binding
+* **New Resource** lsnclient_network_binding
+* **New Resource** lsnappsprofile_port_binding
+* **New Resource** lsnappsprofile_lsnappsattributes_binding
+* **New Resource** lsnstatic
+* **New Resource** lsnip6profile
+* **New Resource** lsntransportprofile
+* **New Resource** cacheparameter
+* **New Resource** ntpsync
+* **New Resource** lsnsipalgprofile
+* **New Resource** lsnrtspalgprofile
+* **New Resource** lsnpool
+* **New Resource** lsnlogprofile
+* **New Resource** lsnappsprofile
+* **New Resource** lsngroup
+* **New Resource** lsnappsattributes
+* **New Resource** lsnclient
+* **New Resource** contentinspectionpolicylabel_contentinspectionpolicy_binding
+* **New Resource** contentinspectionglobal_contentinspectionpolicy_binding
+* **New Resource** contentinspectionprofile
+* **New Resource** contentinspectionpolicylabel
+* **New Resource** contentinspectioncallout
+* **New Resource** contentinspectionparameter
+* **New Resource** contentinspectionpolicy
+* **New Resource** appqoeaction
+* **New Resource** appqoeparameter
+* **New Resource** customresp
+* **New Resource** appqoepolicy
+* **New Resource** feoparameter
+* **New Resource** locationfile
+* **New Resource** feoaction
+* **New Resource** systembackup
+* **New Resource** auditsyslogglobal_auditsyslogpolicy_binding
+* **New Resource** tmtrafficaction
+* **New Resource** admparameter
+* **New Resource** hanode
+* **New Resource** feoaction
+* **New Resource** auditnslogglobal_auditnslogpolicy_binding
+* **New Resource** dbdbprofile
+* **New Resource** ipsecalgprofile
+* **New Resource** feopolicy
+* **New Resource** feologbal_feopolicy_binding
+* **New Resource** lldpparam
+* **New Resource** analyticsprofile
+* **New Resource** auditnslogparams
+* **New Resource** auditsyslogparams
+* **New Resource** dbuser
+* **New Resource** uservserver
+* **New Resource** userprotocol
+* **New Resource** channel
+* **New Resource** interfacepair
+* **New Resource** ipsecprofile
+* **New Resource** tmsamlssoprofile
+* **New Resource** tmglobal_tmtrafficpolicy_binding
+* **New Resource** ipsecparameter
+* **New Resource** tmtrafficpolicy
+* **New Resource** tmsessionaction
+* **New Resource** tmsessionpolicy
+* **New Resource** tmformssoaction
+
+ENHANCEMENTS
+
+* **Enhancements** Updated policydataset_value_binding Resource
+* **Enhancements** updated appfwprofile attributes
+* **Enhancements** Fixed nsip documentation
+* **Enhancements** Added enable/disable functionality
+
+
 ## 1.22.0 (Aug 25, 2022)
 
 BUG FIXES
