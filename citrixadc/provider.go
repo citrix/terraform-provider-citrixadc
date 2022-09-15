@@ -789,6 +789,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_lsngroup_lsnappsprofile_binding": 							   resourceCitrixAdcLsngroup_lsnappsprofile_binding(),
 		"citrixadc_lsngroup_lsnhttphdrlogprofile_binding": 						   resourceCitrixAdcLsngroup_lsnhttphdrlogprofile_binding(),
 		"citrixadc_lsngroup_lsnlogprofile_binding": 							   resourceCitrixAdcLsngroup_lsnlogprofile_binding(),
+		"citrixadc_lsngroup_lsnpool_binding": 									   resourceCitrixAdcLsngroup_lsnpool_binding(),
 	}
 }
 
