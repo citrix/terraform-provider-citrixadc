@@ -781,6 +781,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_lsnip6profile": 												   resourceCitrixAdcLsnip6profile(),
 		"citrixadc_lsnstatic": 													   resourceCitrixAdcLsnstatic(),
 		"citrixadc_lsnappsprofile_lsnappsattributes_binding": 					   resourceCitrixAdcLsnappsprofile_lsnappsattributes_binding(),
+		"citrixadc_lsnappsprofile_port_binding": 								   resourceCitrixAdcLsnappsprofile_port_binding(),
 	}
 }
 
