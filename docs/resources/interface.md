@@ -45,6 +45,7 @@ resource "citrixadc_interface" "tf_interface" {
 * `bandwidthnormal` - (Optional) Normal threshold value for the bandwidth usage of the interface, in Mbps. When the bandwidth usage of the interface becomes less than or equal to the specified normal threshold after exceeding the high threshold, the Citrix ADC generates an SNMP trap message to indicate that the bandwidth usage has returned to normal.
 * `lldpmode` - (Optional) Link Layer Discovery Protocol (LLDP) mode for an interface. The resultant LLDP mode of an interface depends on the LLDP mode configured at the global and the interface levels. Possible values: [ NONE, TRANSMITTER, RECEIVER, TRANSCEIVER ]
 * `lrsetpriority` - (Optional) LRSET port priority, expressed as an integer ranging from 1 to 1024. The highest priority is 1. The Citrix ADC limits the number of interfaces in an LRSET to 8. Within a LRSET the highest LR Priority Interface is considered as the first candidate for the Active interface, if the interface is UP.
+* `state` - (Optional) Link state of the interface (UP/DOWN). Default value: ENABLED Possible values = [ENABLED, DISABLED]
 
 
 ## Attribute Reference
