@@ -785,6 +785,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_lsnclient_network_binding": 									   resourceCitrixAdcLsnclient_network_binding(),
 		"citrixadc_lsnclient_network6_binding": 								   resourceCitrixAdcLsnclient_network6_binding(),
 		"citrixadc_lsnclient_nsacl_binding": 									   resourceCitrixAdcLsnclient_nsacl_binding(),
+		"citrixadc_lsnclient_nsacl6_binding": 									   resourceCitrixAdcLsnclient_nsacl6_binding(),
 	}
 }
 
