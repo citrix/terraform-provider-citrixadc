@@ -768,6 +768,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_contentinspectionglobal_contentinspectionpolicy_binding": 	   resourceCitrixAdcContentinspectionglobal_contentinspectionpolicy_binding(),
 		"citrixadc_contentinspectionpolicylabel_contentinspectionpolicy_binding":  resourceCitrixAdcContentinspectionpolicylabel_contentinspectionpolicy_binding(),
 		"citrixadc_lsnclient": 													   resourceCitrixAdcLsnclient(),
+		"citrixadc_lsnappsattributes": 											   resourceCitrixAdcLsnappsattributes(),
 	}
 }
 
