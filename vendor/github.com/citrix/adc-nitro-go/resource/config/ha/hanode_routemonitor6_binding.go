@@ -39,7 +39,7 @@ type Hanoderoutemonitor6binding struct {
 	/**
 	* Number that uniquely identifies the local node. The ID of the local node is always 0.
 	*/
-	Id int `json:"id,omitempty"`
+	Id int `json:"id"`
 
 
 }

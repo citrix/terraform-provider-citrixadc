@@ -23,7 +23,7 @@ type Hanode struct {
 	/**
 	* Number that uniquely identifies the node. For self node, it will always be 0. Peer node values can range from 1-64.
 	*/
-	Id int `json:"id,omitempty"`
+	Id int `json:"id"`
 	/**
 	* The NSIP or NSIP6 address of the node to be added for an HA configuration. This setting is neither propagated nor synchronized.
 	*/

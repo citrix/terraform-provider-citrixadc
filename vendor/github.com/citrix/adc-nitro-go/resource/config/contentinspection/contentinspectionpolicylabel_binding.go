@@ -14,32 +14,16 @@
 *   limitations under the License.
 */
 
-package ha
+package contentinspection
 
 /**
-* Binding class showing the routemonitor that can be bound to hanode.
+* Binding object which returns the resources bound to contentinspectionpolicylabel_binding. 
 */
-type Hanoderoutemonitorbinding struct {
+type Contentinspectionpolicylabelbinding struct {
 	/**
-	* The IP address (IPv4 or IPv6).
+	* Name of the contentInspection policy label.
 	*/
-	Routemonitor string `json:"routemonitor,omitempty"`
-	/**
-	* The netmask.
-	*/
-	Netmask string `json:"netmask,omitempty"`
-	/**
-	* The flags for this entry.
-	*/
-	Flags int `json:"flags,omitempty"`
-	/**
-	* State for route monitor
-	*/
-	Routemonitorstate string `json:"routemonitorstate,omitempty"`
-	/**
-	* Number that uniquely identifies the local node. The ID of the local node is always 0.
-	*/
-	Id int `json:"id"`
+	Labelname string `json:"labelname,omitempty"`
 
 
 }

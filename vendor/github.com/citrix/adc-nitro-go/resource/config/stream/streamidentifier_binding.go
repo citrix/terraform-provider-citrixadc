@@ -14,19 +14,16 @@
 *   limitations under the License.
 */
 
-package cloud
+package stream
 
 /**
-* Configuration for cloud paramInternal resource.
+* Binding object which returns the resources bound to streamidentifier_binding. 
 */
-type Cloudparaminternal struct {
+type Streamidentifierbinding struct {
 	/**
-	* Indicates if GUI in in FTU mode or not
+	* The name of stream identifier.
 	*/
-	Nonftumode string `json:"nonftumode,omitempty"`
+	Name string `json:"name,omitempty"`
 
-	//------- Read only Parameter ---------;
-
-	Iamperm string `json:"iamperm,omitempty"`
 
 }

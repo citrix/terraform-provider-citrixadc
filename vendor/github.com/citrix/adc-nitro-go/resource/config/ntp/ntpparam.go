@@ -31,10 +31,10 @@ type Ntpparam struct {
 	/**
 	* Autokey protocol requires the keys to be refreshed periodically. This parameter specifies the interval between regenerations of new session keys. In seconds, expressed as a power of 2.
 	*/
-	Autokeylogsec int `json:"autokeylogsec,omitempty"`
+	Autokeylogsec int `json:"autokeylogsec"`
 	/**
 	* Interval between re-randomizations of the autokey seeds to prevent brute-force attacks on the autokey algorithms.
 	*/
-	Revokelogsec int `json:"revokelogsec,omitempty"`
+	Revokelogsec int `json:"revokelogsec"`
 
 }

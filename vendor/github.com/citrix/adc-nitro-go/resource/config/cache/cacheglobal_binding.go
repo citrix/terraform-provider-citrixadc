@@ -14,18 +14,12 @@
 *   limitations under the License.
 */
 
-package cloud
+package cache
 
 /**
-* Configuration for Cloud autoscalegroup resource.
+* Binding object which returns the resources bound to cacheglobal_binding. 
 */
-type Cloudautoscalegroup struct {
-	Name string `json:"name,omitempty"`
+type Cacheglobalbinding struct {
 
-	//------- Read only Parameter ---------;
-
-	Azcount string `json:"azcount,omitempty"`
-	Aznames string `json:"aznames,omitempty"`
-	Graceful string `json:"graceful,omitempty"`
 
 }

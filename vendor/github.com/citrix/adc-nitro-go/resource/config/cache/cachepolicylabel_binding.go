@@ -14,19 +14,16 @@
 *   limitations under the License.
 */
 
-package cloud
+package cache
 
 /**
-* Configuration for Allowed ticket profile for NGS resource.
+* Binding object which returns the resources bound to cachepolicylabel_binding. 
 */
-type Cloudallowedngsticketprofile struct {
+type Cachepolicylabelbinding struct {
 	/**
-	* Profile name for allowed tickets
+	* Name of the cache-policy label about which to display information.
 	*/
-	Name string `json:"name,omitempty"`
-	/**
-	* Created name for allowed tickets
-	*/
-	Creator string `json:"creator,omitempty"`
+	Labelname string `json:"labelname,omitempty"`
+
 
 }

@@ -336,8 +336,19 @@ func (c *NitroClient) DeleteResource(resourceType string, resourceName string) e
 //DeleteResourceWithArgs deletes a resource of supplied type and name. Args are supplied as an array of strings
 //Each array entry is formatted as "key:value"
 func (c *NitroClient) DeleteResourceWithArgs(resourceType string, resourceName string, args []string) error {
-
-	_, err := c.listResourceWithArgs(resourceType, resourceName, args)
+	var err error
+	if resourceType == "snmptrap_snmpuser_binding" {
+		//Remove unwanted argument (username) for listing but keep it for delete operation
+		argsWithoutUsername := make([]string, 0)
+		for i, v := range args {
+			if !strings.Contains(v, "username:") {
+				argsWithoutUsername = append(argsWithoutUsername, args[i])
+			}
+		}
+		_, err = c.listResourceWithArgs(resourceType, resourceName, argsWithoutUsername)
+	} else {
+		_, err = c.listResourceWithArgs(resourceType, resourceName, args)
+	}
 	if err == nil { // resource exists
 		c.logger.Trace("DeleteResource Found resource ", "resourceType", resourceType, "resourceName", resourceName)
 		_, err = c.deleteResourceWithArgs(resourceType, resourceName, args)

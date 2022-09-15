@@ -14,15 +14,16 @@
 *   limitations under the License.
 */
 
-package cloud
+package stream
 
 /**
-* Configuration for cloud service resource.
+* Binding class showing the session that can be bound to streamidentifier.
 */
-type Cloudservice struct {
+type Streamidentifiersessionbinding struct {
+	/**
+	* The name of stream identifier.
+	*/
+	Name string `json:"name,omitempty"`
 
-	//------- Read only Parameter ---------;
-
-	Response string `json:"response,omitempty"`
 
 }

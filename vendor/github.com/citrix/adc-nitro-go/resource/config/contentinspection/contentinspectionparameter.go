@@ -14,27 +14,19 @@
 *   limitations under the License.
 */
 
-package cloud
+package contentinspection
 
 /**
-* Configuration for cloud credentials resource.
+* Configuration for Contentinspection parameter resource.
 */
-type Cloudcredential struct {
+type Contentinspectionparameter struct {
 	/**
-	* Tenant ID of the Credentials
+	* Action to perform if the result of policy evaluation is undefined (UNDEF). An UNDEF event indicates an error condition in evaluating the expression.
+		Available settings function as follows:
+		* NOINSPECTION - Do not Inspect the traffic.
+		* RESET - Reset the connection and notify the user's browser, so that the user can resend the request.
+		* DROP - Drop the message without sending a response to the user.
 	*/
-	Tenantidentifier string `json:"tenantidentifier,omitempty"`
-	/**
-	* Application ID of the Credentials
-	*/
-	Applicationid string `json:"applicationid,omitempty"`
-	/**
-	* Application Secret of the Credentials.
-	*/
-	Applicationsecret string `json:"applicationsecret,omitempty"`
-
-	//------- Read only Parameter ---------;
-
-	Isset string `json:"isset,omitempty"`
+	Undefaction string `json:"undefaction,omitempty"`
 
 }

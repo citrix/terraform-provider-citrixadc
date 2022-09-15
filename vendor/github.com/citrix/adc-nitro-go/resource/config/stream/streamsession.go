@@ -14,32 +14,15 @@
 *   limitations under the License.
 */
 
-package ha
+package stream
 
 /**
-* Binding class showing the routemonitor that can be bound to hanode.
+* Configuration for active connection resource.
 */
-type Hanoderoutemonitorbinding struct {
+type Streamsession struct {
 	/**
-	* The IP address (IPv4 or IPv6).
+	* Name of the stream identifier.
 	*/
-	Routemonitor string `json:"routemonitor,omitempty"`
-	/**
-	* The netmask.
-	*/
-	Netmask string `json:"netmask,omitempty"`
-	/**
-	* The flags for this entry.
-	*/
-	Flags int `json:"flags,omitempty"`
-	/**
-	* State for route monitor
-	*/
-	Routemonitorstate string `json:"routemonitorstate,omitempty"`
-	/**
-	* Number that uniquely identifies the local node. The ID of the local node is always 0.
-	*/
-	Id int `json:"id"`
-
+	Name string `json:"name,omitempty"`
 
 }

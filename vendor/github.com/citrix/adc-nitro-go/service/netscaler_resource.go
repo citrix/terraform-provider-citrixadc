@@ -54,6 +54,8 @@ var idempotentInvalidResources = []string{
 	"snmptrap",
 	"dnsmxrec",
 	"dnstxtrec",
+	"locationfile",
+	"locationfile6",
 }
 
 // HTTP Headers to be masked and not shown in logs

@@ -14,19 +14,16 @@
 *   limitations under the License.
 */
 
-package cloud
+package stream
 
 /**
-* Configuration for cloud ngsparameter resource.
+* Binding class showing the streamsession that can be bound to streamidentifier.
 */
-type Cloudngsparameter struct {
+type Streamidentifierstreamsessionbinding struct {
 	/**
-	* Enables blocking connections authenticated with a ticket createdby by an entity not whitelisted in allowedngstktprofile
+	* The name of stream identifier.
 	*/
-	Blockonallowedngstktprof string `json:"blockonallowedngstktprof,omitempty"`
-	/**
-	* Enables the required UDT version to EDT connections in the CGS deployment
-	*/
-	Allowedudtversion string `json:"allowedudtversion,omitempty"`
+	Name string `json:"name,omitempty"`
+
 
 }

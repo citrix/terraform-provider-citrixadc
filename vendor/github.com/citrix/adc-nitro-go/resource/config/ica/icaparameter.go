@@ -25,6 +25,18 @@ type Icaparameter struct {
 	*/
 	Enablesronhafailover string `json:"enablesronhafailover,omitempty"`
 	/**
+	* Enable/Disable DF enforcement for EDT PMTUD Control Blocks. Default value: DISABLED
+	*/
+	Edtpmtuddf string `json:"edtpmtuddf,omitempty"`
+	/**
+	*DF enforcement timeout for EDTPMTUDDF. Default value: 100
+	*/
+	Edtpmtuddftimeout int `json:"edtpmtuddftimeout,omitempty"`
+	/**
+	*Specify the time interval/period for which L7 Client Latency value is to be calculated. By default, L7 Client Latency is calculated for every packet. The default value is 0. 
+	*/
+	L7latencyfrequency int `json:l7latencyfrequency"`
+	/**
 	* Enable/Disable HDXInsight for Non NSAP ICA Sessions. The default value is Yes
 	*/
 	Hdxinsightnonnsap string `json:"hdxinsightnonnsap,omitempty"`
