@@ -823,6 +823,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_cacheglobal_cachepolicy_binding":						       resourceCitrixAdcCacheglobal_cachepolicy_binding(),
 		"citrixadc_cacheselector": 												   resourceCitrixAdcCacheselector(),
 		"citrixadc_tunneltrafficpolicy": 										   resourceCitrixAdcTunneltrafficpolicy(),
+		"citrixadc_subscriberprofile": 											   resourceCitrixAdcSubscriberprofile(),
 	}
 }
 
