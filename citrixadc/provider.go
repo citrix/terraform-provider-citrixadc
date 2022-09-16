@@ -825,6 +825,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_tunneltrafficpolicy": 										   resourceCitrixAdcTunneltrafficpolicy(),
 		"citrixadc_subscriberprofile": 											   resourceCitrixAdcSubscriberprofile(),
 		"citrixadc_subscriberradiusinterface": 									   resourceCitrixAdcSubscriberradiusinterface(),
+		"citrixadc_subscriberparam": 											   resourceCitrixAdcSubscriberparam(),
 	}
 }
 
