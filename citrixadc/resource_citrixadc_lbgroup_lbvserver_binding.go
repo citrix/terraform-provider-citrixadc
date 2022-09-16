@@ -18,6 +18,9 @@ func resourceCitrixAdcLbgroup_lbvserver_binding() *schema.Resource {
 		Create:        createLbgroup_lbvserver_bindingFunc,
 		Read:          readLbgroup_lbvserver_bindingFunc,
 		Delete:        deleteLbgroup_lbvserver_bindingFunc,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
 				Type:     schema.TypeString,
