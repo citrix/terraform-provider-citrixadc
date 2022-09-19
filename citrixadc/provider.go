@@ -813,6 +813,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_cacheforwardproxy": 											   resourceCitrixAdcCacheforwardproxy(),
 		"citrixadc_auditnslogpolicy": 											   resourceCitrixAdcAuditnslogpolicy(),
 		"citrixadc_auditnslogaction": 											   resourceCitrixAdcAuditnslogaction(),
+		"citrixadc_tunnelglobal_tunneltrafficpolicy_binding": 					   resourceCitrixAdcTunnelglobal_tunneltrafficpolicy_binding(),
 	}
 }
 
