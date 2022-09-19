@@ -818,6 +818,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_smppparam": 													   resourceCitrixAdcSmppparam(),
 		"citrixadc_cachepolicy": 												   resourceCitrixAdcCachepolicy(),
 		"citrixadc_cachepolicylabel_cachepolicy_binding":						   resourceCitrixAdcCachepolicylabel_cachepolicy_binding(),
+		"citrixadc_cachepolicylabel": 											   resourceCitrixAdcCachepolicylabel(),
 	}
 }
 
