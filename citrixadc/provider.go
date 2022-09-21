@@ -809,6 +809,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_subscribergxinterface": 										   resourceCitrixAdcSubscribergxinterface(),
 		"citrixadc_cachecontentgroup": 											   resourceCitrixAdcCachecontentgroup(),
 		"citrixadc_smppuser": 													   resourceCitrixAdcSmppuser(),
+		"citrixadc_linkset_channel_binding": 									   resourceCitrixAdcLinkset_channel_binding(),
 	}
 }
 
