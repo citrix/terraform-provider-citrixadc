@@ -88,9 +88,11 @@ github.com/citrix/adc-nitro-go/resource/config/appqoe
 github.com/citrix/adc-nitro-go/resource/config/audit
 github.com/citrix/adc-nitro-go/resource/config/authentication
 github.com/citrix/adc-nitro-go/resource/config/authorization
+github.com/citrix/adc-nitro-go/resource/config/autoscale
 github.com/citrix/adc-nitro-go/resource/config/basic
 github.com/citrix/adc-nitro-go/resource/config/bot
 github.com/citrix/adc-nitro-go/resource/config/cache
+github.com/citrix/adc-nitro-go/resource/config/cloud
 github.com/citrix/adc-nitro-go/resource/config/cluster
 github.com/citrix/adc-nitro-go/resource/config/cmp
 github.com/citrix/adc-nitro-go/resource/config/contentinspection
@@ -113,6 +115,7 @@ github.com/citrix/adc-nitro-go/resource/config/ns
 github.com/citrix/adc-nitro-go/resource/config/ntp
 github.com/citrix/adc-nitro-go/resource/config/pcp
 github.com/citrix/adc-nitro-go/resource/config/policy
+github.com/citrix/adc-nitro-go/resource/config/protocol
 github.com/citrix/adc-nitro-go/resource/config/rdp
 github.com/citrix/adc-nitro-go/resource/config/reputation
 github.com/citrix/adc-nitro-go/resource/config/responder
@@ -124,6 +127,7 @@ github.com/citrix/adc-nitro-go/resource/config/stream
 github.com/citrix/adc-nitro-go/resource/config/system
 github.com/citrix/adc-nitro-go/resource/config/tm
 github.com/citrix/adc-nitro-go/resource/config/transform
+github.com/citrix/adc-nitro-go/resource/config/urlfiltering
 github.com/citrix/adc-nitro-go/resource/config/user
 github.com/citrix/adc-nitro-go/resource/config/utility
 github.com/citrix/adc-nitro-go/resource/config/vpn
