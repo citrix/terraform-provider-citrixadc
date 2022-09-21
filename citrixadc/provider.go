@@ -803,6 +803,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_autoscaleaction": 											   resourceCitrixAdcAutoscaleaction(),
 		"citrixadc_autoscaleprofile": 											   resourceCitrixAdcAutoscaleprofile(),
 		"citrixadc_autoscalepolicy": 											   resourceCitrixAdcAutoscalepolicy(),
+		"citrixadc_spilloveraction": 											   resourceCitrixAdcSpilloveraction(),
 	}
 }
 

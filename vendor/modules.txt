@@ -122,6 +122,7 @@ github.com/citrix/adc-nitro-go/resource/config/responder
 github.com/citrix/adc-nitro-go/resource/config/rewrite
 github.com/citrix/adc-nitro-go/resource/config/router
 github.com/citrix/adc-nitro-go/resource/config/snmp
+github.com/citrix/adc-nitro-go/resource/config/spillover
 github.com/citrix/adc-nitro-go/resource/config/ssl
 github.com/citrix/adc-nitro-go/resource/config/stream
 github.com/citrix/adc-nitro-go/resource/config/system
