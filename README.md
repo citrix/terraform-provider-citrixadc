@@ -62,13 +62,14 @@ For deploying Citrix ADC in Public Cloud - AWS and Azure, check out cloud script
 1. [Why Terraform for Citrix ADC ?](#why-terraform-for-citrix-adc-)
 2. [Navigating Repository](#navigating-the-repository)
 3. Usage Guidelines
-     [Understanding Provider Configuration](#understanding-provider-configuration)
-  -   [Understanding Resource Configuration](#resource-configuration)
-  -   [General guidelines on ADC configurations](#general-guidelines-on-configuring-adc)
-  -   [Commiting changes to Citrix ADC's persistent store](#commiting-changes-to-citrix-adcs-persistent-store)
-  -   [List of ADC use-cases supported through Terraform](#adc-use-case-supported-through-terraform)
-  -   [Using `remote-exec` for one-time tasks](#using-remote-exec-for-one-time-tasks)
-  -   [Building your own provider](#building)
+
+    - [Understanding Provider Configuration](#understanding-provider-configuration)
+    - [Understanding Resource Configuration](#resource-configuration)
+    - [General guidelines on ADC configurations](#general-guidelines-on-configuring-adc)
+    - [Commiting changes to Citrix ADC's persistent store](#commiting-changes-to-citrix-adcs-persistent-store)
+    - [List of ADC use-cases supported through Terraform](#adc-use-case-supported-through-terraform)
+    - [Using `remote-exec` for one-time tasks](#using-remote-exec-for-one-time-tasks)
+    - [Building your own provider](#building)
 
 ## Beginners Guide to Automating ADC with Terraform
 
@@ -92,6 +93,7 @@ For deploying Citrix ADC in Public Cloud - AWS and Azure, check out cloud script
 
 [Terraform](https://www.terraform.io/) i s an open-source infrastructure as code software tool that provides a consistent CLI workflow to manage hundreds of cloud services.Terraform codifies cloud APIs into declarative configuration files.
 Terraform can be used to **_deploy_** and **_configure_** ADC. Configuring Citrix ADC through Terraform provides multiple benefits.
+
 1. Infrastucture as Code approach to ADC -You can store the ADC configs in scm tools like GitHub and version and track it like just other code repositories you have.
 2. Declarative Approach to ADC automation - Users just need to defined the target state of ADC. ADC terraform resources will make the appropriate API calls to achieve the target state.
 3. ADC resources files in Terraform are human friendly and easy to understand.
@@ -105,13 +107,13 @@ Terraform can be used to **_deploy_** and **_configure_** ADC. Configuring Citri
 2. `examples` folder - Contain the examples for users to use various ADC resources e.g [simple_lb](https://github.com/citrix/terraform-provider-citrixadc/blob/master/examples/simple_lb/) folder contains the resources.tf that illustrates how citrixadc_lbvserver resource can be used to create a Load Balancing vserver on target ADC. Similarly , different folders contains examples on defining different resources. Users are expected to review these examples and define their desired ADC configurations.
 3. `docs` folder` - https://github.com/citrix/terraform-provider-citrixadc/tree/master/docs/resources  - contains the documentation of all resources confgirations supported through Terraform. Refer this to understand the different arguments, values that a particular resource takes.
 
-
-
 ## Usage Guidelines
 
 ### Understanding Provider Configuration
+
 `provider.tf` contains the information on target ADC where you want to apply configuration.
-```
+
+```hcl
 provider "citrixadc" {
     username = "${var.ns_user}"  # You can optionally use `NS_LOGIN` environment variables.
     password = "${var.ns_password}"  # You can optionally use `NS_PASSWORD` environment variables.
@@ -133,23 +135,25 @@ storing sensitive data.
 
 You can also use environment variables as stated in the comments above.
 
-##### Argument Reference
+#### Argument Reference
 
 The following arguments are supported.
 
-* `username` - This is the user name to access to Citrix ADC. Defaults to `nsroot` unless environment variable `NS_LOGIN` has been set
-* `password` - This is the password to access to Citrix ADC. Defaults to `nsroot` unless environment variable `NS_PASSWORD` has been set
-* `endpoint` - (Required) Nitro API endpoint in the form `http://<NS_IP>/` or `http://<NS_IP>:<PORT>/`. Can be specified in environment variable `NS_URL`
+- `username` - This is the user name to access to Citrix ADC. Defaults to `nsroot` unless environment variable `NS_LOGIN` has been set
+- `password` - This is the password to access to Citrix ADC. Defaults to `nsroot` unless environment variable `NS_PASSWORD` has been set
+- `endpoint` - (Required) Nitro API endpoint in the form `http://<NS_IP>/` or `http://<NS_IP>:<PORT>/`. Can be specified in environment variable `NS_URL`
 * `insecure_skip_verify` - (Optional, true/false) Whether to accept the untrusted certificate on the Citrix ADC when the Citrix ADC endpoint is `https`
-* `proxied_ns` - (Optional, NSIP) The target Citrix ADC NSIP for MAS proxied calls. When this option is defined, `username`, `password` and `endpoint` must refer to the MAS proxy.
+- `proxied_ns` - (Optional, NSIP) The target Citrix ADC NSIP for MAS proxied calls. When this option is defined, `username`, `password` and `endpoint` must refer to the MAS proxy.
 
 The username, password and endpoint can be provided in environment variables `NS_LOGIN`, `NS_PASSWORD` and `NS_URL`.
 
 ### Resource Configuration
+
 Resources.tf contains the desired state of the resources that you want on target ADC. E.g. For creating a Load Balancing vserver in ADC following resource.tf contains the desired configs of lbvserver
 
 **`citrixadc_lbvserver`**
-```
+
+```hcl
 resource "citrixadc_lbvserver" "foo" {
   name = "sample_lb"
   ipv46 = "10.71.136.150"
@@ -161,6 +165,7 @@ resource "citrixadc_lbvserver" "foo" {
   sslprofile = "ns_default_ssl_profile_secure_frontend"
 }
 ```
+
 In order to understand the arguments, possible values, and other arguments available for a given resource, refer the NITRO API documentation <https://developer-docs.citrix.com/projects/netscaler-nitro-api/en/12.0/configuration/load-balancing/lbvserver/lbvserver/>  and the Terraform documentation such as https://github.com/citrix/terraform-provider-citrixadc/blob/master/docs/resources/lbvserver.md .
 
 **Note that the attribute `state` is not synced with the remote object.
@@ -168,24 +173,29 @@ If the state of the lb vserver is out of sync with the terraform configuration y
 **
 
 ### General guidelines on configuring ADC
+
 The subfolders in the example folder contains examples of different ADC configurations through terraform. Refer to [simple_lb](https://github.com/citrix/terraform-provider-citrixadc/tree/master/examples/simple_lb) example to understand below structure and usage.
 
 #### Structure
-* `resources.tf` describes the actual NetScaler config objects to be created. The attributes of these resources are either hard coded or looked up from input variables in `terraform.tfvars`
-* `variables.tf` describes the input variables to the terraform config. These can have defaults
-* `provider.tf` is used to specify the username, password and endpoint of the NetScaler. Alternatively, you can set the NS_URL, NS_LOGIN and NS_PASSWORD environment variables.
-* `terraform.tfvars` has the variable inputs specified in `variables.tf`
+
+- `resources.tf` describes the actual NetScaler config objects to be created. The attributes of these resources are either hard coded or looked up from input variables in `terraform.tfvars`
+- `variables.tf` describes the input variables to the terraform config. These can have defaults
+- `provider.tf` is used to specify the username, password and endpoint of the NetScaler. Alternatively, you can set the NS_URL, NS_LOGIN and NS_PASSWORD environment variables.
+- `terraform.tfvars` has the variable inputs specified in `variables.tf`
 
 #### Using
+
 Modify the `terraform.tfvars` and `provider.tf` to suit your own NetScaler deployment. Use `terraform plan` and `terraform apply` to configure the NetScaler.
 
 #### Updating your configuration
+
 Modify the set of backend services and use `terraform plan` and `terraform apply` to verify the changes
 
 ### Commiting changes to Citrix ADC's persistent store
+
 The provider will not commit the config changes to Citrix ADC's persistent store. To do this, run the shell script `ns_commit.sh`:
 
-```
+```bash
 export NS_URL=http://<host>:<port>/
 export NS_LOGIN=nsroot
 export NS_PASSWORD=nsroot
@@ -200,18 +210,21 @@ List of Use-Cases supported in ADC can be found in here https://registry.terrafo
 
 
 ## Using `remote-exec` for one-time tasks
+
 Terraform is useful for maintaining desired state for a set of resources. It is less useful for tasks such as network configuration which don't change. Network configuration is like using a provisioner inside Terraform. The directory `examples/remote-exec` show examples of how Terraform can use ssh to accomplish these one-time tasks.
 
 ## Building
-### Assumption
-* You have (some) experience with Terraform, the different provisioners and providers that come out of the box,
-its configuration files, tfstate files, etc.
-* You are comfortable with the Go language and its code organization.
 
-1. Install `terraform` from <https://www.terraform.io/downloads.html>
-2. Check out this code: `git clone https://<>`
-3. Build this code using `make build`
-4. Binary can be found at `$GOPATH/bin/terraform-provider-citrixadc`
+### Assumption
+
+- You have (some) experience with Terraform, the different provisioners and providers that come out of the box,
+its configuration files, tfstate files, etc.
+- You are comfortable with the Go language and its code organization.
+
+  1. Install `terraform` from <https://www.terraform.io/downloads.html>
+  2. Check out this code: `git clone https://<>`
+  3. Build this code using `make build`
+  4. Binary can be found at `$GOPATH/bin/terraform-provider-citrixadc`
 
 
 ## Navigating the repository
