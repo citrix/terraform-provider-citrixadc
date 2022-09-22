@@ -7,6 +7,12 @@ assignees: ''
 
 ---
 
+# Contact us
+
+> For any immediate issues or help , reach out to us at appmodernization@citrix.com !
+
+# Bug Report
+
 **Describe the bug**
 A clear and concise description of what the bug is.
 
