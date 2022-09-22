@@ -11,14 +11,19 @@ The sslprofile resource is used to create SSL profiles.
 
 ```hcl
 resource "citrixadc_sslprofile" "tf_sslprofile" {
-    name = "tf_sslprofile"
-    hsts = "ENABLED"
-    ecccurvebindings = ["P_256"]
+  name = "tfUnit_sslprofile-hello"
 
-    cipherbindings {
-        ciphername     = "HIGH"
-        cipherpriority = 10
-      }
+  // `ecccurvebindings` is REQUIRED attribute.
+  // The default ecccurvebindings will be DELETED and only the explicitly given ecccurvebindings will be retained
+  // To unbind all the ecccurvebindings, an empty list `[]` is to be assinged to `ecccurvebindings` attribute
+  ecccurvebindings = ["P_256"]
+
+  // `cipherbindings` attribute block is OPTIONAL
+  // If not given, all the default cipher bindings will be deleted and the ones given explicitly are retained/created.
+  # cipherbindings {
+  #   ciphername     = "HIGH"
+  #   cipherpriority = 10
+  # }
 }
 ```
 
@@ -58,7 +63,7 @@ resource "citrixadc_sslprofile" "tf_sslprofile" {
 * `denysslreneg` - (Optional) Deny renegotiation in specified circumstances. Available settings function as follows: * NO - Allow SSL renegotiation. * FRONTEND_CLIENT - Deny secure and nonsecure SSL renegotiation initiated by the client. * FRONTEND_CLIENTSERVER - Deny secure and nonsecure SSL renegotiation initiated by the client or the Citrix ADC during policy-based client authentication. * ALL - Deny all secure and nonsecure SSL renegotiation. * NONSECURE - Deny nonsecure SSL renegotiation. Allows only clients that support RFC 5746. Possible values: [ NO, FRONTEND_CLIENT, FRONTEND_CLIENTSERVER, ALL, NONSECURE ]
 * `quantumsize` - (Optional) Amount of data to collect before the data is pushed to the crypto hardware for encryption. For large downloads, a larger quantum size better utilizes the crypto resources. Possible values: [ 4096, 8192, 16384 ]
 * `strictcachecks` - (Optional) Enable strict CA certificate checks on the appliance. Possible values: [ YES, NO ]
-* `encrypttriggerpktcount` - (Optional) 
+* `encrypttriggerpktcount` - (Optional)
 * `pushflag` - (Optional) Insert PUSH flag into decrypted, encrypted, or all records. If the PUSH flag is set to a value other than 0, the buffered records are forwarded on the basis of the value of the PUSH flag. Available settings function as follows: 0 - Auto (PUSH flag is not set.) 1 - Insert PUSH flag into every decrypted record. 2 -Insert PUSH flag into every encrypted record. 3 - Insert PUSH flag into every decrypted and encrypted record.
 * `dropreqwithnohostheader` - (Optional) Host header check for SNI enabled sessions. If this check is enabled and the HTTP request does not contain the host header for SNI enabled sessions(i.e vserver or profile bound to vserver has SNI enabled and 'Client Hello' arrived with SNI extension), the request is dropped. Possible values: [ YES, NO ]
 * `snihttphostmatch` - (Optional) Controls how the HTTP 'Host' header value is validated. These checks are performed only if the session is SNI enabled (i.e when vserver or profile bound to vserver has SNI enabled and 'Client Hello' arrived with SNI extension) and HTTP request contains 'Host' header. Available settings function as follows: CERT   - Request is forwarded if the 'Host' value is covered by the certificate used to establish this SSL session. Note: 'CERT' matching mode cannot be applied in TLS 1.3 connections established by resuming from a previous TLS 1.3 session. On these connections, 'STRICT' matching mode will be used instead. STRICT - Request is forwarded only if value of 'Host' header in HTTP is identical to the 'Server name' value passed in 'Client Hello' of the SSL connection. NO     - No validation is performed on the HTTP 'Host' header value. Possible values: [ NO, CERT, STRICT ]
@@ -68,7 +73,7 @@ resource "citrixadc_sslprofile" "tf_sslprofile" {
 * `sslinterception` - (Optional) Enable or disable transparent interception of SSL sessions. Possible values: [ ENABLED, DISABLED ]
 * `sslireneg` - (Optional) Enable or disable triggering the client renegotiation when renegotiation request is received from the origin server. Possible values: [ ENABLED, DISABLED ]
 * `ssliocspcheck` - (Optional) Enable or disable OCSP check for origin server certificate. Possible values: [ ENABLED, DISABLED ]
-* `sslimaxsessperserver` - (Optional) 
+* `sslimaxsessperserver` - (Optional)
 * `sessionticket` - (Optional) This option enables the use of session tickets, as per the RFC 5077. Possible values: [ ENABLED, DISABLED ]
 * `sessionticketlifetime` - (Optional) This option sets the life time of session tickets issued by NS in secs.
 * `sessionticketkeyrefresh` - (Optional) This option enables the use of session tickets, as per the RFC 5077. Possible values: [ ENABLED, DISABLED ]
