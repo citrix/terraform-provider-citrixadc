@@ -1,4 +1,4 @@
-# Terraform `adc` Provider
+# Terraform `Citrix ADC` Provider
 
 Citrix has developed a custom Terraform provider for automating [Citrix ADC](https://www.citrix.com/products/netscaler-adc/) deployments and configurations. Using [Terraform](https://www.terraform.io), you can [custom configure your ADCs](https://www.youtube.com/watch?v=IJIIWm5rzpQ&ab_channel=Citrix) for different use-cases such as Load Balancing, SSL, Content Switching, GSLB, WAF etc.
 
@@ -16,7 +16,7 @@ Learn more about Citrix ADC Automation [here](https://docs.citrix.com/en-us/citr
 4. [Understanding Resource Configuration](#resource-configuration)
 5. [General guidelines on ADC configurations](#general-guidelines-on-configuring-adc)
 6. [Commiting changes to Citrix ADC's persistent store](#commiting-changes-to-citrix-adcs-persistent-store)
-7. [List of ADC use-cases supported through Terraform](#adc-use-case-supported-through-terraform)
+7. [List of ADC use-cases supported through Terraform](#adc-use-cases-supported-through-terraform)
 8. [Using `remote-exec` for one-time tasks](#using-remote-exec-for-one-time-tasks)
    
 
@@ -24,7 +24,7 @@ Learn more about Citrix ADC Automation [here](https://docs.citrix.com/en-us/citr
 
 1. [Hands-on lab with ADC automation with Terraform](#hands-on-lab-with-adc-automation-with-terraform)
 2. [Install Terraform in your own setup](#install-terraform-in-your-own-setup)
-3. [Understanding the ADC terraform provider repository](#understanding-provider-configuration)
+3. [Understanding the ADC terraform provider repository](#understanding-the-adc-terraform-provider-repository))
 4. [Get your first terraform config into ADC](#get-your-first-terraform-config-into-adc)
 5. [How to write terraform resources file for ADC](#how-to-write-terraform-resources-file-for-adc)
 6. [Set up SSL-Offloading use-case in ADC](#set-up-ssl-offloading-use-case-in-adc)
@@ -233,9 +233,8 @@ its configuration files, tfstate files, etc.
 You can refer to https://registry.terraform.io/providers/citrix/citrixadc/latest/docs to find the definitions and examples for various ADC entities. 
 3. `docs` folder - https://github.com/citrix/terraform-provider-citrixadc/tree/master/docs/resources  - contains the documentation of all resources confgirations supported through Terraform. Refer this to understand the different arguments, values that a particular resource takes. You can also refer to https://registry.terraform.io/providers/citrix/citrixadc/latest/docs to find the definitions and examples for various ADC entities. 
 
-## Usage Guidelines
 
-### Understanding Provider Configuration
+## Understanding Provider Configuration
 
 `provider.tf` contains the information on target ADC where you want to apply configuration.
 
@@ -260,8 +259,6 @@ storing sensitive data.
 
 You can also use environment variables as stated in the comments above.
 
-#### Argument Reference
-
 The following arguments are supported.
 
 - `username` - This is the user name to access to Citrix ADC. Defaults to `nsroot` unless environment variable `NS_LOGIN` has been set
@@ -272,7 +269,7 @@ The following arguments are supported.
 
 The username, password and endpoint can be provided in environment variables `NS_LOGIN`, `NS_PASSWORD` and `NS_URL`.
 
-### Resource Configuration
+## Resource Configuration
 
 Resources.tf contains the desired state of the resources that you want on target ADC. E.g. For creating a Load Balancing vserver in ADC following resource.tf contains the desired configs of lbvserver
 
@@ -297,7 +294,7 @@ In order to understand the arguments, possible values, and other arguments avail
 If the state of the lb vserver is out of sync with the terraform configuration you will need to manually taint the resource and apply the configuration again.
 **
 
-### General guidelines on configuring ADC
+## General guidelines on configuring ADC
 
 1. Refer to [simple_lb](https://github.com/citrix/terraform-provider-citrixadc/tree/master/examples/simple_lb) example to understand different files as mentioned below:
    - `resources.tf` describes the actual NetScaler config objects to be created. The attributes of these resources are either hard coded or looked up from input variables in `terraform.tfvars`
@@ -309,7 +306,7 @@ If the state of the lb vserver is out of sync with the terraform configuration y
 3. Use `terraform plan` and `terraform apply` to configure the NetScaler.
 4. To update the configuration, modify the set of backend services in `terraform.tfvars` and use `terraform plan` and `terraform apply` to verify and apply the changes
 
-### Commiting changes to Citrix ADC's persistent store
+## Commiting changes to Citrix ADC's persistent store
 
 The provider will not commit the config changes to Citrix ADC's persistent store. To do this, run the shell script `ns_commit.sh`:
 
@@ -322,12 +319,12 @@ export NS_PASSWORD=nsroot
 
 To ensure that the config is saved on every run, we can use something like `terraform apply && ns_commit.sh`
 
-## ADC Use-Case supported through Terraform
+## ADC Use-Cases supported through Terraform
 
 List of Use-Cases supported in ADC can be found in here https://registry.terraform.io/providers/citrix/citrixadc/latest/docs.
 
 
-### Using `remote-exec` for one-time tasks
+## Using `remote-exec` for one-time tasks
 
 Terraform is useful for maintaining desired state for a set of resources. It is less useful for tasks such as network configuration which don't change. Network configuration is like using a provisioner inside Terraform. The directory `examples/remote-exec` show examples of how Terraform can use ssh to accomplish these one-time tasks.
 
@@ -353,7 +350,7 @@ Follow the article on [Getting started with Terraform on ADC](#https://forum.dev
 
 ### How to write terraform resources file for ADC
 
-To write the Terrafomr resources for Citrix ADC, refer the following links 
+To write the Terraform resources for Citrix ADC, refer the following links 
   [NITRO API documentation](https://developer-docs.citrix.com/projects/citrix-adc-nitro-api-reference/en/latest/configuration/configuration/) or [terraform registry documentation](https://registry.terraform.io/providers/citrix/citrixadc/latest/docs).
 
 ### Set up SSL-Offloading use-case in ADC
