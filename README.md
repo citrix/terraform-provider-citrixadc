@@ -50,15 +50,15 @@ Terraform can be used to **_deploy_** and **_configure_** ADC. Configuring Citri
 4. Abstract away the complexity associated with Citrix ADC internals architecture.
 5. Detect the configuration drifts on ADC through Terraform easily.
 
-Citrix has developed a custom Terraform provider for automating [Citrix ADC](https://www.citrix.com/products/netscaler-adc/) deployments and configurations. Using [Terraform](https://www.terraform.io), you can [custom configure your ADCs](https://www.youtube.com/watch?v=IJIIWm5rzpQ&ab_channel=Citrix) for different use-cases such as Load Balancing, SSL, Content Switching, GSLB, WAF etc. 
-Learn more about Citrix ADC Automation [here](https://docs.citrix.com/en-us/citrix-adc/current-release/deploying-vpx/citrix-adc-automation.html) 
+Citrix has developed a custom Terraform provider for automating [Citrix ADC](https://www.citrix.com/products/netscaler-adc/) deployments and configurations. Using [Terraform](https://www.terraform.io), you can [custom configure your ADCs](https://www.youtube.com/watch?v=IJIIWm5rzpQ&ab_channel=Citrix) for different use-cases such as Load Balancing, SSL, Content Switching, GSLB, WAF etc.
+Learn more about Citrix ADC Automation [here](https://docs.citrix.com/en-us/citrix-adc/current-release/deploying-vpx/citrix-adc-automation.html)
 
 For deploying Citrix ADC in Public Cloud - AWS and Azure, check out cloud scripts in github repo [terraform-cloud-scripts](https://github.com/citrix/terraform-cloud-scripts).
 
-_For any immediate issues or help , reach out to us at appmodernization@citrix.com !_
+> For any immediate issues or help , reach out to us at appmodernization@citrix.com !
 
-Terrraform Provider Documentation
-------------
+## Terrraform Provider Documentation
+
 1. [Why Terraform for Citrix ADC ?](#why-terraform-for-citrix-adc-)
 2. [Navigating Repository](#navigating-the-repository)
 3. Usage Guidelines
@@ -70,23 +70,23 @@ Terrraform Provider Documentation
   -   [Using `remote-exec` for one-time tasks](#using-remote-exec-for-one-time-tasks)
   -   [Building your own provider](#building)
 
-Beginners Guide to Automating ADC with Terraform 
-------------
-	1. Hands-on lab with ADC automation with Terraform
-	2. Install Terraform in your own setup
-	3. Understanding the ADC terraform provider repository
-	4. Get your first terraform config into ADC
-	5. How to write terraform resources file for ADC
-	6. Set up SSL-Offloading use-case in ADC 
-	7. Committing changes to Citrix ADC's persistent store
-	8. Managing ADC configs drifts in terraform
+## Beginners Guide to Automating ADC with Terraform
 
-Advanced guide on Automating ADC with Terraform
--------------
-	1. Deploy ADC in AWS using Terraform
-	2. Leveraging Terraform workspaces to manage multiple ADCs
-	3. Dynamically updates Services using Consul-Terraform-Sync
-  4. Blue-Green Deployment with Citrix ADC and Azure Pipelines
+- [Hands-on lab with ADC automation with Terraform](#hands-on-lab-with-adc-automation-with-terraform)
+- [Install Terraform in your own setup](#install-terraform-in-your-own-setup)
+- [Understanding the ADC terraform provider repository](#understanding-provider-configuration)
+- [Get your first terraform config into ADC](#get-your-first-terraform-config-into-adc)
+- [How to write terraform resources file for ADC](#how-to-write-terraform-resources-file-for-adc)
+- [Set up SSL-Offloading use-case in ADC](#set-up-ssl-offloading-use-case-in-adc)
+- [Committing changes to Citrix ADC's persistent store](#commiting-changes-to-citrix-adcs-persistent-store)
+- [Managing ADC configs drifts in terraform](#managing-adc-configs-drifts-in-terraform)
+
+## Advanced guide on Automating ADC with Terraform
+
+- [Deploy ADC in AWS using Terraform](#deploy-adc-in-aws-using-terraform)
+- [Leveraging Terraform workspaces to manage multiple ADCs](#leveraging-terraform-workspaces-to-manage-multiple-adcs)
+- [Dynamically updates Services using Consul-Terraform-Sync](#dynamically-updates-services-using-consul-terraform-sync)
+- [Blue-Green Deployment with Citrix ADC and Azure Pipelines](#blue-green-deployment-with-citrix-adc-and-azure-pipelines)
 
 ## Why Terraform for Citrix ADC ?
 
@@ -143,10 +143,10 @@ The following arguments are supported.
 * `insecure_skip_verify` - (Optional, true/false) Whether to accept the untrusted certificate on the Citrix ADC when the Citrix ADC endpoint is `https`
 * `proxied_ns` - (Optional, NSIP) The target Citrix ADC NSIP for MAS proxied calls. When this option is defined, `username`, `password` and `endpoint` must refer to the MAS proxy.
 
-The username, password and endpoint can be provided in environment variables `NS_LOGIN`, `NS_PASSWORD` and `NS_URL`. 
+The username, password and endpoint can be provided in environment variables `NS_LOGIN`, `NS_PASSWORD` and `NS_URL`.
 
 ### Resource Configuration
-Resources.tf contains the desired state of the resources that you want on target ADC. E.g. For creating a Load Balancing vserver in ADC following resource.tf contains the desired configs of lbvserver 
+Resources.tf contains the desired state of the resources that you want on target ADC. E.g. For creating a Load Balancing vserver in ADC following resource.tf contains the desired configs of lbvserver
 
 **`citrixadc_lbvserver`**
 ```
