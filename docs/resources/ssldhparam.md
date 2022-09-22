@@ -10,6 +10,8 @@ The ssldhparam resource is used to configure ssl DH parameters.
 ## Example usage
 
 ```hcl
+// Make sure the dhfile name does not exist in the target ADC
+// citrixadc_sslparam does not support UPDATE operation, so to change any attributes here, first delete the dhfile, if present
 resource "citrixadc_ssldhparam" "foo" {
     dhfile = "/nsconfig/ssl/tfAcc_dhfile"
     bits   = "512"
