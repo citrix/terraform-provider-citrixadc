@@ -101,21 +101,21 @@ Terraform can be used to **_deploy_** and **_configure_** ADC. Configuring Citri
 
 ## Navigating the repository
 
-1. _citrixadc folder_ - Contains all the ADC resources library that we support through Terraform. These resource libraries will internally call NITRO APIS to configure target ADC.
-2. _examples folder_ - Contain the examples for users to use various ADC resources e.g [simple_lb](https://github.com/citrix/terraform-provider-citrixadc/blob/master/examples/simple_lb/) folder contains the resources.tf that illustrates how citrixadc_lbvserver resource can be used to create a Load Balancing vserver on target ADC. Similarly , different folders contains examples on defining different resources. Users are expected to review these examples and define their desired ADC configurations.
-3. _docs folder_ - https://github.com/citrix/terraform-provider-citrixadc/tree/master/docs/resources  - contains the documentation of all resources confgirations supported through Terraform. Refer this to understand the different arguments, values that a particular resource takes.
+1. `citrixadc` folder - Contains all the ADC resources library that we support through Terraform. These resource libraries will internally call NITRO APIS to configure target ADC.
+2. `examples` folder - Contain the examples for users to use various ADC resources e.g [simple_lb](https://github.com/citrix/terraform-provider-citrixadc/blob/master/examples/simple_lb/) folder contains the resources.tf that illustrates how citrixadc_lbvserver resource can be used to create a Load Balancing vserver on target ADC. Similarly , different folders contains examples on defining different resources. Users are expected to review these examples and define their desired ADC configurations.
+3. `docs` folder` - https://github.com/citrix/terraform-provider-citrixadc/tree/master/docs/resources  - contains the documentation of all resources confgirations supported through Terraform. Refer this to understand the different arguments, values that a particular resource takes.
 
 
 
 ## Usage Guidelines
 
 ### Understanding Provider Configuration
-Provider.tf contains the information on target ADC where you want to apply configuration.
+`provider.tf` contains the information on target ADC where you want to apply configuration.
 ```
 provider "citrixadc" {
-    username = "${var.ns_user}"
-    password = "${var.ns_password}"
-    endpoint = "http://10.71.136.250/"
+    username = "${var.ns_user}"  # You can optionally use `NS_LOGIN` environment variables.
+    password = "${var.ns_password}"  # You can optionally use `NS_PASSWORD` environment variables.
+    endpoint = "http://10.71.136.250/"  # You can optionally use `NS_URL` environment variables.
 }
 ```
 
@@ -130,6 +130,8 @@ to be transmitted in cleartext. Anyone observing the HTTP data stream will be ab
 Avoid storing provider credentials in the local state by using a backend that supports encryption.
 The hasicorp [vault provider](https://registry.terraform.io/providers/hashicorp/vault/latest/docs) is also recommended for
 storing sensitive data.
+
+You can also use environment variables as stated in the comments above.
 
 ##### Argument Reference
 
