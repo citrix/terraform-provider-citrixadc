@@ -1,5 +1,5 @@
 ---
-subcategory: "Lsn"
+subcategory: "LSN"
 ---
 
 # Resource: lsngroup_lsnhttphdrlogprofile_binding

@@ -1,5 +1,5 @@
 ---
-subcategory: "TRANSFORM"
+subcategory: "Transform"
 ---
 
 # Resource: transformglobal_transformpolicy_binding

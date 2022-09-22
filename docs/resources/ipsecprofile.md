@@ -1,5 +1,5 @@
 ---
-subcategory: "Ipsec"
+subcategory: "IPsec"
 ---
 
 # Resource: ipsecprofile

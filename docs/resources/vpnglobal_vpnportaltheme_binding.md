@@ -1,5 +1,5 @@
 ---
-subcategory: "Vpn"
+subcategory: "VPN"
 ---
 
 # Resource: vpnglobal_vpnportaltheme_binding

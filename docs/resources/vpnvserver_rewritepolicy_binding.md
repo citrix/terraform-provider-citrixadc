@@ -1,5 +1,5 @@
 ---
-subcategory: "Vpn"
+subcategory: "VPN"
 ---
 
 # Resource: vpnvserver_rewritepolicy_binding

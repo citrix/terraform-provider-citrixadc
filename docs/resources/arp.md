@@ -1,5 +1,5 @@
 ---
-subcategory: "network"
+subcategory: "Network"
 ---
 
 # Resource: arp

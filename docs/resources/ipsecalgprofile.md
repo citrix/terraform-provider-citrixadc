@@ -1,5 +1,5 @@
 ---
-subcategory: "Ipsecalg"
+subcategory: "IPSECALG"
 ---
 
 # Resource: ipsecalgprofile

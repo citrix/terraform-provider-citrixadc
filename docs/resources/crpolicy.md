@@ -1,5 +1,5 @@
 ---
-subcategory: "Cache Reduction"
+subcategory: "Cache Redirection"
 ---
 
 # Resource: crpolicy

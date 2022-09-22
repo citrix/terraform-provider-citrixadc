@@ -1,5 +1,5 @@
 ---
-subcategory: "CMP"
+subcategory: "Compression"
 ---
 
 # Resource: cmppolicy

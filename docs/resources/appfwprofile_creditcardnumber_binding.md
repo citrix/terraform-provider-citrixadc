@@ -1,5 +1,5 @@
 ---
-subcategory: "appfwprofile_creditcardnumber_binding"
+subcategory: "Application Firewall"
 ---
 
 # Resource: appfwprofile_creditcardnumber_binding
