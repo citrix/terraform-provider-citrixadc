@@ -1,5 +1,5 @@
 ---
-subcategory: "Pcp"
+subcategory: "PCP"
 ---
 
 # Resource: pcpserver

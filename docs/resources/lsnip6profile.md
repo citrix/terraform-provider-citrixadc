@@ -1,5 +1,5 @@
 ---
-subcategory: "Lsn"
+subcategory: "LSN"
 ---
 
 # Resource: lsnip6profile

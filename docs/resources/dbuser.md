@@ -1,5 +1,5 @@
 ---
-subcategory: "Db"
+subcategory: "DB"
 ---
 
 # Resource: dbuser

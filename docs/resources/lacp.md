@@ -1,5 +1,5 @@
 ---
-subcategory: "Netowrk"
+subcategory: "Network"
 ---
 
 # Resource: lacp

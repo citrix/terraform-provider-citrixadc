@@ -1,5 +1,5 @@
 ---
-subcategory: "ipsec"
+subcategory: "IPsec"
 ---
 
 # Resource: ipsecparameter

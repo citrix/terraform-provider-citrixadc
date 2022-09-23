@@ -1,5 +1,5 @@
 ---
-subcategory: "Rdp"
+subcategory: "RDP"
 ---
 
 # Resource: rdpserverprofile

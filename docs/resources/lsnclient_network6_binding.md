@@ -1,5 +1,5 @@
 ---
-subcategory: "Lsn"
+subcategory: "LSN"
 ---
 
 # Resource: lsnclient_network6_binding
