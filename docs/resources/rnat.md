@@ -10,12 +10,24 @@ The rnat resource is used to create reverse nat rules.
 ## Example usage
 
 ```hcl
-resource "citrixadc_rnat" "tf_rnat" {
-	rnatsname = "tf_rnat"
-	rnat {
-           network = "192.168.96.0"
-           netmask = "255.255.240.0"
-         }
+resource "citrixadc_rnat" "allrnat" {
+  rnatsname = "rnatsall"
+
+  rnat {
+    network = "192.168.20.0"
+    netmask = "255.255.255.0"
+  }
+
+  rnat {
+    network = "192.168.88.0"
+    netmask = "255.255.255.0"
+    natip   = "172.17.0.2"
+  }
+
+  rnat {
+    aclname = "RNAT_ACL_1"
+    natip   = "172.17.0.2"
+  }
 }
 ```
 

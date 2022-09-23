@@ -18,6 +18,25 @@ resource "citrixadc_lbvserver" "tf_lbvserver" {
   port = 80
   servicetype = "HTTP"
 }
+
+
+resource "citrixadc_lbvserver" "test_lbvserver" {
+  ipv46       = "10.10.10.33"
+  name        = "test_lbvserver"
+  port        = 443
+  servicetype = "SSL"
+
+  sslpolicybinding {
+      policyname = citrixadc_sslpolicy.tf_sslpolicy.name
+     priority = 101
+  }
+  sslpolicybinding {
+      policyname = citrixadc_sslpolicy.tf_sslpolicy2.name
+     priority = 100
+  }
+
+}
+
 ```
 
 
