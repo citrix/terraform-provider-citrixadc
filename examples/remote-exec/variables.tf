@@ -1,5 +1,5 @@
 variable "ns" {
-    "description" = "NetScaler information to target SSH connections"
+    description = "NetScaler information to target SSH connections"
     type = "map"
     default = {
         login = "nsroot"
