@@ -1,15 +1,22 @@
-## Citrix ADC configuration examples
-The subfolders have examples of terraform configurations
+# Citrix ADC configuration examples
 
-## Structure
-* `resources.tf` describes the actual Citrix ADC config objects to be created. The attributes of these resources are either hard coded or looked up from input variables in `terraform.tfvars`
-* `variables.tf` describes the input variables to the terraform config. These can have defaults
-* `provider.tf` is used to specify the username, password and endpoint of the Citrix ADC. Alternatively, you can set the NS_URL, NS_LOGIN and NS_PASSWORD environment variables.
-* `terraform.tfvars` has the variable inputs specified in `variables.tf`
+Below is the table showing the usecase you would like to achieve and where you can find the respective example.
 
-## Using
-Modify the `terraform.tfvars` and `provider.tf` to suit your own Citrix ADC deployment. Use `terraform plan` and `terraform apply` to configure the Citrix ADC.
-
-## Updating your configuration
-Modify the set of backend services and use `terraform plan` and `terraform apply` to verify the changes
-
+|**ADC Usecase**|**Terraform Example Folder**|
+|--|--|
+|Configure a simple loadbalancer|[HERE](./simple_lb/)|
+|Change Citrix ADC Password|[HERE](./utility/password_resetter/)|
+|Ping Citrix ADC|[HERE](./utility/pinger/)|
+|Save Citrix ADC Config|[HERE](./saveconfig/)|
+|Reboot Citrix ADC|[HERE](./utility/rebooter/)|
+|Save/Update/Clear Citrix ADC configs|[HERE](./nsconfig_save_update_clear_configs/)|
+|Upgrade Citrix ADC|[HERE](./upgrade_citrixadc/)|
+|Upgrade HA Pair|[HERE](./upgrade_ha_pair/)|
+|Take Citrix ADC system backup|[HERE](./systembackup/)|
+|Get SSL A+ Certified apps using Citrix ADC|[HERE](./aplus-certified-via-citrix-adc/)|
+|Configure a secure content switching server in Citrix ADC|[HERE](./secure_cs_server/)|
+|Redirect External URL to internal URL using Rewrite/Responder policies|[HERE](./redirect_external_url_to_internal_url/)|
+|Redirect client URL to New URL using Reponder and Rewrite Polices|[HERE](./redirecting_client_to_new_url/)|
+|Config Citrix ADC if there are no citrixadc resources (using local-exec)|[HERE](./using_local_exec_to_configure_citrixadc_as_the_last_resort/)|
+|How to get data of various NITRO objects|[HERE](./nitro_info_get_information_of_various_nitro_objects/)|
+|Create NITRO resources in generic way|[HERE](./nitro_resource_generically_create_nitro_resources/)|
