@@ -1,5 +1,10 @@
 # Citrix ADC configuration examples
 
+
+> :round_pushpin:For deploying Citrix ADC in Public Cloud - AWS and Azure, check out cloud scripts in github repo [terraform-cloud-scripts](https://github.com/citrix/terraform-cloud-scripts).
+
+> :envelope: For any immediate issues or help , reach out to us at appmodernization@citrix.com !
+
 Below is the table showing the usecase you would like to achieve and where you can find the respective example.
 
 |**ADC Usecase**|**Terraform Example Folder**|
