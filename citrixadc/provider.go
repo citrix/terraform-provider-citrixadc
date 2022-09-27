@@ -800,6 +800,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_rdpserverprofile": 											   resourceCitrixAdcRdpserverprofile(),
 		"citrixadc_reputationsettings": 										   resourceCitrixAdcReputationsettings(),
 		"citrixadc_nsweblogparam":												   resourceCitrixAdcNsweblogparam(),
+		"citrixadc_autoscaleaction": 											   resourceCitrixAdcAutoscaleaction(),
 	}
 }
 
