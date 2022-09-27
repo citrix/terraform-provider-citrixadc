@@ -8,21 +8,21 @@
 
 Below is the table showing the usecase you would like to achieve and where you can find the respective example.
 
-|**ADC Usecase**|**Terraform Example Folder**|
-|--|--|
-|Configure a simple loadbalancer|[HERE](./simple_lb/)|
-|Change Citrix ADC Password|[HERE](./utility/password_resetter/)|
-|Ping Citrix ADC|[HERE](./utility/pinger/)|
-|Save Citrix ADC Config|[HERE](./saveconfig/)|
-|Reboot Citrix ADC|[HERE](./utility/rebooter/)|
-|Save/Update/Clear Citrix ADC configs|[HERE](./nsconfig_save_update_clear_configs/)|
-|Upgrade Citrix ADC|[HERE](./upgrade_citrixadc/)|
-|Upgrade HA Pair|[HERE](./upgrade_ha_pair/)|
-|Take Citrix ADC system backup|[HERE](./systembackup/)|
-|Get SSL A+ Certified apps using Citrix ADC|[HERE](./aplus-certified-via-citrix-adc/)|
-|Configure a secure content switching server in Citrix ADC|[HERE](./secure_cs_server/)|
-|Redirect External URL to internal URL using Rewrite/Responder policies|[HERE](./redirect_external_url_to_internal_url/)|
-|Redirect client URL to New URL using Reponder and Rewrite Polices|[HERE](./redirecting_client_to_new_url/)|
-|Config Citrix ADC if there are no citrixadc resources (using local-exec)|[HERE](./using_local_exec_to_configure_citrixadc_as_the_last_resort/)|
-|How to get data of various NITRO objects|[HERE](./nitro_info_get_information_of_various_nitro_objects/)|
-|Create NITRO resources in generic way|[HERE](./nitro_resource_generically_create_nitro_resources/)|
+|**Folder**|**ADC Usecase**|**Terraform Example Folder**|
+|--|--|--|
+|**Basic ADC Operations**|Ping Citrix ADC|[HERE](./basic_adc_operations/pinger/)|
+||Change Citrix ADC Password|[HERE](./basic_adc_operations/password_resetter/)|
+||Save Citrix ADC Config|[HERE](./saveconfig/)|
+||Reboot Citrix ADC|[HERE](./basic_adc_operations/rebooter/)|
+||Save/Update/Clear Citrix ADC configs|[HERE](./basic_adc_operations/nsconfig_save_update_clear_configs/)|
+||Upgrade Citrix ADC|[HERE](./basic_adc_operations/upgrade_citrixadc/)|
+||Upgrade HA Pair|[HERE](./basic_adc_operations/upgrade_ha_pair/)|
+||Take Citrix ADC system backup|[HERE](./basic_adc_operations/systembackup/)|
+|**ADC Usecases**|Configure a simple loadbalancer|[HERE](./adc_usecases/simple_lb/)|
+||Get SSL A+ Certified apps using Citrix ADC|[HERE](./adc_usecases/aplus-certified-via-citrix-adc/)|
+||Configure a secure content switching server in Citrix ADC|[HERE](./adc_usecases/secure_cs_server/)|
+||Redirect External URL to internal URL using Rewrite/Responder policies|[HERE](./adc_usecases/redirect_external_url_to_internal_url/)|
+||Redirect client URL to New URL using Reponder and Rewrite Polices|[HERE](./adc_usecases/redirecting_client_to_new_url/)|
+|**Special ADC Resources**|Config Citrix ADC if there are no citrixadc resources (using local-exec)|[HERE](./special_adc_resources/using_local_exec_to_configure_citrixadc_as_the_last_resort/)|
+||How to get data of various NITRO objects|[HERE](./special_adc_resources/nitro_info_get_information_of_various_nitro_objects/)|
+||Create NITRO resources in generic way|[HERE](./special_adc_resources/nitro_resource_generically_create_nitro_resources/)|
