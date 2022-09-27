@@ -806,6 +806,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_spilloveraction": 											   resourceCitrixAdcSpilloveraction(),
 		"citrixadc_locationfile6": 												   resourceCitrixAdcLocationfile6(),
 		"citrixadc_locationfile6_import": 										   resourceCitrixAdcLocationfile6Import(),
+		"citrixadc_subscribergxinterface": 										   resourceCitrixAdcSubscribergxinterface(),
 	}
 }
 
