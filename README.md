@@ -174,7 +174,7 @@ Refer the [Navigating our repository](#navigating-the-repository) section
 
 ### Get your first terraform config into ADC
 
-Follow the article on [Getting started with Terraform on ADC](#https://forum.developer.cloud.com/s/article/Get-Started-with-ADC-Automation-using-Terraform)to get your first configuration
+Follow the article on [Getting started with Terraform on ADC](https://forum.developer.cloud.com/s/article/Get-Started-with-ADC-Automation-using-Terraform) to get your first configuration
 
 ### How to write terraform resources file for ADC
 
