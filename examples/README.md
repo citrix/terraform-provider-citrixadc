@@ -15,6 +15,7 @@ Below is the table showing the usecase you would like to achieve and where you c
 ||Save Citrix ADC Config|[HERE](./saveconfig/)|
 ||Reboot Citrix ADC|[HERE](./basic_adc_operations/rebooter/)|
 ||Save/Update/Clear Citrix ADC configs|[HERE](./basic_adc_operations/nsconfig_save_update_clear_configs/)|
+||Copy a file from local to Citrix ADC|[HERE](./basic_adc_operations/systemfile_copy_a_file_from_local_to_citrixadc/)|
 ||Upgrade Citrix ADC|[HERE](./basic_adc_operations/upgrade_citrixadc/)|
 ||Upgrade HA Pair|[HERE](./basic_adc_operations/upgrade_ha_pair/)|
 ||Take Citrix ADC system backup|[HERE](./basic_adc_operations/systembackup/)|
