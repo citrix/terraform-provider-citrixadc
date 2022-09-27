@@ -807,6 +807,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_locationfile6": 												   resourceCitrixAdcLocationfile6(),
 		"citrixadc_locationfile6_import": 										   resourceCitrixAdcLocationfile6Import(),
 		"citrixadc_subscribergxinterface": 										   resourceCitrixAdcSubscribergxinterface(),
+		"citrixadc_cachecontentgroup": 											   resourceCitrixAdcCachecontentgroup(),
 	}
 }
 
