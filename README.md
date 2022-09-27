@@ -10,7 +10,7 @@ Learn more about Citrix ADC Automation [here](https://docs.citrix.com/en-us/citr
 
 ## Terrraform Provider Documentation
 
-1. [Why Terraform for Citrix ADC ?](#why-terraform-for-citrix-adc)
+1. [Why Terraform for Citrix ADC ?](#why-terraform-for-citrix-adc-)
 2. [Navigating Repository](#navigating-the-repository)
 3. [Understanding Provider Configuration](#understanding-provider-configuration)
 4. [Understanding Resource Configuration](#resource-configuration)
