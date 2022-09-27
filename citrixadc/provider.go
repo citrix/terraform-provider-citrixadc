@@ -810,6 +810,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_cachecontentgroup": 											   resourceCitrixAdcCachecontentgroup(),
 		"citrixadc_smppuser": 													   resourceCitrixAdcSmppuser(),
 		"citrixadc_linkset_channel_binding": 									   resourceCitrixAdcLinkset_channel_binding(),
+		"citrixadc_cacheforwardproxy": 											   resourceCitrixAdcCacheforwardproxy(),
 	}
 }
 
