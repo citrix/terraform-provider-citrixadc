@@ -802,6 +802,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_nsweblogparam":												   resourceCitrixAdcNsweblogparam(),
 		"citrixadc_autoscaleaction": 											   resourceCitrixAdcAutoscaleaction(),
 		"citrixadc_autoscaleprofile": 											   resourceCitrixAdcAutoscaleprofile(),
+		"citrixadc_autoscalepolicy": 											   resourceCitrixAdcAutoscalepolicy(),
 	}
 }
 
