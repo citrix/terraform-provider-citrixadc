@@ -1,5 +1,6 @@
 # Citrix ADC configuration examples
 
+> For individual resource examples, please refer to [Citrix ADC docs in Terraform Registry](https://registry.terraform.io/providers/citrix/citrixadc/latest/docs)
 
 > :round_pushpin:For deploying Citrix ADC in Public Cloud - AWS and Azure, check out cloud scripts in github repo [terraform-cloud-scripts](https://github.com/citrix/terraform-cloud-scripts).
 
