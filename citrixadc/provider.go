@@ -831,6 +831,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_lsngroup_lsntransportprofile_binding": 						   resourceCitrixAdcLsngroup_lsntransportprofile_binding(),
 		"citrixadc_streamselector": 											   resourceCitrixAdcStreamselector(),
 		"citrixadc_lsnparameter": 												   resourceCitrixAdcLsnparameter(),
+		"citrixadc_aaaglobal_aaapreauthenticationpolicy_binding": 				   resourceCitrixAdcAaaglobal_aaapreauthenticationpolicy_binding(),
 	}
 }
 
