@@ -830,6 +830,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_lsngroup_pcpserver_binding": 								   resourceCitrixAdcLsngroup_pcpserver_binding(),
 		"citrixadc_lsngroup_lsntransportprofile_binding": 						   resourceCitrixAdcLsngroup_lsntransportprofile_binding(),
 		"citrixadc_streamselector": 											   resourceCitrixAdcStreamselector(),
+		"citrixadc_lsnparameter": 												   resourceCitrixAdcLsnparameter(),
 	}
 }
 
