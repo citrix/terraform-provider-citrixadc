@@ -4,28 +4,36 @@ subcategory: "SSL"
 
 # Resource: sslservicegroup_sslciphersuite_binding
 
-The sslservicegroup_sslciphersuite_binding resource is used to add a sslciphersuite to sslservicegroup.
+The sslservicegroup_sslciphersuite_binding resource is used to create sslservicegroup_sslciphersuite_binding.
 
 
 ## Example usage
 
 ```hcl
 resource "citrixadc_sslservicegroup_sslciphersuite_binding" "tf_sslservicegroup_sslciphersuite_binding" {
-	ciphername = citrixadc_sslcipher.tf_sslcipher.ciphergroupname
-	servicegroupname = citrixadc_servicegroup.tf_servicegroup.servicegroupname
+  ciphername       = citrixadc_sslcipher.tf_sslcipher.ciphergroupname
+  servicegroupname = citrixadc_gslbservicegroup.tf_gslbservicegroup.servicegroupname
 }
-
-resource "citrixadc_servicegroup" "tf_servicegroup" {
-	servicegroupname = "tf_servicegroup"
-	servicetype = "SSL"
-}
-
 resource "citrixadc_sslcipher" "tf_sslcipher" {
-	ciphergroupname = "tf_sslcipher"
-	ciphersuitebinding {
-		ciphername     = "TLS1.2-ECDHE-RSA-AES128-GCM-SHA256"
-		cipherpriority = 1
-	}
+    ciphergroupname = "my_ciphersuite"
+   
+    ciphersuitebinding {
+        ciphername     = "TLS1.2-ECDHE-RSA-AES128-GCM-SHA256"
+        cipherpriority = 1
+    }    
+}
+
+resource "citrixadc_gslbservicegroup" "tf_gslbservicegroup" {
+  servicegroupname = "my_gslbvservicegroup"
+  servicetype      = "SSL_TCP"
+  cip              = "DISABLED"
+  healthmonitor    = "NO"
+  sitename         = citrixadc_gslbsite.site_local.sitename
+}
+resource "citrixadc_gslbsite" "site_local" {
+  sitename        = "Site-Local"
+  siteipaddress   = "172.31.96.234"
+  sessionexchange = "DISABLED"
 }
 ```
 
@@ -41,7 +49,7 @@ resource "citrixadc_sslcipher" "tf_sslcipher" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the sslservicegroup_sslciphersuite_binding. It is the concatenation of the `servicegroupname` and `ciphername` attributes separated by a comma.
+* `id` - The id of the sslservicegroup_sslciphersuite_binding. It is the concatenation of `servicegroupname` and `ciphername` attributes separated by a comma.
 
 
 ## Import
@@ -49,5 +57,5 @@ In addition to the arguments, the following attributes are available:
 A sslservicegroup_sslciphersuite_binding can be imported using its name, e.g.
 
 ```shell
-terraform import citrixadc_sslservicegroup_sslciphersuite_binding.tf_sslservicegroup_sslciphersuite_binding tf_servicegroup,tf_sslcipher
+terraform import citrixadc_sslservicegroup_sslciphersuite_binding.tf_sslservicegroup_sslciphersuite_binding  my_gslbvservicegroup,my_ciphersuite
 ```

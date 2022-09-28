@@ -819,6 +819,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_cachepolicy": 												   resourceCitrixAdcCachepolicy(),
 		"citrixadc_cachepolicylabel_cachepolicy_binding":						   resourceCitrixAdcCachepolicylabel_cachepolicy_binding(),
 		"citrixadc_cachepolicylabel": 											   resourceCitrixAdcCachepolicylabel(),
+		"citrixadc_sslservicegroup_sslciphersuite_binding": 					   resourceCitrixAdcSslservicegroup_sslciphersuite_binding(),
 	}
 }
 
