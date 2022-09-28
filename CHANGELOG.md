@@ -1,3 +1,49 @@
+## 1.24.0 (Sept 28, 2022)
+
+FEATURES
+
+* **New Resource** aaaglobal_aaapreauthenticationpolicy_binding
+* **New Resource** lsnparameter
+* **New Resource** streamselector
+* **New Resource** lsngroup_lsntransportprofile_binding
+* **New Resource** lsngroup_pcpserver_binding
+* **New Resource** lsnhttphdrlogprofile
+* **New Resource** subscriberparam
+* **New Resource** subscriberradiusinterface
+* **New Resource** subscriberprofile
+* **New Resource** tunneltrafficpolicy
+* **New Resource** cacheselector
+* **New Resource** cacheglobal_cachepolicy_binding
+* **New Resource** sslservicegroup_sslciphersuite_binding
+* **New Resource** cachepolicylabel
+* **New Resource** cachepolicylabel_cachepolicy_binding
+* **New Resource** cachepolicy
+* **New Resource** smppparam
+* **New Resource** icaparameter
+* **New Resource** tunnelglobal_tunneltrafficpolicy_binding
+* **New Resource** auditnslogaction
+* **New Resource** auditnslogpolicy
+* **New Resource** cacheforwardproxy
+* **New Resource** linkset_channel_binding
+* **New Resource** smppuser
+* **New Resource** cachecontentgroup
+* **New Resource** subscribergxinterface
+* **New Resource** locationfile6
+* **New Resource** spilloveraction
+* **New Resource** autoscalepolicy
+* **New Resource** autoscaleprofile
+* **New Resource** autoscaleaction
+* **New Resource** nsweblogparam
+* **New Usecase** Added ADC usecases for Responded and Rewrite Resources
+
+ENHANCEMENTS
+
+* **Enhancements** Updated documentation
+* **Enhancements** Removed examples from example folder which are available in terraform registry
+
+BUG FIXES
+* **Bugfix** fixed `inc` attribute not adding to the `hanode` POST payload
+
 ## 1.23.0 (Sept 15, 2022)
 
 FEATURES
