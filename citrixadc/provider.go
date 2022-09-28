@@ -826,6 +826,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_subscriberprofile": 											   resourceCitrixAdcSubscriberprofile(),
 		"citrixadc_subscriberradiusinterface": 									   resourceCitrixAdcSubscriberradiusinterface(),
 		"citrixadc_subscriberparam": 											   resourceCitrixAdcSubscriberparam(),
+		"citrixadc_lsnhttphdrlogprofile": 										   resourceCitrixAdcLsnhttphdrlogprofile(),
 	}
 }
 
