@@ -43,7 +43,7 @@ type Pcpprofile struct {
 	/**
 	* Integer value that identify the number announce message to be send.
 	*/
-	Announcemulticount int `json:"announcemulticount,omitempty"`
+	Announcemulticount int `json:"announcemulticount"`
 	/**
 	* This argument is for enabling/disabling the THIRD PARTY opcode of current PCP Profile
 	*/

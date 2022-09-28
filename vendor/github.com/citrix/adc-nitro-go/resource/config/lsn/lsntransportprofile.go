@@ -50,16 +50,16 @@ type Lsntransportprofile struct {
 	/**
 	* Maximum number of LSN NAT ports to be used at a time by each subscriber for the specified protocol. For example, each subscriber can be limited to a maximum of 500 TCP NAT ports. When the LSN NAT mappings for a subscriber reach the limit, the Citrix ADC does not allocate additional NAT ports for that subscriber.
 	*/
-	Portquota int `json:"portquota,omitempty"`
+	Portquota int `json:"portquota"`
 	/**
 	* Maximum number of concurrent LSN sessions allowed for each subscriber for the specified protocol. 
 		When the number of LSN sessions reaches the limit for a subscriber, the Citrix ADC does not allow the subscriber to open additional sessions.
 	*/
-	Sessionquota int `json:"sessionquota,omitempty"`
+	Sessionquota int `json:"sessionquota"`
 	/**
 	* Maximum number of concurrent LSN sessions(for the specified protocol) allowed for all subscriber of a group to which this profile has bound. This limit will get split across the Citrix ADCs packet engines and rounded down. When the number of LSN sessions reaches the limit for a group in packet engine, the Citrix ADC does not allow the subscriber of that group to open additional sessions through that packet engine.
 	*/
-	Groupsessionlimit int `json:"groupsessionlimit,omitempty"`
+	Groupsessionlimit int `json:"groupsessionlimit"`
 	/**
 	* Enable port parity between a subscriber port and its mapped LSN NAT port. For example, if a subscriber initiates a connection from an odd numbered port, the Citrix ADC allocates an odd numbered LSN NAT port for this connection. 
 		You must set this parameter for proper functioning of protocols that require the source port to be even or odd numbered, for example, in peer-to-peer applications that use RTP or RTCP protocol.

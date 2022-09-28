@@ -38,11 +38,11 @@ type Smppparam struct {
 	/**
 	* Type of Number, such as an international number or a national number, used in the ESME address sent in the bind request.
 	*/
-	Addrton int `json:"addrton,omitempty"`
+	Addrton int `json:"addrton"`
 	/**
 	* Numbering Plan Indicator, such as landline, data, or WAP client, used in the ESME address sent in the bind request.
 	*/
-	Addrnpi int `json:"addrnpi,omitempty"`
+	Addrnpi int `json:"addrnpi"`
 	/**
 	* Set of SME addresses, sent in the bind request, serviced by the ESME.
 	*/

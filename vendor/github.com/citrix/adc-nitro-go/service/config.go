@@ -346,6 +346,9 @@ func (c *NitroClient) DeleteResourceWithArgs(resourceType string, resourceName s
 			}
 		}
 		_, err = c.listResourceWithArgs(resourceType, resourceName, argsWithoutUsername)
+	} else if resourceType == "cacheforwardproxy" {
+		//Cacheforwardproxy supports only GET(all) Request
+		_, err = c.listResource(resourceType, "")
 	} else {
 		_, err = c.listResourceWithArgs(resourceType, resourceName, args)
 	}
