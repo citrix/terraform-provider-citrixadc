@@ -99,6 +99,7 @@ func createHanodeFunc(d *schema.ResourceData, meta interface{}) error {
 	hanode := ha.Hanode{
         Id:                   d.Get("hanode_id").(int),
         Deadinterval:         d.Get("deadinterval").(int),
+		Inc:				  d.Get("inc").(string),
         Failsafe:             d.Get("failsafe").(string),
         Haprop:               d.Get("haprop").(string),
         Hastatus:             d.Get("hastatus").(string),
