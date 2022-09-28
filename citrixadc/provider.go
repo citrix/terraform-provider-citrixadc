@@ -814,6 +814,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_auditnslogpolicy": 											   resourceCitrixAdcAuditnslogpolicy(),
 		"citrixadc_auditnslogaction": 											   resourceCitrixAdcAuditnslogaction(),
 		"citrixadc_tunnelglobal_tunneltrafficpolicy_binding": 					   resourceCitrixAdcTunnelglobal_tunneltrafficpolicy_binding(),
+		"citrixadc_icaparameter": 												   resourceCitrixAdcIcaparameter(),
 	}
 }
 
