@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"net/url"
 )
 
 func resourceCitrixAdcPolicydataset_value_binding() *schema.Resource {
@@ -160,9 +161,9 @@ func deletePolicydataset_value_bindingFunc(d *schema.ResourceData, meta interfac
 	log.Printf("[DEBUG]  citrixadc-provider: In deletePolicydataset_value_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	args := make(map[string]string)
-	args["value"] = d.Get("value").(string)
+	args["value"] = url.QueryEscape(d.Get("value").(string))
 	if val, ok := d.GetOk("endrange"); ok {
-		args["endrange"] = val.(string)
+		args["endrange"] = url.QueryEscape(val.(string))
 	}
 	err := client.DeleteResourceWithArgsMap(service.Policydataset_value_binding.Type(), d.Get("name").(string), args)
 	if err != nil {
