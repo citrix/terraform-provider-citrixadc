@@ -42,19 +42,19 @@ csvserver_servicetype = "SSL"
 
 # CS Policy 1
 cspolicy1_name = "pol1"
-cspolicy1_url  = "/*.cgi"
+cspolicy1_rule  = "HTTP.REQ.URL.SUFFIX.EQ(\"cgi\")"
 
 # CS Policy 2
 cspolicy2_name = "pol2"
-cspolicy2_url  = "/*.asp"
+cspolicy2_rule  = "HTTP.REQ.URL.SUFFIX.EQ(\"asp\")"
 
 # CS Policy 3
 cspolicy3_name = "pol3"
-cspolicy3_url  = "/*.gif"
+cspolicy3_rule  = "HTTP.REQ.URL.SUFFIX.EQ(\"gif\")"
 
 # CS Policy 4
 cspolicy4_name = "pol4"
-cspolicy4_url  = "/*.jpeg"
+cspolicy4_rule  = "HTTP.REQ.URL.SUFFIX.EQ(\"jpeg\")"
 
 # SSL CertKey
 sslcertkey_name = "mykey"
