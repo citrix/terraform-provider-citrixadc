@@ -30,6 +30,7 @@ Learn more about Citrix ADC Automation [here](https://docs.citrix.com/en-us/citr
 6. [Set up SSL-Offloading use-case in ADC](#set-up-ssl-offloading-use-case-in-adc)
 7. [Committing changes to Citrix ADC's persistent store](#commiting-changes-to-citrix-adcs-persistent-store)
 8. [Managing ADC configs drifts in terraform](#managing-adc-configs-drifts-in-terraform)
+9. [Importing ADC configs into Terraform resources file](#importing-adc-configs-into-terraform-resources-file)
 
 ## Advanced guide on Automating ADC with Terraform
 
@@ -191,13 +192,28 @@ Refer the [commiting changes](#commiting-changes-to-citrix-adcs-persistent-store
 
 ### Managing ADC configs drifts in terraform
 
-TBD
+You want to see the current state of ADC entities in Terraform 
+- Use **terraform refresh** to update your local terraform state file to match with existing ADC state
+- Use **terraform show** to show the current state for your entire configuration
+- Use **terraform state list** to show the resources that are being tracked/managed via Terraform
+- To inspect a particular entity use **terraform state show <entity_name>** e.g. 
+**terraform state show citrixadc_servicegroup.tf_servicegroup**
+
+If you want to override the ADC configuration with the configs you have in Terraform resource file then 
+- You can run **terraform plan** to see the drifts/diff between the two state 
+- Run **terraform apply** to push the desired configs( in your Terraform resource file) to your ADC.
+
+Update your terraform state file to reflect the current/true state of ADC
+- Use **terraform refresh** to update your local terraform state file to match with existing ADC state
+
+### Importing ADC configs into Terraform resources file
+
 
 -----------
 ## Advanced guide on Automating ADC with Terraform
 
 ### Deploy ADC in AWS using Terraform
-Refer our [terraform cloud scripts for AWS](Refer our terraform cloud scripts for AWS) and [demo video](https://www.youtube.com/watch?v=LgGS0-Q5ODE&list=PLrUklKi1o_Zny9cgvjJ7xrBtcdOY_Kc6N&index=15&ab_channel=Citrix)
+Refer our [terraform cloud scripts for AWS](https://github.com/citrix/terraform-cloud-scripts) and [demo video](https://www.youtube.com/watch?v=LgGS0-Q5ODE&list=PLrUklKi1o_Zny9cgvjJ7xrBtcdOY_Kc6N&index=15&ab_channel=Citrix)
 
 
 ### Leveraging Terraform workspaces to manage multiple ADCs
