@@ -162,7 +162,7 @@ Terraform is useful for maintaining desired state for a set of resources. It is 
 
 ### Hands-on lab with ADC automation with Terraform
 
-Try out our [Hands on Lab](https://forum.developer.cloud.com/s/citrix-labs?articleId=ka08b0000005XlIAAU) to experience whats it like using Terraform for ADC.
+Try out our [Hands on Lab](https://forum.developer.cloud.com/s/netscaler-labs?labId=000001068) to experience whats it like using Terraform for ADC.
 
 ### Install Terraform in your own setup
 
@@ -174,7 +174,7 @@ Refer the [Navigating our repository](#navigating-the-repository) section
 
 ### Get your first terraform config into ADC
 
-Follow the article on [Getting started with Terraform on ADC](https://forum.developer.cloud.com/s/article/Get-Started-with-ADC-Automation-using-Terraform) to get your first configuration
+Follow the article on [Getting started with Terraform on NetScaler](https://forum.developer.cloud.com/s/article/Get-Started-with-NetScaler-Automation-using-Terraform) to get your first configuration
 
 ### How to write terraform resources file for ADC
 
