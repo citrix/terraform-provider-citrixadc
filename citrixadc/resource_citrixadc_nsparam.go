@@ -1,7 +1,6 @@
 package citrixadc
 
 import (
-	"github.com/citrix/adc-nitro-go/resource/config/ns"
 	"github.com/citrix/adc-nitro-go/service"
 
 	"github.com/hashicorp/terraform/helper/resource"
@@ -169,33 +168,79 @@ func createNsparamFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNsparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nsparamId := resource.PrefixedUniqueId("tf-nsparam-")
-	nsparam := ns.Nsparam{
-		Advancedanalyticsstats:    d.Get("advancedanalyticsstats").(string),
-		Aftpallowrandomsourceport: d.Get("aftpallowrandomsourceport").(string),
-		Cip:                       d.Get("cip").(string),
-		Cipheader:                 d.Get("cipheader").(string),
-		Cookieversion:             d.Get("cookieversion").(string),
-		Crportrange:               d.Get("crportrange").(string),
-		Exclusivequotamaxclient:   d.Get("exclusivequotamaxclient").(int),
-		Exclusivequotaspillover:   d.Get("exclusivequotaspillover").(int),
-		Ftpportrange:              d.Get("ftpportrange").(string),
-		Grantquotamaxclient:       d.Get("grantquotamaxclient").(int),
-		Grantquotaspillover:       d.Get("grantquotaspillover").(int),
-		Internaluserlogin:         d.Get("internaluserlogin").(string),
-		Maxconn:                   d.Get("maxconn").(int),
-		Maxreq:                    d.Get("maxreq").(int),
-		Mgmthttpport:              d.Get("mgmthttpport").(int),
-		Mgmthttpsport:             d.Get("mgmthttpsport").(int),
-		Pmtumin:                   d.Get("pmtumin").(int),
-		Pmtutimeout:               d.Get("pmtutimeout").(int),
-		Proxyprotocol:             d.Get("proxyprotocol").(string),
-		Securecookie:              d.Get("securecookie").(string),
-		Servicepathingressvlan:    d.Get("servicepathingressvlan").(int),
-		Tcpcip:                    d.Get("tcpcip").(string),
-		Timezone:                  d.Get("timezone").(string),
-		Useproxyport:              d.Get("useproxyport").(string),
-	}
-
+	nsparam := make(map[string]interface{})
+    if data, ok := d.GetOk("advancedanalyticsstats"); ok {
+        nsparam["advancedanalyticsstats"] = data.(string)
+    }
+    if data, ok := d.GetOk("aftpallowrandomsourceport"); ok {
+        nsparam["aftpallowrandomsourceport"] = data.(string)
+    }
+    if data, ok := d.GetOk("cip"); ok {
+        nsparam["cip"] = data.(string)
+    }
+    if data, ok := d.GetOk("cipheader"); ok {
+        nsparam["cipheader"] = data.(string)
+    }
+    if data, ok := d.GetOk("cookieversion"); ok {
+        nsparam["cookieversion"] = data.(string)
+    }
+    if data, ok := d.GetOk("crportrange"); ok {
+        nsparam["crportrange"] = data.(string)
+    }
+    if data, ok := d.GetOk("exclusivequotamaxclient"); ok {
+        nsparam["exclusivequotamaxclient"] = data.(string)
+    }
+    if data, ok := d.GetOk("exclusivequotaspillover"); ok {
+        nsparam["exclusivequotaspillover"] = data.(string)
+    }
+    if data, ok := d.GetOk("ftpportrange"); ok {
+        nsparam["ftpportrange"] = data.(string)
+    }
+    if data, ok := d.GetOk("grantquotaspillover"); ok {
+        nsparam["grantquotaspillover"] = data.(string)
+    }
+    if data, ok := d.GetOk("grantquotamaxclient"); ok {
+        nsparam["grantquotamaxclient"] = data.(string)
+    }
+    if data, ok := d.GetOk("internaluserlogin"); ok {
+        nsparam["internaluserlogin"] = data.(string)
+    }
+    if data, ok := d.GetOkExists("maxconn"); ok {
+        nsparam["maxconn"] = data.(int)
+    }
+    if data, ok := d.GetOkExists("maxreq"); ok {
+        nsparam["maxreq"] = data.(int)
+    }
+    if data, ok := d.GetOk("mgmthttpport"); ok {
+        nsparam["mgmthttpport"] = data.(int)
+    }
+    if data, ok := d.GetOk("mgmthttpsport"); ok {
+        nsparam["mgmthttpsport"] = data.(int)
+    }
+    if data, ok := d.GetOk("pmtumin"); ok {
+        nsparam["pmtumin"] = data.(int)
+    }
+    if data, ok := d.GetOk("pmtutimeout"); ok {
+        nsparam["pmtutimeout"] = data.(int)
+    }
+    if data, ok := d.GetOk("proxyprotocol"); ok {
+        nsparam["proxyprotocol"] = data.(string)
+    }
+    if data, ok := d.GetOk("securecookie"); ok {
+        nsparam["securecookie"] = data.(string)
+    }
+    if data, ok := d.GetOk("servicepathingressvlan"); ok {
+        nsparam["servicepathingressvlan"] = data.(string)
+    }
+    if data, ok := d.GetOk("tcpcip"); ok {
+        nsparam["tcpcip"] = data.(string)
+    }
+    if data, ok := d.GetOk("timezone"); ok {
+        nsparam["timezone"] = data.(string)
+    }
+    if data, ok := d.GetOk("useproxyport"); ok {
+        nsparam["useproxyport"] = data.(string)
+    }
 	err := client.UpdateUnnamedResource(service.Nsparam.Type(), &nsparam)
 	if err != nil {
 		return err
@@ -222,7 +267,6 @@ func readNsparamFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
-	d.Set("name", data["name"])
 	d.Set("advancedanalyticsstats", data["advancedanalyticsstats"])
 	d.Set("aftpallowrandomsourceport", data["aftpallowrandomsourceport"])
 	d.Set("cip", data["cip"])
