@@ -68,42 +68,55 @@ resource "citrixadc_csvserver" "tf_csvserver" {
   state       = "ENABLED"
   stateupdate = "ENABLED"
 }
+
+resource "citrixadc_csaction" "csaction_html" {
+  name            = "csaction_HTML"
+  targetlbvserver = citrixadc_lbvserver.lb_1.name
+}
+resource "citrixadc_csaction" "csaction_image" {
+  name            = "csaction_Image"
+  targetlbvserver = citrixadc_lbvserver.lb_2.name
+}
 resource "citrixadc_cspolicy" "tf_cspolicy1" {
   policyname = var.cspolicy1_name
-  url        = var.cspolicy1_url
+  rule       = var.cspolicy1_rule
+  action     = citrixadc_csaction.csaction_html.name
 }
 resource "citrixadc_cspolicy" "tf_cspolicy2" {
   policyname = var.cspolicy2_name
-  url        = var.cspolicy2_url
+  rule       = var.cspolicy2_rule
+  action     = citrixadc_csaction.csaction_html.name
 }
 resource "citrixadc_cspolicy" "tf_cspolicy3" {
   policyname = var.cspolicy3_name
-  url        = var.cspolicy3_url
+  rule       = var.cspolicy3_rule
+  action     = citrixadc_csaction.csaction_image.name
 }
 resource "citrixadc_cspolicy" "tf_cspolicy4" {
   policyname = var.cspolicy4_name
-  url        = var.cspolicy4_url
+  rule       = var.cspolicy4_rule
+  action     = citrixadc_csaction.csaction_image.name
 }
 
 resource "citrixadc_csvserver_cspolicy_binding" "tf_bind1" {
-  name            = citrixadc_csvserver.tf_csvserver.name
-  policyname      = citrixadc_cspolicy.tf_cspolicy1.policyname
-  targetlbvserver = citrixadc_lbvserver.lb_1.name
+  name       = citrixadc_csvserver.tf_csvserver.name
+  policyname = citrixadc_cspolicy.tf_cspolicy1.policyname
+  priority   = 100
 }
 resource "citrixadc_csvserver_cspolicy_binding" "tf_bind2" {
-  name            = citrixadc_csvserver.tf_csvserver.name
-  policyname      = citrixadc_cspolicy.tf_cspolicy2.policyname
-  targetlbvserver = citrixadc_lbvserver.lb_1.name
+  name       = citrixadc_csvserver.tf_csvserver.name
+  policyname = citrixadc_cspolicy.tf_cspolicy2.policyname
+  priority   = 200
 }
 resource "citrixadc_csvserver_cspolicy_binding" "tf_bind3" {
-  name            = citrixadc_csvserver.tf_csvserver.name
-  policyname      = citrixadc_cspolicy.tf_cspolicy3.policyname
-  targetlbvserver = citrixadc_lbvserver.lb_2.name
+  name       = citrixadc_csvserver.tf_csvserver.name
+  policyname = citrixadc_cspolicy.tf_cspolicy3.policyname
+  priority   = 300
 }
 resource "citrixadc_csvserver_cspolicy_binding" "tf_bind4" {
-  name            = citrixadc_csvserver.tf_csvserver.name
-  policyname      = citrixadc_cspolicy.tf_cspolicy4.policyname
-  targetlbvserver = citrixadc_lbvserver.lb_2.name
+  name       = citrixadc_csvserver.tf_csvserver.name
+  policyname = citrixadc_cspolicy.tf_cspolicy4.policyname
+  priority   = 400
 }
 
 resource "citrixadc_sslcertkey" "tf_sslcertkey" {
