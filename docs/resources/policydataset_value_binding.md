@@ -46,3 +46,11 @@ resource "citrixadc_policydataset_value_binding" "tf_value2" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the policydataset_value_binding. Its value is the concatenation of the `name` and `value` attributes separated by a comma: `<name>,<value>`.
+
+## Import
+
+A policydataset_value_binding can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_policydataset_value_binding.tf_value1 tf_dataset,100
+```
