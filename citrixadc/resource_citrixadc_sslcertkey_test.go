@@ -41,11 +41,11 @@ func TestAccSslcertkey_basic(t *testing.T) {
 					testAccCheckSslcertkeyExist("citrixadc_sslcertkey.foo", nil),
 
 					resource.TestCheckResourceAttr(
-						"citrixadc_sslcertkey.foo", "cert", "/var/tmp/certificate1.crt"),
+						"citrixadc_sslcertkey.foo", "cert", "/nsconfig/ssl/certificate1.crt"),
 					resource.TestCheckResourceAttr(
 						"citrixadc_sslcertkey.foo", "certkey", "sample_ssl_cert"),
 					resource.TestCheckResourceAttr(
-						"citrixadc_sslcertkey.foo", "key", "/var/tmp/key1.pem"),
+						"citrixadc_sslcertkey.foo", "key", "/nsconfig/ssl/key1.pem"),
 				),
 			},
 		},
@@ -141,17 +141,17 @@ const testAccSslcertkey_basic = `
 
 resource "citrixadc_sslcertkey" "foo" {
   certkey = "sample_ssl_cert"
-  cert = "/var/tmp/certificate1.crt"
-  key = "/var/tmp/key1.pem"
+  cert = "/nsconfig/ssl/certificate1.crt"
+  key = "/nsconfig/ssl/key1.pem"
   notificationperiod = 40
   expirymonitor = "ENABLED"
 }
 `
 
 func TestAccSslcertkey_linkcert(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
+	// if adcTestbed != "STANDALONE" {
+	// 	t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	// }
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { doSslcertkeyPreChecks(t) },
 		Providers:    testAccProviders,
@@ -240,13 +240,13 @@ func TestAccSslcertkey_linkcert(t *testing.T) {
 const testAccSslcertkey_linkcert_nolink = `
 
 resource "citrixadc_sslcertkey" "client" {
-    cert = "/var/tmp/certificate1.crt"
-    key = "/var/tmp/key1.pem"
+    cert = "/nsconfig/ssl/certificate1.crt"
+    key = "/nsconfig/ssl/key1.pem"
     certkey = "client"
 }
 
 resource "citrixadc_sslcertkey" "intermediate" {
-    cert = "/var/tmp/intermediate.crt"
+    cert = "/nsconfig/ssl/intermediate.crt"
     certkey = "intermediate"
 }
 
@@ -256,14 +256,14 @@ resource "citrixadc_sslcertkey" "intermediate" {
 const testAccSslcertkey_linkcert_linked = `
 
 resource "citrixadc_sslcertkey" "client" {
-    cert = "/var/tmp/certificate1.crt"
-    key = "/var/tmp/key1.pem"
+    cert = "/nsconfig/ssl/certificate1.crt"
+    key = "/nsconfig/ssl/key1.pem"
     certkey = "client"
     linkcertkeyname = citrixadc_sslcertkey.intermediate.certkey
 }
 
 resource "citrixadc_sslcertkey" "intermediate" {
-    cert = "/var/tmp/intermediate.crt"
+    cert = "/nsconfig/ssl/intermediate.crt"
     certkey = "intermediate"
 }
 
@@ -272,7 +272,7 @@ resource "citrixadc_sslcertkey" "intermediate" {
 const testAccSslcertkey_linkcert_client_key_removed = `
 
 resource "citrixadc_sslcertkey" "intermediate" {
-    cert = "/var/tmp/intermediate.crt"
+    cert = "/nsconfig/ssl/intermediate.crt"
     certkey = "intermediate"
 }
 
@@ -301,8 +301,8 @@ func TestAccSslcertkey_AssertNonUpdateableAttributes(t *testing.T) {
 
 	certkeyInstance := ssl.Sslcertkey{
 		Certkey: certkeyName,
-		Cert:    "/var/tmp/certificate1.crt",
-		Key:     "/var/tmp/key1.pem",
+		Cert:    "/nsconfig/ssl/certificate1.crt",
+		Key:     "/nsconfig/ssl/key1.pem",
 	}
 
 	if _, err := c.client.AddResource(certkeyType, certkeyName, certkeyInstance); err != nil {
@@ -315,12 +315,12 @@ func TestAccSslcertkey_AssertNonUpdateableAttributes(t *testing.T) {
 	certkeyInstance.Key = ""
 
 	//cert
-	certkeyInstance.Cert = "/var/tmp/new/crt"
+	certkeyInstance.Cert = "/nsconfig/ssl/new/crt"
 	testHelperVerifyImmutabilityFunc(c, t, certkeyType, certkeyName, certkeyInstance, "cert")
 	certkeyInstance.Cert = ""
 
 	//key
-	certkeyInstance.Key = "/var/tmp/new/key"
+	certkeyInstance.Key = "/nsconfig/ssl/new/key"
 	testHelperVerifyImmutabilityFunc(c, t, certkeyType, certkeyName, certkeyInstance, "key")
 	certkeyInstance.Key = ""
 
