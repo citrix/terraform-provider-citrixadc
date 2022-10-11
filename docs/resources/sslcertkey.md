@@ -12,8 +12,8 @@ The sslcertkey resource is used to create TLS certificate keys.
 ```hcl
 resource "citrixadc_sslcertkey" "tf_sslcertkey" {
   certkey = "tf_sslcertkey"
-  cert = "/var/tmp/certificate1.crt"
-  key = "/var/tmp/key1.pem"
+  cert = "/nsconfig/ssl/certificate1.crt"
+  key = "/nsconfig/ssl/key1.pem"
   notificationperiod = 40
   expirymonitor = "ENABLED"
 }
