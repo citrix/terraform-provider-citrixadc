@@ -207,7 +207,7 @@ Update your terraform state file to reflect the current/true state of ADC
 - Use **terraform refresh** to update your local terraform state file to match with existing ADC state
 
 ### Importing ADC configs into Terraform resources file
-
+Learn how to import existing NetScaler configurations into Terraform resources [here](https://forum.developer.cloud.com/s/article/Importing-existing-NetScaler-configuration-into-Terraform)
 
 -----------
 ## Advanced guide on Automating ADC with Terraform
