@@ -833,6 +833,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_streamselector": 											   resourceCitrixAdcStreamselector(),
 		"citrixadc_lsnparameter": 												   resourceCitrixAdcLsnparameter(),
 		"citrixadc_aaaglobal_aaapreauthenticationpolicy_binding": 				   resourceCitrixAdcAaaglobal_aaapreauthenticationpolicy_binding(),
+		"citrixadc_sslcertfile": 				   								   resourceCitrixAdcSslcertfile(),
 	}
 }
 
