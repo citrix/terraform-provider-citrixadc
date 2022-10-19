@@ -834,6 +834,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_lsnparameter": 												   resourceCitrixAdcLsnparameter(),
 		"citrixadc_aaaglobal_aaapreauthenticationpolicy_binding": 				   resourceCitrixAdcAaaglobal_aaapreauthenticationpolicy_binding(),
 		"citrixadc_sslcertfile": 				   								   resourceCitrixAdcSslcertfile(),
+		"citrixadc_sslcertkey_sslocspresponder_binding":						   resourceCitrixAdcSslcertkey_sslocspresponder_binding(),
 	}
 }
 
