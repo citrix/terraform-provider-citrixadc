@@ -95,6 +95,7 @@ func providerDataSources() map[string]*schema.Resource {
 		"citrixadc_nsversion":                     dataSourceCitrixAdcNsversion(),
 		"citrixadc_sslcipher_sslvserver_bindings": dataSourceCitrixAdcSslcipherSslvserverBindings(),
 		"citrixadc_nitro_info":                    dataSourceCitrixAdcNitroInfo(),
+		"citrixadc_hanode":                    	   dataSourceCitrixAdcHanode(),
 	}
 }
 
