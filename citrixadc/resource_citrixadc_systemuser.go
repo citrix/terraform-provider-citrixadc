@@ -128,6 +128,10 @@ func createSystemuserFunc(d *schema.ResourceData, meta interface{}) error {
 func readSystemuserFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSystemuserFunc")
 	client := meta.(*NetScalerNitroClient).client
+
+	// To send new password for API call authentication 
+	client = client.SetPassword(d.Get("password").(string))
+
 	systemuserName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading systemuser state %s", systemuserName)
 	data, err := client.FindResource(service.Systemuser.Type(), systemuserName)
