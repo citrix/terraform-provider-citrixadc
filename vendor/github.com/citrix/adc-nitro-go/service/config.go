@@ -181,6 +181,13 @@ func (c *NitroClient) Logout() error {
 	return err
 }
 
+// SetPassword sets new password for authentication
+func (c *NitroClient) SetPassword(newPassword string) *NitroClient {
+	c.password = newPassword
+
+	return c
+}
+
 //AddResourceReturnBody adds a resource of supplied type and name and returns http response body
 func (c *NitroClient) AddResourceReturnBody(resourceType string, name string, resourceStruct interface{}) ([]byte, error) {
 
