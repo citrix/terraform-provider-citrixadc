@@ -17,26 +17,55 @@ package citrixadc
 
 import (
 	"fmt"
-	"testing"
-
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+	"testing"
 )
 
-func TestAccRnat_basic(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+const testAccRnat_add = `
+
+	resource "citrixadc_rnat" "tfrnat" {
+		name             = "tfrnat"
+		network          = "10.2.2.0"
+		netmask          = "255.255.255.255"
+		useproxyport     = "ENABLED"
+		srcippersistency = "DISABLED"
+		connfailover     = "DISABLED"
 	}
+`
+const testAccRnat_update = `
+
+	resource "citrixadc_rnat" "tfrnat" {
+		name             = "tfrnat"
+		network          = "10.2.2.0"
+		netmask          = "255.255.255.255"
+		useproxyport     = "DISABLED"
+		srcippersistency = "DISABLED"
+		connfailover     = "DISABLED"
+	}
+`
+
+func TestAccRnat_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRnatDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccRnat_basic,
+				Config: testAccRnat_add,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRnatExist("citrixadc_rnat.foo", nil),
+					testAccCheckRnatExist("citrixadc_rnat.tfrnat", nil),
+					resource.TestCheckResourceAttr("citrixadc_rnat.tfrnat","name", "tfrnat"),
+					resource.TestCheckResourceAttr("citrixadc_rnat.tfrnat","useproxyport", "ENABLED"),
+				),
+			},
+			resource.TestStep{
+				Config: testAccRnat_update,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRnatExist("citrixadc_rnat.tfrnat", nil),
+					resource.TestCheckResourceAttr("citrixadc_rnat.tfrnat","name", "tfrnat"),
+					resource.TestCheckResourceAttr("citrixadc_rnat.tfrnat","useproxyport", "DISABLED"),
 				),
 			},
 		},
@@ -63,15 +92,14 @@ func testAccCheckRnatExist(n string, id *string) resource.TestCheckFunc {
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		//d, err := nsClient.FindFilteredResourceArray(service.Rnat.Type(), map[string]string{"network": "192.168.96.0", "netmask": "255.255.240.0", "natip": "*"})
-		d, err := nsClient.FindFilteredResourceArray(service.Rnat.Type(), map[string]string{"network": "192.168.96.0", "netmask": "255.255.240.0"})
+		data, err := nsClient.FindResource(service.Rnat.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if len(d) != 1 {
-			return fmt.Errorf("Rnat rule %s not found", n)
+		if data == nil {
+			return fmt.Errorf("rnat %s not found", n)
 		}
 
 		return nil
@@ -90,24 +118,12 @@ func testAccCheckRnatDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindFilteredResourceArray(service.Rnat.Type(), map[string]string{"network": "192.168.96.0", "netmask": "255.255.240.0", "natip": "*"})
+		_, err := nsClient.FindResource(service.Rnat.Type(), rs.Primary.ID)
 		if err == nil {
-			return fmt.Errorf("Rnat rule %s still exists", rs.Primary.ID)
+			return fmt.Errorf("rnat %s still exists", rs.Primary.ID)
 		}
 
 	}
 
 	return nil
 }
-
-const testAccRnat_basic = `
-
-
-resource "citrixadc_rnat" "foo" {
-	rnatsname = "foo"
-	rnat {
-           network = "192.168.96.0"
-           netmask = "255.255.240.0"
-         }
-}
-`
