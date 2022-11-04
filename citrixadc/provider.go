@@ -836,6 +836,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_sslcertfile": 				   								   resourceCitrixAdcSslcertfile(),
 		"citrixadc_sslcertkey_sslocspresponder_binding":						   resourceCitrixAdcSslcertkey_sslocspresponder_binding(),
 		"citrixadc_nspbrs": 				   								   	   resourceCitrixAdcNspbrs(),
+		"citrixadc_sslcertkey_update": 				   							   resourceCitrixAdcSslcertkeyUpdate(),
 	}
 }
 
