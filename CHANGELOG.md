@@ -1,3 +1,28 @@
+## 1.25.0 (Nov 4, 2022)
+
+FEATURES
+
+**New Resource** sslcertkey_update
+**New Resource** nspbrs
+**New Resource** sslcertkey_sslocspresponder_binding
+**New Resource** sslcertfile
+**New Data-Source** hanode
+
+EXAMPLE USECASES
+
+**New Usecase** SSL Offloading in Citrix ADC using terraform modules
+
+ENHANCEMENTS
+
+**Enhancements** policydataset_value_binding supported CIDR for IP addresses
+**Enhancements** Updated documentation
+
+BUG FIXES
+
+**Bug Fix** a small fix in naparam
+**Bug Fix** Updated systemuser resource
+
+
 ## 1.24.0 (Sept 28, 2022)
 
 FEATURES
