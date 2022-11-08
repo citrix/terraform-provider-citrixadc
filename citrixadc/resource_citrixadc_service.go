@@ -321,17 +321,17 @@ func resourceCitrixAdcService() *schema.Resource {
 			"disabled_timeout": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "2m",
+				// Default:  "2m",
 			},
 			"disabled_poll_delay": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "2s",
+				// Default:  "2s",
 			},
 			"disabled_poll_interval": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "5s",
+				// Default:  "5s",
 			},
 		},
 	}

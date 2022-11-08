@@ -142,7 +142,8 @@ func readNd6ravariablesFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
-	d.Set("vlan", data["vlan"])
+	vlan_int,_ := strconv.Atoi(data["vlan"].(string))
+	d.Set("vlan", vlan_int)
 	d.Set("ceaserouteradv", data["ceaserouteradv"])
 	d.Set("currhoplimit", data["currhoplimit"])
 	d.Set("defaultlifetime", data["defaultlifetime"])
