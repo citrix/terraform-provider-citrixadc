@@ -152,6 +152,12 @@ func resourceCitrixAdcLbmonitor() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"ipaddress": &schema.Schema{
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Optional: true,
+				Computed: true,
+			},
 			"iptunnel": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -561,6 +567,7 @@ func createLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 		Httprequest:                    d.Get("httprequest").(string),
 		Inbandsecurityid:               d.Get("inbandsecurityid").(string),
 		Interval:                       d.Get("interval").(int),
+		Ipaddress:                      toStringList(d.Get("ipaddress").([]interface{})),
 		Iptunnel:                       d.Get("iptunnel").(string),
 		Kcdaccount:                     d.Get("kcdaccount").(string),
 		Lasversion:                     d.Get("lasversion").(string),
@@ -688,6 +695,7 @@ func readLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("httprequest", data["httprequest"])
 	d.Set("inbandsecurityid", data["inbandsecurityid"])
 	d.Set("interval", data["interval"])
+	d.Set("ipaddress", data["ipaddress"])
 	d.Set("iptunnel", data["iptunnel"])
 	d.Set("kcdaccount", data["kcdaccount"])
 	d.Set("lasversion", data["lasversion"])
@@ -907,6 +915,11 @@ func updateLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("interval") {
 		log.Printf("[DEBUG] netscaler-provider:  Interval has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Interval = d.Get("interval").(int)
+		hasChange = true
+	}
+	if d.HasChange("ipaddress") {
+		log.Printf("[DEBUG] netscaler-provider:  Iptunnel has changed for lbmonitor %s, starting update", lbmonitorName)
+		lbmonitor.Ipaddress = toStringList(d.Get("ipaddress").([]interface{}))
 		hasChange = true
 	}
 	if d.HasChange("iptunnel") {
