@@ -6,6 +6,8 @@ subcategory: "Network"
 
 The rnat resource is used to create rnat.
 
+~>
+This is updated `rnat` resource which supports add, update and delete operation for latest Citrix ADC versions(from 13.0 and above). To continue using older rnat resource operation `clear` refer and use the resource [`citrixadc_rnat_clear`](./rnat_clear.md). 
 
 ## Example usage
 
@@ -22,7 +24,7 @@ resource "citrixadc_rnat" "tfrnat" {
 
 
 ## Argument Reference
-1
+
 * `name` - (Required) Name for the RNAT4 rule. Must begin with a letter, number, or the underscore character (_), and can consist of letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at sign (@), equals (=), colon (:), and underscore characters. Cannot be changed after the rule is created. Choose a name that helps identify the RNAT4 rule. Minimum length =  1
 * `network` - (Optional) The network address defined for the RNAT entry. Minimum length =  1
 * `netmask` - (Optional) The subnet mask for the network address. Minimum length =  1
