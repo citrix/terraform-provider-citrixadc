@@ -7,6 +7,12 @@ import (
 	"log"
 )
 
+type changePasswordPayload struct {
+	Username     string `json:"username,omitempty"`
+	Password     string `json:"password,omitempty"`
+	New_password string `json:"new_password,omitempty"`
+}
+
 func resourceCitrixAdcChangePassword() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
@@ -33,7 +39,7 @@ func resourceCitrixAdcChangePassword() *schema.Resource {
 			},
 			"first_time_password_reset": &schema.Schema{
 				Type:      schema.TypeBool,
-				Description: "value is true if the user is changing the default password else value is false",
+				Description: "Value is 'true' if the user is changing the default password, else value is 'false' if user wants to change password at any point later",
 				Required:  true,
 				ForceNew:  true,
 			},
@@ -58,7 +64,7 @@ func createChangePassword(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return err
 		} 
-	} else if d.Get("first_time_password_reset").(bool) == false {
+	} else {
 		new_payload := changePasswordPayload{
 			Username:     d.Get("username").(string),
 			Password:     d.Get("new_password").(string),
@@ -74,8 +80,3 @@ func createChangePassword(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-type changePasswordPayload struct {
-	Username     string `json:"username,omitempty"`
-	Password     string `json:"password,omitempty"`
-	New_password string `json:"new_password,omitempty"`
-}

@@ -24,7 +24,11 @@ resource "citrixadc_change_password" "tf_change_password" {
 * `username` - (Required) User name for the operation.
 * `password` - (Required) The default password.
 * `new_password` - (Required) The new password
-* `first_time_password_reset` - (Required) bool value.The value is `true` if the user wants to perform default password reset operation, else `false` if the user wants to change the password not for the first time. 
+* `first_time_password_reset` - (Required) bool value.The value is `true` if the user wants to perform default password reset operation at first login, else `false` if the user wants to change the password at any point later. 
+
+~>
+│ Error: [ERROR] nitro-go: Failed to create resource of type login, name=, err=failed: 599 Netscaler specific error ({ "errorcode": 278, "message": "Invalid argument", "severity": "ERROR" })  
+If the user observe above error than it may be possible that the value of `first_time_password_reset` is set to `true` by the user but if the user wants to change the password at any point later than it must be set `false`. So, change the value of `first_time_password_reset` to `false`.
 
 
 ## Attribute Reference
