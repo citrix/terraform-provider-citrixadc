@@ -25,9 +25,9 @@ import (
 )
 
 func TestAccRnatClear_basic(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
+	// if adcTestbed != "STANDALONE" {
+	// 	t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	// }
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -36,7 +36,7 @@ func TestAccRnatClear_basic(t *testing.T) {
 			resource.TestStep{
 				Config: testAccRnatClear_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRnatClearExist("citrixadc_rnat.foo", nil),
+					testAccCheckRnatClearExist("citrixadc_rnat_clear.foo", nil),
 				),
 			},
 		},
@@ -82,7 +82,7 @@ func testAccCheckRnatClearDestroy(s *terraform.State) error {
 	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "citrixadc_rnat" {
+		if rs.Type != "citrixadc_rnat_clear" {
 			continue
 		}
 
@@ -103,7 +103,7 @@ func testAccCheckRnatClearDestroy(s *terraform.State) error {
 const testAccRnatClear_basic = `
 
 
-resource "citrixadc_rnat" "foo" {
+resource "citrixadc_rnat_clear" "foo" {
 	rnatsname = "foo"
 	rnat {
            network = "192.168.96.0"

@@ -7,12 +7,13 @@ subcategory: "Network"
 The rnat_clear resource is used to create and clear the RNAT rule.
 
 ~> 
-This resource supports create and clear operation. To use add, update and delete operation that supports latest ADC version(from 13.0 and above) refer [`citrixadc_rnat'](./rnat.md) resource.
+* This resource supports create and clear operation. To use add, update and delete operation that supports latest ADC version(from 13.0 and above) refer `citrixadc_rnat' resource.
+* This is depricated in the versions 13.0 and above. To clear the rnat you need to destroy the resource.
 
 ## Example usage
 
 ```hcl
-resource "citrixadc_rnat" "allrnat" {
+resource "citrixadc_rnat_clear" "allrnat" {
   rnatsname = "rnatsall"
 
   rnat {

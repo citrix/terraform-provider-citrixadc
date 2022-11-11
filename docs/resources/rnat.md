@@ -7,7 +7,8 @@ subcategory: "Network"
 The rnat resource is used to create rnat.
 
 ~>
-This is updated `rnat` resource which supports add, update and delete operation for latest Citrix ADC versions(from 13.0 and above). To continue using older rnat resource operation `clear` refer and use the resource [`citrixadc_rnat_clear`](./rnat_clear.md). 
+* This is updated `rnat` resource which supports add, update and delete operation for latest Citrix ADC versions(from 13.0 and above). 
+* For versions 12.1 and below, to continue using older rnat resource operation `clear` refer and use the resource `citrixadc_rnat_clear`
 
 ## Example usage
 
