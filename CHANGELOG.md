@@ -1,3 +1,22 @@
+## 1.26.0 (Nov 15, 2022)
+
+FEATURES
+
+* **New Resource** change_password
+* **New Resource** rnat_clear
+
+BUG FIXES
+
+* **citrixadc_lbmonitor** Added `ipaddress` attribute in `lbmonitor` resource
+* **citrixadc_nd6ravariables** Type conversion for `vlan` attribute in `nd6ravariables` resource.
+* **citrixadc_service**: Removed the default values for some attributes in `service` resource.
+* **citrixadc_systemuser**: Removed unwanted function call to `client.SetPassword()` in read operation.
+
+ENHANCEMENTS
+
+* **citrixadc_rnat**: Supported Add, update and Delete operation in `rnat` resource(for ADC version 13.0 and above) and created new `rnat_clear` resource which supports old rnat resouce or operation
+`clear` for ADC version 12.0. Refer `rnat` and `rnat_clear` resource documentation for more details.
+* **citrixadc_cspolicy**: Updated `cspolicy` resource to support to the latest ADC versions i.e., Added attribute `boundto` which is present in `csvserver_cspolicy_binding` for ADC version 13.1.
 ## 1.25.0 (Nov 4, 2022)
 
 FEATURES
