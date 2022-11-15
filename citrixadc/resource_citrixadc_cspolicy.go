@@ -39,8 +39,9 @@ func resourceCitrixAdcCspolicy() *schema.Resource {
 			},
 			"policyname": &schema.Schema{
 				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Required: true,
+				Computed: false,
+				ForceNew: true,
 			},
 			"rule": &schema.Schema{
 				Type:     schema.TypeString,
@@ -65,7 +66,7 @@ func resourceCitrixAdcCspolicy() *schema.Resource {
 			"forcenew_id_set": &schema.Schema{
 				Type:     schema.TypeSet,
 				Optional: true,
-				Computed: true,
+				Computed: false,
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
@@ -176,7 +177,7 @@ func readCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
-	d.Set("name", data["name"])
+	d.Set("policyname", data["policyname"])
 	d.Set("action", data["action"])
 	d.Set("domain", data["domain"])
 	d.Set("logaction", data["logaction"])
