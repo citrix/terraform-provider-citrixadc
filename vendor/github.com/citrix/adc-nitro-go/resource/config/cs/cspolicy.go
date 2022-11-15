@@ -39,6 +39,10 @@ type Cspolicy struct {
 	*/
 	Rule string `json:"rule,omitempty"`
 	/**
+	* The boundto name. The string value can range to 63 characters.
+	*/
+	Boundto string `json:"boundto,omitempty"`
+	/**
 	* The domain name. The string value can range to 63 characters.
 	*/
 	Domain string `json:"domain,omitempty"`
