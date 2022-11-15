@@ -2,25 +2,25 @@
 
 FEATURES
 
-**New Resource** sslcertkey_update
-**New Resource** nspbrs
-**New Resource** sslcertkey_sslocspresponder_binding
-**New Resource** sslcertfile
-**New Data-Source** hanode
+* **New Resource** sslcertkey_update
+* **New Resource** nspbrs
+* **New Resource** sslcertkey_sslocspresponder_binding
+* **New Resource** sslcertfile
+* **New Data-Source** hanode
 
 EXAMPLE USECASES
 
-**New Usecase** SSL Offloading in Citrix ADC using terraform modules
+* **New Usecase** SSL Offloading in Citrix ADC using terraform modules
 
 ENHANCEMENTS
 
-**Enhancements** policydataset_value_binding supported CIDR for IP addresses
-**Enhancements** Updated documentation
+* **Enhancements** policydataset_value_binding supported CIDR for IP addresses
+* **Enhancements** Updated documentation
 
 BUG FIXES
 
-**Bug Fix** a small fix in naparam
-**Bug Fix** Updated systemuser resource
+* **Bug Fix** a small fix in naparam
+* **Bug Fix** Updated systemuser resource
 
 
 ## 1.24.0 (Sept 28, 2022)
