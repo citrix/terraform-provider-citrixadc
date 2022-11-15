@@ -17,62 +17,33 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"testing"
 )
 
-const testAccRnat_add = `
-
-	resource "citrixadc_rnat" "tfrnat" {
-		name             = "tfrnat"
-		network          = "10.2.2.0"
-		netmask          = "255.255.255.255"
-		useproxyport     = "ENABLED"
-		srcippersistency = "DISABLED"
-		connfailover     = "DISABLED"
-	}
-`
-const testAccRnat_update = `
-
-	resource "citrixadc_rnat" "tfrnat" {
-		name             = "tfrnat"
-		network          = "10.2.2.0"
-		netmask          = "255.255.255.255"
-		useproxyport     = "DISABLED"
-		srcippersistency = "DISABLED"
-		connfailover     = "DISABLED"
-	}
-`
-
-func TestAccRnat_basic(t *testing.T) {
+func TestAccRnatClear_basic(t *testing.T) {
+	// if adcTestbed != "STANDALONE" {
+	// 	t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
+	// }
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRnatDestroy,
+		CheckDestroy: testAccCheckRnatClearDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccRnat_add,
+				Config: testAccRnatClear_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRnatExist("citrixadc_rnat.tfrnat", nil),
-					resource.TestCheckResourceAttr("citrixadc_rnat.tfrnat","name", "tfrnat"),
-					resource.TestCheckResourceAttr("citrixadc_rnat.tfrnat","useproxyport", "ENABLED"),
-				),
-			},
-			resource.TestStep{
-				Config: testAccRnat_update,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRnatExist("citrixadc_rnat.tfrnat", nil),
-					resource.TestCheckResourceAttr("citrixadc_rnat.tfrnat","name", "tfrnat"),
-					resource.TestCheckResourceAttr("citrixadc_rnat.tfrnat","useproxyport", "DISABLED"),
+					testAccCheckRnatClearExist("citrixadc_rnat_clear.foo", nil),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckRnatExist(n string, id *string) resource.TestCheckFunc {
+func testAccCheckRnatClearExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -92,25 +63,26 @@ func testAccCheckRnatExist(n string, id *string) resource.TestCheckFunc {
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Rnat.Type(), rs.Primary.ID)
+		//d, err := nsClient.FindFilteredResourceArray(service.RnatClear.Type(), map[string]string{"network": "192.168.96.0", "netmask": "255.255.240.0", "natip": "*"})
+		d, err := nsClient.FindFilteredResourceArray(service.Rnat.Type(), map[string]string{"network": "192.168.96.0", "netmask": "255.255.240.0"})
 
 		if err != nil {
 			return err
 		}
 
-		if data == nil {
-			return fmt.Errorf("rnat %s not found", n)
+		if len(d) != 1 {
+			return fmt.Errorf("RnatClear rule %s not found", n)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckRnatDestroy(s *terraform.State) error {
+func testAccCheckRnatClearDestroy(s *terraform.State) error {
 	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "citrixadc_rnat" {
+		if rs.Type != "citrixadc_rnat_clear" {
 			continue
 		}
 
@@ -118,12 +90,24 @@ func testAccCheckRnatDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Rnat.Type(), rs.Primary.ID)
+		_, err := nsClient.FindFilteredResourceArray(service.Rnat.Type(), map[string]string{"network": "192.168.96.0", "netmask": "255.255.240.0", "natip": "*"})
 		if err == nil {
-			return fmt.Errorf("rnat %s still exists", rs.Primary.ID)
+			return fmt.Errorf("RnatClear rule %s still exists", rs.Primary.ID)
 		}
 
 	}
 
 	return nil
 }
+
+const testAccRnatClear_basic = `
+
+
+resource "citrixadc_rnat_clear" "foo" {
+	rnatsname = "foo"
+	rnat {
+           network = "192.168.96.0"
+           netmask = "255.255.240.0"
+         }
+}
+`
