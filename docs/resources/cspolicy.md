@@ -44,6 +44,8 @@ resource "citrixadc_cspolicy" "tf_cspolicy" {
 }
 ```
 
+!>
+To bind `csvserver` to `cspolicy` please use `csvserver_cspolicy_binding` insted of this resource. As this support for binding in `cspolicy` resource will get deprecated soon.
 
 ## Argument Reference
 
@@ -51,6 +53,7 @@ resource "citrixadc_cspolicy" "tf_cspolicy" {
 * `url` - (Optional) URL string that is matched with the URL of a request. Can contain a wildcard character. Specify the string value in the following format: [[prefix] [*]] [.suffix].
 * `rule` - (Optional) Expression, or name of a named expression, against which traffic is evaluated.
 * `domain` - (Optional) The domain name. The string value can range to 63 characters.
+* `boundto` - (Optional) The boundto name. The string value can range to 63 characters.
 * `action` - (Optional) Content switching action that names the target load balancing virtual server to which the traffic is switched.
 * `logaction` - (Optional) The log action associated with the content switching policy.
 * `csvserver` - (Required) Content switching vserver that this policy will bind to.
