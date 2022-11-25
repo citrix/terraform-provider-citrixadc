@@ -97,7 +97,7 @@ func createSystemuserFunc(d *schema.ResourceData, meta interface{}) error {
 	username := d.Get("username").(string)
 
 	if (username == login_username) {
-		return fmt.Errorf("It seems you are trying to change the password of the Admin user if so than please use the resource \"citrixadc_change_password\" resource")
+		return fmt.Errorf("It seems you are trying to change the password of the Admin user. If so, please use the resource \"citrixadc_change_password\"")
 	}
 	systemuser := system.Systemuser{
 		Externalauth: d.Get("externalauth").(string),
