@@ -102,7 +102,7 @@ func readDnsaddrecFunc(d *schema.ResourceData, meta interface{}) error {
 
 	foundIndex := -1
 	for i, v := range dataArr {
-		if v["hostname"].(string) == d.Get("hostname") && v["ipaddress"].(string) == d.Get("ipaddress") {
+		if v["hostname"].(string) == d.Get("hostname").(string) && v["ipaddress"].(string) == d.Get("ipaddress").(string) {
 			foundIndex = i
 			break
 		}
@@ -130,7 +130,6 @@ func readDnsaddrecFunc(d *schema.ResourceData, meta interface{}) error {
 func deleteDnsaddrecFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteDnsaddrecFunc")
 	client := meta.(*NetScalerNitroClient).client
-	// dnsaddrecId := d.Id()
 	argsMap := make(map[string]string) 
 	if ecs,ok := d.GetOk("ecssubnet");ok{
 		argsMap["ecssubnet"] = url.QueryEscape(ecs.(string))
