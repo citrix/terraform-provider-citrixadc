@@ -18,6 +18,7 @@ package citrixadc
 import (
 	"fmt"
 	"testing"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -90,15 +91,33 @@ func testAccCheckDnsnameserverExist(n string, id *string) resource.TestCheckFunc
 			*id = rs.Primary.ID
 		}
 
+		PrimaryId := rs.Primary.ID
+		idSlice := strings.SplitN(PrimaryId, ",", 2)
+		name := idSlice[0]
+		dns_type := idSlice[1]
+	
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Dnsnameserver.Type(), rs.Primary.ID)
+		dataArr, err := nsClient.FindAllResources(service.Dnsnameserver.Type())
 
 		if err != nil {
 			return err
 		}
 
-		if data == nil {
-			return fmt.Errorf("resource %s not found", n)
+		found := false
+		for _, v := range dataArr {
+			if v["ip"] == name || v["dnsvservername"] == name {
+				found = true
+			}
+			if found == true {
+				if v["type"] != dns_type {
+					found = false
+				} else {
+					break
+				}
+			}
+		}
+		if !found {
+			return fmt.Errorf("dnsnameserver %s not found", n)
 		}
 
 		return nil
@@ -116,10 +135,33 @@ func testAccCheckDnsnameserverDestroy(s *terraform.State) error {
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("No name is set")
 		}
+		
+		PrimaryId := rs.Primary.ID
+		idSlice := strings.SplitN(PrimaryId, ",", 2)
+		name := idSlice[0]
+		dns_type := idSlice[1]
+	
+		dataArr, err := nsClient.FindAllResources(service.Dnsnameserver.Type())
 
-		_, err := nsClient.FindResource(service.Dnsnameserver.Type(), rs.Primary.ID)
-		if err == nil {
-			return fmt.Errorf("resource %s still exists", rs.Primary.ID)
+		if err != nil {
+			return err
+		}
+
+		found := false
+		for _, v := range dataArr {
+			if v["ip"] == name || v["dnsvservername"] == name {
+				found = true
+			}
+			if found == true {
+				if v["type"] != dns_type {
+					found = false
+				} else {
+					break
+				}
+			}
+		}
+		if found {
+			return fmt.Errorf("dnsnameserver Still exists %s not found", PrimaryId)
 		}
 
 	}

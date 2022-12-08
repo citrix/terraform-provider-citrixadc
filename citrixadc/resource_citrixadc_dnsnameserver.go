@@ -1,13 +1,14 @@
 package citrixadc
 
 import (
-	"github.com/citrix/adc-nitro-go/resource/config/dns"
-
-	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform/helper/schema"
-
 	"fmt"
 	"log"
+	"net/url"
+	"strings"
+
+	"github.com/citrix/adc-nitro-go/resource/config/dns"
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform/helper/schema"
 )
 
 func resourceCitrixAdcDnsnameserver() *schema.Resource {
@@ -49,7 +50,7 @@ func resourceCitrixAdcDnsnameserver() *schema.Resource {
 			"type": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				ForceNew: true,
 			},
 		},
 	}
@@ -68,7 +69,7 @@ func createDnsnameserverFunc(d *schema.ResourceData, meta interface{}) error {
 	if Ip, ok := d.GetOk("ip"); ok {
 		PrimaryId = Ip.(string)
 		dnsnameserver.Ip = PrimaryId
-	} else if dnsvserver,ok := d.GetOk("dnsvservername");ok{
+	} else if dnsvserver, ok := d.GetOk("dnsvservername"); ok {
 		PrimaryId = dnsvserver.(string)
 		dnsnameserver.Dnsvservername = PrimaryId
 	}
@@ -76,6 +77,11 @@ func createDnsnameserverFunc(d *schema.ResourceData, meta interface{}) error {
 	_, err := client.AddResource(service.Dnsnameserver.Type(), PrimaryId, &dnsnameserver)
 	if err != nil {
 		return err
+	}
+	if val, ok := d.GetOk("type"); ok {
+		PrimaryId = PrimaryId + "," + val.(string)
+	} else {
+		PrimaryId = PrimaryId + ",UDP"
 	}
 
 	d.SetId(PrimaryId)
@@ -108,13 +114,21 @@ func readDnsnameserverFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
+
+	idSlice := strings.SplitN(PrimaryId, ",", 2)
+	name := idSlice[0]
+	dns_type := idSlice[1]
+
 	foundIndex := -1
 	for i, dnsnameserver := range dataArray {
 		match := false
-		if dnsnameserver["ip"] == d.Get("ip").(string) {
+		if dnsnameserver["ip"] == name || dnsnameserver["dnsvservername"] == name {
 			match = true
-		}else if dnsnameserver["dnsvservername"] == d.Get("dnsvservername").(string) {
-			match = true
+		}
+		if match == true {
+			if dnsnameserver["type"] != dns_type {
+				match = false
+			}
 		}
 		if match {
 			foundIndex = i
@@ -142,13 +156,11 @@ func readDnsnameserverFunc(d *schema.ResourceData, meta interface{}) error {
 func updateDnsnameserverFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateDnsnameserverFunc")
 	client := meta.(*NetScalerNitroClient).client
-	var PrimaryId string
-	if Name, ok := d.GetOk("ip"); ok {
-		PrimaryId = Name.(string)
 
-	} else if Name,ok :=d.GetOk("dnsvservername");ok {
-		PrimaryId = Name.(string)
-	}
+	PrimaryId := d.Id()
+
+	idSlice := strings.SplitN(PrimaryId, ",", 2)
+	name := idSlice[0]
 
 	dnsnameserver := dns.Dnsnameserver{
 		Ip:             d.Get("ip").(string),
@@ -172,19 +184,14 @@ func updateDnsnameserverFunc(d *schema.ResourceData, meta interface{}) error {
 		dnsnameserver.State = d.Get("state").(string)
 		stateChange = true
 	}
-	if d.HasChange("type") {
-		log.Printf("[DEBUG]  citrixadc-provider: Type has changed for dnsnameserver %s, starting update", PrimaryId)
-		dnsnameserver.Type = d.Get("type").(string)
-		hasChange = true
-	}
 	if stateChange {
 		err := doDnsvserverStateChange(d, client)
 		if err != nil {
-			return fmt.Errorf("Error enabling/disabling cs vserver %s", PrimaryId)
+			return fmt.Errorf("Error enabling/disabling dnsnameserver %s", PrimaryId)
 		}
 	}
 	if hasChange {
-		_, err := client.UpdateResource(service.Dnsnameserver.Type(), PrimaryId, &dnsnameserver)
+		_, err := client.UpdateResource(service.Dnsnameserver.Type(), name, &dnsnameserver)
 		if err != nil {
 			return fmt.Errorf("Error updating dnsnameserver %s", PrimaryId)
 		}
@@ -195,8 +202,21 @@ func updateDnsnameserverFunc(d *schema.ResourceData, meta interface{}) error {
 func deleteDnsnameserverFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteDnsnameserverFunc")
 	client := meta.(*NetScalerNitroClient).client
-	Name := d.Id()
-	err := client.DeleteResource(service.Dnsnameserver.Type(), Name)
+	PrimaryId := d.Id()
+	idSlice := strings.SplitN(PrimaryId, ",", 2)
+	Name := idSlice[0]
+	dns_type := idSlice[1]
+
+	argsMap := make(map[string]string)
+	if val, ok := d.GetOk("dnsvservername"); ok {
+		argsMap["dnsvservername"] = url.QueryEscape(val.(string))
+	}
+	if val, ok := d.GetOk("type"); ok {
+		argsMap["type"] = url.QueryEscape(val.(string))
+	} else {
+		argsMap["type"] = dns_type
+	}
+	err := client.DeleteResourceWithArgsMap(service.Dnsnameserver.Type(), Name, argsMap)
 	if err != nil {
 		return err
 	}
@@ -206,7 +226,7 @@ func deleteDnsnameserverFunc(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 func doDnsvserverStateChange(d *schema.ResourceData, client *service.NitroClient) error {
-	log.Printf("[DEBUG]  netscaler-provider: In doLbvserverStateChange")
+	log.Printf("[DEBUG]  netscaler-provider: In doDnsvserverStateChange")
 
 	dnsvserver := dns.Dnsnameserver{
 		Ip:             d.Get("ip").(string),
@@ -226,7 +246,7 @@ func doDnsvserverStateChange(d *schema.ResourceData, client *service.NitroClient
 			return err
 		}
 	} else {
-		return fmt.Errorf("\"%s\" is not a valid state. Use (\"ENABLED\", \"DISABLED\").", newstate)
+		return fmt.Errorf("doDnsvserverStateChange : \"%s\" is not a valid state. Use (\"ENABLED\", \"DISABLED\").", newstate)
 	}
 
 	return nil

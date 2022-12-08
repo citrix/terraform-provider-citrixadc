@@ -4,18 +4,18 @@ subcategory: "DNS"
 
 # Resource: dnsnameserver
 
-The dnsnameserver resource is used to create    DNS nameserver.
+The dnsnameserver resource is used to create DNS nameserver.
 
 
 ## Example usage
 
 ```hcl
 resource "citrixadc_dnsnameserver" "dnsnameserver" {
-	ip = "192.0.2.0"
-    local = true
-    state = "DISABLED"
-    type = "UDP"
-    dnsprofilename = "tf_profile1"
+	ip              = "192.0.2.0"
+    local           = true
+    state           = "DISABLED"
+    type            = "UDP"
+    dnsprofilename  = "tf_profile1"
 }
 ```
 
@@ -34,15 +34,15 @@ resource "citrixadc_dnsnameserver" "dnsnameserver" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the dnsnameserver. It has the same value as the `ip` or `dnsvserver` attribute.
+* `id` - The id of the dnsnameserver. It is the concatenation of `ip` (or `dnsvserver`) and `type` attributes seperated by comma.
 
 
 ## Import
 
-A dnsnameserver can be imported using its ip or dnsvservername, e.g.
+A dnsnameserver can be imported using its id , e.g.
 
 ```shell
-terraform import citrixadc_dnsnameserver.dnsnameserver 192.0.2.0
+terraform import citrixadc_dnsnameserver.dnsnameserver 192.0.2.0,UDP
 `or`
-terraform import citrixadc_dnsnameserver.dnsnameserver dnsvservername1
+terraform import citrixadc_dnsnameserver.dnsnameserver dnsvservername1,UDP
 ```
