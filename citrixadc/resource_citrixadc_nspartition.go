@@ -1,8 +1,6 @@
 package citrixadc
 
 import (
-	"github.com/citrix/adc-nitro-go/resource/config/ns"
-
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform/helper/schema"
 
@@ -70,17 +68,32 @@ func createNspartitionFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNspartitionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nspartitionName := d.Get("partitionname").(string)
-	nspartition := ns.Nspartition{
-		Force:         d.Get("force").(bool),
-		Maxbandwidth:  d.Get("maxbandwidth").(int),
-		Maxconn:       d.Get("maxconn").(int),
-		Maxmemlimit:   d.Get("maxmemlimit").(int),
-		Minbandwidth:  d.Get("minbandwidth").(int),
-		Partitionmac:  d.Get("partitionmac").(string),
-		Partitionname: d.Get("partitionname").(string),
-		Save:          d.Get("save").(bool),
-	}
 
+	nspartition := make(map[string]interface{})
+	if v, ok := d.GetOk("partitionname"); ok {
+		nspartition["partitionname"] = v.(string)
+	}
+	if v, ok := d.GetOkExists("maxbandwidth"); ok {
+		nspartition["maxbandwidth"] = v.(int)
+	}
+	if v, ok := d.GetOkExists("minbandwidth"); ok {
+		nspartition["minbandwidth"] = v.(int)
+	}
+	if v, ok := d.GetOkExists("maxconn"); ok {
+		nspartition["maxconn"] = v.(int)
+	}
+	if v, ok := d.GetOkExists("maxmemlimit"); ok {
+		nspartition["maxmemlimit"] = v.(int)
+	}
+	if v, ok := d.GetOk("partitionmac"); ok {
+		nspartition["partitionmac"] = v.(string)
+	}
+	if v, ok := d.GetOk("force"); ok {
+		nspartition["force"] = v.(bool)
+	}
+	if v, ok := d.GetOk("save"); ok {
+		nspartition["save"] = v.(bool)
+	}
 	_, err := client.AddResource(service.Nspartition.Type(), nspartitionName, &nspartition)
 	if err != nil {
 		return err
@@ -108,9 +121,9 @@ func readNspartitionFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	d.Set("force", data["force"])
-	d.Set("maxbandwidth", data["maxbandwidth"])
-	d.Set("maxconn", data["maxconn"])
-	d.Set("maxmemlimit", data["maxmemlimit"])
+	setToInt("maxbandwidth", d, data["maxbandwidth"])
+	setToInt("maxconn", d, data["maxconn"])
+	setToInt("maxmemlimit", d, data["maxmemlimit"])
 	// d.Set("minbandwidth", data["minbandwidth"])
 	d.Set("partitionmac", data["partitionmac"])
 	d.Set("partitionname", data["partitionname"])
@@ -125,43 +138,42 @@ func updateNspartitionFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	nspartitionName := d.Get("partitionname").(string)
 
-	nspartition := ns.Nspartition{
-		Partitionname: d.Get("partitionname").(string),
-	}
+	nspartition := make(map[string]interface{})
+	nspartition["partitionname"] = d.Get("partitionname").(string)
 	hasChange := false
 	if d.HasChange("force") {
 		log.Printf("[DEBUG]  citrixadc-provider: Force has changed for nspartition %s, starting update", nspartitionName)
-		nspartition.Force = d.Get("force").(bool)
+		nspartition["force"] = d.Get("force").(bool)
 		hasChange = true
 	}
 	if d.HasChange("maxbandwidth") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxbandwidth has changed for nspartition %s, starting update", nspartitionName)
-		nspartition.Maxbandwidth = d.Get("maxbandwidth").(int)
+		nspartition["maxbandwidth"] = d.Get("maxbandwidth").(int)
 		hasChange = true
 	}
 	if d.HasChange("maxconn") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxconn has changed for nspartition %s, starting update", nspartitionName)
-		nspartition.Maxconn = d.Get("maxconn").(int)
+		nspartition["maxconn"] = d.Get("maxconn").(int)
 		hasChange = true
 	}
 	if d.HasChange("maxmemlimit") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxmemlimit has changed for nspartition %s, starting update", nspartitionName)
-		nspartition.Maxmemlimit = d.Get("maxmemlimit").(int)
+		nspartition["maxmemlimit"] = d.Get("maxmemlimit").(int)
 		hasChange = true
 	}
 	if d.HasChange("minbandwidth") {
 		log.Printf("[DEBUG]  citrixadc-provider: Minbandwidth has changed for nspartition %s, starting update", nspartitionName)
-		nspartition.Minbandwidth = d.Get("minbandwidth").(int)
+		nspartition["minbandwidth"] = d.Get("minbandwidth").(int)
 		hasChange = true
 	}
 	if d.HasChange("partitionmac") {
 		log.Printf("[DEBUG]  citrixadc-provider: Partitionmac has changed for nspartition %s, starting update", nspartitionName)
-		nspartition.Partitionmac = d.Get("partitionmac").(string)
+		nspartition["partitionmac"] = d.Get("partitionmac").(string)
 		hasChange = true
 	}
 	if d.HasChange("save") {
 		log.Printf("[DEBUG]  citrixadc-provider: Save has changed for nspartition %s, starting update", nspartitionName)
-		nspartition.Save = d.Get("save").(bool)
+		nspartition["save"] = d.Get("save").(bool)
 		hasChange = true
 	}
 
