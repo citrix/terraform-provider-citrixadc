@@ -839,6 +839,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_sslcertkey_update": 				   							   resourceCitrixAdcSslcertkeyUpdate(),
 		"citrixadc_rnat_clear": 				   							   	   resourceCitrixAdcRnatClear(),
 		"citrixadc_change_password": 				   							   resourceCitrixAdcChangePassword(),
+		"citrixadc_spilloverpolicy": 				   							   resourceCitrixAdcSpilloverpolicy(),
 	}
 }
 
