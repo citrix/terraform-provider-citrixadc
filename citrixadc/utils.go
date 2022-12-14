@@ -2,8 +2,10 @@ package citrixadc
 
 import (
 	"log"
+	"strconv"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform/helper/schema"
 )
 
 func isTargetAdcCluster(nsClient *service.NitroClient) bool {
@@ -36,4 +38,28 @@ func toIntegerList(in []interface{}) []int {
 		out[i] = in[i].(int)
 	}
 	return out
+}
+
+// Check if the attribute is int, if not convert to int and set the value
+func setToInt(attributeName string, d *schema.ResourceData, value interface{}) {
+	var v int
+	var err error
+
+	switch valueTyped := value.(type) {
+	case int:
+		v = valueTyped
+	case string:
+		v, _ = strconv.Atoi(valueTyped)
+	case nil:
+		v = 0
+	default:
+		log.Printf("[DEBUG] got unexpected type %T for int", value)
+		return
+	}
+
+	if err != nil {
+		return
+	}
+
+	d.Set(attributeName, v)
 }
