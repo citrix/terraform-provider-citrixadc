@@ -2,7 +2,6 @@ package citrixadc
 
 import (
 	"github.com/citrix/adc-nitro-go/resource/config/bot"
-
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"fmt"
@@ -25,22 +24,22 @@ func resourceCitrixAdcBotprofile() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"signature": &schema.Schema{
+			"bot_enable_black_list": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"errorurl": &schema.Schema{
+			"bot_enable_ip_reputation": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"trapurl": &schema.Schema{
+			"bot_enable_rate_limit": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"comment": &schema.Schema{
+			"bot_enable_tps": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -50,12 +49,12 @@ func resourceCitrixAdcBotprofile() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"bot_enable_black_list": &schema.Schema{
+			"clientipexpression": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"bot_enable_rate_limit": &schema.Schema{
+			"comment": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -71,8 +70,46 @@ func resourceCitrixAdcBotprofile() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"bot_enable_ip_reputation": &schema.Schema{
+			"devicefingerprintmobile": &schema.Schema{
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Optional: true,
+				Computed: true,
+			},
+			"errorurl": &schema.Schema{
 				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"kmdetection": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"kmeventspostbodylimit": &schema.Schema{
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"kmjavascriptname": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"signature": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"signaturemultipleuseragentheaderaction": &schema.Schema{
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Optional: true,
+				Computed: true,
+			},
+			"signaturenouseragentheaderaction": &schema.Schema{
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 				Computed: true,
 			},
@@ -87,7 +124,7 @@ func resourceCitrixAdcBotprofile() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"bot_enable_tps": &schema.Schema{
+			"trapurl": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -97,25 +134,32 @@ func resourceCitrixAdcBotprofile() *schema.Resource {
 }
 
 func createBotprofileFunc(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[DEBUG]  netscaler-provider: In createBotprofileFunc")
+	log.Printf("[DEBUG]  citrixadc-provider: In createBotprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 
 	botprofileName := d.Get("name").(string)
 	botprofile := bot.Botprofile{
-		Name:                    d.Get("name").(string),
-		Signature:               d.Get("signature").(string),
-		Errorurl:                d.Get("errorurl").(string),
-		Trapurl:                 d.Get("trapurl").(string),
-		Comment:                 d.Get("comment").(string),
-		Botenablewhitelist:      d.Get("bot_enable_white_list").(string),
-		Botenableblacklist:      d.Get("bot_enable_black_list").(string),
-		Botenableratelimit:      d.Get("bot_enable_rate_limit").(string),
-		Devicefingerprint:       d.Get("devicefingerprint").(string),
-		Devicefingerprintaction: toStringList(d.Get("devicefingerprintaction").([]interface{})),
-		Botenableipreputation:   d.Get("bot_enable_ip_reputation").(string),
-		Trap:                    d.Get("trap").(string),
-		Trapaction:              toStringList(d.Get("trapaction").([]interface{})),
-		Botenabletps:            d.Get("bot_enable_tps").(string),
+		Botenableblacklist:                     d.Get("bot_enable_black_list").(string),
+		Botenableipreputation:                  d.Get("bot_enable_ip_reputation").(string),
+		Botenableratelimit:                     d.Get("bot_enable_rate_limit").(string),
+		Botenabletps:                           d.Get("bot_enable_tps").(string),
+		Botenablewhitelist:                     d.Get("bot_enable_white_list").(string),
+		Clientipexpression:                     d.Get("clientipexpression").(string),
+		Comment:                                d.Get("comment").(string),
+		Devicefingerprint:                      d.Get("devicefingerprint").(string),
+		Devicefingerprintaction:                toStringList(d.Get("devicefingerprintaction").([]interface{})),
+		Devicefingerprintmobile:                toStringList(d.Get("devicefingerprintmobile").([]interface{})),
+		Errorurl:                               d.Get("errorurl").(string),
+		Kmdetection:                            d.Get("kmdetection").(string),
+		Kmeventspostbodylimit:                  d.Get("kmeventspostbodylimit").(int),
+		Kmjavascriptname:                       d.Get("kmjavascriptname").(string),
+		Name:                                   d.Get("name").(string),
+		Signature:                              d.Get("signature").(string),
+		Signaturemultipleuseragentheaderaction: toStringList(d.Get("signaturemultipleuseragentheaderaction").([]interface{})),
+		Signaturenouseragentheaderaction:       toStringList(d.Get("signaturenouseragentheaderaction").([]interface{})),
+		Trap:                                   d.Get("trap").(string),
+		Trapaction:                             toStringList(d.Get("trapaction").([]interface{})),
+		Trapurl:                                d.Get("trapurl").(string),
 	}
 
 	_, err := client.AddResource("botprofile", botprofileName, &botprofile)
@@ -134,108 +178,149 @@ func createBotprofileFunc(d *schema.ResourceData, meta interface{}) error {
 }
 
 func readBotprofileFunc(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[DEBUG] netscaler-provider:  In readBotprofileFunc")
+	log.Printf("[DEBUG] citrixadc-provider:  In readBotprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	botprofileName := d.Id()
-	log.Printf("[DEBUG] netscaler-provider: Reading botprofile state %s", botprofileName)
+	log.Printf("[DEBUG] citrixadc-provider: Reading botprofile state %s", botprofileName)
 	data, err := client.FindResource("botprofile", botprofileName)
 	if err != nil {
-		log.Printf("[WARN] netscaler-provider: Clearing botprofile state %s", botprofileName)
+		log.Printf("[WARN] citrixadc-provider: Clearing botprofile state %s", botprofileName)
 		d.SetId("")
 		return nil
 	}
 	d.Set("name", data["name"])
-	d.Set("signature", data["signature"])
-	d.Set("errorurl", data["errorurl"])
-	d.Set("trapurl", data["trapurl"])
-	d.Set("comment", data["comment"])
-	d.Set("bot_enable_white_list", data["bot_enable_white_list"])
 	d.Set("bot_enable_black_list", data["bot_enable_black_list"])
+	d.Set("bot_enable_ip_reputation", data["bot_enable_ip_reputation"])
 	d.Set("bot_enable_rate_limit", data["bot_enable_rate_limit"])
+	d.Set("bot_enable_tps", data["bot_enable_tps"])
+	d.Set("bot_enable_white_list", data["bot_enable_white_list"])
+	d.Set("clientipexpression", data["clientipexpression"])
+	d.Set("comment", data["comment"])
 	d.Set("devicefingerprint", data["devicefingerprint"])
 	d.Set("devicefingerprintaction", data["devicefingerprintaction"])
-	d.Set("bot_enable_ip_reputation", data["bot_enable_ip_reputation"])
+	d.Set("devicefingerprintmobile", data["devicefingerprintmobile"])
+	d.Set("errorurl", data["errorurl"])
+	d.Set("kmdetection", data["kmdetection"])
+	d.Set("kmeventspostbodylimit", data["kmeventspostbodylimit"])
+	d.Set("kmjavascriptname", data["kmjavascriptname"])
+	d.Set("signature", data["signature"])
+	d.Set("signaturemultipleuseragentheaderaction", data["signaturemultipleuseragentheaderaction"])
+	d.Set("signaturenouseragentheaderaction", data["signaturenouseragentheaderaction"])
 	d.Set("trap", data["trap"])
 	d.Set("trapaction", data["trapaction"])
-	d.Set("bot_enable_tps", data["bot_enable_tps"])
+	d.Set("trapurl", data["trapurl"])
 
 	return nil
+
 }
 
 func updateBotprofileFunc(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[DEBUG]  netscaler-provider: In updateBotprofileFunc")
+	log.Printf("[DEBUG]  citrixadc-provider: In updateBotprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	botprofileName := d.Get("name").(string)
 
 	botprofile := bot.Botprofile{
 		Name: d.Get("name").(string),
 	}
-
 	hasChange := false
-
-	if d.HasChange("signature") {
-		log.Printf("[DEBUG]  netscaler-provider: Signature has changed for botprofile %s, starting update", botprofileName)
-		botprofile.Signature = d.Get("signature").(string)
-		hasChange = true
-	}
-	if d.HasChange("errorurl") {
-		log.Printf("[DEBUG]  netscaler-provider: Errorurl has changed for botprofile %s, starting update", botprofileName)
-		botprofile.Errorurl = d.Get("errorurl").(string)
-		hasChange = true
-	}
-	if d.HasChange("trapurl") {
-		log.Printf("[DEBUG]  netscaler-provider: Trapurl has changed for botprofile %s, starting update", botprofileName)
-		botprofile.Trapurl = d.Get("trapurl").(string)
-		hasChange = true
-	}
-	if d.HasChange("comment") {
-		log.Printf("[DEBUG]  netscaler-provider: Comment has changed for botprofile %s, starting update", botprofileName)
-		botprofile.Comment = d.Get("comment").(string)
-		hasChange = true
-	}
-	if d.HasChange("bot_enable_white_list") {
-		log.Printf("[DEBUG]  netscaler-provider: Bot_enable_white_list has changed for botprofile %s, starting update", botprofileName)
-		botprofile.Botenablewhitelist = d.Get("bot_enable_white_list").(string)
-		hasChange = true
-	}
 	if d.HasChange("bot_enable_black_list") {
-		log.Printf("[DEBUG]  netscaler-provider: Bot_enable_black_list has changed for botprofile %s, starting update", botprofileName)
+		log.Printf("[DEBUG]  citrixadc-provider: Botenableblacklist has changed for botprofile %s, starting update", botprofileName)
 		botprofile.Botenableblacklist = d.Get("bot_enable_black_list").(string)
 		hasChange = true
 	}
+	if d.HasChange("bot_enable_ip_reputation") {
+		log.Printf("[DEBUG]  citrixadc-provider: Botenableipreputation has changed for botprofile %s, starting update", botprofileName)
+		botprofile.Botenableipreputation = d.Get("bot_enable_ip_reputation").(string)
+		hasChange = true
+	}
 	if d.HasChange("bot_enable_rate_limit") {
-		log.Printf("[DEBUG]  netscaler-provider: Bot_enable_rate_limit has changed for botprofile %s, starting update", botprofileName)
+		log.Printf("[DEBUG]  citrixadc-provider: Botenableratelimit has changed for botprofile %s, starting update", botprofileName)
 		botprofile.Botenableratelimit = d.Get("bot_enable_rate_limit").(string)
 		hasChange = true
 	}
+	if d.HasChange("bot_enable_tps") {
+		log.Printf("[DEBUG]  citrixadc-provider: Botenabletps has changed for botprofile %s, starting update", botprofileName)
+		botprofile.Botenabletps = d.Get("bot_enable_tps").(string)
+		hasChange = true
+	}
+	if d.HasChange("bot_enable_white_list") {
+		log.Printf("[DEBUG]  citrixadc-provider: Botenablewhitelist has changed for botprofile %s, starting update", botprofileName)
+		botprofile.Botenablewhitelist = d.Get("bot_enable_white_list").(string)
+		hasChange = true
+	}
+	if d.HasChange("clientipexpression") {
+		log.Printf("[DEBUG]  citrixadc-provider: Clientipexpression has changed for botprofile %s, starting update", botprofileName)
+		botprofile.Clientipexpression = d.Get("clientipexpression").(string)
+		hasChange = true
+	}
+	if d.HasChange("comment") {
+		log.Printf("[DEBUG]  citrixadc-provider: Comment has changed for botprofile %s, starting update", botprofileName)
+		botprofile.Comment = d.Get("comment").(string)
+		hasChange = true
+	}
 	if d.HasChange("devicefingerprint") {
-		log.Printf("[DEBUG]  netscaler-provider: Devicefingerprint has changed for botprofile %s, starting update", botprofileName)
+		log.Printf("[DEBUG]  citrixadc-provider: Devicefingerprint has changed for botprofile %s, starting update", botprofileName)
 		botprofile.Devicefingerprint = d.Get("devicefingerprint").(string)
 		hasChange = true
 	}
 	if d.HasChange("devicefingerprintaction") {
-		log.Printf("[DEBUG]  netscaler-provider: Devicefingerprintaction has changed for botprofile %s, starting update", botprofileName)
-		hasChange = true
+		log.Printf("[DEBUG]  citrixadc-provider: Devicefingerprintaction has changed for botprofile %s, starting update", botprofileName)
 		botprofile.Devicefingerprintaction = toStringList(d.Get("devicefingerprintaction").([]interface{}))
+		hasChange = true
 	}
-	if d.HasChange("bot_enable_ip_reputation") {
-		log.Printf("[DEBUG]  netscaler-provider: Bot_enable_ip_reputation has changed for botprofile %s, starting update", botprofileName)
-		botprofile.Botenableipreputation = d.Get("bot_enable_ip_reputation").(string)
+	if d.HasChange("devicefingerprintmobile") {
+		log.Printf("[DEBUG]  citrixadc-provider: Devicefingerprintmobile has changed for botprofile %s, starting update", botprofileName)
+		botprofile.Devicefingerprintmobile = toStringList(d.Get("devicefingerprintmobile").([]interface{}))
+		hasChange = true
+	}
+	if d.HasChange("errorurl") {
+		log.Printf("[DEBUG]  citrixadc-provider: Errorurl has changed for botprofile %s, starting update", botprofileName)
+		botprofile.Errorurl = d.Get("errorurl").(string)
+		hasChange = true
+	}
+	if d.HasChange("kmdetection") {
+		log.Printf("[DEBUG]  citrixadc-provider: Kmdetection has changed for botprofile %s, starting update", botprofileName)
+		botprofile.Kmdetection = d.Get("kmdetection").(string)
+		hasChange = true
+	}
+	if d.HasChange("kmeventspostbodylimit") {
+		log.Printf("[DEBUG]  citrixadc-provider: Kmeventspostbodylimit has changed for botprofile %s, starting update", botprofileName)
+		botprofile.Kmeventspostbodylimit = d.Get("kmeventspostbodylimit").(int)
+		hasChange = true
+	}
+	if d.HasChange("kmjavascriptname") {
+		log.Printf("[DEBUG]  citrixadc-provider: Kmjavascriptname has changed for botprofile %s, starting update", botprofileName)
+		botprofile.Kmjavascriptname = d.Get("kmjavascriptname").(string)
+		hasChange = true
+	}
+	if d.HasChange("signature") {
+		log.Printf("[DEBUG]  citrixadc-provider: Signature has changed for botprofile %s, starting update", botprofileName)
+		botprofile.Signature = d.Get("signature").(string)
+		hasChange = true
+	}
+	if d.HasChange("signaturemultipleuseragentheaderaction") {
+		log.Printf("[DEBUG]  citrixadc-provider: Signaturemultipleuseragentheaderaction has changed for botprofile %s, starting update", botprofileName)
+		botprofile.Signaturemultipleuseragentheaderaction = toStringList(d.Get("signaturemultipleuseragentheaderaction").([]interface{}))
+		hasChange = true
+	}
+	if d.HasChange("signaturenouseragentheaderaction") {
+		log.Printf("[DEBUG]  citrixadc-provider: Signaturenouseragentheaderaction has changed for botprofile %s, starting update", botprofileName)
+		botprofile.Signaturenouseragentheaderaction = toStringList(d.Get("signaturenouseragentheaderaction").([]interface{}))
 		hasChange = true
 	}
 	if d.HasChange("trap") {
-		log.Printf("[DEBUG]  netscaler-provider: Trap has changed for botprofile %s, starting update", botprofileName)
+		log.Printf("[DEBUG]  citrixadc-provider: Trap has changed for botprofile %s, starting update", botprofileName)
 		botprofile.Trap = d.Get("trap").(string)
 		hasChange = true
 	}
 	if d.HasChange("trapaction") {
-		log.Printf("[DEBUG]  netscaler-provider: Trapaction has changed for botprofile %s, starting update", botprofileName)
-		hasChange = true
+		log.Printf("[DEBUG]  citrixadc-provider: Trapaction has changed for botprofile %s, starting update", botprofileName)
 		botprofile.Trapaction = toStringList(d.Get("trapaction").([]interface{}))
+		hasChange = true
 	}
-	if d.HasChange("bot_enable_tps") {
-		log.Printf("[DEBUG]  netscaler-provider: Bot_enable_tps has changed for botprofile %s, starting update", botprofileName)
-		botprofile.Botenabletps = d.Get("bot_enable_tps").(string)
+	if d.HasChange("trapurl") {
+		log.Printf("[DEBUG]  citrixadc-provider: Trapurl has changed for botprofile %s, starting update", botprofileName)
+		botprofile.Trapurl = d.Get("trapurl").(string)
 		hasChange = true
 	}
 
@@ -245,12 +330,11 @@ func updateBotprofileFunc(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("Error updating botprofile %s", botprofileName)
 		}
 	}
-
 	return readBotprofileFunc(d, meta)
 }
 
 func deleteBotprofileFunc(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[DEBUG]  netscaler-provider: In deleteBotprofileFunc")
+	log.Printf("[DEBUG]  citrixadc-provider: In deleteBotprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	botprofileName := d.Id()
 	err := client.DeleteResource("botprofile", botprofileName)
