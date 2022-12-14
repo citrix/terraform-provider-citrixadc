@@ -34,7 +34,7 @@ resource "citrixadc_dnsnameserver" "dnsnameserver" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the dnsnameserver. It is the concatenation of `ip` (or `dnsvserver`) and `type` attributes seperated by comma.
+* `id` - The id of the dnsnameserver. It is the concatenation of `ip` (or `dnsvservername`) and `type` attributes seperated by comma.
 
 
 ## Import

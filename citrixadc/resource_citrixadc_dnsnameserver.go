@@ -81,6 +81,7 @@ func createDnsnameserverFunc(d *schema.ResourceData, meta interface{}) error {
 	if val, ok := d.GetOk("type"); ok {
 		PrimaryId = PrimaryId + "," + val.(string)
 	} else {
+		// the default value of attribute type is "UDP". So, it is appended implicitly when not specified by the user. 
 		PrimaryId = PrimaryId + ",UDP"
 	}
 
