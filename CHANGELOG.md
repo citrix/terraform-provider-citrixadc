@@ -1,3 +1,20 @@
+## 1.27.0 (Dec 14, 2022)
+
+FEATURES
+
+* **New Resource** spilloverpolicy
+
+BUG FIXES
+
+* **citrixadc_dnsnameserver**: Updated id of resource, it is now the concatenation of `ip` (or `dnsvservername`) and `type` attributes seperated by comma. User can now add more dnsnameserver with same `ip` and different `type` value.  
+* **citrixadc_dnsaddrec**: Updated id of resource, it is now the concatenation of `hostname` and `ipaddress` attributes separated by a comma. User can now create dnsaddrec with same `hostname` and multiple `ipaddress`.
+* **citrixadc_nspartition**: Supporting the zero value for certatin attributes of `nspartition` and type conversion for attribute.
+
+ENHANCEMENTS
+
+* **citrixadc_botprofile**: Added missed attributes to resource `signaturemultipleuseragentheaderaction`, `signaturenouseragentheaderaction`, ` devicefingerprintmobile`, `kmjavascriptname`, `kmeventspostbodylimit`, `kmdetection`, and `clientipexpression`, 
+* **citrixadc_systemuser**: Added condition to check the username and to throw error if the user wants to change the Admin password.
+
 ## 1.26.0 (Nov 15, 2022)
 
 FEATURES
