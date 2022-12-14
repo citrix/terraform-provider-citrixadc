@@ -32,13 +32,13 @@ resource "citrixadc_dnsaddrec" "dnsaddrec" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the dnsaddrec It has the same value as the `domain` attribute.
+* `id` - The id of the dnsaddrec. It is the concatenation of  `hostname` and `ipaddress` attributes separated by a comma.
 
 
 ## Import
 
-A dnsaddrec can be imported using its name, e.g.
+A dnsaddrec can be imported using its id, e.g.
 
 ```shell
-terraform import citrixadc_dnsaddrec.dnsaddrec ab.root-servers.net
+terraform import citrixadc_dnsaddrec.dnsaddrec a.root-servers.net,65.200.211.129
 ```

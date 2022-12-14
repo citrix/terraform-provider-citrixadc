@@ -17,7 +17,6 @@ package citrixadc
 
 import (
 	"fmt"
-	"net/url"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -74,14 +73,22 @@ func testAccCheckDnsaddrecExist(n string, id *string) resource.TestCheckFunc {
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Dnsaddrec.Type(), rs.Primary.ID)
+		dataArr, err := nsClient.FindAllResources(service.Dnsaddrec.Type())
 
 		if err != nil {
 			return err
 		}
 
-		if data == nil {
-			return fmt.Errorf("dnsaddrec %s not found", n)
+		found := false
+		for _, v := range dataArr {
+			if v["hostname"].(string) == rs.Primary.Attributes["hostname"] && v["ipaddress"].(string) == rs.Primary.Attributes["ipaddress"] {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			return fmt.Errorf("Dnsaddrec %s not found", n)
 		}
 
 		return nil
@@ -99,17 +106,22 @@ func testAccCheckDnsaddrecDestroy(s *terraform.State) error {
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("No name is set")
 		}
-		argsMap := make(map[string]string)
-		argsMap["ipaddress"] = url.QueryEscape(rs.Primary.Attributes["ipaddress"])
-		argsMap["ecssubnet"] = url.QueryEscape(rs.Primary.Attributes["ecssubnet"])
-		findParams := service.FindParams{
-			ResourceType: service.Dnsaddrec.Type(),
-			ArgsMap:      argsMap,
-		}
-		_, err := nsClient.FindResourceArrayWithParams(findParams)
+		dataArr, err := nsClient.FindAllResources(service.Dnsaddrec.Type())
 
-		if err == nil {
-			return fmt.Errorf("dnsaddrec %s still exists", rs.Primary.ID)
+		if err != nil {
+			return err
+		}
+
+		found := false
+		for _, v := range dataArr {
+			if v["hostname"].(string) == rs.Primary.Attributes["hostname"] && v["ipaddress"].(string) == rs.Primary.Attributes["ipaddress"] {
+				found = true
+				break
+			}
+		}
+
+		if found {
+			return fmt.Errorf("Dnsaddrec %s still exists", rs.Primary.ID)
 		}
 
 	}

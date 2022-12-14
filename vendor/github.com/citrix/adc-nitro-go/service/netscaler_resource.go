@@ -58,6 +58,7 @@ var idempotentInvalidResources = []string{
 	"locationfile6",
 	"cacheforwardproxy",
 	"systemuser",
+	"dnsaddrec",
 }
 
 // HTTP Headers to be masked and not shown in logs
