@@ -27,19 +27,19 @@ type Nspartition struct {
 	/**
 	* Maximum bandwidth, in Kbps, that the partition can consume. A zero value indicates the bandwidth is unrestricted on the partition and it can consume up to the system limits.
 	*/
-	Maxbandwidth int `json:"maxbandwidth,omitempty"`
+	Maxbandwidth int `json:"maxbandwidth"`
 	/**
 	* Minimum bandwidth, in Kbps, that the partition can consume. A zero value indicates the bandwidth is unrestricted on the partition and it can consume up to the system limits
 	*/
-	Minbandwidth int `json:"minbandwidth,omitempty"`
+	Minbandwidth int `json:"minbandwidth"`
 	/**
 	* Maximum number of concurrent connections that can be open in the partition. A zero value indicates no limit on number of open connections.
 	*/
-	Maxconn int `json:"maxconn,omitempty"`
+	Maxconn int `json:"maxconn"`
 	/**
 	* Maximum memory, in megabytes, allocated to the partition.  A zero value indicates the memory is unlimited on the partition and it can consume up to the system limits.
 	*/
-	Maxmemlimit int `json:"maxmemlimit,omitempty"`
+	Maxmemlimit int `json:"maxmemlimit"`
 	/**
 	* Special MAC address for the partition which is used for communication over shared vlans in this partition. If not specified, the MAC address is auto-generated.
 	*/
