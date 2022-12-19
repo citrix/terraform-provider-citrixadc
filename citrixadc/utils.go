@@ -2,10 +2,12 @@ package citrixadc
 
 import (
 	"log"
+	"time"
 	"strconv"
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/citrix/adc-nitro-go/resource/config/ns"
 )
 
 func isTargetAdcCluster(nsClient *service.NitroClient) bool {
@@ -62,4 +64,20 @@ func setToInt(attributeName string, d *schema.ResourceData, value interface{}) {
 	}
 
 	d.Set(attributeName, v)
+}
+
+// TODO: Better implementation can be done to check whether NetScaler is UP after reboot, by pooling the NetScaler 
+func rebootNetScaler(d *schema.ResourceData, meta interface{}, warm bool) error{
+	log.Printf("[DEBUG] netscaler-provider: In rebootAdc")
+
+	client := meta.(*NetScalerNitroClient).client
+	reboot := ns.Reboot{
+		Warm: warm,
+	}
+	if err := client.ActOnResource("reboot", &reboot, ""); err != nil {
+		return err
+	}
+	time.Sleep(time.Second * 120)
+
+	return nil
 }

@@ -8,7 +8,6 @@ import (
 
 	"fmt"
 	"log"
-	"time"
 )
 
 func resourceCitrixAdcNscapacity() *schema.Resource {
@@ -16,64 +15,38 @@ func resourceCitrixAdcNscapacity() *schema.Resource {
 		SchemaVersion: 1,
 		Create:        createNscapacityFunc,
 		Read:          readNscapacityFunc,
-		Update:        schema.Noop,
+		Update:        createNscapacityFunc,
 		Delete:        deleteNscapacityFunc,
 		Schema: map[string]*schema.Schema{
 			"bandwidth": &schema.Schema{
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
-				ForceNew: true,
 			},
 			"edition": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
-				ForceNew: true,
 			},
 			"nodeid": &schema.Schema{
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
-				ForceNew: true,
 			},
 			"platform": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
-				ForceNew: true,
 			},
 			"unit": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
-				ForceNew: true,
 			},
 			"vcpu": &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
-				ForceNew: true,
-			},
-			"reboot_timeout": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "10m",
-			},
-			"poll_delay": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "60s",
-			},
-			"poll_interval": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "60s",
-			},
-			"poll_timeout": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "10s",
 			},
 		},
 	}
@@ -100,7 +73,11 @@ func createNscapacityFunc(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(nscapacityId)
 
-	// Read also powercycles the ADC
+	warm := true
+	if err = rebootNetScaler(d, meta, warm); err != nil {
+		return fmt.Errorf("Error warm rebooting ADC. %s", err.Error())
+	}
+	
 	err = readNscapacityFunc(d, meta)
 
 	if err != nil {
@@ -139,16 +116,6 @@ func deleteNscapacityFunc(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	var timeout time.Duration
-	if timeout, err = time.ParseDuration(d.Get("reboot_timeout").(string)); err != nil {
-		return err
-	}
-
-	err = powerCycleAndWait(d, meta, timeout)
-	if err != nil {
-		return fmt.Errorf("Error power cycling ADC. %s", err.Error())
-	}
-
 	d.SetId("")
 
 	return nil
@@ -159,16 +126,6 @@ func readNscapacityFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 
 	var err error
-
-	var timeout time.Duration
-	if timeout, err = time.ParseDuration(d.Get("reboot_timeout").(string)); err != nil {
-		return err
-	}
-
-	err = powerCycleAndWait(d, meta, timeout)
-	if err != nil {
-		return fmt.Errorf("Error power cycling ADC. %s", err.Error())
-	}
 
 	log.Printf("[DEBUG] citrixadc-provider: Reading nscapacity state")
 	data, err := client.FindResource("nscapacity", "")
@@ -194,7 +151,7 @@ func readNscapacityFunc(d *schema.ResourceData, meta interface{}) error {
 
 	// Pooled
 	if value, ok := data["bandwidth"]; ok {
-		d.Set("bandwidth", value)
+		setToInt("bandwidth", d, value)
 		d.Set("edition", data["edition"])
 		d.Set("unit", data["unit"])
 	} else {
