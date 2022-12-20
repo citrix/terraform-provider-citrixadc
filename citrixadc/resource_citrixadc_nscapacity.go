@@ -17,6 +17,9 @@ func resourceCitrixAdcNscapacity() *schema.Resource {
 		Read:          readNscapacityFunc,
 		Update:        createNscapacityFunc,
 		Delete:        deleteNscapacityFunc,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"bandwidth": &schema.Schema{
 				Type:     schema.TypeInt,

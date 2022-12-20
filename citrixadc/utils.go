@@ -66,8 +66,8 @@ func setToInt(attributeName string, d *schema.ResourceData, value interface{}) {
 	d.Set(attributeName, v)
 }
 
-// TODO: Better implementation can be done to check whether NetScaler is UP after reboot, by pooling the NetScaler 
-func rebootNetScaler(d *schema.ResourceData, meta interface{}, warm bool) error{
+// TODO: Better implementation can be done to check whether NetScaler is UP after reboot, by polling the NetScaler
+func rebootNetScaler(d *schema.ResourceData, meta interface{}, warm bool) error {
 	log.Printf("[DEBUG] netscaler-provider: In rebootAdc")
 
 	client := meta.(*NetScalerNitroClient).client
@@ -77,7 +77,12 @@ func rebootNetScaler(d *schema.ResourceData, meta interface{}, warm bool) error{
 	if err := client.ActOnResource("reboot", &reboot, ""); err != nil {
 		return err
 	}
-	time.Sleep(time.Second * 120)
+	// wait for NetScaler to Reboot. If warm reboot then wait for 120s, else wait for 240s
+	if warm {
+		time.Sleep(time.Second * 120)
+	} else {
+		time.Sleep(time.Second * 240)
+	}
 
 	return nil
 }
