@@ -38,10 +38,6 @@ resource "citrixadc_nscapacity" "tf_vcpu" {
 * `edition` - (Optional) Product edition. Possible values: [ Standard, Enterprise, Platinum ]
 * `unit` - (Optional) Bandwidth unit. Possible values: [ Gbps, Mbps ]
 * `nodeid` - (Optional) Unique number that identifies the cluster node.
-* `reboot_timeout` - (Optional) Time duration to wait for ADC to be available after reboot.
-* `poll_delay` - (Optional) Time duration to wait for first poll after ADC reboot.
-* `poll_interval` - (Optional) Time duration between polls after reboot.
-* `poll_timeout` - (Optional) Time duration for each poll to timeout.
 
 
 ## Attribute Reference
@@ -49,3 +45,11 @@ resource "citrixadc_nscapacity" "tf_vcpu" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the nscapacity. It is a unique string prefixed with `tf-nscapacity-`
+
+## Import
+
+A nscapacity can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_nscapacity.tf_pooled tf-nscapacity-<some_random_string>
+```
