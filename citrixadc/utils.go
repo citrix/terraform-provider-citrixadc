@@ -78,11 +78,11 @@ func rebootNetScaler(d *schema.ResourceData, meta interface{}, warm bool) error 
 		return err
 	}
 	// wait for NetScaler to Reboot. If warm reboot then wait for 120s, else wait for 240s
-	if warm {
-		time.Sleep(time.Second * 120)
-	} else {
-		time.Sleep(time.Second * 240)
+	sleepTimeout := 120
+	if !warm {
+		sleepTimeout = 240
 	}
+	time.Sleep(time.Second * time.Duration(sleepTimeout))
 
 	return nil
 }

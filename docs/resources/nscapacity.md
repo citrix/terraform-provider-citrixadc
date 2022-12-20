@@ -51,5 +51,5 @@ In addition to the arguments, the following attributes are available:
 A nscapacity can be imported using its id, e.g.
 
 ```shell
-terraform import citrixadc_nscapacity.tf_pooled tf-nscapacity-20221220045114659600000001
+terraform import citrixadc_nscapacity.tf_pooled tf-nscapacity-<some_random_string>
 ```
