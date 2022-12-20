@@ -1,3 +1,9 @@
+## 1.28.0 (Dec 20, 2022)
+
+BUG FIXES
+
+* **citrixadc_nscapacity**: Included warm rebooting of NetScaler after changing the license bandwidth, to read the latest snapshot of nscapacity. Removed some unnecessary attributes from schema.
+
 ## 1.27.0 (Dec 14, 2022)
 
 FEATURES
