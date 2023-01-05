@@ -15,6 +15,9 @@ func resourceCitrixAdcPolicypatset() *schema.Resource {
 		Create:        createPolicypatsetFunc,
 		Read:          readPolicypatsetFunc,
 		Delete:        deletePolicypatsetFunc,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"comment": &schema.Schema{
 				Type:     schema.TypeString,

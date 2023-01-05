@@ -34,3 +34,11 @@ resource "citrixadc_policypatset_pattern_binding" "tf_bind1" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the policypatset. It has the same value as the `name` attribute.
+
+## Import
+
+A policypatset can be imported using its name, e.g.
+
+```shell
+terraform import citrixadc_policypatset.tf_patset tf_patset
+```

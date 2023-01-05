@@ -17,6 +17,9 @@ func resourceCitrixAdcSslvserver() *schema.Resource {
 		Read:          readSslvserverFunc,
 		Update:        updateSslvserverFunc,
 		Delete:        deleteSslvserverFunc,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"cipherredirect": &schema.Schema{
 				Type:     schema.TypeString,
@@ -319,14 +322,14 @@ func readSslvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("ersacount", data["ersacount"])
 	d.Set("hsts", data["hsts"])
 	d.Set("includesubdomains", data["includesubdomains"])
-	d.Set("maxage", data["maxage"])
+	setToInt("maxage", d, data["maxage"])
 	d.Set("ocspstapling", data["ocspstapling"])
 	d.Set("preload", data["preload"])
 	d.Set("pushenctrigger", data["pushenctrigger"])
 	d.Set("redirectportrewrite", data["redirectportrewrite"])
 	d.Set("sendclosenotify", data["sendclosenotify"])
 	d.Set("sessreuse", data["sessreuse"])
-	d.Set("sesstimeout", data["sesstimeout"])
+	setToInt("sesstimeout", d, data["sesstimeout"])
 	d.Set("snienable", data["snienable"])
 	d.Set("ssl2", data["ssl2"])
 	d.Set("ssl3", data["ssl3"])
@@ -339,7 +342,7 @@ func readSslvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("tls11", data["tls11"])
 	d.Set("tls12", data["tls12"])
 	d.Set("tls13", data["tls13"])
-	d.Set("tls13sessionticketsperauthcontext", data["tls13sessionticketsperauthcontext"])
+	setToInt("tls13sessionticketsperauthcontext", d, data["tls13sessionticketsperauthcontext"])
 	d.Set("vservername", data["vservername"])
 	d.Set("zerorttearlydata", data["zerorttearlydata"])
 
