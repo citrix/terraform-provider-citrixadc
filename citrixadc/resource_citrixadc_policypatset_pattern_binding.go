@@ -18,6 +18,9 @@ func resourceCitrixAdcPolicypatset_pattern_binding() *schema.Resource {
 		Create:        createPolicypatset_pattern_bindingFunc,
 		Read:          readPolicypatset_pattern_bindingFunc,
 		Delete:        deletePolicypatset_pattern_bindingFunc,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"charset": &schema.Schema{
 				Type:     schema.TypeString,
@@ -145,7 +148,7 @@ func readPolicypatset_pattern_bindingFunc(d *schema.ResourceData, meta interface
 	d.Set("charset", data["charset"])
 	d.Set("comment", data["comment"])
 	d.Set("feature", data["feature"])
-	d.Set("index", data["index"])
+	setToInt("index",d , data["index"])
 	d.Set("name", data["name"])
 	d.Set("string", data["String"])
 
