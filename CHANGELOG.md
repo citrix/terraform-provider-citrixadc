@@ -5,6 +5,7 @@ ENHANCEMENTS
 * **citrixadc_sslvserver**: Suppored Import to the resource.
 * **citrixadc_policypatset**: Suppored Import to the resource.
 * **citrixadc_policypatset_pattern_binding**: Suppored Import to the resource.
+
 ## 1.28.0 (Dec 20, 2022)
 
 BUG FIXES
