@@ -8,7 +8,7 @@ import (
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceCitrixAdcLinkset() *schema.Resource {
@@ -29,7 +29,7 @@ func resourceCitrixAdcLinkset() *schema.Resource {
 			"interfacebinding": &schema.Schema{
 				Type:     schema.TypeSet,
 				Optional: true,
-				ForceNew: true, // to avoid this error: https://github.com/hashicorp/terraform/blob/master/helper/schema/resource.go#L635
+				ForceNew: true, // to avoid this error: https://github.com/hashicorp/terraform-plugin-sdk/blob/master/helper/schema/resource.go#L635
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 		},

@@ -9,7 +9,7 @@ import (
 	"github.com/citrix/adc-nitro-go/service"
 	"gopkg.in/yaml.v2"
 
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"log"
 )

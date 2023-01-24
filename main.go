@@ -17,7 +17,7 @@ package main
 
 import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc"
-	"github.com/hashicorp/terraform/plugin"
+	"github.com/hashicorp/terraform-plugin-sdk/plugin"
 )
 
 func main() {

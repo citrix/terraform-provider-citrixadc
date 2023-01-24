@@ -2,7 +2,7 @@ package citrixadc
 
 import (
 	"github.com/citrix/adc-nitro-go/resource/config/vpn"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"fmt"
 	"log"
 )
