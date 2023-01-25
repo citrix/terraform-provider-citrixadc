@@ -5,7 +5,7 @@ import (
 	"github.com/citrix/adc-nitro-go/service"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"bytes"
 	"fmt"

@@ -21,8 +21,8 @@ import (
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 const testAccDnsnameserver_add = `

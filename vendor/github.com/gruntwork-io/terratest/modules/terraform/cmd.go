@@ -32,10 +32,6 @@ var commandsWithParallelism = []string{
 
 // GetCommonOptions extracts commons terraform options
 func GetCommonOptions(options *Options, args ...string) (*Options, []string) {
-	if options.NoColor && !collections.ListContains(args, "-no-color") {
-		args = append(args, "-no-color")
-	}
-
 	if options.TerraformBinary == "" {
 		options.TerraformBinary = "terraform"
 	}

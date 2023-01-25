@@ -2,7 +2,7 @@ package citrixadc
 
 import (
 	"github.com/citrix/adc-nitro-go/resource/config/rdp"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
 	"log"

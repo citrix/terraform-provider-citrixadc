@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"reflect"
+	"strings"
 
 	"github.com/gruntwork-io/terratest/modules/testing"
 
+	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclparse"
 	"github.com/stretchr/testify/require"
 	"github.com/zclconf/go-cty/cty"
@@ -133,9 +135,9 @@ func GetAllVariablesFromVarFileE(t testing.TestingT, fileName string, out interf
 	return parseAndDecodeVarFile(string(fileContents), fileName, out)
 }
 
-// parseAndDecodeVarFile uses the HCL2 parser to parse the given varfile string into an HCL file body, and then decode it
+// parseAndDecodeVarFile uses the HCL2 parser to parse the given varfile string into an HCL or HCL JSON file body, and then decode it
 // into a map that maps var names to values.
-func parseAndDecodeVarFile(hclContents string, filename string, out interface{}) (err error) {
+func parseAndDecodeVarFile(fileContents string, filename string, out interface{}) (err error) {
 	// The HCL2 parser and especially cty conversions will panic in many types of errors, so we have to recover from
 	// those panics here and convert them to normal errors
 	defer func() {
@@ -146,7 +148,16 @@ func parseAndDecodeVarFile(hclContents string, filename string, out interface{})
 
 	parser := hclparse.NewParser()
 
-	file, parseDiagnostics := parser.ParseHCL([]byte(hclContents), filename)
+	var file *hcl.File
+	var parseDiagnostics hcl.Diagnostics
+
+	// determine if a JSON variables file is submitted and parse accordingly
+	if strings.HasSuffix(filename, ".json") {
+		file, parseDiagnostics = parser.ParseJSON([]byte(fileContents), filename)
+	} else {
+		file, parseDiagnostics = parser.ParseHCL([]byte(fileContents), filename)
+	}
+
 	if parseDiagnostics != nil && parseDiagnostics.HasErrors() {
 		return parseDiagnostics
 	}

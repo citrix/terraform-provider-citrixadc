@@ -5,7 +5,7 @@ import (
 
 	"github.com/citrix/adc-nitro-go/resource/config/authorization"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceCitrixAdcAuthorizationpolicylabel() *schema.Resource {

@@ -60,6 +60,8 @@ type Options struct {
 	MaxRetries               int                    // Maximum number of times to retry errors matching RetryableTerraformErrors
 	TimeBetweenRetries       time.Duration          // The amount of time to wait between retries
 	Upgrade                  bool                   // Whether the -upgrade flag of the terraform init command should be set to true or not
+	Reconfigure              bool                   // Set the -reconfigure flag to the terraform init command
+	MigrateState             bool                   // Set the -migrate-state and -force-copy (suppress 'yes' answer prompt) flag to the terraform init command
 	NoColor                  bool                   // Whether the -no-color flag will be set for any Terraform command or not
 	SshAgent                 *ssh.SshAgent          // Overrides local SSH agent with the given in-process agent
 	NoStderr                 bool                   // Disable stderr redirection
@@ -68,6 +70,7 @@ type Options struct {
 	Parallelism              int                    // Set the parallelism setting for Terraform
 	PlanFilePath             string                 // The path to output a plan file to (for the plan command) or read one from (for the apply command)
 	PluginDir                string                 // The path of downloaded plugins to pass to the terraform init command (-plugin-dir)
+	SetVarsAfterVarFiles     bool                   // Pass -var options after -var-file options to Terraform commands
 }
 
 // Clone makes a deep copy of most fields on the Options object and returns it.
@@ -79,6 +82,24 @@ func (options *Options) Clone() (*Options, error) {
 	if err := copier.Copy(newOptions, options); err != nil {
 		return nil, err
 	}
+	// copier does not deep copy maps, so we have to do it manually.
+	newOptions.EnvVars = make(map[string]string)
+	for key, val := range options.EnvVars {
+		newOptions.EnvVars[key] = val
+	}
+	newOptions.Vars = make(map[string]interface{})
+	for key, val := range options.Vars {
+		newOptions.Vars[key] = val
+	}
+	newOptions.BackendConfig = make(map[string]interface{})
+	for key, val := range options.BackendConfig {
+		newOptions.BackendConfig[key] = val
+	}
+	newOptions.RetryableTerraformErrors = make(map[string]string)
+	for key, val := range options.RetryableTerraformErrors {
+		newOptions.RetryableTerraformErrors[key] = val
+	}
+
 	return newOptions, nil
 }
 
