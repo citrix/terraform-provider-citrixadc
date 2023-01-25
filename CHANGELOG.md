@@ -1,3 +1,14 @@
+## 1.30.0 (Jan 25, 2023)
+
+BUG FIXES
+
+* **citrixadc_ntpserver**: Handled the ntpserver resource instance missing in the read function.
+* **citrixadc_route**: Updated Read function to make the Import work as required.
+
+ENHANCEMENTS
+
+* Migrated to terraform sdkv1 and resolved the transitive dependencies.
+
 ## 1.29.0 (Jan 05, 2023)
 
 ENHANCEMENTS
