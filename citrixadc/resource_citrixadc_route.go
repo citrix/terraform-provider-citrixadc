@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"strings"
 )
 
 func resourceCitrixAdcRoute() *schema.Resource {
@@ -161,16 +162,22 @@ func readRouteFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
+	idSlice := strings.SplitN(routeName, "_", 3)
+
+	network := idSlice[0]
+	netmask := idSlice[1]
+	gateway := idSlice[2]
+
 	foundIndex := -1
 	for i, route := range dataArray {
 		match := true
-		if route["network"] != d.Get("network").(string) {
+		if route["network"] != network {
 			match = false
 		}
-		if route["netmask"] != d.Get("netmask").(string) {
+		if route["netmask"] != netmask {
 			match = false
 		}
-		if route["gateway"] != d.Get("gateway").(string) {
+		if route["gateway"] != gateway {
 			match = false
 		}
 		if val, ok := d.GetOk("ownergroup"); ok {
