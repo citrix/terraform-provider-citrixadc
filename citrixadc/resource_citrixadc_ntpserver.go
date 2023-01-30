@@ -109,7 +109,13 @@ func readNtpserverFunc(d *schema.ResourceData, meta interface{}) error {
 			foundIndex = i
 			break
 		}
-
+	}
+	// Resource is missing
+	if foundIndex == -1 {
+		log.Printf("[DEBUG] citrixadc-provider: FindAllResources Ntpserver not found in array")
+		log.Printf("[WARN] citrixadc-provider: Clearing Ntpserver state %s", ntpserverName)
+		d.SetId("")
+		return nil
 	}
 	
 	data := dataArr[foundIndex]
