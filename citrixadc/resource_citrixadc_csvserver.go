@@ -219,6 +219,11 @@ func resourceCitrixAdcCsvserver() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"persistencetype": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"port": &schema.Schema{
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -492,6 +497,7 @@ func createCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		Netprofile:              d.Get("netprofile").(string),
 		Oracleserverversion:     d.Get("oracleserverversion").(string),
 		Persistenceid:           d.Get("persistenceid").(int),
+		Persistencetype:         d.Get("persistencetype").(string),
 		Port:                    d.Get("port").(int),
 		Precedence:              d.Get("precedence").(string),
 		Push:                    d.Get("push").(string),
@@ -664,6 +670,7 @@ func readCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("netprofile", data["netprofile"])
 	d.Set("oracleserverversion", data["oracleserverversion"])
 	d.Set("persistenceid", data["persistenceid"])
+	d.Set("persistencetype", data["persistencetype"])
 	d.Set("port", data["port"])
 	d.Set("precedence", data["precedence"])
 	d.Set("push", data["push"])
@@ -930,6 +937,11 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("persistenceid") {
 		log.Printf("[DEBUG]  netscaler-provider: Persistenceid has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Persistenceid = d.Get("persistenceid").(int)
+		hasChange = true
+	}
+	if d.HasChange("persistencetype") {
+		log.Printf("[DEBUG]  netscaler-provider: Persistenceid has changed for csvserver %s, starting update", csvserverName)
+		csvserver.Persistencetype = d.Get("persistencetype").(string)
 		hasChange = true
 	}
 	if d.HasChange("port") {

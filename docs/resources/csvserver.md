@@ -29,6 +29,11 @@ resource "citrixadc_csvserver" "tf_csvserver" {
 * `targettype` - (Optional) Virtual server target type. Possible values: [ GSLB ]
 * `dnsrecordtype` - (Optional) Possible values: [ A, AAAA, CNAME, NAPTR ]
 * `persistenceid` - (Optional)
+* `persistencetype` - (Optional) Type of persistence for the virtual server. Available settings function as follows:
+    * SOURCEIP - Connections from the same client IP address belong to the same persistence session.
+    * COOKIEINSERT - Connections that have the same HTTP Cookie, inserted by a Set-Cookie directive from a server, belong to the same persistence session.
+    * SSLSESSION - Connections that have the same SSL Session ID belong to the same persistence session.     
+    Possible values = SOURCEIP, COOKIEINSERT, SSLSESSION, NONE
 * `ippattern` - (Optional) IP address pattern, in dotted decimal notation, for identifying packets to be accepted by the virtual server. The IP Mask parameter specifies which part of the destination IP address is matched against the pattern. Mutually exclusive with the IP Address parameter.
 
     For example, if the IP pattern assigned to the virtual server is 198.51.100.0 and the IP mask is 255.255.240.0 (a forward mask), the first 20 bits in the destination IP addresses are matched with the first 20 bits in the pattern. The virtual server accepts requests with IP addresses that range from 198.51.96.1 to 198.51.111.254. You can also use a pattern such as 0.0.2.2 and a mask such as 0.0.255.255 (a reverse mask).
