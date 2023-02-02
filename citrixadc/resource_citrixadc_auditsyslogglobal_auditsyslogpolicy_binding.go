@@ -7,6 +7,7 @@ import (
 
 	"fmt"
 	"log"
+	"net/url"
 )
 
 func resourceCitrixAdcAuditsyslogglobal_auditsyslogpolicy_binding() *schema.Resource {
@@ -141,7 +142,7 @@ func deleteAuditsyslogglobal_auditsyslogpolicy_bindingFunc(d *schema.ResourceDat
 	policyname := d.Id()
 
 	args := make([]string, 0)
-	args = append(args, fmt.Sprintf("policyname:%s", policyname))
+	args = append(args, fmt.Sprintf("policyname:%s", url.QueryEscape(policyname)))
 	if v, ok := d.GetOk("globalbindtype"); ok {
 		bind_type := v.(string)
 		args = append(args, fmt.Sprintf("globalbindtype:%s", bind_type))
