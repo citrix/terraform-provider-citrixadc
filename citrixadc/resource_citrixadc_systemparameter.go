@@ -54,6 +54,11 @@ func resourceCitrixAdcSystemparameter() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"maxclient": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"minpasswordlen": &schema.Schema{
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -127,6 +132,7 @@ func createSystemparameterFunc(d *schema.ResourceData, meta interface{}) error {
 		Googleanalytics:         d.Get("googleanalytics").(string),
 		Localauth:               d.Get("localauth").(string),
 		Minpasswordlen:          d.Get("minpasswordlen").(int),
+		Maxclient:          	 d.Get("maxclient").(string),
 		Natpcbforceflushlimit:   d.Get("natpcbforceflushlimit").(int),
 		Natpcbrstontimeout:      d.Get("natpcbrstontimeout").(string),
 		Promptstring:            d.Get("promptstring").(string),
@@ -172,6 +178,7 @@ func readSystemparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("googleanalytics", data["googleanalytics"])
 	d.Set("localauth", data["localauth"])
 	d.Set("minpasswordlen", data["minpasswordlen"])
+	d.Set("maxclient", data["maxclient"])
 	d.Set("natpcbforceflushlimit", data["natpcbforceflushlimit"])
 	d.Set("natpcbrstontimeout", data["natpcbrstontimeout"])
 	d.Set("promptstring", data["promptstring"])
@@ -231,6 +238,11 @@ func updateSystemparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("minpasswordlen") {
 		log.Printf("[DEBUG]  citrixadc-provider: Minpasswordlen has changed for systemparameter, starting update")
 		systemparameter.Minpasswordlen = d.Get("minpasswordlen").(int)
+		hasChange = true
+	}
+	if d.HasChange("maxclient") {
+		log.Printf("[DEBUG]  citrixadc-provider: Minpasswordlen has changed for systemparameter, starting update")
+		systemparameter.Maxclient = d.Get("maxclient").(string)
 		hasChange = true
 	}
 	if d.HasChange("natpcbforceflushlimit") {
