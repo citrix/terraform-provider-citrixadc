@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"net/url"
 )
 
 type Systemglobalauditsyslogpolicybinding struct {
@@ -129,8 +130,9 @@ func readAuditsyslogpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAuditsyslogpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	auditsyslogpolicyName := d.Id()
+	auditsyslogpolicyNameEscaped := url.QueryEscape(auditsyslogpolicyName)
 	log.Printf("[DEBUG] citrixadc-provider: Reading auditsyslogpolicy state %s", auditsyslogpolicyName)
-	data, err := client.FindResource(service.Auditsyslogpolicy.Type(), auditsyslogpolicyName)
+	data, err := client.FindResource(service.Auditsyslogpolicy.Type(), auditsyslogpolicyNameEscaped)
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing auditsyslogpolicy state %s", auditsyslogpolicyName)
 		d.SetId("")
@@ -173,9 +175,11 @@ func updateAuditsyslogpolicyFunc(d *schema.ResourceData, meta interface{}) error
 		auditsyslogpolicy.Rule = d.Get("rule").(string)
 		hasChange = true
 	}
+	
+	auditsyslogpolicyNameEscaped := url.QueryEscape(auditsyslogpolicyName)
 
 	if hasChange {
-		_, err := client.UpdateResource(service.Auditsyslogpolicy.Type(), auditsyslogpolicyName, &auditsyslogpolicy)
+		_, err := client.UpdateResource(service.Auditsyslogpolicy.Type(), auditsyslogpolicyNameEscaped, &auditsyslogpolicy)
 		if err != nil {
 			return fmt.Errorf("Error updating auditsyslogpolicy %s: %s", auditsyslogpolicyName, err.Error())
 		}
@@ -192,6 +196,8 @@ func deleteAuditsyslogpolicyFunc(d *schema.ResourceData, meta interface{}) error
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAuditsyslogpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	auditsyslogpolicyName := d.Id()
+	
+	auditsyslogpolicyNameEscaped := url.QueryEscape(auditsyslogpolicyName)
 
 	// Unbind from global if appropriate
 	if v, ok := d.GetOk("globalbinding"); ok {
@@ -203,7 +209,7 @@ func deleteAuditsyslogpolicyFunc(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	err := client.DeleteResource(service.Auditsyslogpolicy.Type(), auditsyslogpolicyName)
+	err := client.DeleteResource(service.Auditsyslogpolicy.Type(), auditsyslogpolicyNameEscaped)
 	if err != nil {
 		return err
 	}
@@ -221,7 +227,7 @@ func readSystemglobalAuditsyslogpolicyBinding(d *schema.ResourceData, meta inter
 
 	findParams := service.FindParams{
 		ResourceType: "systemglobal_auditsyslogpolicy_binding",
-		FilterMap:    map[string]string{"policyname": policyName},
+		FilterMap:    map[string]string{"policyname": url.QueryEscape(policyName)},
 	}
 
 	globalBindings, err := client.FindResourceArrayWithParams(findParams)
