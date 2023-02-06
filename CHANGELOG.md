@@ -1,3 +1,12 @@
+## 1.31.0 (Feb 06, 2023)
+
+BUG FIXES
+
+* **citrixadc_csvserver**: Updated the csvserver resource with additional supported `persistencetype` attribute 
+* **citrixadc_systemparameter**: Updated the systemparameter resource with additional supported `maxclient` attribute
+* **citrixadc_auditsyslogpolicy**: Updated with the url QueryEscape for the attributes for the proper API calls.
+* **citrixadc_auditsyslogglobal_auditsyslogpolicy_binding**: Updated with the url QueryEscape for the attributes for the proper API calls.
+
 ## 1.30.0 (Jan 25, 2023)
 
 BUG FIXES
