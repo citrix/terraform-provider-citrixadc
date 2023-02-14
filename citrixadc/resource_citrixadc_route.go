@@ -162,7 +162,7 @@ func readRouteFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	idSlice := strings.SplitN(routeName, "_", 3)
+	idSlice := strings.SplitN(routeName, "__", 3)
 
 	network := idSlice[0]
 	netmask := idSlice[1]
