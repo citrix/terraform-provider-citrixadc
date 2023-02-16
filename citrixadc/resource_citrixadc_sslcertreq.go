@@ -15,7 +15,7 @@ func resourceCitrixAdcSslcertreq() *schema.Resource {
 		SchemaVersion: 1,
 		Create:        createSslcertreqFunc,
 		Read:          schema.Noop,
-		Delete:        deleteSslcertreqFunc,
+		Delete:        schema.Noop,
 		Schema: map[string]*schema.Schema{
 			"reqfile": &schema.Schema{
 				Type:     schema.TypeString,
@@ -135,14 +135,6 @@ func createSslcertreqFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(sslcertreqName)
-
-	return nil
-}
-
-func deleteSslcertreqFunc(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[DEBUG]  citrixadc-provider: In deleteSslcertreqFunc")
-
-	d.SetId("")
 
 	return nil
 }
