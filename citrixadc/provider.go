@@ -19,7 +19,6 @@ import (
 	"log"
 	"sync"
 
-	"github.com/citrix/adc-nitro-go/resource/config/ns"
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
@@ -879,9 +878,8 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 	}
 
 	if partition, ok := d.GetOk("partition"); ok {
-		nspartition := ns.Nspartition{
-			Partitionname: partition.(string),
-		}
+		nspartition := make(map[string]interface{})
+		nspartition["partitionname"] = partition.(string)
 		err := client.ActOnResource("nspartition", &nspartition, "Switch")
 		if err != nil {
 			return nil, err
