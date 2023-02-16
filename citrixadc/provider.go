@@ -849,6 +849,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_change_password": 				   							   resourceCitrixAdcChangePassword(),
 		"citrixadc_spilloverpolicy": 				   							   resourceCitrixAdcSpilloverpolicy(),
 		"citrixadc_sslcert": 				   							   		   resourceCitrixAdcSslcert(),
+		"citrixadc_sslcertreq": 				   							   	   resourceCitrixAdcSslcertreq(),
 	}
 }
 
