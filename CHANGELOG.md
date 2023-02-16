@@ -1,3 +1,22 @@
+## 1.32.0 (Feb 16, 2023)
+
+FEATURES
+
+* **New Resource** sslcertreq
+* **New Resource** sslcert
+
+BUG FIXES
+
+* **citrixadc_route**: Updated the read function for fetching the resource instance from the NetScaler.
+* **citrixadc_nspbr**: Handled setting of srcip value of nspbr resource.
+* **citrixadc_appfwjsoncontenttype**: Escaped jsoncontenttype value for proper api calls and supported the Import functionality for the endpoint.
+* **citrixadc_appfwxmlcontenttype**: Escaped xmlcontenttype value for proper api calls and supported the Import functionality for the endpoint.
+* **provider.go**: Updated the nspartation to include only the `partitionname` in the request payload in provider.go file.
+
+ENHANCEMENTS
+
+* **citrixadc_systemgroup**: Updated the systemgroup resource with additional supported `allowedmanagementinterface` attribute.
+
 ## 1.31.0 (Feb 06, 2023)
 
 BUG FIXES
