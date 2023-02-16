@@ -275,7 +275,7 @@ func readNspbrFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("priority", data["priority"])
 	d.Set("protocol", data["protocol"])
 	d.Set("protocolnumber", data["protocolnumber"])
-	d.Set("srcip", data["srcip"])
+	// d.Set("srcip", data["srcip"])
 	d.Set("srcipop", data["srcipop"])
 	d.Set("srcipval", data["srcipval"])
 	d.Set("srcmac", data["srcmac"])
