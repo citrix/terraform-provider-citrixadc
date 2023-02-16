@@ -38,6 +38,9 @@ resource "citrixadc_systemgroup" "tf_systemgroup" {
 * `groupname` - (Optional) Name for the group. 
 * `promptstring` - (Optional) String to display at the command-line prompt. Can consist of letters, numbers, hyphen (-), period (.), hash (#), space ( ), at (@), equal (=), colon (:), underscore (\_), and the following variables: * %u - Will be replaced by the user name. * %h - Will be replaced by the hostname of the Citrix ADC. * %t - Will be replaced by the current time in 12-hour format. * %T - Will be replaced by the current time in 24-hour format. * %d - Will be replaced by the current date. * %s - Will be replaced by the state of the Citrix ADC. Note: The 63-character limit for the length of the string does not apply to the characters that replace the variables.
 * `timeout` - (Optional) CLI session inactivity timeout, in seconds. If Restrictedtimeout argument of system parameter is enabled, Timeout can have values in the range [300-86400] seconds.If Restrictedtimeout argument of system parameter is disabled, Timeout can have values in the range [0, 10-100000000] seconds. Default value is 900 seconds.
+* `allowedmanagementinterface` - (Optional) Allowed Management interfaces of the system users in the group. By default allowed from both API and CLI interfaces. If management interface for a group is set to API, then all users under this group will not allowed to access NS through CLI. GUI interface will come under API interface.
+Default value: NS_INTERFACE_ALL
+Possible values = CLI, API
 * `systemusers` - (Optional) A set of user names to bind to this group.
 * `cmdpolicybinding` - (Optional) A set of command policies to bing to this group. Attributes are detailed below
 

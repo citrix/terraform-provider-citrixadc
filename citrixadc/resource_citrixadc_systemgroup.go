@@ -39,6 +39,12 @@ func resourceCitrixAdcSystemgroup() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"allowedmanagementinterface": &schema.Schema{
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"systemusers": &schema.Schema{
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -74,9 +80,10 @@ func createSystemgroupFunc(d *schema.ResourceData, meta interface{}) error {
 	systemgroupName := d.Get("groupname").(string)
 
 	systemgroup := system.Systemgroup{
-		Groupname:    d.Get("groupname").(string),
-		Promptstring: d.Get("promptstring").(string),
-		Timeout:      d.Get("timeout").(int),
+		Groupname:                  d.Get("groupname").(string),
+		Promptstring:               d.Get("promptstring").(string),
+		Timeout:                    d.Get("timeout").(int),
+		Allowedmanagementinterface: toStringList(d.Get("allowedmanagementinterface").([]interface{})),
 	}
 
 	_, err := client.AddResource(service.Systemgroup.Type(), systemgroupName, &systemgroup)
@@ -130,6 +137,7 @@ func readSystemgroupFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("groupname", data["groupname"])
 	d.Set("promptstring", data["promptstring"])
 	d.Set("timeout", data["timeout"])
+	d.Set("allowedmanagementinterface", data["allowedmanagementinterface"])
 
 	return nil
 
@@ -152,6 +160,11 @@ func updateSystemgroupFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("timeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Timeout has changed for systemgroup %s, starting update", systemgroupName)
 		systemgroup.Timeout = d.Get("timeout").(int)
+		hasChange = true
+	}
+	if d.HasChange("allowedmanagementinterface") {
+		log.Printf("[DEBUG]  citrixadc-provider: Timeout has changed for systemgroup %s, starting update", systemgroupName)
+		systemgroup.Allowedmanagementinterface = toStringList(d.Get("allowedmanagementinterface").([]interface{}))
 		hasChange = true
 	}
 
