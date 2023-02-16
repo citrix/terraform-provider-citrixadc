@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"log"
+	"net/url"
 )
 
 func resourceCitrixAdcAppfwjsoncontenttype() *schema.Resource {
@@ -15,6 +16,9 @@ func resourceCitrixAdcAppfwjsoncontenttype() *schema.Resource {
 		Create:        createAppfwjsoncontenttypeFunc,
 		Read:          readAppfwjsoncontenttypeFunc,
 		Delete:        deleteAppfwjsoncontenttypeFunc,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"isregex": &schema.Schema{
 				Type:     schema.TypeString,
@@ -58,8 +62,9 @@ func readAppfwjsoncontenttypeFunc(d *schema.ResourceData, meta interface{}) erro
 	log.Printf("[DEBUG] citrixadc-provider:  In readAppfwjsoncontenttypeFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appfwjsoncontenttypeName := d.Id()
+	appfwjsoncontenttypeNameEscaped := url.PathEscape(url.QueryEscape(appfwjsoncontenttypeName))
 	log.Printf("[DEBUG] citrixadc-provider: Reading appfwjsoncontenttype state %s", appfwjsoncontenttypeName)
-	data, err := client.FindResource(service.Appfwjsoncontenttype.Type(), appfwjsoncontenttypeName)
+	data, err := client.FindResource(service.Appfwjsoncontenttype.Type(), appfwjsoncontenttypeNameEscaped)
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing appfwjsoncontenttype state %s", appfwjsoncontenttypeName)
 		d.SetId("")
@@ -76,7 +81,8 @@ func deleteAppfwjsoncontenttypeFunc(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppfwjsoncontenttypeFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appfwjsoncontenttypeName := d.Id()
-	err := client.DeleteResource(service.Appfwjsoncontenttype.Type(), appfwjsoncontenttypeName)
+	appfwjsoncontenttypeNameEscaped := url.PathEscape(url.QueryEscape(appfwjsoncontenttypeName))
+	err := client.DeleteResource(service.Appfwjsoncontenttype.Type(), appfwjsoncontenttypeNameEscaped)
 	if err != nil {
 		return err
 	}
