@@ -15,7 +15,7 @@ func resourceCitrixAdcSslcert() *schema.Resource {
 		SchemaVersion: 1,
 		Create:        createSslcertFunc,
 		Read:          schema.Noop,
-		Delete:        deleteSslcertFunc,
+		Delete:        schema.Noop,
 		Schema: map[string]*schema.Schema{
 			"certfile": &schema.Schema{
 				Type:     schema.TypeString,
@@ -135,14 +135,6 @@ func createSslcertFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(sslcertName)
-
-	return nil
-}
-
-func deleteSslcertFunc(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[DEBUG]  citrixadc-provider: In deleteSslcertFunc")
-
-	d.SetId("")
 
 	return nil
 }
