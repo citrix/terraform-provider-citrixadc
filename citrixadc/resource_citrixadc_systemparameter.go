@@ -178,7 +178,7 @@ func readSystemparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("googleanalytics", data["googleanalytics"])
 	d.Set("localauth", data["localauth"])
 	d.Set("minpasswordlen", data["minpasswordlen"])
-	d.Set("maxclient", data["maxclient"])
+	setToInt("maxclient", d, data["maxclient"])
 	d.Set("natpcbforceflushlimit", data["natpcbforceflushlimit"])
 	d.Set("natpcbrstontimeout", data["natpcbrstontimeout"])
 	d.Set("promptstring", data["promptstring"])

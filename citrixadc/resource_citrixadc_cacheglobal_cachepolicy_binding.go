@@ -152,7 +152,7 @@ func readCacheglobal_cachepolicy_bindingFunc(d *schema.ResourceData, meta interf
 	d.Set("labeltype", data["labeltype"])
 	d.Set("policy", data["policy"])
 	d.Set("precededefrules", data["precededefrules"])
-	d.Set("priority", data["priority"])
+	setToInt("priority", d, data["priority"])
 	d.Set("type", data["type"])
 
 	return nil

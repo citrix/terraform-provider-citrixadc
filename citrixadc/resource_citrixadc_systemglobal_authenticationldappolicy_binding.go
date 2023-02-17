@@ -148,7 +148,7 @@ func readSystemglobal_authenticationldappolicy_bindingFunc(d *schema.ResourceDat
 	d.Set("gotopriorityexpression", data["gotopriorityexpression"])
 	d.Set("nextfactor", data["nextfactor"])
 	d.Set("policyname", data["policyname"])
-	d.Set("priority", data["priority"])
+	setToInt("priority", d, data["priority"])
 
 	return nil
 

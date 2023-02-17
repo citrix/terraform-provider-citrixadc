@@ -88,7 +88,7 @@ func readClusternodegroupFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	d.Set("name", data["name"])
-	//d.Set("priority", data["priority"])
+	//setToInt("priority", d, data["priority"])
 	//d.Set("state", data["state"])
 	//d.Set("sticky", data["sticky"])
 	//d.Set("strict", data["strict"])

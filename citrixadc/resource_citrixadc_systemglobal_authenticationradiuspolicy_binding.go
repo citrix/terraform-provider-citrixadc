@@ -147,7 +147,7 @@ func readSystemglobal_authenticationradiuspolicy_bindingFunc(d *schema.ResourceD
 	d.Set("gotopriorityexpression", data["gotopriorityexpression"])
 	d.Set("nextfactor", data["nextfactor"])
 	d.Set("policyname", data["policyname"])
-	d.Set("priority", data["priority"])
+	setToInt("priority", d, data["priority"])
 
 	return nil
 

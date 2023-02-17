@@ -119,7 +119,7 @@ func readVrid6Func(d *schema.ResourceData, meta interface{}) error {
 	d.Set("ownernode", data["ownernode"])
 	d.Set("preemption", data["preemption"])
 	d.Set("preemptiondelaytimer", data["preemptiondelaytimer"])
-	d.Set("priority", data["priority"])
+	setToInt("priority", d, data["priority"])
 	d.Set("sharing", data["sharing"])
 	d.Set("trackifnumpriority", data["trackifnumpriority"])
 	d.Set("tracking", data["tracking"])

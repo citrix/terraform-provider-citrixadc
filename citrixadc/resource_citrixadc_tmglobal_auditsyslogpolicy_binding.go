@@ -113,7 +113,7 @@ func readTmglobal_auditsyslogpolicy_bindingFunc(d *schema.ResourceData, meta int
 
 	d.Set("gotopriorityexpression", data["gotopriorityexpression"])
 	d.Set("policyname", data["policyname"])
-	d.Set("priority", data["priority"])
+	setToInt("priority", d, data["priority"])
 
 	return nil
 

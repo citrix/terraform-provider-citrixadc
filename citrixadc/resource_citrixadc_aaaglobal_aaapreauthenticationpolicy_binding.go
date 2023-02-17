@@ -114,7 +114,7 @@ func readAaaglobal_aaapreauthenticationpolicy_bindingFunc(d *schema.ResourceData
 
 	d.Set("builtin", data["builtin"])
 	d.Set("policy", data["policy"])
-	d.Set("priority", data["priority"])
+	setToInt("priority", d, data["priority"])
 
 	return nil
 

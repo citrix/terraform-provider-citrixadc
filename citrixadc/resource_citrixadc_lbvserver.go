@@ -947,7 +947,7 @@ func readLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("backupvserver", data["backupvserver"])
 	d.Set("bypassaaaa", data["bypassaaaa"])
 	d.Set("cacheable", data["cacheable"])
-	d.Set("clttimeout", data["clttimeout"])
+	setToInt("clttimeout", d, data["clttimeout"])
 	d.Set("comment", data["comment"])
 	d.Set("connfailover", data["connfailover"])
 	d.Set("cookiename", data["cookiename"])

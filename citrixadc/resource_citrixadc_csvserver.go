@@ -641,7 +641,7 @@ func readCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("backupvserver", data["backupvserver"])
 	d.Set("cacheable", data["cacheable"])
 	d.Set("casesensitive", data["casesensitive"])
-	d.Set("clttimeout", data["clttimeout"])
+	setToInt("clttimeout", d, data["clttimeout"])
 	d.Set("comment", data["comment"])
 	d.Set("cookiedomain", data["cookiedomain"])
 	d.Set("cookietimeout", data["cookietimeout"])

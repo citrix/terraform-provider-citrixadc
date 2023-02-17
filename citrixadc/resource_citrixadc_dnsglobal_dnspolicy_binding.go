@@ -157,7 +157,7 @@ func readDnsglobal_dnspolicy_bindingFunc(d *schema.ResourceData, meta interface{
 	d.Set("labelname", data["labelname"])
 	d.Set("labeltype", data["labeltype"])
 	d.Set("policyname", data["policyname"])
-	d.Set("priority", data["priority"])
+	setToInt("priority", d, data["priority"])
 	d.Set("type", data["type"])
 
 	return nil

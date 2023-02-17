@@ -136,7 +136,7 @@ func readTunnelglobal_tunneltrafficpolicy_bindingFunc(d *schema.ResourceData, me
 	d.Set("feature", data["feature"])
 	d.Set("gotopriorityexpression", data["gotopriorityexpression"])
 	d.Set("policyname", data["policyname"])
-	d.Set("priority", data["priority"])
+	setToInt("priority", d, data["priority"])
 	d.Set("state", data["state"])
 	d.Set("type", data["type"])
 

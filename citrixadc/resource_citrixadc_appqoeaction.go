@@ -200,7 +200,7 @@ func readAppqoeactionFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", data["name"])
 	d.Set("numretries", data["numretries"])
 	d.Set("polqdepth", data["polqdepth"])
-	d.Set("priority", data["priority"])
+	setToInt("priority", d, data["priority"])
 	d.Set("priqdepth", data["priqdepth"])
 	d.Set("respondwith", data["respondwith"])
 	d.Set("retryonreset", data["retryonreset"])

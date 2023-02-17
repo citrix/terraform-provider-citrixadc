@@ -274,7 +274,7 @@ func readNspbr6Func(d *schema.ResourceData, meta interface{}) error {
 	d.Set("nexthopval", data["nexthopval"])
 	d.Set("nexthopvlan", data["nexthopvlan"])
 	d.Set("ownergroup", data["ownergroup"])
-	d.Set("priority", data["priority"])
+	setToInt("priority", d, data["priority"])
 	d.Set("protocol", data["protocol"])
 	d.Set("protocolnumber", data["protocolnumber"])
 	d.Set("srcipop", data["srcipop"])

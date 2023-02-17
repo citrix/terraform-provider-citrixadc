@@ -155,7 +155,7 @@ func readVpnvserver_vpnurlpolicy_bindingFunc(d *schema.ResourceData, meta interf
 	d.Set("groupextraction", data["groupextraction"])
 	d.Set("name", data["name"])
 	d.Set("policy", data["policy"])
-	d.Set("priority", data["priority"])
+	setToInt("priority", d, data["priority"])
 	d.Set("secondary", data["secondary"])
 
 	return nil
