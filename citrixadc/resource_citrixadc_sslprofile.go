@@ -416,7 +416,7 @@ func resourceCitrixAdcSslprofile() *schema.Resource {
 			// sslprofile_ecccurve_binding
 			"ecccurvebindings": &schema.Schema{
 				Type:     schema.TypeSet,
-				Required: true,
+				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			// sslprofile_cipher_binding

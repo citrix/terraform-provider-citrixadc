@@ -28,7 +28,7 @@ func resourceCitrixAdcSslprofile_sslcipher_binding() *schema.Resource {
 			},
 			"cipherpriority": &schema.Schema{
 				Type:     schema.TypeInt,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
 			},
 			"name": &schema.Schema{

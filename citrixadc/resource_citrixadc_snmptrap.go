@@ -6,10 +6,9 @@ import (
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"strings"
-	"net/url"
 	"fmt"
 	"log"
+	"strings"
 )
 
 func resourceCitrixAdcSnmptrap() *schema.Resource {
@@ -65,8 +64,9 @@ func resourceCitrixAdcSnmptrap() *schema.Resource {
 			},
 			"version": &schema.Schema{
 				Type:     schema.TypeString,
+				Default:  "V2",
 				Optional: true,
-				Computed: true,
+				ForceNew: true,
 			},
 		},
 	}
@@ -75,8 +75,8 @@ func resourceCitrixAdcSnmptrap() *schema.Resource {
 func createSnmptrapFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSnmptrapFunc")
 	client := meta.(*NetScalerNitroClient).client
-	snmptrapId:= d.Get("trapclass").(string) + "," + d.Get("trapdestination").(string)
-	
+	snmptrapId := d.Get("trapclass").(string) + "," + d.Get("trapdestination").(string) + "," + d.Get("version").(string)
+
 	snmptrap := snmp.Snmptrap{
 		Allpartitions:   d.Get("allpartitions").(string),
 		Communityname:   d.Get("communityname").(string),
@@ -108,7 +108,12 @@ func readSnmptrapFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSnmptrapFunc")
 	client := meta.(*NetScalerNitroClient).client
 	snmptrapId := d.Id()
-	
+
+	idSlice := strings.SplitN(snmptrapId, ",", 3)
+	trapclass := idSlice[0]
+	trapdestination := idSlice[1]
+	version := idSlice[2]
+
 	log.Printf("[DEBUG] citrixadc-provider: Reading snmptrap state %s", snmptrapId)
 	findParams := service.FindParams{
 		ResourceType: service.Snmptrap.Type(),
@@ -119,22 +124,21 @@ func readSnmptrapFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
-	
+
 	if len(dataArr) == 0 {
 		log.Printf("[WARN] citrixadc-provider: snmptrap does not exist. Clearing state.")
 		d.SetId("")
 		return nil
 	}
-	
 
 	foundIndex := -1
 	for i, v := range dataArr {
-		if v["trapclass"].(string) == d.Get("trapclass") && v["trapdestination"].(string) == d.Get("trapdestination") {
+		if v["trapclass"].(string) == trapclass && v["trapdestination"].(string) == trapdestination && v["version"].(string) == version {
 			foundIndex = i
 			break
 		}
 	}
-	
+
 	if foundIndex == -1 {
 		log.Printf("[DEBUG] citrixadc-provider: FindResourceArrayWithParams snmptrap not found in array")
 		log.Printf("[WARN] citrixadc-provider: Clearing snmptrap state %s", snmptrapId)
@@ -160,11 +164,17 @@ func readSnmptrapFunc(d *schema.ResourceData, meta interface{}) error {
 func updateSnmptrapFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateSnmptrapFunc")
 	client := meta.(*NetScalerNitroClient).client
-	snmptrapId:= d.Id()
+	snmptrapId := d.Id()
+
+	idSlice := strings.SplitN(snmptrapId, ",", 3)
+	trapclass := idSlice[0]
+	trapdestination := idSlice[1]
+	version := idSlice[2]
 
 	snmptrap := snmp.Snmptrap{
-		Trapclass: d.Get("trapclass").(string),
-		Trapdestination: d.Get("trapdestination").(string),
+		Trapclass:       trapclass,
+		Trapdestination: trapdestination,
+		Version:         version,
 	}
 	hasChange := false
 	if d.HasChange("allpartitions") {
@@ -197,14 +207,9 @@ func updateSnmptrapFunc(d *schema.ResourceData, meta interface{}) error {
 		snmptrap.Td = d.Get("td").(int)
 		hasChange = true
 	}
-	if d.HasChange("version") {
-		log.Printf("[DEBUG]  citrixadc-provider: Version has changed for snmptrap %s, starting update", snmptrapId)
-		snmptrap.Version = d.Get("version").(string)
-		hasChange = true
-	}
 
 	if hasChange {
-		_, err := client.UpdateResource(service.Snmptrap.Type(), "",  &snmptrap)
+		err := client.UpdateUnnamedResource(service.Snmptrap.Type(), &snmptrap)
 		if err != nil {
 			return fmt.Errorf("Error updating snmptrap %s", snmptrapId)
 		}
@@ -215,21 +220,20 @@ func updateSnmptrapFunc(d *schema.ResourceData, meta interface{}) error {
 func deleteSnmptrapFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSnmptrapFunc")
 	client := meta.(*NetScalerNitroClient).client
-	snmptrapId:= d.Id()
-	idSlice := strings.SplitN(snmptrapId, ",", 2)
+	snmptrapId := d.Id()
+	idSlice := strings.SplitN(snmptrapId, ",", 3)
 
 	trapclass := idSlice[0]
 	trapdestination := idSlice[1]
-	
+	version := idSlice[2]
+
 	args := make([]string, 0)
-	
+
 	args = append(args, fmt.Sprintf("trapdestination:%s", trapdestination))
-	if val, ok := d.GetOk("version"); ok {
-		args = append(args, fmt.Sprintf("version:%s", url.QueryEscape(val.(string))))
-	}
+	args = append(args, fmt.Sprintf("version:%s", version))
 	if val, ok := d.GetOk("td"); ok {
 		args = append(args, fmt.Sprintf("td:%d", val.(int)))
-	}	
+	}
 
 	err := client.DeleteResourceWithArgs(service.Snmptrap.Type(), trapclass, args)
 	if err != nil {

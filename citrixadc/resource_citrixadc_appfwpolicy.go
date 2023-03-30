@@ -17,6 +17,9 @@ func resourceCitrixAdcAppfwpolicy() *schema.Resource {
 		Read:          readAppfwpolicyFunc,
 		Update:        updateAppfwpolicyFunc,
 		Delete:        deleteAppfwpolicyFunc,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"comment": &schema.Schema{
 				Type:     schema.TypeString,
