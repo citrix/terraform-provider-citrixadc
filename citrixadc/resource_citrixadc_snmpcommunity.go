@@ -1,6 +1,9 @@
 package citrixadc
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/citrix/adc-nitro-go/resource/config/snmp"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -25,9 +28,13 @@ func resourceCitrixAdcSnmpcommunity() *schema.Resource {
 				ForceNew: true,
 			},
 			"permissions": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validatePermissions,
+				StateFunc: func(v interface{}) string {
+					return strings.ToUpper(v.(string))
+				},
 			},
 		},
 	}
@@ -75,7 +82,6 @@ func readSnmpcommunityFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-
 func deleteSnmpcommunityFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSnmpcommunityFunc")
 	client := meta.(*NetScalerNitroClient).client
@@ -88,4 +94,19 @@ func deleteSnmpcommunityFunc(d *schema.ResourceData, meta interface{}) error {
 	d.SetId("")
 
 	return nil
+}
+
+func validatePermissions(v interface{}, k string) (ws []string, errors []error) {
+	allowedValues := []string{"GET", "GET_NEXT", "GET_BULK", "SET", "ALL"}
+
+	value := v.(string)
+
+	for _, allowed := range allowedValues {
+		if strings.EqualFold(value, allowed) {
+			return
+		}
+	}
+
+	errors = append(errors, fmt.Errorf("%q must be one of %q", k, allowedValues))
+	return
 }
