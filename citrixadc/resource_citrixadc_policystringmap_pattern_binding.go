@@ -1,9 +1,10 @@
 package citrixadc
 
 import (
+	"net/url"
+
 	"github.com/citrix/adc-nitro-go/resource/config/policy"
 	"github.com/citrix/adc-nitro-go/service"
-
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
@@ -133,7 +134,7 @@ func deletePolicystringmap_pattern_bindingFunc(d *schema.ResourceData, meta inte
 	idSlice := strings.SplitN(bindingId, ",", 2)
 
 	name := idSlice[0]
-	key := idSlice[1]
+	key := url.PathEscape(idSlice[1])
 
 	args := make([]string, 0)
 	args = append(args, fmt.Sprintf("key:%s", key))
