@@ -1,3 +1,26 @@
+## 1.33.0 (April 03, 2023)
+
+FEATURES
+
+* **New Resource** snmptrap_snmpuser_binding
+
+BUG FIXES
+
+* **citrixadc_authenticationldapaction**: Updated the read function to not to set `ldapbinddnpassword` attribute from the NetScaler.
+* **citrixadc_dnsnameserver**: Updated the delete function and updated computed as true for some of the attributes.
+* **citrixadc_lbmonitor**: Updated the read function to not to set some attributes that are received as Hash value from NetScaler.
+* **citrixadc_lbvserver**: Updated the resource struct to set omitempty for `timeout` attribute and made computed as true for `sslprofile` attribute.
+* **citrixadc_sslprofile_sslcipher_binding**: Updated the schema to make the `cipherpriority` as the optional attribute.
+* **citrixadc_sslprofile**: Updated the schema to make the `ecccurvebindings` as the optional attribute.
+* **citrixadc_vpnvserver_vpnsessionpolicy_binding**: Updated the read function to not to set some attributes that are not received from NetScaler.
+* **citrixadc_snmptrap**: Updated id of resource, it is now the concatenation of `trapclass`, `trapdestination` and `version` attributes seperated by comma. User can now add more snmptrap with different different combination of these value.  
+
+ENHANCEMENTS
+
+* **citrixadc_appfwpolicy**: Suppored Import to the resource.
+* **citrixadc_appfwprofile**: Suppored Import to the resource.
+* **citrixadc_lbvserver_appfwpolicy_binding**: Suppored Import to the resource.
+
 ## 1.32.0 (Feb 16, 2023)
 
 FEATURES
