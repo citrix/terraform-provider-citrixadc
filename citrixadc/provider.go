@@ -850,6 +850,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_spilloverpolicy": 				   							   resourceCitrixAdcSpilloverpolicy(),
 		"citrixadc_sslcert": 				   							   		   resourceCitrixAdcSslcert(),
 		"citrixadc_sslcertreq": 				   							   	   resourceCitrixAdcSslcertreq(),
+		"citrixadc_snmptrap_snmpuser_binding":									   resourceCitrixAdcSnmptrap_snmpuser_binding(),
 	}
 }
 
