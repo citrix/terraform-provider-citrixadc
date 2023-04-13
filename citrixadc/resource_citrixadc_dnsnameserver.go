@@ -40,19 +40,19 @@ func resourceCitrixAdcDnsnameserver() *schema.Resource {
 			"local": &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
+				Computed: true, // Computed is often used to represent values that are not user configurable or can not be known at time of terraform plan or apply
 				ForceNew: true,
 			},
 			"state": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Computed: true, // Computed is often used to represent values that are not user configurable or can not be known at time of terraform plan or apply
 				ForceNew: true,
 			},
 			"type": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Computed: true, // Computed is often used to represent values that are not user configurable or can not be known at time of terraform plan or apply
 				ForceNew: true,
 			},
 		},
@@ -212,7 +212,7 @@ func deleteDnsnameserverFunc(d *schema.ResourceData, meta interface{}) error {
 	dns_type := idSlice[1]
 
 	argsMap := make(map[string]string)
-	if val, ok := d.GetOk("dnsvservername"); ok && Name == val {
+	if val, ok := d.GetOk("dnsvservername"); ok && Name == val {	// if the user gives `dnsvservername`, then we need to directly call delete operation.
 		err := client.DeleteResource(service.Dnsnameserver.Type(), Name)
 		if err != nil {
 			return err

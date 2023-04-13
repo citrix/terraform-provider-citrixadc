@@ -134,7 +134,7 @@ type lbvserver struct {
 	Td                                 int         `json:"td,omitempty"`
 	Thresholdvalue                     int         `json:"thresholdvalue,omitempty"`
 	Tickssincelaststatechange          int         `json:"tickssincelaststatechange,omitempty"`
-	Timeout                            int         `json:"timeout,omitempty"`
+	Timeout                            int         `json:"timeout,omitempty"`	// Included Omitempty flag, because it doesnot support 0 value
 	Tosid                              int         `json:"tosid,omitempty"`
 	Totalservices                      int         `json:"totalservices,omitempty"`
 	Trofspersistence                   string      `json:"trofspersistence,omitempty"`
@@ -657,7 +657,7 @@ func resourceCitrixAdcLbvserver() *schema.Resource {
 			},
 			"sslprofile": &schema.Schema{
 				Type:     schema.TypeString,
-				Computed: true,
+				Computed: true,	// Computed is often used to represent values that are not user configurable or can not be known at time of terraform plan or apply,
 				Optional: true,
 			},
 			"quicbridgeprofilename": &schema.Schema{

@@ -91,10 +91,11 @@ func testAccCheckSnmptrapExist(n string, id *string) resource.TestCheckFunc {
 		}
 		
 		snmptrapId := rs.Primary.ID
-		idSlice := strings.SplitN(snmptrapId, ",", 2)
+		idSlice := strings.SplitN(snmptrapId, ",", 3)
 
 		trapclass := idSlice[0]
 		trapdestination := idSlice[1]
+		version := idSlice[2]
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
 
@@ -115,7 +116,7 @@ func testAccCheckSnmptrapExist(n string, id *string) resource.TestCheckFunc {
 		
 		found := false
 		 for _, v := range dataArr {
-		 	if v["trapclass"].(string) == trapclass &&  v["trapdestination"] == trapdestination{
+		 	if v["trapclass"].(string) == trapclass &&  v["trapdestination"] == trapdestination && v["version"] == version {
 				found = true
 		 		break
 			}
@@ -141,10 +142,11 @@ func testAccCheckSnmptrapDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 		snmptrapId := rs.Primary.ID
-		idSlice := strings.SplitN(snmptrapId, ",", 2)
+		idSlice := strings.SplitN(snmptrapId, ",", 3)
 
 		trapclass := idSlice[0]
 		trapdestination := idSlice[1]
+		version := idSlice[2]
 
 
 		dataArr, err := nsClient.FindAllResources(service.Snmptrap.Type())
@@ -155,7 +157,7 @@ func testAccCheckSnmptrapDestroy(s *terraform.State) error {
 
 		found := false
 		for _, v := range dataArr {
-			if v["trapclass"].(string) == trapclass &&  v["trapdestination"] == trapdestination{
+			if v["trapclass"].(string) == trapclass &&  v["trapdestination"] == trapdestination  && v["version"] == version {
 			   found = true
 				break
 		   }

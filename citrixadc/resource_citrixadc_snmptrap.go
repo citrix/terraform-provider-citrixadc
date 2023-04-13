@@ -64,7 +64,7 @@ func resourceCitrixAdcSnmptrap() *schema.Resource {
 			},
 			"version": &schema.Schema{
 				Type:     schema.TypeString,
-				Default:  "V2",
+				Default:  "V2",	// default value is V2, this is included in Id
 				Optional: true,
 				ForceNew: true,
 			},
@@ -133,7 +133,7 @@ func readSnmptrapFunc(d *schema.ResourceData, meta interface{}) error {
 
 	foundIndex := -1
 	for i, v := range dataArr {
-		if v["trapclass"].(string) == trapclass && v["trapdestination"].(string) == trapdestination && v["version"].(string) == version {
+		if v["trapclass"].(string) == trapclass && v["trapdestination"].(string) == trapdestination && v["version"].(string) == version {	// version is also included in the id, as we can have combination of these as resource instance
 			foundIndex = i
 			break
 		}
