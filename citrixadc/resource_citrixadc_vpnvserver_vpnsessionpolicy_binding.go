@@ -149,8 +149,8 @@ func readVpnvserver_vpnsessionpolicy_bindingFunc(d *schema.ResourceData, meta in
 
 	data := dataArr[foundIndex]
 
-	d.Set("bindpoint", data["bindpoint"])
-	d.Set("gotopriorityexpression", data["gotopriorityexpression"])
+	// d.Set("bindpoint", data["bindpoint"]) // We dont get these attributes from the netScaler in GET Api call
+	// d.Set("gotopriorityexpression", data["gotopriorityexpression"])
 	d.Set("groupextraction", data["groupextraction"])
 	d.Set("name", data["name"])
 	d.Set("policy", data["policy"])

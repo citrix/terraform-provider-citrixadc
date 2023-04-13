@@ -421,7 +421,7 @@ func readAuthenticationldapactionFunc(d *schema.ResourceData, meta interface{}) 
 	d.Set("kbattribute", data["kbattribute"])
 	d.Set("ldapbase", data["ldapbase"])
 	d.Set("ldapbinddn", data["ldapbinddn"])
-	d.Set("ldapbinddnpassword", data["ldapbinddnpassword"])
+	// d.Set("ldapbinddnpassword", data["ldapbinddnpassword"]) // We get the hash value from the NetScaler, which creates terraform to update the resource attribute on our next terraform apply command
 	d.Set("ldaphostname", data["ldaphostname"])
 	d.Set("ldaploginname", data["ldaploginname"])
 	d.Set("maxldapreferrals", data["maxldapreferrals"])

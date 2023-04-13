@@ -18,6 +18,9 @@ func resourceCitrixAdcLbvserver_appfwpolicy_binding() *schema.Resource {
 		Create:        createLbvserver_appfwpolicy_bindingFunc,
 		Read:          readLbvserver_appfwpolicy_bindingFunc,
 		Delete:        deleteLbvserver_appfwpolicy_bindingFunc,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
 				Type:     schema.TypeString,

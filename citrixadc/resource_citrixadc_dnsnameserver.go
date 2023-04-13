@@ -40,16 +40,19 @@ func resourceCitrixAdcDnsnameserver() *schema.Resource {
 			"local": &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true, // Computed is often used to represent values that are not user configurable or can not be known at time of terraform plan or apply
 				ForceNew: true,
 			},
 			"state": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true, // Computed is often used to represent values that are not user configurable or can not be known at time of terraform plan or apply
 				ForceNew: true,
 			},
 			"type": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true, // Computed is often used to represent values that are not user configurable or can not be known at time of terraform plan or apply
 				ForceNew: true,
 			},
 		},
@@ -81,7 +84,7 @@ func createDnsnameserverFunc(d *schema.ResourceData, meta interface{}) error {
 	if val, ok := d.GetOk("type"); ok {
 		PrimaryId = PrimaryId + "," + val.(string)
 	} else {
-		// the default value of attribute type is "UDP". So, it is appended implicitly when not specified by the user. 
+		// the default value of attribute type is "UDP". So, it is appended implicitly when not specified by the user.
 		PrimaryId = PrimaryId + ",UDP"
 	}
 
@@ -209,8 +212,15 @@ func deleteDnsnameserverFunc(d *schema.ResourceData, meta interface{}) error {
 	dns_type := idSlice[1]
 
 	argsMap := make(map[string]string)
-	if val, ok := d.GetOk("dnsvservername"); ok {
-		argsMap["dnsvservername"] = url.QueryEscape(val.(string))
+	if val, ok := d.GetOk("dnsvservername"); ok && Name == val {	// if the user gives `dnsvservername`, then we need to directly call delete operation.
+		err := client.DeleteResource(service.Dnsnameserver.Type(), Name)
+		if err != nil {
+			return err
+		}
+
+		d.SetId("")
+
+		return nil
 	}
 	if val, ok := d.GetOk("type"); ok {
 		argsMap["type"] = url.QueryEscape(val.(string))

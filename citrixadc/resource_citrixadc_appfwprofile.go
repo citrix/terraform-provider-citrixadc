@@ -17,6 +17,9 @@ func resourceCitrixAdcAppfwprofile() *schema.Resource {
 		Read:          readAppfwprofileFunc,
 		Update:        updateAppfwprofileFunc,
 		Delete:        deleteAppfwprofileFunc,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"addcookieflags": &schema.Schema{
 				Type:     schema.TypeString,
