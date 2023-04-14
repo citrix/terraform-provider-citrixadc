@@ -9,7 +9,7 @@ assignees: ''
 
 # Contact us
 
-> For any immediate issues or help , reach out to us at appmodernization@citrix.com !
+> For any immediate issues or help , reach out to us at NetScaler-AutomationToolkit@cloud.com !
 
 # Bug Report
 
@@ -22,13 +22,13 @@ Steps to reproduce the behaviour:
 ```hcl
 # my terraform script here
 ```
-2. which terraform command I am getting the error 
+2. which terraform command I am getting the error
 ```bash
 # terrafrom command
 ```
 3. Terraform output logs to the log file (./tf.log). Append `TF_LOG=TRACE NS_LOG=TRACE TF_LOG_PATH=./tf.log` to your terraform command
 ```bash
-# terraform output logs. 
+# terraform output logs.
 ```
 4. Error I am facing on the console
 ```bash

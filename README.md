@@ -6,7 +6,7 @@ Learn more about Citrix ADC Automation [here](https://docs.citrix.com/en-us/citr
 
 > :round_pushpin:For deploying Citrix ADC in Public Cloud - AWS and Azure, check out cloud scripts in github repo [terraform-cloud-scripts](https://github.com/citrix/terraform-cloud-scripts).
 
-> :envelope: For any immediate issues or help , reach out to us at appmodernization@citrix.com !
+> :envelope: For any immediate issues or help , reach out to us at NetScaler-AutomationToolkit@cloud.com !
 
 ## Terrraform Provider Documentation
 
@@ -192,15 +192,15 @@ Refer the [commiting changes](#commiting-changes-to-citrix-adcs-persistent-store
 
 ### Managing ADC configs drifts in terraform
 
-You want to see the current state of ADC entities in Terraform 
+You want to see the current state of ADC entities in Terraform
 - Use **terraform refresh** to update your local terraform state file to match with existing ADC state
 - Use **terraform show** to show the current state for your entire configuration
 - Use **terraform state list** to show the resources that are being tracked/managed via Terraform
-- To inspect a particular entity use **terraform state show <entity_name>** e.g. 
+- To inspect a particular entity use **terraform state show <entity_name>** e.g.
 **terraform state show citrixadc_servicegroup.tf_servicegroup**
 
-If you want to override the ADC configuration with the configs you have in Terraform resource file then 
-- You can run **terraform plan** to see the drifts/diff between the two state 
+If you want to override the ADC configuration with the configs you have in Terraform resource file then
+- You can run **terraform plan** to see the drifts/diff between the two state
 - Run **terraform apply** to push the desired configs( in your Terraform resource file) to your ADC.
 
 Update your terraform state file to reflect the current/true state of ADC

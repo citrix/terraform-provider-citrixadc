@@ -9,12 +9,12 @@ assignees: ''
 
 # Contact us
 
-> For any immediate issues or help , reach out to us at appmodernization@citrix.com !
+> For any immediate issues or help , reach out to us at NetScaler-AutomationToolkit@cloud.com !
 
 # Feature Request
 
 **Is your feature request related to a problem? Please describe.**
-A clear and concise description of what the problem is. 
+A clear and concise description of what the problem is.
 
 **Describe the solution you'd like**
 A clear and concise description of what you want to happen.
