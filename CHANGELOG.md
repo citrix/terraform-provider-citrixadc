@@ -1,3 +1,10 @@
+## 1.34.0 (April 25, 2023)
+
+BUG FIXES
+
+* **citrixadc_systemfile**: Updated the read function to handle recreating of resource in case file doesnot exist in NetScaler.
+
+
 ## 1.33.0 (April 03, 2023)
 
 FEATURES
