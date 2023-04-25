@@ -116,7 +116,8 @@ func readSystemfileFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	dataArray, err := client.FindResourceArrayWithParams(findParams)
 	if err != nil {
-		return err
+		d.SetId("") // If the file doesnot exist, then we are setting Id is null so that the resource will be created. 
+		// return err // If the file doesnot exist then the program will be exited, so we dont want it to happen
 	}
 
 	if len(dataArray) == 0 {
