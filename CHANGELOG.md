@@ -1,3 +1,9 @@
+## 1.34.0 (April 25, 2023)
+
+BUG FIXES
+
+* **citrixadc_snmptrap**: Updated read operation to make it backward compatible, appended the attribute value to old Id. 
+
 ## 1.33.0 (April 03, 2023)
 
 FEATURES
