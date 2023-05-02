@@ -78,7 +78,7 @@ func resourceCitrixAdcNspbr() *schema.Resource {
 			"iptunnelname": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				ForceNew: true,
 			},
 			"monitor": &schema.Schema{
 				Type:     schema.TypeString,
@@ -257,15 +257,15 @@ func readNspbrFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("name", data["name"])
 	d.Set("action", data["action"])
-	d.Set("destip", data["destip"])
+	// d.Set("destip", data["destip"])
 	d.Set("destipop", data["destipop"])
 	d.Set("destipval", data["destipval"])
-	d.Set("destport", data["destport"])
+	// d.Set("destport", data["destport"])
 	d.Set("destportop", data["destportop"])
 	d.Set("destportval", data["destportval"])
 	d.Set("detail", data["detail"])
 	d.Set("interface", data["interface"])
-	d.Set("iptunnel", data["iptunnel"])
+	// d.Set("iptunnel", data["iptunnel"])
 	d.Set("iptunnelname", data["iptunnelname"])
 	d.Set("monitor", data["monitor"])
 	d.Set("msr", data["msr"])
@@ -280,7 +280,7 @@ func readNspbrFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("srcipval", data["srcipval"])
 	d.Set("srcmac", data["srcmac"])
 	d.Set("srcmacmask", data["srcmacmask"])
-	d.Set("srcport", data["srcport"])
+	// d.Set("srcport", data["srcport"])
 	d.Set("srcportop", data["srcportop"])
 	d.Set("srcportval", data["srcportval"])
 	d.Set("state", data["state"])
@@ -321,6 +321,7 @@ func updateNspbrFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("destipval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Destipval has changed for nspbr %s, starting update", nspbrName)
 		nspbr.Destipval = d.Get("destipval").(string)
+		nspbr.Destip = d.Get("destip").(bool)
 		hasChange = true
 	}
 	if d.HasChange("destport") {
@@ -336,6 +337,7 @@ func updateNspbrFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("destportval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Destportval has changed for nspbr %s, starting update", nspbrName)
 		nspbr.Destportval = d.Get("destportval").(string)
+		nspbr.Destport = d.Get("destport").(bool)
 		hasChange = true
 	}
 	if d.HasChange("detail") {
@@ -346,16 +348,6 @@ func updateNspbrFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("interface") {
 		log.Printf("[DEBUG]  citrixadc-provider: Interface has changed for nspbr %s, starting update", nspbrName)
 		nspbr.Interface = d.Get("interface").(string)
-		hasChange = true
-	}
-	if d.HasChange("iptunnel") {
-		log.Printf("[DEBUG]  citrixadc-provider: Iptunnel has changed for nspbr %s, starting update", nspbrName)
-		nspbr.Iptunnel = d.Get("iptunnel").(bool)
-		hasChange = true
-	}
-	if d.HasChange("iptunnelname") {
-		log.Printf("[DEBUG]  citrixadc-provider: Iptunnelname has changed for nspbr %s, starting update", nspbrName)
-		nspbr.Iptunnelname = d.Get("iptunnelname").(string)
 		hasChange = true
 	}
 	if d.HasChange("monitor") {
@@ -412,6 +404,7 @@ func updateNspbrFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("srcipval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Srcipval has changed for nspbr %s, starting update", nspbrName)
 		nspbr.Srcipval = d.Get("srcipval").(string)
+		nspbr.Srcip = d.Get("srcip").(bool)
 		hasChange = true
 	}
 	if d.HasChange("srcmac") {
@@ -437,6 +430,7 @@ func updateNspbrFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("srcportval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Srcportval has changed for nspbr %s, starting update", nspbrName)
 		nspbr.Srcportval = d.Get("srcportval").(string)
+		nspbr.Srcport = d.Get("srcport").(bool)
 		hasChange = true
 	}
 	if d.HasChange("state") {
