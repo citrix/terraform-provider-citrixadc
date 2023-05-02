@@ -1,3 +1,9 @@
+## 1.34.0 (April 25, 2023)
+
+FEATURES
+
+* **New Resource**: citrixadc_aaapreauthenticationaction 
+
 ## 1.33.0 (April 03, 2023)
 
 FEATURES
