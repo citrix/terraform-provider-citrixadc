@@ -143,11 +143,15 @@ func readHanodeFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
+	// We recieve "UP" as value from the NetScaler, if the user has given "ENABLED"
+	if data["hastatus"] == "UP" {
+		d.Set("hastatus", "ENABLED")
+	}
 	d.Set("hanode_id", data["id"])
 	d.Set("deadinterval", data["deadinterval"])
 	d.Set("failsafe", data["failsafe"])
 	d.Set("haprop", data["haprop"])
-	d.Set("hastatus", data["hastatus"])
+	// d.Set("hastatus", data["hastatus"]) // We recieve "UP" as value from the NetScaler, if the user has given "ENABLED"
 	d.Set("hasync", data["hasync"])
 	d.Set("hellointerval", data["hellointerval"])
 	d.Set("inc", data["inc"])
