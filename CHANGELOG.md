@@ -1,3 +1,9 @@
+## 1.34.0 (May 05, 2023)
+
+BUG FIXES
+
+* **citrixadc_dnsnameserver**: Updated read operation to make it backward compatible, appended an attribute to old Id. 
+
 ## 1.33.0 (April 03, 2023)
 
 FEATURES
