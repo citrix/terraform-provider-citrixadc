@@ -1,3 +1,9 @@
+## 1.34.0 (May 005, 2023)
+
+BUG FIXES
+
+* **citrixadc_nspbr**: Updated the read function to not to set values for some attributes that are not recieved from the NetScaler. In the Update function, added the dependent attributes into the payload when there is update called to some attributes.
+
 ## 1.33.0 (April 03, 2023)
 
 FEATURES
