@@ -1,3 +1,9 @@
+## 1.34.0 (May 05, 2023)
+
+BUG FIXES
+
+* **citrixadc_hanode**: Updated read operation to handle the correct state of `hastatus` attribute. 
+
 ## 1.33.0 (April 03, 2023)
 
 FEATURES
