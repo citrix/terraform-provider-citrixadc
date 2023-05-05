@@ -2,6 +2,7 @@
 
 FEATURES
 
+* **New Resource**: lbmetrictable_metric_binding 
 * **New Resource**: citrixadc_videooptimizationdetectionaction 
 * **New Resource**: citrixadc_videooptimizationdetectionpolicy 
 * **New Resource**: citrixadc_aaapreauthenticationaction 

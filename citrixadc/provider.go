@@ -851,6 +851,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_sslcert": 				   							   		   resourceCitrixAdcSslcert(),
 		"citrixadc_sslcertreq": 				   							   	   resourceCitrixAdcSslcertreq(),
 		"citrixadc_snmptrap_snmpuser_binding":									   resourceCitrixAdcSnmptrap_snmpuser_binding(),
+		"citrixadc_lbmetrictable_metric_binding":								   resourceCitrixAdcLbmetrictable_metric_binding(),
 		"citrixadc_videooptimizationdetectionaction":                              resourceCitrixAdcVideooptimizationdetectionaction(),
 		"citrixadc_videooptimizationdetectionpolicy":                              resourceCitrixAdcVideooptimizationdetectionpolicy(),
 		"citrixadc_aaapreauthenticationaction":                                    resourceCitrixAdcAaapreauthenticationaction(),
