@@ -144,6 +144,7 @@ func readHanodeFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	// We recieve "UP" as value from the NetScaler, if the user has given "ENABLED"
+	// FIXME: Revisit once the API is fixed
 	if data["hastatus"] == "UP" {
 		d.Set("hastatus", "ENABLED")
 	}
