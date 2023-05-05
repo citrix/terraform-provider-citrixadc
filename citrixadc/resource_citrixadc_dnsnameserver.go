@@ -102,6 +102,21 @@ func readDnsnameserverFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] citrixadc-provider:  In readDnsnameserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	PrimaryId := d.Id()
+
+	// To make the resource backward compatible, in the prev state file user will have ID with 1 value, but in release v1.27.0 we have updated Id. So here we are changing the code to make it backward compatible
+	// here we are checking for id, if it has 1 elements then we are appending the 2rd attribute to the old Id. 
+	oldIdSlice := strings.Split(PrimaryId, ",")
+	
+	if len(oldIdSlice) == 1 {
+		if val, ok := d.GetOk("type") ; ok {
+			PrimaryId = PrimaryId + "," + val.(string)
+		} else {
+			PrimaryId = PrimaryId + ",UDP"
+		}
+		
+		d.SetId(PrimaryId)
+	}
+
 	log.Printf("[DEBUG] citrixadc-provider: Reading dnsnameserver state %s", PrimaryId)
 	findParams := service.FindParams{
 		ResourceType: service.Dnsnameserver.Type(),

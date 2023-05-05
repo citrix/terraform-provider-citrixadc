@@ -64,7 +64,7 @@ func resourceCitrixAdcSnmptrap() *schema.Resource {
 			},
 			"version": &schema.Schema{
 				Type:     schema.TypeString,
-				Default:  "V2",	// default value is V2, this is included in Id
+				Default:  "V2", // default value is V2, this is included in Id
 				Optional: true,
 				ForceNew: true,
 			},
@@ -109,6 +109,20 @@ func readSnmptrapFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	snmptrapId := d.Id()
 
+	// To make the resource backward compatible, in the prev state file user will have ID with 2 values, but in release v1.33.0 we have updated Id. So here we are changing the code to make it backward compatible
+	// here we are checking for id, if it has 2 elements then we are appending the 3rd attribute to the old Id. 
+	oldIdSlice := strings.Split(snmptrapId, ",")
+	
+	if len(oldIdSlice) == 2 {
+		if _, ok := d.GetOk("version") ; ok {
+			snmptrapId = snmptrapId + "," + d.Get("version").(string)
+		} else {
+			snmptrapId = snmptrapId + ",V2"
+		}
+		
+		d.SetId(snmptrapId)
+	}
+
 	idSlice := strings.SplitN(snmptrapId, ",", 3)
 	trapclass := idSlice[0]
 	trapdestination := idSlice[1]
@@ -133,7 +147,7 @@ func readSnmptrapFunc(d *schema.ResourceData, meta interface{}) error {
 
 	foundIndex := -1
 	for i, v := range dataArr {
-		if v["trapclass"].(string) == trapclass && v["trapdestination"].(string) == trapdestination && v["version"].(string) == version {	// version is also included in the id, as we can have combination of these as resource instance
+		if v["trapclass"].(string) == trapclass && v["trapdestination"].(string) == trapdestination && v["version"].(string) == version { // version is also included in the id, as we can have combination of these as resource instance
 			foundIndex = i
 			break
 		}

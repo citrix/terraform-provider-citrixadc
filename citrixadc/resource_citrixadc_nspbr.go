@@ -78,7 +78,7 @@ func resourceCitrixAdcNspbr() *schema.Resource {
 			"iptunnelname": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				ForceNew: true,
 			},
 			"monitor": &schema.Schema{
 				Type:     schema.TypeString,
@@ -257,30 +257,30 @@ func readNspbrFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("name", data["name"])
 	d.Set("action", data["action"])
-	d.Set("destip", data["destip"])
+	// d.Set("destip", data["destip"]) // We don't recieve from the NetScaler
 	d.Set("destipop", data["destipop"])
 	d.Set("destipval", data["destipval"])
-	d.Set("destport", data["destport"])
+	// d.Set("destport", data["destport"]) // We don't recieve from the NetScaler
 	d.Set("destportop", data["destportop"])
 	d.Set("destportval", data["destportval"])
 	d.Set("detail", data["detail"])
 	d.Set("interface", data["interface"])
-	d.Set("iptunnel", data["iptunnel"])
+	// d.Set("iptunnel", data["iptunnel"]) // We don't recieve from the NetScaler
 	d.Set("iptunnelname", data["iptunnelname"])
 	d.Set("monitor", data["monitor"])
 	d.Set("msr", data["msr"])
-	//d.Set("nexthop", data["nexthop"])
+	//d.Set("nexthop", data["nexthop"]) // We don't recieve from the NetScaler
 	d.Set("nexthopval", data["nexthopval"])
 	d.Set("ownergroup", data["ownergroup"])
 	d.Set("priority", data["priority"])
 	d.Set("protocol", data["protocol"])
 	d.Set("protocolnumber", data["protocolnumber"])
-	// d.Set("srcip", data["srcip"])
+	// d.Set("srcip", data["srcip"]) // We don't recieve from the NetScaler
 	d.Set("srcipop", data["srcipop"])
 	d.Set("srcipval", data["srcipval"])
 	d.Set("srcmac", data["srcmac"])
 	d.Set("srcmacmask", data["srcmacmask"])
-	d.Set("srcport", data["srcport"])
+	// d.Set("srcport", data["srcport"]) // We don't recieve from the NetScaler
 	d.Set("srcportop", data["srcportop"])
 	d.Set("srcportval", data["srcportval"])
 	d.Set("state", data["state"])
@@ -321,6 +321,7 @@ func updateNspbrFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("destipval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Destipval has changed for nspbr %s, starting update", nspbrName)
 		nspbr.Destipval = d.Get("destipval").(string)
+		nspbr.Destip = d.Get("destip").(bool)	// whenever the `destipval` is included in the payload then `destip` should also be included
 		hasChange = true
 	}
 	if d.HasChange("destport") {
@@ -336,6 +337,7 @@ func updateNspbrFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("destportval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Destportval has changed for nspbr %s, starting update", nspbrName)
 		nspbr.Destportval = d.Get("destportval").(string)
+		nspbr.Destport = d.Get("destport").(bool)	// whenever the `destportval` is included in the payload then `destport` should also be included
 		hasChange = true
 	}
 	if d.HasChange("detail") {
@@ -346,16 +348,6 @@ func updateNspbrFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("interface") {
 		log.Printf("[DEBUG]  citrixadc-provider: Interface has changed for nspbr %s, starting update", nspbrName)
 		nspbr.Interface = d.Get("interface").(string)
-		hasChange = true
-	}
-	if d.HasChange("iptunnel") {
-		log.Printf("[DEBUG]  citrixadc-provider: Iptunnel has changed for nspbr %s, starting update", nspbrName)
-		nspbr.Iptunnel = d.Get("iptunnel").(bool)
-		hasChange = true
-	}
-	if d.HasChange("iptunnelname") {
-		log.Printf("[DEBUG]  citrixadc-provider: Iptunnelname has changed for nspbr %s, starting update", nspbrName)
-		nspbr.Iptunnelname = d.Get("iptunnelname").(string)
 		hasChange = true
 	}
 	if d.HasChange("monitor") {
@@ -376,7 +368,7 @@ func updateNspbrFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("nexthopval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Nexthopval has changed for nspbr %s, starting update", nspbrName)
 		nspbr.Nexthopval = d.Get("nexthopval").(string)
-		nspbr.Nexthop = d.Get("nexthop").(bool)
+		nspbr.Nexthop = d.Get("nexthop").(bool)	// whenever the `nexthopval` is included in the payload then `nexthop` should also be included
 		hasChange = true
 	}
 	if d.HasChange("ownergroup") {
@@ -412,6 +404,7 @@ func updateNspbrFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("srcipval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Srcipval has changed for nspbr %s, starting update", nspbrName)
 		nspbr.Srcipval = d.Get("srcipval").(string)
+		nspbr.Srcip = d.Get("srcip").(bool)	// whenever the `srcipval` is included in the payload then `srcip` should also be included
 		hasChange = true
 	}
 	if d.HasChange("srcmac") {
@@ -437,6 +430,7 @@ func updateNspbrFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("srcportval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Srcportval has changed for nspbr %s, starting update", nspbrName)
 		nspbr.Srcportval = d.Get("srcportval").(string)
+		nspbr.Srcport = d.Get("srcport").(bool)	// whenever the `srcportval` is included in the payload then `srcport` should also be included
 		hasChange = true
 	}
 	if d.HasChange("state") {
