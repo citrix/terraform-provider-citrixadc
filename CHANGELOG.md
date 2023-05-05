@@ -1,3 +1,9 @@
+## 1.34.0 (May 05, 2023)
+
+FEATURES
+
+* **New Resource**: lbmetrictable_metric_binding 
+
 ## 1.33.0 (April 03, 2023)
 
 FEATURES
