@@ -152,6 +152,7 @@ github.com/citrix/adc-nitro-go/resource/config/transform
 github.com/citrix/adc-nitro-go/resource/config/tunnel
 github.com/citrix/adc-nitro-go/resource/config/user
 github.com/citrix/adc-nitro-go/resource/config/utility
+github.com/citrix/adc-nitro-go/resource/config/videooptimization
 github.com/citrix/adc-nitro-go/resource/config/vpn
 github.com/citrix/adc-nitro-go/service
 # github.com/davecgh/go-spew v1.1.1
