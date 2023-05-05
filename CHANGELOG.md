@@ -1,9 +1,16 @@
-## 1.34.0 (April 25, 2023)
+## 1.34.0 (May 05, 2023)
 
 FEATURES
 
 * **New Resource**: citrixadc_videooptimizationdetectionaction 
 * **New Resource**: citrixadc_videooptimizationdetectionpolicy 
+* **New Resource**: citrixadc_aaapreauthenticationaction 
+
+BUG FIXES
+
+* **citrixadc_snmptrap**: Updated read operation to make it backward compatible, appended the attribute value to old Id. 
+* **citrixadc_policystringmap_pattern_binding**: Updated delete operation with QueryEscape function while making API call.
+
 
 ## 1.33.0 (April 03, 2023)
 
