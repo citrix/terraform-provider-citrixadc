@@ -2,6 +2,8 @@
 
 FEATURES
 
+* **New Resource**: citrixadc_videooptimizationdetectionaction 
+* **New Resource**: citrixadc_videooptimizationdetectionpolicy 
 * **New Resource**: citrixadc_aaapreauthenticationaction 
 
 BUG FIXES
