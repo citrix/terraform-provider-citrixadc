@@ -1,8 +1,20 @@
 ## 1.34.0 (May 05, 2023)
 
+FEATURES
+
+* **New Resource**: citrixadc_videooptimizationdetectionaction 
+* **New Resource**: citrixadc_videooptimizationdetectionpolicy 
+* **New Resource**: citrixadc_aaapreauthenticationaction 
+
 BUG FIXES
 
+* **citrixadc_snmptrap**: Updated read operation to make it backward compatible, appended the attribute value to old Id. 
+* **citrixadc_policystringmap_pattern_binding**: Updated delete operation with QueryEscape function while making API call.
+* **citrixadc_nspbr**: Updated the read function to not to set values for some attributes that are not recieved from the NetScaler. In the Update function, added the dependent attributes into the payload when there is update called to some attributes.
+* **citrixadc_dnsnameserver**: Updated read operation to make it backward compatible, appended an attribute to old Id. 
+* **citrixadc_systemfile**: Updated the read function to handle recreating of resource in case file doesnot exist in NetScaler.
 * **citrixadc_hanode**: Updated read operation to handle the correct state of `hastatus` attribute. 
+
 
 ## 1.33.0 (April 03, 2023)
 
