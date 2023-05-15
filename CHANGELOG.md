@@ -1,3 +1,9 @@
+## 1.35.0 (May 15, 2023)
+
+BUG FIXES
+
+* **citrixadc_vpnvserver_appflowpolicy_binding**: Updated Id of the resource and Updated read operation to make it backward compatible. 
+
 ## 1.34.0 (May 05, 2023)
 
 FEATURES
