@@ -856,6 +856,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_videooptimizationdetectionpolicy":                              resourceCitrixAdcVideooptimizationdetectionpolicy(),
 		"citrixadc_aaapreauthenticationaction":                                    resourceCitrixAdcAaapreauthenticationaction(),
 		"citrixadc_videooptimizationpacingaction":                                 resourceCitrixAdcVideooptimizationpacingaction(),
+		"citrixadc_videooptimizationpacingpolicy":                                 resourceCitrixAdcVideooptimizationpacingpolicy(),
 	}
 }
 
