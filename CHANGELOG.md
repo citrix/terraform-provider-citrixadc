@@ -1,3 +1,10 @@
+## 1.35.0 (May 16, 2023)
+
+FEATURES
+
+* **New Resource**: videooptimizationpacingaction 
+* **New Resource**: videooptimizationpacingpolicy 
+
 ## 1.34.0 (May 05, 2023)
 
 FEATURES
