@@ -90,6 +90,8 @@ github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e/go.mod h1:nSuG5e5P
 github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1/go.mod h1:Q3SI9o4m/ZMnBNeIyt5eFwwo7qiLfzFZmjNmxjkiQlU=
 github.com/citrix/adc-nitro-go v0.0.0-20221214053622-d3cc85bd6cc9 h1:E90DUiSjB181gAKG/MYJgNWRsQ337Pkp951lTcmn/b0=
 github.com/citrix/adc-nitro-go v0.0.0-20221214053622-d3cc85bd6cc9/go.mod h1:DL1n+MgO15981ahrt+CsQVv43yyUrTdigPq3dIxydD8=
+github.com/citrix/adc-nitro-go v0.0.0-20230522084156-ad284f0b5afe h1:R4/sTMYGJOEeRMHsnxNDMy10fVCj3vgKcv5/xW9ndFo=
+github.com/citrix/adc-nitro-go v0.0.0-20230522084156-ad284f0b5afe/go.mod h1:DL1n+MgO15981ahrt+CsQVv43yyUrTdigPq3dIxydD8=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
 github.com/cncf/udpa/go v0.0.0-20191209042840-269d4d468f6f/go.mod h1:M8M6+tZqaGXZJjfX53e64911xZQV5JYwmTeXPW+k8Sc=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
