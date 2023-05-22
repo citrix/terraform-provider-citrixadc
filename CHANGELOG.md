@@ -1,3 +1,9 @@
+## 1.35.0 (May 22, 2023)
+
+ENHANCEMENTS
+
+* **citrixadc_appfwprofile_jsonsqlurl_binding**: Updated appfwprofile_jsonsqlurl_binding resource with additional attributes.
+
 ## 1.34.0 (May 05, 2023)
 
 FEATURES
