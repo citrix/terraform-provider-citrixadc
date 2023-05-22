@@ -1,3 +1,9 @@
+## 1.35.0 (May 22, 2023)
+
+BUG FIXES
+
+* **citrixadc_appfwprofile**: Updated the read function to not to set values for some attributes that are not recieved from the NetScaler.
+
 ## 1.34.0 (May 05, 2023)
 
 FEATURES
