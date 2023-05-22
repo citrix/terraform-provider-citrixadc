@@ -1,3 +1,10 @@
+## 1.35.0 (May 22, 2023)
+
+ENHANCEMENTS
+
+* **citrixadc_lbparameter**: Added `sessionsthreshold` attribute to the schema of the resource.
+
+
 ## 1.34.0 (May 05, 2023)
 
 FEATURES
