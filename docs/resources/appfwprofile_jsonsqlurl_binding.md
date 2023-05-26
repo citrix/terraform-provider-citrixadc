@@ -61,7 +61,11 @@ resource "citrixadc_appfwprofile_jsonsqlurl_binding" "tf_binding" {
 * `resourceid` - (Optional) A "id" that identifies the rule.
 * `ruletype` - (Optional) Specifies rule type of binding
 * `state` - (Optional) Enabled.
-
+* `isvalueregex_json_sql` - (Optional) Is the JSON SQL key value a regular expression? Possible values = REGEX, NOTREGEX
+* `iskeyregex_json_sql` - (Optional) Is the key name a regular expression? Possible values = REGEX, NOTREGEX
+* `as_value_type_json_sql` - (Optional) Type of the relaxed JSON SQL key value. Possible values = Keyword, SpecialString, Wildchar.
+* `as_value_expr_json_sql` - (Optional) The JSON SQL key value expression.
+* `keyname_json_sql` - (Optional) An expression that designates a keyname on the JSON SQL URL for which SQL injection violations are relaxed.
 
 ## Attribute Reference
 
