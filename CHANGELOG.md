@@ -1,7 +1,18 @@
-## 1.35.0 (May 22, 2023)
+## 1.35.0 (May 26, 2023)
+
+FEATURES
+
+* **New Resource**: videooptimizationpacingaction 
+* **New Resource**: videooptimizationpacingpolicy 
+
+BUG FIXES
+
+* **citrixadc_ntpsync**: Updated create operation to call appropriate API call.
+* **citrixadc_appfwprofile**: Updated the read function to not to set values for some attributes that are not recieved from the NetScaler.
 
 ENHANCEMENTS
 
+* **citrixadc_appfwprofile_jsonsqlurl_binding**: Updated ppfwprofile_jsonsqlurl_binding resource with additional attributes.
 * **citrixadc_lbparameter**: Added `sessionsthreshold` attribute to the schema of the resource.
 
 
