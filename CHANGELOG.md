@@ -1,8 +1,14 @@
-## 1.35.0 (May 23, 2023)
+## 1.35.0 (May 26, 2023)
+
+FEATURES
+
+* **New Resource**: videooptimizationpacingaction 
+* **New Resource**: videooptimizationpacingpolicy 
 
 BUG FIXES
 
 * **citrixadc_ntpsync**: Updated create operation to call appropriate API call.
+
 
 ## 1.34.0 (May 05, 2023)
 
