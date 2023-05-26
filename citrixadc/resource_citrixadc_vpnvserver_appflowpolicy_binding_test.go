@@ -74,7 +74,7 @@ func TestAccVpnvserver_appflowpolicy_binding_basic(t *testing.T) {
 			resource.TestStep{
 				Config: testAccVpnvserver_appflowpolicy_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpnvserver_appflowpolicy_bindingNotExist("citrixadc_vpnvserver_appflowpolicy_binding.tf_bind", "tf_vpnvserver,tf_appflowpolicy"),
+					testAccCheckVpnvserver_appflowpolicy_bindingNotExist("citrixadc_vpnvserver_appflowpolicy_binding.tf_bind", "tf_vpnvserver,tf_appflowpolicy,ICA_REQUEST"),
 				),
 			},
 		},
@@ -104,10 +104,11 @@ func testAccCheckVpnvserver_appflowpolicy_bindingExist(n string, id *string) res
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
+		idSlice := strings.SplitN(bindingId, ",", 3)
 
 		name := idSlice[0]
 		policy := idSlice[1]
+		bindpoint := idSlice[2]
 
 		findParams := service.FindParams{
 			ResourceType:             "vpnvserver_appflowpolicy_binding",
@@ -124,7 +125,7 @@ func testAccCheckVpnvserver_appflowpolicy_bindingExist(n string, id *string) res
 		// Iterate through results to find the one with the matching secondIdComponent
 		found := false
 		for _, v := range dataArr {
-			if v["policy"].(string) == policy {
+			if v["policy"].(string) == policy && v["bindpoint"].(string) == bindpoint {
 				found = true
 				break
 			}
@@ -145,10 +146,11 @@ func testAccCheckVpnvserver_appflowpolicy_bindingNotExist(n string, id string) r
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
+		idSlice := strings.SplitN(id, ",", 3)
 
 		name := idSlice[0]
 		policy := idSlice[1]
+		bindpoint := idSlice[2]
 
 		findParams := service.FindParams{
 			ResourceType:             "vpnvserver_appflowpolicy_binding",
@@ -165,7 +167,7 @@ func testAccCheckVpnvserver_appflowpolicy_bindingNotExist(n string, id string) r
 		// Iterate through results to hopefully not find the one with the matching secondIdComponent
 		found := false
 		for _, v := range dataArr {
-			if v["policy"].(string) == policy {
+			if v["policy"].(string) == policy && v["bindpoint"].(string) == bindpoint {
 				found = true
 				break
 			}

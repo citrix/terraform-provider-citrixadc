@@ -9,6 +9,7 @@ BUG FIXES
 
 * **citrixadc_ntpsync**: Updated create operation to call appropriate API call.
 * **citrixadc_appfwprofile**: Updated the read function to not to set values for some attributes that are not recieved from the NetScaler.
+* **citrixadc_vpnvserver_appflowpolicy_binding**: Updated Id of the resource and Updated read operation to make it backward compatible. 
 
 ENHANCEMENTS
 
