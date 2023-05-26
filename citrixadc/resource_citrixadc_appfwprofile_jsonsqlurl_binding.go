@@ -7,8 +7,8 @@ import (
 
 	"fmt"
 	"log"
-	"strings"
 	"net/url"
+	"strings"
 )
 
 func resourceCitrixAdcAppfwprofile_jsonsqlurl_binding() *schema.Resource {
@@ -69,6 +69,36 @@ func resourceCitrixAdcAppfwprofile_jsonsqlurl_binding() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
+			"keyname_json_sql": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"iskeyregex_json_sql": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"as_value_type_json_sql": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"as_value_expr_json_sql": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"isvalueregex_json_sql": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -80,14 +110,19 @@ func createAppfwprofile_jsonsqlurl_bindingFunc(d *schema.ResourceData, meta inte
 	jsonsqlurl := d.Get("jsonsqlurl")
 	bindingId := fmt.Sprintf("%s,%s", name, jsonsqlurl)
 	appfwprofile_jsonsqlurl_binding := appfw.Appfwprofilejsonsqlurlbinding{
-		Alertonly:      d.Get("alertonly").(string),
-		Comment:        d.Get("comment").(string),
-		Isautodeployed: d.Get("isautodeployed").(string),
-		Jsonsqlurl:     d.Get("jsonsqlurl").(string),
-		Name:           d.Get("name").(string),
-		Resourceid:     d.Get("resourceid").(string),
-		Ruletype:       d.Get("ruletype").(string),
-		State:          d.Get("state").(string),
+		Alertonly:              d.Get("alertonly").(string),
+		Comment:                d.Get("comment").(string),
+		Isautodeployed:         d.Get("isautodeployed").(string),
+		Jsonsqlurl:             d.Get("jsonsqlurl").(string),
+		Name:                   d.Get("name").(string),
+		Resourceid:             d.Get("resourceid").(string),
+		Ruletype:               d.Get("ruletype").(string),
+		State:                  d.Get("state").(string),
+		Keyname_json_sql:       d.Get("keyname_json_sql").(string),
+		As_value_expr_json_sql: d.Get("as_value_expr_json_sql").(string),
+		As_value_type_json_sql: d.Get("as_value_type_json_sql").(string),
+		Iskeyregex_json_sql:    d.Get("iskeyregex_json_sql").(string),
+		Isvalueregex_json_sql:  d.Get("isvalueregex_json_sql").(string),
 	}
 
 	err := client.UpdateUnnamedResource("appfwprofile_jsonsqlurl_binding", &appfwprofile_jsonsqlurl_binding)
@@ -165,6 +200,11 @@ func readAppfwprofile_jsonsqlurl_bindingFunc(d *schema.ResourceData, meta interf
 	d.Set("resourceid", data["resourceid"])
 	d.Set("ruletype", data["ruletype"])
 	d.Set("state", data["state"])
+	d.Set("keyname_json_sql", data["keyname_json_sql"])
+	d.Set("as_value_expr_json_sql", data["as_value_expr_json_sql"])
+	d.Set("as_value_type_json_sql", data["as_value_type_json_sql"])
+	d.Set("iskeyregex_json_sql", data["iskeyregex_json_sql"])
+	d.Set("isvalueregex_json_sql", data["isvalueregex_json_sql"])
 
 	return nil
 
@@ -184,6 +224,15 @@ func deleteAppfwprofile_jsonsqlurl_bindingFunc(d *schema.ResourceData, meta inte
 	args = append(args, fmt.Sprintf("jsonsqlurl:%s", url.QueryEscape(jsonsqlurl)))
 	if val, ok := d.GetOk("ruletype"); ok {
 		args = append(args, fmt.Sprintf("ruletype:%s", url.QueryEscape(val.(string))))
+	}
+	if val, ok := d.GetOk("keyname_json_sql"); ok {
+		args = append(args, fmt.Sprintf("keyname_json_sql:%s", url.QueryEscape(val.(string))))
+	}
+	if val, ok := d.GetOk("as_value_type_json_sql"); ok {
+		args = append(args, fmt.Sprintf("as_value_type_json_sql:%s", url.QueryEscape(val.(string))))
+	}
+	if val, ok := d.GetOk("as_value_expr_json_sql"); ok {
+		args = append(args, fmt.Sprintf("as_value_expr_json_sql:%s", url.QueryEscape(val.(string))))
 	}
 
 	err := client.DeleteResourceWithArgs("appfwprofile_jsonsqlurl_binding", name, args)
