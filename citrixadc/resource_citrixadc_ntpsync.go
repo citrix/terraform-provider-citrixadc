@@ -31,10 +31,16 @@ func resourceCitrixAdcNtpsync() *schema.Resource {
 func createNtpsyncFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNtpsyncFunc")
 	ntpsyncName := resource.PrefixedUniqueId("tf-ntpsync-")
+	client := meta.(*NetScalerNitroClient).client
+
+	err := doNtpsyncChange(d, client)
+	if err != nil {
+		return err
+	}
 
 	d.SetId(ntpsyncName)
 
-	err := readNtpsyncFunc(d, meta)
+	err = readNtpsyncFunc(d, meta)
 	if err != nil {
 		log.Printf("[ERROR] netscaler-provider: ?? we just created this ntpsync but we can't read it ??")
 		return nil
