@@ -13,6 +13,7 @@ BUG FIXES
 ENHANCEMENTS
 
 * **citrixadc_appfwprofile_jsonsqlurl_binding**: Updated ppfwprofile_jsonsqlurl_binding resource with additional attributes.
+* **citrixadc_lbparameter**: Added `sessionsthreshold` attribute to the schema of the resource.
 
 
 ## 1.34.0 (May 05, 2023)
