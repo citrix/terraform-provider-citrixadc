@@ -8,6 +8,7 @@ FEATURES
 BUG FIXES
 
 * **citrixadc_ntpsync**: Updated create operation to call appropriate API call.
+* **citrixadc_appfwprofile**: Updated the read function to not to set values for some attributes that are not recieved from the NetScaler.
 
 
 ## 1.34.0 (May 05, 2023)
