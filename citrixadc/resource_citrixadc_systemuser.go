@@ -156,7 +156,7 @@ func readSystemuserFunc(d *schema.ResourceData, meta interface{}) error {
 	if oldHashedPassword != "" && oldHashedPassword != newHashedPassword && !passwordChanged {
 		d.Set("password", "")
 	}
-	d.Set("name", data["name"])
+	d.Set("username", data["username"])
 	d.Set("externalauth", data["externalauth"])
 	d.Set("logging", data["logging"])
 	d.Set("maxsession", data["maxsession"])
