@@ -18,8 +18,16 @@ func resourceCitrixAdcBotsettings() *schema.Resource {
 		Read:          readBotsettingsFunc,
 		Update:        updateBotsettingsFunc,
 		Delete:        deleteBotsettingsFunc, // Thought botsettings resource donot have DELETE operation, it is required to set ID to "" d.SetID("") to maintain terraform state
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"defaultprofile": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"defaultnonintrusiveprofile": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -92,18 +100,19 @@ func createBotsettingsFunc(d *schema.ResourceData, meta interface{}) error {
 	botsettingsName = resource.PrefixedUniqueId("tf-botsettings")
 
 	botsettings := bot.Botsettings{
-		Defaultprofile:      d.Get("defaultprofile").(string),
-		Javascriptname:      d.Get("javascriptname").(string),
-		Sessiontimeout:      d.Get("sessiontimeout").(int),
-		Sessioncookiename:   d.Get("sessioncookiename").(string),
-		Dfprequestlimit:     d.Get("dfprequestlimit").(int),
-		Signatureautoupdate: d.Get("signatureautoupdate").(string),
-		Signatureurl:        d.Get("signatureurl").(string),
-		Proxyserver:         d.Get("proxyserver").(string),
-		Proxyport:           d.Get("proxyport").(int),
-		Trapurlautogenerate: d.Get("trapurlautogenerate").(string),
-		Trapurlinterval:     d.Get("trapurlinterval").(int),
-		Trapurllength:       d.Get("trapurllength").(int),
+		Defaultprofile:             d.Get("defaultprofile").(string),
+		Defaultnonintrusiveprofile: d.Get("defaultnonintrusiveprofile").(string),
+		Javascriptname:             d.Get("javascriptname").(string),
+		Sessiontimeout:             d.Get("sessiontimeout").(int),
+		Sessioncookiename:          d.Get("sessioncookiename").(string),
+		Dfprequestlimit:            d.Get("dfprequestlimit").(int),
+		Signatureautoupdate:        d.Get("signatureautoupdate").(string),
+		Signatureurl:               d.Get("signatureurl").(string),
+		Proxyserver:                d.Get("proxyserver").(string),
+		Proxyport:                  d.Get("proxyport").(int),
+		Trapurlautogenerate:        d.Get("trapurlautogenerate").(string),
+		Trapurlinterval:            d.Get("trapurlinterval").(int),
+		Trapurllength:              d.Get("trapurllength").(int),
 	}
 
 	err := client.UpdateUnnamedResource("botsettings", &botsettings)
@@ -132,17 +141,18 @@ func readBotsettingsFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	d.Set("defaultprofile", data["defaultprofile"])
+	d.Set("defaultnonintrusiveprofile", data["defaultnonintrusiveprofile"])
 	d.Set("javascriptname", data["javascriptname"])
-	d.Set("sessiontimeout", data["sessiontimeout"])
+	setToInt("sessiontimeout", d, data["sessiontimeout"])
 	d.Set("sessioncookiename", data["sessioncookiename"])
-	d.Set("dfprequestlimit", data["dfprequestlimit"])
+	setToInt("dfprequestlimit", d, data["dfprequestlimit"])
 	d.Set("signatureautoupdate", data["signatureautoupdate"])
 	d.Set("signatureurl", data["signatureurl"])
 	d.Set("proxyserver", data["proxyserver"])
 	d.Set("proxyport", data["proxyport"])
 	d.Set("trapurlautogenerate", data["trapurlautogenerate"])
-	d.Set("trapurlinterval", data["trapurlinterval"])
-	d.Set("trapurllength", data["trapurllength"])
+	setToInt("trapurlinterval", d, data["trapurlinterval"])
+	setToInt("trapurllength", d, data["trapurllength"])
 	d.Set("builtin", data["builtin"])
 	d.Set("feature", data["feature"])
 
@@ -159,6 +169,11 @@ func updateBotsettingsFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("defaultprofile") {
 		log.Printf("[DEBUG]  citrixadc-provider: Defaultprofile has changed for botsettings, starting update")
 		botsettings.Defaultprofile = d.Get("defaultprofile").(string)
+		hasChange = true
+	}
+	if d.HasChange("defaultnonintrusiveprofile") {
+		log.Printf("[DEBUG]  citrixadc-provider: Defaultprofile has changed for botsettings, starting update")
+		botsettings.Defaultnonintrusiveprofile = d.Get("defaultnonintrusiveprofile").(string)
 		hasChange = true
 	}
 	if d.HasChange("javascriptname") {
