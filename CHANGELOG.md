@@ -5,6 +5,7 @@ BUG FIXES
 * **citrixadc_systemuser**: Updated Read function to set the username attribute value, that we get from the NetScaler.
 * **citrixadc_dnsaddrec**: Updated Read function to split the id and parse the data that we get from the NetScaler to match the Id.
 * **citrixadc_botsettings**: Updated the resource with additional supported `defaultnonintrusiveprofile` attribute and also supported import functionality.
+* **citrixadc_nstcpprofile**: Updated the resource with additional supported `sendclientportintcpoption` and `slowstartthreshold` attributes and also handled converting of string to integer for some attributes in the read function.
 
 ## 1.35.0 (May 26, 2023)
 
