@@ -1,10 +1,10 @@
-## 1.36.0 (July 04, 2023)
+## 1.36.0 (July 27, 2023)
 
 BUG FIXES
 
 * **citrixadc_systemuser**: Updated Read function to set the username attribute value, that we get from the NetScaler.
 * **citrixadc_dnsaddrec**: Updated Read function to split the id and parse the data that we get from the NetScaler to match the Id.
-
+* **citrixadc_botsettings**: Updated the resource with additional supported `defaultnonintrusiveprofile` attribute and also supported import functionality.
 
 ## 1.35.0 (May 26, 2023)
 
