@@ -20,49 +20,49 @@ func resourceCitrixAdcAppfwglobal_auditsyslogpolicy_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"policyname": &schema.Schema{
+			"policyname": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"priority": &schema.Schema{
+			"priority": {
 				Type:     schema.TypeInt,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"gotopriorityexpression": &schema.Schema{
+			"gotopriorityexpression": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"invoke": &schema.Schema{
+			"invoke": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"labelname": &schema.Schema{
+			"labelname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"labeltype": &schema.Schema{
+			"labeltype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"state": &schema.Schema{
+			"state": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"type": &schema.Schema{
+			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -87,7 +87,7 @@ func createAppfwglobal_auditsyslogpolicy_bindingFunc(d *schema.ResourceData, met
 		Type:                   d.Get("type").(string),
 	}
 
-	err := client.UpdateUnnamedResource(service.Appfwglobal_auditsyslogpolicy_binding.Type(),&appfwglobal_auditsyslogpolicy_binding)
+	err := client.UpdateUnnamedResource(service.Appfwglobal_auditsyslogpolicy_binding.Type(), &appfwglobal_auditsyslogpolicy_binding)
 	if err != nil {
 		return err
 	}
@@ -175,7 +175,7 @@ func deleteAppfwglobal_auditsyslogpolicy_bindingFunc(d *schema.ResourceData, met
 	}
 	if val, ok := d.GetOk("priority"); ok {
 		args = append(args, fmt.Sprintf("priority:%d", val.(int)))
-	}	
+	}
 
 	err := client.DeleteResourceWithArgs(service.Appfwglobal_auditsyslogpolicy_binding.Type(), "", args)
 	if err != nil {

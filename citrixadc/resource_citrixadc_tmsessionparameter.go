@@ -19,52 +19,52 @@ func resourceCitrixAdcTmsessionparameter() *schema.Resource {
 		Update:        updateTmsessionparameterFunc,
 		Delete:        deleteTmsessionparameterFunc,
 		Schema: map[string]*schema.Schema{
-			"defaultauthorizationaction": &schema.Schema{
+			"defaultauthorizationaction": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"homepage": &schema.Schema{
+			"homepage": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"httponlycookie": &schema.Schema{
+			"httponlycookie": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"kcdaccount": &schema.Schema{
+			"kcdaccount": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"persistentcookie": &schema.Schema{
+			"persistentcookie": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"persistentcookievalidity": &schema.Schema{
+			"persistentcookievalidity": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"sesstimeout": &schema.Schema{
+			"sesstimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"sso": &schema.Schema{
+			"sso": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ssocredential": &schema.Schema{
+			"ssocredential": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ssodomain": &schema.Schema{
+			"ssodomain": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

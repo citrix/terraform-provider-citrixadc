@@ -21,12 +21,12 @@ func resourceCitrixAdcLinkset_channel_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"linkset_id": &schema.Schema{
+			"linkset_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"ifnum": &schema.Schema{
+			"ifnum": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,

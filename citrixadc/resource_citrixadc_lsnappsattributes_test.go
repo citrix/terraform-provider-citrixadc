@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -51,7 +51,7 @@ func TestAccLsnappsattributes_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLsnappsattributesDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccLsnappsattributes_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLsnappsattributesExist("citrixadc_lsnappsattributes.tf_lsnappsattributes", nil),
@@ -61,7 +61,7 @@ func TestAccLsnappsattributes_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_lsnappsattributes.tf_lsnappsattributes", "sessiontimeout", "40"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccLsnappsattributes_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLsnappsattributesExist("citrixadc_lsnappsattributes.tf_lsnappsattributes", nil),

@@ -18,37 +18,37 @@ func resourceCitrixAdcVpnnexthopserver() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"nexthopport": &schema.Schema{
+			"nexthopport": {
 				Type:     schema.TypeInt,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"nexthopfqdn": &schema.Schema{
+			"nexthopfqdn": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"nexthopip": &schema.Schema{
+			"nexthopip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"resaddresstype": &schema.Schema{
+			"resaddresstype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"secure": &schema.Schema{
+			"secure": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

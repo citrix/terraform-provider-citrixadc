@@ -20,12 +20,12 @@ func resourceCitrixAdcClusternodegroup_nslimitidentifier_binding() *schema.Resou
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"identifiername": &schema.Schema{
+			"identifiername": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,

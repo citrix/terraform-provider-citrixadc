@@ -6,8 +6,8 @@ import (
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"strconv"
 	"log"
+	"strconv"
 )
 
 func resourceCitrixAdcInterfacepair() *schema.Resource {
@@ -17,12 +17,12 @@ func resourceCitrixAdcInterfacepair() *schema.Resource {
 		Read:          readInterfacepairFunc,
 		Delete:        deleteInterfacepairFunc,
 		Schema: map[string]*schema.Schema{
-			"interface_id": &schema.Schema{
+			"interface_id": {
 				Type:     schema.TypeInt,
 				Required: true,
 				ForceNew: true,
 			},
-			"ifnum": &schema.Schema{
+			"ifnum": {
 				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
@@ -36,7 +36,7 @@ func createInterfacepairFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createInterfacepairFunc")
 	client := meta.(*NetScalerNitroClient).client
 	interfacepairName := strconv.Itoa(d.Get("interface_id").(int))
-	
+
 	interfacepair := network.Interfacepair{
 		Id:    d.Get("interface_id").(int),
 		Ifnum: toStringList(d.Get("ifnum").([]interface{})),

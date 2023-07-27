@@ -1,10 +1,10 @@
 package citrixadc
 
 import (
-	"github.com/citrix/adc-nitro-go/resource/config/ica"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/citrix/adc-nitro-go/service"
 	"fmt"
+	"github.com/citrix/adc-nitro-go/resource/config/ica"
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"log"
 )
 
@@ -18,28 +18,28 @@ func resourceCitrixAdcIcaglobal_icapolicy_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"policyname": &schema.Schema{
+			"policyname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"priority": &schema.Schema{
+			"priority": {
 				Type:     schema.TypeInt,
 				Required: true,
 				ForceNew: true,
 			},
-			"type": &schema.Schema{
+			"type": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"globalbindtype": &schema.Schema{
+			"globalbindtype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"gotopriorityexpression": &schema.Schema{
+			"gotopriorityexpression": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -85,7 +85,7 @@ func readIcaglobal_icapolicy_bindingFunc(d *schema.ResourceData, meta interface{
 
 	findParams := service.FindParams{
 		ResourceType:             "icaglobal_icapolicy_binding",
-		ArgsMap:				  map[string]string {"type":d.Get("type").(string) },
+		ArgsMap:                  map[string]string{"type": d.Get("type").(string)},
 		ResourceMissingErrorCode: 258,
 	}
 	dataArr, err := client.FindResourceArrayWithParams(findParams)
@@ -144,7 +144,6 @@ func deleteIcaglobal_icapolicy_bindingFunc(d *schema.ResourceData, meta interfac
 	args = append(args, fmt.Sprintf("policyname:%s", policyname))
 	args = append(args, fmt.Sprintf("priority:%v", d.Get("priority").(int)))
 	args = append(args, fmt.Sprintf("type:%s", d.Get("type").(string)))
-	
 
 	err := client.DeleteResourceWithArgs("icaglobal_icapolicy_binding", "", args)
 	if err != nil {

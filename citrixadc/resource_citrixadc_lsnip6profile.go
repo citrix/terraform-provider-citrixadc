@@ -17,22 +17,22 @@ func resourceCitrixAdcLsnip6profile() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"type": &schema.Schema{
+			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"natprefix": &schema.Schema{
+			"natprefix": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"network6": &schema.Schema{
+			"network6": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,

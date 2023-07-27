@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,9 +20,9 @@ import (
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"testing"
 	"log"
 	"net/url"
+	"testing"
 )
 
 const testAccDnsmxrec_add = `
@@ -36,7 +36,7 @@ resource "citrixadc_dnsmxrec" "dnsmxrec" {
   }
 `
 
-const testAccDnsmxrec_update= `
+const testAccDnsmxrec_update = `
 
 
 resource "citrixadc_dnsmxrec" "dnsmxrec" {
@@ -53,7 +53,7 @@ func TestAccDnsmxrec_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDnsmxrecDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDnsmxrec_add,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDnsmxrecExist("citrixadc_dnsmxrec.dnsmxrec", nil),
@@ -63,7 +63,7 @@ func TestAccDnsmxrec_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_dnsmxrec.dnsmxrec", "ttl", "3600"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccDnsmxrec_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDnsmxrecExist("citrixadc_dnsmxrec.dnsmxrec", nil),

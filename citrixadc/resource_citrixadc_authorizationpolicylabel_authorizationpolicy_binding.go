@@ -1,13 +1,13 @@
 package citrixadc
 
 import (
+	"fmt"
 	"github.com/citrix/adc-nitro-go/resource/config/authorization"
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"fmt"
 	"log"
-	"strings"
 	"strconv"
+	"strings"
 )
 
 func resourceCitrixAdcAuthorizationpolicylabel_authorizationpolicy_binding() *schema.Resource {
@@ -20,43 +20,43 @@ func resourceCitrixAdcAuthorizationpolicylabel_authorizationpolicy_binding() *sc
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"gotopriorityexpression": &schema.Schema{
+			"gotopriorityexpression": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"invoke": &schema.Schema{
+			"invoke": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"invokelabelname": &schema.Schema{
+			"invokelabelname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"labelname": &schema.Schema{
+			"labelname": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"labeltype": &schema.Schema{
+			"labeltype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"policyname": &schema.Schema{
+			"policyname": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"priority": &schema.Schema{
+			"priority": {
 				Type:     schema.TypeInt,
 				Required: true,
 				Computed: false,
@@ -174,7 +174,6 @@ func deleteAuthorizationpolicylabel_authorizationpolicy_bindingFunc(d *schema.Re
 	args := make([]string, 0)
 	args = append(args, fmt.Sprintf("policyname:%s", policyname))
 	args = append(args, fmt.Sprintf("priority:%s", strconv.Itoa(d.Get("priority").(int))))
-
 
 	err := client.DeleteResourceWithArgs(service.Authorizationpolicylabel_authorizationpolicy_binding.Type(), labelname, args)
 	if err != nil {

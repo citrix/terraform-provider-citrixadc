@@ -16,217 +16,217 @@ func resourceCitrixAdcNsfeature() *schema.Resource {
 		Update:        updateNsfeatureFunc,
 		Delete:        deleteNsfeatureFunc,
 		Schema: map[string]*schema.Schema{
-			"wl": &schema.Schema{
+			"wl": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"sp": &schema.Schema{
+			"sp": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"lb": &schema.Schema{
+			"lb": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"cs": &schema.Schema{
+			"cs": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"cr": &schema.Schema{
+			"cr": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"cmp": &schema.Schema{
+			"cmp": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"pq": &schema.Schema{
+			"pq": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"ssl": &schema.Schema{
+			"ssl": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"gslb": &schema.Schema{
+			"gslb": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"hdosp": &schema.Schema{
+			"hdosp": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"cf": &schema.Schema{
+			"cf": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"ic": &schema.Schema{
+			"ic": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"sslvpn": &schema.Schema{
+			"sslvpn": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"aaa": &schema.Schema{
+			"aaa": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"ospf": &schema.Schema{
+			"ospf": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"rip": &schema.Schema{
+			"rip": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"bgp": &schema.Schema{
+			"bgp": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"rewrite": &schema.Schema{
+			"rewrite": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"ipv6pt": &schema.Schema{
+			"ipv6pt": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"appfw": &schema.Schema{
+			"appfw": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"responder": &schema.Schema{
+			"responder": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"htmlinjection": &schema.Schema{
+			"htmlinjection": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"push": &schema.Schema{
+			"push": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"appflow": &schema.Schema{
+			"appflow": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"cloudbridge": &schema.Schema{
+			"cloudbridge": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"isis": &schema.Schema{
+			"isis": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"ch": &schema.Schema{
+			"ch": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"appqoe": &schema.Schema{
+			"appqoe": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"contentaccelerator": &schema.Schema{
+			"contentaccelerator": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"rise": &schema.Schema{
+			"rise": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"feo": &schema.Schema{
+			"feo": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"lsn": &schema.Schema{
+			"lsn": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"rdpproxy": &schema.Schema{
+			"rdpproxy": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"rep": &schema.Schema{
+			"rep": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"urlfiltering": &schema.Schema{
+			"urlfiltering": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"videooptimization": &schema.Schema{
+			"videooptimization": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"forwardproxy": &schema.Schema{
+			"forwardproxy": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"sslinterception": &schema.Schema{
+			"sslinterception": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"adaptivetcp": &schema.Schema{
+			"adaptivetcp": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"cqa": &schema.Schema{
+			"cqa": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"ci": &schema.Schema{
+			"ci": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"bot": &schema.Schema{
+			"bot": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"apigateway": &schema.Schema{
+			"apigateway": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,

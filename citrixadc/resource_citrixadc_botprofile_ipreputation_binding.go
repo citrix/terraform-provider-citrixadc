@@ -20,44 +20,44 @@ func resourceCitrixAdcBotprofile_ipreputation_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"category": &schema.Schema{
+			"category": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"bot_bind_comment": &schema.Schema{
+			"bot_bind_comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"bot_iprep_action": &schema.Schema{
+			"bot_iprep_action": {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"bot_iprep_enabled": &schema.Schema{
+			"bot_iprep_enabled": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"bot_ipreputation": &schema.Schema{
+			"bot_ipreputation": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"logmessage": &schema.Schema{
+			"logmessage": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

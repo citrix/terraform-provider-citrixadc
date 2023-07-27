@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -72,13 +72,13 @@ func TestAccAuditsyslogglobal_auditsyslogpolicy_binding_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAuditsyslogglobal_auditsyslogpolicy_bindingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAuditsyslogglobal_auditsyslogpolicy_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuditsyslogglobal_auditsyslogpolicy_bindingExist("citrixadc_auditsyslogglobal_auditsyslogpolicy_binding.tf_auditsyslogglobal_auditsyslogpolicy_binding", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAuditsyslogglobal_auditsyslogpolicy_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuditsyslogglobal_auditsyslogpolicy_bindingNotExist("citrixadc_auditsyslogglobal_auditsyslogpolicy_binding.tf_auditsyslogglobal_auditsyslogpolicy_binding", "tf_auditsyslogpolicy"),
@@ -111,7 +111,6 @@ func testAccCheckAuditsyslogglobal_auditsyslogpolicy_bindingExist(n string, id *
 
 		policyname := rs.Primary.ID
 
-
 		findParams := service.FindParams{
 			ResourceType:             "auditsyslogglobal_auditsyslogpolicy_binding",
 			ResourceMissingErrorCode: 258,
@@ -126,7 +125,7 @@ func testAccCheckAuditsyslogglobal_auditsyslogpolicy_bindingExist(n string, id *
 		// Iterate through results to find the one with the matching	policyname
 		found := false
 		for _, v := range dataArr {
-			if v["policyname"].(string) ==	policyname {
+			if v["policyname"].(string) == policyname {
 				found = true
 				break
 			}
@@ -160,7 +159,7 @@ func testAccCheckAuditsyslogglobal_auditsyslogpolicy_bindingNotExist(n string, i
 		// Iterate through results to hopefully not find the one with the matching	policyname
 		found := false
 		for _, v := range dataArr {
-			if v["policyname"].(string) ==	policyname {
+			if v["policyname"].(string) == policyname {
 				found = true
 				break
 			}

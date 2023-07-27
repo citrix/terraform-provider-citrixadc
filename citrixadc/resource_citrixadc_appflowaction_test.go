@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -52,7 +52,7 @@ const testAccAppflowaction_basic = `
 	
 `
 
-const testAccAppflowaction_update= `	
+const testAccAppflowaction_update = `	
 
 resource "citrixadc_appflowaction" "tf_appflowaction" {
 	name            = "test_action"
@@ -86,7 +86,7 @@ func TestAccAppflowaction_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppflowactionDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAppflowaction_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppflowactionExist("citrixadc_appflowaction.tf_appflowaction", nil),
@@ -95,7 +95,7 @@ func TestAccAppflowaction_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_appflowaction.tf_appflowaction", "videoanalytics", "ENABLED"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAppflowaction_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppflowactionExist("citrixadc_appflowaction.tf_appflowaction", nil),

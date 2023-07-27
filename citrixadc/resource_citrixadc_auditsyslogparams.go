@@ -19,88 +19,88 @@ func resourceCitrixAdcAuditsyslogparams() *schema.Resource {
 		Update:        updateAuditsyslogparamsFunc,
 		Delete:        deleteAuditsyslogparamsFunc,
 		Schema: map[string]*schema.Schema{
-			"acl": &schema.Schema{
+			"acl": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"alg": &schema.Schema{
+			"alg": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"appflowexport": &schema.Schema{
+			"appflowexport": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"contentinspectionlog": &schema.Schema{
+			"contentinspectionlog": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"dateformat": &schema.Schema{
+			"dateformat": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"dns": &schema.Schema{
+			"dns": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"logfacility": &schema.Schema{
+			"logfacility": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"loglevel": &schema.Schema{
+			"loglevel": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"lsn": &schema.Schema{
+			"lsn": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"serverip": &schema.Schema{
+			"serverip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"serverport": &schema.Schema{
+			"serverport": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"sslinterception": &schema.Schema{
+			"sslinterception": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"subscriberlog": &schema.Schema{
+			"subscriberlog": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"tcp": &schema.Schema{
+			"tcp": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"timezone": &schema.Schema{
+			"timezone": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"urlfiltering": &schema.Schema{
+			"urlfiltering": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"userdefinedauditlog": &schema.Schema{
+			"userdefinedauditlog": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -113,7 +113,7 @@ func createAuditsyslogparamsFunc(d *schema.ResourceData, meta interface{}) error
 	log.Printf("[DEBUG]  citrixadc-provider: In createAuditsyslogparamsFunc")
 	client := meta.(*NetScalerNitroClient).client
 	auditsyslogparamsName := resource.PrefixedUniqueId("tf-auditsyslogparams-")
-	
+
 	auditsyslogparams := audit.Auditsyslogparams{
 		Acl:                  d.Get("acl").(string),
 		Alg:                  d.Get("alg").(string),

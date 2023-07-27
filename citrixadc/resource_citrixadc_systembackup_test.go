@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -39,7 +39,7 @@ func TestAccSystembackup_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSystembackupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccSystembackup_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSystembackupExist("citrixadc_systembackup.tf_systembackup", nil),
@@ -82,7 +82,6 @@ func testAccCheckSystembackupExist(n string, id *string) resource.TestCheckFunc 
 		return nil
 	}
 }
-
 
 func testAccCheckSystembackupDestroy(s *terraform.State) error {
 	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client

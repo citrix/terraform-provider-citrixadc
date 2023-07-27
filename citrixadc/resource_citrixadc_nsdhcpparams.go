@@ -19,12 +19,12 @@ func resourceCitrixAdcNsdhcpparams() *schema.Resource {
 		Update:        updateNsdhcpparamsFunc,
 		Delete:        deleteNsdhcpparamsFunc,
 		Schema: map[string]*schema.Schema{
-			"dhcpclient": &schema.Schema{
+			"dhcpclient": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"saveroute": &schema.Schema{
+			"saveroute": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

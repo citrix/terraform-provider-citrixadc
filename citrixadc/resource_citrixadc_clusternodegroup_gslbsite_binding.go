@@ -21,12 +21,12 @@ func resourceCitrixAdcClusternodegroup_gslbsite_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"gslbsite": &schema.Schema{
+			"gslbsite": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -131,7 +131,7 @@ func deleteClusternodegroup_gslbsite_bindingFunc(d *schema.ResourceData, meta in
 	gslbsite := idSlice[1]
 
 	args := make([]string, 0)
-	
+
 	args = append(args, fmt.Sprintf("gslbsite:%s", url.QueryEscape(gslbsite)))
 
 	err := client.DeleteResourceWithArgs(service.Clusternodegroup_gslbsite_binding.Type(), name, args)

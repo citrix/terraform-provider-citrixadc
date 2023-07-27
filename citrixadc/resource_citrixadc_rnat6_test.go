@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -50,7 +50,7 @@ func TestAccRnat6_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRnat6_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRnat6Exist("citrixadc_rnat6.tf_rnat6", nil),
@@ -58,7 +58,7 @@ func TestAccRnat6_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_rnat6.tf_rnat6", "srcippersistency", "DISABLED"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRnat6_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRnat6Exist("citrixadc_rnat6.tf_rnat6", nil),

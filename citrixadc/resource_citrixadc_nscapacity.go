@@ -21,32 +21,32 @@ func resourceCitrixAdcNscapacity() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"bandwidth": &schema.Schema{
+			"bandwidth": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"edition": &schema.Schema{
+			"edition": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"nodeid": &schema.Schema{
+			"nodeid": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"platform": &schema.Schema{
+			"platform": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"unit": &schema.Schema{
+			"unit": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"vcpu": &schema.Schema{
+			"vcpu": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
@@ -80,7 +80,7 @@ func createNscapacityFunc(d *schema.ResourceData, meta interface{}) error {
 	if err = rebootNetScaler(d, meta, warm); err != nil {
 		return fmt.Errorf("Error warm rebooting ADC. %s", err.Error())
 	}
-	
+
 	err = readNscapacityFunc(d, meta)
 
 	if err != nil {

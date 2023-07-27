@@ -20,17 +20,17 @@ func resourceCitrixAdcRnat6_nsip6_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"natip6": &schema.Schema{
+			"natip6": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"ownergroup": &schema.Schema{
+			"ownergroup": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

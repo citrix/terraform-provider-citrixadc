@@ -22,81 +22,81 @@ func resourceCitrixAdcServer() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"comment": &schema.Schema{
+			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"delay": &schema.Schema{
+			"delay": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"domain": &schema.Schema{
+			"domain": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"domainresolvenow": &schema.Schema{
+			"domainresolvenow": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"domainresolveretry": &schema.Schema{
+			"domainresolveretry": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"graceful": &schema.Schema{
+			"graceful": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"internal": &schema.Schema{
+			"internal": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"ipaddress": &schema.Schema{
+			"ipaddress": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ipv6address": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"name": &schema.Schema{
+			"ipv6address": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"querytype": &schema.Schema{
+			"name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"querytype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"state": &schema.Schema{
+			"state": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"td": &schema.Schema{
+			"td": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"translationip": &schema.Schema{
+			"translationip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"translationmask": &schema.Schema{
+			"translationmask": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

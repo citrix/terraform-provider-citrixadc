@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -40,7 +40,7 @@ func TestAccSystembackupCreate_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSystembackupCreateDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccSystembackupCreate_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSystembackupCreateExist("citrixadc_systembackup_create.tf_systembackup_create", nil),
@@ -70,7 +70,7 @@ func testAccCheckSystembackupCreateExist(n string, id *string) resource.TestChec
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Systembackup.Type(), rs.Primary.Attributes["filename"] + ".tgz")
+		data, err := nsClient.FindResource(service.Systembackup.Type(), rs.Primary.Attributes["filename"]+".tgz")
 
 		if err != nil {
 			return err
@@ -84,7 +84,6 @@ func testAccCheckSystembackupCreateExist(n string, id *string) resource.TestChec
 	}
 }
 
-
 func testAccCheckSystembackupCreateDestroy(s *terraform.State) error {
 	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
 
@@ -97,7 +96,7 @@ func testAccCheckSystembackupCreateDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Systembackup.Type(), rs.Primary.Attributes["filename"] + ".tgz")
+		_, err := nsClient.FindResource(service.Systembackup.Type(), rs.Primary.Attributes["filename"]+".tgz")
 		if err == nil {
 			return fmt.Errorf("systembackup %s still exists", rs.Primary.ID)
 		}

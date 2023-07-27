@@ -19,32 +19,32 @@ func resourceCitrixAdcLsnlogprofile() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"logprofilename": &schema.Schema{
+			"logprofilename": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"analyticsprofile": &schema.Schema{
+			"analyticsprofile": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"logcompact": &schema.Schema{
+			"logcompact": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"logipfix": &schema.Schema{
+			"logipfix": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"logsessdeletion": &schema.Schema{
+			"logsessdeletion": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"logsubscrinfo": &schema.Schema{
+			"logsubscrinfo": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

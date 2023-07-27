@@ -20,23 +20,23 @@ func resourceCitrixAdcGslbvserver_gslbservice_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"servicename": &schema.Schema{
+			"servicename": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"domainname": &schema.Schema{
+			"domainname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"weight": &schema.Schema{
+			"weight": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -51,7 +51,7 @@ func createGslbvserver_gslbservice_bindingFunc(d *schema.ResourceData, meta inte
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name")
 	servicename := d.Get("servicename")
-	
+
 	bindingId := fmt.Sprintf("%s,%s", name, servicename)
 	gslbvserver_gslbservice_binding := gslb.Gslbvservergslbservicebinding{
 		Domainname:  d.Get("domainname").(string),
@@ -60,7 +60,7 @@ func createGslbvserver_gslbservice_bindingFunc(d *schema.ResourceData, meta inte
 		Weight:      d.Get("weight").(int),
 	}
 
-    err := client.UpdateUnnamedResource(service.Gslbvserver_gslbservice_binding.Type(), &gslbvserver_gslbservice_binding)
+	err := client.UpdateUnnamedResource(service.Gslbvserver_gslbservice_binding.Type(), &gslbvserver_gslbservice_binding)
 	if err != nil {
 		return err
 	}
@@ -145,7 +145,7 @@ func deleteGslbvserver_gslbservice_bindingFunc(d *schema.ResourceData, meta inte
 
 	name := idSlice[0]
 	servicename := idSlice[1]
-	
+
 	args := make([]string, 0)
 	args = append(args, fmt.Sprintf("servicename:%s", servicename))
 

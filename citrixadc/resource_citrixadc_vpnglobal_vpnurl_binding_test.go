@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -61,14 +61,14 @@ func TestAccVpnglobal_vpnurl_binding_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpnglobal_vpnurl_bindingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccVpnglobal_vpnurl_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnglobal_vpnurl_bindingExist("citrixadc_vpnglobal_vpnurl_binding.tf_bind", nil),
-					resource.TestCheckResourceAttr("citrixadc_vpnglobal_vpnurl_binding.tf_bind","urlname","Firsturl"),
+					resource.TestCheckResourceAttr("citrixadc_vpnglobal_vpnurl_binding.tf_bind", "urlname", "Firsturl"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccVpnglobal_vpnurl_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnglobal_vpnurl_bindingNotExist("citrixadc_vpnglobal_vpnurl_binding.tf_bind", "Firsturl"),

@@ -20,12 +20,12 @@ func resourceCitrixAdcSystemgroup_nspartition_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"groupname": &schema.Schema{
+			"groupname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"partitionname": &schema.Schema{
+			"partitionname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,

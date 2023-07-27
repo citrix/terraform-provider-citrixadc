@@ -20,19 +20,19 @@ func resourceCitrixAdcVpnvserver_intranetip6_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"intranetip6": &schema.Schema{
+			"intranetip6": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"numaddr": &schema.Schema{
+			"numaddr": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,

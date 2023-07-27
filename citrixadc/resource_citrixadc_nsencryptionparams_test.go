@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -34,24 +34,25 @@ const testAccNsencryptionparams_update = `
 		method = "RC4"
 	}
 `
+
 func TestAccNsencryptionparams_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccNsencryptionparams_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNsencryptionparamsExist("citrixadc_nsencryptionparams.tf_nsencryptionparams", nil),
-					resource.TestCheckResourceAttr("citrixadc_nsencryptionparams.tf_nsencryptionparams", "method", "DES-CFB" ),
+					resource.TestCheckResourceAttr("citrixadc_nsencryptionparams.tf_nsencryptionparams", "method", "DES-CFB"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccNsencryptionparams_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNsencryptionparamsExist("citrixadc_nsencryptionparams.tf_nsencryptionparams", nil),
-					resource.TestCheckResourceAttr("citrixadc_nsencryptionparams.tf_nsencryptionparams", "method", "RC4" ),
+					resource.TestCheckResourceAttr("citrixadc_nsencryptionparams.tf_nsencryptionparams", "method", "RC4"),
 				),
 			},
 		},

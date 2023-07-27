@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -44,14 +44,13 @@ resource "citrixadc_icaparameter" "tf_icaparameter" {
   
 `
 
-
 func TestAccIcaparameter_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccIcaparameter_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIcaparameterExist("citrixadc_icaparameter.tf_icaparameter", nil),
@@ -61,7 +60,7 @@ func TestAccIcaparameter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_icaparameter.tf_icaparameter", "enablesronhafailover", "YES"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccIcaparameter_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIcaparameterExist("citrixadc_icaparameter.tf_icaparameter", nil),

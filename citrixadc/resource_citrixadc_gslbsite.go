@@ -22,68 +22,68 @@ func resourceCitrixAdcGslbsite() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"clip": &schema.Schema{
+			"clip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"metricexchange": &schema.Schema{
+			"metricexchange": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"naptrreplacementsuffix": &schema.Schema{
+			"naptrreplacementsuffix": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"nwmetricexchange": &schema.Schema{
+			"nwmetricexchange": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"parentsite": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"publicclip": &schema.Schema{
+			"parentsite": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"publicip": &schema.Schema{
+			"publicclip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"sessionexchange": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"siteipaddress": &schema.Schema{
+			"publicip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"sitename": &schema.Schema{
+			"sessionexchange": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sitetype": &schema.Schema{
+			"siteipaddress": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"triggermonitor": &schema.Schema{
+			"sitename": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"sitetype": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"triggermonitor": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

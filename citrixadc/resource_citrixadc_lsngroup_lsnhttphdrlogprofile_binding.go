@@ -20,12 +20,12 @@ func resourceCitrixAdcLsngroup_lsnhttphdrlogprofile_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"groupname": &schema.Schema{
+			"groupname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"httphdrlogprofilename": &schema.Schema{
+			"httphdrlogprofilename": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,

@@ -19,82 +19,82 @@ func resourceCitrixAdcL2param() *schema.Resource {
 		Update:        updateL2paramFunc,
 		Delete:        deleteL2paramFunc,
 		Schema: map[string]*schema.Schema{
-			"bdggrpproxyarp": &schema.Schema{
+			"bdggrpproxyarp": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"bdgsetting": &schema.Schema{
+			"bdgsetting": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"bridgeagetimeout": &schema.Schema{
+			"bridgeagetimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"garponvridintf": &schema.Schema{
+			"garponvridintf": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"garpreply": &schema.Schema{
+			"garpreply": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"macmodefwdmypkt": &schema.Schema{
+			"macmodefwdmypkt": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"maxbridgecollision": &schema.Schema{
+			"maxbridgecollision": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"mbfinstlearning": &schema.Schema{
+			"mbfinstlearning": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"mbfpeermacupdate": &schema.Schema{
+			"mbfpeermacupdate": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"proxyarp": &schema.Schema{
+			"proxyarp": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"returntoethernetsender": &schema.Schema{
+			"returntoethernetsender": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"rstintfonhafo": &schema.Schema{
+			"rstintfonhafo": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"skipproxyingbsdtraffic": &schema.Schema{
+			"skipproxyingbsdtraffic": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"stopmacmoveupdate": &schema.Schema{
+			"stopmacmoveupdate": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"usemymac": &schema.Schema{
+			"usemymac": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"usenetprofilebsdtraffic": &schema.Schema{
+			"usenetprofilebsdtraffic": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

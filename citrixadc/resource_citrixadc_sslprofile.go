@@ -103,335 +103,335 @@ func resourceCitrixAdcSslprofile() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"ciphername": &schema.Schema{
+			"ciphername": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"cipherpriority": &schema.Schema{
+			"cipherpriority": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"cipherredirect": &schema.Schema{
+			"cipherredirect": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"cipherurl": &schema.Schema{
+			"cipherurl": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"cleartextport": &schema.Schema{
+			"cleartextport": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"clientauth": &schema.Schema{
+			"clientauth": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"clientauthuseboundcachain": &schema.Schema{
+			"clientauthuseboundcachain": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"clientcert": &schema.Schema{
+			"clientcert": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"commonname": &schema.Schema{
+			"commonname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"denysslreneg": &schema.Schema{
+			"denysslreneg": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"dh": &schema.Schema{
+			"dh": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"dhcount": &schema.Schema{
+			"dhcount": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"dhekeyexchangewithpsk": &schema.Schema{
+			"dhekeyexchangewithpsk": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"dhfile": &schema.Schema{
+			"dhfile": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"dhkeyexpsizelimit": &schema.Schema{
+			"dhkeyexpsizelimit": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"dropreqwithnohostheader": &schema.Schema{
+			"dropreqwithnohostheader": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"encrypttriggerpktcount": &schema.Schema{
+			"encrypttriggerpktcount": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"ersa": &schema.Schema{
+			"ersa": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ersacount": &schema.Schema{
+			"ersacount": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"hsts": &schema.Schema{
+			"hsts": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"includesubdomains": &schema.Schema{
+			"includesubdomains": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"insertionencoding": &schema.Schema{
+			"insertionencoding": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"maxage": &schema.Schema{
+			"maxage": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"ocspstapling": &schema.Schema{
+			"ocspstapling": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"preload": &schema.Schema{
+			"preload": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"prevsessionkeylifetime": &schema.Schema{
+			"prevsessionkeylifetime": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"pushenctrigger": &schema.Schema{
+			"pushenctrigger": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"pushenctriggertimeout": &schema.Schema{
+			"pushenctriggertimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"pushflag": &schema.Schema{
+			"pushflag": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"quantumsize": &schema.Schema{
+			"quantumsize": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"redirectportrewrite": &schema.Schema{
+			"redirectportrewrite": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sendclosenotify": &schema.Schema{
+			"sendclosenotify": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"serverauth": &schema.Schema{
+			"serverauth": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sessionkeylifetime": &schema.Schema{
+			"sessionkeylifetime": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"sessionticket": &schema.Schema{
+			"sessionticket": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sessionticketkeydata": &schema.Schema{
+			"sessionticketkeydata": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sessionticketkeyrefresh": &schema.Schema{
+			"sessionticketkeyrefresh": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sessionticketlifetime": &schema.Schema{
+			"sessionticketlifetime": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"sessreuse": &schema.Schema{
+			"sessreuse": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sesstimeout": &schema.Schema{
+			"sesstimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"skipclientcertpolicycheck": &schema.Schema{
+			"skipclientcertpolicycheck": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"snienable": &schema.Schema{
+			"snienable": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"snihttphostmatch": &schema.Schema{
+			"snihttphostmatch": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ssl3": &schema.Schema{
+			"ssl3": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sslimaxsessperserver": &schema.Schema{
+			"sslimaxsessperserver": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"sslinterception": &schema.Schema{
+			"sslinterception": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ssliocspcheck": &schema.Schema{
+			"ssliocspcheck": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sslireneg": &schema.Schema{
+			"sslireneg": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ssllogprofile": &schema.Schema{
+			"ssllogprofile": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sslprofiletype": &schema.Schema{
+			"sslprofiletype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sslredirect": &schema.Schema{
+			"sslredirect": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ssltriggertimeout": &schema.Schema{
+			"ssltriggertimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"strictcachecks": &schema.Schema{
+			"strictcachecks": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"strictsigdigestcheck": &schema.Schema{
+			"strictsigdigestcheck": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"tls1": &schema.Schema{
+			"tls1": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"tls11": &schema.Schema{
+			"tls11": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"tls12": &schema.Schema{
+			"tls12": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"tls13": &schema.Schema{
+			"tls13": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"tls13sessionticketsperauthcontext": &schema.Schema{
+			"tls13sessionticketsperauthcontext": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"zerorttearlydata": &schema.Schema{
+			"zerorttearlydata": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"alpnprotocol": &schema.Schema{
+			"alpnprotocol": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
 			// sslprofile_ecccurve_binding
-			"ecccurvebindings": &schema.Schema{
+			"ecccurvebindings": {
 				Type:     schema.TypeSet,
-				Optional: true,	// this is optional attribute
+				Optional: true, // this is optional attribute
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			// sslprofile_cipher_binding
-			"cipherbindings": &schema.Schema{
+			"cipherbindings": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Set:      sslprofileCipherbindingMappingHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"ciphername": &schema.Schema{
+						"ciphername": {
 							Type:     schema.TypeString,
 							Optional: true,
 							// ForceNew: true,
 						},
-						"cipherpriority": &schema.Schema{
+						"cipherpriority": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							// Computed: true,

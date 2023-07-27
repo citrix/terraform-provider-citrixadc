@@ -20,12 +20,12 @@ func resourceCitrixAdcLsngroup_lsntransportprofile_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"groupname": &schema.Schema{
+			"groupname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"transportprofilename": &schema.Schema{
+			"transportprofilename": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,

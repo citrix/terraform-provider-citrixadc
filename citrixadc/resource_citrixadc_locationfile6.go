@@ -5,7 +5,7 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	
+
 	"log"
 )
 
@@ -19,17 +19,17 @@ func resourceCitrixAdcLocationfile6() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"format": &schema.Schema{
+			"format": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"locationfile": &schema.Schema{
+			"locationfile": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"src": &schema.Schema{
+			"src": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,

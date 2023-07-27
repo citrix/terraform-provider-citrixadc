@@ -22,48 +22,48 @@ func resourceCitrixAdcVrid() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"vrid_id": &schema.Schema{
+			"vrid_id": {
 				Type:     schema.TypeInt,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"all": &schema.Schema{
+			"all": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"ownernode": &schema.Schema{
+			"ownernode": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"preemption": &schema.Schema{
+			"preemption": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"preemptiondelaytimer": &schema.Schema{
+			"preemptiondelaytimer": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"priority": &schema.Schema{
+			"priority": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"sharing": &schema.Schema{
+			"sharing": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"trackifnumpriority": &schema.Schema{
+			"trackifnumpriority": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"tracking": &schema.Schema{
+			"tracking": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -87,7 +87,7 @@ func createVridFunc(d *schema.ResourceData, meta interface{}) error {
 		Trackifnumpriority:   d.Get("trackifnumpriority").(int),
 		Tracking:             d.Get("tracking").(string),
 	}
-	vridIdStr := strconv.Itoa(vridId) 
+	vridIdStr := strconv.Itoa(vridId)
 	_, err := client.AddResource(service.Vrid.Type(), vridIdStr, &vrid)
 	if err != nil {
 		return err

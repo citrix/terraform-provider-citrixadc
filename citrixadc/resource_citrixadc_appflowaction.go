@@ -21,70 +21,70 @@ func resourceCitrixAdcAppflowaction() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"botinsight": &schema.Schema{
+			"botinsight": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ciinsight": &schema.Schema{
+			"ciinsight": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"clientsidemeasurements": &schema.Schema{
+			"clientsidemeasurements": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"collectors": &schema.Schema{
+			"collectors": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"comment": &schema.Schema{
+			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"distributionalgorithm": &schema.Schema{
+			"distributionalgorithm": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"metricslog": &schema.Schema{
+			"metricslog": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
-				ForceNew: true,	
+				ForceNew: true,
 			},
-			"pagetracking": &schema.Schema{
+			"pagetracking": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"securityinsight": &schema.Schema{
+			"securityinsight": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"transactionlog": &schema.Schema{
+			"transactionlog": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"videoanalytics": &schema.Schema{
+			"videoanalytics": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"webinsight": &schema.Schema{
+			"webinsight": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -97,7 +97,7 @@ func createAppflowactionFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppflowactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appflowactionName := d.Get("name").(string)
-	
+
 	appflowaction := appflow.Appflowaction{
 		Botinsight:             d.Get("botinsight").(string),
 		Ciinsight:              d.Get("ciinsight").(string),

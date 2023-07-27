@@ -18,27 +18,27 @@ func resourceCitrixAdcIcaparameter() *schema.Resource {
 		Update:        updateIcaparameterFunc,
 		Delete:        deleteIcaparameterFunc,
 		Schema: map[string]*schema.Schema{
-			"enablesronhafailover": &schema.Schema{
+			"enablesronhafailover": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"hdxinsightnonnsap": &schema.Schema{
+			"hdxinsightnonnsap": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"edtpmtuddf": &schema.Schema{
+			"edtpmtuddf": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"edtpmtuddftimeout": &schema.Schema{
+			"edtpmtuddftimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"l7latencyfrequency": &schema.Schema{
+			"l7latencyfrequency": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -51,15 +51,15 @@ func createIcaparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createIcaparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	icaparameterName := resource.PrefixedUniqueId("tf-icaparameter-")
-	
+
 	icaparameter := ica.Icaparameter{
 		Enablesronhafailover: d.Get("enablesronhafailover").(string),
 		Hdxinsightnonnsap:    d.Get("hdxinsightnonnsap").(string),
 		L7latencyfrequency:   d.Get("l7latencyfrequency").(int),
-		Edtpmtuddf:			  d.Get("edtpmtuddf").(string),
+		Edtpmtuddf:           d.Get("edtpmtuddf").(string),
 		Edtpmtuddftimeout:    d.Get("edtpmtuddftimeout").(int),
 	}
-	
+
 	err := client.UpdateUnnamedResource("icaparameter", &icaparameter)
 	if err != nil {
 		return err

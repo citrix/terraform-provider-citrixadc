@@ -19,12 +19,12 @@ func resourceCitrixAdcTransformpolicylabel() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"labelname": &schema.Schema{
+			"labelname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"policylabeltype": &schema.Schema{
+			"policylabeltype": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -74,7 +74,6 @@ func readTransformpolicylabelFunc(d *schema.ResourceData, meta interface{}) erro
 	return nil
 
 }
-
 
 func deleteTransformpolicylabelFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteTransformpolicylabelFunc")

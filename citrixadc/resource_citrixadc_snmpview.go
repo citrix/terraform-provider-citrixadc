@@ -21,17 +21,17 @@ func resourceCitrixAdcSnmpview() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"subtree": &schema.Schema{
+			"subtree": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"type": &schema.Schema{
+			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -96,7 +96,7 @@ func readSnmpviewFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Iterate through results to find the one with the right policy name
-	
+
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing snmpview state %s", snmpviewName)
 		d.SetId("")
@@ -117,10 +117,9 @@ func updateSnmpviewFunc(d *schema.ResourceData, meta interface{}) error {
 	snmpviewName := d.Get("name").(string)
 
 	snmpview := snmp.Snmpview{
-		Name: d.Get("name").(string),
+		Name:    d.Get("name").(string),
 		Subtree: d.Get("subtree").(string),
 		Type:    d.Get("type").(string),
-		
 	}
 	hasChange := false
 	if d.HasChange("type") {

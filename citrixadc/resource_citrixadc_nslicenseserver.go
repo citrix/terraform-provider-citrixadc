@@ -17,25 +17,25 @@ func resourceCitrixAdcNslicenseserver() *schema.Resource {
 		Read:          readNslicenseserverFunc,
 		Delete:        deleteNslicenseserverFunc,
 		Schema: map[string]*schema.Schema{
-			"forceupdateip": &schema.Schema{
+			"forceupdateip": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"nodeid": &schema.Schema{
+			"nodeid": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"port": &schema.Schema{
+			"port": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"servername": &schema.Schema{
+			"servername": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,

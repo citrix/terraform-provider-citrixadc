@@ -7,8 +7,8 @@ import (
 
 	"fmt"
 	"log"
-	"strings"
 	"strconv"
+	"strings"
 )
 
 func resourceCitrixAdcNspartition_bridgegroup_binding() *schema.Resource {
@@ -21,13 +21,13 @@ func resourceCitrixAdcNspartition_bridgegroup_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"partitionname": &schema.Schema{
+			"partitionname": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"bridgegroup": &schema.Schema{
+			"bridgegroup": {
 				Type:     schema.TypeInt,
 				Required: true,
 				Computed: false,

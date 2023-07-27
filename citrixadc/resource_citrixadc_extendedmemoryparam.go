@@ -19,7 +19,7 @@ func resourceCitrixAdcExtendedmemoryparam() *schema.Resource {
 		Update:        updateExtendedmemoryparamFunc,
 		Delete:        deleteExtendedmemoryparamFunc,
 		Schema: map[string]*schema.Schema{
-			"memlimit": &schema.Schema{
+			"memlimit": {
 				Type:     schema.TypeInt,
 				Required: true,
 				Computed: false,
@@ -91,7 +91,7 @@ func updateExtendedmemoryparamFunc(d *schema.ResourceData, meta interface{}) err
 
 func deleteExtendedmemoryparamFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteExtendedmemoryparamFunc")
-	
+
 	d.SetId("")
 
 	return nil

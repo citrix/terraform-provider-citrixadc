@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -58,18 +58,18 @@ func TestAccAuthenticationcertpolicy_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAuthenticationcertpolicyDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAuthenticationcertpolicy_add,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAuthenticationcertpolicyExist("citrixadc_authenticationcertpolicy.tf_certpolicy", nil),					
+					testAccCheckAuthenticationcertpolicyExist("citrixadc_authenticationcertpolicy.tf_certpolicy", nil),
 					resource.TestCheckResourceAttr("citrixadc_authenticationcertpolicy.tf_certpolicy", "name", "tf_certpolicy"),
 					resource.TestCheckResourceAttr("citrixadc_authenticationcertpolicy.tf_certpolicy", "rule", "ns_true"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAuthenticationcertpolicy_update,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAuthenticationcertpolicyExist("citrixadc_authenticationcertpolicy.tf_certpolicy", nil),					
+					testAccCheckAuthenticationcertpolicyExist("citrixadc_authenticationcertpolicy.tf_certpolicy", nil),
 					resource.TestCheckResourceAttr("citrixadc_authenticationcertpolicy.tf_certpolicy", "name", "tf_certpolicy"),
 					resource.TestCheckResourceAttr("citrixadc_authenticationcertpolicy.tf_certpolicy", "rule", "ns_false"),
 				),

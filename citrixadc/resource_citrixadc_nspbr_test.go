@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -48,7 +48,7 @@ func TestAccNspbr_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNspbrDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccNspbr_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNspbrExist("citrixadc_nspbr.tf_nspbr", nil),
@@ -56,7 +56,7 @@ func TestAccNspbr_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_nspbr.tf_nspbr", "action", "DENY"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccNspbr_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNspbrExist("citrixadc_nspbr.tf_nspbr", nil),

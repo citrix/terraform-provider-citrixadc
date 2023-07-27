@@ -19,78 +19,78 @@ func resourceCitrixAdcSslocspresponder() *schema.Resource {
 		Update:        updateSslocspresponderFunc,
 		Delete:        deleteSslocspresponderFunc,
 		Schema: map[string]*schema.Schema{
-			"batchingdelay": &schema.Schema{
+			"batchingdelay": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"batchingdepth": &schema.Schema{
+			"batchingdepth": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"cache": &schema.Schema{
+			"cache": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"cachetimeout": &schema.Schema{
+			"cachetimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"httpmethod": &schema.Schema{
+			"httpmethod": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"insertclientcert": &schema.Schema{
+			"insertclientcert": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"ocspurlresolvetimeout": &schema.Schema{
+			"ocspurlresolvetimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"producedattimeskew": &schema.Schema{
+			"producedattimeskew": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"respondercert": &schema.Schema{
+			"respondercert": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"resptimeout": &schema.Schema{
+			"resptimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"signingcert": &schema.Schema{
+			"signingcert": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"trustresponder": &schema.Schema{
+			"trustresponder": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"url": &schema.Schema{
+			"url": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"usenonce": &schema.Schema{
+			"usenonce": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

@@ -22,29 +22,29 @@ func resourceCitrixAdcAppfwconfidfield() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"fieldname": &schema.Schema{
+			"fieldname": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"url": &schema.Schema{
+			"url": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"comment": &schema.Schema{
+			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"isregex": &schema.Schema{
+			"isregex": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"state": &schema.Schema{
+			"state": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -94,13 +94,13 @@ func readAppfwconfidfieldFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
-	
+
 	if len(dataArray) == 0 {
 		log.Printf("[WARN] citrixadc-provider: appfw confidfield does not exist. Clearing state.")
 		d.SetId("")
 		return nil
 	}
-	
+
 	foundIndex := -1
 	for i, appfwconfidfield := range dataArray {
 		match := true
@@ -134,7 +134,7 @@ func readAppfwconfidfieldFunc(d *schema.ResourceData, meta interface{}) error {
 func updateAppfwconfidfieldFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAppfwconfidfieldFunc")
 	client := meta.(*NetScalerNitroClient).client
-	
+
 	appfwconfidfieldName := d.Get("fieldname").(string)
 	appfwconfidfield := appfw.Appfwconfidfield{}
 	log.Println(appfwconfidfield)
@@ -175,7 +175,7 @@ func deleteAppfwconfidfieldFunc(d *schema.ResourceData, meta interface{}) error 
 	argsMap["fieldname"] = url.QueryEscape(d.Get("fieldname").(string))
 	argsMap["url"] = url.QueryEscape(d.Get("url").(string))
 
-	err := client.DeleteResourceWithArgsMap(service.Appfwconfidfield.Type(),"", argsMap)
+	err := client.DeleteResourceWithArgsMap(service.Appfwconfidfield.Type(), "", argsMap)
 	if err != nil {
 		return err
 	}

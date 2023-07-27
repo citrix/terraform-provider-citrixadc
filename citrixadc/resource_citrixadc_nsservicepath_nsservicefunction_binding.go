@@ -20,19 +20,19 @@ func resourceCitrixAdcNsservicepath_nsservicefunction_binding() *schema.Resource
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"servicepathname": &schema.Schema{
+			"servicepathname": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"servicefunction": &schema.Schema{
+			"servicefunction": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"index": &schema.Schema{
+			"index": {
 				Type:     schema.TypeInt,
 				Required: true,
 				Computed: false,

@@ -7,8 +7,8 @@ import (
 
 	"fmt"
 	"log"
-	"strings"
 	"net/url"
+	"strings"
 )
 
 func resourceCitrixAdcVpnvserver_appflowpolicy_binding() *schema.Resource {
@@ -21,43 +21,43 @@ func resourceCitrixAdcVpnvserver_appflowpolicy_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"policy": &schema.Schema{
+			"policy": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"bindpoint": &schema.Schema{
+			"bindpoint": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"gotopriorityexpression": &schema.Schema{
+			"gotopriorityexpression": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"groupextraction": &schema.Schema{
+			"groupextraction": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"priority": &schema.Schema{
+			"priority": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"secondary": &schema.Schema{
+			"secondary": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
@@ -84,7 +84,7 @@ func createVpnvserver_appflowpolicy_bindingFunc(d *schema.ResourceData, meta int
 		Secondary:              d.Get("secondary").(bool),
 	}
 
-	err := client.UpdateUnnamedResource(service.Vpnvserver_appflowpolicy_binding.Type(),&vpnvserver_appflowpolicy_binding)
+	err := client.UpdateUnnamedResource(service.Vpnvserver_appflowpolicy_binding.Type(), &vpnvserver_appflowpolicy_binding)
 	if err != nil {
 		return err
 	}
@@ -105,11 +105,11 @@ func readVpnvserver_appflowpolicy_bindingFunc(d *schema.ResourceData, meta inter
 	bindingId := d.Id()
 
 	// To make the resource backward compatible, in the prev state file user will have ID with 2 values, but we have updated Id. So here we are changing the code to make it backward compatible
-	// here we are checking for id, if it has 2 elements then we are appending the 3rd attribute to the old Id. 
+	// here we are checking for id, if it has 2 elements then we are appending the 3rd attribute to the old Id.
 	oldIdSlice := strings.Split(bindingId, ",")
-	
+
 	if len(oldIdSlice) == 2 {
-		if _, ok := d.GetOk("bindpoint") ; ok {
+		if _, ok := d.GetOk("bindpoint"); ok {
 			bindingId = bindingId + "," + d.Get("bindpoint").(string)
 		} else {
 			return fmt.Errorf("bindpoint should be given, as it is the part of Id. The id of the vpnvserver_appflowpolicy_binding is the concatenation of the `name`, `policy` and `bindpoint` attributes separated by a comma")

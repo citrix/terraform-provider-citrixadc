@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -77,13 +77,13 @@ func TestAccNsvpxparam_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNsvpxparamDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccNsvpxparam_basic_step1,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNsvpxparamExist("citrixadc_nsvpxparam.tf_vpxparam", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccNsvpxparam_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNsvpxparamExist("citrixadc_nsvpxparam.tf_vpxparam", nil),
@@ -105,14 +105,14 @@ func TestAccNsvpxparam_cluster(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNsvpxparamDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccNsvpxparam_cluster_step1,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNsvpxparamExist("citrixadc_nsvpxparam.tf_vpxparam0", nil),
 					testAccCheckNsvpxparamExist("citrixadc_nsvpxparam.tf_vpxparam1", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccNsvpxparam_cluster_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNsvpxparamExist("citrixadc_nsvpxparam.tf_vpxparam0", nil),

@@ -7,8 +7,8 @@ import (
 
 	"fmt"
 	"log"
-	"strings"
 	"net/url"
+	"strings"
 )
 
 func resourceCitrixAdcVpnvserver_staserver_binding() *schema.Resource {
@@ -21,19 +21,19 @@ func resourceCitrixAdcVpnvserver_staserver_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"staserver": &schema.Schema{
+			"staserver": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"staaddresstype": &schema.Schema{
+			"staaddresstype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

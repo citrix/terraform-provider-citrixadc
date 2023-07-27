@@ -21,166 +21,166 @@ func resourceCitrixAdcNspbr() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"action": &schema.Schema{
+			"action": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"destip": &schema.Schema{
+			"destip": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"destipop": &schema.Schema{
+			"destipop": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"destipval": &schema.Schema{
+			"destipval": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"destport": &schema.Schema{
+			"destport": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"destportop": &schema.Schema{
+			"destportop": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"destportval": &schema.Schema{
+			"destportval": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"detail": &schema.Schema{
+			"detail": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"interface": &schema.Schema{
+			"interface": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"iptunnel": &schema.Schema{
+			"iptunnel": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"iptunnelname": &schema.Schema{
+			"iptunnelname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"monitor": &schema.Schema{
+			"monitor": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"msr": &schema.Schema{
+			"msr": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"nexthop": &schema.Schema{
+			"nexthop": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"nexthopval": &schema.Schema{
+			"nexthopval": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ownergroup": &schema.Schema{
+			"ownergroup": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"priority": &schema.Schema{
+			"priority": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"protocol": &schema.Schema{
+			"protocol": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"protocolnumber": &schema.Schema{
+			"protocolnumber": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"srcip": &schema.Schema{
+			"srcip": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"srcipop": &schema.Schema{
+			"srcipop": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"srcipval": &schema.Schema{
+			"srcipval": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"srcmac": &schema.Schema{
+			"srcmac": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"srcmacmask": &schema.Schema{
+			"srcmacmask": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"srcport": &schema.Schema{
+			"srcport": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"srcportop": &schema.Schema{
+			"srcportop": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"srcportval": &schema.Schema{
+			"srcportval": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"state": &schema.Schema{
+			"state": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"td": &schema.Schema{
+			"td": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"vlan": &schema.Schema{
+			"vlan": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"vxlan": &schema.Schema{
+			"vxlan": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"vxlanvlanmap": &schema.Schema{
+			"vxlanvlanmap": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -192,7 +192,7 @@ func resourceCitrixAdcNspbr() *schema.Resource {
 func createNspbrFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNspbrFunc")
 	client := meta.(*NetScalerNitroClient).client
-	nspbrName:= d.Get("name").(string)
+	nspbrName := d.Get("name").(string)
 	nspbr := ns.Nspbr{
 		Action:         d.Get("action").(string),
 		Destip:         d.Get("destip").(bool),
@@ -321,7 +321,7 @@ func updateNspbrFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("destipval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Destipval has changed for nspbr %s, starting update", nspbrName)
 		nspbr.Destipval = d.Get("destipval").(string)
-		nspbr.Destip = d.Get("destip").(bool)	// whenever the `destipval` is included in the payload then `destip` should also be included
+		nspbr.Destip = d.Get("destip").(bool) // whenever the `destipval` is included in the payload then `destip` should also be included
 		hasChange = true
 	}
 	if d.HasChange("destport") {
@@ -337,7 +337,7 @@ func updateNspbrFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("destportval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Destportval has changed for nspbr %s, starting update", nspbrName)
 		nspbr.Destportval = d.Get("destportval").(string)
-		nspbr.Destport = d.Get("destport").(bool)	// whenever the `destportval` is included in the payload then `destport` should also be included
+		nspbr.Destport = d.Get("destport").(bool) // whenever the `destportval` is included in the payload then `destport` should also be included
 		hasChange = true
 	}
 	if d.HasChange("detail") {
@@ -368,7 +368,7 @@ func updateNspbrFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("nexthopval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Nexthopval has changed for nspbr %s, starting update", nspbrName)
 		nspbr.Nexthopval = d.Get("nexthopval").(string)
-		nspbr.Nexthop = d.Get("nexthop").(bool)	// whenever the `nexthopval` is included in the payload then `nexthop` should also be included
+		nspbr.Nexthop = d.Get("nexthop").(bool) // whenever the `nexthopval` is included in the payload then `nexthop` should also be included
 		hasChange = true
 	}
 	if d.HasChange("ownergroup") {
@@ -404,7 +404,7 @@ func updateNspbrFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("srcipval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Srcipval has changed for nspbr %s, starting update", nspbrName)
 		nspbr.Srcipval = d.Get("srcipval").(string)
-		nspbr.Srcip = d.Get("srcip").(bool)	// whenever the `srcipval` is included in the payload then `srcip` should also be included
+		nspbr.Srcip = d.Get("srcip").(bool) // whenever the `srcipval` is included in the payload then `srcip` should also be included
 		hasChange = true
 	}
 	if d.HasChange("srcmac") {
@@ -430,7 +430,7 @@ func updateNspbrFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("srcportval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Srcportval has changed for nspbr %s, starting update", nspbrName)
 		nspbr.Srcportval = d.Get("srcportval").(string)
-		nspbr.Srcport = d.Get("srcport").(bool)	// whenever the `srcportval` is included in the payload then `srcport` should also be included
+		nspbr.Srcport = d.Get("srcport").(bool) // whenever the `srcportval` is included in the payload then `srcport` should also be included
 		hasChange = true
 	}
 	if d.HasChange("state") {
@@ -479,7 +479,7 @@ func doNspbrStateChange(d *schema.ResourceData, client *service.NitroClient) err
 
 	// We need a new instance of the struct since
 	// ActOnResource will fail if we put in superfluous attributes
-	
+
 	nspbr := ns.Nspbr{
 		Name: d.Get("name").(string),
 	}

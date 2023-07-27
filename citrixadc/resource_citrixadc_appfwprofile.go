@@ -21,491 +21,491 @@ func resourceCitrixAdcAppfwprofile() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"addcookieflags": &schema.Schema{
+			"addcookieflags": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"archivename": &schema.Schema{
+			"archivename": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"bufferoverflowmaxcookielength": &schema.Schema{
+			"bufferoverflowmaxcookielength": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"bufferoverflowmaxheaderlength": &schema.Schema{
+			"bufferoverflowmaxheaderlength": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"bufferoverflowmaxurllength": &schema.Schema{
+			"bufferoverflowmaxurllength": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"canonicalizehtmlresponse": &schema.Schema{
+			"canonicalizehtmlresponse": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"checkrequestheaders": &schema.Schema{
+			"checkrequestheaders": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"comment": &schema.Schema{
+			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"cookieencryption": &schema.Schema{
+			"cookieencryption": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"cookieproxying": &schema.Schema{
+			"cookieproxying": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"cookietransforms": &schema.Schema{
+			"cookietransforms": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"creditcardmaxallowed": &schema.Schema{
+			"creditcardmaxallowed": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"creditcardxout": &schema.Schema{
+			"creditcardxout": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"crosssitescriptingcheckcompleteurls": &schema.Schema{
+			"crosssitescriptingcheckcompleteurls": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"crosssitescriptingtransformunsafehtml": &schema.Schema{
+			"crosssitescriptingtransformunsafehtml": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"customsettings": &schema.Schema{
+			"customsettings": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"defaultcharset": &schema.Schema{
+			"defaultcharset": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"defaultfieldformatmaxlength": &schema.Schema{
+			"defaultfieldformatmaxlength": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"defaultfieldformatminlength": &schema.Schema{
+			"defaultfieldformatminlength": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"defaultfieldformattype": &schema.Schema{
+			"defaultfieldformattype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"defaults": &schema.Schema{
+			"defaults": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"dosecurecreditcardlogging": &schema.Schema{
+			"dosecurecreditcardlogging": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"enableformtagging": &schema.Schema{
+			"enableformtagging": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"errorurl": &schema.Schema{
+			"errorurl": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"excludefileuploadfromchecks": &schema.Schema{
+			"excludefileuploadfromchecks": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"exemptclosureurlsfromsecuritychecks": &schema.Schema{
+			"exemptclosureurlsfromsecuritychecks": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"fileuploadmaxnum": &schema.Schema{
+			"fileuploadmaxnum": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"htmlerrorobject": &schema.Schema{
+			"htmlerrorobject": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"invalidpercenthandling": &schema.Schema{
+			"invalidpercenthandling": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"jsonerrorobject": &schema.Schema{
+			"jsonerrorobject": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"jsonsqlinjectiontype": &schema.Schema{
+			"jsonsqlinjectiontype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"logeverypolicyhit": &schema.Schema{
+			"logeverypolicyhit": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"optimizepartialreqs": &schema.Schema{
+			"optimizepartialreqs": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"percentdecoderecursively": &schema.Schema{
+			"percentdecoderecursively": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"postbodylimit": &schema.Schema{
+			"postbodylimit": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"postbodylimitsignature": &schema.Schema{
+			"postbodylimitsignature": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"refererheadercheck": &schema.Schema{
+			"refererheadercheck": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"requestcontenttype": &schema.Schema{
+			"requestcontenttype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"responsecontenttype": &schema.Schema{
+			"responsecontenttype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"rfcprofile": &schema.Schema{
+			"rfcprofile": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"semicolonfieldseparator": &schema.Schema{
+			"semicolonfieldseparator": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sessionlessfieldconsistency": &schema.Schema{
+			"sessionlessfieldconsistency": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sessionlessurlclosure": &schema.Schema{
+			"sessionlessurlclosure": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"signatures": &schema.Schema{
+			"signatures": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sqlinjectionchecksqlwildchars": &schema.Schema{
+			"sqlinjectionchecksqlwildchars": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sqlinjectiononlycheckfieldswithsqlchars": &schema.Schema{
+			"sqlinjectiononlycheckfieldswithsqlchars": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sqlinjectionparsecomments": &schema.Schema{
+			"sqlinjectionparsecomments": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sqlinjectiontransformspecialchars": &schema.Schema{
+			"sqlinjectiontransformspecialchars": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sqlinjectiontype": &schema.Schema{
+			"sqlinjectiontype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"starturlclosure": &schema.Schema{
+			"starturlclosure": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"postbodylimitaction": &schema.Schema{
+			"postbodylimitaction": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"bufferoverflowmaxquerylength": &schema.Schema{
+			"bufferoverflowmaxquerylength": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"cookiehijackingaction": &schema.Schema{
+			"cookiehijackingaction": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"infercontenttypexmlpayloadaction": &schema.Schema{
+			"infercontenttypexmlpayloadaction": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"cmdinjectionaction": &schema.Schema{
+			"cmdinjectionaction": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"streaming": &schema.Schema{
+			"streaming": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"stripcomments": &schema.Schema{
+			"stripcomments": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"striphtmlcomments": &schema.Schema{
+			"striphtmlcomments": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"stripxmlcomments": &schema.Schema{
+			"stripxmlcomments": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"trace": &schema.Schema{
+			"trace": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"urldecoderequestcookies": &schema.Schema{
+			"urldecoderequestcookies": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"usehtmlerrorobject": &schema.Schema{
+			"usehtmlerrorobject": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"verboseloglevel": &schema.Schema{
+			"verboseloglevel": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"xmlerrorobject": &schema.Schema{
+			"xmlerrorobject": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"xmlsqlinjectionchecksqlwildchars": &schema.Schema{
+			"xmlsqlinjectionchecksqlwildchars": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"xmlsqlinjectiononlycheckfieldswithsqlchars": &schema.Schema{
+			"xmlsqlinjectiononlycheckfieldswithsqlchars": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"xmlsqlinjectionparsecomments": &schema.Schema{
+			"xmlsqlinjectionparsecomments": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"xmlsqlinjectiontype": &schema.Schema{
+			"xmlsqlinjectiontype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"bufferoverflowaction": &schema.Schema{
+			"bufferoverflowaction": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"contenttypeaction": &schema.Schema{
+			"contenttypeaction": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"cookieconsistencyaction": &schema.Schema{
+			"cookieconsistencyaction": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"creditcard": &schema.Schema{
+			"creditcard": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"creditcardaction": &schema.Schema{
+			"creditcardaction": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"crosssitescriptingaction": &schema.Schema{
+			"crosssitescriptingaction": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"csrftagaction": &schema.Schema{
+			"csrftagaction": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"denyurlaction": &schema.Schema{
+			"denyurlaction": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"dynamiclearning": &schema.Schema{
+			"dynamiclearning": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"fieldconsistencyaction": &schema.Schema{
+			"fieldconsistencyaction": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"fieldformataction": &schema.Schema{
+			"fieldformataction": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"fileuploadtypesaction": &schema.Schema{
+			"fileuploadtypesaction": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"inspectcontenttypes": &schema.Schema{
+			"inspectcontenttypes": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"jsondosaction": &schema.Schema{
+			"jsondosaction": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"jsonsqlinjectionaction": &schema.Schema{
+			"jsonsqlinjectionaction": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"jsonxssaction": &schema.Schema{
+			"jsonxssaction": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"multipleheaderaction": &schema.Schema{
+			"multipleheaderaction": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"sqlinjectionaction": &schema.Schema{
+			"sqlinjectionaction": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"starturlaction": &schema.Schema{
+			"starturlaction": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"type": &schema.Schema{
+			"type": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"xmlattachmentaction": &schema.Schema{
+			"xmlattachmentaction": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"xmldosaction": &schema.Schema{
+			"xmldosaction": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"xmlformataction": &schema.Schema{
+			"xmlformataction": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"xmlsoapfaultaction": &schema.Schema{
+			"xmlsoapfaultaction": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"xmlsqlinjectionaction": &schema.Schema{
+			"xmlsqlinjectionaction": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"xmlvalidationaction": &schema.Schema{
+			"xmlvalidationaction": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"xmlwsiaction": &schema.Schema{
+			"xmlwsiaction": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"xmlxssaction": &schema.Schema{
+			"xmlxssaction": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -523,9 +523,9 @@ func createAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 		Name:                                       appfwprofileName,
 		Postbodylimitaction:                        toStringList(d.Get("postbodylimitaction").([]interface{})),
 		Bufferoverflowmaxquerylength:               d.Get("bufferoverflowmaxquerylength").(int),
-		Cookiehijackingaction:    					toStringList(d.Get("cookiehijackingaction").([]interface{})),
-		Infercontenttypexmlpayloadaction:   		toStringList(d.Get("infercontenttypexmlpayloadaction").([]interface{})),
-		Cmdinjectionaction: 						toStringList(d.Get("cmdinjectionaction").([]interface{})),
+		Cookiehijackingaction:                      toStringList(d.Get("cookiehijackingaction").([]interface{})),
+		Infercontenttypexmlpayloadaction:           toStringList(d.Get("infercontenttypexmlpayloadaction").([]interface{})),
+		Cmdinjectionaction:                         toStringList(d.Get("cmdinjectionaction").([]interface{})),
 		Addcookieflags:                             d.Get("addcookieflags").(string),
 		Archivename:                                d.Get("archivename").(string),
 		Bufferoverflowmaxcookielength:              d.Get("bufferoverflowmaxcookielength").(int),

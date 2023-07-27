@@ -7,8 +7,8 @@ import (
 
 	"fmt"
 	"log"
-	"strings"
 	"strconv"
+	"strings"
 )
 
 func resourceCitrixAdcVxlan_srcip_binding() *schema.Resource {
@@ -21,13 +21,13 @@ func resourceCitrixAdcVxlan_srcip_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"vxlanid": &schema.Schema{
+			"vxlanid": {
 				Type:     schema.TypeInt,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"srcip": &schema.Schema{
+			"srcip": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,

@@ -23,82 +23,82 @@ func resourceCitrixAdcSslcertkey() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"bundle": &schema.Schema{
+			"bundle": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"cert": &schema.Schema{
+			"cert": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"certkey": &schema.Schema{
+			"certkey": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"expirymonitor": &schema.Schema{
+			"expirymonitor": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"fipskey": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"hsmkey": &schema.Schema{
+			"fipskey": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"inform": &schema.Schema{
+			"hsmkey": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"key": &schema.Schema{
+			"inform": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"linkcertkeyname": &schema.Schema{
+			"key": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"linkcertkeyname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: false,
 			},
-			"nodomaincheck": &schema.Schema{
+			"nodomaincheck": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"notificationperiod": &schema.Schema{
+			"notificationperiod": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"ocspstaplingcache": &schema.Schema{
+			"ocspstaplingcache": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"passplain": &schema.Schema{
+			"passplain": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"password": &schema.Schema{
+			"password": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,

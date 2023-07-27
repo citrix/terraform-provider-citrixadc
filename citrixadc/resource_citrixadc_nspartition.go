@@ -19,43 +19,43 @@ func resourceCitrixAdcNspartition() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"partitionname": &schema.Schema{
+			"partitionname": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"force": &schema.Schema{
+			"force": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"maxbandwidth": &schema.Schema{
+			"maxbandwidth": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"maxconn": &schema.Schema{
+			"maxconn": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"maxmemlimit": &schema.Schema{
+			"maxmemlimit": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"minbandwidth": &schema.Schema{
+			"minbandwidth": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"partitionmac": &schema.Schema{
+			"partitionmac": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"save": &schema.Schema{
+			"save": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,

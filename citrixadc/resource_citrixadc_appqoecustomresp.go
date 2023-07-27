@@ -19,12 +19,12 @@ func resourceCitrixAdcAppqoecustomresp() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"src": &schema.Schema{
+			"src": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -73,7 +73,7 @@ func readAppqoecustomrespFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
-	
+
 	foundIndex := -1
 	for i, v := range dataArr {
 		if v["name"].(string) == appqoecustomrespName {

@@ -20,17 +20,17 @@ func resourceCitrixAdcLbmetrictable_metric_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"metric": &schema.Schema{
+			"metric": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"metrictable": &schema.Schema{
+			"metrictable": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"snmpoid": &schema.Schema{
+			"snmpoid": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,

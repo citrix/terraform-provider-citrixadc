@@ -20,28 +20,28 @@ func resourceCitrixAdcAaagroup_vpnsessionpolicy_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"groupname": &schema.Schema{
+			"groupname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"policy": &schema.Schema{
+			"policy": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"priority": &schema.Schema{
+			"priority": {
 				Type:     schema.TypeInt,
 				Required: true,
 				ForceNew: true,
 			},
-			"gotopriorityexpression": &schema.Schema{
+			"gotopriorityexpression": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"type": &schema.Schema{
+			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -74,7 +74,7 @@ func createAaagroup_vpnsessionpolicy_bindingFunc(d *schema.ResourceData, meta in
 
 	err = readAaagroup_vpnsessionpolicy_bindingFunc(d, meta)
 	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this aaagroup_vpnsessionpolicy_binding but we can't read it ?? %s", bindingId	)
+		log.Printf("[ERROR] netscaler-provider: ?? we just created this aaagroup_vpnsessionpolicy_binding but we can't read it ?? %s", bindingId)
 		return nil
 	}
 	return nil

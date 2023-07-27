@@ -7,8 +7,8 @@ import (
 
 	"fmt"
 	"log"
-	"regexp"
 	"net/url"
+	"regexp"
 	"strings"
 )
 
@@ -22,23 +22,23 @@ func resourceCitrixAdcAaauser_intranetip6_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"username": &schema.Schema{
+			"username": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"intranetip6": &schema.Schema{
+			"intranetip6": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"gotopriorityexpression": &schema.Schema{
+			"gotopriorityexpression": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"numaddr": &schema.Schema{
+			"numaddr": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,

@@ -21,43 +21,43 @@ func resourceCitrixAdcTmformssoaction() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"actionurl": &schema.Schema{
+			"actionurl": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"userfield": &schema.Schema{
+			"userfield": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"passwdfield": &schema.Schema{
+			"passwdfield": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"ssosuccessrule": &schema.Schema{
+			"ssosuccessrule": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"namevaluepair": &schema.Schema{
+			"namevaluepair": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"nvtype": &schema.Schema{
+			"nvtype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"responsesize": &schema.Schema{
+			"responsesize": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"submitmethod": &schema.Schema{
+			"submitmethod": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

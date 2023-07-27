@@ -20,13 +20,13 @@ func resourceCitrixAdcVpnvserver_sharefileserver_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"sharefile": &schema.Schema{
+			"sharefile": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,

@@ -19,83 +19,83 @@ func resourceCitrixAdcAuthenticationoauthidpprofile() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"clientid": &schema.Schema{
+			"clientid": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 			},
-			"clientsecret": &schema.Schema{
+			"clientsecret": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 			},
-			"redirecturl": &schema.Schema{
+			"redirecturl": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 			},
-			"attributes": &schema.Schema{
+			"attributes": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"audience": &schema.Schema{
+			"audience": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"configservice": &schema.Schema{
+			"configservice": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"defaultauthenticationgroup": &schema.Schema{
+			"defaultauthenticationgroup": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"encrypttoken": &schema.Schema{
+			"encrypttoken": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"issuer": &schema.Schema{
+			"issuer": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"refreshinterval": &schema.Schema{
+			"refreshinterval": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"relyingpartymetadataurl": &schema.Schema{
+			"relyingpartymetadataurl": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sendpassword": &schema.Schema{
+			"sendpassword": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"signaturealg": &schema.Schema{
+			"signaturealg": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"signatureservice": &schema.Schema{
+			"signatureservice": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"skewtime": &schema.Schema{
+			"skewtime": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,

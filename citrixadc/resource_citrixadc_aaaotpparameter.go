@@ -17,12 +17,12 @@ func resourceCitrixAdcAaaotpparameter() *schema.Resource {
 		Update:        updateAaaotpparameterFunc,
 		Delete:        deleteAaaotpparameterFunc,
 		Schema: map[string]*schema.Schema{
-			"encryption": &schema.Schema{
+			"encryption": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"maxotpdevices": &schema.Schema{
+			"maxotpdevices": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -35,7 +35,7 @@ func createAaaotpparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAaaotpparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	aaaotpparameterName := resource.PrefixedUniqueId("tf-aaaotpparameter-")
-	
+
 	aaaotpparameter := aaa.Aaaotpparameter{
 		Encryption:    d.Get("encryption").(string),
 		Maxotpdevices: d.Get("maxotpdevices").(int),

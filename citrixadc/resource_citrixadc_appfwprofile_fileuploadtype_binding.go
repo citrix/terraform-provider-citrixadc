@@ -7,8 +7,8 @@ import (
 
 	"fmt"
 	"log"
-	"strings"
 	"net/url"
+	"strings"
 )
 
 func resourceCitrixAdcAppfwprofile_fileuploadtype_binding() *schema.Resource {
@@ -21,68 +21,68 @@ func resourceCitrixAdcAppfwprofile_fileuploadtype_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"fileuploadtype": &schema.Schema{
+			"fileuploadtype": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"as_fileuploadtypes_url": &schema.Schema{
+			"as_fileuploadtypes_url": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"alertonly": &schema.Schema{
+			"alertonly": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"comment": &schema.Schema{
+			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"filetype": &schema.Schema{
+			"filetype": {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"isautodeployed": &schema.Schema{
+			"isautodeployed": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"isregexfileuploadtypesurl": &schema.Schema{
+			"isregexfileuploadtypesurl": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"resourceid": &schema.Schema{
+			"resourceid": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"ruletype": &schema.Schema{
+			"ruletype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"state": &schema.Schema{
+			"state": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -216,7 +216,7 @@ func deleteAppfwprofile_fileuploadtype_bindingFunc(d *schema.ResourceData, meta 
 		args = append(args, fmt.Sprintf("fileuploadtype:%s", url.QueryEscape(val.(string))))
 	}
 	if val, ok := d.GetOk("filetype"); ok {
-		args = append(args, fmt.Sprintf("filetype:%v", url.QueryEscape(strings.Join((toStringList((val).([]interface{})))," "))))
+		args = append(args, fmt.Sprintf("filetype:%v", url.QueryEscape(strings.Join((toStringList((val).([]interface{}))), " "))))
 	}
 	if val, ok := d.GetOk("ruletype"); ok {
 		args = append(args, fmt.Sprintf("ruletype:%s", url.QueryEscape(val.(string))))

@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,8 +20,8 @@ import (
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"testing"
 	"strings"
+	"testing"
 )
 
 const testAccBridgetable_basic = `
@@ -52,7 +52,7 @@ func TestAccBridgetable_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBridgetableDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccBridgetable_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBridgetableExist("citrixadc_bridgetable.tf_bridgetable", nil),
@@ -144,7 +144,7 @@ func testAccCheckBridgetableDestroy(s *terraform.State) error {
 		if err != nil {
 			return err
 		}
-		
+
 		bindingId := rs.Primary.ID
 
 		idSlice := strings.SplitN(bindingId, ",", 3)
@@ -170,7 +170,7 @@ func testAccCheckBridgetableDestroy(s *terraform.State) error {
 				break
 			}
 		}
-		
+
 		if foundIndex != -1 {
 			return fmt.Errorf("bridgetable %s still exists", rs.Primary.ID)
 		}

@@ -17,12 +17,12 @@ func resourceCitrixAdcReputationsettings() *schema.Resource {
 		Update:        updateReputationsettingsFunc,
 		Delete:        deleteReputationsettingsFunc,
 		Schema: map[string]*schema.Schema{
-			"proxyport": &schema.Schema{
+			"proxyport": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"proxyserver": &schema.Schema{
+			"proxyserver": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -91,7 +91,7 @@ func updateReputationsettingsFunc(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if hasChange {
-		err := client.UpdateUnnamedResource("reputationsettings",  &reputationsettings)
+		err := client.UpdateUnnamedResource("reputationsettings", &reputationsettings)
 		if err != nil {
 			return fmt.Errorf("Error updating reputationsettings")
 		}

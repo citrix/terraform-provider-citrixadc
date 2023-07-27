@@ -21,13 +21,13 @@ func resourceCitrixAdcNetbridge() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"vxlanvlanmap": &schema.Schema{
+			"vxlanvlanmap": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

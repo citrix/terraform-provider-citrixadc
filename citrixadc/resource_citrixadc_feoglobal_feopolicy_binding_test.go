@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -42,13 +42,13 @@ func TestAccFeoglobal_feopolicy_binding_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckFeoglobal_feopolicy_bindingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccFeoglobal_feopolicy_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFeoglobal_feopolicy_bindingExist("citrixadc_feoglobal_feopolicy_binding.tf_feoglobal_feopolicy_binding", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccFeoglobal_feopolicy_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFeoglobal_feopolicy_bindingNotExist("citrixadc_feoglobal_feopolicy_binding.tf_feoglobal_feopolicy_binding", "my_feopolicy", "REQ_DEFAULT"),
@@ -83,7 +83,7 @@ func testAccCheckFeoglobal_feopolicy_bindingExist(n string, id *string) resource
 
 		findParams := service.FindParams{
 			ResourceType:             "feoglobal_feopolicy_binding",
-			ArgsMap:             map[string]string{ "type":rs.Primary.Attributes["type"] },
+			ArgsMap:                  map[string]string{"type": rs.Primary.Attributes["type"]},
 			ResourceMissingErrorCode: 258,
 		}
 		dataArr, err := client.FindResourceArrayWithParams(findParams)
@@ -117,7 +117,7 @@ func testAccCheckFeoglobal_feopolicy_bindingNotExist(n string, id string, typena
 
 		findParams := service.FindParams{
 			ResourceType:             "feoglobal_feopolicy_binding",
-			ArgsMap:                  map[string]string{ "type":typename },
+			ArgsMap:                  map[string]string{"type": typename},
 			ResourceMissingErrorCode: 258,
 		}
 		dataArr, err := client.FindResourceArrayWithParams(findParams)

@@ -19,33 +19,33 @@ func resourceCitrixAdcAuthenticationepaaction() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"csecexpr": &schema.Schema{
+			"csecexpr": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 			},
-			"defaultepagroup": &schema.Schema{
+			"defaultepagroup": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"deletefiles": &schema.Schema{
+			"deletefiles": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"killprocess": &schema.Schema{
+			"killprocess": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"quarantinegroup": &schema.Schema{
+			"quarantinegroup": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

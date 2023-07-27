@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -37,7 +37,7 @@ func TestAccNsacls_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNsaclsDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccNsacls_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNsaclsExist("citrixadc_nsacls.foo", nil),
@@ -133,14 +133,14 @@ func TestAccNsacls_update(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNsaclsDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccNsacls_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNsaclsExist("citrixadc_nsacls.foo", nil),
 					resource.TestCheckResourceAttr("citrixadc_nsacls.foo", "acl.1629125634.aclname", "restricttcp2"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccNsacls_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNsaclsUpdateExist("citrixadc_nsacls.foo", nil),

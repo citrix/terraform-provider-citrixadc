@@ -19,29 +19,29 @@ func resourceCitrixAdcFeoglobal_feopolicy_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"policyname": &schema.Schema{
+			"policyname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"priority": &schema.Schema{
+			"priority": {
 				Type:     schema.TypeInt,
 				Required: true,
 				ForceNew: true,
 			},
-			"globalbindtype": &schema.Schema{
+			"globalbindtype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"gotopriorityexpression": &schema.Schema{
+			"gotopriorityexpression": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"type": &schema.Schema{
+			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -90,10 +90,10 @@ func readFeoglobal_feopolicy_bindingFunc(d *schema.ResourceData, meta interface{
 	} else {
 		argsMap["type"] = "REQ_DEFAULT"
 	}
-	
+
 	findParams := service.FindParams{
 		ResourceType:             "feoglobal_feopolicy_binding",
-		ArgsMap: 				  argsMap,
+		ArgsMap:                  argsMap,
 		ResourceMissingErrorCode: 258,
 	}
 	dataArr, err := client.FindResourceArrayWithParams(findParams)

@@ -34,48 +34,48 @@ func resourceCitrixAdcNetprofile() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"mbf": &schema.Schema{
+			"mbf": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"overridelsn": &schema.Schema{
+			"overridelsn": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"proxyprotocol": &schema.Schema{
+			"proxyprotocol": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"proxyprotocoltxversion": &schema.Schema{
+			"proxyprotocoltxversion": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"srcip": &schema.Schema{
+			"srcip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"srcippersistency": &schema.Schema{
+			"srcippersistency": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"td": &schema.Schema{
+			"td": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"proxyprotocolaftertlshandshake": &schema.Schema{
+			"proxyprotocolaftertlshandshake": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

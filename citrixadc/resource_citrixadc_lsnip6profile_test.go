@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -47,7 +47,7 @@ func TestAccLsnip6profile_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLsnip6profileDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccLsnip6profile_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLsnip6profileExist("citrixadc_lsnip6profile.tf_lsnaip6profile", nil),
@@ -56,7 +56,7 @@ func TestAccLsnip6profile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_lsnip6profile.tf_lsnaip6profile", "network6", "2003::/64"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccLsnip6profile_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLsnip6profileExist("citrixadc_lsnip6profile.tf_lsnaip6profile", nil),

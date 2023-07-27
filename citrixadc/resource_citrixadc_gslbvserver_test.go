@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -35,7 +35,7 @@ func TestAccGslbvserver_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGslbvserverDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccGslbvserver_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGslbvserverExist("citrixadc_gslbvserver.foo", nil),
@@ -193,7 +193,7 @@ func TestAccGslbvserver_enable_disable(t *testing.T) {
 		CheckDestroy: testAccCheckGslbvserverDestroy,
 		Steps: []resource.TestStep{
 			// Create enabled
-			resource.TestStep{
+			{
 				Config: testAccGslbvserverEnableDisable_enabled,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGslbvserverExist("citrixadc_gslbvserver.tf_test_acc_gslbvsever", nil),
@@ -201,7 +201,7 @@ func TestAccGslbvserver_enable_disable(t *testing.T) {
 				),
 			},
 			// Disable
-			resource.TestStep{
+			{
 				Config: testAccGslbvserverEnableDisable_disabled,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGslbvserverExist("citrixadc_gslbvserver.tf_test_acc_gslbvsever", nil),
@@ -209,7 +209,7 @@ func TestAccGslbvserver_enable_disable(t *testing.T) {
 				),
 			},
 			// Re enable
-			resource.TestStep{
+			{
 				Config: testAccGslbvserverEnableDisable_enabled,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGslbvserverExist("citrixadc_gslbvserver.tf_test_acc_gslbvsever", nil),

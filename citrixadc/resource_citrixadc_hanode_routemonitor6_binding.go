@@ -7,8 +7,8 @@ import (
 
 	"fmt"
 	"log"
-	"strconv"
 	"net/url"
+	"strconv"
 	"strings"
 )
 
@@ -22,12 +22,12 @@ func resourceCitrixAdcHanode_routemonitor6_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"hanode_id": &schema.Schema{
+			"hanode_id": {
 				Type:     schema.TypeInt,
 				Required: true,
 				ForceNew: true,
 			},
-			"routemonitor": &schema.Schema{
+			"routemonitor": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,

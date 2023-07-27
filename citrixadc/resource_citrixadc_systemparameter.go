@@ -19,97 +19,97 @@ func resourceCitrixAdcSystemparameter() *schema.Resource {
 		Update:        updateSystemparameterFunc,
 		Delete:        deleteSystemparameterFunc,
 		Schema: map[string]*schema.Schema{
-			"basicauth": &schema.Schema{
+			"basicauth": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"cliloglevel": &schema.Schema{
+			"cliloglevel": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"doppler": &schema.Schema{
+			"doppler": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"fipsusermode": &schema.Schema{
+			"fipsusermode": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"forcepasswordchange": &schema.Schema{
+			"forcepasswordchange": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"googleanalytics": &schema.Schema{
+			"googleanalytics": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"localauth": &schema.Schema{
+			"localauth": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"maxclient": &schema.Schema{
+			"maxclient": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"minpasswordlen": &schema.Schema{
+			"minpasswordlen": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"natpcbforceflushlimit": &schema.Schema{
+			"natpcbforceflushlimit": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"natpcbrstontimeout": &schema.Schema{
+			"natpcbrstontimeout": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"promptstring": &schema.Schema{
+			"promptstring": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"rbaonresponse": &schema.Schema{
+			"rbaonresponse": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"reauthonauthparamchange": &schema.Schema{
+			"reauthonauthparamchange": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"removesensitivefiles": &schema.Schema{
+			"removesensitivefiles": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"restrictedtimeout": &schema.Schema{
+			"restrictedtimeout": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"strongpassword": &schema.Schema{
+			"strongpassword": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"timeout": &schema.Schema{
+			"timeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"totalauthtimeout": &schema.Schema{
+			"totalauthtimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -132,7 +132,7 @@ func createSystemparameterFunc(d *schema.ResourceData, meta interface{}) error {
 		Googleanalytics:         d.Get("googleanalytics").(string),
 		Localauth:               d.Get("localauth").(string),
 		Minpasswordlen:          d.Get("minpasswordlen").(int),
-		Maxclient:          	 d.Get("maxclient").(string),
+		Maxclient:               d.Get("maxclient").(string),
 		Natpcbforceflushlimit:   d.Get("natpcbforceflushlimit").(int),
 		Natpcbrstontimeout:      d.Get("natpcbrstontimeout").(string),
 		Promptstring:            d.Get("promptstring").(string),

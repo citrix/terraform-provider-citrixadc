@@ -20,219 +20,219 @@ func resourceCitrixAdcAuthenticationoauthaction() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"authorizationendpoint": &schema.Schema{
+			"authorizationendpoint": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 			},
-			"clientid": &schema.Schema{
+			"clientid": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 			},
-			"clientsecret": &schema.Schema{
+			"clientsecret": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 			},
-			"tokenendpoint": &schema.Schema{
+			"tokenendpoint": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 			},
-			"allowedalgorithms": &schema.Schema{
+			"allowedalgorithms": {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 				Computed: true,
 			},
-			"attribute1": &schema.Schema{
+			"attribute1": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute10": &schema.Schema{
+			"attribute10": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute11": &schema.Schema{
+			"attribute11": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute12": &schema.Schema{
+			"attribute12": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute13": &schema.Schema{
+			"attribute13": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute14": &schema.Schema{
+			"attribute14": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute15": &schema.Schema{
+			"attribute15": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute16": &schema.Schema{
+			"attribute16": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute2": &schema.Schema{
+			"attribute2": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute3": &schema.Schema{
+			"attribute3": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute4": &schema.Schema{
+			"attribute4": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute5": &schema.Schema{
+			"attribute5": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute6": &schema.Schema{
+			"attribute6": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute7": &schema.Schema{
+			"attribute7": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute8": &schema.Schema{
+			"attribute8": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute9": &schema.Schema{
+			"attribute9": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attributes": &schema.Schema{
+			"attributes": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"audience": &schema.Schema{
+			"audience": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"authentication": &schema.Schema{
+			"authentication": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"certendpoint": &schema.Schema{
+			"certendpoint": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"certfilepath": &schema.Schema{
+			"certfilepath": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"defaultauthenticationgroup": &schema.Schema{
+			"defaultauthenticationgroup": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"granttype": &schema.Schema{
+			"granttype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"graphendpoint": &schema.Schema{
+			"graphendpoint": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"idtokendecryptendpoint": &schema.Schema{
+			"idtokendecryptendpoint": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"introspecturl": &schema.Schema{
+			"introspecturl": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"issuer": &schema.Schema{
+			"issuer": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"metadataurl": &schema.Schema{
+			"metadataurl": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"oauthtype": &schema.Schema{
+			"oauthtype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"pkce": &schema.Schema{
+			"pkce": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"refreshinterval": &schema.Schema{
+			"refreshinterval": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"resourceuri": &schema.Schema{
+			"resourceuri": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"skewtime": &schema.Schema{
+			"skewtime": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"tenantid": &schema.Schema{
+			"tenantid": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"tokenendpointauthmethod": &schema.Schema{
+			"tokenendpointauthmethod": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"userinfourl": &schema.Schema{
+			"userinfourl": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"usernamefield": &schema.Schema{
+			"usernamefield": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

@@ -21,17 +21,17 @@ func resourceCitrixAdcDbuser() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"username": &schema.Schema{
+			"username": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"loggedin": &schema.Schema{
+			"loggedin": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"password": &schema.Schema{
+			"password": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

@@ -19,7 +19,7 @@ func resourceCitrixAdcRnatClear() *schema.Resource {
 		Update:        updateRnatClearFunc,
 		Delete:        deleteRnatClearFunc,
 		Schema: map[string]*schema.Schema{
-			"rnatsname": &schema.Schema{
+			"rnatsname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -31,37 +31,37 @@ func resourceCitrixAdcRnatClear() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"aclname": &schema.Schema{
+						"aclname": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"natip": &schema.Schema{
+						"natip": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"natip2": &schema.Schema{
+						"natip2": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"netmask": &schema.Schema{
+						"netmask": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"network": &schema.Schema{
+						"network": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"redirectport": &schema.Schema{
+						"redirectport": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Computed: true,
 						},
-						"td": &schema.Schema{
+						"td": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,

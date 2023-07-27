@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -33,19 +33,19 @@ func TestAccPolicyexpression_advanced(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckPolicyexpressionDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccPolicyexpression_advanced_step1,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyexpressionExist("citrixadc_policyexpression.tf_advanced_policyexpression", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccPolicyexpression_advanced_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyexpressionExist("citrixadc_policyexpression.tf_advanced_policyexpression", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccPolicyexpression_advanced_step3,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyexpressionExist("citrixadc_policyexpression.tf_advanced_policyexpression", nil),
@@ -64,19 +64,19 @@ func TestAccPolicyexpression_classic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckPolicyexpressionDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccPolicyexpression_classic_step1,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyexpressionExist("citrixadc_policyexpression.tf_classic_policyexpression", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccPolicyexpression_classic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyexpressionExist("citrixadc_policyexpression.tf_classic_policyexpression", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccPolicyexpression_classic_step3,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyexpressionExist("citrixadc_policyexpression.tf_classic_policyexpression", nil),

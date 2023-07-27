@@ -19,41 +19,41 @@ func resourceCitrixAdcContentinspectionglobal_contentinspectionpolicy_binding() 
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"policyname": &schema.Schema{
+			"policyname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"priority": &schema.Schema{
+			"priority": {
 				Type:     schema.TypeInt,
 				Required: true,
 				ForceNew: true,
 			},
-			"gotopriorityexpression": &schema.Schema{
+			"gotopriorityexpression": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"invoke": &schema.Schema{
+			"invoke": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"labelname": &schema.Schema{
+			"labelname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"labeltype": &schema.Schema{
+			"labeltype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"type": &schema.Schema{
+			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -99,7 +99,7 @@ func readContentinspectionglobal_contentinspectionpolicy_bindingFunc(d *schema.R
 
 	log.Printf("[DEBUG] citrixadc-provider: Reading contentinspectionglobal_contentinspectionpolicy_binding state %s", policyname)
 	argsmap := make(map[string]string)
-	
+
 	if v, ok := d.GetOk("type"); ok {
 		argsmap["type"] = v.(string)
 	} else {
@@ -107,7 +107,7 @@ func readContentinspectionglobal_contentinspectionpolicy_bindingFunc(d *schema.R
 	}
 	findParams := service.FindParams{
 		ResourceType:             "contentinspectionglobal_contentinspectionpolicy_binding",
-		ArgsMap: 				  argsmap,
+		ArgsMap:                  argsmap,
 		ResourceMissingErrorCode: 258,
 	}
 	dataArr, err := client.FindResourceArrayWithParams(findParams)
@@ -164,7 +164,6 @@ func deleteContentinspectionglobal_contentinspectionpolicy_bindingFunc(d *schema
 	client := meta.(*NetScalerNitroClient).client
 
 	policyname := d.Id()
-
 
 	args := make([]string, 0)
 	args = append(args, fmt.Sprintf("policyname:%s", policyname))

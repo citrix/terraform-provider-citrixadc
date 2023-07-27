@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -44,20 +44,20 @@ func TestAccAaagroup_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAaagroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAaagroup_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAaagroupExist("citrixadc_aaagroup.tf_aaagroup", nil),
-					resource.TestCheckResourceAttr("citrixadc_aaagroup.tf_aaagroup","groupname", "my_group"),
-					resource.TestCheckResourceAttr("citrixadc_aaagroup.tf_aaagroup","weight", "100"),
+					resource.TestCheckResourceAttr("citrixadc_aaagroup.tf_aaagroup", "groupname", "my_group"),
+					resource.TestCheckResourceAttr("citrixadc_aaagroup.tf_aaagroup", "weight", "100"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAaagroup_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAaagroupExist("citrixadc_aaagroup.tf_aaagroup", nil),
-					resource.TestCheckResourceAttr("citrixadc_aaagroup.tf_aaagroup","groupname", "my_group"),
-					resource.TestCheckResourceAttr("citrixadc_aaagroup.tf_aaagroup","weight", "0"),
+					resource.TestCheckResourceAttr("citrixadc_aaagroup.tf_aaagroup", "groupname", "my_group"),
+					resource.TestCheckResourceAttr("citrixadc_aaagroup.tf_aaagroup", "weight", "0"),
 				),
 			},
 		},

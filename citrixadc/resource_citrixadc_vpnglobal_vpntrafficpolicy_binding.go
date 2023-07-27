@@ -20,31 +20,31 @@ func resourceCitrixAdcVpnglobal_vpntrafficpolicy_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"policyname": &schema.Schema{
+			"policyname": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"gotopriorityexpression": &schema.Schema{
+			"gotopriorityexpression": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"groupextraction": &schema.Schema{
+			"groupextraction": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"priority": &schema.Schema{
+			"priority": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"secondary": &schema.Schema{
+			"secondary": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
@@ -89,7 +89,7 @@ func readVpnglobal_vpntrafficpolicy_bindingFunc(d *schema.ResourceData, meta int
 	log.Printf("[DEBUG] citrixadc-provider: Reading vpnglobal_vpntrafficpolicy_binding state %s", policyname)
 
 	findParams := service.FindParams{
-		ResourceType: "vpnglobal_vpntrafficpolicy_binding",
+		ResourceType:             "vpnglobal_vpntrafficpolicy_binding",
 		ResourceMissingErrorCode: 258,
 	}
 	dataArr, err := client.FindResourceArrayWithParams(findParams)

@@ -17,32 +17,32 @@ func resourceCitrixAdcSmppparam() *schema.Resource {
 		Update:        updateSmppparamFunc,
 		Delete:        deleteSmppparamFunc,
 		Schema: map[string]*schema.Schema{
-			"addrnpi": &schema.Schema{
+			"addrnpi": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"addrrange": &schema.Schema{
+			"addrrange": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"addrton": &schema.Schema{
+			"addrton": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"clientmode": &schema.Schema{
+			"clientmode": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"msgqueue": &schema.Schema{
+			"msgqueue": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"msgqueuesize": &schema.Schema{
+			"msgqueuesize": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,

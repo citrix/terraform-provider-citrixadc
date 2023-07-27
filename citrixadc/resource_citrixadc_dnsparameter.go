@@ -19,107 +19,107 @@ func resourceCitrixAdcDnsparameter() *schema.Resource {
 		Update:        updateDnsparameterFunc,
 		Delete:        deleteDnsparameterFunc,
 		Schema: map[string]*schema.Schema{
-			"cacheecszeroprefix": &schema.Schema{
+			"cacheecszeroprefix": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"cachehitbypass": &schema.Schema{
+			"cachehitbypass": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"cachenoexpire": &schema.Schema{
+			"cachenoexpire": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"cacherecords": &schema.Schema{
+			"cacherecords": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"dns64timeout": &schema.Schema{
+			"dns64timeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"dnsrootreferral": &schema.Schema{
+			"dnsrootreferral": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"dnssec": &schema.Schema{
+			"dnssec": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ecsmaxsubnets": &schema.Schema{
+			"ecsmaxsubnets": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"maxcachesize": &schema.Schema{
+			"maxcachesize": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"maxnegativecachesize": &schema.Schema{
+			"maxnegativecachesize": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"maxnegcachettl": &schema.Schema{
+			"maxnegcachettl": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"maxpipeline": &schema.Schema{
+			"maxpipeline": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"maxttl": &schema.Schema{
+			"maxttl": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"maxudppacketsize": &schema.Schema{
+			"maxudppacketsize": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"minttl": &schema.Schema{
+			"minttl": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"namelookuppriority": &schema.Schema{
+			"namelookuppriority": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"nxdomainratelimitthreshold": &schema.Schema{
+			"nxdomainratelimitthreshold": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"recursion": &schema.Schema{
+			"recursion": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"resolutionorder": &schema.Schema{
+			"resolutionorder": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"retries": &schema.Schema{
+			"retries": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"splitpktqueryprocessing": &schema.Schema{
+			"splitpktqueryprocessing": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

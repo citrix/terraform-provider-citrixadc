@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -77,20 +77,18 @@ func TestAccGslbservice_lbmonitor_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-                CheckDestroy: testAccCheckGslbservice_lbmonitor_bindingDestroy,
+		CheckDestroy: testAccCheckGslbservice_lbmonitor_bindingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
-                                Config: testAccGslbservice_lbmonitor_binding_basic,
+			{
+				Config: testAccGslbservice_lbmonitor_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
-                                        testAccCheckGslbservice_lbmonitor_bindingExist("citrixadc_gslbservice_lbmonitor_binding.tf_gslbservice_lbmonitor_binding", nil),								
-                                        
+					testAccCheckGslbservice_lbmonitor_bindingExist("citrixadc_gslbservice_lbmonitor_binding.tf_gslbservice_lbmonitor_binding", nil),
 				),
 			},
-			resource.TestStep{
-                                Config: testAccGslbservice_lbmonitor_binding_basic_step2,
+			{
+				Config: testAccGslbservice_lbmonitor_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-                                        testAccCheckGslbservice_lbmonitor_bindingNotExist("citrixadc_gslbservice_lbmonitor_binding.tf_gslbservice_lbmonitor_binding", "tf_gslb1vservice,tf_monitor"),
-                                        
+					testAccCheckGslbservice_lbmonitor_bindingNotExist("citrixadc_gslbservice_lbmonitor_binding.tf_gslbservice_lbmonitor_binding", "tf_gslb1vservice,tf_monitor"),
 				),
 			},
 		},
@@ -126,8 +124,8 @@ func testAccCheckGslbservice_lbmonitor_bindingExist(n string, id *string) resour
 		monitor_name := idSlice[1]
 
 		findParams := service.FindParams{
-            ResourceType:             "gslbservice_lbmonitor_binding",
-            ResourceName:             servicename,
+			ResourceType:             "gslbservice_lbmonitor_binding",
+			ResourceName:             servicename,
 			ResourceMissingErrorCode: 258,
 		}
 		dataArr, err := client.FindResourceArrayWithParams(findParams)
@@ -140,7 +138,7 @@ func testAccCheckGslbservice_lbmonitor_bindingExist(n string, id *string) resour
 		// Iterate through results to find the one with the matching secondIdComponent
 		found := false
 		for _, v := range dataArr {
-			if v["monitor_name"].(string) == monitor_name{
+			if v["monitor_name"].(string) == monitor_name {
 				found = true
 				break
 			}
@@ -199,7 +197,7 @@ func testAccCheckGslbservice_lbmonitor_bindingDestroy(s *terraform.State) error 
 	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
 
 	for _, rs := range s.RootModule().Resources {
-                if rs.Type != "citrixadc_gslbservice_lbmonitor_binding" {
+		if rs.Type != "citrixadc_gslbservice_lbmonitor_binding" {
 			continue
 		}
 
@@ -207,7 +205,7 @@ func testAccCheckGslbservice_lbmonitor_bindingDestroy(s *terraform.State) error 
 			return fmt.Errorf("No name is set")
 		}
 
-                _, err := nsClient.FindResource(service.Gslbservice_lbmonitor_binding.Type(), rs.Primary.ID)
+		_, err := nsClient.FindResource(service.Gslbservice_lbmonitor_binding.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("gslbservice_lbmonitor_binding %s still exists", rs.Primary.ID)
 		}

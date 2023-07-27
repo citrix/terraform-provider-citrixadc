@@ -22,64 +22,64 @@ func resourceCitrixAdcInat() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"ftp": &schema.Schema{
+			"ftp": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"mode": &schema.Schema{
+			"mode": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"privateip": &schema.Schema{
+			"privateip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"proxyip": &schema.Schema{
+			"proxyip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"publicip": &schema.Schema{
+			"publicip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"tcpproxy": &schema.Schema{
+			"tcpproxy": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"td": &schema.Schema{
+			"td": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"tftp": &schema.Schema{
+			"tftp": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"useproxyport": &schema.Schema{
+			"useproxyport": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"usip": &schema.Schema{
+			"usip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"usnip": &schema.Schema{
+			"usnip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

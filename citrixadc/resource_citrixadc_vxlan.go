@@ -22,43 +22,43 @@ func resourceCitrixAdcVxlan() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"vxlanid": &schema.Schema{
+			"vxlanid": {
 				Type:     schema.TypeInt,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"dynamicrouting": &schema.Schema{
+			"dynamicrouting": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"innervlantagging": &schema.Schema{
+			"innervlantagging": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ipv6dynamicrouting": &schema.Schema{
+			"ipv6dynamicrouting": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"port": &schema.Schema{
+			"port": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"protocol": &schema.Schema{
+			"protocol": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"type": &schema.Schema{
+			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"vlan": &schema.Schema{
+			"vlan": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,

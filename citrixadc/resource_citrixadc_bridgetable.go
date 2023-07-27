@@ -23,54 +23,54 @@ func resourceCitrixAdcBridgetable() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"mac": &schema.Schema{
+			"mac": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"vtep": &schema.Schema{
+			"vtep": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"vxlan": &schema.Schema{
+			"vxlan": {
 				Type:     schema.TypeInt,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"bridgeage": &schema.Schema{
+			"bridgeage": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"devicevlan": &schema.Schema{
+			"devicevlan": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"ifnum": &schema.Schema{
+			"ifnum": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"nodeid": &schema.Schema{
+			"nodeid": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"vlan": &schema.Schema{
+			"vlan": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"vni": &schema.Schema{
+			"vni": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -94,7 +94,7 @@ func createBridgetableFunc(d *schema.ResourceData, meta interface{}) error {
 		Nodeid:     d.Get("nodeid").(int),
 		Vlan:       d.Get("vlan").(int),
 	}
-	
+
 	_, err := client.AddResource(service.Bridgetable.Type(), bridgetableName, &bridgetable)
 	if err != nil {
 		return err
@@ -102,9 +102,9 @@ func createBridgetableFunc(d *schema.ResourceData, meta interface{}) error {
 
 	if _, ok := d.GetOk("bridgeage"); ok {
 		bridgetable2 := network.Bridgetable{
-			Bridgeage:  d.Get("bridgeage").(int),
+			Bridgeage: d.Get("bridgeage").(int),
 		}
-		err1 := client.UpdateUnnamedResource(service.Bridgetable.Type(),&bridgetable2)
+		err1 := client.UpdateUnnamedResource(service.Bridgetable.Type(), &bridgetable2)
 		if err1 != nil {
 			return err1
 		}
@@ -208,7 +208,7 @@ func deleteBridgetableFunc(d *schema.ResourceData, meta interface{}) error {
 	argsMap["vtep"] = url.QueryEscape(d.Get("vtep").(string))
 	argsMap["vxlan"] = strconv.Itoa(d.Get("vxlan").(int))
 	argsMap["devicevlan"] = strconv.Itoa(d.Get("devicevlan").(int))
-	err := client.DeleteResourceWithArgsMap(service.Bridgetable.Type(), "",argsMap)
+	err := client.DeleteResourceWithArgsMap(service.Bridgetable.Type(), "", argsMap)
 	if err != nil {
 		return err
 	}

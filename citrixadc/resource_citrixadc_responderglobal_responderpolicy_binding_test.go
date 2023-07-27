@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -55,13 +55,13 @@ func TestAccResponderglobal_responderpolicy_binding_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckResponderglobal_responderpolicy_bindingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccResponderglobal_responderpolicy_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponderglobal_responderpolicy_bindingExist("citrixadc_responderglobal_responderpolicy_binding.tf_responderglobal_responderpolicy_binding", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccResponderglobal_responderpolicy_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponderglobal_responderpolicy_bindingNotExist("citrixadc_responderglobal_responderpolicy_binding.tf_responderglobal_responderpolicy_binding", "tf_responderpolicy", "REQ_DEFAULT"),
@@ -98,7 +98,7 @@ func testAccCheckResponderglobal_responderpolicy_bindingExist(n string, id *stri
 
 		findParams := service.FindParams{
 			ResourceType:             "responderglobal_responderpolicy_binding",
-			ArgsMap:             argsMap,
+			ArgsMap:                  argsMap,
 			ResourceMissingErrorCode: 258,
 		}
 		dataArr, err := client.FindResourceArrayWithParams(findParams)
@@ -133,7 +133,7 @@ func testAccCheckResponderglobal_responderpolicy_bindingNotExist(n string, id st
 
 		findParams := service.FindParams{
 			ResourceType:             "responderglobal_responderpolicy_binding",
-			ArgsMap:                  map[string]string{ "type":typename},
+			ArgsMap:                  map[string]string{"type": typename},
 			ResourceMissingErrorCode: 258,
 		}
 		dataArr, err := client.FindResourceArrayWithParams(findParams)

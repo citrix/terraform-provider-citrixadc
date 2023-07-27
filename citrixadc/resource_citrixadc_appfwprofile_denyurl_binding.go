@@ -20,32 +20,32 @@ func resourceCitrixAdcAppfwprofileDenyurlBinding() *schema.Resource {
 		Read:          readAppfwprofileDenyurlBindingFunc,
 		Delete:        deleteAppfwprofileDenyurlBindingFunc,
 		Schema: map[string]*schema.Schema{
-			"alertonly": &schema.Schema{
+			"alertonly": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"comment": &schema.Schema{
+			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"denyurl": &schema.Schema{
+			"denyurl": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"isautodeployed": &schema.Schema{
+			"isautodeployed": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"state": &schema.Schema{
+			"state": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,

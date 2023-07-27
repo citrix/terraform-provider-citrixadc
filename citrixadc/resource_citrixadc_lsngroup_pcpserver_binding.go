@@ -20,12 +20,12 @@ func resourceCitrixAdcLsngroup_pcpserver_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"groupname": &schema.Schema{
+			"groupname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"pcpserver": &schema.Schema{
+			"pcpserver": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,

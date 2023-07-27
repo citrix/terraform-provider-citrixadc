@@ -8,8 +8,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
-	"strconv"
 	"log"
+	"strconv"
 )
 
 func resourceCitrixAdcNsweblogparam() *schema.Resource {
@@ -20,18 +20,18 @@ func resourceCitrixAdcNsweblogparam() *schema.Resource {
 		Update:        updateNsweblogparamFunc,
 		Delete:        deleteNsweblogparamFunc,
 		Schema: map[string]*schema.Schema{
-			"buffersizemb": &schema.Schema{
+			"buffersizemb": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"customreqhdrs": &schema.Schema{
+			"customreqhdrs": {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 				Computed: true,
 			},
-			"customrsphdrs": &schema.Schema{
+			"customrsphdrs": {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
@@ -72,13 +72,13 @@ func readNsweblogparamFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNsweblogparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading nsweblogparam state")
-	data, err := client.FindResource(service.Nsweblogparam.Type(),"")
+	data, err := client.FindResource(service.Nsweblogparam.Type(), "")
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing nsweblogparam state")
 		d.SetId("")
 		return nil
 	}
-	value,_ := strconv.Atoi(data["buffersizemb"].(string))
+	value, _ := strconv.Atoi(data["buffersizemb"].(string))
 	d.Set("buffersizemb", value)
 	d.Set("customreqhdrs", data["customreqhdrs"])
 	d.Set("customrsphdrs", data["customrsphdrs"])

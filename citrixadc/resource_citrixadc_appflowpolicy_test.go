@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -93,7 +93,7 @@ func TestAccAppflowpolicy_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppflowpolicyDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAppflowpolicy_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppflowpolicyExist("citrixadc_appflowpolicy.tf_appflowpolicy", nil),
@@ -102,7 +102,7 @@ func TestAccAppflowpolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_appflowpolicy.tf_appflowpolicy", "rule", "client.TCP.DSTPORT.EQ(22)"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAppflowpolicy_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppflowpolicyExist("citrixadc_appflowpolicy.tf_appflowpolicy", nil),

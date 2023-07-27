@@ -7,8 +7,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
-	"strconv"
 	"log"
+	"strconv"
 )
 
 func resourceCitrixAdcSubscriberprofile() *schema.Resource {
@@ -22,33 +22,33 @@ func resourceCitrixAdcSubscriberprofile() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"ip": &schema.Schema{
+			"ip": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"vlan": &schema.Schema{
+			"vlan": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				ForceNew: true,
 			},
-			"servicepath": &schema.Schema{
+			"servicepath": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"subscriberrules": &schema.Schema{
+			"subscriberrules": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"subscriptionidtype": &schema.Schema{
+			"subscriptionidtype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"subscriptionidvalue": &schema.Schema{
+			"subscriptionidvalue": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -92,7 +92,7 @@ func readSubscriberprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] citrixadc-provider: Reading subscriberprofile state %s", subscriberprofileName)
 	findParams := service.FindParams{
 		ResourceType:             "subscriberprofile",
-		ArgsMap:                  map[string]string {"vlan": strconv.Itoa(d.Get("vlan").(int))},
+		ArgsMap:                  map[string]string{"vlan": strconv.Itoa(d.Get("vlan").(int))},
 		ResourceMissingErrorCode: 258,
 	}
 	dataArr, err := client.FindResourceArrayWithParams(findParams)
@@ -102,14 +102,14 @@ func readSubscriberprofileFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
-	
+
 	if len(dataArr) == 0 {
 		log.Printf("[DEBUG] citrixadc-provider: FindAllResources returned empty array")
 		log.Printf("[WARN] citrixadc-provider: Clearing subscriberprofile state %s", subscriberprofileName)
 		d.SetId("")
 		return nil
 	}
-	
+
 	foundIndex := -1
 	for i, v := range dataArr {
 		if v["ip"].(string) == subscriberprofileName {
@@ -117,7 +117,7 @@ func readSubscriberprofileFunc(d *schema.ResourceData, meta interface{}) error {
 			break
 		}
 	}
-	
+
 	if foundIndex == -1 {
 		log.Printf("[DEBUG] citrixadc-provider: FindAllResources ip not found in array")
 		log.Printf("[WARN] citrixadc-provider: Clearing subscriberprofile state %s", subscriberprofileName)

@@ -21,62 +21,62 @@ func resourceCitrixAdcTmtrafficaction() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"apptimeout": &schema.Schema{
+			"apptimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"forcedtimeout": &schema.Schema{
+			"forcedtimeout": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"forcedtimeoutval": &schema.Schema{
+			"forcedtimeoutval": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"formssoaction": &schema.Schema{
+			"formssoaction": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"initiatelogout": &schema.Schema{
+			"initiatelogout": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"kcdaccount": &schema.Schema{
+			"kcdaccount": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"passwdexpression": &schema.Schema{
+			"passwdexpression": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"persistentcookie": &schema.Schema{
+			"persistentcookie": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"samlssoprofile": &schema.Schema{
+			"samlssoprofile": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sso": &schema.Schema{
+			"sso": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"userexpression": &schema.Schema{
+			"userexpression": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -89,7 +89,7 @@ func createTmtrafficactionFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createTmtrafficactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	tmtrafficactionName := d.Get("name").(string)
-	
+
 	tmtrafficaction := tm.Tmtrafficaction{
 		Apptimeout:       d.Get("apptimeout").(int),
 		Forcedtimeout:    d.Get("forcedtimeout").(string),

@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -43,13 +43,13 @@ func TestAccLsnappsprofile_port_binding_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLsnappsprofile_port_bindingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccLsnappsprofile_port_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLsnappsprofile_port_bindingExist("citrixadc_lsnappsprofile_port_binding.tf_lsnappsprofile_port_binding", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccLsnappsprofile_port_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLsnappsprofile_port_bindingNotExist("citrixadc_lsnappsprofile_port_binding.tf_lsnappsprofile_port_binding", "my_lsn_profile,80"),

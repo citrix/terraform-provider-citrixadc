@@ -18,7 +18,7 @@ func resourceCitrixAdcSslcacertgroup() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"cacertgroupname": &schema.Schema{
+			"cacertgroupname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,

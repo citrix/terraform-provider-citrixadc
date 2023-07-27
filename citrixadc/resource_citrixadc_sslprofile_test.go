@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -47,14 +47,14 @@ func TestAccSslprofile_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSslprofileDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccSslprofile_add,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSslprofileExist("citrixadc_sslprofile.foo", nil),
 					resource.TestCheckResourceAttr("citrixadc_sslprofile.foo", "name", "tfAcc_sslprofile"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccSslprofile_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSslprofileExist("citrixadc_sslprofile.foo", nil),
@@ -88,14 +88,14 @@ func TestAccSslprofile_ecccurve_binding(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSslprofileDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccSslprofile_ecccurvebinding_bind,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSslprofileExist("citrixadc_sslprofile.foo", nil),
 					resource.TestCheckResourceAttr("citrixadc_sslprofile.foo", "name", "tfAcc_sslprofile"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccSslprofile_ecccurvebinding_unbind,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSslprofileExist("citrixadc_sslprofile.foo", nil),
@@ -133,14 +133,14 @@ func TestAccSslprofile_cipher_binding(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSslprofileDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccSslprofile_cipherbinding_bind,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSslprofileExist("citrixadc_sslprofile.foo", nil),
 					resource.TestCheckResourceAttr("citrixadc_sslprofile.foo", "name", "tfAcc_sslprofile"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccSslprofile_cipherbinding_unbind,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSslprofileExist("citrixadc_sslprofile.foo", nil),

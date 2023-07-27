@@ -16,17 +16,17 @@ func resourceCitrixAdcSsldhparam() *schema.Resource {
 		Read:          schema.Noop,
 		Delete:        deleteSsldhparamFunc,
 		Schema: map[string]*schema.Schema{
-			"bits": &schema.Schema{
+			"bits": {
 				Type:     schema.TypeInt,
 				Required: true,
 				ForceNew: true,
 			},
-			"dhfile": &schema.Schema{
+			"dhfile": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"gen": &schema.Schema{
+			"gen": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

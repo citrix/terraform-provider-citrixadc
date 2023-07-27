@@ -19,17 +19,17 @@ func resourceCitrixAdcAaacertparams() *schema.Resource {
 		Update:        updateAaacertparamsFunc,
 		Delete:        deleteAaacertparamsFunc,
 		Schema: map[string]*schema.Schema{
-			"defaultauthenticationgroup": &schema.Schema{
+			"defaultauthenticationgroup": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"groupnamefield": &schema.Schema{
+			"groupnamefield": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"usernamefield": &schema.Schema{
+			"usernamefield": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -42,7 +42,7 @@ func createAaacertparamsFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAaacertparamsFunc")
 	client := meta.(*NetScalerNitroClient).client
 	aaacertparamsName := resource.PrefixedUniqueId("tf-aaacertparams-")
-	
+
 	aaacertparams := aaa.Aaacertparams{
 		Defaultauthenticationgroup: d.Get("defaultauthenticationgroup").(string),
 		Groupnamefield:             d.Get("groupnamefield").(string),

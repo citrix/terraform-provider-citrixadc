@@ -20,19 +20,19 @@ func resourceCitrixAdcVpnglobal_staserver_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"staserver": &schema.Schema{
+			"staserver": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"gotopriorityexpression": &schema.Schema{
+			"gotopriorityexpression": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"staaddresstype": &schema.Schema{
+			"staaddresstype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -127,7 +127,7 @@ func deleteVpnglobal_staserver_bindingFunc(d *schema.ResourceData, meta interfac
 	client := meta.(*NetScalerNitroClient).client
 
 	staserver := d.Id()
-	
+
 	args := make([]string, 0)
 	args = append(args, fmt.Sprintf("staserver:%s", url.QueryEscape(staserver)))
 

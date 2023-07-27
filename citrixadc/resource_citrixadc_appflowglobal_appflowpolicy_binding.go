@@ -20,47 +20,47 @@ func resourceCitrixAdcAppflowglobal_appflowpolicy_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"globalbindtype": &schema.Schema{
+			"globalbindtype": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"policyname": &schema.Schema{
+			"policyname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"gotopriorityexpression": &schema.Schema{
+			"gotopriorityexpression": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"invoke": &schema.Schema{
+			"invoke": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"labelname": &schema.Schema{
+			"labelname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"labeltype": &schema.Schema{
+			"labeltype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"priority": &schema.Schema{
+			"priority": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"type": &schema.Schema{
+			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -74,8 +74,7 @@ func createAppflowglobal_appflowpolicy_bindingFunc(d *schema.ResourceData, meta 
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppflowglobal_appflowpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policyname := d.Get("policyname").(string)
-	
-	
+
 	appflowglobal_appflowpolicy_binding := appflow.Appflowglobalappflowpolicybinding{
 		Globalbindtype:         d.Get("globalbindtype").(string),
 		Gotopriorityexpression: d.Get("gotopriorityexpression").(string),
@@ -105,13 +104,13 @@ func createAppflowglobal_appflowpolicy_bindingFunc(d *schema.ResourceData, meta 
 func readAppflowglobal_appflowpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAppflowglobal_appflowpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
-	policyname:= d.Id()
+	policyname := d.Id()
 
 	log.Printf("[DEBUG] citrixadc-provider: Reading appflowglobal_appflowpolicy_binding state %s", policyname)
 
 	findParams := service.FindParams{
 		ResourceType:             "appflowglobal_appflowpolicy_binding",
-		ArgsMap: 				  map[string]string{ "type":d.Get("type").(string) },
+		ArgsMap:                  map[string]string{"type": d.Get("type").(string)},
 		ResourceMissingErrorCode: 258,
 	}
 	dataArr, err := client.FindResourceArrayWithParams(findParams)
@@ -170,12 +169,12 @@ func deleteAppflowglobal_appflowpolicy_bindingFunc(d *schema.ResourceData, meta 
 
 	args := make([]string, 0)
 	args = append(args, fmt.Sprintf("policyname:%s", policyname))
-	
+
 	if v, ok := d.GetOk("type"); ok {
 		typeName := v.(string)
 		args = append(args, fmt.Sprintf("type:%s", url.QueryEscape(typeName)))
 	}
-	
+
 	if v, ok := d.GetOk("priority"); ok {
 		priority := v.(int)
 		args = append(args, fmt.Sprintf("priority:%d", priority))

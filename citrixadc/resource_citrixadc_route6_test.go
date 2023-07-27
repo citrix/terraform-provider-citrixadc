@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -53,7 +53,7 @@ func TestAccRoute6_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute6Destroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRoute6_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute6Exist("citrixadc_route6.tf_route6", nil),
@@ -62,7 +62,7 @@ func TestAccRoute6_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_route6.tf_route6", "distance", "3"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRoute6_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute6Exist("citrixadc_route6.tf_route6", nil),
@@ -101,17 +101,16 @@ func testAccCheckRoute6Exist(n string, id *string) resource.TestCheckFunc {
 		for _, v := range dataArr {
 			if v["network"] == route6Network &&
 				v["vlan"] == rs.Primary.Attributes["vlan"] {
-					found= true
-					break
-				}
+				found = true
+				break
+			}
 		}
 
 		if err != nil {
 			return err
 		}
 
-
-		if !found  {
+		if !found {
 			return fmt.Errorf("route6 %s not found", n)
 		}
 
@@ -130,7 +129,7 @@ func testAccCheckRoute6Destroy(s *terraform.State) error {
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("No name is set")
 		}
-	
+
 		route6Network := rs.Primary.ID
 		dataArr, err := nsClient.FindAllResources(service.Route6.Type())
 		if err != nil {
@@ -140,9 +139,9 @@ func testAccCheckRoute6Destroy(s *terraform.State) error {
 		for _, v := range dataArr {
 			if v["network"] == route6Network &&
 				v["vlan"] == rs.Primary.Attributes["vlan"] {
-					found= true
-					break
-				}
+				found = true
+				break
+			}
 		}
 		if found {
 			return fmt.Errorf("route6 %s still exists", rs.Primary.ID)

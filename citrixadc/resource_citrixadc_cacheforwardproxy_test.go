@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,8 +20,8 @@ import (
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"testing"
 	"strconv"
+	"testing"
 )
 
 const testAccCacheforwardproxy_basic = `
@@ -30,19 +30,20 @@ const testAccCacheforwardproxy_basic = `
 		port        = 5000
 	}
 `
-const testAccCacheforwardproxy_update= `
+const testAccCacheforwardproxy_update = `
 	resource "citrixadc_cacheforwardproxy" "tf_cacheforwardproxy" {
 		ipaddress  = "10.222.74.186"
 		port        = 5500
 	}
 `
+
 func TestAccCacheforwardproxy_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCacheforwardproxyDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccCacheforwardproxy_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCacheforwardproxyExist("citrixadc_cacheforwardproxy.tf_cacheforwardproxy", nil),
@@ -50,7 +51,7 @@ func TestAccCacheforwardproxy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_cacheforwardproxy.tf_cacheforwardproxy", "port", "5000"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccCacheforwardproxy_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCacheforwardproxyExist("citrixadc_cacheforwardproxy.tf_cacheforwardproxy", nil),
@@ -117,11 +118,11 @@ func testAccCheckCacheforwardproxyDestroy(s *terraform.State) error {
 		}
 
 		dataArr, err := nsClient.FindAllResources(service.Cacheforwardproxy.Type())
-		
+
 		if err != nil {
 			return err
 		}
-		
+
 		found := false
 		for _, v := range dataArr {
 			if v["ipaddress"].(string) == rs.Primary.Attributes["ipaddress"] &&

@@ -7,8 +7,8 @@ import (
 
 	"fmt"
 	"log"
-	"strings"
 	"net/url"
+	"strings"
 )
 
 func resourceCitrixAdcBotprofile_captcha_binding() *schema.Resource {
@@ -21,74 +21,74 @@ func resourceCitrixAdcBotprofile_captcha_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"bot_captcha_url": &schema.Schema{
+			"bot_captcha_url": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"captcharesource": &schema.Schema{
+			"captcharesource": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"bot_bind_comment": &schema.Schema{
+			"bot_bind_comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"bot_captcha_action": &schema.Schema{
+			"bot_captcha_action": {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"bot_captcha_enabled": &schema.Schema{
+			"bot_captcha_enabled": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"graceperiod": &schema.Schema{
+			"graceperiod": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"logmessage": &schema.Schema{
+			"logmessage": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"muteperiod": &schema.Schema{
+			"muteperiod": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"requestsizelimit": &schema.Schema{
+			"requestsizelimit": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"retryattempts": &schema.Schema{
+			"retryattempts": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"waittime": &schema.Schema{
+			"waittime": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,

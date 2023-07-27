@@ -19,28 +19,28 @@ func resourceCitrixAdcAuthenticationpushservice() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"clientid": &schema.Schema{
+			"clientid": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"clientsecret": &schema.Schema{
+			"clientsecret": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"customerid": &schema.Schema{
+			"customerid": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"refreshinterval": &schema.Schema{
+			"refreshinterval": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,

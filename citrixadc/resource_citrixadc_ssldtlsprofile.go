@@ -19,47 +19,47 @@ func resourceCitrixAdcSsldtlsprofile() *schema.Resource {
 		Update:        updateSsldtlsprofileFunc,
 		Delete:        deleteSsldtlsprofileFunc,
 		Schema: map[string]*schema.Schema{
-			"helloverifyrequest": &schema.Schema{
+			"helloverifyrequest": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"maxbadmacignorecount": &schema.Schema{
+			"maxbadmacignorecount": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"maxholdqlen": &schema.Schema{
+			"maxholdqlen": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"maxpacketsize": &schema.Schema{
+			"maxpacketsize": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"maxrecordsize": &schema.Schema{
+			"maxrecordsize": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"maxretrytime": &schema.Schema{
+			"maxretrytime": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"pmtudiscovery": &schema.Schema{
+			"pmtudiscovery": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"terminatesession": &schema.Schema{
+			"terminatesession": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

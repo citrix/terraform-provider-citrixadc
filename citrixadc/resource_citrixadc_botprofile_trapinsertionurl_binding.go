@@ -20,37 +20,37 @@ func resourceCitrixAdcBotprofile_trapinsertionurl_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"bot_trap_url": &schema.Schema{
+			"bot_trap_url": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"bot_bind_comment": &schema.Schema{
+			"bot_bind_comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"bot_trap_url_insertion_enabled": &schema.Schema{
+			"bot_trap_url_insertion_enabled": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"logmessage": &schema.Schema{
+			"logmessage": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"trapinsertionurl": &schema.Schema{
+			"trapinsertionurl": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,

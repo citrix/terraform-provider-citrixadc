@@ -19,49 +19,49 @@ func resourceCitrixAdcIpsecparameter() *schema.Resource {
 		Update:        updateIpsecparameterFunc,
 		Delete:        deleteIpsecparameterFunc,
 		Schema: map[string]*schema.Schema{
-			"encalgo": &schema.Schema{
+			"encalgo": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"hashalgo": &schema.Schema{
+			"hashalgo": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"ikeretryinterval": &schema.Schema{
+			"ikeretryinterval": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"ikeversion": &schema.Schema{
+			"ikeversion": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"lifetime": &schema.Schema{
+			"lifetime": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"livenesscheckinterval": &schema.Schema{
+			"livenesscheckinterval": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"perfectforwardsecrecy": &schema.Schema{
+			"perfectforwardsecrecy": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"replaywindowsize": &schema.Schema{
+			"replaywindowsize": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"retransmissiontime": &schema.Schema{
+			"retransmissiontime": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -74,7 +74,7 @@ func createIpsecparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createIpsecparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	ipsecparameterName := resource.PrefixedUniqueId("tf-ipsecparameter-")
-	
+
 	ipsecparameter := ipsec.Ipsecparameter{
 		Encalgo:               toStringList(d.Get("encalgo").([]interface{})),
 		Hashalgo:              toStringList(d.Get("hashalgo").([]interface{})),
@@ -130,7 +130,6 @@ func readIpsecparameterFunc(d *schema.ResourceData, meta interface{}) error {
 func updateIpsecparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateIpsecparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
-
 
 	ipsecparameter := ipsec.Ipsecparameter{}
 	hasChange := false

@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -35,21 +35,20 @@ resource "citrixadc_contentinspectionparameter" "tf_contentinspectionparameter" 
 	}
 `
 
-
 func TestAccContentinspectionparameter_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccContentinspectionparameter_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContentinspectionparameterExist("citrixadc_contentinspectionparameter.tf_contentinspectionparameter", nil),
 					resource.TestCheckResourceAttr("citrixadc_contentinspectionparameter.tf_contentinspectionparameter", "undefaction", "RESET"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccContentinspectionparameter_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContentinspectionparameterExist("citrixadc_contentinspectionparameter.tf_contentinspectionparameter", nil),

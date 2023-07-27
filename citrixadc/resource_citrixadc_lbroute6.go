@@ -18,17 +18,17 @@ func resourceCitrixAdcLbroute6() *schema.Resource {
 		Read:          readLbroute6Func,
 		Delete:        deleteLbroute6Func,
 		Schema: map[string]*schema.Schema{
-			"gatewayname": &schema.Schema{
+			"gatewayname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"network": &schema.Schema{
+			"network": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"td": &schema.Schema{
+			"td": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,

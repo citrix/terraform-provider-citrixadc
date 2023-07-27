@@ -20,278 +20,278 @@ func resourceCitrixAdcAuthenticationldapaction() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"alternateemailattr": &schema.Schema{
+			"alternateemailattr": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute1": &schema.Schema{
+			"attribute1": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute10": &schema.Schema{
+			"attribute10": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute11": &schema.Schema{
+			"attribute11": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute12": &schema.Schema{
+			"attribute12": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute13": &schema.Schema{
+			"attribute13": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute14": &schema.Schema{
+			"attribute14": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute15": &schema.Schema{
+			"attribute15": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute16": &schema.Schema{
+			"attribute16": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute2": &schema.Schema{
+			"attribute2": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute3": &schema.Schema{
+			"attribute3": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute4": &schema.Schema{
+			"attribute4": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute5": &schema.Schema{
+			"attribute5": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute6": &schema.Schema{
+			"attribute6": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute7": &schema.Schema{
+			"attribute7": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute8": &schema.Schema{
+			"attribute8": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute9": &schema.Schema{
+			"attribute9": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attributes": &schema.Schema{
+			"attributes": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"authentication": &schema.Schema{
+			"authentication": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"authtimeout": &schema.Schema{
+			"authtimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"cloudattributes": &schema.Schema{
+			"cloudattributes": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"defaultauthenticationgroup": &schema.Schema{
+			"defaultauthenticationgroup": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"email": &schema.Schema{
+			"email": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"followreferrals": &schema.Schema{
+			"followreferrals": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"groupattrname": &schema.Schema{
+			"groupattrname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"groupnameidentifier": &schema.Schema{
+			"groupnameidentifier": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"groupsearchattribute": &schema.Schema{
+			"groupsearchattribute": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"groupsearchfilter": &schema.Schema{
+			"groupsearchfilter": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"groupsearchsubattribute": &schema.Schema{
+			"groupsearchsubattribute": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"kbattribute": &schema.Schema{
+			"kbattribute": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ldapbase": &schema.Schema{
+			"ldapbase": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ldapbinddn": &schema.Schema{
+			"ldapbinddn": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ldapbinddnpassword": &schema.Schema{
+			"ldapbinddnpassword": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ldaphostname": &schema.Schema{
+			"ldaphostname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ldaploginname": &schema.Schema{
+			"ldaploginname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"maxldapreferrals": &schema.Schema{
+			"maxldapreferrals": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"maxnestinglevel": &schema.Schema{
+			"maxnestinglevel": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"mssrvrecordlocation": &schema.Schema{
+			"mssrvrecordlocation": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"nestedgroupextraction": &schema.Schema{
+			"nestedgroupextraction": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"otpsecret": &schema.Schema{
+			"otpsecret": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"passwdchange": &schema.Schema{
+			"passwdchange": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"pushservice": &schema.Schema{
+			"pushservice": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"referraldnslookup": &schema.Schema{
+			"referraldnslookup": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"requireuser": &schema.Schema{
+			"requireuser": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"searchfilter": &schema.Schema{
+			"searchfilter": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sectype": &schema.Schema{
+			"sectype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"serverip": &schema.Schema{
+			"serverip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"servername": &schema.Schema{
+			"servername": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"serverport": &schema.Schema{
+			"serverport": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"sshpublickey": &schema.Schema{
+			"sshpublickey": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ssonameattribute": &schema.Schema{
+			"ssonameattribute": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"subattributename": &schema.Schema{
+			"subattributename": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"svrtype": &schema.Schema{
+			"svrtype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"validateservercert": &schema.Schema{
+			"validateservercert": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

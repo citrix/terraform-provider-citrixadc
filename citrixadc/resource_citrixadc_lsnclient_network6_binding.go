@@ -21,17 +21,17 @@ func resourceCitrixAdcLsnclient_network6_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"clientname": &schema.Schema{
+			"clientname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"network6": &schema.Schema{
+			"network6": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"td": &schema.Schema{
+			"td": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -103,7 +103,7 @@ func readLsnclient_network6_bindingFunc(d *schema.ResourceData, meta interface{}
 	// Iterate through results to find the one with the right id
 	foundIndex := -1
 	for i, v := range dataArr {
-		if strings.ToLower(v["network6"].(string))  == strings.ToLower(network6) {
+		if strings.ToLower(v["network6"].(string)) == strings.ToLower(network6) {
 			foundIndex = i
 			break
 		}

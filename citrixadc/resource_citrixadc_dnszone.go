@@ -21,38 +21,37 @@ func resourceCitrixAdcDnszone() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"zonename": &schema.Schema{
+			"zonename": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"proxymode": &schema.Schema{
+			"proxymode": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 			},
-			"dnssecoffload": &schema.Schema{
+			"dnssecoffload": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"keyname": &schema.Schema{
+			"keyname": {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 				Computed: true,
 			},
-			"nsec": &schema.Schema{
+			"nsec": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"type": &schema.Schema{
+			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			
 		},
 	}
 }
@@ -60,7 +59,7 @@ func resourceCitrixAdcDnszone() *schema.Resource {
 func createDnszoneFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createDnszoneFunc")
 	client := meta.(*NetScalerNitroClient).client
-	dnszoneName:= d.Get("zonename").(string)
+	dnszoneName := d.Get("zonename").(string)
 	dnszone := dns.Dnszone{
 		Dnssecoffload: d.Get("dnssecoffload").(string),
 		Keyname:       toStringList(d.Get("keyname").([]interface{})),

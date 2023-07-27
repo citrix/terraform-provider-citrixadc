@@ -19,17 +19,17 @@ func resourceCitrixAdcVridparam() *schema.Resource {
 		Update:        updateVridparamFunc,
 		Delete:        deleteVridparamFunc,
 		Schema: map[string]*schema.Schema{
-			"deadinterval": &schema.Schema{
+			"deadinterval": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"hellointerval": &schema.Schema{
+			"hellointerval": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"sendtomaster": &schema.Schema{
+			"sendtomaster": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -86,8 +86,7 @@ func readVridparamFunc(d *schema.ResourceData, meta interface{}) error {
 func updateVridparamFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateVridparamFunc")
 	client := meta.(*NetScalerNitroClient).client
-	vridparam := network.Vridparam{
-	}
+	vridparam := network.Vridparam{}
 	hasChange := false
 	if d.HasChange("deadinterval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Deadinterval has changed for vridparam, starting update")

@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -42,7 +42,7 @@ func TestAccL4param_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccL4param_add,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckL4paramExist("citrixadc_l4param.tf_l4param", nil),
@@ -50,7 +50,7 @@ func TestAccL4param_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_l4param.tf_l4param", "l4switch", "ENABLED"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccL4param_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckL4paramExist("citrixadc_l4param.tf_l4param", nil),
@@ -82,7 +82,7 @@ func testAccCheckL4paramExist(n string, id *string) resource.TestCheckFunc {
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.L4param.Type(),"")
+		data, err := nsClient.FindResource(service.L4param.Type(), "")
 
 		if err != nil {
 			return err

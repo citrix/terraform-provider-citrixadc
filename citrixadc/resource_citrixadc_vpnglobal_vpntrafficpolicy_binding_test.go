@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -58,13 +58,14 @@ const testAccVpnglobal_vpntrafficpolicy_binding_basic_step2 = `
 		action = citrixadc_vpntrafficaction.foo.name
 	}
 `
+
 func TestAccVpnglobal_vpntrafficpolicy_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpnglobal_vpntrafficpolicy_bindingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccVpnglobal_vpntrafficpolicy_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnglobal_vpntrafficpolicy_bindingExist("citrixadc_vpngobal_vpntrafficpolicy_binding.tf_bind", nil),
@@ -72,7 +73,7 @@ func TestAccVpnglobal_vpntrafficpolicy_binding_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_vpngobal_vpntrafficpolicy_binding.tf_bind", "priority", "20"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccVpnglobal_vpntrafficpolicy_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnglobal_vpntrafficpolicy_bindingNotExist("citrixadc_vpngobal_vpntrafficpolicy_binding.tf_bind", "policyname"),

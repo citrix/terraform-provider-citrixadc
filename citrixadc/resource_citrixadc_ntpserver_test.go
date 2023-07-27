@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -51,7 +51,7 @@ func TestAccNtpserver_ip(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNtpserverDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccNtpserver_basic_ip,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNtpserverExist("citrixadc_ntpserver.tf_ntpserver", nil),
@@ -59,10 +59,9 @@ func TestAccNtpserver_ip(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_ntpserver.tf_ntpserver", "minpoll", "5"),
 					resource.TestCheckResourceAttr("citrixadc_ntpserver.tf_ntpserver", "maxpoll", "9"),
 					resource.TestCheckResourceAttr("citrixadc_ntpserver.tf_ntpserver", "preferredntpserver", "NO"),
-
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccNtpserver_update_ip,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNtpserverExist("citrixadc_ntpserver.tf_ntpserver", nil),
@@ -71,11 +70,10 @@ func TestAccNtpserver_ip(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_ntpserver.tf_ntpserver", "maxpoll", "10"),
 					resource.TestCheckResourceAttr("citrixadc_ntpserver.tf_ntpserver", "preferredntpserver", "YES"),
 				),
-			},		
+			},
 		},
 	})
 }
-
 
 const testAccNtpserver_basic_servername = `
 
@@ -106,7 +104,7 @@ func TestAccNtpserver_servername(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNtpserverDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccNtpserver_basic_servername,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNtpserverExist("citrixadc_ntpserver.tf_ntpserver", nil),
@@ -114,10 +112,9 @@ func TestAccNtpserver_servername(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_ntpserver.tf_ntpserver", "minpoll", "5"),
 					resource.TestCheckResourceAttr("citrixadc_ntpserver.tf_ntpserver", "maxpoll", "9"),
 					resource.TestCheckResourceAttr("citrixadc_ntpserver.tf_ntpserver", "preferredntpserver", "NO"),
-
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccNtpserver_update_servername,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNtpserverExist("citrixadc_ntpserver.tf_ntpserver", nil),
@@ -126,7 +123,7 @@ func TestAccNtpserver_servername(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_ntpserver.tf_ntpserver", "maxpoll", "10"),
 					resource.TestCheckResourceAttr("citrixadc_ntpserver.tf_ntpserver", "preferredntpserver", "YES"),
 				),
-			},		
+			},
 		},
 	})
 }
@@ -162,7 +159,7 @@ func testAccCheckNtpserverExist(n string, id *string) resource.TestCheckFunc {
 				found = true
 				break
 			}
-	
+
 		}
 		if !found {
 			return fmt.Errorf("ntpserver %s not found", n)
@@ -186,11 +183,11 @@ func testAccCheckNtpserverDestroy(s *terraform.State) error {
 
 		ntpserverName := rs.Primary.ID
 		dataArr, err := nsClient.FindAllResources(service.Ntpserver.Type())
-		
+
 		if err != nil {
 			return err
 		}
-		
+
 		found := false
 		for _, v := range dataArr {
 			if v["serverip"] == ntpserverName || v["servername"] == ntpserverName {
@@ -198,7 +195,7 @@ func testAccCheckNtpserverDestroy(s *terraform.State) error {
 				break
 			}
 		}
-		
+
 		if found {
 			return fmt.Errorf("ntpserver %s still exists", ntpserverName)
 		}

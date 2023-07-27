@@ -14,7 +14,7 @@ func dataSourceCitrixAdcSslcipherSslvserverBindings() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceCitrixAdcSslcipherSslvserverBindingsRead,
 		Schema: map[string]*schema.Schema{
-			"ciphername": &schema.Schema{
+			"ciphername": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -25,7 +25,7 @@ func dataSourceCitrixAdcSslcipherSslvserverBindings() *schema.Resource {
 					Computed: true,
 				},
 			*/
-			"bound_sslvservers": &schema.Schema{
+			"bound_sslvservers": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},

@@ -10,7 +10,6 @@ import (
 	"net/url"
 )
 
-
 func resourceCitrixAdcDnsglobal_dnspolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
@@ -21,49 +20,49 @@ func resourceCitrixAdcDnsglobal_dnspolicy_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"policyname": &schema.Schema{
+			"policyname": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"priority": &schema.Schema{
+			"priority": {
 				Type:     schema.TypeInt,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"globalbindtype": &schema.Schema{
+			"globalbindtype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"gotopriorityexpression": &schema.Schema{
+			"gotopriorityexpression": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"invoke": &schema.Schema{
+			"invoke": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"labelname": &schema.Schema{
+			"labelname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"labeltype": &schema.Schema{
+			"labeltype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"type": &schema.Schema{
+			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -112,7 +111,7 @@ func readDnsglobal_dnspolicy_bindingFunc(d *schema.ResourceData, meta interface{
 
 	findParams := service.FindParams{
 		ResourceType:             "dnsglobal_dnspolicy_binding",
-		ArgsMap: 				  map[string]string{ "type":d.Get("type").(string) },
+		ArgsMap:                  map[string]string{"type": d.Get("type").(string)},
 		ResourceMissingErrorCode: 258,
 	}
 	dataArr, err := client.FindResourceArrayWithParams(findParams)
@@ -169,7 +168,6 @@ func deleteDnsglobal_dnspolicy_bindingFunc(d *schema.ResourceData, meta interfac
 	client := meta.(*NetScalerNitroClient).client
 
 	policyname := d.Id()
-
 
 	args := make([]string, 0)
 	args = append(args, fmt.Sprintf("policyname:%s", policyname))

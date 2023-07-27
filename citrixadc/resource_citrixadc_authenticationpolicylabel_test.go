@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -39,13 +39,14 @@ const testAccAuthenticationpolicylabel_update = `
 		comment   = "Testing1"
 	}
 `
+
 func TestAccAuthenticationpolicylabel_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAuthenticationpolicylabelDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAuthenticationpolicylabel_add,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthenticationpolicylabelExist("citrixadc_authenticationpolicylabel.tf_authenticationpolicylabel", nil),
@@ -54,7 +55,7 @@ func TestAccAuthenticationpolicylabel_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_authenticationpolicylabel.tf_authenticationpolicylabel", "comment", "Testing"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAuthenticationpolicylabel_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthenticationpolicylabelExist("citrixadc_authenticationpolicylabel.tf_authenticationpolicylabel", nil),

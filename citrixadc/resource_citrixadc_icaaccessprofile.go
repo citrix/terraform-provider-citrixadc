@@ -19,52 +19,52 @@ func resourceCitrixAdcIcaaccessprofile() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"clientaudioredirection": &schema.Schema{
+			"clientaudioredirection": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"clientclipboardredirection": &schema.Schema{
+			"clientclipboardredirection": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"clientcomportredirection": &schema.Schema{
+			"clientcomportredirection": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"clientdriveredirection": &schema.Schema{
+			"clientdriveredirection": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"clientprinterredirection": &schema.Schema{
+			"clientprinterredirection": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"clientusbdriveredirection": &schema.Schema{
+			"clientusbdriveredirection": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"connectclientlptports": &schema.Schema{
+			"connectclientlptports": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"localremotedatasharing": &schema.Schema{
+			"localremotedatasharing": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"multistream": &schema.Schema{
+			"multistream": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -187,7 +187,7 @@ func updateIcaaccessprofileFunc(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if hasChange {
-		err := client.UpdateUnnamedResource("icaaccessprofile",  &icaaccessprofile)
+		err := client.UpdateUnnamedResource("icaaccessprofile", &icaaccessprofile)
 		if err != nil {
 			return fmt.Errorf("Error updating icaaccessprofile %s", icaaccessprofileName)
 		}

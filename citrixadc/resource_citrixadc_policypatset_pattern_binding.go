@@ -22,36 +22,36 @@ func resourceCitrixAdcPolicypatset_pattern_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"charset": &schema.Schema{
+			"charset": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"comment": &schema.Schema{
+			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"feature": &schema.Schema{
+			"feature": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"index": &schema.Schema{
+			"index": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"string": &schema.Schema{
+			"string": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -148,7 +148,7 @@ func readPolicypatset_pattern_bindingFunc(d *schema.ResourceData, meta interface
 	d.Set("charset", data["charset"])
 	d.Set("comment", data["comment"])
 	d.Set("feature", data["feature"])
-	setToInt("index",d , data["index"])
+	setToInt("index", d, data["index"])
 	d.Set("name", data["name"])
 	d.Set("string", data["String"])
 

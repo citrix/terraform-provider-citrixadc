@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -47,7 +47,7 @@ func TestAccContentinspectionpolicy_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckContentinspectionpolicyDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccContentinspectionpolicy_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContentinspectionpolicyExist("citrixadc_contentinspectionpolicy.tf_contentinspectionpolicy", nil),
@@ -56,7 +56,7 @@ func TestAccContentinspectionpolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_contentinspectionpolicy.tf_contentinspectionpolicy", "action", "RESET"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccContentinspectionpolicy_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContentinspectionpolicyExist("citrixadc_contentinspectionpolicy.tf_contentinspectionpolicy", nil),

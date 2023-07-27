@@ -7,8 +7,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"log"
 	"fmt"
+	"log"
 )
 
 func resourceCitrixAdcNtpsync() *schema.Resource {
@@ -18,13 +18,12 @@ func resourceCitrixAdcNtpsync() *schema.Resource {
 		Update:        updateNtpsyncFunc,
 		Read:          readNtpsyncFunc,
 		Delete:        deleteNtpsyncFunc,
-		Schema:        map[string]*schema.Schema{
-			"state": &schema.Schema{
+		Schema: map[string]*schema.Schema{
+			"state": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
 		},
-
 	}
 }
 
@@ -60,7 +59,6 @@ func readNtpsyncFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("state", data["state"].(string))
 
-
 	return nil
 
 }
@@ -69,7 +67,7 @@ func updateNtpsyncFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateNtpSyncFunc")
 	client := meta.(*NetScalerNitroClient).client
 
-	hasChange := false	
+	hasChange := false
 	if d.HasChange("state") {
 		log.Printf("[DEBUG]  citrixadc-provider: state has changed for ntpsync, starting update")
 		hasChange = true
@@ -98,7 +96,7 @@ func doNtpsyncChange(d *schema.ResourceData, client *service.NitroClient) error 
 	} else if newstate == "DISABLED" {
 		// Add attributes relevant to the disable operation
 		err = client.ActOnResource(service.Ntpsync.Type(), &ntpsync, "disable")
-	
+
 	} else {
 		return fmt.Errorf("\"%s\" is not a valid state. Use (\"ENABLED\", \"DISABLED\")", newstate)
 	}

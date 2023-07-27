@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -35,19 +35,19 @@ func TestAccResponderaction_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckResponderactionDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccResponderaction_target_step1,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponderactionExist("citrixadc_responderaction.tfaction", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccResponderaction_target_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponderactionExist("citrixadc_responderaction.tfaction", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccResponderaction_target_step3,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponderactionExist("citrixadc_responderaction.tfaction", nil),
@@ -70,13 +70,13 @@ func TestAccResponderaction_html(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckResponderactionDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccResponderaction_html_step1,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponderactionExist("citrixadc_responderaction.tfaction2", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccResponderaction_html_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponderactionExist("citrixadc_responderaction.tfaction2", nil),

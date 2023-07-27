@@ -50,13 +50,13 @@ func TestAccLbmetrictable_metric_binding_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLbmetrictable_metric_bindingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccLbmetrictable_metric_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLbmetrictable_metric_bindingExist("citrixadc_lbmetrictable_metric_binding.tf_bind", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccLbmetrictable_metric_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLbmetrictable_metric_bindingNotExist("citrixadc_lbmetrictable_metric_binding.tf_bind", "Table-Custom,2.3.6.4.5"),

@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -108,13 +108,13 @@ func TestAccAppfwprofile_xmlxss_binding_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppfwprofile_xmlxss_bindingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAppfwprofile_xmlxss_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppfwprofile_xmlxss_bindingExist("citrixadc_appfwprofile_xmlxss_binding.tf_binding", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAppfwprofile_xmlxss_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppfwprofile_xmlxss_bindingNotExist("citrixadc_appfwprofile_xmlxss_binding.tf_binding", "tf_appfwprofile,tf_xmlxss,ELEMENT"),
@@ -169,7 +169,7 @@ func testAccCheckAppfwprofile_xmlxss_bindingExist(n string, id *string) resource
 		found := false
 		for _, v := range dataArr {
 			if v["xmlxss"].(string) == xmlxss {
-				if v["as_scan_location_xmlxss"].(string) == as_scan_location_xmlxss{
+				if v["as_scan_location_xmlxss"].(string) == as_scan_location_xmlxss {
 					found = true
 					break
 				}
@@ -213,7 +213,7 @@ func testAccCheckAppfwprofile_xmlxss_bindingNotExist(n string, id string) resour
 		found := false
 		for _, v := range dataArr {
 			if v["xmlxss"].(string) == xmlxss {
-				if v["as_scan_location_xmlxss"].(string) == as_scan_location_xmlxss{
+				if v["as_scan_location_xmlxss"].(string) == as_scan_location_xmlxss {
 					found = true
 					break
 				}

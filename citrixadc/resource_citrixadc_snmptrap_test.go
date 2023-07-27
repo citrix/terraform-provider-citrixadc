@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,11 +19,11 @@ import (
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	
+
 	"fmt"
 	"log"
-	"testing"
 	"strings"
+	"testing"
 )
 
 const testAccSnmptrap_basic = `
@@ -47,24 +47,22 @@ func TestAccSnmptrap_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSnmptrapDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccSnmptrap_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnmptrapExist("citrixadc_snmptrap.tf_snmptrap", nil),
 					resource.TestCheckResourceAttr("citrixadc_snmptrap.tf_snmptrap", "trapclass", "specific"),
 					resource.TestCheckResourceAttr("citrixadc_snmptrap.tf_snmptrap", "trapdestination", "192.168.2.2"),
 					resource.TestCheckResourceAttr("citrixadc_snmptrap.tf_snmptrap", "severity", "Major"),
-
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccSnmptrap_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnmptrapExist("citrixadc_snmptrap.tf_snmptrap", nil),
 					resource.TestCheckResourceAttr("citrixadc_snmptrap.tf_snmptrap", "trapclass", "specific"),
 					resource.TestCheckResourceAttr("citrixadc_snmptrap.tf_snmptrap", "trapdestination", "192.168.2.2"),
 					resource.TestCheckResourceAttr("citrixadc_snmptrap.tf_snmptrap", "severity", "Minor"),
-
 				),
 			},
 		},
@@ -89,7 +87,7 @@ func testAccCheckSnmptrapExist(n string, id *string) resource.TestCheckFunc {
 
 			*id = rs.Primary.ID
 		}
-		
+
 		snmptrapId := rs.Primary.ID
 		idSlice := strings.SplitN(snmptrapId, ",", 3)
 
@@ -100,29 +98,29 @@ func testAccCheckSnmptrapExist(n string, id *string) resource.TestCheckFunc {
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
 
 		dataArr, err := nsClient.FindAllResources(service.Snmptrap.Type())
-		
+
 		if err != nil {
 			return err
 		}
-		
+
 		if len(dataArr) == 0 {
 			log.Printf("[WARN] citrix-provider: acceptance test: snmptrap does not exist. Clearing state.")
 			return nil
 		}
-		
+
 		// if len(dataArray) > 1 {
 		// 	return fmt.Errorf("[ERROR] citrix-provider: acceptance test: multiple entries found for snmptrap")
 		// }
-		
-		found := false
-		 for _, v := range dataArr {
-		 	if v["trapclass"].(string) == trapclass &&  v["trapdestination"] == trapdestination && v["version"] == version {
-				found = true
-		 		break
-			}
-		 }
 
-		if  !found  {
+		found := false
+		for _, v := range dataArr {
+			if v["trapclass"].(string) == trapclass && v["trapdestination"] == trapdestination && v["version"] == version {
+				found = true
+				break
+			}
+		}
+
+		if !found {
 			return fmt.Errorf("snmptrap %s not found", n)
 		}
 
@@ -148,19 +146,18 @@ func testAccCheckSnmptrapDestroy(s *terraform.State) error {
 		trapdestination := idSlice[1]
 		version := idSlice[2]
 
-
 		dataArr, err := nsClient.FindAllResources(service.Snmptrap.Type())
-		
+
 		if err != nil {
 			return err
 		}
 
 		found := false
 		for _, v := range dataArr {
-			if v["trapclass"].(string) == trapclass &&  v["trapdestination"] == trapdestination  && v["version"] == version {
-			   found = true
+			if v["trapclass"].(string) == trapclass && v["trapdestination"] == trapdestination && v["version"] == version {
+				found = true
 				break
-		   }
+			}
 		}
 		if found {
 			return fmt.Errorf("snmptrap %s still exists", rs.Primary.ID)

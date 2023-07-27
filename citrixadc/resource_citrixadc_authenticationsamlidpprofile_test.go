@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -66,7 +66,7 @@ func TestAccAuthenticationsamlidpprofile_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAuthenticationsamlidpprofileDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAuthenticationsamlidpprofile_add,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthenticationsamlidpprofileExist("citrixadc_authenticationsamlidpprofile.tf_samlidpprofile", nil),
@@ -74,7 +74,7 @@ func TestAccAuthenticationsamlidpprofile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_authenticationsamlidpprofile.tf_samlidpprofile", "digestmethod", "SHA1"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAuthenticationsamlidpprofile_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthenticationsamlidpprofileExist("citrixadc_authenticationsamlidpprofile.tf_samlidpprofile", nil),
@@ -131,7 +131,7 @@ func doSslPrecheckforsamlidpprofile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to instantiate client. %v\n", err)
 	}
-	
+
 	//c := testAccProvider.Meta().(*NetScalerNitroClient)
 	for _, filename := range uploads {
 		err := uploadTestdataFile(c, t, filename, "/var/tmp")
