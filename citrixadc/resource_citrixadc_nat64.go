@@ -21,18 +21,18 @@ func resourceCitrixAdcNat64() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"acl6name": &schema.Schema{
+			"acl6name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 			},
-			"netprofile": &schema.Schema{
+			"netprofile": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

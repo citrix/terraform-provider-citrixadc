@@ -19,11 +19,11 @@ func resourceCitrixAdcNshostname() *schema.Resource {
 		Update:        updateNshostnameFunc,
 		Delete:        deleteNshostnameFunc,
 		Schema: map[string]*schema.Schema{
-			"hostname": &schema.Schema{
+			"hostname": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"ownernode": &schema.Schema{
+			"ownernode": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -77,7 +77,7 @@ func updateNshostnameFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateNshostnameFunc")
 	client := meta.(*NetScalerNitroClient).client
 
-	nshostname := ns.Nshostname {
+	nshostname := ns.Nshostname{
 		Hostname: d.Get("hostname").(string),
 	}
 

@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -34,13 +34,14 @@ resource "citrixadc_dnszone" "dnszone" {
 	
   }
 `
+
 func TestAccDnszone_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDnszoneDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDnszone_add,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDnszoneExist("citrixadc_dnszone.dnszone", nil),
@@ -48,9 +49,6 @@ func TestAccDnszone_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_dnszone.dnszone", "proxymode", "YES"),
 					resource.TestCheckResourceAttr("citrixadc_dnszone.dnszone", "dnssecoffload", "DISABLED"),
 					resource.TestCheckResourceAttr("citrixadc_dnszone.dnszone", "nsec", "DISABLED"),
-
-
-
 				),
 			},
 		},

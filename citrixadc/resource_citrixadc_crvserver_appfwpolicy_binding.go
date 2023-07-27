@@ -7,8 +7,8 @@ import (
 
 	"fmt"
 	"log"
-	"strings"
 	"net/url"
+	"strings"
 )
 
 func resourceCitrixAdcCrvserver_appfwpolicy_binding() *schema.Resource {
@@ -21,55 +21,55 @@ func resourceCitrixAdcCrvserver_appfwpolicy_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"bindpoint": &schema.Schema{
+			"bindpoint": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"gotopriorityexpression": &schema.Schema{
+			"gotopriorityexpression": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"invoke": &schema.Schema{
+			"invoke": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"labelname": &schema.Schema{
+			"labelname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"labeltype": &schema.Schema{
+			"labeltype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"policyname": &schema.Schema{
+			"policyname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"priority": &schema.Schema{
+			"priority": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"targetvserver": &schema.Schema{
+			"targetvserver": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -195,7 +195,7 @@ func deleteCrvserver_appfwpolicy_bindingFunc(d *schema.ResourceData, meta interf
 	}
 	if val, ok := d.GetOk("priority"); ok {
 		args = append(args, fmt.Sprintf("priority:%d", val.(int)))
-	}	
+	}
 
 	err := client.DeleteResourceWithArgs(service.Crvserver_appfwpolicy_binding.Type(), name, args)
 	if err != nil {

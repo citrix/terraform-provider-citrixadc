@@ -19,12 +19,12 @@ func resourceCitrixAdcCachepolicylabel() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"evaluates": &schema.Schema{
+			"evaluates": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"labelname": &schema.Schema{
+			"labelname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,

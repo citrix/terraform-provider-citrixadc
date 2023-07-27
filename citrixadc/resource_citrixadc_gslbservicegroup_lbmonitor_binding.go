@@ -20,65 +20,65 @@ func resourceCitrixAdcGslbservicegroup_lbmonitor_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"servicegroupname": &schema.Schema{
+			"servicegroupname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"monitor_name": &schema.Schema{
+			"monitor_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"hashid": &schema.Schema{
+			"hashid": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"monstate": &schema.Schema{
+			"monstate": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"passive": &schema.Schema{
+			"passive": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"port": &schema.Schema{
+			"port": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"publicip": &schema.Schema{
+			"publicip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"publicport": &schema.Schema{
+			"publicport": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"siteprefix": &schema.Schema{
+			"siteprefix": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"state": &schema.Schema{
+			"state": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"weight": &schema.Schema{
+			"weight": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -93,7 +93,7 @@ func createGslbservicegroup_lbmonitor_bindingFunc(d *schema.ResourceData, meta i
 	client := meta.(*NetScalerNitroClient).client
 	servicegroupname := d.Get("servicegroupname")
 	monitor_name := d.Get("monitor_name")
-	
+
 	bindingId := fmt.Sprintf("%s,%s", servicegroupname, monitor_name)
 	gslbservicegroup_lbmonitor_binding := gslb.Gslbservicegrouplbmonitorbinding{
 		Hashid:           d.Get("hashid").(int),

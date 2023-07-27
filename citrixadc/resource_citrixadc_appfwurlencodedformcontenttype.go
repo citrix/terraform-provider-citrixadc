@@ -17,13 +17,13 @@ func resourceCitrixAdcAppfwurlencodedformcontenttype() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"urlencodedformcontenttypevalue": &schema.Schema{
+			"urlencodedformcontenttypevalue": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"isregex": &schema.Schema{
+			"isregex": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

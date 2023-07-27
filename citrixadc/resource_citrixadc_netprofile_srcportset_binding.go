@@ -20,13 +20,13 @@ func resourceCitrixAdcNetprofile_srcportset_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"srcportrange": &schema.Schema{
+			"srcportrange": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,

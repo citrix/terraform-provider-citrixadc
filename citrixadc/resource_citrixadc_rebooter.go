@@ -21,40 +21,40 @@ func resourceCitrixAdcRebooter() *schema.Resource {
 		Read:          schema.Noop,
 		Delete:        schema.Noop,
 		Schema: map[string]*schema.Schema{
-			"warm": &schema.Schema{
+			"warm": {
 				Type:     schema.TypeBool,
 				Required: true,
 				ForceNew: true,
 			},
-			"timestamp": &schema.Schema{
+			"timestamp": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"wait_until_reachable": &schema.Schema{
+			"wait_until_reachable": {
 				Type:     schema.TypeBool,
 				Required: true,
 				ForceNew: true,
 			},
-			"reachable_timeout": &schema.Schema{
+			"reachable_timeout": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "10m",
 				ForceNew: true,
 			},
-			"reachable_poll_delay": &schema.Schema{
+			"reachable_poll_delay": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "60s",
 				ForceNew: true,
 			},
-			"reachable_poll_interval": &schema.Schema{
+			"reachable_poll_interval": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "60s",
 				ForceNew: true,
 			},
-			"reachable_poll_timeout": &schema.Schema{
+			"reachable_poll_timeout": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "20s",

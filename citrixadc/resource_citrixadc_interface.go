@@ -21,131 +21,131 @@ func resourceCitrixAdcInterface() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"autoneg": &schema.Schema{
+			"autoneg": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"bandwidthhigh": &schema.Schema{
+			"bandwidthhigh": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"bandwidthnormal": &schema.Schema{
+			"bandwidthnormal": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"duplex": &schema.Schema{
+			"duplex": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"flowctl": &schema.Schema{
+			"flowctl": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"haheartbeat": &schema.Schema{
+			"haheartbeat": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"hamonitor": &schema.Schema{
+			"hamonitor": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"interface_id": &schema.Schema{
+			"interface_id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"ifalias": &schema.Schema{
+			"ifalias": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"lacpkey": &schema.Schema{
+			"lacpkey": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"lacpmode": &schema.Schema{
+			"lacpmode": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"lacppriority": &schema.Schema{
+			"lacppriority": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"lacptimeout": &schema.Schema{
+			"lacptimeout": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"lagtype": &schema.Schema{
+			"lagtype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"linkredundancy": &schema.Schema{
+			"linkredundancy": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"lldpmode": &schema.Schema{
+			"lldpmode": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"lrsetpriority": &schema.Schema{
+			"lrsetpriority": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"mtu": &schema.Schema{
+			"mtu": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"ringsize": &schema.Schema{
+			"ringsize": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"ringtype": &schema.Schema{
+			"ringtype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"speed": &schema.Schema{
+			"speed": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"tagall": &schema.Schema{
+			"tagall": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"throughput": &schema.Schema{
+			"throughput": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"trunk": &schema.Schema{
+			"trunk": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"trunkmode": &schema.Schema{
+			"trunkmode": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"state": &schema.Schema{
+			"state": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -418,7 +418,7 @@ func doInterfaceStateChange(d *schema.ResourceData, client *service.NitroClient)
 	log.Printf("[DEBUG]  netscaler-provider: In doLbvserverStateChange")
 
 	Interface := network.Interface{
-	Id:              d.Get("interface_id").(string),
+		Id: d.Get("interface_id").(string),
 	}
 
 	newstate := d.Get("state").(string)

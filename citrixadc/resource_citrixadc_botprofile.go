@@ -19,112 +19,112 @@ func resourceCitrixAdcBotprofile() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"bot_enable_black_list": &schema.Schema{
+			"bot_enable_black_list": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"bot_enable_ip_reputation": &schema.Schema{
+			"bot_enable_ip_reputation": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"bot_enable_rate_limit": &schema.Schema{
+			"bot_enable_rate_limit": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"bot_enable_tps": &schema.Schema{
+			"bot_enable_tps": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"bot_enable_white_list": &schema.Schema{
+			"bot_enable_white_list": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"clientipexpression": &schema.Schema{
+			"clientipexpression": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"comment": &schema.Schema{
+			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"devicefingerprint": &schema.Schema{
+			"devicefingerprint": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"devicefingerprintaction": &schema.Schema{
+			"devicefingerprintaction": {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 				Computed: true,
 			},
-			"devicefingerprintmobile": &schema.Schema{
+			"devicefingerprintmobile": {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 				Computed: true,
 			},
-			"errorurl": &schema.Schema{
+			"errorurl": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"kmdetection": &schema.Schema{
+			"kmdetection": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"kmeventspostbodylimit": &schema.Schema{
+			"kmeventspostbodylimit": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"kmjavascriptname": &schema.Schema{
+			"kmjavascriptname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"signature": &schema.Schema{
+			"signature": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"signaturemultipleuseragentheaderaction": &schema.Schema{
+			"signaturemultipleuseragentheaderaction": {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 				Computed: true,
 			},
-			"signaturenouseragentheaderaction": &schema.Schema{
+			"signaturenouseragentheaderaction": {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 				Computed: true,
 			},
-			"trap": &schema.Schema{
+			"trap": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"trapaction": &schema.Schema{
+			"trapaction": {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 				Computed: true,
 			},
-			"trapurl": &schema.Schema{
+			"trapurl": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

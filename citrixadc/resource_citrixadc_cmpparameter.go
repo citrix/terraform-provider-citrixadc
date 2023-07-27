@@ -19,67 +19,67 @@ func resourceCitrixAdcCmpparameter() *schema.Resource {
 		Update:        updateCmpparameterFunc,
 		Delete:        deleteCmpparameterFunc,
 		Schema: map[string]*schema.Schema{
-			"addvaryheader": &schema.Schema{
+			"addvaryheader": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"cmpbypasspct": &schema.Schema{
+			"cmpbypasspct": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"cmplevel": &schema.Schema{
+			"cmplevel": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"cmponpush": &schema.Schema{
+			"cmponpush": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"externalcache": &schema.Schema{
+			"externalcache": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"heurexpiry": &schema.Schema{
+			"heurexpiry": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"heurexpiryhistwt": &schema.Schema{
+			"heurexpiryhistwt": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"heurexpirythres": &schema.Schema{
+			"heurexpirythres": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"minressize": &schema.Schema{
+			"minressize": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"policytype": &schema.Schema{
+			"policytype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"quantumsize": &schema.Schema{
+			"quantumsize": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"servercmp": &schema.Schema{
+			"servercmp": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"varyheadervalue": &schema.Schema{
+			"varyheadervalue": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

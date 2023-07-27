@@ -19,34 +19,34 @@ func resourceCitrixAdcNsencryptionkey() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"method": &schema.Schema{
+			"method": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"comment": &schema.Schema{
+			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"iv": &schema.Schema{
+			"iv": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"keyvalue": &schema.Schema{
+			"keyvalue": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"padding": &schema.Schema{
+			"padding": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

@@ -7,8 +7,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
-	"strings"
 	"log"
+	"strings"
 )
 
 func resourceCitrixAdcNslicenseproxyserver() *schema.Resource {
@@ -22,16 +22,16 @@ func resourceCitrixAdcNslicenseproxyserver() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"port": &schema.Schema{
+			"port": {
 				Type:     schema.TypeInt,
 				Required: true,
 			},
-			"serverip": &schema.Schema{
+			"serverip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"servername": &schema.Schema{
+			"servername": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -94,8 +94,8 @@ func updateNslicenseproxyserverFunc(d *schema.ResourceData, meta interface{}) er
 	client := meta.(*NetScalerNitroClient).client
 	nslicenseproxyserverName := d.Id()
 	nslicenseproxyserver := ns.Nslicenseproxyserver{}
-	
-	if v, ok := d.GetOk("serverip"); ok {	
+
+	if v, ok := d.GetOk("serverip"); ok {
 		nslicenseproxyserver.Serverip = v.(string)
 	} else if v, ok := d.GetOk("servername"); ok {
 		nslicenseproxyserver.Servername = v.(string)
@@ -106,7 +106,7 @@ func updateNslicenseproxyserverFunc(d *schema.ResourceData, meta interface{}) er
 		nslicenseproxyserver.Port = d.Get("port").(int)
 		hasChange = true
 	}
-	
+
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Nslicenseproxyserver.Type(), &nslicenseproxyserver)
 		if err != nil {
@@ -122,7 +122,7 @@ func deleteNslicenseproxyserverFunc(d *schema.ResourceData, meta interface{}) er
 	nslicenseproxyserverId := d.Id()
 	idSlice := strings.SplitN(nslicenseproxyserverId, ",", 2)
 	nslicenseproxyserverName := idSlice[0]
-	
+
 	err := client.DeleteResource(service.Nslicenseproxyserver.Type(), nslicenseproxyserverName)
 	if err != nil {
 		return err

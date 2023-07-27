@@ -18,12 +18,12 @@ func resourceCitrixAdcLsnparameter() *schema.Resource {
 		Update:        updateLsnparameterFunc,
 		Delete:        deleteLsnparameterFunc,
 		Schema: map[string]*schema.Schema{
-			"sessionsync": &schema.Schema{
+			"sessionsync": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"subscrsessionremoval": &schema.Schema{
+			"subscrsessionremoval": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

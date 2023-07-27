@@ -7,9 +7,9 @@ import (
 
 	"fmt"
 	"log"
-	"strings"
 	"net/url"
 	"strconv"
+	"strings"
 )
 
 func resourceCitrixAdcVxlan_nsip6_binding() *schema.Resource {
@@ -22,19 +22,19 @@ func resourceCitrixAdcVxlan_nsip6_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"vxlanid": &schema.Schema{
+			"vxlanid": {
 				Type:     schema.TypeInt,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"ipaddress": &schema.Schema{
+			"ipaddress": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"netmask": &schema.Schema{
+			"netmask": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -49,7 +49,7 @@ func createVxlan_nsip6_bindingFunc(d *schema.ResourceData, meta interface{}) err
 	client := meta.(*NetScalerNitroClient).client
 	vxlanid := strconv.Itoa(d.Get("vxlanid").(int))
 	ipaddress := d.Get("ipaddress").(string)
-	bindingId := fmt.Sprintf("%s,%s", vxlanid, ipaddress	)
+	bindingId := fmt.Sprintf("%s,%s", vxlanid, ipaddress)
 	vxlan_nsip6_binding := network.Vxlannsip6binding{
 		Id:        d.Get("vxlanid").(int),
 		Ipaddress: d.Get("ipaddress").(string),

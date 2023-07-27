@@ -7,8 +7,8 @@ import (
 
 	"fmt"
 	"log"
-	"strings"
 	"net/url"
+	"strings"
 )
 
 func resourceCitrixAdcAppfwprofile_creditcardnumber_binding() *schema.Resource {
@@ -21,55 +21,55 @@ func resourceCitrixAdcAppfwprofile_creditcardnumber_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"creditcardnumber": &schema.Schema{
+			"creditcardnumber": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"creditcardnumberurl": &schema.Schema{
+			"creditcardnumberurl": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"alertonly": &schema.Schema{
+			"alertonly": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"comment": &schema.Schema{
+			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"isautodeployed": &schema.Schema{
+			"isautodeployed": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"resourceid": &schema.Schema{
+			"resourceid": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"ruletype": &schema.Schema{
+			"ruletype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"state": &schema.Schema{
+			"state": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -200,7 +200,7 @@ func deleteAppfwprofile_creditcardnumber_bindingFunc(d *schema.ResourceData, met
 	args := make([]string, 0)
 	args = append(args, fmt.Sprintf("creditcardnumber:%s", creditcardnumber))
 	args = append(args, fmt.Sprintf("creditcardnumberurl:%s", url.QueryEscape(creditcardnumberurl)))
-	
+
 	if val, ok := d.GetOk("ruletype"); ok {
 		args = append(args, fmt.Sprintf("ruletype:%s", url.QueryEscape(val.(string))))
 	}

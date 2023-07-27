@@ -6,8 +6,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
-	"strconv"
 	"log"
+	"strconv"
 )
 
 func resourceCitrixAdcIpv6() *schema.Resource {
@@ -18,42 +18,42 @@ func resourceCitrixAdcIpv6() *schema.Resource {
 		Update:        updateIpv6Func,
 		Delete:        deleteIpv6Func,
 		Schema: map[string]*schema.Schema{
-			"dodad": &schema.Schema{
+			"dodad": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"natprefix": &schema.Schema{
+			"natprefix": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ndbasereachtime": &schema.Schema{
+			"ndbasereachtime": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"ndretransmissiontime": &schema.Schema{
+			"ndretransmissiontime": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"ralearning": &schema.Schema{
+			"ralearning": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"routerredirection": &schema.Schema{
+			"routerredirection": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"td": &schema.Schema{
+			"td": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"usipnatprefix": &schema.Schema{
+			"usipnatprefix": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -69,31 +69,30 @@ func createIpv6Func(d *schema.ResourceData, meta interface{}) error {
 	ipv6 := make(map[string]interface{})
 
 	if v, ok := d.GetOk("dodad"); ok {
-		ipv6["dodad"] = v.(string)	
+		ipv6["dodad"] = v.(string)
 	}
 	if v, ok := d.GetOk("natprefix"); ok {
-		ipv6["natprefix"] = v.(string)	
+		ipv6["natprefix"] = v.(string)
 	}
 	if v, ok := d.GetOk("ndbasereachtime"); ok {
-		ipv6["ndbasereachtime"] = v.(int)	
+		ipv6["ndbasereachtime"] = v.(int)
 	}
 	if v, ok := d.GetOk("ndretransmissiontime"); ok {
-		ipv6["ndretransmissiontime"] = v.(int)	
+		ipv6["ndretransmissiontime"] = v.(int)
 	}
 	if v, ok := d.GetOk("ralearning"); ok {
 		ipv6["ralearning"] = v.(string)
-		
+
 	}
 	if v, ok := d.GetOk("routerredirection"); ok {
-		ipv6["routerredirection"] = v.(string)	
+		ipv6["routerredirection"] = v.(string)
 	}
 	if v, ok := d.GetOk("td"); ok {
-		ipv6["td"] = v.(int)	
+		ipv6["td"] = v.(int)
 	}
 	if v, ok := d.GetOk("usipnatprefix"); ok {
 		ipv6["usipnatprefix"] = v.(string)
 	}
-
 
 	err := client.UpdateUnnamedResource(service.Ipv6.Type(), &ipv6)
 	if err != nil {

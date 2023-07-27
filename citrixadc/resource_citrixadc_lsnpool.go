@@ -5,8 +5,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
-	"strconv"
 	"log"
+	"strconv"
 )
 
 func resourceCitrixAdcLsnpool() *schema.Resource {
@@ -20,27 +20,27 @@ func resourceCitrixAdcLsnpool() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"poolname": &schema.Schema{
+			"poolname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"nattype": &schema.Schema{
+			"nattype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"maxportrealloctmq": &schema.Schema{
+			"maxportrealloctmq": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"portblockallocation": &schema.Schema{
+			"portblockallocation": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"portrealloctimeout": &schema.Schema{
+			"portrealloctimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -53,8 +53,7 @@ func createLsnpoolFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createLsnpoolFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lsnpoolName := d.Get("poolname").(string)
-	
-	
+
 	lsnpool := make(map[string]interface{})
 	if v, ok := d.GetOkExists("portrealloctimeout"); ok {
 		lsnpool["portrealloctimeout"] = v.(int)
@@ -64,7 +63,7 @@ func createLsnpoolFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if v, ok := d.GetOkExists("poolname"); ok {
 		lsnpool["poolname"] = v.(string)
-	} 
+	}
 	if v, ok := d.GetOk("nattype"); ok {
 		lsnpool["nattype"] = v.(string)
 	}

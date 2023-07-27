@@ -18,52 +18,52 @@ func resourceCitrixAdcAaakcdaccount() *schema.Resource {
 		Update:        updateAaakcdaccountFunc,
 		Delete:        deleteAaakcdaccountFunc,
 		Schema: map[string]*schema.Schema{
-			"kcdaccount": &schema.Schema{
+			"kcdaccount": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"cacert": &schema.Schema{
+			"cacert": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"delegateduser": &schema.Schema{
+			"delegateduser": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"enterpriserealm": &schema.Schema{
+			"enterpriserealm": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"kcdpassword": &schema.Schema{
+			"kcdpassword": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"keytab": &schema.Schema{
+			"keytab": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"realmstr": &schema.Schema{
+			"realmstr": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"servicespn": &schema.Schema{
+			"servicespn": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"usercert": &schema.Schema{
+			"usercert": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"userrealm": &schema.Schema{
+			"userrealm": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

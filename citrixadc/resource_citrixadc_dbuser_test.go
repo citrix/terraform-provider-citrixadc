@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -34,26 +34,26 @@ const testAccDbuser_update = `
 		password = "1234"
 	}
 `
+
 func TestAccDbuser_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDbuserDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDbuser_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDbuserExist("citrixadc_dbuser.tf_dbuser", nil),
 					resource.TestCheckResourceAttr("citrixadc_dbuser.tf_dbuser", "username", "user1"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccDbuser_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDbuserExist("citrixadc_dbuser.tf_dbuser", nil),
 					resource.TestCheckResourceAttr("citrixadc_dbuser.tf_dbuser", "username", "user1"),
 					resource.TestCheckResourceAttr("citrixadc_dbuser.tf_dbuser", "password", "1234"),
-
 				),
 			},
 		},

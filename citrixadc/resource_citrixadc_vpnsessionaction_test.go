@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -60,7 +60,7 @@ func TestAccVpnsessionaction_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpnsessionactionDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccVpnsessionaction_add,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnsessionactionExist("citrixadc_vpnsessionaction.foo", nil),
@@ -69,7 +69,7 @@ func TestAccVpnsessionaction_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_vpnsessionaction.foo", "defaultauthorizationaction", "ALLOW"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccVpnsessionaction_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnsessionactionExist("citrixadc_vpnsessionaction.foo", nil),

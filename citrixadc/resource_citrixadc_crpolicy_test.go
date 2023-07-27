@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -41,22 +41,22 @@ resource "citrixadc_crpolicy" "crpolicy" {
 }
 
 `
+
 func TestAccCrpolicy_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCrpolicyDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccCrpolicy_add,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrpolicyExist("citrixadc_crpolicy.crpolicy", nil),
 					resource.TestCheckResourceAttr("citrixadc_crpolicy.crpolicy", "rule", "true"),
 					resource.TestCheckResourceAttr("citrixadc_crpolicy.crpolicy", "action", "CACHE"),
-
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccCrpolicy_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrpolicyExist("citrixadc_crpolicy.crpolicy", nil),

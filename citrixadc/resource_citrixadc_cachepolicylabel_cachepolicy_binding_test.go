@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -45,13 +45,13 @@ func TestAccCachepolicylabel_cachepolicy_binding_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCachepolicylabel_cachepolicy_bindingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccCachepolicylabel_cachepolicy_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCachepolicylabel_cachepolicy_bindingExist("citrixadc_cachepolicylabel_cachepolicy_binding.tf_cachepolicylabel_cachepolicy_binding", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccCachepolicylabel_cachepolicy_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCachepolicylabel_cachepolicy_bindingNotExist("citrixadc_cachepolicylabel_cachepolicy_binding.tf_cachepolicylabel_cachepolicy_binding", "my_cachepolicylabel,my_cachepolicy"),

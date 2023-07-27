@@ -19,22 +19,22 @@ func resourceCitrixAdcAaapreauthenticationparameter() *schema.Resource {
 		Update:        updateAaapreauthenticationparameterFunc,
 		Delete:        deleteAaapreauthenticationparameterFunc,
 		Schema: map[string]*schema.Schema{
-			"deletefiles": &schema.Schema{
+			"deletefiles": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"killprocess": &schema.Schema{
+			"killprocess": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"preauthenticationaction": &schema.Schema{
+			"preauthenticationaction": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"rule": &schema.Schema{
+			"rule": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -47,7 +47,7 @@ func createAaapreauthenticationparameterFunc(d *schema.ResourceData, meta interf
 	log.Printf("[DEBUG]  citrixadc-provider: In createAaapreauthenticationparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	aaapreauthenticationparameterName := resource.PrefixedUniqueId("tf-aaapreauthenticationparameter-")
-	
+
 	aaapreauthenticationparameter := aaa.Aaapreauthenticationparameter{
 		Deletefiles:             d.Get("deletefiles").(string),
 		Killprocess:             d.Get("killprocess").(string),

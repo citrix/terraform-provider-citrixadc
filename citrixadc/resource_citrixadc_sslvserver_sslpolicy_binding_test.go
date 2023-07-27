@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -34,13 +34,13 @@ func TestAccSslvserver_sslpolicy_binding_lbvserver(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSslvserver_sslpolicy_bindingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccSslvserver_sslpolicy_binding_lbvserver_step1,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSslvserver_sslpolicy_bindingExist("citrixadc_sslvserver_sslpolicy_binding.tf_binding_lb", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccSslvserver_sslpolicy_binding_lbvserver_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSslvserver_sslpolicy_bindingExist("citrixadc_sslvserver_sslpolicy_binding.tf_binding_lb", nil),
@@ -59,13 +59,13 @@ func TestAccSslvserver_sslpolicy_binding_csvserver(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSslvserver_sslpolicy_bindingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccSslvserver_sslpolicy_binding_csvserver_step1,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSslvserver_sslpolicy_bindingExist("citrixadc_sslvserver_sslpolicy_binding.tf_binding_cs", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccSslvserver_sslpolicy_binding_csvserver_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSslvserver_sslpolicy_bindingExist("citrixadc_sslvserver_sslpolicy_binding.tf_binding_cs", nil),

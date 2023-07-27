@@ -20,7 +20,7 @@ func resourceCitrixAdcNsacls() *schema.Resource {
 		Read:          readNsaclsFunc,
 		Delete:        deleteNsaclsFunc,
 		Schema: map[string]*schema.Schema{
-			"aclsname": &schema.Schema{
+			"aclsname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -31,121 +31,121 @@ func resourceCitrixAdcNsacls() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"aclaction": &schema.Schema{
+						"aclaction": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"aclname": &schema.Schema{
+						"aclname": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"destipop": &schema.Schema{
+						"destipop": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"destipval": &schema.Schema{
+						"destipval": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"destportop": &schema.Schema{
+						"destportop": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"destportval": &schema.Schema{
+						"destportval": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"established": &schema.Schema{
+						"established": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Computed: true,
 						},
-						"icmpcode": &schema.Schema{
+						"icmpcode": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 						},
-						"icmptype": &schema.Schema{
+						"icmptype": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 						},
-						"interface": &schema.Schema{
+						"interface": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"logstate": &schema.Schema{
+						"logstate": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"priority": &schema.Schema{
+						"priority": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 						},
-						"protocol": &schema.Schema{
+						"protocol": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"protocolnumber": &schema.Schema{
+						"protocolnumber": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 						},
-						"ratelimit": &schema.Schema{
+						"ratelimit": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 						},
-						"srcipop": &schema.Schema{
+						"srcipop": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"srcipval": &schema.Schema{
+						"srcipval": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"srcmac": &schema.Schema{
+						"srcmac": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"srcportop": &schema.Schema{
+						"srcportop": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"srcportval": &schema.Schema{
+						"srcportval": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"state": &schema.Schema{
+						"state": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"td": &schema.Schema{
+						"td": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 						},
-						"ttl": &schema.Schema{
+						"ttl": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 						},
-						"vlan": &schema.Schema{
+						"vlan": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,

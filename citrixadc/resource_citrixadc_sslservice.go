@@ -21,172 +21,172 @@ func resourceCitrixAdcSslservice() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"cipherredirect": &schema.Schema{
+			"cipherredirect": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"cipherurl": &schema.Schema{
+			"cipherurl": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"clientauth": &schema.Schema{
+			"clientauth": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"clientcert": &schema.Schema{
+			"clientcert": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"commonname": &schema.Schema{
+			"commonname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"dh": &schema.Schema{
+			"dh": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"dhcount": &schema.Schema{
+			"dhcount": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"dhfile": &schema.Schema{
+			"dhfile": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"dhkeyexpsizelimit": &schema.Schema{
+			"dhkeyexpsizelimit": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"dtls1": &schema.Schema{
+			"dtls1": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"dtls12": &schema.Schema{
+			"dtls12": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"dtlsprofilename": &schema.Schema{
+			"dtlsprofilename": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ersa": &schema.Schema{
+			"ersa": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ersacount": &schema.Schema{
+			"ersacount": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"ocspstapling": &schema.Schema{
+			"ocspstapling": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"pushenctrigger": &schema.Schema{
+			"pushenctrigger": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"redirectportrewrite": &schema.Schema{
+			"redirectportrewrite": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sendclosenotify": &schema.Schema{
+			"sendclosenotify": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"serverauth": &schema.Schema{
+			"serverauth": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"servicename": &schema.Schema{
+			"servicename": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"sessreuse": &schema.Schema{
+			"sessreuse": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sesstimeout": &schema.Schema{
+			"sesstimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"snienable": &schema.Schema{
+			"snienable": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ssl2": &schema.Schema{
+			"ssl2": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ssl3": &schema.Schema{
+			"ssl3": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sslprofile": &schema.Schema{
+			"sslprofile": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sslredirect": &schema.Schema{
+			"sslredirect": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sslv2redirect": &schema.Schema{
+			"sslv2redirect": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sslv2url": &schema.Schema{
+			"sslv2url": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"strictsigdigestcheck": &schema.Schema{
+			"strictsigdigestcheck": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"tls1": &schema.Schema{
+			"tls1": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"tls11": &schema.Schema{
+			"tls11": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"tls12": &schema.Schema{
+			"tls12": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"tls13": &schema.Schema{
+			"tls13": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

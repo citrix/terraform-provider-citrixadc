@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -54,16 +54,16 @@ func TestAccBotglobal_botpolicy_binding_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBotglobal_botpolicy_bindingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccBotglobal_botpolicy_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBotglobal_botpolicy_bindingExist("citrixadc_botglobal_botpolicy_binding.tf_binding", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccBotglobal_botpolicy_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBotglobal_botpolicy_bindingNotExist("citrixadc_botglobal_botpolicy_binding.tf_binding", "tf_botpolicy","REQ_OVERRIDE"),
+					testAccCheckBotglobal_botpolicy_bindingNotExist("citrixadc_botglobal_botpolicy_binding.tf_binding", "tf_botpolicy", "REQ_OVERRIDE"),
 				),
 			},
 		},
@@ -93,10 +93,10 @@ func testAccCheckBotglobal_botpolicy_bindingExist(n string, id *string) resource
 
 		policyname := rs.Primary.ID
 		typename := rs.Primary.Attributes["type"]
-		
+
 		findParams := service.FindParams{
 			ResourceType:             "botglobal_botpolicy_binding",
-			ArgsMap: map[string]string{"type":typename},
+			ArgsMap:                  map[string]string{"type": typename},
 			ResourceMissingErrorCode: 258,
 		}
 		dataArr, err := client.FindResourceArrayWithParams(findParams)
@@ -122,15 +122,15 @@ func testAccCheckBotglobal_botpolicy_bindingExist(n string, id *string) resource
 		return nil
 	}
 }
-		
+
 func testAccCheckBotglobal_botpolicy_bindingNotExist(n string, id string, typename string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		client := testAccProvider.Meta().(*NetScalerNitroClient).client
 		policyname := id
-		
+
 		findParams := service.FindParams{
 			ResourceType:             "botglobal_botpolicy_binding",
-			ArgsMap: map[string]string{"type": typename},
+			ArgsMap:                  map[string]string{"type": typename},
 			ResourceMissingErrorCode: 258,
 		}
 		dataArr, err := client.FindResourceArrayWithParams(findParams)

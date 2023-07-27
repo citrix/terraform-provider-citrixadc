@@ -22,32 +22,32 @@ func resourceCitrixAdcVlan() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"aliasname": &schema.Schema{
+			"aliasname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"dynamicrouting": &schema.Schema{
+			"dynamicrouting": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"vlanid": &schema.Schema{
+			"vlanid": {
 				Type:     schema.TypeInt,
 				Required: true,
 				ForceNew: true,
 			},
-			"ipv6dynamicrouting": &schema.Schema{
+			"ipv6dynamicrouting": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"mtu": &schema.Schema{
+			"mtu": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"sharing": &schema.Schema{
+			"sharing": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

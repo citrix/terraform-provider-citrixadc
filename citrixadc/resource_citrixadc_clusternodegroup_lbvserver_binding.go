@@ -20,12 +20,12 @@ func resourceCitrixAdcClusternodegroup_lbvserver_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"vserver": &schema.Schema{
+			"vserver": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,

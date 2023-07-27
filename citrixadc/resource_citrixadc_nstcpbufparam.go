@@ -19,12 +19,12 @@ func resourceCitrixAdcNstcpbufparam() *schema.Resource {
 		Update:        updateNstcpbufparamFunc,
 		Delete:        deleteNstcpbufparamFunc,
 		Schema: map[string]*schema.Schema{
-			"memlimit": &schema.Schema{
+			"memlimit": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"size": &schema.Schema{
+			"size": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,

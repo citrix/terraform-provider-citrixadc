@@ -20,67 +20,67 @@ func resourceCitrixAdcVpntrafficaction() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"qual": &schema.Schema{
+			"qual": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 			},
-			"apptimeout": &schema.Schema{
+			"apptimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"formssoaction": &schema.Schema{
+			"formssoaction": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"fta": &schema.Schema{
+			"fta": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"hdx": &schema.Schema{
+			"hdx": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"kcdaccount": &schema.Schema{
+			"kcdaccount": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"passwdexpression": &schema.Schema{
+			"passwdexpression": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"proxy": &schema.Schema{
+			"proxy": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"samlssoprofile": &schema.Schema{
+			"samlssoprofile": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sso": &schema.Schema{
+			"sso": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"userexpression": &schema.Schema{
+			"userexpression": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"wanscaler": &schema.Schema{
+			"wanscaler": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

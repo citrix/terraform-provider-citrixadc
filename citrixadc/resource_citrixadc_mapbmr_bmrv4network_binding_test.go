@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -56,7 +56,7 @@ func TestAccMapbmr_bmrv4network_binding_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckMapbmr_bmrv4network_bindingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccMapbmr_bmrv4network_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMapbmr_bmrv4network_bindingExist("citrixadc_mapbmr_bmrv4network_binding.tf_binding", nil),
@@ -65,7 +65,7 @@ func TestAccMapbmr_bmrv4network_binding_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_mapbmr_bmrv4network_binding.tf_binding", "netmask", "255.255.255.0"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccMapbmr_bmrv4network_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMapbmr_bmrv4network_bindingNotExist("citrixadc_mapbmr_bmrv4network_binding.tf_binding", "tf_mapbmr,1.2.3.0"),

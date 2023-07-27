@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -42,13 +42,13 @@ func TestAccVlan_nsip6_binding_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVlan_nsip6_bindingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccVlan_nsip6_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVlan_nsip6_bindingExist("citrixadc_vlan_nsip6_binding.tf_vlan_nsip6_binding", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccVlan_nsip6_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVlan_nsip6_bindingNotExist("citrixadc_vlan_nsip6_binding.tf_vlan_nsip6_binding", "2,2001::a/96"),

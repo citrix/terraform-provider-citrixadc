@@ -20,43 +20,43 @@ func resourceCitrixAdcAuthenticationloginschema() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"authenticationschema": &schema.Schema{
+			"authenticationschema": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 			},
-			"authenticationstrength": &schema.Schema{
+			"authenticationstrength": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"passwdexpression": &schema.Schema{
+			"passwdexpression": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"passwordcredentialindex": &schema.Schema{
+			"passwordcredentialindex": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"ssocredentials": &schema.Schema{
+			"ssocredentials": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"usercredentialindex": &schema.Schema{
+			"usercredentialindex": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"userexpression": &schema.Schema{
+			"userexpression": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -68,7 +68,7 @@ func resourceCitrixAdcAuthenticationloginschema() *schema.Resource {
 func createAuthenticationloginschemaFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAuthenticationloginschemaFunc")
 	client := meta.(*NetScalerNitroClient).client
-	authenticationloginschemaName := d.Get("name").(string) 
+	authenticationloginschemaName := d.Get("name").(string)
 	authenticationloginschema := authentication.Authenticationloginschema{
 		Authenticationschema:    d.Get("authenticationschema").(string),
 		Authenticationstrength:  d.Get("authenticationstrength").(int),

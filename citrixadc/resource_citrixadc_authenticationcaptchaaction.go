@@ -19,28 +19,28 @@ func resourceCitrixAdcAuthenticationcaptchaaction() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"secretkey": &schema.Schema{
+			"secretkey": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 			},
-			"sitekey": &schema.Schema{
+			"sitekey": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 			},
-			"defaultauthenticationgroup": &schema.Schema{
+			"defaultauthenticationgroup": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"serverurl": &schema.Schema{
+			"serverurl": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

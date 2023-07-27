@@ -20,43 +20,43 @@ func resourceCitrixAdcAuthenticationnegotiateaction() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"defaultauthenticationgroup": &schema.Schema{
+			"defaultauthenticationgroup": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"domain": &schema.Schema{
+			"domain": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"domainuser": &schema.Schema{
+			"domainuser": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"domainuserpasswd": &schema.Schema{
+			"domainuserpasswd": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"keytab": &schema.Schema{
+			"keytab": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ntlmpath": &schema.Schema{
+			"ntlmpath": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ou": &schema.Schema{
+			"ou": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

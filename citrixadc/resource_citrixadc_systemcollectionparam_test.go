@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -38,20 +38,21 @@ const testAccSystemcollectionparam_update = `
 		loglevel      = "INFO"
 	} 
 `
+
 func TestAccSystemcollectionparam_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccSystemcollectionparam_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSystemcollectionparamExist("citrixadc_systemcollectionparam.tf_systemcollectionparam", nil),
 					resource.TestCheckResourceAttr("citrixadc_systemcollectionparam.tf_systemcollectionparam", "loglevel", "WARNING"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccSystemcollectionparam_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSystemcollectionparamExist("citrixadc_systemcollectionparam.tf_systemcollectionparam", nil),

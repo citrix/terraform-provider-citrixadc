@@ -17,89 +17,88 @@ func resourceCitrixAdcSubscribergxinterface() *schema.Resource {
 		Update:        updateSubscribergxinterfaceFunc,
 		Delete:        deleteSubscribergxinterfaceFunc,
 		Schema: map[string]*schema.Schema{
-			"cerrequesttimeout": &schema.Schema{
+			"cerrequesttimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"healthcheck": &schema.Schema{
+			"healthcheck": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"healthcheckttl": &schema.Schema{
+			"healthcheckttl": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"holdonsubscriberabsence": &schema.Schema{
+			"holdonsubscriberabsence": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"idlettl": &schema.Schema{
+			"idlettl": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"negativettl": &schema.Schema{
+			"negativettl": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"negativettllimitedsuccess": &schema.Schema{
+			"negativettllimitedsuccess": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"nodeid": &schema.Schema{
+			"nodeid": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"pcrfrealm": &schema.Schema{
+			"pcrfrealm": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"purgesdbongxfailure": &schema.Schema{
+			"purgesdbongxfailure": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"requestretryattempts": &schema.Schema{
+			"requestretryattempts": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"requesttimeout": &schema.Schema{
+			"requesttimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"revalidationtimeout": &schema.Schema{
+			"revalidationtimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"service": &schema.Schema{
+			"service": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"servicepathavp": &schema.Schema{
+			"servicepathavp": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeInt},
-
 			},
-			"servicepathvendorid": &schema.Schema{
+			"servicepathvendorid": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"vserver": &schema.Schema{
+			"vserver": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -112,7 +111,7 @@ func createSubscribergxinterfaceFunc(d *schema.ResourceData, meta interface{}) e
 	log.Printf("[DEBUG]  citrixadc-provider: In createSubscribergxinterfaceFunc")
 	client := meta.(*NetScalerNitroClient).client
 	subscribergxinterfaceName := resource.PrefixedUniqueId("tf-subscribergxinterface-")
-	
+
 	subscribergxinterface := subscriber.Subscribergxinterface{
 		Cerrequesttimeout:         d.Get("cerrequesttimeout").(int),
 		Healthcheck:               d.Get("healthcheck").(string),

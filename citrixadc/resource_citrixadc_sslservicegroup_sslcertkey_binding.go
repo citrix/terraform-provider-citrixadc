@@ -21,35 +21,35 @@ func resourceCitrixAdcSslservicegroup_sslcertkey_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"ca": &schema.Schema{
+			"ca": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"certkeyname": &schema.Schema{
+			"certkeyname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"crlcheck": &schema.Schema{
+			"crlcheck": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"ocspcheck": &schema.Schema{
+			"ocspcheck": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"servicegroupname": &schema.Schema{
+			"servicegroupname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"snicert": &schema.Schema{
+			"snicert": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,

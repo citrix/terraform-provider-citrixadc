@@ -19,12 +19,12 @@ func resourceCitrixAdcSnmpcommunity() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"communityname": &schema.Schema{
+			"communityname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"permissions": &schema.Schema{
+			"permissions": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -74,7 +74,6 @@ func readSnmpcommunityFunc(d *schema.ResourceData, meta interface{}) error {
 	return nil
 
 }
-
 
 func deleteSnmpcommunityFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSnmpcommunityFunc")

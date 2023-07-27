@@ -21,60 +21,60 @@ func resourceCitrixAdcInstaller() *schema.Resource {
 		Read:          schema.Noop,
 		Delete:        schema.Noop,
 		Schema: map[string]*schema.Schema{
-			"enhancedupgrade": &schema.Schema{
+			"enhancedupgrade": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"l": &schema.Schema{
+			"l": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"resizeswapvar": &schema.Schema{
+			"resizeswapvar": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"url": &schema.Schema{
+			"url": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"y": &schema.Schema{
+			"y": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"wait_until_reachable": &schema.Schema{
+			"wait_until_reachable": {
 				Type:     schema.TypeBool,
 				Required: true,
 				ForceNew: true,
 			},
-			"reachable_timeout": &schema.Schema{
+			"reachable_timeout": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "10m",
 				ForceNew: true,
 			},
-			"reachable_poll_delay": &schema.Schema{
+			"reachable_poll_delay": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "60s",
 				ForceNew: true,
 			},
-			"reachable_poll_interval": &schema.Schema{
+			"reachable_poll_interval": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "60s",
 				ForceNew: true,
 			},
-			"reachable_poll_timeout": &schema.Schema{
+			"reachable_poll_timeout": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "20s",

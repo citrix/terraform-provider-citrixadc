@@ -19,12 +19,12 @@ func resourceCitrixAdcAppflowpolicylabel() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"labelname": &schema.Schema{
+			"labelname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"policylabeltype": &schema.Schema{
+			"policylabeltype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -38,7 +38,7 @@ func createAppflowpolicylabelFunc(d *schema.ResourceData, meta interface{}) erro
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppflowpolicylabelFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appflowpolicylabelName := d.Get("labelname").(string)
-	
+
 	appflowpolicylabel := appflow.Appflowpolicylabel{
 		Labelname:       d.Get("labelname").(string),
 		Policylabeltype: d.Get("policylabeltype").(string),

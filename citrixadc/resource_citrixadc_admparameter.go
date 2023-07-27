@@ -17,7 +17,7 @@ func resourceCitrixAdcAdmparameter() *schema.Resource {
 		Update:        updateAdmparameterFunc,
 		Delete:        deleteAdmparameterFunc,
 		Schema: map[string]*schema.Schema{
-			"admserviceconnect": &schema.Schema{
+			"admserviceconnect": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -29,8 +29,8 @@ func resourceCitrixAdcAdmparameter() *schema.Resource {
 func createAdmparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAdmparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
-		admparameterName := resource.PrefixedUniqueId("tf-admparameter-")
-	
+	admparameterName := resource.PrefixedUniqueId("tf-admparameter-")
+
 	admparameter := adm.Admparameter{
 		Admserviceconnect: d.Get("admserviceconnect").(string),
 	}

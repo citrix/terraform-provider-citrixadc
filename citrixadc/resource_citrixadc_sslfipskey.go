@@ -19,53 +19,53 @@ func resourceCitrixAdcSslfipskey() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"curve": &schema.Schema{
+			"curve": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"exponent": &schema.Schema{
+			"exponent": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"fipskeyname": &schema.Schema{
+			"fipskeyname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"inform": &schema.Schema{
+			"inform": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"iv": &schema.Schema{
+			"iv": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"key": &schema.Schema{
+			"key": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"keytype": &schema.Schema{
+			"keytype": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"modulus": &schema.Schema{
+			"modulus": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"wrapkeyname": &schema.Schema{
+			"wrapkeyname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

@@ -22,48 +22,48 @@ func resourceCitrixAdcVrid6() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"vrid6_id": &schema.Schema{
+			"vrid6_id": {
 				Type:     schema.TypeInt,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"all": &schema.Schema{
+			"all": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"ownernode": &schema.Schema{
+			"ownernode": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"preemption": &schema.Schema{
+			"preemption": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"preemptiondelaytimer": &schema.Schema{
+			"preemptiondelaytimer": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"priority": &schema.Schema{
+			"priority": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"sharing": &schema.Schema{
+			"sharing": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"trackifnumpriority": &schema.Schema{
+			"trackifnumpriority": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"tracking": &schema.Schema{
+			"tracking": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

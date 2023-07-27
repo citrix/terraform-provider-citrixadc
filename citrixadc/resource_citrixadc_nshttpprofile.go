@@ -21,257 +21,257 @@ func resourceCitrixAdcNshttpprofile() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"adpttimeout": &schema.Schema{
+			"adpttimeout": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"altsvc": &schema.Schema{
+			"altsvc": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"altsvcvalue": &schema.Schema{
+			"altsvcvalue": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"apdexcltresptimethreshold": &schema.Schema{
+			"apdexcltresptimethreshold": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"clientiphdrexpr": &schema.Schema{
+			"clientiphdrexpr": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"cmponpush": &schema.Schema{
+			"cmponpush": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"conmultiplex": &schema.Schema{
+			"conmultiplex": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"dropextracrlf": &schema.Schema{
+			"dropextracrlf": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"dropextradata": &schema.Schema{
+			"dropextradata": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"dropinvalreqs": &schema.Schema{
+			"dropinvalreqs": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"grpcholdlimit": &schema.Schema{
+			"grpcholdlimit": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"grpcholdtimeout": &schema.Schema{
+			"grpcholdtimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"grpclengthdelimitation": &schema.Schema{
+			"grpclengthdelimitation": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"http2": &schema.Schema{
+			"http2": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"http2altsvcframe": &schema.Schema{
+			"http2altsvcframe": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"http2direct": &schema.Schema{
+			"http2direct": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"http2headertablesize": &schema.Schema{
+			"http2headertablesize": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"http2initialconnwindowsize": &schema.Schema{
+			"http2initialconnwindowsize": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"http2initialwindowsize": &schema.Schema{
+			"http2initialwindowsize": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"http2maxconcurrentstreams": &schema.Schema{
+			"http2maxconcurrentstreams": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"http2maxemptyframespermin": &schema.Schema{
+			"http2maxemptyframespermin": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"http2maxframesize": &schema.Schema{
+			"http2maxframesize": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"http2maxheaderlistsize": &schema.Schema{
+			"http2maxheaderlistsize": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"http2maxpingframespermin": &schema.Schema{
+			"http2maxpingframespermin": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"http2maxresetframespermin": &schema.Schema{
+			"http2maxresetframespermin": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"http2maxsettingsframespermin": &schema.Schema{
+			"http2maxsettingsframespermin": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"http2minseverconn": &schema.Schema{
+			"http2minseverconn": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"http2strictcipher": &schema.Schema{
+			"http2strictcipher": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"http3": &schema.Schema{
+			"http3": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"http3maxheaderblockedstreams": &schema.Schema{
+			"http3maxheaderblockedstreams": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"http3maxheaderfieldsectionsize": &schema.Schema{
+			"http3maxheaderfieldsectionsize": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"http3maxheadertablesize": &schema.Schema{
+			"http3maxheadertablesize": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"incomphdrdelay": &schema.Schema{
+			"incomphdrdelay": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"markconnreqinval": &schema.Schema{
+			"markconnreqinval": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"markhttp09inval": &schema.Schema{
+			"markhttp09inval": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"markhttpheaderextrawserror": &schema.Schema{
+			"markhttpheaderextrawserror": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"markrfc7230noncompliantinval": &schema.Schema{
+			"markrfc7230noncompliantinval": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"marktracereqinval": &schema.Schema{
+			"marktracereqinval": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"maxheaderlen": &schema.Schema{
+			"maxheaderlen": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"maxreq": &schema.Schema{
+			"maxreq": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"maxreusepool": &schema.Schema{
+			"maxreusepool": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"minreusepool": &schema.Schema{
+			"minreusepool": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"persistentetag": &schema.Schema{
+			"persistentetag": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"reqtimeout": &schema.Schema{
+			"reqtimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"reqtimeoutaction": &schema.Schema{
+			"reqtimeoutaction": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"reusepooltimeout": &schema.Schema{
+			"reusepooltimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"rtsptunnel": &schema.Schema{
+			"rtsptunnel": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"spdy": &schema.Schema{
+			"spdy": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"weblog": &schema.Schema{
+			"weblog": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"websocket": &schema.Schema{
+			"websocket": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

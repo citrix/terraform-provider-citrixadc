@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -33,7 +33,7 @@ resource "citrixadc_snmpview" "tf_snmpview" {
   }
   
 `
-const testAccSnmpview_update= `
+const testAccSnmpview_update = `
 
 
 resource "citrixadc_snmpview" "tf_snmpview" {
@@ -50,20 +50,20 @@ func TestAccSnmpview_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSnmpviewDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccSnmpview_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnmpviewExist("citrixadc_snmpview.tf_snmpview", nil),
-					resource.TestCheckResourceAttr("citrixadc_snmpview.tf_snmpview", "subtree","1.2.4.7"),
-					resource.TestCheckResourceAttr("citrixadc_snmpview.tf_snmpview", "type","excluded"),
+					resource.TestCheckResourceAttr("citrixadc_snmpview.tf_snmpview", "subtree", "1.2.4.7"),
+					resource.TestCheckResourceAttr("citrixadc_snmpview.tf_snmpview", "type", "excluded"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccSnmpview_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnmpviewExist("citrixadc_snmpview.tf_snmpview", nil),
-					resource.TestCheckResourceAttr("citrixadc_snmpview.tf_snmpview", "subtree","1.2.4.8"),
-					resource.TestCheckResourceAttr("citrixadc_snmpview.tf_snmpview", "type","included"),
+					resource.TestCheckResourceAttr("citrixadc_snmpview.tf_snmpview", "subtree", "1.2.4.8"),
+					resource.TestCheckResourceAttr("citrixadc_snmpview.tf_snmpview", "type", "included"),
 				),
 			},
 		},
@@ -107,7 +107,7 @@ func testAccCheckSnmpviewExist(n string, id *string) resource.TestCheckFunc {
 				break
 			}
 		}
-		if !found  {
+		if !found {
 			return fmt.Errorf("gslbservicegroup %s not found", n)
 		}
 

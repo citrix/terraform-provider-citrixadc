@@ -20,31 +20,31 @@ func resourceCitrixAdcLocation() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"ipfrom": &schema.Schema{
+			"ipfrom": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"ipto": &schema.Schema{
+			"ipto": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"preferredlocation": &schema.Schema{
+			"preferredlocation": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"latitude": &schema.Schema{
+			"latitude": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"longitude": &schema.Schema{
+			"longitude": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -105,12 +105,12 @@ func readLocationFunc(d *schema.ResourceData, meta interface{}) error {
 func deleteLocationFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteLocationFunc")
 	client := meta.(*NetScalerNitroClient).client
-	
+
 	argsMap := make(map[string]string)
 	// Only the ipfrom and ipto properties are required for deletion
 	argsMap["ipfrom"] = url.QueryEscape(d.Get("ipfrom").(string))
 	argsMap["ipto"] = url.QueryEscape(d.Get("ipto").(string))
-	err := client.DeleteResourceWithArgsMap(service.Location.Type(), "",argsMap)
+	err := client.DeleteResourceWithArgsMap(service.Location.Type(), "", argsMap)
 	if err != nil {
 		return err
 	}

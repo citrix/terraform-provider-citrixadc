@@ -21,135 +21,135 @@ func resourceCitrixAdcAuditsyslogaction() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"acl": &schema.Schema{
+			"acl": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"alg": &schema.Schema{
+			"alg": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"appflowexport": &schema.Schema{
+			"appflowexport": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"contentinspectionlog": &schema.Schema{
+			"contentinspectionlog": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"dateformat": &schema.Schema{
+			"dateformat": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"dns": &schema.Schema{
+			"dns": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"domainresolvenow": &schema.Schema{
+			"domainresolvenow": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"domainresolveretry": &schema.Schema{
+			"domainresolveretry": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"lbvservername": &schema.Schema{
+			"lbvservername": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"logfacility": &schema.Schema{
+			"logfacility": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"loglevel": &schema.Schema{
+			"loglevel": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"lsn": &schema.Schema{
+			"lsn": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"maxlogdatasizetohold": &schema.Schema{
+			"maxlogdatasizetohold": {
 
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"netprofile": &schema.Schema{
+			"netprofile": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"serverdomainname": &schema.Schema{
+			"serverdomainname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"serverip": &schema.Schema{
+			"serverip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"serverport": &schema.Schema{
+			"serverport": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"sslinterception": &schema.Schema{
+			"sslinterception": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"subscriberlog": &schema.Schema{
+			"subscriberlog": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"tcp": &schema.Schema{
+			"tcp": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"tcpprofilename": &schema.Schema{
+			"tcpprofilename": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"timezone": &schema.Schema{
+			"timezone": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"transport": &schema.Schema{
+			"transport": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"urlfiltering": &schema.Schema{
+			"urlfiltering": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"userdefinedauditlog": &schema.Schema{
+			"userdefinedauditlog": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -39,7 +39,7 @@ const testAccCmpaction_update = `
 		name    = "my_cmpaction"
 		cmptype = "compress"
 	}
- ` 
+ `
 
 func TestAccCmpaction_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
@@ -47,7 +47,7 @@ func TestAccCmpaction_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCmpactionDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccCmpaction_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCmpactionExist("citrixadc_cmpaction.tf_cmpaction", nil),
@@ -55,7 +55,7 @@ func TestAccCmpaction_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_cmpaction.tf_cmpaction", "cmptype", "nocompress"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccCmpaction_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCmpactionExist("citrixadc_cmpaction.tf_cmpaction", nil),

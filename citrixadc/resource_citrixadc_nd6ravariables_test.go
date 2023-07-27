@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -44,14 +44,13 @@ const testAccNd6ravariables_update = `
 	}
 `
 
-
 func TestAccNd6ravariables_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccNd6ravariables_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNd6ravariablesExist("citrixadc_nd6ravariables.tf_nd6ravariables", nil),
@@ -60,7 +59,7 @@ func TestAccNd6ravariables_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_nd6ravariables.tf_nd6ravariables", "srclinklayeraddroption", "NO"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccNd6ravariables_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNd6ravariablesExist("citrixadc_nd6ravariables.tf_nd6ravariables", nil),

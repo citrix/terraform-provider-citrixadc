@@ -18,13 +18,13 @@ func resourceCitrixAdcRadiusnode() *schema.Resource {
 		Update:        updateRadiusnodeFunc,
 		Delete:        deleteRadiusnodeFunc,
 		Schema: map[string]*schema.Schema{
-			"nodeprefix": &schema.Schema{
+			"nodeprefix": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"radkey": &schema.Schema{
+			"radkey": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
@@ -81,7 +81,6 @@ func updateRadiusnodeFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	radiusnodeName := d.Get("nodeprefix").(string)
 	radiusnodeescaped := url.PathEscape(url.QueryEscape(radiusnodeName))
-
 
 	radiusnode := basic.Radiusnode{
 		Nodeprefix: d.Get("nodeprefix").(string),

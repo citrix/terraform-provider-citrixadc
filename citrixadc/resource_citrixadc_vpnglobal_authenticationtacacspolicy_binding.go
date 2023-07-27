@@ -20,31 +20,31 @@ func resourceCitrixAdcVpnglobal_authenticationtacacspolicy_binding() *schema.Res
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"policyname": &schema.Schema{
+			"policyname": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"gotopriorityexpression": &schema.Schema{
+			"gotopriorityexpression": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"groupextraction": &schema.Schema{
+			"groupextraction": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"priority": &schema.Schema{
+			"priority": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"secondary": &schema.Schema{
+			"secondary": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
@@ -66,7 +66,7 @@ func createVpnglobal_authenticationtacacspolicy_bindingFunc(d *schema.ResourceDa
 		Secondary:              d.Get("secondary").(bool),
 	}
 
-	err := client.UpdateUnnamedResource(service.Vpnglobal_authenticationtacacspolicy_binding.Type(),  &vpnglobal_authenticationtacacspolicy_binding)
+	err := client.UpdateUnnamedResource(service.Vpnglobal_authenticationtacacspolicy_binding.Type(), &vpnglobal_authenticationtacacspolicy_binding)
 	if err != nil {
 		return err
 	}

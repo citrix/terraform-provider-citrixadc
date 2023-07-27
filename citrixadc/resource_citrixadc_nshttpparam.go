@@ -3,12 +3,12 @@ package citrixadc
 import (
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 
+	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"strconv"
-	"fmt"
 	"log"
+	"strconv"
 )
 
 func resourceCitrixAdcNshttpparam() *schema.Resource {
@@ -19,52 +19,52 @@ func resourceCitrixAdcNshttpparam() *schema.Resource {
 		Update:        updateNshttpparamFunc,
 		Delete:        deleteNshttpparamFunc,
 		Schema: map[string]*schema.Schema{
-			"conmultiplex": &schema.Schema{
+			"conmultiplex": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"dropinvalreqs": &schema.Schema{
+			"dropinvalreqs": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"http2serverside": &schema.Schema{
+			"http2serverside": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ignoreconnectcodingscheme": &schema.Schema{
+			"ignoreconnectcodingscheme": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"insnssrvrhdr": &schema.Schema{
+			"insnssrvrhdr": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"logerrresp": &schema.Schema{
+			"logerrresp": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"markconnreqinval": &schema.Schema{
+			"markconnreqinval": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"markhttp09inval": &schema.Schema{
+			"markhttp09inval": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"maxreusepool": &schema.Schema{
+			"maxreusepool": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"nssrvrhdr": &schema.Schema{
+			"nssrvrhdr": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -125,7 +125,7 @@ func readNshttpparamFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("logerrresp", data["logerrresp"])
 	d.Set("markconnreqinval", data["markconnreqinval"])
 	d.Set("markhttp09inval", data["markhttp09inval"])
-	val,_ := strconv.Atoi(data["maxreusepool"].(string))
+	val, _ := strconv.Atoi(data["maxreusepool"].(string))
 	d.Set("maxreusepool", val)
 	d.Set("nssrvrhdr", data["nssrvrhdr"])
 
@@ -136,9 +136,9 @@ func readNshttpparamFunc(d *schema.ResourceData, meta interface{}) error {
 func updateNshttpparamFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateNshttpparamFunc")
 	client := meta.(*NetScalerNitroClient).client
-	
+
 	nshttpparam := ns.Nshttpparam{
-		Maxreusepool:  d.Get("maxreusepool").(int),
+		Maxreusepool: d.Get("maxreusepool").(int),
 	}
 	hasChange := false
 	if d.HasChange("conmultiplex") {

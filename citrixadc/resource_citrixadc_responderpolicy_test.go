@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -34,21 +34,21 @@ func TestAccResponderpolicy_globalbinding(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckResponderpolicyDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccResponderpolicy_globalbinding_exists,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponderpolicyExist("citrixadc_responderpolicy.tf_responder_policy", nil),
 					verifyGlobalBindingExists("REQ_OVERRIDE", "tf_responder_policy", false),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccResponderpolicy_globalbinding_modified,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponderpolicyExist("citrixadc_responderpolicy.tf_responder_policy", nil),
 					verifyGlobalBindingExists("REQ_OVERRIDE", "tf_responder_policy", false),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccResponderpolicy_globalbinding_not_exists,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponderpolicyExist("citrixadc_responderpolicy.tf_responder_policy", nil),
@@ -182,7 +182,7 @@ func TestAccResponderpolicy_lbvserverbinding(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckResponderpolicyDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccResponderpolicy_lbvserverbinding_both,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponderpolicyExist("citrixadc_responderpolicy.tf_responder_policy", nil),
@@ -190,7 +190,7 @@ func TestAccResponderpolicy_lbvserverbinding(t *testing.T) {
 					verifyLbvserverBindingExists("tf_lbvserver2", "tf_responder_policy", false),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccResponderpolicy_lbvserverbinding_one,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponderpolicyExist("citrixadc_responderpolicy.tf_responder_policy", nil),
@@ -198,7 +198,7 @@ func TestAccResponderpolicy_lbvserverbinding(t *testing.T) {
 					verifyLbvserverBindingExists("tf_lbvserver2", "tf_responder_policy", true),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccResponderpolicy_lbvserverbinding_both,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponderpolicyExist("citrixadc_responderpolicy.tf_responder_policy", nil),
@@ -217,7 +217,7 @@ func TestAccResponderpolicy_csvserverbinding(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckResponderpolicyDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccResponderpolicy_csvserverbinding_both,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponderpolicyExist("citrixadc_responderpolicy.tf_responder_policy", nil),
@@ -225,7 +225,7 @@ func TestAccResponderpolicy_csvserverbinding(t *testing.T) {
 					verifyCsvserverBindingExists("tf_csvserver2", "tf_responder_policy", false),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccResponderpolicy_csvserverbinding_one,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponderpolicyExist("citrixadc_responderpolicy.tf_responder_policy", nil),
@@ -233,7 +233,7 @@ func TestAccResponderpolicy_csvserverbinding(t *testing.T) {
 					verifyCsvserverBindingExists("tf_csvserver2", "tf_responder_policy", true),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccResponderpolicy_csvserverbinding_none,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponderpolicyExist("citrixadc_responderpolicy.tf_responder_policy", nil),
@@ -241,7 +241,7 @@ func TestAccResponderpolicy_csvserverbinding(t *testing.T) {
 					verifyCsvserverBindingExists("tf_csvserver2", "tf_responder_policy", true),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccResponderpolicy_csvserverbinding_one,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponderpolicyExist("citrixadc_responderpolicy.tf_responder_policy", nil),

@@ -17,25 +17,25 @@ func resourceCitrixAdcAppfwjsonerrorpage() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"comment": &schema.Schema{
+			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"overwrite": &schema.Schema{
+			"overwrite": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"src": &schema.Schema{
+			"src": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -49,7 +49,7 @@ func createAppfwjsonerrorpageFunc(d *schema.ResourceData, meta interface{}) erro
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppfwjsonerrorpageFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appfwjsonerrorpageName := d.Get("name").(string)
-	
+
 	appfwjsonerrorpage := appfw.Appfwjsonerrorpage{
 		Comment:   d.Get("comment").(string),
 		Name:      d.Get("name").(string),

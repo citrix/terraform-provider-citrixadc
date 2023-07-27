@@ -22,18 +22,18 @@ func resourceCitrixAdcBridgegroup() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"bridgegroup_id": &schema.Schema{
+			"bridgegroup_id": {
 				Type:     schema.TypeInt,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"dynamicrouting": &schema.Schema{
+			"dynamicrouting": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ipv6dynamicrouting": &schema.Schema{
+			"ipv6dynamicrouting": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

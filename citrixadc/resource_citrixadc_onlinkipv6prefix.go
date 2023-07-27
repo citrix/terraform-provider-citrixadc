@@ -7,8 +7,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
-	"net/url"
 	"log"
+	"net/url"
 )
 
 func resourceCitrixAdcOnlinkipv6prefix() *schema.Resource {
@@ -22,37 +22,37 @@ func resourceCitrixAdcOnlinkipv6prefix() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"ipv6prefix": &schema.Schema{
+			"ipv6prefix": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"autonomusprefix": &schema.Schema{
+			"autonomusprefix": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"decrementprefixlifetimes": &schema.Schema{
+			"decrementprefixlifetimes": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"depricateprefix": &schema.Schema{
+			"depricateprefix": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"onlinkprefix": &schema.Schema{
+			"onlinkprefix": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"prefixpreferredlifetime": &schema.Schema{
+			"prefixpreferredlifetime": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"prefixvalidelifetime": &schema.Schema{
+			"prefixvalidelifetime": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,

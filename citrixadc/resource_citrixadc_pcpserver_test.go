@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -41,14 +41,13 @@ const testAccPcpserver_update = `
   
 `
 
-
 func TestAccPcpserver_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckPcpserverDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccPcpserver_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPcpserverExist("citrixadc_pcpserver.tf_pcpserver", nil),
@@ -57,7 +56,7 @@ func TestAccPcpserver_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_pcpserver.tf_pcpserver", "port", "5351"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccPcpserver_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPcpserverExist("citrixadc_pcpserver.tf_pcpserver", nil),

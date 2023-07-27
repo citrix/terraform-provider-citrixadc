@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -40,13 +40,13 @@ func TestAccDnsaction_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDnsactionDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDnsaction_add,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDnsactionExist("citrixadc_dnsaction.dnsaction", nil),
 					resource.TestCheckResourceAttr("citrixadc_dnsaction.dnsaction", "actionname", "tf_action1"),
-					resource.TestCheckResourceAttr("citrixadc_dnsaction.dnsaction","actiontype", "Rewrite_Response"),
-					resource.TestCheckResourceAttr("citrixadc_dnsaction.dnsaction","dnsprofilename", "tf_profile1"),
+					resource.TestCheckResourceAttr("citrixadc_dnsaction.dnsaction", "actiontype", "Rewrite_Response"),
+					resource.TestCheckResourceAttr("citrixadc_dnsaction.dnsaction", "dnsprofilename", "tf_profile1"),
 				),
 			},
 		},

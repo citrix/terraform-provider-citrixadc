@@ -17,12 +17,12 @@ func resourceCitrixAdcClusterfilesSyncer() *schema.Resource {
 		Read:          schema.Noop,
 		Delete:        schema.Noop,
 		Schema: map[string]*schema.Schema{
-			"timestamp": &schema.Schema{
+			"timestamp": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"mode": &schema.Schema{
+			"mode": {
 				Type:     schema.TypeSet,
 				Required: true,
 				ForceNew: true,

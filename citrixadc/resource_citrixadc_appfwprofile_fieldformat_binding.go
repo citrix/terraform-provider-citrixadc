@@ -7,8 +7,8 @@ import (
 
 	"fmt"
 	"log"
-	"strings"
 	"net/url"
+	"strings"
 )
 
 func resourceCitrixAdcAppfwprofile_fieldformat_binding() *schema.Resource {
@@ -21,79 +21,79 @@ func resourceCitrixAdcAppfwprofile_fieldformat_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"fieldformat": &schema.Schema{
+			"fieldformat": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"formactionurl_ff": &schema.Schema{
+			"formactionurl_ff": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"alertonly": &schema.Schema{
+			"alertonly": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"comment": &schema.Schema{
+			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"fieldformatmaxlength": &schema.Schema{
+			"fieldformatmaxlength": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"fieldformatminlength": &schema.Schema{
+			"fieldformatminlength": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"fieldtype": &schema.Schema{
+			"fieldtype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"isautodeployed": &schema.Schema{
+			"isautodeployed": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"isregexff": &schema.Schema{
+			"isregexff": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"resourceid": &schema.Schema{
+			"resourceid": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"ruletype": &schema.Schema{
+			"ruletype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"state": &schema.Schema{
+			"state": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -233,7 +233,7 @@ func deleteAppfwprofile_fieldformat_bindingFunc(d *schema.ResourceData, meta int
 	args := make([]string, 0)
 	args = append(args, fmt.Sprintf("fieldformat:%s", fieldformat))
 	args = append(args, fmt.Sprintf("formactionurl_ff:%s", url.QueryEscape(formactionurl_ff)))
-	
+
 	if val, ok := d.GetOk("ruletype"); ok {
 		args = append(args, fmt.Sprintf("ruletype:%s", url.QueryEscape(val.(string))))
 	}

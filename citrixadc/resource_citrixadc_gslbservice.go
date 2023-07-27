@@ -26,197 +26,197 @@ func resourceCitrixAdcGslbservice() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"appflowlog": &schema.Schema{
+			"appflowlog": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"cip": &schema.Schema{
+			"cip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"cipheader": &schema.Schema{
+			"cipheader": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"clttimeout": &schema.Schema{
+			"clttimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"cnameentry": &schema.Schema{
+			"cnameentry": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"comment": &schema.Schema{
+			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"cookietimeout": &schema.Schema{
+			"cookietimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"downstateflush": &schema.Schema{
+			"downstateflush": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"hashid": &schema.Schema{
+			"hashid": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"healthmonitor": &schema.Schema{
+			"healthmonitor": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ip": &schema.Schema{
+			"ip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"ipaddress": &schema.Schema{
+			"ipaddress": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"maxaaausers": &schema.Schema{
+			"maxaaausers": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"maxbandwidth": &schema.Schema{
+			"maxbandwidth": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"maxclient": &schema.Schema{
+			"maxclient": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"monitornamesvc": &schema.Schema{
+			"monitornamesvc": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"monthreshold": &schema.Schema{
+			"monthreshold": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"naptrdomainttl": &schema.Schema{
+			"naptrdomainttl": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"naptrorder": &schema.Schema{
+			"naptrorder": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"naptrpreference": &schema.Schema{
+			"naptrpreference": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"naptrreplacement": &schema.Schema{
+			"naptrreplacement": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"naptrservices": &schema.Schema{
+			"naptrservices": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"port": &schema.Schema{
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"publicip": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"publicport": &schema.Schema{
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-			"servername": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"servicename": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"servicetype": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"sitename": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"sitepersistence": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"siteprefix": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"state": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"svrtimeout": &schema.Schema{
+			"port": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"viewip": &schema.Schema{
+			"publicip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"viewname": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"weight": &schema.Schema{
+			"publicport": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"delay": &schema.Schema{
+			"servername": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"servicename": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"servicetype": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"sitename": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"sitepersistence": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"siteprefix": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"state": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"svrtimeout": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"viewip": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"viewname": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"weight": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"delay": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -228,17 +228,17 @@ func resourceCitrixAdcGslbservice() *schema.Resource {
 				Set:      lbmonitorMappingHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"weight": &schema.Schema{
+						"weight": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 						},
-						"monitor_name": &schema.Schema{
+						"monitor_name": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"monstate": &schema.Schema{
+						"monstate": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,

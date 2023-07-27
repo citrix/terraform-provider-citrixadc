@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -66,12 +66,12 @@ const testAccVpnparameter_update = `
 
 func TestAccVpnparameter_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
 		// vpnparameter resource do not have DELETE operation
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccVpnparameter_add,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnparameterExist("citrixadc_vpnparameter.tf_vpnparameter", nil),
@@ -79,7 +79,7 @@ func TestAccVpnparameter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_vpnparameter.tf_vpnparameter", "locallanaccess", "ON"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccVpnparameter_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnparameterExist("citrixadc_vpnparameter.tf_vpnparameter", nil),

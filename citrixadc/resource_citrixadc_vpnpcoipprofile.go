@@ -19,23 +19,23 @@ func resourceCitrixAdcVpnpcoipprofile() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"conserverurl": &schema.Schema{
+			"conserverurl": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 			},
-			"icvverification": &schema.Schema{
+			"icvverification": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sessionidletimeout": &schema.Schema{
+			"sessionidletimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,

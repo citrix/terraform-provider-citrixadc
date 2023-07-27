@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,8 +20,8 @@ import (
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"testing"
 	"net/url"
+	"testing"
 )
 
 const testAccVpnglobal_sslcertkey_binding_basic = `
@@ -52,13 +52,13 @@ func TestAccVpnglobal_sslcertkey_binding_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpnglobal_sslcertkey_bindingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccVpnglobal_sslcertkey_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnglobal_sslcertkey_bindingExist("citrixadc_vpnglobal_sslcertkey_binding.tf_vpnglobal_sslcertkey_binding", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccVpnglobal_sslcertkey_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnglobal_sslcertkey_bindingNotExist("citrixadc_vpnglobal_sslcertkey_binding.tf_vpnglobal_sslcertkey_binding", "certkeyname"),
@@ -88,7 +88,7 @@ func testAccCheckVpnglobal_sslcertkey_bindingExist(n string, id *string) resourc
 		}
 
 		client := testAccProvider.Meta().(*NetScalerNitroClient).client
-		certkeyname , _ := url.QueryUnescape(rs.Primary.ID)
+		certkeyname, _ := url.QueryUnescape(rs.Primary.ID)
 
 		findParams := service.FindParams{
 			ResourceType:             "vpnglobal_sslcertkey_binding",
@@ -139,7 +139,6 @@ func PreCheckSslceriKey(t *testing.T) {
 		}
 	}
 }
-
 
 func testAccCheckVpnglobal_sslcertkey_bindingNotExist(n string, id string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {

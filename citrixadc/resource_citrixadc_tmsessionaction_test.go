@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -34,7 +34,6 @@ const testAccTmsessionaction_basic = `
 	}
 `
 
-
 const testAccTmsessionaction_update = `
 
 
@@ -52,7 +51,7 @@ func TestAccTmsessionaction_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckTmsessionactionDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccTmsessionaction_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTmsessionactionExist("citrixadc_tmsessionaction.tf_tmsessionaction", nil),
@@ -62,7 +61,7 @@ func TestAccTmsessionaction_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_tmsessionaction.tf_tmsessionaction", "sso", "OFF"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccTmsessionaction_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTmsessionactionExist("citrixadc_tmsessionaction.tf_tmsessionaction", nil),

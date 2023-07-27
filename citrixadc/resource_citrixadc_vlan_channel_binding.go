@@ -7,8 +7,8 @@ import (
 
 	"fmt"
 	"log"
-	"strconv"
 	"net/url"
+	"strconv"
 	"strings"
 )
 
@@ -22,23 +22,23 @@ func resourceCitrixAdcVlan_channel_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"vlanid": &schema.Schema{
+			"vlanid": {
 				Type:     schema.TypeInt,
 				Required: true,
 				ForceNew: true,
 			},
-			"ifnum": &schema.Schema{
+			"ifnum": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"ownergroup": &schema.Schema{
+			"ownergroup": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"tagged": &schema.Schema{
+			"tagged": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
@@ -148,7 +148,7 @@ func deleteVlan_channel_bindingFunc(d *schema.ResourceData, meta interface{}) er
 	ifnum := idSlice[1]
 
 	args := make([]string, 0)
-	
+
 	args = append(args, fmt.Sprintf("ifnum:%s", url.PathEscape(ifnum)))
 	if v, ok := d.GetOk("tagged"); ok {
 		tagged := v.(bool)

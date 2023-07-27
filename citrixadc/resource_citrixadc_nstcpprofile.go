@@ -21,292 +21,292 @@ func resourceCitrixAdcNstcpprofile() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"ackaggregation": &schema.Schema{
+			"ackaggregation": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ackonpush": &schema.Schema{
+			"ackonpush": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"applyadaptivetcp": &schema.Schema{
+			"applyadaptivetcp": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"buffersize": &schema.Schema{
+			"buffersize": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"burstratecontrol": &schema.Schema{
+			"burstratecontrol": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"clientiptcpoption": &schema.Schema{
+			"clientiptcpoption": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"clientiptcpoptionnumber": &schema.Schema{
+			"clientiptcpoptionnumber": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"delayedack": &schema.Schema{
+			"delayedack": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"dropestconnontimeout": &schema.Schema{
+			"dropestconnontimeout": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"drophalfclosedconnontimeout": &schema.Schema{
+			"drophalfclosedconnontimeout": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"dsack": &schema.Schema{
+			"dsack": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"dupackthresh": &schema.Schema{
+			"dupackthresh": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"dynamicreceivebuffering": &schema.Schema{
+			"dynamicreceivebuffering": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ecn": &schema.Schema{
+			"ecn": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"establishclientconn": &schema.Schema{
+			"establishclientconn": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"fack": &schema.Schema{
+			"fack": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"flavor": &schema.Schema{
+			"flavor": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"frto": &schema.Schema{
+			"frto": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"hystart": &schema.Schema{
+			"hystart": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"initialcwnd": &schema.Schema{
+			"initialcwnd": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"ka": &schema.Schema{
+			"ka": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"kaconnidletime": &schema.Schema{
+			"kaconnidletime": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"kamaxprobes": &schema.Schema{
+			"kamaxprobes": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"kaprobeinterval": &schema.Schema{
+			"kaprobeinterval": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"kaprobeupdatelastactivity": &schema.Schema{
+			"kaprobeupdatelastactivity": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"maxburst": &schema.Schema{
+			"maxburst": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"maxcwnd": &schema.Schema{
+			"maxcwnd": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"maxpktpermss": &schema.Schema{
+			"maxpktpermss": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"minrto": &schema.Schema{
+			"minrto": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"mptcp": &schema.Schema{
+			"mptcp": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"mptcpdropdataonpreestsf": &schema.Schema{
+			"mptcpdropdataonpreestsf": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"mptcpfastopen": &schema.Schema{
+			"mptcpfastopen": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"mptcpsessiontimeout": &schema.Schema{
+			"mptcpsessiontimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"mss": &schema.Schema{
+			"mss": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"nagle": &schema.Schema{
+			"nagle": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"oooqsize": &schema.Schema{
+			"oooqsize": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"pktperretx": &schema.Schema{
+			"pktperretx": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"rateqmax": &schema.Schema{
+			"rateqmax": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"rstmaxack": &schema.Schema{
+			"rstmaxack": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"rstwindowattenuate": &schema.Schema{
+			"rstwindowattenuate": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sack": &schema.Schema{
+			"sack": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sendbuffsize": &schema.Schema{
+			"sendbuffsize": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"sendclientportintcpoption": &schema.Schema{
+			"sendclientportintcpoption": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"slowstartincr": &schema.Schema{
+			"slowstartincr": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"slowstartthreshold": &schema.Schema{
+			"slowstartthreshold": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"spoofsyndrop": &schema.Schema{
+			"spoofsyndrop": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"syncookie": &schema.Schema{
+			"syncookie": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"taillossprobe": &schema.Schema{
+			"taillossprobe": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"tcpfastopen": &schema.Schema{
+			"tcpfastopen": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"tcpfastopencookiesize": &schema.Schema{
+			"tcpfastopencookiesize": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"tcpmode": &schema.Schema{
+			"tcpmode": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"tcprate": &schema.Schema{
+			"tcprate": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"tcpsegoffload": &schema.Schema{
+			"tcpsegoffload": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"timestamp": &schema.Schema{
+			"timestamp": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ws": &schema.Schema{
+			"ws": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"wsval": &schema.Schema{
+			"wsval": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"mpcapablecbit": &schema.Schema{
+			"mpcapablecbit": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

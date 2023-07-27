@@ -30,23 +30,23 @@ func resourceCitrixAdcSystemfile() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"filecontent": &schema.Schema{
+			"filecontent": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"fileencoding": &schema.Schema{
+			"fileencoding": {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Default:  "BASE64",
 				Optional: true,
 			},
-			"filelocation": &schema.Schema{
+			"filelocation": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"filename": &schema.Schema{
+			"filename": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,

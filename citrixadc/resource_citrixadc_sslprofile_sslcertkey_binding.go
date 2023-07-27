@@ -20,18 +20,18 @@ func resourceCitrixAdcSslprofile_sslcertkey_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"cipherpriority": &schema.Schema{
+			"cipherpriority": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"sslicacertkey": &schema.Schema{
+			"sslicacertkey": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,

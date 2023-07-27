@@ -19,32 +19,32 @@ func resourceCitrixAdcIcalatencyprofile() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"l7latencymaxnotifycount": &schema.Schema{
+			"l7latencymaxnotifycount": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"l7latencymonitoring": &schema.Schema{
+			"l7latencymonitoring": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"l7latencynotifyinterval": &schema.Schema{
+			"l7latencynotifyinterval": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"l7latencythresholdfactor": &schema.Schema{
+			"l7latencythresholdfactor": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"l7latencywaittime": &schema.Schema{
+			"l7latencywaittime": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,

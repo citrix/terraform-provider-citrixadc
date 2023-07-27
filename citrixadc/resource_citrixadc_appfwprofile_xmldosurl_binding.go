@@ -7,8 +7,8 @@ import (
 
 	"fmt"
 	"log"
-	"strings"
 	"net/url"
+	"strings"
 )
 
 func resourceCitrixAdcAppfwprofile_xmldosurl_binding() *schema.Resource {
@@ -21,265 +21,265 @@ func resourceCitrixAdcAppfwprofile_xmldosurl_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"xmldosurl": &schema.Schema{
+			"xmldosurl": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"alertonly": &schema.Schema{
+			"alertonly": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"comment": &schema.Schema{
+			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"isautodeployed": &schema.Schema{
+			"isautodeployed": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"resourceid": &schema.Schema{
+			"resourceid": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"ruletype": &schema.Schema{
+			"ruletype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"state": &schema.Schema{
+			"state": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"xmlblockdtd": &schema.Schema{
+			"xmlblockdtd": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"xmlblockexternalentities": &schema.Schema{
+			"xmlblockexternalentities": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"xmlblockpi": &schema.Schema{
+			"xmlblockpi": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"xmlmaxattributenamelength": &schema.Schema{
+			"xmlmaxattributenamelength": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"xmlmaxattributenamelengthcheck": &schema.Schema{
+			"xmlmaxattributenamelengthcheck": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"xmlmaxattributes": &schema.Schema{
+			"xmlmaxattributes": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"xmlmaxattributescheck": &schema.Schema{
+			"xmlmaxattributescheck": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"xmlmaxattributevaluelength": &schema.Schema{
+			"xmlmaxattributevaluelength": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"xmlmaxattributevaluelengthcheck": &schema.Schema{
+			"xmlmaxattributevaluelengthcheck": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"xmlmaxchardatalength": &schema.Schema{
+			"xmlmaxchardatalength": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"xmlmaxchardatalengthcheck": &schema.Schema{
+			"xmlmaxchardatalengthcheck": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"xmlmaxelementchildren": &schema.Schema{
+			"xmlmaxelementchildren": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"xmlmaxelementchildrencheck": &schema.Schema{
+			"xmlmaxelementchildrencheck": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"xmlmaxelementdepth": &schema.Schema{
+			"xmlmaxelementdepth": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"xmlmaxelementdepthcheck": &schema.Schema{
+			"xmlmaxelementdepthcheck": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"xmlmaxelementnamelength": &schema.Schema{
+			"xmlmaxelementnamelength": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"xmlmaxelementnamelengthcheck": &schema.Schema{
+			"xmlmaxelementnamelengthcheck": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"xmlmaxelements": &schema.Schema{
+			"xmlmaxelements": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"xmlmaxelementscheck": &schema.Schema{
+			"xmlmaxelementscheck": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"xmlmaxentityexpansiondepth": &schema.Schema{
+			"xmlmaxentityexpansiondepth": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"xmlmaxentityexpansiondepthcheck": &schema.Schema{
+			"xmlmaxentityexpansiondepthcheck": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"xmlmaxentityexpansions": &schema.Schema{
+			"xmlmaxentityexpansions": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"xmlmaxentityexpansionscheck": &schema.Schema{
+			"xmlmaxentityexpansionscheck": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"xmlmaxfilesize": &schema.Schema{
+			"xmlmaxfilesize": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"xmlmaxfilesizecheck": &schema.Schema{
+			"xmlmaxfilesizecheck": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"xmlmaxnamespaces": &schema.Schema{
+			"xmlmaxnamespaces": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"xmlmaxnamespacescheck": &schema.Schema{
+			"xmlmaxnamespacescheck": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"xmlmaxnamespaceurilength": &schema.Schema{
+			"xmlmaxnamespaceurilength": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"xmlmaxnamespaceurilengthcheck": &schema.Schema{
+			"xmlmaxnamespaceurilengthcheck": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"xmlmaxnodes": &schema.Schema{
+			"xmlmaxnodes": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"xmlmaxnodescheck": &schema.Schema{
+			"xmlmaxnodescheck": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"xmlmaxsoaparrayrank": &schema.Schema{
+			"xmlmaxsoaparrayrank": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"xmlmaxsoaparraysize": &schema.Schema{
+			"xmlmaxsoaparraysize": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"xmlminfilesize": &schema.Schema{
+			"xmlminfilesize": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"xmlminfilesizecheck": &schema.Schema{
+			"xmlminfilesizecheck": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"xmlsoaparraycheck": &schema.Schema{
+			"xmlsoaparraycheck": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

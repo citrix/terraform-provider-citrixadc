@@ -22,67 +22,67 @@ func resourceCitrixAdcBotsettings() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"defaultprofile": &schema.Schema{
+			"defaultprofile": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"defaultnonintrusiveprofile": &schema.Schema{
+			"defaultnonintrusiveprofile": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"javascriptname": &schema.Schema{
+			"javascriptname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sessiontimeout": &schema.Schema{
+			"sessiontimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"sessioncookiename": &schema.Schema{
+			"sessioncookiename": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"dfprequestlimit": &schema.Schema{
+			"dfprequestlimit": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"signatureautoupdate": &schema.Schema{
+			"signatureautoupdate": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"signatureurl": &schema.Schema{
+			"signatureurl": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"proxyserver": &schema.Schema{
+			"proxyserver": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"proxyport": &schema.Schema{
+			"proxyport": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"trapurlautogenerate": &schema.Schema{
+			"trapurlautogenerate": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"trapurlinterval": &schema.Schema{
+			"trapurlinterval": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"trapurllength": &schema.Schema{
+			"trapurllength": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,

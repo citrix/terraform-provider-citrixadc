@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -52,16 +52,16 @@ func TestAccTransformglobal_transformpolicy_binding_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckTransformglobal_transformpolicy_bindingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccTransformglobal_transformpolicy_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransformglobal_transformpolicy_bindingExist("citrixadc_transformglobal_transformpolicy_binding.transformglobal_transformpolicy_binding", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccTransformglobal_transformpolicy_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransformglobal_transformpolicy_bindingNotExist("citrixadc_transformglobal_transformpolicy_binding.transformglobal_transformpolicy_binding","tf_trans_policy","REQ_DEFAULT"),
+					testAccCheckTransformglobal_transformpolicy_bindingNotExist("citrixadc_transformglobal_transformpolicy_binding.transformglobal_transformpolicy_binding", "tf_trans_policy", "REQ_DEFAULT"),
 				),
 			},
 		},
@@ -93,7 +93,7 @@ func testAccCheckTransformglobal_transformpolicy_bindingExist(n string, id *stri
 		typename := rs.Primary.Attributes["type"]
 		findParams := service.FindParams{
 			ResourceType:             "transformglobal_transformpolicy_binding",
-			ArgsMap: 				  map[string]string{ "type":typename },
+			ArgsMap:                  map[string]string{"type": typename},
 			ResourceMissingErrorCode: 258,
 		}
 		dataArr, err := client.FindResourceArrayWithParams(findParams)
@@ -120,13 +120,13 @@ func testAccCheckTransformglobal_transformpolicy_bindingExist(n string, id *stri
 	}
 }
 
-func testAccCheckTransformglobal_transformpolicy_bindingNotExist(n string, id string,typename string) resource.TestCheckFunc {
+func testAccCheckTransformglobal_transformpolicy_bindingNotExist(n string, id string, typename string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		client := testAccProvider.Meta().(*NetScalerNitroClient).client
 		policyname := id
 		findParams := service.FindParams{
 			ResourceType:             "transformglobal_transformpolicy_binding",
-			ArgsMap: 				   map[string]string{ "type":typename },
+			ArgsMap:                  map[string]string{"type": typename},
 			ResourceMissingErrorCode: 258,
 		}
 		dataArr, err := client.FindResourceArrayWithParams(findParams)

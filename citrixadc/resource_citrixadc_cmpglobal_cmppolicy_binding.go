@@ -20,53 +20,53 @@ func resourceCitrixAdcCmpglobal_cmppolicy_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"policyname": &schema.Schema{
+			"policyname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"priority": &schema.Schema{
+			"priority": {
 				Type:     schema.TypeInt,
 				Required: true,
 				ForceNew: true,
 			},
-			"globalbindtype": &schema.Schema{
+			"globalbindtype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"gotopriorityexpression": &schema.Schema{
+			"gotopriorityexpression": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"invoke": &schema.Schema{
+			"invoke": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"labelname": &schema.Schema{
+			"labelname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"labeltype": &schema.Schema{
+			"labeltype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"state": &schema.Schema{
+			"state": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"type": &schema.Schema{
+			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -117,11 +117,10 @@ func readCmpglobal_cmppolicy_bindingFunc(d *schema.ResourceData, meta interface{
 	if v, ok := d.GetOk("type"); ok {
 		log.Printf("Inside if value: %s", v.(string))
 		argsMap["type"] = url.QueryEscape(v.(string))
-	//if type is not set by user, we set it with the default value, "RES_DEFAULT"
-	}	else {
+		//if type is not set by user, we set it with the default value, "RES_DEFAULT"
+	} else {
 		argsMap["type"] = url.QueryEscape("RES_DEFAULT")
 	}
-	
 
 	findParams := service.FindParams{
 		ResourceType:             "cmpglobal_cmppolicy_binding",

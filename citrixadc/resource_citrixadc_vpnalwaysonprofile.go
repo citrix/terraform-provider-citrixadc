@@ -21,22 +21,22 @@ func resourceCitrixAdcVpnalwaysonprofile() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"clientcontrol": &schema.Schema{
+			"clientcontrol": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"locationbasedvpn": &schema.Schema{
+			"locationbasedvpn": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"networkaccessonvpnfailure": &schema.Schema{
+			"networkaccessonvpnfailure": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

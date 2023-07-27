@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -34,21 +34,21 @@ func TestAccServicegroup_lbmonitor_binding_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServicegroup_lbmonitor_bindingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccServicegroup_lbmonitor_binding_basic_step1,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServicegroup_lbmonitor_bindingExist("citrixadc_servicegroup_lbmonitor_binding.bind1", nil),
 					testAccCheckServicegroup_lbmonitor_bindingExist("citrixadc_servicegroup_lbmonitor_binding.bind2", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccServicegroup_lbmonitor_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServicegroup_lbmonitor_bindingExist("citrixadc_servicegroup_lbmonitor_binding.bind1", nil),
 					testAccCheckServicegroup_lbmonitor_bindingExist("citrixadc_servicegroup_lbmonitor_binding.bind2", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccServicegroup_lbmonitor_binding_basic_step3,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServicegroup_lbmonitor_bindingExist("citrixadc_servicegroup_lbmonitor_binding.bind1", nil),

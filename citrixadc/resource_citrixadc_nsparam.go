@@ -16,145 +16,145 @@ func resourceCitrixAdcNsparam() *schema.Resource {
 		Read:          readNsparamFunc,
 		Delete:        deleteNsparamFunc,
 		Schema: map[string]*schema.Schema{
-			"advancedanalyticsstats": &schema.Schema{
+			"advancedanalyticsstats": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"aftpallowrandomsourceport": &schema.Schema{
+			"aftpallowrandomsourceport": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"cip": &schema.Schema{
+			"cip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"cipheader": &schema.Schema{
+			"cipheader": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"cookieversion": &schema.Schema{
+			"cookieversion": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"crportrange": &schema.Schema{
+			"crportrange": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"exclusivequotamaxclient": &schema.Schema{
+			"exclusivequotamaxclient": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"exclusivequotaspillover": &schema.Schema{
+			"exclusivequotaspillover": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"ftpportrange": &schema.Schema{
+			"ftpportrange": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"grantquotamaxclient": &schema.Schema{
+			"grantquotamaxclient": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"grantquotaspillover": &schema.Schema{
+			"grantquotaspillover": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"internaluserlogin": &schema.Schema{
+			"internaluserlogin": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"maxconn": &schema.Schema{
+			"maxconn": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"maxreq": &schema.Schema{
+			"maxreq": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"mgmthttpport": &schema.Schema{
+			"mgmthttpport": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"mgmthttpsport": &schema.Schema{
+			"mgmthttpsport": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"pmtumin": &schema.Schema{
+			"pmtumin": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"pmtutimeout": &schema.Schema{
+			"pmtutimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"proxyprotocol": &schema.Schema{
+			"proxyprotocol": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"securecookie": &schema.Schema{
+			"securecookie": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"servicepathingressvlan": &schema.Schema{
+			"servicepathingressvlan": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"tcpcip": &schema.Schema{
+			"tcpcip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"timezone": &schema.Schema{
+			"timezone": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"useproxyport": &schema.Schema{
+			"useproxyport": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -169,78 +169,78 @@ func createNsparamFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	nsparamId := resource.PrefixedUniqueId("tf-nsparam-")
 	nsparam := make(map[string]interface{})
-    if data, ok := d.GetOk("advancedanalyticsstats"); ok {
-        nsparam["advancedanalyticsstats"] = data.(string)
-    }
-    if data, ok := d.GetOk("aftpallowrandomsourceport"); ok {
-        nsparam["aftpallowrandomsourceport"] = data.(string)
-    }
-    if data, ok := d.GetOk("cip"); ok {
-        nsparam["cip"] = data.(string)
-    }
-    if data, ok := d.GetOk("cipheader"); ok {
-        nsparam["cipheader"] = data.(string)
-    }
-    if data, ok := d.GetOk("cookieversion"); ok {
-        nsparam["cookieversion"] = data.(string)
-    }
-    if data, ok := d.GetOk("crportrange"); ok {
-        nsparam["crportrange"] = data.(string)
-    }
-    if data, ok := d.GetOk("exclusivequotamaxclient"); ok {
-        nsparam["exclusivequotamaxclient"] = data.(string)
-    }
-    if data, ok := d.GetOk("exclusivequotaspillover"); ok {
-        nsparam["exclusivequotaspillover"] = data.(string)
-    }
-    if data, ok := d.GetOk("ftpportrange"); ok {
-        nsparam["ftpportrange"] = data.(string)
-    }
-    if data, ok := d.GetOk("grantquotaspillover"); ok {
-        nsparam["grantquotaspillover"] = data.(string)
-    }
-    if data, ok := d.GetOk("grantquotamaxclient"); ok {
-        nsparam["grantquotamaxclient"] = data.(string)
-    }
-    if data, ok := d.GetOk("internaluserlogin"); ok {
-        nsparam["internaluserlogin"] = data.(string)
-    }
-    if data, ok := d.GetOkExists("maxconn"); ok {
-        nsparam["maxconn"] = data.(int)
-    }
-    if data, ok := d.GetOkExists("maxreq"); ok {
-        nsparam["maxreq"] = data.(int)
-    }
-    if data, ok := d.GetOk("mgmthttpport"); ok {
-        nsparam["mgmthttpport"] = data.(int)
-    }
-    if data, ok := d.GetOk("mgmthttpsport"); ok {
-        nsparam["mgmthttpsport"] = data.(int)
-    }
-    if data, ok := d.GetOk("pmtumin"); ok {
-        nsparam["pmtumin"] = data.(int)
-    }
-    if data, ok := d.GetOk("pmtutimeout"); ok {
-        nsparam["pmtutimeout"] = data.(int)
-    }
-    if data, ok := d.GetOk("proxyprotocol"); ok {
-        nsparam["proxyprotocol"] = data.(string)
-    }
-    if data, ok := d.GetOk("securecookie"); ok {
-        nsparam["securecookie"] = data.(string)
-    }
-    if data, ok := d.GetOk("servicepathingressvlan"); ok {
-        nsparam["servicepathingressvlan"] = data.(string)
-    }
-    if data, ok := d.GetOk("tcpcip"); ok {
-        nsparam["tcpcip"] = data.(string)
-    }
-    if data, ok := d.GetOk("timezone"); ok {
-        nsparam["timezone"] = data.(string)
-    }
-    if data, ok := d.GetOk("useproxyport"); ok {
-        nsparam["useproxyport"] = data.(string)
-    }
+	if data, ok := d.GetOk("advancedanalyticsstats"); ok {
+		nsparam["advancedanalyticsstats"] = data.(string)
+	}
+	if data, ok := d.GetOk("aftpallowrandomsourceport"); ok {
+		nsparam["aftpallowrandomsourceport"] = data.(string)
+	}
+	if data, ok := d.GetOk("cip"); ok {
+		nsparam["cip"] = data.(string)
+	}
+	if data, ok := d.GetOk("cipheader"); ok {
+		nsparam["cipheader"] = data.(string)
+	}
+	if data, ok := d.GetOk("cookieversion"); ok {
+		nsparam["cookieversion"] = data.(string)
+	}
+	if data, ok := d.GetOk("crportrange"); ok {
+		nsparam["crportrange"] = data.(string)
+	}
+	if data, ok := d.GetOk("exclusivequotamaxclient"); ok {
+		nsparam["exclusivequotamaxclient"] = data.(string)
+	}
+	if data, ok := d.GetOk("exclusivequotaspillover"); ok {
+		nsparam["exclusivequotaspillover"] = data.(string)
+	}
+	if data, ok := d.GetOk("ftpportrange"); ok {
+		nsparam["ftpportrange"] = data.(string)
+	}
+	if data, ok := d.GetOk("grantquotaspillover"); ok {
+		nsparam["grantquotaspillover"] = data.(string)
+	}
+	if data, ok := d.GetOk("grantquotamaxclient"); ok {
+		nsparam["grantquotamaxclient"] = data.(string)
+	}
+	if data, ok := d.GetOk("internaluserlogin"); ok {
+		nsparam["internaluserlogin"] = data.(string)
+	}
+	if data, ok := d.GetOkExists("maxconn"); ok {
+		nsparam["maxconn"] = data.(int)
+	}
+	if data, ok := d.GetOkExists("maxreq"); ok {
+		nsparam["maxreq"] = data.(int)
+	}
+	if data, ok := d.GetOk("mgmthttpport"); ok {
+		nsparam["mgmthttpport"] = data.(int)
+	}
+	if data, ok := d.GetOk("mgmthttpsport"); ok {
+		nsparam["mgmthttpsport"] = data.(int)
+	}
+	if data, ok := d.GetOk("pmtumin"); ok {
+		nsparam["pmtumin"] = data.(int)
+	}
+	if data, ok := d.GetOk("pmtutimeout"); ok {
+		nsparam["pmtutimeout"] = data.(int)
+	}
+	if data, ok := d.GetOk("proxyprotocol"); ok {
+		nsparam["proxyprotocol"] = data.(string)
+	}
+	if data, ok := d.GetOk("securecookie"); ok {
+		nsparam["securecookie"] = data.(string)
+	}
+	if data, ok := d.GetOk("servicepathingressvlan"); ok {
+		nsparam["servicepathingressvlan"] = data.(string)
+	}
+	if data, ok := d.GetOk("tcpcip"); ok {
+		nsparam["tcpcip"] = data.(string)
+	}
+	if data, ok := d.GetOk("timezone"); ok {
+		nsparam["timezone"] = data.(string)
+	}
+	if data, ok := d.GetOk("useproxyport"); ok {
+		nsparam["useproxyport"] = data.(string)
+	}
 	err := client.UpdateUnnamedResource(service.Nsparam.Type(), &nsparam)
 	if err != nil {
 		return err

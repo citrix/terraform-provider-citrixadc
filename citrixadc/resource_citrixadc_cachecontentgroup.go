@@ -1,7 +1,6 @@
 package citrixadc
 
 import (
-
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
@@ -20,221 +19,221 @@ func resourceCitrixAdcCachecontentgroup() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"absexpiry": &schema.Schema{
+			"absexpiry": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"absexpirygmt": &schema.Schema{
+			"absexpirygmt": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"alwaysevalpolicies": &schema.Schema{
+			"alwaysevalpolicies": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"cachecontrol": &schema.Schema{
+			"cachecontrol": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"expireatlastbyte": &schema.Schema{
+			"expireatlastbyte": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"flashcache": &schema.Schema{
+			"flashcache": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"heurexpiryparam": &schema.Schema{
+			"heurexpiryparam": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"hitparams": &schema.Schema{
+			"hitparams": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"hitselector": &schema.Schema{
+			"hitselector": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"host": &schema.Schema{
+			"host": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ignoreparamvaluecase": &schema.Schema{
+			"ignoreparamvaluecase": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ignorereloadreq": &schema.Schema{
+			"ignorereloadreq": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ignorereqcachinghdrs": &schema.Schema{
+			"ignorereqcachinghdrs": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"insertage": &schema.Schema{
+			"insertage": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"insertetag": &schema.Schema{
+			"insertetag": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"insertvia": &schema.Schema{
+			"insertvia": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"invalparams": &schema.Schema{
+			"invalparams": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"invalrestrictedtohost": &schema.Schema{
+			"invalrestrictedtohost": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"invalselector": &schema.Schema{
+			"invalselector": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"lazydnsresolve": &schema.Schema{
+			"lazydnsresolve": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"matchcookies": &schema.Schema{
+			"matchcookies": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"maxressize": &schema.Schema{
+			"maxressize": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"memlimit": &schema.Schema{
+			"memlimit": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"minhits": &schema.Schema{
+			"minhits": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"minressize": &schema.Schema{
+			"minressize": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"persistha": &schema.Schema{
+			"persistha": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"pinned": &schema.Schema{
+			"pinned": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"polleverytime": &schema.Schema{
+			"polleverytime": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"prefetch": &schema.Schema{
+			"prefetch": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"prefetchmaxpending": &schema.Schema{
+			"prefetchmaxpending": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"prefetchperiod": &schema.Schema{
+			"prefetchperiod": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"prefetchperiodmillisec": &schema.Schema{
+			"prefetchperiodmillisec": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"query": &schema.Schema{
+			"query": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"quickabortsize": &schema.Schema{
+			"quickabortsize": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"relexpiry": &schema.Schema{
+			"relexpiry": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"relexpirymillisec": &schema.Schema{
+			"relexpirymillisec": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"removecookies": &schema.Schema{
+			"removecookies": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"selectorvalue": &schema.Schema{
+			"selectorvalue": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"tosecondary": &schema.Schema{
+			"tosecondary": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"type": &schema.Schema{
+			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"weaknegrelexpiry": &schema.Schema{
+			"weaknegrelexpiry": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"weakposrelexpiry": &schema.Schema{
+			"weakposrelexpiry": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -254,7 +253,7 @@ func createCachecontentgroupFunc(d *schema.ResourceData, meta interface{}) error
 	}
 	if v, ok := d.GetOk("polleverytime"); ok {
 		cachecontentgroup["polleverytime"] = v.(string)
-	} 
+	}
 	if v, ok := d.GetOk("pinned"); ok {
 		cachecontentgroup["pinned"] = v.(string)
 	}
@@ -266,67 +265,67 @@ func createCachecontentgroupFunc(d *schema.ResourceData, meta interface{}) error
 	}
 	if v, ok := d.GetOkExists("minressize"); ok {
 		cachecontentgroup["minressize"] = v.(int)
-	} 
+	}
 	if v, ok := d.GetOkExists("minhits"); ok {
 		cachecontentgroup["minhits"] = v.(int)
 	}
 	if v, ok := d.GetOk("memlimit"); ok {
 		cachecontentgroup["memlimit"] = v.(int)
-	}	
+	}
 	if v, ok := d.GetOkExists("maxressize"); ok {
 		cachecontentgroup["maxressize"] = v.(int)
 	}
 	if v, ok := d.GetOk("matchcookies"); ok {
 		cachecontentgroup["matchcookies"] = v.(string)
-	} 
+	}
 	if v, ok := d.GetOk("lazydnsresolve"); ok {
 		cachecontentgroup["lazydnsresolve"] = v.(string)
 	}
 	if v, ok := d.GetOk("invalselector"); ok {
 		cachecontentgroup["invalselector"] = v.(string)
-	}	
+	}
 	if v, ok := d.GetOk("invalrestrictedtohost"); ok {
 		cachecontentgroup["invalrestrictedtohost"] = v.(string)
 	}
 	if v, ok := d.GetOk("invalparams"); ok {
 		cachecontentgroup["invalparams"] = toStringList(v.([]interface{}))
-	} 
+	}
 	if v, ok := d.GetOk("insertvia"); ok {
 		cachecontentgroup["insertvia"] = v.(string)
 	}
 	if v, ok := d.GetOk("insertetag"); ok {
 		cachecontentgroup["insertetag"] = v.(string)
-	}	
+	}
 	if v, ok := d.GetOk("insertage"); ok {
 		cachecontentgroup["insertage"] = v.(string)
 	}
 	if v, ok := d.GetOk("ignoreparamvaluecase"); ok {
 		cachecontentgroup["ignoreparamvaluecase"] = v.(string)
-	} 
+	}
 	if v, ok := d.GetOk("host"); ok {
 		cachecontentgroup["host"] = v.(string)
 	}
 	if v, ok := d.GetOk("hitselector"); ok {
 		cachecontentgroup["hitselector"] = v.(string)
-	}	
+	}
 	if v, ok := d.GetOk("hitparams"); ok {
 		cachecontentgroup["hitparams"] = toStringList(v.([]interface{}))
 	}
 	if v, ok := d.GetOkExists("heurexpiryparam"); ok {
 		cachecontentgroup["heurexpiryparam"] = v.(int)
-	} 
+	}
 	if v, ok := d.GetOk("flashcache"); ok {
 		cachecontentgroup["flashcache"] = v.(string)
 	}
 	if v, ok := d.GetOk("expireatlastbyte"); ok {
 		cachecontentgroup["expireatlastbyte"] = v.(string)
-	}	
+	}
 	if v, ok := d.GetOk("cachecontrol"); ok {
 		cachecontentgroup["cachecontrol"] = v.(int)
 	}
 	if v, ok := d.GetOk("alwaysevalpolicies"); ok {
 		cachecontentgroup["alwaysevalpolicies"] = v.(string)
-	} 
+	}
 	if v, ok := d.GetOk("absexpirygmt"); ok {
 		cachecontentgroup["absexpirygmt"] = toStringList(v.([]interface{}))
 	}
@@ -335,19 +334,19 @@ func createCachecontentgroupFunc(d *schema.ResourceData, meta interface{}) error
 	}
 	if v, ok := d.GetOkExists("prefetchmaxpending"); ok {
 		cachecontentgroup["prefetchmaxpending"] = v.(int)
-	}	
+	}
 	if v, ok := d.GetOkExists("prefetchperiod"); ok {
 		cachecontentgroup["prefetchperiod"] = v.(int)
-	}	
+	}
 	if v, ok := d.GetOkExists("prefetchperiodmillisec"); ok {
 		cachecontentgroup["prefetchperiodmillisec"] = v.(int)
-	}	
+	}
 	if v, ok := d.GetOk("query"); ok {
 		cachecontentgroup["query"] = v.(string)
-	}	
+	}
 	if v, ok := d.GetOkExists("quickabortsize"); ok {
 		cachecontentgroup["quickabortsize"] = v.(int)
-	}	
+	}
 	if v, ok := d.GetOkExists("relexpiry"); ok {
 		cachecontentgroup["relexpiry"] = v.(int)
 	}
@@ -372,8 +371,6 @@ func createCachecontentgroupFunc(d *schema.ResourceData, meta interface{}) error
 	if v, ok := d.GetOk("weakposrelexpiry"); ok {
 		cachecontentgroup["weakposrelexpiry"] = v.(int)
 	}
-
-
 
 	// cachecontentgroup := cache.Cachecontentgroup{
 	// 	Absexpiry:              toStringList(d.Get("absexpiry").([]interface{})),
@@ -501,8 +498,8 @@ func updateCachecontentgroupFunc(d *schema.ResourceData, meta interface{}) error
 	cachecontentgroupName := d.Get("name").(string)
 
 	cachecontentgroup := make(map[string]interface{})
-	cachecontentgroup["name"] =  d.Get("name").(string)
-	
+	cachecontentgroup["name"] = d.Get("name").(string)
+
 	hasChange := false
 	if d.HasChange("absexpiry") {
 		log.Printf("[DEBUG]  citrixadc-provider: Absexpiry has changed for cachecontentgroup %s, starting update", cachecontentgroupName)

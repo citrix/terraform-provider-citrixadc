@@ -17,17 +17,17 @@ func resourceCitrixAdcLldpparam() *schema.Resource {
 		Update:        updateLldpparamFunc,
 		Delete:        deleteLldpparamFunc,
 		Schema: map[string]*schema.Schema{
-			"holdtimetxmult": &schema.Schema{
+			"holdtimetxmult": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"mode": &schema.Schema{
+			"mode": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"timer": &schema.Schema{
+			"timer": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -40,7 +40,7 @@ func createLldpparamFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createLldpparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lldpparamName := resource.PrefixedUniqueId("tf-lldpparam-")
-	
+
 	lldpparam := lldp.Lldpparam{
 		Holdtimetxmult: d.Get("holdtimetxmult").(int),
 		Mode:           d.Get("mode").(string),

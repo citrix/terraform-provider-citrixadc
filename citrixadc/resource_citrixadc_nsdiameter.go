@@ -19,22 +19,22 @@ func resourceCitrixAdcNsdiameter() *schema.Resource {
 		Update:        updateNsdiameterFunc,
 		Delete:        deleteNsdiameterFunc,
 		Schema: map[string]*schema.Schema{
-			"identity": &schema.Schema{
+			"identity": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ownernode": &schema.Schema{
+			"ownernode": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"realm": &schema.Schema{
+			"realm": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"serverclosepropagation": &schema.Schema{
+			"serverclosepropagation": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

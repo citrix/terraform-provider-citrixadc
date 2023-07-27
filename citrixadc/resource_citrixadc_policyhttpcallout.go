@@ -22,84 +22,84 @@ func resourceCitrixAdcPolicyhttpcallout() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"bodyexpr": &schema.Schema{
+			"bodyexpr": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"cacheforsecs": &schema.Schema{
+			"cacheforsecs": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"comment": &schema.Schema{
+			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"fullreqexpr": &schema.Schema{
+			"fullreqexpr": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"headers": &schema.Schema{
+			"headers": {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 				Computed: true,
 			},
-			"hostexpr": &schema.Schema{
+			"hostexpr": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"httpmethod": &schema.Schema{
+			"httpmethod": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ipaddress": &schema.Schema{
+			"ipaddress": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"parameters": &schema.Schema{
+			"parameters": {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 				Computed: true,
 			},
-			"port": &schema.Schema{
+			"port": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"resultexpr": &schema.Schema{
+			"resultexpr": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"returntype": &schema.Schema{
+			"returntype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"scheme": &schema.Schema{
+			"scheme": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"urlstemexpr": &schema.Schema{
+			"urlstemexpr": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"vserver": &schema.Schema{
+			"vserver": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

@@ -20,27 +20,27 @@ func resourceCitrixAdcLsnhttphdrlogprofile() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"httphdrlogprofilename": &schema.Schema{
+			"httphdrlogprofilename": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"loghost": &schema.Schema{
+			"loghost": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"logmethod": &schema.Schema{
+			"logmethod": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"logurl": &schema.Schema{
+			"logurl": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"logversion": &schema.Schema{
+			"logversion": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

@@ -19,37 +19,37 @@ func resourceCitrixAdcLbsipparameters() *schema.Resource {
 		Update:        updateLbsipparametersFunc,
 		Delete:        deleteLbsipparametersFunc, // Thought lbsipparameters resource does not have a DELETE operation, it is required to set ID to "" d.SetID("") to maintain terraform state
 		Schema: map[string]*schema.Schema{
-			"addrportvip": &schema.Schema{
+			"addrportvip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"retrydur": &schema.Schema{
+			"retrydur": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"rnatdstport": &schema.Schema{
+			"rnatdstport": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"rnatsecuredstport": &schema.Schema{
+			"rnatsecuredstport": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"rnatsecuresrcport": &schema.Schema{
+			"rnatsecuresrcport": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"rnatsrcport": &schema.Schema{
+			"rnatsrcport": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"sip503ratethreshold": &schema.Schema{
+			"sip503ratethreshold": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,

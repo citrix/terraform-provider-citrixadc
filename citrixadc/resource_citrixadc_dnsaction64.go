@@ -21,22 +21,22 @@ func resourceCitrixAdcDnsaction64() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"actionname": &schema.Schema{
+			"actionname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"excluderule": &schema.Schema{
+			"excluderule": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"mappedrule": &schema.Schema{
+			"mappedrule": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"prefix": &schema.Schema{
+			"prefix": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,

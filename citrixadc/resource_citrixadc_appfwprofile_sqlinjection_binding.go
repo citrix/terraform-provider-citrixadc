@@ -20,69 +20,69 @@ func resourceCitrixAdcAppfwprofile_sqlinjection_binding() *schema.Resource {
 		Read:          readAppfwprofile_sqlinjection_bindingFunc,
 		Delete:        deleteAppfwprofile_sqlinjection_bindingFunc,
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"sqlinjection": &schema.Schema{
+			"sqlinjection": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"as_scan_location_sql": &schema.Schema{
+			"as_scan_location_sql": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"formactionurl_sql": &schema.Schema{
+			"formactionurl_sql": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"alertonly": &schema.Schema{
+			"alertonly": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"as_value_expr_sql": &schema.Schema{
+			"as_value_expr_sql": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"as_value_type_sql": &schema.Schema{
+			"as_value_type_sql": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"comment": &schema.Schema{
+			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"isautodeployed": &schema.Schema{
+			"isautodeployed": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"isregex_sql": &schema.Schema{
+			"isregex_sql": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"isvalueregex_sql": &schema.Schema{
+			"isvalueregex_sql": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"state": &schema.Schema{
+			"state": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

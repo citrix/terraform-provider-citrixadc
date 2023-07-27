@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -63,13 +63,13 @@ func TestAccCrvserver_crpolicy_binding_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCrvserver_crpolicy_bindingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccCrvserver_crpolicy_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrvserver_crpolicy_bindingExist("citrixadc_crvserver_crpolicy_binding.crvserver_crpolicy_binding", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccCrvserver_crpolicy_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrvserver_crpolicy_bindingNotExist("citrixadc_crvserver_crpolicy_binding.crvserver_crpolicy_binding", "my_vserver,crpolicy1"),

@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -46,7 +46,7 @@ func TestAccAppflowcollector_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppflowcollectorDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAppflowcollector_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppflowcollectorExist("citrixadc_appflowcollector.tf_appflowcollector", nil),
@@ -54,10 +54,9 @@ func TestAccAppflowcollector_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_appflowcollector.tf_appflowcollector", "transport", "logstream"),
 					resource.TestCheckResourceAttr("citrixadc_appflowcollector.tf_appflowcollector", "ipaddress", "192.168.2.3"),
 					resource.TestCheckResourceAttr("citrixadc_appflowcollector.tf_appflowcollector", "port", "80"),
-
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAppflowcollector_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppflowcollectorExist("citrixadc_appflowcollector.tf_appflowcollector", nil),

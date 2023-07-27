@@ -1,7 +1,7 @@
 /*
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -12,11 +12,11 @@ limitations under the License.
 package citrixadc
 
 import (
-        "fmt"
-        "github.com/citrix/adc-nitro-go/service"
-        "github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-        "github.com/hashicorp/terraform-plugin-sdk/terraform"
-        "testing"
+	"fmt"
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"testing"
 )
 
 const testAccSystemglobal_auditnslogpolicy_binding_basic = `
@@ -32,129 +32,129 @@ const testAccSystemglobal_auditnslogpolicy_binding_basic_step2 = `
 `
 
 func TestAccSystemglobal_auditnslogpolicy_binding_basic(t *testing.T) {
-        resource.Test(t, resource.TestCase{
-                PreCheck:     func() { testAccPreCheck(t) },
-                Providers:    testAccProviders,
-                CheckDestroy: testAccCheckSystemglobal_auditnslogpolicy_bindingDestroy,
-                Steps: []resource.TestStep{
-                        resource.TestStep{
-                                Config: testAccSystemglobal_auditnslogpolicy_binding_basic,
-                                Check: resource.ComposeTestCheckFunc(
-                                        testAccCheckSystemglobal_auditnslogpolicy_bindingExist("citrixadc_systemglobal_auditnslogpolicy_binding.tf_systemglobal_auditnslogpolicy_binding", nil),
-                                ),
-                        },
-                        resource.TestStep{
-                                Config: testAccSystemglobal_auditnslogpolicy_binding_basic_step2,
-                                Check: resource.ComposeTestCheckFunc(
-                                        testAccCheckSystemglobal_auditnslogpolicy_bindingNotExist("citrixadc_systemglobal_auditnslogpolicy_binding.tf_systemglobal_auditnslogpolicy_binding", "tf_auditnslogpolicy"),
-                                ),
-                        },
-                },
-        })
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckSystemglobal_auditnslogpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSystemglobal_auditnslogpolicy_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSystemglobal_auditnslogpolicy_bindingExist("citrixadc_systemglobal_auditnslogpolicy_binding.tf_systemglobal_auditnslogpolicy_binding", nil),
+				),
+			},
+			{
+				Config: testAccSystemglobal_auditnslogpolicy_binding_basic_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSystemglobal_auditnslogpolicy_bindingNotExist("citrixadc_systemglobal_auditnslogpolicy_binding.tf_systemglobal_auditnslogpolicy_binding", "tf_auditnslogpolicy"),
+				),
+			},
+		},
+	})
 }
 
 func testAccCheckSystemglobal_auditnslogpolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
-        return func(s *terraform.State) error {
-                rs, ok := s.RootModule().Resources[n]
-                if !ok {
-                        return fmt.Errorf("Not found: %s", n)
-                }
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
 
-                if rs.Primary.ID == "" {
-                        return fmt.Errorf("No systemglobal_auditnslogpolicy_binding id is set")
-                }
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No systemglobal_auditnslogpolicy_binding id is set")
+		}
 
-                if id != nil {
-                        if *id != "" && *id != rs.Primary.ID {
-                                return fmt.Errorf("Resource ID has changed!")
-                        }
+		if id != nil {
+			if *id != "" && *id != rs.Primary.ID {
+				return fmt.Errorf("Resource ID has changed!")
+			}
 
-                        *id = rs.Primary.ID
-                }
+			*id = rs.Primary.ID
+		}
 
-                client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		client := testAccProvider.Meta().(*NetScalerNitroClient).client
 
-                policyname := rs.Primary.ID
-               
-				findParams := service.FindParams{
-                        ResourceType:             "systemglobal_auditnslogpolicy_binding",
-                        ResourceMissingErrorCode: 258,
-                }
-                dataArr, err := client.FindResourceArrayWithParams(findParams)
+		policyname := rs.Primary.ID
 
-                // Unexpected error
-                if err != nil {
-                        return err
-                }
+		findParams := service.FindParams{
+			ResourceType:             "systemglobal_auditnslogpolicy_binding",
+			ResourceMissingErrorCode: 258,
+		}
+		dataArr, err := client.FindResourceArrayWithParams(findParams)
 
-                // Iterate through results to find the one with the matching policyname
-                found := false
-                for _, v := range dataArr {
-                        if v["policyname"].(string) == policyname {
-                                found = true
-                                break
-                        }
-                }
+		// Unexpected error
+		if err != nil {
+			return err
+		}
 
-                if !found {
-                        return fmt.Errorf("systemglobal_auditnslogpolicy_binding %s not found", n)
-                }
+		// Iterate through results to find the one with the matching policyname
+		found := false
+		for _, v := range dataArr {
+			if v["policyname"].(string) == policyname {
+				found = true
+				break
+			}
+		}
 
-                return nil
-        }
+		if !found {
+			return fmt.Errorf("systemglobal_auditnslogpolicy_binding %s not found", n)
+		}
+
+		return nil
+	}
 }
 
 func testAccCheckSystemglobal_auditnslogpolicy_bindingNotExist(n string, id string) resource.TestCheckFunc {
-        return func(s *terraform.State) error {
-                client := testAccProvider.Meta().(*NetScalerNitroClient).client
-                
-				policyname := id
-                findParams := service.FindParams{
-                        ResourceType:             "systemglobal_auditnslogpolicy_binding",
-                        ResourceMissingErrorCode: 258,
-                }
-                dataArr, err := client.FindResourceArrayWithParams(findParams)
+	return func(s *terraform.State) error {
+		client := testAccProvider.Meta().(*NetScalerNitroClient).client
 
-                // Unexpected error
-                if err != nil {
-                        return err
-                }
+		policyname := id
+		findParams := service.FindParams{
+			ResourceType:             "systemglobal_auditnslogpolicy_binding",
+			ResourceMissingErrorCode: 258,
+		}
+		dataArr, err := client.FindResourceArrayWithParams(findParams)
 
-                // Iterate through results to hopefully not find the one with the matching policyname
-                found := false
-                for _, v := range dataArr {
-                        if v["policyname"].(string) == policyname {
-                                found = true
-                                break
-                        }
-                }
+		// Unexpected error
+		if err != nil {
+			return err
+		}
 
-                if found {
-                        return fmt.Errorf("systemglobal_auditnslogpolicy_binding %s was found, but it should have been destroyed", n)
-                }
+		// Iterate through results to hopefully not find the one with the matching policyname
+		found := false
+		for _, v := range dataArr {
+			if v["policyname"].(string) == policyname {
+				found = true
+				break
+			}
+		}
 
-                return nil
-        }
+		if found {
+			return fmt.Errorf("systemglobal_auditnslogpolicy_binding %s was found, but it should have been destroyed", n)
+		}
+
+		return nil
+	}
 }
 
 func testAccCheckSystemglobal_auditnslogpolicy_bindingDestroy(s *terraform.State) error {
-        nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
 
-        for _, rs := range s.RootModule().Resources {
-                if rs.Type != "citrixadc_systemglobal_auditnslogpolicy_binding" {
-                        continue
-                }
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "citrixadc_systemglobal_auditnslogpolicy_binding" {
+			continue
+		}
 
-                if rs.Primary.ID == "" {
-                        return fmt.Errorf("No name is set")
-                }
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No name is set")
+		}
 
-                _, err := nsClient.FindResource(service.Systemglobal_auditnslogpolicy_binding.Type(), rs.Primary.ID)
-                if err == nil {
-                        return fmt.Errorf("systemglobal_auditnslogpolicy_binding %s still exists", rs.Primary.ID)
-                }
+		_, err := nsClient.FindResource(service.Systemglobal_auditnslogpolicy_binding.Type(), rs.Primary.ID)
+		if err == nil {
+			return fmt.Errorf("systemglobal_auditnslogpolicy_binding %s still exists", rs.Primary.ID)
+		}
 
-        }
+	}
 
-        return nil
+	return nil
 }

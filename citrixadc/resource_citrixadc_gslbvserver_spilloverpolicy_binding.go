@@ -20,29 +20,29 @@ func resourceCitrixAdcGslbvserver_spilloverpolicy_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"policyname": &schema.Schema{
+			"policyname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"gotopriorityexpression": &schema.Schema{
+			"gotopriorityexpression": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"priority": &schema.Schema{
+			"priority": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"type": &schema.Schema{
+			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -57,7 +57,7 @@ func createGslbvserver_spilloverpolicy_bindingFunc(d *schema.ResourceData, meta 
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name")
 	policyname := d.Get("policyname")
-	
+
 	bindingId := fmt.Sprintf("%s,%s", name, policyname)
 	gslbvserver_spilloverpolicy_binding := gslb.Gslbvserverspilloverpolicybinding{
 		Gotopriorityexpression: d.Get("gotopriorityexpression").(string),

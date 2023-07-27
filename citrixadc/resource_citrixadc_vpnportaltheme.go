@@ -15,13 +15,13 @@ func resourceCitrixAdcVpnportaltheme() *schema.Resource {
 		Read:          readVpnportalthemeFunc,
 		Delete:        deleteVpnportalthemeFunc,
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"basetheme": &schema.Schema{
+			"basetheme": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,

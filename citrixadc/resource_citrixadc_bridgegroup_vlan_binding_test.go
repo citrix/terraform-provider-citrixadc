@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -59,7 +59,7 @@ func TestAccBridgegroup_vlan_binding_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBridgegroup_vlan_bindingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccBridgegroup_vlan_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBridgegroup_vlan_bindingExist("citrixadc_bridgegroup_vlan_binding.tf_binding", nil),
@@ -67,7 +67,7 @@ func TestAccBridgegroup_vlan_binding_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_bridgegroup_vlan_binding.tf_binding", "vlan", "20"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccBridgegroup_vlan_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBridgegroup_vlan_bindingNotExist("citrixadc_bridgegroup_vlan_binding.tf_binding", "2,20"),

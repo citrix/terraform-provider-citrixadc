@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -41,7 +41,7 @@ const testAccAuthenticationtacacspolicy_add = `
 		
 	}
 `
-const testAccAuthenticationtacacspolicy_update= `
+const testAccAuthenticationtacacspolicy_update = `
 	resource "citrixadc_authenticationtacacsaction" "tf_tacacsaction" {
 		name            = "tf_tacacsaction"
 		serverip        = "1.2.3.4"
@@ -66,7 +66,7 @@ func TestAccAuthenticationtacacspolicy_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAuthenticationtacacspolicyDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAuthenticationtacacspolicy_add,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthenticationtacacspolicyExist("citrixadc_authenticationtacacspolicy.tf_tacacspolicy", nil),
@@ -74,7 +74,7 @@ func TestAccAuthenticationtacacspolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_authenticationtacacspolicy.tf_tacacspolicy", "rule", "NS_TRUE"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAuthenticationtacacspolicy_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthenticationtacacspolicyExist("citrixadc_authenticationtacacspolicy.tf_tacacspolicy", nil),

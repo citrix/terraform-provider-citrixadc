@@ -21,18 +21,18 @@ func resourceCitrixAdcDnstxtrec() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"domain": &schema.Schema{
+			"domain": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"string": &schema.Schema{
+			"string": {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Required: true,
 				ForceNew: true,
 			},
-			"ttl": &schema.Schema{
+			"ttl": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				ForceNew: true,
@@ -46,9 +46,9 @@ func createDnstxtrecFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	dnstxtrecName := d.Get("domain").(string)
 	dnstxtrec := dns.Dnstxtrec{
-		Domain:    dnstxtrecName,
-		String:    toStringList(d.Get("string").([]interface{})),
-		Ttl:       d.Get("ttl").(int),
+		Domain: dnstxtrecName,
+		String: toStringList(d.Get("string").([]interface{})),
+		Ttl:    d.Get("ttl").(int),
 	}
 
 	_, err := client.AddResource(service.Dnstxtrec.Type(), dnstxtrecName, &dnstxtrec)
@@ -97,7 +97,7 @@ func deleteDnstxtrecFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	argsMap := make(map[string]string)
-	argsMap["recordid"] = fmt.Sprintf("%v",data["recordid"])
+	argsMap["recordid"] = fmt.Sprintf("%v", data["recordid"])
 	argsMap["domain"] = url.QueryEscape(d.Id())
 
 	err = client.DeleteResourceWithArgsMap(service.Dnstxtrec.Type(), dnstxtrecName, argsMap)

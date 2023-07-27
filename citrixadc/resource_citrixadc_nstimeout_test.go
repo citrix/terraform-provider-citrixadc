@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"testing"
 )
-
 
 const testAccNstimeout_basic = `
 
@@ -55,26 +54,26 @@ func TestAccNstimeout_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccNstimeout_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNstimeoutExist("citrixadc_nstimeout.tf_nstimeout", nil),
-					resource.TestCheckResourceAttr("citrixadc_nstimeout.tf_nstimeout", "zombie", "60"), 
-					resource.TestCheckResourceAttr("citrixadc_nstimeout.tf_nstimeout", "client", "2000"), 
-					resource.TestCheckResourceAttr("citrixadc_nstimeout.tf_nstimeout", "server", "2000"), 
-					resource.TestCheckResourceAttr("citrixadc_nstimeout.tf_nstimeout", "httpclient", "2000"), 
-					resource.TestCheckResourceAttr("citrixadc_nstimeout.tf_nstimeout", "reducedrsttimeout", "10"), 
+					resource.TestCheckResourceAttr("citrixadc_nstimeout.tf_nstimeout", "zombie", "60"),
+					resource.TestCheckResourceAttr("citrixadc_nstimeout.tf_nstimeout", "client", "2000"),
+					resource.TestCheckResourceAttr("citrixadc_nstimeout.tf_nstimeout", "server", "2000"),
+					resource.TestCheckResourceAttr("citrixadc_nstimeout.tf_nstimeout", "httpclient", "2000"),
+					resource.TestCheckResourceAttr("citrixadc_nstimeout.tf_nstimeout", "reducedrsttimeout", "10"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccNstimeout_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNstimeoutExist("citrixadc_nstimeout.tf_nstimeout", nil),
-					resource.TestCheckResourceAttr("citrixadc_nstimeout.tf_nstimeout", "zombie", "70"), 
-					resource.TestCheckResourceAttr("citrixadc_nstimeout.tf_nstimeout", "client", "2300"), 
-					resource.TestCheckResourceAttr("citrixadc_nstimeout.tf_nstimeout", "server", "2400"), 
-					resource.TestCheckResourceAttr("citrixadc_nstimeout.tf_nstimeout", "httpclient", "2500"), 
-					resource.TestCheckResourceAttr("citrixadc_nstimeout.tf_nstimeout", "reducedrsttimeout", "15"), 
+					resource.TestCheckResourceAttr("citrixadc_nstimeout.tf_nstimeout", "zombie", "70"),
+					resource.TestCheckResourceAttr("citrixadc_nstimeout.tf_nstimeout", "client", "2300"),
+					resource.TestCheckResourceAttr("citrixadc_nstimeout.tf_nstimeout", "server", "2400"),
+					resource.TestCheckResourceAttr("citrixadc_nstimeout.tf_nstimeout", "httpclient", "2500"),
+					resource.TestCheckResourceAttr("citrixadc_nstimeout.tf_nstimeout", "reducedrsttimeout", "15"),
 				),
 			},
 		},

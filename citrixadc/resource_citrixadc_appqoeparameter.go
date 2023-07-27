@@ -19,22 +19,22 @@ func resourceCitrixAdcAppqoeparameter() *schema.Resource {
 		Update:        updateAppqoeparameterFunc,
 		Delete:        deleteAppqoeparameterFunc,
 		Schema: map[string]*schema.Schema{
-			"avgwaitingclient": &schema.Schema{
+			"avgwaitingclient": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"dosattackthresh": &schema.Schema{
+			"dosattackthresh": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"maxaltrespbandwidth": &schema.Schema{
+			"maxaltrespbandwidth": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"sessionlife": &schema.Schema{
+			"sessionlife": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -48,13 +48,13 @@ func createAppqoeparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	appqoeparameterName := resource.PrefixedUniqueId("tf-appqoeparameter-")
 	appqoeparameter := make(map[string]interface{})
-	
+
 	if v, ok := d.GetOkExists("avgwaitingclient"); ok {
 		appqoeparameter["avgwaitingclient"] = v.(int)
 	}
 	if v, ok := d.GetOkExists("dosattackthresh"); ok {
 		appqoeparameter["dosattackthresh"] = v.(int)
-	} 
+	}
 	if v, ok := d.GetOk("maxaltrespbandwidth"); ok {
 		appqoeparameter["maxaltrespbandwidth"] = v.(int)
 	}

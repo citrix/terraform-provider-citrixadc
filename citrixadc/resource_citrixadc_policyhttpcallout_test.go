@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -102,7 +102,7 @@ func TestAccPolicyhttpcallout_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckPolicyhttpcalloutDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccPolicyhttpcallout_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyhttpcalloutExist("citrixadc_policyhttpcallout.tf_policyhttpcallout", nil),
@@ -122,7 +122,7 @@ func TestAccPolicyhttpcallout_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_policyhttpcallout.tf_policyhttpcallout", "vserver", "tf_lbvserver"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccPolicyhttpcallout_basic_update_list_attributes,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyhttpcalloutExist("citrixadc_policyhttpcallout.tf_policyhttpcallout", nil),
@@ -130,7 +130,7 @@ func TestAccPolicyhttpcallout_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_policyhttpcallout.tf_policyhttpcallout", "parameters.0", "param_update(\"name_update\")"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccPolicyhttpcallout_basic_update_other_attributes,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyhttpcalloutExist("citrixadc_policyhttpcallout.tf_policyhttpcallout", nil),
@@ -145,7 +145,7 @@ func TestAccPolicyhttpcallout_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_policyhttpcallout.tf_policyhttpcallout", "vserver", "tf_lbvserver_update"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccPolicyhttpcallout_basic_update_return_type,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyhttpcalloutExist("citrixadc_policyhttpcallout.tf_policyhttpcallout", nil),

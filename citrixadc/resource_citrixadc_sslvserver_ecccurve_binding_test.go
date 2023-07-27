@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -55,13 +55,13 @@ func TestAccSslvserver_ecccurve_binding_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSslvserver_ecccurve_bindingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccSslvserver_ecccurve_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSslvserver_ecccurve_bindingExist("citrixadc_sslvserver_ecccurve_binding.tf_sslvserver_ecccurve_binding", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccSslvserver_ecccurve_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSslvserver_ecccurve_bindingNotExist("citrixadc_sslvserver_ecccurve_binding.tf_sslvserver_ecccurve_binding", "tf_sslvserver,P_256"),

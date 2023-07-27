@@ -19,18 +19,18 @@ func resourceCitrixAdcRewritepolicylabel() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"comment": &schema.Schema{
+			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"labelname": &schema.Schema{
+			"labelname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"transform": &schema.Schema{
+			"transform": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

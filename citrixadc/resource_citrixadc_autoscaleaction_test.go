@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -46,14 +46,13 @@ resource "citrixadc_autoscaleaction" "tf_autoscaleaction" {
   }
 `
 
-
 func TestAccAutoscaleaction_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAutoscaleactionDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAutoscaleaction_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutoscaleactionExist("citrixadc_autoscaleaction.tf_autoscaleaction", nil),
@@ -64,7 +63,7 @@ func TestAccAutoscaleaction_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_autoscaleaction.tf_autoscaleaction", "parameters", "my_parameters"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAutoscaleaction_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutoscaleactionExist("citrixadc_autoscaleaction.tf_autoscaleaction", nil),

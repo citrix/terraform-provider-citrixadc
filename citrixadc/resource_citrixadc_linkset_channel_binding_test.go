@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,8 +20,8 @@ import (
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"strings"
 	"net/url"
+	"strings"
 	"testing"
 )
 
@@ -59,13 +59,13 @@ func TestAccLinkset_channel_binding_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLinkset_channel_bindingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccLinkset_channel_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLinkset_channel_bindingExist("citrixadc_linkset_channel_binding.tf_linkset_channel_binding", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccLinkset_channel_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLinkset_channel_bindingNotExist("citrixadc_linkset_channel_binding.tf_linkset_channel_binding", "LS/3,0/LA/2"),
@@ -146,7 +146,7 @@ func testAccCheckLinkset_channel_bindingNotExist(n string, id string) resource.T
 
 		findParams := service.FindParams{
 			ResourceType:             "linkset_channel_binding",
-			ResourceName:              url.QueryEscape(url.QueryEscape(id)),
+			ResourceName:             url.QueryEscape(url.QueryEscape(id)),
 			ResourceMissingErrorCode: 258,
 		}
 		dataArr, err := client.FindResourceArrayWithParams(findParams)
@@ -185,7 +185,7 @@ func testAccCheckLinkset_channel_bindingDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Linkset_channel_binding.Type(),  url.QueryEscape(url.QueryEscape(rs.Primary.ID)))
+		_, err := nsClient.FindResource(service.Linkset_channel_binding.Type(), url.QueryEscape(url.QueryEscape(rs.Primary.ID)))
 		if err == nil {
 			return fmt.Errorf("linkset_channel_binding %s still exists", rs.Primary.ID)
 		}

@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -110,13 +110,13 @@ func TestAccAppfwprofile_fieldformat_binding_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppfwprofile_fieldformat_bindingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAppfwprofile_fieldformat_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppfwprofile_fieldformat_bindingExist("citrixadc_appfwprofile_fieldformat_binding.tf_binding", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAppfwprofile_fieldformat_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppfwprofile_fieldformat_bindingNotExist("citrixadc_appfwprofile_fieldformat_binding.tf_binding", "tf_appfwprofile,tf_field,http://www.example.com"),
@@ -171,7 +171,7 @@ func testAccCheckAppfwprofile_fieldformat_bindingExist(n string, id *string) res
 		found := false
 		for _, v := range dataArr {
 			if v["fieldformat"].(string) == fieldformat {
-				if v["formactionurl_ff"].(string) == formactionurl_ff{
+				if v["formactionurl_ff"].(string) == formactionurl_ff {
 					found = true
 					break
 				}
@@ -215,7 +215,7 @@ func testAccCheckAppfwprofile_fieldformat_bindingNotExist(n string, id string) r
 		found := false
 		for _, v := range dataArr {
 			if v["fieldformat"].(string) == fieldformat {
-				if v["formactionurl_ff"].(string) == formactionurl_ff{
+				if v["formactionurl_ff"].(string) == formactionurl_ff {
 					found = true
 					break
 				}

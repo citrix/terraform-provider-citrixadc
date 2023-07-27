@@ -19,12 +19,12 @@ func resourceCitrixAdcNsspparams() *schema.Resource {
 		Update:        updateNsspparamsFunc,
 		Delete:        deleteNsspparamsFunc,
 		Schema: map[string]*schema.Schema{
-			"basethreshold": &schema.Schema{
+			"basethreshold": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"throttle": &schema.Schema{
+			"throttle": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

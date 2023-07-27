@@ -17,31 +17,31 @@ func resourceCitrixAdcMapbmr() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"ruleipv6prefix": &schema.Schema{
+			"ruleipv6prefix": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"eabitlength": &schema.Schema{
+			"eabitlength": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"psidlength": &schema.Schema{
+			"psidlength": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"psidoffset": &schema.Schema{
+			"psidoffset": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,

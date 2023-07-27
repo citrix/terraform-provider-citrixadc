@@ -19,7 +19,7 @@ func resourceCitrixAdcNsservicepath() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"servicepathname": &schema.Schema{
+			"servicepathname": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,

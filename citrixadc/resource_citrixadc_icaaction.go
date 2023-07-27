@@ -20,17 +20,17 @@ func resourceCitrixAdcIcaaction() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"accessprofilename": &schema.Schema{
+			"accessprofilename": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"latencyprofilename": &schema.Schema{
+			"latencyprofilename": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

@@ -19,47 +19,47 @@ func resourceCitrixAdcVpnformssoaction() *schema.Resource {
 		Update:        updateVpnformssoactionFunc,
 		Delete:        deleteVpnformssoactionFunc,
 		Schema: map[string]*schema.Schema{
-			"actionurl": &schema.Schema{
+			"actionurl": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"namevaluepair": &schema.Schema{
+			"namevaluepair": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"nvtype": &schema.Schema{
+			"nvtype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"passwdfield": &schema.Schema{
+			"passwdfield": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"responsesize": &schema.Schema{
+			"responsesize": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"ssosuccessrule": &schema.Schema{
+			"ssosuccessrule": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"submitmethod": &schema.Schema{
+			"submitmethod": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"userfield": &schema.Schema{
+			"userfield": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,

@@ -22,73 +22,73 @@ func resourceCitrixAdcGslbparameter() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"automaticconfigsync": &schema.Schema{
+			"automaticconfigsync": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"dropldnsreq": &schema.Schema{
+			"dropldnsreq": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"gslbconfigsyncmonitor": &schema.Schema{
+			"gslbconfigsyncmonitor": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"gslbsvcstatedelaytime": &schema.Schema{
+			"gslbsvcstatedelaytime": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"gslbsyncinterval": &schema.Schema{
+			"gslbsyncinterval": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"gslbsynclocfiles": &schema.Schema{
+			"gslbsynclocfiles": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"gslbsyncmode": &schema.Schema{
+			"gslbsyncmode": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ldnsentrytimeout": &schema.Schema{
+			"ldnsentrytimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"ldnsmask": &schema.Schema{
+			"ldnsmask": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ldnsprobeorder": &schema.Schema{
+			"ldnsprobeorder": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"mepkeepalivetimeout": &schema.Schema{
+			"mepkeepalivetimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"rtttolerance": &schema.Schema{
+			"rtttolerance": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"svcstatelearningtime": &schema.Schema{
+			"svcstatelearningtime": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"v6ldnsmasklen": &schema.Schema{
+			"v6ldnsmasklen": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -136,7 +136,7 @@ func readGslbparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] citrixadc-provider:  In readGslbparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading gslbparameter state ")
-	data, err := client.FindResource(service.Gslbparameter.Type(), "") 
+	data, err := client.FindResource(service.Gslbparameter.Type(), "")
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing gslbparameter state ")
 		d.SetId("")
@@ -164,7 +164,6 @@ func readGslbparameterFunc(d *schema.ResourceData, meta interface{}) error {
 func updateGslbparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateGslbparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
-
 
 	gslbparameter := gslb.Gslbparameter{}
 	hasChange := false

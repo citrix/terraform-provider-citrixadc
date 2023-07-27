@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -61,7 +61,7 @@ func TestAccSslpolicy_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSslpolicyDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccSslpolicy_add,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSslpolicyExist("citrixadc_sslpolicy.foo", nil),
@@ -70,7 +70,7 @@ func TestAccSslpolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_sslpolicy.foo", "action", "tf_sslaction"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccSslpolicy_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSslpolicyExist("citrixadc_sslpolicy.foo", nil),

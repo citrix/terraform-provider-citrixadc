@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -64,7 +64,7 @@ func TestAccDnsprofile_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDnsprofileDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDnsprofile_add,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDnsprofileExist("citrixadc_dnsprofile.tf_add", nil),
@@ -77,10 +77,9 @@ func TestAccDnsprofile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_dnsprofile.tf_add", "cachenegativeresponses", "ENABLED"),
 					resource.TestCheckResourceAttr("citrixadc_dnsprofile.tf_add", "dropmultiqueryrequest", "DISABLED"),
 					resource.TestCheckResourceAttr("citrixadc_dnsprofile.tf_add", "cacheecsresponses", "DISABLED"),
-
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccDnsprofile_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDnsprofileExist("citrixadc_dnsprofile.tf_add", nil),
