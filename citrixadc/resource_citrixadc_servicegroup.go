@@ -764,6 +764,7 @@ func updateServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("cipheader") {
 		log.Printf("[DEBUG]  netscaler-provider: Cipheader has changed for servicegroup %s, starting update", servicegroupName)
 		servicegroup.Cipheader = d.Get("cipheader").(string)
+		servicegroup.Cip = d.Get("cip").(string)
 		hasChange = true
 	}
 	if d.HasChange("cka") {
