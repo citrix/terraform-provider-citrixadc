@@ -266,6 +266,11 @@ func resourceCitrixAdcCsvserver() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"redirectfromport": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
 			"redirecturl": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -506,6 +511,7 @@ func createCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		Pushvserver:             d.Get("pushvserver").(string),
 		Range:                   d.Get("range").(int),
 		Redirectportrewrite:     d.Get("redirectportrewrite").(string),
+		Redirectfromport:        d.Get("redirectfromport").(int),
 		Redirecturl:             d.Get("redirecturl").(string),
 		Rhistate:                d.Get("rhistate").(string),
 		Rtspnat:                 d.Get("rtspnat").(string),
@@ -679,6 +685,7 @@ func readCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("pushvserver", data["pushvserver"])
 	d.Set("range", data["range"])
 	d.Set("redirectportrewrite", data["redirectportrewrite"])
+	setToInt("redirectfromport", d, data["redirectfromport"])
 	d.Set("redirecturl", data["redirecturl"])
 	d.Set("rhistate", data["rhistate"])
 	d.Set("rtspnat", data["rtspnat"])
@@ -982,6 +989,11 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("redirectportrewrite") {
 		log.Printf("[DEBUG] netscaler-provider:  Redirectportrewrite has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Redirectportrewrite = d.Get("redirectportrewrite").(string)
+		hasChange = true
+	}
+	if d.HasChange("redirectfromport") {
+		log.Printf("[DEBUG] netscaler-provider:  redirectfromport has changed for csvserver %s, starting update", csvserverName)
+		csvserver.Redirectfromport = d.Get("redirectfromport").(int)
 		hasChange = true
 	}
 	if d.HasChange("redirecturl") {
