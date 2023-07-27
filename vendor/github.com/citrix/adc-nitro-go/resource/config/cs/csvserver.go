@@ -329,6 +329,10 @@ type Csvserver struct {
 	* Domain name for which to change the time to live (TTL) and/or backup service IP address.
 	*/
 	Domainname string `json:"domainname,omitempty"`
+	/**
+	* Port number for the virtual server, from which we absorb the traffic for http redirect.
+	*/
+	Redirectfromport int `json:"redirectfromport,omitempty"`
 	Ttl int `json:"ttl,omitempty"`
 	Backupip string `json:"backupip,omitempty"`
 	Cookiedomain string `json:"cookiedomain,omitempty"`
