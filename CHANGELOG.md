@@ -1,3 +1,9 @@
+## 1.36.0 (July 04, 2023)
+
+BUG FIXES
+
+* **citrixadc_systemuser**: Updated Read function to set the username attribute value, that we get from the NetScaler.
+
 ## 1.35.0 (May 26, 2023)
 
 FEATURES
