@@ -147,6 +147,8 @@ type lbvserver struct {
 	Vsvrdynconnsothreshold             int         `json:"vsvrdynconnsothreshold,omitempty"`
 	Weight                             int         `json:"weight,omitempty"`
 	Quicbridgeprofilename              string      `json:"quicbridgeprofilename,omitempty"`
+	Probeport                          int         `json:"probeport,omitempty"`
+	Probeprotocol                      string      `json:"probeprotocol,omitempty"`
 }
 
 func resourceCitrixAdcLbvserver() *schema.Resource {
@@ -458,6 +460,16 @@ func resourceCitrixAdcLbvserver() *schema.Resource {
 				ForceNew: true,
 			},
 			"pq": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"probeport": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"probeprotocol": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -848,6 +860,8 @@ func createLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		Vipheader:                          d.Get("vipheader").(string),
 		Weight:                             d.Get("weight").(int),
 		Quicbridgeprofilename:              d.Get("quicbridgeprofilename").(string),
+		Probeport:                          d.Get("probeport").(int),
+		Probeprotocol:                      d.Get("probeprotocol").(string),
 	}
 
 	_, err := client.AddResource(service.Lbvserver.Type(), lbvserverName, &lbvserver)
@@ -1033,6 +1047,8 @@ func readLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("vipheader", data["vipheader"])
 	d.Set("weight", data["weight"])
 	d.Set("quicbridgeprofilename", data["quicbridgeprofilename"])
+	setToInt("probeport", d, data["probeport"])
+	d.Set("probeprotocol", data["probeprotocol"])
 
 	_, sslok := d.GetOk("sslcertkey")
 	_, sniok := d.GetOk("snisslcertkeys")
@@ -1378,6 +1394,16 @@ func updateLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("pq") {
 		log.Printf("[DEBUG] netscaler-provider:  Pq has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Pq = d.Get("pq").(string)
+		hasChange = true
+	}
+	if d.HasChange("probeport") {
+		log.Printf("[DEBUG] netscaler-provider:  probeport has changed for lbvserver %s, starting update", lbvserverName)
+		lbvserver.Probeport = d.Get("probeport").(int)
+		hasChange = true
+	}
+	if d.HasChange("probeprotocol") {
+		log.Printf("[DEBUG] netscaler-provider:  probeprotocol has changed for lbvserver %s, starting update", lbvserverName)
+		lbvserver.Probeprotocol = d.Get("probeprotocol").(string)
 		hasChange = true
 	}
 	if d.HasChange("processlocal") {

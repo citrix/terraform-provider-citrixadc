@@ -8,6 +8,7 @@ BUG FIXES
 * **citrixadc_nstcpprofile**: Updated the resource with additional supported `sendclientportintcpoption` and `slowstartthreshold` attributes and also handled converting of string to integer for some attributes in the read function.
 * **citrixadc_servicegroup**: Updated update operation to formulate appropriate playload whenever there is change in `cipheader` attribute.
 * **citrixadc_snmpcommunity**: Updated `permissions` attribute property to required from optional, updated documentation with possible values.
+* **citrixadc_lbvserver**: Updated the resource with additional supported `probeport` and `probeprotocol` attribute.
 
 ## 1.35.0 (May 26, 2023)
 
