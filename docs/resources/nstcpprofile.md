@@ -75,7 +75,9 @@ resource "citrixadc_nstcpprofile" "tf_nsprofile" {
 * `taillossprobe` - (Optional) TCP tail loss probe optimizations. Possible values: [ ENABLED, DISABLED ]
 * `clientiptcpoption` - (Optional) Client IP in TCP options. Possible values: [ ENABLED, DISABLED ]
 * `clientiptcpoptionnumber` - (Optional) ClientIP TCP Option number.
-* `mpcapablecbit` - (Optional)
+* `mpcapablecbit` - (Optional) Set C bit in MP-CAPABLE Syn-Ack sent by Citrix ADC. Default value: DISABLED Possible values: [ ENABLED, DISABLED ]
+* `sendclientportintcpoption` - (optional) Send Client Port number along with Client IP in TCP-Options. ClientIpTcpOption must be ENABLED. Default value: DISABLED Possible values = [ ENABLED, DISABLED ]
+* `slowstartthreshold` - (optional) TCP Slow Start Threhsold Value. Default value: 524288, Minimum value = 8190, Maximum value = 20971520
 
 
 ## Attribute Reference
