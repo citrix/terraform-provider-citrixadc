@@ -247,6 +247,14 @@ type Nstcpprofile struct {
 	* Set C bit in MP-CAPABLE Syn-Ack sent by Citrix ADC
 	*/
 	Mpcapablecbit string `json:"mpcapablecbit,omitempty"`
+	/**
+	* Send Client Port number along with Client IP in TCP-Options. ClientIpTcpOption must be ENABLED.
+	*/
+	Sendclientportintcpoption string `json:"sendclientportintcpoption,omitempty"`
+	/**
+	* TCP Slow Start Threhsold Value.
+	*/
+	Slowstartthreshold int `json:"slowstartthreshold,omitempty"`
 
 	//------- Read only Parameter ---------;
 
