@@ -26,7 +26,7 @@ func resourceCitrixAdcSnmpcommunity() *schema.Resource {
 			},
 			"permissions": &schema.Schema{
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 				ForceNew: true,
 			},
 		},
