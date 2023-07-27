@@ -1047,7 +1047,7 @@ func readLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("vipheader", data["vipheader"])
 	d.Set("weight", data["weight"])
 	d.Set("quicbridgeprofilename", data["quicbridgeprofilename"])
-	d.Set("probeport", data["probeport"])
+	setToInt("probeport", d, data["probeport"])
 	d.Set("probeprotocol", data["probeprotocol"])
 
 	_, sslok := d.GetOk("sslcertkey")
