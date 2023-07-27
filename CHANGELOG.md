@@ -9,6 +9,7 @@ BUG FIXES
 * **citrixadc_servicegroup**: Updated update operation to formulate appropriate playload whenever there is change in `cipheader` attribute.
 * **citrixadc_snmpcommunity**: Updated `permissions` attribute property to required from optional, updated documentation with possible values.
 * **citrixadc_lbvserver**: Updated the resource with additional supported `probeport` and `probeprotocol` attribute.
+* **citrixadc_csvserver**: Updated the resource with additional supported `redirectfromport` attributes.
 
 ## 1.35.0 (May 26, 2023)
 
