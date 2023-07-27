@@ -8,6 +8,7 @@ import (
 
 	"log"
 	"net/url"
+	"strings"
 )
 
 func resourceCitrixAdcDnsaddrec() *schema.Resource {
@@ -87,6 +88,11 @@ func readDnsaddrecFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] citrixadc-provider:  In readDnsaddrecFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnsaddrecId := d.Id()
+	idSlice := strings.SplitN(dnsaddrecId, ",", 2)
+
+	hostname := idSlice[0]
+	ipaddress := idSlice[1]
+
 	log.Printf("[DEBUG] citrixadc-provider: Reading dnsaddrec state %s", dnsaddrecId)
 	dataArr, err := client.FindAllResources(service.Dnsaddrec.Type())
 	if err != nil {
@@ -102,7 +108,7 @@ func readDnsaddrecFunc(d *schema.ResourceData, meta interface{}) error {
 
 	foundIndex := -1
 	for i, v := range dataArr {
-		if v["hostname"].(string) == d.Get("hostname").(string) && v["ipaddress"].(string) == d.Get("ipaddress").(string) {
+		if v["hostname"].(string) == hostname && v["ipaddress"].(string) == ipaddress {
 			foundIndex = i
 			break
 		}

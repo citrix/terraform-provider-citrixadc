@@ -3,6 +3,8 @@
 BUG FIXES
 
 * **citrixadc_systemuser**: Updated Read function to set the username attribute value, that we get from the NetScaler.
+* **citrixadc_dnsaddrec**: Updated Read function to split the id and parse the data that we get from the NetScaler to match the Id.
+
 
 ## 1.35.0 (May 26, 2023)
 
