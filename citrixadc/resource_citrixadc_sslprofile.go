@@ -357,6 +357,7 @@ func resourceCitrixAdcSslprofile() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"sslredirect": {
 				Type:     schema.TypeString,
