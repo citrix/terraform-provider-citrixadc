@@ -21,27 +21,27 @@ func resourceCitrixAdcAutoscaleprofile() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"apikey": &schema.Schema{
+			"apikey": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sharedsecret": &schema.Schema{
+			"sharedsecret": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"type": &schema.Schema{
+			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"url": &schema.Schema{
+			"url": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

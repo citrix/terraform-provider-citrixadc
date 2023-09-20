@@ -17,37 +17,37 @@ func resourceCitrixAdcVpnglobal_sslcertkey_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"certkeyname": &schema.Schema{
+			"certkeyname": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"cacert": &schema.Schema{
+			"cacert": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"crlcheck": &schema.Schema{
+			"crlcheck": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"gotopriorityexpression": &schema.Schema{
+			"gotopriorityexpression": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"ocspcheck": &schema.Schema{
+			"ocspcheck": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"userdataencryptionkey": &schema.Schema{
+			"userdataencryptionkey": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -150,10 +150,10 @@ func deleteVpnglobal_sslcertkey_bindingFunc(d *schema.ResourceData, meta interfa
 	certkeyname := d.Id()
 	argsMap := make(map[string]string)
 	argsMap["certkeyname"] = certkeyname
-	if val,ok := d.GetOk("userdataencryptionkey"); ok{
+	if val, ok := d.GetOk("userdataencryptionkey"); ok {
 		argsMap["userdataencryptionkey"] = val.(string)
 	}
-	if val,ok := d.GetOk("cacert"); ok{
+	if val, ok := d.GetOk("cacert"); ok {
 		argsMap["cacert"] = val.(string)
 	}
 

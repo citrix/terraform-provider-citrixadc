@@ -19,42 +19,42 @@ func resourceCitrixAdcSystemglobal_authenticationpolicy_binding() *schema.Resour
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"policyname": &schema.Schema{
+			"policyname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"priority": &schema.Schema{
+			"priority": {
 				Type:     schema.TypeInt,
 				Required: true,
 				ForceNew: true,
 			},
-			"builtin": &schema.Schema{
+			"builtin": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"feature": &schema.Schema{
+			"feature": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"globalbindtype": &schema.Schema{
+			"globalbindtype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"gotopriorityexpression": &schema.Schema{
+			"gotopriorityexpression": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"nextfactor": &schema.Schema{
+			"nextfactor": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -97,7 +97,6 @@ func readSystemglobal_authenticationpolicy_bindingFunc(d *schema.ResourceData, m
 	log.Printf("[DEBUG] citrixadc-provider:  In readSystemglobal_authenticationpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policyname := d.Id()
-
 
 	log.Printf("[DEBUG] citrixadc-provider: Reading systemglobal_authenticationpolicy_binding state %s", policyname)
 
@@ -162,7 +161,7 @@ func deleteSystemglobal_authenticationpolicy_bindingFunc(d *schema.ResourceData,
 	args := make([]string, 0)
 	args = append(args, fmt.Sprintf("policyname:%s", policyname))
 
-	err := client.DeleteResourceWithArgs(service.Systemglobal_authenticationpolicy_binding.Type(), "" , args)
+	err := client.DeleteResourceWithArgs(service.Systemglobal_authenticationpolicy_binding.Type(), "", args)
 	if err != nil {
 		return err
 	}

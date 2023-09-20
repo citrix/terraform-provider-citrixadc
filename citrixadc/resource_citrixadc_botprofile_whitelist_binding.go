@@ -20,49 +20,49 @@ func resourceCitrixAdcBotprofile_whitelist_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"bot_whitelist_value": &schema.Schema{
+			"bot_whitelist_value": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"bot_bind_comment": &schema.Schema{
+			"bot_bind_comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"bot_whitelist": &schema.Schema{
+			"bot_whitelist": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"bot_whitelist_enabled": &schema.Schema{
+			"bot_whitelist_enabled": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"bot_whitelist_type": &schema.Schema{
+			"bot_whitelist_type": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"log": &schema.Schema{
+			"log": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"logmessage": &schema.Schema{
+			"logmessage": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

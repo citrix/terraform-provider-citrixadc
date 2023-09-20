@@ -20,7 +20,7 @@ func resourceCitrixAdcAppalgparam() *schema.Resource {
 		Update:        updateAppalgparamFunc,
 		Delete:        deleteAppalgparamFunc,
 		Schema: map[string]*schema.Schema{
-			"pptpgreidletimeout": &schema.Schema{
+			"pptpgreidletimeout": {
 				Type:     schema.TypeInt,
 				Required: true,
 				Computed: false,
@@ -64,7 +64,7 @@ func readAppalgparamFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
-	val,_ := strconv.Atoi(data["pptpgreidletimeout"].(string))
+	val, _ := strconv.Atoi(data["pptpgreidletimeout"].(string))
 	d.Set("pptpgreidletimeout", val)
 
 	return nil
@@ -94,7 +94,6 @@ func updateAppalgparamFunc(d *schema.ResourceData, meta interface{}) error {
 
 func deleteAppalgparamFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppalgparamFunc")
-
 
 	d.SetId("")
 

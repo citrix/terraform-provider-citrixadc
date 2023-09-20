@@ -7,8 +7,8 @@ import (
 
 	"fmt"
 	"log"
-	"strings"
 	"net/url"
+	"strings"
 )
 
 func resourceCitrixAdcVpnvserver_appflowpolicy_binding() *schema.Resource {
@@ -21,43 +21,43 @@ func resourceCitrixAdcVpnvserver_appflowpolicy_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"policy": &schema.Schema{
+			"policy": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"bindpoint": &schema.Schema{
+			"bindpoint": {
+				Type:     schema.TypeString,
+				Required: true,
+				Computed: false,
+				ForceNew: true,
+			},
+			"gotopriorityexpression": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"gotopriorityexpression": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"groupextraction": &schema.Schema{
+			"groupextraction": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"priority": &schema.Schema{
+			"priority": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"secondary": &schema.Schema{
+			"secondary": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
@@ -72,7 +72,8 @@ func createVpnvserver_appflowpolicy_bindingFunc(d *schema.ResourceData, meta int
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name")
 	policy := d.Get("policy")
-	bindingId := fmt.Sprintf("%s,%s", name, policy)
+	bindpoint := d.Get("bindpoint")
+	bindingId := fmt.Sprintf("%s,%s,%s", name, policy, bindpoint)
 	vpnvserver_appflowpolicy_binding := vpn.Vpnvserverappflowpolicybinding{
 		Bindpoint:              d.Get("bindpoint").(string),
 		Gotopriorityexpression: d.Get("gotopriorityexpression").(string),
@@ -83,7 +84,7 @@ func createVpnvserver_appflowpolicy_bindingFunc(d *schema.ResourceData, meta int
 		Secondary:              d.Get("secondary").(bool),
 	}
 
-	err := client.UpdateUnnamedResource(service.Vpnvserver_appflowpolicy_binding.Type(),&vpnvserver_appflowpolicy_binding)
+	err := client.UpdateUnnamedResource(service.Vpnvserver_appflowpolicy_binding.Type(), &vpnvserver_appflowpolicy_binding)
 	if err != nil {
 		return err
 	}
@@ -102,10 +103,25 @@ func readVpnvserver_appflowpolicy_bindingFunc(d *schema.ResourceData, meta inter
 	log.Printf("[DEBUG] citrixadc-provider:  In readVpnvserver_appflowpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
-	idSlice := strings.SplitN(bindingId, ",", 2)
+
+	// To make the resource backward compatible, in the prev state file user will have ID with 2 values, but we have updated Id. So here we are changing the code to make it backward compatible
+	// here we are checking for id, if it has 2 elements then we are appending the 3rd attribute to the old Id.
+	oldIdSlice := strings.Split(bindingId, ",")
+
+	if len(oldIdSlice) == 2 {
+		if _, ok := d.GetOk("bindpoint"); ok {
+			bindingId = bindingId + "," + d.Get("bindpoint").(string)
+		} else {
+			return fmt.Errorf("bindpoint should be given, as it is the part of Id. The id of the vpnvserver_appflowpolicy_binding is the concatenation of the `name`, `policy` and `bindpoint` attributes separated by a comma")
+		}
+		d.SetId(bindingId)
+	}
+
+	idSlice := strings.SplitN(bindingId, ",", 3)
 
 	name := idSlice[0]
 	policy := idSlice[1]
+	bindpoint := idSlice[2]
 
 	log.Printf("[DEBUG] citrixadc-provider: Reading vpnvserver_appflowpolicy_binding state %s", bindingId)
 
@@ -133,7 +149,7 @@ func readVpnvserver_appflowpolicy_bindingFunc(d *schema.ResourceData, meta inter
 	// Iterate through results to find the one with the right id
 	foundIndex := -1
 	for i, v := range dataArr {
-		if v["policy"].(string) == policy {
+		if v["policy"].(string) == policy && v["bindpoint"].(string) == bindpoint {
 			foundIndex = i
 			break
 		}
@@ -167,21 +183,20 @@ func deleteVpnvserver_appflowpolicy_bindingFunc(d *schema.ResourceData, meta int
 	client := meta.(*NetScalerNitroClient).client
 
 	bindingId := d.Id()
-	idSlice := strings.SplitN(bindingId, ",", 2)
+	idSlice := strings.SplitN(bindingId, ",", 3)
 
 	name := idSlice[0]
 	policy := idSlice[1]
+	bindpoint := idSlice[2]
 
 	args := make([]string, 0)
 	args = append(args, fmt.Sprintf("policy:%s", policy))
+	args = append(args, fmt.Sprintf("bindpoint:%s", bindpoint))
 	if val, ok := d.GetOk("secondary"); ok {
 		args = append(args, fmt.Sprintf("secondary:%s", url.QueryEscape(val.(string))))
 	}
 	if val, ok := d.GetOk("groupextraction"); ok {
 		args = append(args, fmt.Sprintf("groupextraction:%s", url.QueryEscape(val.(string))))
-	}
-	if val, ok := d.GetOk("bindpoint"); ok {
-		args = append(args, fmt.Sprintf("bindpoint:%s", url.QueryEscape(val.(string))))
 	}
 
 	err := client.DeleteResourceWithArgs(service.Vpnvserver_appflowpolicy_binding.Type(), name, args)

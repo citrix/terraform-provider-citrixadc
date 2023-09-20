@@ -15,18 +15,18 @@ func resourceCitrixAdcPasswordResetter() *schema.Resource {
 		Read:          schema.Noop,
 		Delete:        schema.Noop,
 		Schema: map[string]*schema.Schema{
-			"username": &schema.Schema{
+			"username": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"password": &schema.Schema{
+			"password": {
 				Type:      schema.TypeString,
 				Required:  true,
 				Sensitive: true,
 				ForceNew:  true,
 			},
-			"new_password": &schema.Schema{
+			"new_password": {
 				Type:      schema.TypeString,
 				Required:  true,
 				Sensitive: true,

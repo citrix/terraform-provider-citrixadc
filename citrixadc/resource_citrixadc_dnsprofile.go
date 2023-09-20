@@ -21,47 +21,47 @@ func resourceCitrixAdcDnsprofile() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"cacheecsresponses": &schema.Schema{
+			"cacheecsresponses": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"cachenegativeresponses": &schema.Schema{
+			"cachenegativeresponses": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"cacherecords": &schema.Schema{
+			"cacherecords": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"dnsanswerseclogging": &schema.Schema{
+			"dnsanswerseclogging": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"dnserrorlogging": &schema.Schema{
+			"dnserrorlogging": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"dnsextendedlogging": &schema.Schema{
+			"dnsextendedlogging": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"dnsprofilename": &schema.Schema{
+			"dnsprofilename": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"dnsquerylogging": &schema.Schema{
+			"dnsquerylogging": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"dropmultiqueryrequest": &schema.Schema{
+			"dropmultiqueryrequest": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

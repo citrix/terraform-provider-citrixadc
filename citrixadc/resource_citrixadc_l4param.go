@@ -19,12 +19,12 @@ func resourceCitrixAdcL4param() *schema.Resource {
 		Update:        updateL4paramFunc,
 		Delete:        deleteL4paramFunc,
 		Schema: map[string]*schema.Schema{
-			"l2connmethod": &schema.Schema{
+			"l2connmethod": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"l4switch": &schema.Schema{
+			"l4switch": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

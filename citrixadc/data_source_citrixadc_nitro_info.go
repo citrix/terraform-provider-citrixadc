@@ -16,23 +16,23 @@ func dataSourceCitrixAdcNitroInfo() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceCitrixAdcNitroInfoRead,
 		Schema: map[string]*schema.Schema{
-			"workflow": &schema.Schema{
+			"workflow": {
 				Type:     schema.TypeMap,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 				Computed: true,
 			},
-			"primary_id": &schema.Schema{
+			"primary_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"secondary_id": &schema.Schema{
+			"secondary_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"nitro_list": &schema.Schema{
+			"nitro_list": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Optional: true,
@@ -47,7 +47,7 @@ func dataSourceCitrixAdcNitroInfo() *schema.Resource {
 					},
 				},
 			},
-			"nitro_object": &schema.Schema{
+			"nitro_object": {
 				Type:     schema.TypeMap,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,

@@ -7,8 +7,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
-	"strings"
 	"log"
+	"strings"
 )
 
 func resourceCitrixAdcUservserver() *schema.Resource {
@@ -22,40 +22,40 @@ func resourceCitrixAdcUservserver() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"defaultlb": &schema.Schema{
+			"defaultlb": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"ipaddress": &schema.Schema{
+			"ipaddress": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"name": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"userprotocol": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"port": &schema.Schema{
+			"userprotocol": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"port": {
 				Type:     schema.TypeInt,
 				Required: true,
 				ForceNew: true,
 			},
-			"comment": &schema.Schema{
+			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"params": &schema.Schema{
+			"params": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"state": &schema.Schema{
+			"state": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -126,7 +126,7 @@ func updateUservserverFunc(d *schema.ResourceData, meta interface{}) error {
 	uservserver := user.Uservserver{
 		Name: d.Get("name").(string),
 	}
-	
+
 	hasChange := false
 	stateChange := false
 
@@ -154,7 +154,7 @@ func updateUservserverFunc(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG]  citrixadc-provider: State has changed for uservserver %s, starting update", uservserverName)
 		//uservserver.State = d.Get("state").(string)
 		stateChange = true
-		}
+	}
 
 	if stateChange {
 		err := doUservserverStateChange(d, client)
@@ -189,7 +189,7 @@ func doUservserverStateChange(d *schema.ResourceData, client *service.NitroClien
 	log.Printf("[DEBUG]  netscaler-provider: In doUservserverStateChange")
 
 	uservserver := user.Uservserver{
-		Name:         d.Get("name").(string),
+		Name: d.Get("name").(string),
 	}
 	newstate := d.Get("state").(string)
 
@@ -204,8 +204,8 @@ func doUservserverStateChange(d *schema.ResourceData, client *service.NitroClien
 			return err
 		}
 	} else {
-			return fmt.Errorf("\"%s\" is not a valid state. Use (\"ENABLED\", \"DISABLED\").", newstate)
+		return fmt.Errorf("\"%s\" is not a valid state. Use (\"ENABLED\", \"DISABLED\").", newstate)
 	}
-	
+
 	return nil
 }

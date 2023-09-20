@@ -19,69 +19,69 @@ func resourceCitrixAdcAppfwprofile_crosssitescripting_binding() *schema.Resource
 		Read:          readAppfwprofile_crosssitescripting_bindingFunc,
 		Delete:        deleteAppfwprofile_crosssitescripting_bindingFunc,
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"crosssitescripting": &schema.Schema{
+			"crosssitescripting": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"formactionurl_xss": &schema.Schema{
+			"formactionurl_xss": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"as_scan_location_xss": &schema.Schema{
+			"as_scan_location_xss": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"alertonly": &schema.Schema{
+			"alertonly": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"as_value_expr_xss": &schema.Schema{
+			"as_value_expr_xss": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"as_value_type_xss": &schema.Schema{
+			"as_value_type_xss": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"comment": &schema.Schema{
+			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"isautodeployed": &schema.Schema{
+			"isautodeployed": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"isregex_xss": &schema.Schema{
+			"isregex_xss": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"isvalueregex_xss": &schema.Schema{
+			"isvalueregex_xss": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"state": &schema.Schema{
+			"state": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

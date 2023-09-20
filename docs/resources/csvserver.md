@@ -17,6 +17,16 @@ resource "citrixadc_csvserver" "tf_csvserver" {
   servicetype = "HTTP"
 
 }
+
+
+resource "citrixadc_csvserver" "tf_csvserver1" {
+  ipv46       = "10.10.10.22"
+  name        = "tf_csvserver"
+  port        = 80
+  servicetype = "SSL"
+  redirectfromport = 90
+
+}
 ```
 
 
@@ -59,6 +69,7 @@ resource "citrixadc_csvserver" "tf_csvserver" {
     If you want to enable state updates for only some content switching virtual servers, be sure to disable the state update parameter.
     Possible values: [ ENABLED, DISABLED, UPDATEONBACKENDUPDATE ]
 * `cacheable` - (Optional) Use this option to specify whether a virtual server, used for load balancing or content switching, routes requests to the cache redirection virtual server before sending it to the configured servers. Possible values: [ YES, NO ]
+* `redirectfromport` - (Optional) Port number for the virtual server, from which we absorb the traffic for http redirect.
 * `redirecturl` - (Optional) URL to which traffic is redirected if the virtual server becomes unavailable. The service type of the virtual server should be either HTTP or SSL.
 
     ~> Make sure that the domain in the URL does not match the domain specified for a content switching policy. If it does, requests are continuously redirected to the unavailable virtual server.

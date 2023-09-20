@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -35,7 +35,7 @@ func TestAccService_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccService_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExist("citrixadc_service.foo", nil),
@@ -269,21 +269,21 @@ func TestAccService_enable_disable(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccServiceEnableDisable_enabled,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExist("citrixadc_service.tf_acc_service", nil),
 					resource.TestCheckResourceAttr("citrixadc_service.tf_acc_service", "state", "ENABLED"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccServiceEnableDisable_disabled,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExist("citrixadc_service.tf_acc_service", nil),
 					resource.TestCheckResourceAttr("citrixadc_service.tf_acc_service", "state", "DISABLED"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccServiceEnableDisable_enabled,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExist("citrixadc_service.tf_acc_service", nil),
@@ -303,7 +303,7 @@ func TestAccService_sslservice(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccService_sslservice_config,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExist("citrixadc_service.test_service", nil),
@@ -344,21 +344,21 @@ func TestAccService_rebind_default_monitor(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccService_rebind_default_monitor_step1,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExist("citrixadc_service.test_service", nil),
 					resource.TestCheckResourceAttr("citrixadc_service.test_service", "lbmonitor", "tcp-default"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccService_rebind_default_monitor_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExist("citrixadc_service.test_service", nil),
 					resource.TestCheckResourceAttr("citrixadc_service.test_service", "lbmonitor", "tf_monitor"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccService_rebind_default_monitor_step3,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExist("citrixadc_service.test_service", nil),

@@ -28,44 +28,44 @@ func resourceCitrixAdcSystemuser() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"externalauth": &schema.Schema{
+			"externalauth": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"logging": &schema.Schema{
+			"logging": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"maxsession": &schema.Schema{
+			"maxsession": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"password": &schema.Schema{
+			"password": {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         false,
 				Sensitive:        true,
 				DiffSuppressFunc: ignoreHashMatch,
 			},
-			"hashedpassword": &schema.Schema{
+			"hashedpassword": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"promptstring": &schema.Schema{
+			"promptstring": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"timeout": &schema.Schema{
+			"timeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"username": &schema.Schema{
+			"username": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
@@ -78,12 +78,12 @@ func resourceCitrixAdcSystemuser() *schema.Resource {
 				Set:      cmdpolicybindingMappingHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"policyname": &schema.Schema{
+						"policyname": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"priority": &schema.Schema{
+						"priority": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
@@ -173,7 +173,7 @@ func readSystemuserFunc(d *schema.ResourceData, meta interface{}) error {
 	if oldHashedPassword != "" && oldHashedPassword != newHashedPassword && !passwordChanged {
 		d.Set("password", "")
 	}
-	d.Set("name", data["name"])
+	d.Set("username", data["username"])
 	d.Set("externalauth", data["externalauth"])
 	d.Set("logging", data["logging"])
 	d.Set("maxsession", data["maxsession"])
@@ -351,7 +351,7 @@ func readCmdpolicybindings(d *schema.ResourceData, meta interface{}) error {
 	// Process values into new list of maps
 	processedBindings := make([]interface{}, len(bindings))
 	// Initialize maps
-	for i, _ := range bindings {
+	for i := range bindings {
 		processedBindings[i] = make(map[string]interface{})
 		processedBindings[i].(map[string]interface{})["policyname"] = bindings[i]["policyname"].(string)
 		processedBindings[i].(map[string]interface{})["priority"], _ = strconv.Atoi(bindings[i]["priority"].(string))

@@ -18,13 +18,13 @@ func resourceCitrixAdcFis() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"ownernode": &schema.Schema{
+			"ownernode": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,

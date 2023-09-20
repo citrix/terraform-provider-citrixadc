@@ -19,82 +19,82 @@ func resourceCitrixAdcNstimeout() *schema.Resource {
 		Update:        updateNstimeoutFunc,
 		Delete:        deleteNstimeoutFunc, // Thought nstimeout resource donot have DELETE operation, it is required to set ID to "" d.SetID("") to maintain terraform state
 		Schema: map[string]*schema.Schema{
-			"anyclient": &schema.Schema{
+			"anyclient": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"anyserver": &schema.Schema{
+			"anyserver": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"anytcpclient": &schema.Schema{
+			"anytcpclient": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"anytcpserver": &schema.Schema{
+			"anytcpserver": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"client": &schema.Schema{
+			"client": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"halfclose": &schema.Schema{
+			"halfclose": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"httpclient": &schema.Schema{
+			"httpclient": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"httpserver": &schema.Schema{
+			"httpserver": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"newconnidletimeout": &schema.Schema{
+			"newconnidletimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"nontcpzombie": &schema.Schema{
+			"nontcpzombie": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"reducedfintimeout": &schema.Schema{
+			"reducedfintimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"reducedrsttimeout": &schema.Schema{
+			"reducedrsttimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"server": &schema.Schema{
+			"server": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"tcpclient": &schema.Schema{
+			"tcpclient": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"tcpserver": &schema.Schema{
+			"tcpserver": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"zombie": &schema.Schema{
+			"zombie": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -107,7 +107,7 @@ func createNstimeoutFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNstimeoutFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nstimeoutName := resource.PrefixedUniqueId("tf-nstimeout-")
-	
+
 	nstimeout := ns.Nstimeout{
 		Anyclient:          d.Get("anyclient").(int),
 		Anyserver:          d.Get("anyserver").(int),
@@ -178,7 +178,7 @@ func updateNstimeoutFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 
 	nstimeout := ns.Nstimeout{}
-	
+
 	hasChange := false
 	if d.HasChange("anyclient") {
 		log.Printf("[DEBUG]  citrixadc-provider: Anyclient has changed for nstimeout, starting update")

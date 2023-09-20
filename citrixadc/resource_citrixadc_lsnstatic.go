@@ -17,57 +17,57 @@ func resourceCitrixAdcLsnstatic() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"destip": &schema.Schema{
+			"destip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"dsttd": &schema.Schema{
+			"dsttd": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				ForceNew: true,
 			},
-			"natip": &schema.Schema{
+			"natip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"natport": &schema.Schema{
+			"natport": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				ForceNew: true,
 			},
-			"nattype": &schema.Schema{
+			"nattype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"network6": &schema.Schema{
+			"network6": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"subscrip": &schema.Schema{
+			"subscrip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"subscrport": &schema.Schema{
+			"subscrport": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				ForceNew: true,
 			},
-			"td": &schema.Schema{
+			"td": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				ForceNew: true,
 			},
-			"transportprotocol": &schema.Schema{
+			"transportprotocol": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,

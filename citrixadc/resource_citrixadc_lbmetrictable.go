@@ -18,7 +18,7 @@ func resourceCitrixAdcLbmetrictable() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"metrictable": &schema.Schema{
+			"metrictable": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,

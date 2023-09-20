@@ -18,32 +18,32 @@ func resourceCitrixAdcDnsptrrec() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"reversedomain": &schema.Schema{
+			"reversedomain": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"domain": &schema.Schema{
+			"domain": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"ecssubnet": &schema.Schema{
+			"ecssubnet": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"nodeid": &schema.Schema{
+			"nodeid": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				ForceNew: true,
 			},
-			"ttl": &schema.Schema{
+			"ttl": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				ForceNew: true,
 			},
-			"type": &schema.Schema{
+			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -55,7 +55,7 @@ func resourceCitrixAdcDnsptrrec() *schema.Resource {
 func createDnsptrrecFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createDnsptrrecFunc")
 	client := meta.(*NetScalerNitroClient).client
-	dnsptrrecName:= d.Get("reversedomain").(string)
+	dnsptrrecName := d.Get("reversedomain").(string)
 	dnsptrrec := dns.Dnsptrrec{
 		Domain:        d.Get("domain").(string),
 		Ecssubnet:     d.Get("ecssubnet").(string),

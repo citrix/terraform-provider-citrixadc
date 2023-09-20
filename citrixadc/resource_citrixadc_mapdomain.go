@@ -17,13 +17,13 @@ func resourceCitrixAdcMapdomain() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"mapdmrname": &schema.Schema{
+			"mapdmrname": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,

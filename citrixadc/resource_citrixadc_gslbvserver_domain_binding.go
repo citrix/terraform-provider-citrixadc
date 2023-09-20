@@ -20,53 +20,53 @@ func resourceCitrixAdcGslbvserver_domain_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"domainname": &schema.Schema{
+			"domainname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"backupip": &schema.Schema{
+			"backupip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"backupipflag": &schema.Schema{
+			"backupipflag": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"cookiedomain": &schema.Schema{
+			"cookiedomain": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"cookiedomainflag": &schema.Schema{
+			"cookiedomainflag": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"cookietimeout": &schema.Schema{
+			"cookietimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"sitedomainttl": &schema.Schema{
+			"sitedomainttl": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"ttl": &schema.Schema{
+			"ttl": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -81,7 +81,7 @@ func createGslbvserver_domain_bindingFunc(d *schema.ResourceData, meta interface
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name")
 	domainname := d.Get("domainname")
-	
+
 	bindingId := fmt.Sprintf("%s,%s", name, domainname)
 	gslbvserver_domain_binding := gslb.Gslbvserverdomainbinding{
 		Backupip:         d.Get("backupip").(string),

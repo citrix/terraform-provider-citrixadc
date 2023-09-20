@@ -20,41 +20,41 @@ func resourceCitrixAdcAppfwprofile_cookieconsistency_binding() *schema.Resource 
 		Read:          readAppfwprofile_cookieconsistency_bindingFunc,
 		Delete:        deleteAppfwprofile_cookieconsistency_bindingFunc,
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"cookieconsistency": &schema.Schema{
+			"cookieconsistency": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"alertonly": &schema.Schema{
+			"alertonly": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"comment": &schema.Schema{
+			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"isautodeployed": &schema.Schema{
+			"isautodeployed": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"isregex": &schema.Schema{
+			"isregex": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"state": &schema.Schema{
+			"state": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

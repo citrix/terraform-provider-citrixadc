@@ -18,13 +18,13 @@ func resourceCitrixAdcAppfwmultipartformcontenttype() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"multipartformcontenttypevalue": &schema.Schema{
+			"multipartformcontenttypevalue": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"isregex": &schema.Schema{
+			"isregex": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

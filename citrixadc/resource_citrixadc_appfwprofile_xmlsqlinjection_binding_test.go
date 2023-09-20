@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -108,16 +108,16 @@ func TestAccAppfwprofile_xmlsqlinjection_binding_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppfwprofile_xmlsqlinjection_bindingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAppfwprofile_xmlsqlinjection_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppfwprofile_xmlsqlinjection_bindingExist("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAppfwprofile_xmlsqlinjection_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppfwprofile_xmlsqlinjection_bindingNotExist("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding", "tf_appfwprofile,hello","ELEMENT"),
+					testAccCheckAppfwprofile_xmlsqlinjection_bindingNotExist("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding", "tf_appfwprofile,hello", "ELEMENT"),
 				),
 			},
 		},
@@ -158,7 +158,7 @@ func testAccCheckAppfwprofile_xmlsqlinjection_bindingExist(n string, id *string)
 			ResourceMissingErrorCode: 258,
 		}
 		dataArr, err := client.FindResourceArrayWithParams(findParams)
-		
+
 		// Unexpected error
 		if err != nil {
 			return err

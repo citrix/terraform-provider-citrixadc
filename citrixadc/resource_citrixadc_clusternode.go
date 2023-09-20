@@ -21,47 +21,47 @@ func resourceCitrixAdcClusternode() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"nodeid": &schema.Schema{
+			"nodeid": {
 				Type:     schema.TypeInt,
 				Required: true,
 				ForceNew: true,
 			},
-			"ipaddress": &schema.Schema{
+			"ipaddress": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"backplane": &schema.Schema{
+			"backplane": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"clearnodegroupconfig": &schema.Schema{
+			"clearnodegroupconfig": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"delay": &schema.Schema{
+			"delay": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"nodegroup": &schema.Schema{
+			"nodegroup": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"priority": &schema.Schema{
+			"priority": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"state": &schema.Schema{
+			"state": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"tunnelmode": &schema.Schema{
+			"tunnelmode": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -73,17 +73,17 @@ func resourceCitrixAdcClusternode() *schema.Resource {
 func createClusternodeFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createClusternodeFunc")
 	client := meta.(*NetScalerNitroClient).client
-	clusternodeId:=strconv.Itoa(d.Get("nodeid").(int))
-	
+	clusternodeId := strconv.Itoa(d.Get("nodeid").(int))
+
 	clusternode := cluster.Clusternode{
-		Backplane:            d.Get("backplane").(string),
-		Delay:                d.Get("delay").(int),
-		Ipaddress:            d.Get("ipaddress").(string),
-		Nodegroup:            d.Get("nodegroup").(string),
-		Nodeid:               d.Get("nodeid").(int),
-		Priority:             d.Get("priority").(int),
-		State:                d.Get("state").(string),
-		Tunnelmode:           d.Get("tunnelmode").(string),
+		Backplane:  d.Get("backplane").(string),
+		Delay:      d.Get("delay").(int),
+		Ipaddress:  d.Get("ipaddress").(string),
+		Nodegroup:  d.Get("nodegroup").(string),
+		Nodeid:     d.Get("nodeid").(int),
+		Priority:   d.Get("priority").(int),
+		State:      d.Get("state").(string),
+		Tunnelmode: d.Get("tunnelmode").(string),
 	}
 
 	_, err := client.AddResource(service.Clusternode.Type(), clusternodeId, &clusternode)
@@ -104,7 +104,7 @@ func createClusternodeFunc(d *schema.ResourceData, meta interface{}) error {
 func readClusternodeFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] citrixadc-provider:  In readClusternodeFunc")
 	client := meta.(*NetScalerNitroClient).client
-	clusternodeId:= d.Id()
+	clusternodeId := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading clusternode state %s", clusternodeId)
 	data, err := client.FindResource(service.Clusternode.Type(), clusternodeId)
 	if err != nil {
@@ -128,7 +128,7 @@ func readClusternodeFunc(d *schema.ResourceData, meta interface{}) error {
 func updateClusternodeFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateClusternodeFunc")
 	client := meta.(*NetScalerNitroClient).client
-	clusternodeId:= strconv.Itoa(d.Get("nodeid").(int))
+	clusternodeId := strconv.Itoa(d.Get("nodeid").(int))
 
 	clusternode := cluster.Clusternode{
 		Nodeid: d.Get("nodeid").(int),
@@ -182,12 +182,12 @@ func updateClusternodeFunc(d *schema.ResourceData, meta interface{}) error {
 func deleteClusternodeFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteClusternodeFunc")
 	client := meta.(*NetScalerNitroClient).client
-	clusternodeId:= d.Id()
+	clusternodeId := d.Id()
 	args := make([]string, 0)
 	if v, ok := d.GetOk("clearnodegroupconfig"); ok {
-		args = append(args,fmt.Sprintf("clearnodegroupconfig:%s", v.(string)))
-	} else  {
-		args = append(args,fmt.Sprintf("clearnodegroupconfig:YES"))
+		args = append(args, fmt.Sprintf("clearnodegroupconfig:%s", v.(string)))
+	} else {
+		args = append(args, fmt.Sprintf("clearnodegroupconfig:YES"))
 	}
 	err := client.DeleteResourceWithArgs(service.Clusternode.Type(), clusternodeId, args)
 	if err != nil {

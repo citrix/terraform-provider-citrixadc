@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -82,13 +82,13 @@ func TestAccIpset_no_bindings(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckIpsetDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccIpset_no_bindings,
 				Check: resource.ComposeTestCheckFunc(testAccCheckIpsetExist("citrixadc_ipset.foo", nil),
 					resource.TestCheckResourceAttr("citrixadc_ipset.foo", "name", "tf_test_ipset"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccIpset_name_changed,
 				Check: resource.ComposeTestCheckFunc(testAccCheckIpsetExist("citrixadc_ipset.foo", nil),
 					resource.TestCheckResourceAttr("citrixadc_ipset.foo", "name", "tf_test_ipset_newname"),
@@ -107,13 +107,13 @@ func TestAccIpset_with_bindings(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckIpsetDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccIpset_no_bindings,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIpsetExist("citrixadc_ipset.foo", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccIpset_single_binding,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIpsetExist("citrixadc_ipset.foo", nil),
@@ -251,13 +251,13 @@ func TestAccIpset_ipv4_swaps(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckIpsetDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccIpset_swap_ipv4_step1,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIpsetExist("citrixadc_ipset.tf_ipset", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccIpset_swap_ipv4_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIpsetExist("citrixadc_ipset.tf_ipset", nil),
@@ -341,13 +341,13 @@ func TestAccIpset_ipv6_swaps(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckIpsetDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccIpset_swap_ipv6_step1,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIpsetExist("citrixadc_ipset.tf_ipset", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccIpset_swap_ipv6_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIpsetExist("citrixadc_ipset.tf_ipset", nil),

@@ -19,12 +19,12 @@ func resourceCitrixAdcRnatparam() *schema.Resource {
 		Update:        updateRnatparamFunc,
 		Delete:        deleteRnatparamFunc,
 		Schema: map[string]*schema.Schema{
-			"srcippersistency": &schema.Schema{
+			"srcippersistency": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"tcpproxy": &schema.Schema{
+			"tcpproxy": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

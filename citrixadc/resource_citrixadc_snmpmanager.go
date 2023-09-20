@@ -21,17 +21,17 @@ func resourceCitrixAdcSnmpmanager() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"ipaddress": &schema.Schema{
+			"ipaddress": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"domainresolveretry": &schema.Schema{
+			"domainresolveretry": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"netmask": &schema.Schema{
+			"netmask": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -44,7 +44,7 @@ func createSnmpmanagerFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSnmpmanagerFunc")
 	client := meta.(*NetScalerNitroClient).client
 	snmpmanagerName := d.Get("ipaddress").(string)
-	
+
 	snmpmanager := snmp.Snmpmanager{
 		Domainresolveretry: d.Get("domainresolveretry").(int),
 		Ipaddress:          d.Get("ipaddress").(string),
@@ -71,7 +71,7 @@ func readSnmpmanagerFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	snmpmanagerName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading snmpmanager state %s", snmpmanagerName)
-	
+
 	dataArr, err := client.FindAllResources(service.Snmpmanager.Type())
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing snmpmanager state %s", snmpmanagerName)
@@ -92,14 +92,14 @@ func readSnmpmanagerFunc(d *schema.ResourceData, meta interface{}) error {
 			break
 		}
 	}
-	
+
 	if foundIndex == -1 {
 		log.Printf("[DEBUG] citrixadc-provider: FindResourceAllResources snmpgroup not found in array")
 		log.Printf("[WARN] citrixadc-provider: Clearing snmpmanager state %s", snmpmanagerName)
 		d.SetId("")
 		return nil
 	}
-	
+
 	data := dataArr[foundIndex]
 	d.Set("domainresolveretry", data["domainresolveretry"])
 	d.Set("ipaddress", data["ipaddress"])
@@ -142,11 +142,11 @@ func deleteSnmpmanagerFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSnmpmanagerFunc")
 	client := meta.(*NetScalerNitroClient).client
 	snmpmanagerName := d.Id()
-	
+
 	args := make([]string, 0)
 
 	args = append(args, fmt.Sprintf("netmask:%s", url.QueryEscape(d.Get("netmask").(string))))
-	
+
 	err := client.DeleteResourceWithArgs(service.Snmpmanager.Type(), snmpmanagerName, args)
 	if err != nil {
 		return err

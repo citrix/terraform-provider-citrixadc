@@ -19,7 +19,7 @@ func resourceCitrixAdcRsskeytype() *schema.Resource {
 		Update:        updateRsskeytypeFunc,
 		Delete:        deleteRsskeytypeFunc,
 		Schema: map[string]*schema.Schema{
-			"rsstype": &schema.Schema{
+			"rsstype": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
@@ -58,7 +58,7 @@ func readRsskeytypeFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] citrixadc-provider:  In readRsskeytypeFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading rsskeytype state")
-	data, err := client.FindResource(service.Rsskeytype.Type(),"")
+	data, err := client.FindResource(service.Rsskeytype.Type(), "")
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing rsskeytype state")
 		d.SetId("")
@@ -93,7 +93,6 @@ func updateRsskeytypeFunc(d *schema.ResourceData, meta interface{}) error {
 
 func deleteRsskeytypeFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteRsskeytypeFunc")
-	
 
 	d.SetId("")
 

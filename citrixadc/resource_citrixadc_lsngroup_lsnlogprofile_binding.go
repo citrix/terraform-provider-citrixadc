@@ -20,12 +20,12 @@ func resourceCitrixAdcLsngroup_lsnlogprofile_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"groupname": &schema.Schema{
+			"groupname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"logprofilename": &schema.Schema{
+			"logprofilename": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,

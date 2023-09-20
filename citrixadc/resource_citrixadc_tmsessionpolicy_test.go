@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -31,7 +31,7 @@ const testAccTmsessionpolicy_basic = `
 		action = "tf_tmsessaction"
 	}
 `
-const testAccTmsessionpolicy_update= `
+const testAccTmsessionpolicy_update = `
 
 	resource "citrixadc_tmsessionpolicy" "tf_tmsessionpolicy" {
 		name   = "my_tmsession_policy"
@@ -46,7 +46,7 @@ func TestAccTmsessionpolicy_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckTmsessionpolicyDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccTmsessionpolicy_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTmsessionpolicyExist("citrixadc_tmsessionpolicy.tf_tmsessionpolicy", nil),
@@ -55,7 +55,7 @@ func TestAccTmsessionpolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_tmsessionpolicy.tf_tmsessionpolicy", "action", "tf_tmsessaction"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccTmsessionpolicy_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTmsessionpolicyExist("citrixadc_tmsessionpolicy.tf_tmsessionpolicy", nil),

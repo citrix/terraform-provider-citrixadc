@@ -23,77 +23,77 @@ func resourceCitrixAdcRoute() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"network": &schema.Schema{
+			"network": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"netmask": &schema.Schema{
+			"netmask": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"gateway": &schema.Schema{
+			"gateway": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"advertise": &schema.Schema{
+			"advertise": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"cost": &schema.Schema{
+			"cost": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"cost1": &schema.Schema{
+			"cost1": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"detail": &schema.Schema{
+			"detail": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"distance": &schema.Schema{
+			"distance": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"monitor": &schema.Schema{
+			"monitor": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"msr": &schema.Schema{
+			"msr": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ownergroup": &schema.Schema{
+			"ownergroup": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"routetype": &schema.Schema{
+			"routetype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"td": &schema.Schema{
+			"td": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"vlan": &schema.Schema{
+			"vlan": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"weight": &schema.Schema{
+			"weight": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,

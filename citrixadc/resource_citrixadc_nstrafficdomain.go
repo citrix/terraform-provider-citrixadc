@@ -20,19 +20,19 @@ func resourceCitrixAdcNstrafficdomain() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"td": &schema.Schema{
+			"td": {
 				Type:     schema.TypeInt,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"aliasname": &schema.Schema{
+			"aliasname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"vmac": &schema.Schema{
+			"vmac": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

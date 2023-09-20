@@ -17,86 +17,86 @@ func resourceCitrixAdcSslcertreq() *schema.Resource {
 		Read:          schema.Noop,
 		Delete:        schema.Noop,
 		Schema: map[string]*schema.Schema{
-			"reqfile": &schema.Schema{
+			"reqfile": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"countryname": &schema.Schema{
+			"countryname": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"organizationname": &schema.Schema{
+			"organizationname": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"statename": &schema.Schema{
+			"statename": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"challengepassword": &schema.Schema{
+			"challengepassword": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"commonname": &schema.Schema{
+			"commonname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"companyname": &schema.Schema{
+			"companyname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"digestmethod": &schema.Schema{
+			"digestmethod": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"emailaddress": &schema.Schema{
+			"emailaddress": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"fipskeyname": &schema.Schema{
+			"fipskeyname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"keyfile": &schema.Schema{
+			"keyfile": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"keyform": &schema.Schema{
+			"keyform": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"localityname": &schema.Schema{
+			"localityname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"organizationunitname": &schema.Schema{
+			"organizationunitname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"pempassphrase": &schema.Schema{
+			"pempassphrase": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"subjectaltname": &schema.Schema{
+			"subjectaltname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

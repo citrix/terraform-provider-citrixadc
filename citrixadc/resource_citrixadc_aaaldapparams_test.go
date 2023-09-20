@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -46,7 +46,7 @@ func TestAccAaaldapparams_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAaaldapparams_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAaaldapparamsExist("citrixadc_aaaldapparams.tf_aaaldapparams", nil),
@@ -55,7 +55,7 @@ func TestAccAaaldapparams_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_aaaldapparams.tf_aaaldapparams", "passwdchange", "DISABLED"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAaaldapparams_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAaaldapparamsExist("citrixadc_aaaldapparams.tf_aaaldapparams", nil),

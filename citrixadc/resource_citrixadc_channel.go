@@ -2,13 +2,13 @@ package citrixadc
 
 import (
 	"github.com/citrix/adc-nitro-go/resource/config/network"
-	
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
-	"net/url"
 	"log"
+	"net/url"
 )
 
 func resourceCitrixAdcChannel() *schema.Resource {
@@ -22,103 +22,103 @@ func resourceCitrixAdcChannel() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"channel_id": &schema.Schema{
+			"channel_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"bandwidthhigh": &schema.Schema{
+			"bandwidthhigh": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"bandwidthnormal": &schema.Schema{
+			"bandwidthnormal": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"conndistr": &schema.Schema{
+			"conndistr": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"flowctl": &schema.Schema{
+			"flowctl": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"haheartbeat": &schema.Schema{
+			"haheartbeat": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"hamonitor": &schema.Schema{
+			"hamonitor": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ifalias": &schema.Schema{
+			"ifalias": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ifnum": &schema.Schema{
+			"ifnum": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"lamac": &schema.Schema{
+			"lamac": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"linkredundancy": &schema.Schema{
+			"linkredundancy": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"lrminthroughput": &schema.Schema{
+			"lrminthroughput": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"macdistr": &schema.Schema{
+			"macdistr": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"mode": &schema.Schema{
+			"mode": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"mtu": &schema.Schema{
+			"mtu": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"speed": &schema.Schema{
+			"speed": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"state": &schema.Schema{
+			"state": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"tagall": &schema.Schema{
+			"tagall": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"throughput": &schema.Schema{
+			"throughput": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"trunk": &schema.Schema{
+			"trunk": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

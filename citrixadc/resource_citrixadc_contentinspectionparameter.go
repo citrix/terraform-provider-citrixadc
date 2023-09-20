@@ -18,7 +18,7 @@ func resourceCitrixAdcContentinspectionparameter() *schema.Resource {
 		Update:        updateContentinspectionparameterFunc,
 		Delete:        deleteContentinspectionparameterFunc,
 		Schema: map[string]*schema.Schema{
-			"undefaction": &schema.Schema{
+			"undefaction": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -36,7 +36,7 @@ func createContentinspectionparameterFunc(d *schema.ResourceData, meta interface
 		Undefaction: d.Get("undefaction").(string),
 	}
 
-	err := client.UpdateUnnamedResource("contentinspectionparameter",&contentinspectionparameter)
+	err := client.UpdateUnnamedResource("contentinspectionparameter", &contentinspectionparameter)
 	if err != nil {
 		return err
 	}

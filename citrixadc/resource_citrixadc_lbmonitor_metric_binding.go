@@ -18,22 +18,22 @@ func resourceCitrixAdcLbmonitor_metric_binding() *schema.Resource {
 		Read:          readLbmonitor_metric_bindingFunc,
 		Delete:        deleteLbmonitor_metric_bindingFunc,
 		Schema: map[string]*schema.Schema{
-			"monitorname": &schema.Schema{
+			"monitorname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"metric": &schema.Schema{
+			"metric": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"metricthreshold": &schema.Schema{
+			"metricthreshold": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				ForceNew: true,
 			},
-			"metricweight": &schema.Schema{
+			"metricweight": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				ForceNew: true,

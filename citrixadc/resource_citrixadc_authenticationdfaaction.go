@@ -20,28 +20,28 @@ func resourceCitrixAdcAuthenticationdfaaction() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"passphrase": &schema.Schema{
+			"passphrase": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 			},
-			"serverurl": &schema.Schema{
+			"serverurl": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 			},
-			"clientid": &schema.Schema{
+			"clientid": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 			},
-			"defaultauthenticationgroup": &schema.Schema{
+			"defaultauthenticationgroup": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

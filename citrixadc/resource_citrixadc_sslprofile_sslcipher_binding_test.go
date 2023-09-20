@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -35,21 +35,21 @@ func TestAccSslprofile_sslcipher_binding_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSslprofile_sslcipher_bindingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccSslprofile_sslcipher_binding_basic_step1,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSslprofile_sslcipher_bindingExist("citrixadc_sslprofile_sslcipher_binding.tf_binding", nil),
 					testAccCheckSslprofile_sslcipher_bindingExist("citrixadc_sslprofile_sslcipher_binding.tf_binding2", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccSslprofile_sslcipher_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSslprofile_sslcipher_bindingExist("citrixadc_sslprofile_sslcipher_binding.tf_binding", nil),
 					testAccCheckSslprofile_sslcipher_bindingExist("citrixadc_sslprofile_sslcipher_binding.tf_binding2", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccSslprofile_sslcipher_binding_basic_step3,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSslprofile_sslcipher_bindingExist("citrixadc_sslprofile_sslcipher_binding.tf_binding", nil),

@@ -20,13 +20,13 @@ func resourceCitrixAdcAuthenticationvserver_vpnportaltheme_binding() *schema.Res
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"portaltheme": &schema.Schema{
+			"portaltheme": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,

@@ -19,108 +19,108 @@ func resourceCitrixAdcAppfwsettings() *schema.Resource {
 		Update:        updateAppfwsettingsFunc,
 		Delete:        deleteAppfwsettingsFunc,
 		Schema: map[string]*schema.Schema{
-			"ceflogging": &schema.Schema{
+			"ceflogging": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"centralizedlearning": &schema.Schema{
+			"centralizedlearning": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"clientiploggingheader": &schema.Schema{
+			"clientiploggingheader": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"cookiepostencryptprefix": &schema.Schema{
+			"cookiepostencryptprefix": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"defaultprofile": &schema.Schema{
+			"defaultprofile": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"entitydecoding": &schema.Schema{
+			"entitydecoding": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"geolocationlogging": &schema.Schema{
+			"geolocationlogging": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"importsizelimit": &schema.Schema{
+			"importsizelimit": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"learnratelimit": &schema.Schema{
+			"learnratelimit": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"logmalformedreq": &schema.Schema{
+			"logmalformedreq": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"malformedreqaction": &schema.Schema{
+			"malformedreqaction": {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 				Computed: true,
 			},
-			"proxyport": &schema.Schema{
+			"proxyport": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"proxyserver": &schema.Schema{
+			"proxyserver": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sessioncookiename": &schema.Schema{
+			"sessioncookiename": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sessionlifetime": &schema.Schema{
+			"sessionlifetime": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"sessionlimit": &schema.Schema{
+			"sessionlimit": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"sessiontimeout": &schema.Schema{
+			"sessiontimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"signatureautoupdate": &schema.Schema{
+			"signatureautoupdate": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"signatureurl": &schema.Schema{
+			"signatureurl": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"undefaction": &schema.Schema{
+			"undefaction": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"useconfigurablesecretkey": &schema.Schema{
+			"useconfigurablesecretkey": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

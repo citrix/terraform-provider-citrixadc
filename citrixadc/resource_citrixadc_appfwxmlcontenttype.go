@@ -20,12 +20,12 @@ func resourceCitrixAdcAppfwxmlcontenttype() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"isregex": &schema.Schema{
+			"isregex": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"xmlcontenttypevalue": &schema.Schema{
+			"xmlcontenttypevalue": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,

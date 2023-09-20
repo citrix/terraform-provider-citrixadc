@@ -18,12 +18,12 @@ func resourceCitrixAdcPolicystringmap() *schema.Resource {
 		Update:        updatePolicystringmapFunc,
 		Delete:        deletePolicystringmapFunc,
 		Schema: map[string]*schema.Schema{
-			"comment": &schema.Schema{
+			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},

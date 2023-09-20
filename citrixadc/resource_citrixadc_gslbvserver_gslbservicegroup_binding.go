@@ -20,12 +20,12 @@ func resourceCitrixAdcGslbvserver_gslbservicegroup_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"servicegroupname": &schema.Schema{
+			"servicegroupname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -39,7 +39,7 @@ func createGslbvserver_gslbservicegroup_bindingFunc(d *schema.ResourceData, meta
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name")
 	servicegroupname := d.Get("servicegroupname")
-	
+
 	bindingId := fmt.Sprintf("%s,%s", name, servicegroupname)
 	gslbvserver_gslbservicegroup_binding := gslb.Gslbvservergslbservicegroupbinding{
 		Name:             d.Get("name").(string),

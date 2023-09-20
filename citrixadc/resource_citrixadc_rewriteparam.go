@@ -19,12 +19,12 @@ func resourceCitrixAdcRewriteparam() *schema.Resource {
 		Update:        updateRewriteparamFunc,
 		Delete:        deleteRewriteparamFunc, // Thought rewriteparam resource does not have a DELETE operation, it is required to set ID to "" d.SetID("") to maintain terraform state
 		Schema: map[string]*schema.Schema{
-			"timeout": &schema.Schema{
+			"timeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"undefaction": &schema.Schema{
+			"undefaction": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

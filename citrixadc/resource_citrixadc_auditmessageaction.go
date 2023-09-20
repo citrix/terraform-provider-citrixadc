@@ -21,27 +21,27 @@ func resourceCitrixAdcAuditmessageaction() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"bypasssafetycheck": &schema.Schema{
+			"bypasssafetycheck": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"loglevel": &schema.Schema{
+			"loglevel": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"logtonewnslog": &schema.Schema{
+			"logtonewnslog": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"stringbuilderexpr": &schema.Schema{
+			"stringbuilderexpr": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

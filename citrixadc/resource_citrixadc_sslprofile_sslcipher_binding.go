@@ -21,17 +21,17 @@ func resourceCitrixAdcSslprofile_sslcipher_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"ciphername": &schema.Schema{
+			"ciphername": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"cipherpriority": &schema.Schema{
+			"cipherpriority": {
 				Type:     schema.TypeInt,
-				Optional: true,	// this is optional attribute
+				Optional: true, // this is optional attribute
 				ForceNew: true,
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,

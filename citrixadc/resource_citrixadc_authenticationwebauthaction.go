@@ -21,118 +21,118 @@ func resourceCitrixAdcAuthenticationwebauthaction() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"scheme": &schema.Schema{
+			"scheme": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 			},
-			"serverip": &schema.Schema{
+			"serverip": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 			},
-			"serverport": &schema.Schema{
+			"serverport": {
 				Type:     schema.TypeInt,
 				Required: true,
 				Computed: false,
 			},
-			"successrule": &schema.Schema{
+			"successrule": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 			},
-			"attribute1": &schema.Schema{
+			"attribute1": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute10": &schema.Schema{
+			"attribute10": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute11": &schema.Schema{
+			"attribute11": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute12": &schema.Schema{
+			"attribute12": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute13": &schema.Schema{
+			"attribute13": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute14": &schema.Schema{
+			"attribute14": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute15": &schema.Schema{
+			"attribute15": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute16": &schema.Schema{
+			"attribute16": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute2": &schema.Schema{
+			"attribute2": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute3": &schema.Schema{
+			"attribute3": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute4": &schema.Schema{
+			"attribute4": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute5": &schema.Schema{
+			"attribute5": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute6": &schema.Schema{
+			"attribute6": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute7": &schema.Schema{
+			"attribute7": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute8": &schema.Schema{
+			"attribute8": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute9": &schema.Schema{
+			"attribute9": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"defaultauthenticationgroup": &schema.Schema{
+			"defaultauthenticationgroup": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"fullreqexpr": &schema.Schema{
+			"fullreqexpr": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

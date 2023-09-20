@@ -37,6 +37,17 @@ resource "citrixadc_lbvserver" "test_lbvserver" {
 
 }
 
+
+resource "citrixadc_lbvserver" "tf_lbvserver_test" {
+  name          = "tf_lbvserver"
+  ipv46         = "10.202.11.11"
+  lbmethod      = "ROUNDROBIN"
+  port          = 80
+  servicetype   = "HTTP"
+  probeport     = 90
+  probeprotocol = "HTTP"
+}
+
 ```
 
 
@@ -67,6 +78,8 @@ resource "citrixadc_lbvserver" "test_lbvserver" {
 * `persistmask` - (Optional) Persistence mask for IP based persistence types, for IPv4 virtual servers.
 * `v6persistmasklen` - (Optional) Persistence mask for IP based persistence types, for IPv6 virtual servers.
 * `pq` - (Optional) Use priority queuing on the virtual server. based persistence types, for IPv6 virtual servers. Possible values: [ on, off ]
+* `probeport` - (Optional) Citrix ADC provides support for external health check of the vserver status. Select port for HTTP/TCP monitring. Default value: 0
+* `probeprotocol` - (Optional) Citrix ADC provides support for external health check of the vserver status. Select HTTP or TCP probes for healthcheck.. Possible values: [ TCP, HTTP ]
 * `sc` - (Optional) Use SureConnect on the virtual server. Possible values: [ on, off ]
 * `rtspnat` - (Optional) Use network address translation (NAT) for RTSP data connections. Possible values: [ on, off ]
 * `m` - (Optional) Redirection mode for load balancing. Available settings function as follows: * IP - Before forwarding a request to a server, change the destination IP address to the server's IP address. * MAC - Before forwarding a request to a server, change the destination MAC address to the server's MAC address.  The destination IP address is not changed. MAC-based redirection mode is used mostly in firewall load balancing deployments. * IPTUNNEL - Perform IP-in-IP encapsulation for client IP packets. In the outer IP headers, set the destination IP address to the IP address of the server and the source IP address to the subnet IP (SNIP). The client IP packets are not modified. Applicable to both IPv4 and IPv6 packets. * TOS - Encode the virtual server's TOS ID in the TOS field of the IP header. You can use either the IPTUNNEL or the TOS option to implement Direct Server Return (DSR). Possible values: [ IP, MAC, IPTUNNEL, TOS ]

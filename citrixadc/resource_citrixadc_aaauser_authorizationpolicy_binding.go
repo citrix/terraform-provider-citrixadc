@@ -20,28 +20,28 @@ func resourceCitrixAdcAaauser_authorizationpolicy_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"username": &schema.Schema{
+			"username": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"policy": &schema.Schema{
+			"policy": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"gotopriorityexpression": &schema.Schema{
+			"gotopriorityexpression": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"priority": &schema.Schema{
+			"priority": {
 				Type:     schema.TypeInt,
 				Required: true,
 				ForceNew: true,
 			},
-			"type": &schema.Schema{
+			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -156,7 +156,7 @@ func deleteAaauser_authorizationpolicy_bindingFunc(d *schema.ResourceData, meta 
 	args = append(args, fmt.Sprintf("policy:%s", policy))
 	if v, ok := d.GetOk("type"); ok {
 		type_val := v.(string)
-		args = append (args, fmt.Sprintf("type:%s",type_val))
+		args = append(args, fmt.Sprintf("type:%s", type_val))
 	}
 
 	err := client.DeleteResourceWithArgs(service.Aaauser_authorizationpolicy_binding.Type(), name, args)

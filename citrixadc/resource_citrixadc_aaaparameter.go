@@ -19,107 +19,107 @@ func resourceCitrixAdcAaaparameter() *schema.Resource {
 		Update:        updateAaaparameterFunc,
 		Delete:        deleteAaaparameterFunc,
 		Schema: map[string]*schema.Schema{
-			"aaadloglevel": &schema.Schema{
+			"aaadloglevel": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"aaadnatip": &schema.Schema{
+			"aaadnatip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"aaasessionloglevel": &schema.Schema{
+			"aaasessionloglevel": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"apitokencache": &schema.Schema{
+			"apitokencache": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"defaultauthtype": &schema.Schema{
+			"defaultauthtype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"defaultcspheader": &schema.Schema{
+			"defaultcspheader": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"dynaddr": &schema.Schema{
+			"dynaddr": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"enableenhancedauthfeedback": &schema.Schema{
+			"enableenhancedauthfeedback": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"enablesessionstickiness": &schema.Schema{
+			"enablesessionstickiness": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"enablestaticpagecaching": &schema.Schema{
+			"enablestaticpagecaching": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"failedlogintimeout": &schema.Schema{
+			"failedlogintimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"ftmode": &schema.Schema{
+			"ftmode": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"loginencryption": &schema.Schema{
+			"loginencryption": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"maxaaausers": &schema.Schema{
+			"maxaaausers": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"maxkbquestions": &schema.Schema{
+			"maxkbquestions": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"maxloginattempts": &schema.Schema{
+			"maxloginattempts": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"maxsamldeflatesize": &schema.Schema{
+			"maxsamldeflatesize": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"persistentloginattempts": &schema.Schema{
+			"persistentloginattempts": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"pwdexpirynotificationdays": &schema.Schema{
+			"pwdexpirynotificationdays": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"samesite": &schema.Schema{
+			"samesite": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"tokenintrospectioninterval": &schema.Schema{
+			"tokenintrospectioninterval": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -132,7 +132,7 @@ func createAaaparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAaaparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	aaaparameterName := resource.PrefixedUniqueId("tf-aaaparameter-")
-	
+
 	aaaparameter := aaa.Aaaparameter{
 		Aaadloglevel:               d.Get("aaadloglevel").(string),
 		Aaadnatip:                  d.Get("aaadnatip").(string),

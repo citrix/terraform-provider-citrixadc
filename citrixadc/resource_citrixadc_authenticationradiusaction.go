@@ -20,118 +20,118 @@ func resourceCitrixAdcAuthenticationradiusaction() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"radkey": &schema.Schema{
+			"radkey": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 			},
-			"accounting": &schema.Schema{
+			"accounting": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"authentication": &schema.Schema{
+			"authentication": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"authservretry": &schema.Schema{
+			"authservretry": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"authtimeout": &schema.Schema{
+			"authtimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"callingstationid": &schema.Schema{
+			"callingstationid": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"defaultauthenticationgroup": &schema.Schema{
+			"defaultauthenticationgroup": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ipattributetype": &schema.Schema{
+			"ipattributetype": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"ipvendorid": &schema.Schema{
+			"ipvendorid": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"passencoding": &schema.Schema{
+			"passencoding": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"pwdattributetype": &schema.Schema{
+			"pwdattributetype": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"pwdvendorid": &schema.Schema{
+			"pwdvendorid": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"radattributetype": &schema.Schema{
+			"radattributetype": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"radgroupseparator": &schema.Schema{
+			"radgroupseparator": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"radgroupsprefix": &schema.Schema{
+			"radgroupsprefix": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"radnasid": &schema.Schema{
+			"radnasid": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"radnasip": &schema.Schema{
+			"radnasip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"radvendorid": &schema.Schema{
+			"radvendorid": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"serverip": &schema.Schema{
+			"serverip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"servername": &schema.Schema{
+			"servername": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"serverport": &schema.Schema{
+			"serverport": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"tunnelendpointclientip": &schema.Schema{
+			"tunnelendpointclientip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

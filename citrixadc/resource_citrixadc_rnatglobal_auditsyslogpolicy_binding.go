@@ -20,19 +20,19 @@ func resourceCitrixAdcRnatglobal_auditsyslogpolicy_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"policy": &schema.Schema{
+			"policy": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"all": &schema.Schema{
+			"all": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"priority": &schema.Schema{
+			"priority": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -71,7 +71,7 @@ func readRnatglobal_auditsyslogpolicy_bindingFunc(d *schema.ResourceData, meta i
 	log.Printf("[DEBUG] citrixadc-provider:  In readRnatglobal_auditsyslogpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policy := d.Id()
-	
+
 	log.Printf("[DEBUG] citrixadc-provider: Reading rnatglobal_auditsyslogpolicy_binding state %s", policy)
 
 	findParams := service.FindParams{

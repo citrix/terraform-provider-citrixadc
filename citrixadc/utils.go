@@ -2,12 +2,12 @@ package citrixadc
 
 import (
 	"log"
-	"time"
 	"strconv"
+	"time"
 
+	"github.com/citrix/adc-nitro-go/resource/config/ns"
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/citrix/adc-nitro-go/resource/config/ns"
 )
 
 func isTargetAdcCluster(nsClient *service.NitroClient) bool {

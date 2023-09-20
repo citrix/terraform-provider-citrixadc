@@ -65,265 +65,265 @@ func resourceCitrixAdcNstcpparam() *schema.Resource {
 		Read:          readNstcpparamFunc,
 		Delete:        deleteNstcpparamFunc,
 		Schema: map[string]*schema.Schema{
-			"ackonpush": &schema.Schema{
+			"ackonpush": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"autosyncookietimeout": &schema.Schema{
+			"autosyncookietimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"connflushifnomem": &schema.Schema{
+			"connflushifnomem": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"connflushthres": &schema.Schema{
+			"connflushthres": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"delayedack": &schema.Schema{
+			"delayedack": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"downstaterst": &schema.Schema{
+			"downstaterst": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"initialcwnd": &schema.Schema{
+			"initialcwnd": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"kaprobeupdatelastactivity": &schema.Schema{
+			"kaprobeupdatelastactivity": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"learnvsvrmss": &schema.Schema{
+			"learnvsvrmss": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"limitedpersist": &schema.Schema{
+			"limitedpersist": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"maxburst": &schema.Schema{
+			"maxburst": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"maxdynserverprobes": &schema.Schema{
+			"maxdynserverprobes": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"maxpktpermss": &schema.Schema{
+			"maxpktpermss": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"maxsynackretx": &schema.Schema{
+			"maxsynackretx": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"maxsynhold": &schema.Schema{
+			"maxsynhold": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"maxsynholdperprobe": &schema.Schema{
+			"maxsynholdperprobe": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"maxtimewaitconn": &schema.Schema{
+			"maxtimewaitconn": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"minrto": &schema.Schema{
+			"minrto": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"mptcpchecksum": &schema.Schema{
+			"mptcpchecksum": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"mptcpclosemptcpsessiononlastsfclose": &schema.Schema{
+			"mptcpclosemptcpsessiononlastsfclose": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"mptcpconcloseonpassivesf": &schema.Schema{
+			"mptcpconcloseonpassivesf": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"mptcpimmediatesfcloseonfin": &schema.Schema{
+			"mptcpimmediatesfcloseonfin": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"mptcpmaxpendingsf": &schema.Schema{
+			"mptcpmaxpendingsf": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"mptcpmaxsf": &schema.Schema{
+			"mptcpmaxsf": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"mptcppendingjointhreshold": &schema.Schema{
+			"mptcppendingjointhreshold": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"mptcprtostoswitchsf": &schema.Schema{
+			"mptcprtostoswitchsf": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"mptcpsfreplacetimeout": &schema.Schema{
+			"mptcpsfreplacetimeout": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"mptcpsftimeout": &schema.Schema{
+			"mptcpsftimeout": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"mptcpusebackupondss": &schema.Schema{
+			"mptcpusebackupondss": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"msslearndelay": &schema.Schema{
+			"msslearndelay": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"msslearninterval": &schema.Schema{
+			"msslearninterval": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"nagle": &schema.Schema{
+			"nagle": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"oooqsize": &schema.Schema{
+			"oooqsize": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"pktperretx": &schema.Schema{
+			"pktperretx": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"recvbuffsize": &schema.Schema{
+			"recvbuffsize": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"sack": &schema.Schema{
+			"sack": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"slowstartincr": &schema.Schema{
+			"slowstartincr": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"synattackdetection": &schema.Schema{
+			"synattackdetection": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"synholdfastgiveup": &schema.Schema{
+			"synholdfastgiveup": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"tcpfastopencookietimeout": &schema.Schema{
+			"tcpfastopencookietimeout": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"tcpfintimeout": &schema.Schema{
+			"tcpfintimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"tcpmaxretries": &schema.Schema{
+			"tcpmaxretries": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"ws": &schema.Schema{
+			"ws": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"wsval": &schema.Schema{
+			"wsval": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

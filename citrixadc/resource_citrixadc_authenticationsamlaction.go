@@ -20,239 +20,239 @@ func resourceCitrixAdcAuthenticationsamlaction() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"artifactresolutionserviceurl": &schema.Schema{
+			"artifactresolutionserviceurl": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute1": &schema.Schema{
+			"attribute1": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute10": &schema.Schema{
+			"attribute10": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute11": &schema.Schema{
+			"attribute11": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute12": &schema.Schema{
+			"attribute12": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute13": &schema.Schema{
+			"attribute13": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute14": &schema.Schema{
+			"attribute14": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute15": &schema.Schema{
+			"attribute15": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute16": &schema.Schema{
+			"attribute16": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute2": &schema.Schema{
+			"attribute2": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute3": &schema.Schema{
+			"attribute3": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute4": &schema.Schema{
+			"attribute4": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute5": &schema.Schema{
+			"attribute5": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute6": &schema.Schema{
+			"attribute6": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute7": &schema.Schema{
+			"attribute7": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute8": &schema.Schema{
+			"attribute8": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute9": &schema.Schema{
+			"attribute9": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attributeconsumingserviceindex": &schema.Schema{
+			"attributeconsumingserviceindex": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"attributes": &schema.Schema{
+			"attributes": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"audience": &schema.Schema{
+			"audience": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"authnctxclassref": &schema.Schema{
+			"authnctxclassref": {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 				Computed: true,
 			},
-			"customauthnctxclassref": &schema.Schema{
+			"customauthnctxclassref": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"defaultauthenticationgroup": &schema.Schema{
+			"defaultauthenticationgroup": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"digestmethod": &schema.Schema{
+			"digestmethod": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"enforceusername": &schema.Schema{
+			"enforceusername": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"forceauthn": &schema.Schema{
+			"forceauthn": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"groupnamefield": &schema.Schema{
+			"groupnamefield": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"logoutbinding": &schema.Schema{
+			"logoutbinding": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"logouturl": &schema.Schema{
+			"logouturl": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"metadatarefreshinterval": &schema.Schema{
+			"metadatarefreshinterval": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"metadataurl": &schema.Schema{
+			"metadataurl": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"relaystaterule": &schema.Schema{
+			"relaystaterule": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"requestedauthncontext": &schema.Schema{
+			"requestedauthncontext": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"samlacsindex": &schema.Schema{
+			"samlacsindex": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"samlbinding": &schema.Schema{
+			"samlbinding": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"samlidpcertname": &schema.Schema{
+			"samlidpcertname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"samlissuername": &schema.Schema{
+			"samlissuername": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"samlredirecturl": &schema.Schema{
+			"samlredirecturl": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"samlrejectunsignedassertion": &schema.Schema{
+			"samlrejectunsignedassertion": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"samlsigningcertname": &schema.Schema{
+			"samlsigningcertname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"samltwofactor": &schema.Schema{
+			"samltwofactor": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"samluserfield": &schema.Schema{
+			"samluserfield": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sendthumbprint": &schema.Schema{
+			"sendthumbprint": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"signaturealg": &schema.Schema{
+			"signaturealg": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"skewtime": &schema.Schema{
+			"skewtime": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"storesamlresponse": &schema.Schema{
+			"storesamlresponse": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

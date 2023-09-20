@@ -18,7 +18,7 @@ func resourceCitrixAdcPolicyparam() *schema.Resource {
 		Update:        updatePolicyparamFunc,
 		Delete:        deletePolicyparamFunc, // Thought policyparam resource does not have a DELETE operation, it is required to set ID to "" d.SetID("") to maintain terraform state
 		Schema: map[string]*schema.Schema{
-			"timeout": &schema.Schema{
+			"timeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,

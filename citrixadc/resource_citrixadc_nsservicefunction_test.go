@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -58,7 +58,7 @@ func TestAccNsservicefunction_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNsservicefunctionDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccNsservicefunction_add,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNsservicefunctionExist("citrixadc_nsservicefunction.tf_servicefunc", nil),
@@ -66,7 +66,7 @@ func TestAccNsservicefunction_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_nsservicefunction.tf_servicefunc", "ingressvlan", "20"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccNsservicefunction_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNsservicefunctionExist("citrixadc_nsservicefunction.tf_servicefunc", nil),

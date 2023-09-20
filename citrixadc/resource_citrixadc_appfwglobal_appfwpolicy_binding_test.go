@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -114,16 +114,16 @@ func TestAccAppfwglobal_appfwpolicy_binding_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppfwglobal_appfwpolicy_bindingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAppfwglobal_appfwpolicy_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppfwglobal_appfwpolicy_bindingExist("citrixadc_appfwglobal_appfwpolicy_binding.tf_binding", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAppfwglobal_appfwpolicy_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppfwglobal_appfwpolicy_bindingNotExist("citrixadc_appfwglobal_appfwpolicy_binding.tf_binding", "tf_appfwpolicy","REQ_DEFAULT"),
+					testAccCheckAppfwglobal_appfwpolicy_bindingNotExist("citrixadc_appfwglobal_appfwpolicy_binding.tf_binding", "tf_appfwpolicy", "REQ_DEFAULT"),
 				),
 			},
 		},
@@ -155,7 +155,7 @@ func testAccCheckAppfwglobal_appfwpolicy_bindingExist(n string, id *string) reso
 		typename := rs.Primary.Attributes["type"]
 		findParams := service.FindParams{
 			ResourceType:             "appfwglobal_appfwpolicy_binding",
-			ArgsMap: 				  map[string]string{ "type":typename },
+			ArgsMap:                  map[string]string{"type": typename},
 			ResourceMissingErrorCode: 258,
 		}
 		dataArr, err := client.FindResourceArrayWithParams(findParams)
@@ -182,13 +182,13 @@ func testAccCheckAppfwglobal_appfwpolicy_bindingExist(n string, id *string) reso
 	}
 }
 
-func testAccCheckAppfwglobal_appfwpolicy_bindingNotExist(n string, id string,typename string) resource.TestCheckFunc {
+func testAccCheckAppfwglobal_appfwpolicy_bindingNotExist(n string, id string, typename string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		client := testAccProvider.Meta().(*NetScalerNitroClient).client
 		policyname := id
 		findParams := service.FindParams{
 			ResourceType:             "appfwglobal_appfwpolicy_binding",
-			ArgsMap: 				  map[string]string{ "type":typename },
+			ArgsMap:                  map[string]string{"type": typename},
 			ResourceMissingErrorCode: 258,
 		}
 		dataArr, err := client.FindResourceArrayWithParams(findParams)

@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -33,7 +33,7 @@ func TestAccBotprofile_basic(t *testing.T) {
 		CheckDestroy: testAccCheckBotprofileDestroy,
 		Steps: []resource.TestStep{
 			// create botprofile
-			resource.TestStep{
+			{
 				Config: testAccBotprofile_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBotprofileExist("citrixadc_botprofile.tf_botprofile", nil),
@@ -41,7 +41,7 @@ func TestAccBotprofile_basic(t *testing.T) {
 				),
 			},
 			// update botprofile actions
-			resource.TestStep{
+			{
 				Config: testAccBotprofile_update_actions,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBotprofileExist("citrixadc_botprofile.tf_botprofile", nil),
@@ -53,7 +53,7 @@ func TestAccBotprofile_basic(t *testing.T) {
 				),
 			},
 			// update botprofile properties
-			resource.TestStep{
+			{
 				Config: testAccBotprofile_update_properties,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBotprofileExist("citrixadc_botprofile.tf_botprofile", nil),

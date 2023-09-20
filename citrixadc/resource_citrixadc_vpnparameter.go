@@ -17,423 +17,423 @@ func resourceCitrixAdcVpnparameter() *schema.Resource {
 		Create:        createVpnparameterFunc,
 		Read:          readVpnparameterFunc,
 		Update:        updateVpnparameterFunc,
-		Delete:        deleteVpnparameterFunc,// Thought vpnparameter resource donot have DELETE operation, it is required to set ID to "" d.SetID("") to maintain terraform state
+		Delete:        deleteVpnparameterFunc, // Thought vpnparameter resource donot have DELETE operation, it is required to set ID to "" d.SetID("") to maintain terraform state
 		Schema: map[string]*schema.Schema{
-			"advancedclientlessvpnmode": &schema.Schema{
+			"advancedclientlessvpnmode": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"allowedlogingroups": &schema.Schema{
+			"allowedlogingroups": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"allprotocolproxy": &schema.Schema{
+			"allprotocolproxy": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"alwaysonprofilename": &schema.Schema{
+			"alwaysonprofilename": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"apptokentimeout": &schema.Schema{
+			"apptokentimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"authorizationgroup": &schema.Schema{
+			"authorizationgroup": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"autoproxyurl": &schema.Schema{
+			"autoproxyurl": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"backendcertvalidation": &schema.Schema{
+			"backendcertvalidation": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"backendserversni": &schema.Schema{
+			"backendserversni": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"citrixreceiverhome": &schema.Schema{
+			"citrixreceiverhome": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"clientchoices": &schema.Schema{
+			"clientchoices": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"clientcleanupprompt": &schema.Schema{
+			"clientcleanupprompt": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"clientconfiguration": &schema.Schema{
+			"clientconfiguration": {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 				Computed: true,
 			},
-			"clientdebug": &schema.Schema{
+			"clientdebug": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"clientidletimeout": &schema.Schema{
+			"clientidletimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"clientlessmodeurlencoding": &schema.Schema{
+			"clientlessmodeurlencoding": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"clientlesspersistentcookie": &schema.Schema{
+			"clientlesspersistentcookie": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"clientlessvpnmode": &schema.Schema{
+			"clientlessvpnmode": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"clientoptions": &schema.Schema{
+			"clientoptions": {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 				Computed: true,
 			},
-			"clientsecurity": &schema.Schema{
+			"clientsecurity": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"clientsecuritygroup": &schema.Schema{
+			"clientsecuritygroup": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"clientsecuritylog": &schema.Schema{
+			"clientsecuritylog": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"clientsecuritymessage": &schema.Schema{
+			"clientsecuritymessage": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"clientversions": &schema.Schema{
+			"clientversions": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"defaultauthorizationaction": &schema.Schema{
+			"defaultauthorizationaction": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"dnsvservername": &schema.Schema{
+			"dnsvservername": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"emailhome": &schema.Schema{
+			"emailhome": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"encryptcsecexp": &schema.Schema{
+			"encryptcsecexp": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"epaclienttype": &schema.Schema{
+			"epaclienttype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"forcecleanup": &schema.Schema{
+			"forcecleanup": {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 				Computed: true,
 			},
-			"forcedtimeout": &schema.Schema{
+			"forcedtimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"forcedtimeoutwarning": &schema.Schema{
+			"forcedtimeoutwarning": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"fqdnspoofedip": &schema.Schema{
+			"fqdnspoofedip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ftpproxy": &schema.Schema{
+			"ftpproxy": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"gopherproxy": &schema.Schema{
+			"gopherproxy": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"homepage": &schema.Schema{
+			"homepage": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"httpport": &schema.Schema{
+			"httpport": {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeInt},
 				Optional: true,
 				Computed: true,
 			},
-			"httpproxy": &schema.Schema{
+			"httpproxy": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"icaproxy": &schema.Schema{
+			"icaproxy": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"icasessiontimeout": &schema.Schema{
+			"icasessiontimeout": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"icauseraccounting": &schema.Schema{
+			"icauseraccounting": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"iconwithreceiver": &schema.Schema{
+			"iconwithreceiver": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"iipdnssuffix": &schema.Schema{
+			"iipdnssuffix": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"kcdaccount": &schema.Schema{
+			"kcdaccount": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"killconnections": &schema.Schema{
+			"killconnections": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"linuxpluginupgrade": &schema.Schema{
+			"linuxpluginupgrade": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"locallanaccess": &schema.Schema{
+			"locallanaccess": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"loginscript": &schema.Schema{
+			"loginscript": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"logoutscript": &schema.Schema{
+			"logoutscript": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"macpluginupgrade": &schema.Schema{
+			"macpluginupgrade": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"mdxtokentimeout": &schema.Schema{
+			"mdxtokentimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"netmask": &schema.Schema{
+			"netmask": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ntdomain": &schema.Schema{
+			"ntdomain": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"pcoipprofilename": &schema.Schema{
+			"pcoipprofilename": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"proxy": &schema.Schema{
+			"proxy": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"proxyexception": &schema.Schema{
+			"proxyexception": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"proxylocalbypass": &schema.Schema{
+			"proxylocalbypass": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"rdpclientprofilename": &schema.Schema{
+			"rdpclientprofilename": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"rfc1918": &schema.Schema{
+			"rfc1918": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"samesite": &schema.Schema{
+			"samesite": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"securebrowse": &schema.Schema{
+			"securebrowse": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sesstimeout": &schema.Schema{
+			"sesstimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"smartgroup": &schema.Schema{
+			"smartgroup": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"socksproxy": &schema.Schema{
+			"socksproxy": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"splitdns": &schema.Schema{
+			"splitdns": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"splittunnel": &schema.Schema{
+			"splittunnel": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"spoofiip": &schema.Schema{
+			"spoofiip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sslproxy": &schema.Schema{
+			"sslproxy": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sso": &schema.Schema{
+			"sso": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ssocredential": &schema.Schema{
+			"ssocredential": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"storefronturl": &schema.Schema{
+			"storefronturl": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"transparentinterception": &schema.Schema{
+			"transparentinterception": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"uitheme": &schema.Schema{
+			"uitheme": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"useiip": &schema.Schema{
+			"useiip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"usemip": &schema.Schema{
+			"usemip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"userdomains": &schema.Schema{
+			"userdomains": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"wihome": &schema.Schema{
+			"wihome": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"wihomeaddresstype": &schema.Schema{
+			"wihomeaddresstype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"windowsautologon": &schema.Schema{
+			"windowsautologon": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"windowsclienttype": &schema.Schema{
+			"windowsclienttype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"windowspluginupgrade": &schema.Schema{
+			"windowspluginupgrade": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"winsip": &schema.Schema{
+			"winsip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"wiportalmode": &schema.Schema{
+			"wiportalmode": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -656,7 +656,7 @@ func updateVpnparameterFunc(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG]  citrixadc-provider: Advancedclientlessvpnmode has changed for vpnparameter vpnparameter, starting update")
 		vpnparameter.Advancedclientlessvpnmode = d.Get("advancedclientlessvpnmode").(string)
 		hasChange = true
-	}	
+	}
 	if d.HasChange("allowedlogingroups") {
 		log.Printf("[DEBUG]  citrixadc-provider: Allowedlogingroups has changed for vpnparameter vpnparameter, starting update")
 		vpnparameter.Allowedlogingroups = d.Get("allowedlogingroups").(string)

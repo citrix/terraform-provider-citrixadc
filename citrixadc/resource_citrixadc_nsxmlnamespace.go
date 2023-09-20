@@ -21,18 +21,18 @@ func resourceCitrixAdcNsxmlnamespace() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"prefix": &schema.Schema{
+			"prefix": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"namespace": &schema.Schema{
+			"namespace": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 			},
-			"description": &schema.Schema{
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -50,24 +50,24 @@ func TestAccSnmpmib_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccSnmpmib_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnmpmibExist("citrixadc_snmpmib.tf_snmpmib", nil),
-					resource.TestCheckResourceAttr("citrixadc_snmpmib.tf_snmpmib","contact", "phone_number"),
-					resource.TestCheckResourceAttr("citrixadc_snmpmib.tf_snmpmib","name", "my_name"),
-					resource.TestCheckResourceAttr("citrixadc_snmpmib.tf_snmpmib","location", "LOCATION"),
-					resource.TestCheckResourceAttr("citrixadc_snmpmib.tf_snmpmib","customid", "CUSTOMER_ID"),
+					resource.TestCheckResourceAttr("citrixadc_snmpmib.tf_snmpmib", "contact", "phone_number"),
+					resource.TestCheckResourceAttr("citrixadc_snmpmib.tf_snmpmib", "name", "my_name"),
+					resource.TestCheckResourceAttr("citrixadc_snmpmib.tf_snmpmib", "location", "LOCATION"),
+					resource.TestCheckResourceAttr("citrixadc_snmpmib.tf_snmpmib", "customid", "CUSTOMER_ID"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccSnmpmib_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnmpmibExist("citrixadc_snmpmib.tf_snmpmib", nil),
-					resource.TestCheckResourceAttr("citrixadc_snmpmib.tf_snmpmib","contact", "phone_number2"),
-					resource.TestCheckResourceAttr("citrixadc_snmpmib.tf_snmpmib","name", "my_name2"),
-					resource.TestCheckResourceAttr("citrixadc_snmpmib.tf_snmpmib","location", "LOCATION2"),
-					resource.TestCheckResourceAttr("citrixadc_snmpmib.tf_snmpmib","customid", "CUSTOMER_ID2"),
+					resource.TestCheckResourceAttr("citrixadc_snmpmib.tf_snmpmib", "contact", "phone_number2"),
+					resource.TestCheckResourceAttr("citrixadc_snmpmib.tf_snmpmib", "name", "my_name2"),
+					resource.TestCheckResourceAttr("citrixadc_snmpmib.tf_snmpmib", "location", "LOCATION2"),
+					resource.TestCheckResourceAttr("citrixadc_snmpmib.tf_snmpmib", "customid", "CUSTOMER_ID2"),
 				),
 			},
 		},
@@ -94,7 +94,7 @@ func testAccCheckSnmpmibExist(n string, id *string) resource.TestCheckFunc {
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Snmpmib.Type(),"")
+		data, err := nsClient.FindResource(service.Snmpmib.Type(), "")
 
 		if err != nil {
 			return err

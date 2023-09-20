@@ -19,41 +19,41 @@ func resourceCitrixAdcNsconfigSave() *schema.Resource {
 		Read:          schema.Noop,
 		Delete:        deleteNsconfigSaveFunc,
 		Schema: map[string]*schema.Schema{
-			"all": &schema.Schema{
+			"all": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"timestamp": &schema.Schema{
+			"timestamp": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"concurrent_save_ok": &schema.Schema{
+			"concurrent_save_ok": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
 				ForceNew: true,
 			},
-			"concurrent_save_retries": &schema.Schema{
+			"concurrent_save_retries": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Default:  0,
 				ForceNew: true,
 			},
-			"concurrent_save_timeout": &schema.Schema{
+			"concurrent_save_timeout": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "5m",
 				ForceNew: true,
 			},
-			"concurrent_save_interval": &schema.Schema{
+			"concurrent_save_interval": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "10s",
 				ForceNew: true,
 			},
-			"save_on_destroy": &schema.Schema{
+			"save_on_destroy": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,

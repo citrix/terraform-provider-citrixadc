@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -32,25 +32,25 @@ func TestAccNsfeature_basic(t *testing.T) {
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccNsfeature_basic_step1,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnabledDisabledFeatures([]string{"cs", "lb"}, []string{"ssl", "appfw"}),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccNsfeature_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnabledDisabledFeatures([]string{"cs"}, []string{"ssl", "appfw", "lb"}),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccNsfeature_basic_step3,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnabledDisabledFeatures([]string{"cs", "ssl"}, []string{"appfw", "lb"}),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccNsfeature_basic_step4,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnabledDisabledFeatures([]string{"appfw", "lb"}, []string{"cs", "ssl"}),

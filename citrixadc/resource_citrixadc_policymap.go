@@ -20,28 +20,28 @@ func resourceCitrixAdcPolicymap() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"mappolicyname": &schema.Schema{
+			"mappolicyname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"sd": &schema.Schema{
+			"sd": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"su": &schema.Schema{
+			"su": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"td": &schema.Schema{
+			"td": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"tu": &schema.Schema{
+			"tu": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

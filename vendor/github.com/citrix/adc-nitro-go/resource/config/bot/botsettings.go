@@ -25,6 +25,10 @@ type Botsettings struct {
 	*/
 	Defaultprofile string `json:"defaultprofile,omitempty"`
 	/**
+	* Profile to use when the feature is not enabled but feature is licensed.
+	*/
+	Defaultnonintrusiveprofile string `json:"defaultnonintrusiveprofile,omitempty"`
+	/**
 	* Name of the JavaScript that the Bot Management feature  uses in response.
 		Must begin with a letter or number, and can consist of from 1 to 31 letters, numbers, and the hyphen (-) and underscore (_) symbols.
 		The following requirement applies only to the Citrix ADC CLI:

@@ -2,8 +2,8 @@ package citrixadc
 
 import (
 	"github.com/citrix/adc-nitro-go/resource/config/snmp"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
@@ -18,11 +18,11 @@ func resourceCitrixAdcSnmpengineid() *schema.Resource {
 		Update:        updateSnmpengineidFunc,
 		Delete:        deleteSnmpengineidFunc, // Thought snmpengineid resource donot have DELETE operation, it is required to set ID to "" d.SetID("") to maintain terraform state
 		Schema: map[string]*schema.Schema{
-			"engineid": &schema.Schema{
+			"engineid": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"ownernode": &schema.Schema{
+			"ownernode": {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
@@ -32,26 +32,25 @@ func resourceCitrixAdcSnmpengineid() *schema.Resource {
 func createSnmpengineidFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSnmpengineidFunc")
 	client := meta.(*NetScalerNitroClient).client
-	
+
 	snmpengineidName := resource.PrefixedUniqueId("tf-snmpengineid-")
 
-	
 	snmpengineid := snmp.Snmpengineid{
-			Engineid:  d.Get("engineid").(string),
-			Ownernode: d.Get("ownernode").(int),
+		Engineid:  d.Get("engineid").(string),
+		Ownernode: d.Get("ownernode").(int),
 	}
 
 	err := client.UpdateUnnamedResource(service.Snmpengineid.Type(), &snmpengineid)
 	if err != nil {
-			return err
+		return err
 	}
 
 	d.SetId(snmpengineidName)
 
 	err = readSnmpengineidFunc(d, meta)
 	if err != nil {
-			log.Printf("[ERROR] netscaler-provider: ?? we just created this snmpengineid but we can't read it ??", )
-			return nil
+		log.Printf("[ERROR] netscaler-provider: ?? we just created this snmpengineid but we can't read it ??")
+		return nil
 	}
 	return nil
 }
@@ -59,7 +58,7 @@ func createSnmpengineidFunc(d *schema.ResourceData, meta interface{}) error {
 func readSnmpengineidFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSnmpengineidFunc")
 	client := meta.(*NetScalerNitroClient).client
-	log.Printf("[DEBUG] citrixadc-provider: Reading snmpengineid state",)
+	log.Printf("[DEBUG] citrixadc-provider: Reading snmpengineid state")
 	data, err := client.FindResource(service.Snmpengineid.Type(), "")
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing snmpengineid state")
@@ -77,7 +76,7 @@ func updateSnmpengineidFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateSnmpengineidFunc")
 	client := meta.(*NetScalerNitroClient).client
 	snmpengineid := snmp.Snmpengineid{}
-	
+
 	hasChange := false
 	if d.HasChange("engineid") {
 		log.Printf("[DEBUG]  citrixadc-provider: Engineid has changed for snmpengineid, starting update")

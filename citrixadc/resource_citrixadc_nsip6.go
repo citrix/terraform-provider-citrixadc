@@ -64,166 +64,166 @@ func resourceCitrixAdcNsip6() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"advertiseondefaultpartition": &schema.Schema{
+			"advertiseondefaultpartition": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"decrementhoplimit": &schema.Schema{
+			"decrementhoplimit": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"dynamicrouting": &schema.Schema{
+			"dynamicrouting": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ftp": &schema.Schema{
+			"ftp": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"gui": &schema.Schema{
+			"gui": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"hostroute": &schema.Schema{
+			"hostroute": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"icmp": &schema.Schema{
+			"icmp": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ip6hostrtgw": &schema.Schema{
+			"ip6hostrtgw": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ipv6address": &schema.Schema{
+			"ipv6address": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"map": &schema.Schema{
+			"map": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"metric": &schema.Schema{
+			"metric": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"mgmtaccess": &schema.Schema{
+			"mgmtaccess": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"nd": &schema.Schema{
+			"nd": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"networkroute": &schema.Schema{
+			"networkroute": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ospf6lsatype": &schema.Schema{
+			"ospf6lsatype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ospfarea": &schema.Schema{
+			"ospfarea": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"ownerdownresponse": &schema.Schema{
+			"ownerdownresponse": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ownernode": &schema.Schema{
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"restrictaccess": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"scope": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"snmp": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"ssh": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"state": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"tag": &schema.Schema{
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-			"td": &schema.Schema{
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-			"telnet": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"type": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"vlan": &schema.Schema{
+			"ownernode": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"vrid6": &schema.Schema{
+			"restrictaccess": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"scope": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"snmp": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"ssh": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"state": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"tag": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"vserver": &schema.Schema{
+			"td": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"telnet": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"vserverrhilevel": &schema.Schema{
+			"type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"vlan": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"vrid6": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"vserver": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"mptcpadvertise": &schema.Schema{
+			"vserverrhilevel": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"mptcpadvertise": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

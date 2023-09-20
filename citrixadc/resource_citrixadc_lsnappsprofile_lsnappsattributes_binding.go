@@ -20,12 +20,12 @@ func resourceCitrixAdcLsnappsprofile_lsnappsattributes_binding() *schema.Resourc
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"appsattributesname": &schema.Schema{
+			"appsattributesname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"appsprofilename": &schema.Schema{
+			"appsprofilename": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,

@@ -20,83 +20,83 @@ func resourceCitrixAdcAuthenticationvserver() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"appflowlog": &schema.Schema{
+			"appflowlog": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"authentication": &schema.Schema{
+			"authentication": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"authenticationdomain": &schema.Schema{
+			"authenticationdomain": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"certkeynames": &schema.Schema{
+			"certkeynames": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"comment": &schema.Schema{
+			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"failedlogintimeout": &schema.Schema{
+			"failedlogintimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"ipv46": &schema.Schema{
+			"ipv46": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"maxloginattempts": &schema.Schema{
+			"maxloginattempts": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"newname": &schema.Schema{
+			"newname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"port": &schema.Schema{
+			"port": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"range": &schema.Schema{
+			"range": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"samesite": &schema.Schema{
+			"samesite": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"servicetype": &schema.Schema{
+			"servicetype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"state": &schema.Schema{
+			"state": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"td": &schema.Schema{
+			"td": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,

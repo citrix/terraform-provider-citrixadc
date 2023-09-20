@@ -23,43 +23,43 @@ func resourceCitrixAdcResponderaction() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"bypasssafetycheck": &schema.Schema{
+			"bypasssafetycheck": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"comment": &schema.Schema{
+			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"htmlpage": &schema.Schema{
+			"htmlpage": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"reasonphrase": &schema.Schema{
+			"reasonphrase": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"responsestatuscode": &schema.Schema{
+			"responsestatuscode": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"target": &schema.Schema{
+			"target": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"type": &schema.Schema{
+			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

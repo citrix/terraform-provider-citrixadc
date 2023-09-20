@@ -5,8 +5,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
-	"strconv"
 	"log"
+	"strconv"
 )
 
 func resourceCitrixAdcLsngroup() *schema.Resource {
@@ -20,77 +20,77 @@ func resourceCitrixAdcLsngroup() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"groupname": &schema.Schema{
+			"groupname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"clientname": &schema.Schema{
+			"clientname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"allocpolicy": &schema.Schema{
+			"allocpolicy": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"ftp": &schema.Schema{
+			"ftp": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ftpcm": &schema.Schema{
+			"ftpcm": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ip6profile": &schema.Schema{
+			"ip6profile": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"logging": &schema.Schema{
+			"logging": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"nattype": &schema.Schema{
+			"nattype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"portblocksize": &schema.Schema{
+			"portblocksize": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"pptp": &schema.Schema{
+			"pptp": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"rtspalg": &schema.Schema{
+			"rtspalg": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sessionlogging": &schema.Schema{
+			"sessionlogging": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sessionsync": &schema.Schema{
+			"sessionsync": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sipalg": &schema.Schema{
+			"sipalg": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"snmptraplimit": &schema.Schema{
+			"snmptraplimit": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -103,14 +103,14 @@ func createLsngroupFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createLsngroupFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lsngroupName := d.Get("groupname").(string)
-	
+
 	lsngroup := make(map[string]interface{})
 	if v, ok := d.GetOk("allocpolicy"); ok {
 		lsngroup["allocpolicy"] = v.(string)
 	}
 	if v, ok := d.GetOk("clientname"); ok {
 		lsngroup["clientname"] = v.(string)
-	} 
+	}
 	if v, ok := d.GetOk("ftp"); ok {
 		lsngroup["ftp"] = v.(string)
 	}
@@ -122,7 +122,7 @@ func createLsngroupFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if v, ok := d.GetOk("ip6profile"); ok {
 		lsngroup["ip6profile"] = v.(string)
-	} 
+	}
 	if v, ok := d.GetOk("logging"); ok {
 		lsngroup["logging"] = v.(string)
 	}
@@ -134,7 +134,7 @@ func createLsngroupFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if v, ok := d.GetOk("pptp"); ok {
 		lsngroup["pptp"] = v.(string)
-	} 
+	}
 	if v, ok := d.GetOk("rtspalg"); ok {
 		lsngroup["rtspalg"] = v.(string)
 	}
@@ -143,7 +143,7 @@ func createLsngroupFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if v, ok := d.GetOk("sessionsync"); ok {
 		lsngroup["sessionsync"] = v.(string)
-	} 
+	}
 	if v, ok := d.GetOk("sipalg"); ok {
 		lsngroup["sipalg"] = v.(string)
 	}

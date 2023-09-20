@@ -20,38 +20,38 @@ func resourceCitrixAdcAuthenticationloginschemapolicy() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"rule": &schema.Schema{
+			"rule": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 			},
-			"action": &schema.Schema{
+			"action": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 			},
-			"comment": &schema.Schema{
+			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"logaction": &schema.Schema{
+			"logaction": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"newname": &schema.Schema{
+			"newname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"undefaction": &schema.Schema{
+			"undefaction": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

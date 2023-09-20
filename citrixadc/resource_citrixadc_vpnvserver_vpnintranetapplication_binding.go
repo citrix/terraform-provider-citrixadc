@@ -20,13 +20,13 @@ func resourceCitrixAdcVpnvserver_vpnintranetapplication_binding() *schema.Resour
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"intranetapplication": &schema.Schema{
+			"intranetapplication": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,

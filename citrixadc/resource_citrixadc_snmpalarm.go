@@ -19,37 +19,37 @@ func resourceCitrixAdcSnmpalarm() *schema.Resource {
 		Update:        updateSnmpalarmFunc,
 		Delete:        deleteSnmpalarmFunc,
 		Schema: map[string]*schema.Schema{
-			"logging": &schema.Schema{
+			"logging": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"normalvalue": &schema.Schema{
+			"normalvalue": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"severity": &schema.Schema{
+			"severity": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"state": &schema.Schema{
+			"state": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"thresholdvalue": &schema.Schema{
+			"thresholdvalue": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"time": &schema.Schema{
+			"time": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"trapname": &schema.Schema{
+			"trapname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -179,7 +179,7 @@ func doSnmpalarmStateChange(d *schema.ResourceData, client *service.NitroClient)
 
 	// We need a new instance of the struct since
 	// ActOnResource will fail if we put in superfluous attributes
-	
+
 	snmpalarm := snmp.Snmpalarm{
 		Trapname: d.Get("trapname").(string),
 	}

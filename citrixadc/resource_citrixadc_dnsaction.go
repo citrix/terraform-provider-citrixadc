@@ -21,39 +21,39 @@ func resourceCitrixAdcDnsaction() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"actionname": &schema.Schema{
+			"actionname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"actiontype": &schema.Schema{
+			"actiontype": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 			},
-			"dnsprofilename": &schema.Schema{
+			"dnsprofilename": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ipaddress": &schema.Schema{
+			"ipaddress": {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 				Computed: true,
 			},
-			"preferredloclist": &schema.Schema{
+			"preferredloclist": {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 				Computed: true,
 			},
-			"ttl": &schema.Schema{
+			"ttl": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"viewname": &schema.Schema{
+			"viewname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

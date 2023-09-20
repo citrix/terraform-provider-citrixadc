@@ -6,8 +6,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
-	"strconv"
 	"log"
+	"strconv"
 )
 
 func resourceCitrixAdcClusterinstance() *schema.Resource {
@@ -21,57 +21,57 @@ func resourceCitrixAdcClusterinstance() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"clid": &schema.Schema{
+			"clid": {
 				Type:     schema.TypeInt,
 				Required: true,
 				ForceNew: true,
 			},
-			"backplanebasedview": &schema.Schema{
+			"backplanebasedview": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"deadinterval": &schema.Schema{
+			"deadinterval": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"hellointerval": &schema.Schema{
+			"hellointerval": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"inc": &schema.Schema{
+			"inc": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"nodegroup": &schema.Schema{
+			"nodegroup": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"preemption": &schema.Schema{
+			"preemption": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"processlocal": &schema.Schema{
+			"processlocal": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"quorumtype": &schema.Schema{
+			"quorumtype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"retainconnectionsoncluster": &schema.Schema{
+			"retainconnectionsoncluster": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"syncstatusstrictmode": &schema.Schema{
+			"syncstatusstrictmode": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -98,7 +98,6 @@ func createClusterinstanceFunc(d *schema.ResourceData, meta interface{}) error {
 		Retainconnectionsoncluster: d.Get("retainconnectionsoncluster").(string),
 		Syncstatusstrictmode:       d.Get("syncstatusstrictmode").(string),
 	}
-
 
 	_, err := client.AddResource(service.Clusterinstance.Type(), strconv.Itoa(clusterinstanceName), &clusterinstance)
 	if err != nil {

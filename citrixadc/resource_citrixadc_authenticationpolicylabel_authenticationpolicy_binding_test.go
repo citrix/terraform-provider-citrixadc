@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -77,7 +77,7 @@ func TestAccAuthenticationpolicylabel_authenticationpolicy_binding_basic(t *test
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAuthenticationpolicylabel_authenticationpolicy_bindingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAuthenticationpolicylabel_authenticationpolicy_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthenticationpolicylabel_authenticationpolicy_bindingExist("citrixadc_authenticationpolicylabel_authenticationpolicy_binding.tf_bind", nil),
@@ -86,7 +86,7 @@ func TestAccAuthenticationpolicylabel_authenticationpolicy_binding_basic(t *test
 					resource.TestCheckResourceAttr("citrixadc_authenticationpolicylabel_authenticationpolicy_binding.tf_bind", "priority", "20"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAuthenticationpolicylabel_authenticationpolicy_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthenticationpolicylabel_authenticationpolicy_bindingNotExist("citrixadc_authenticationpolicylabel_authenticationpolicy_binding.tf_bind", "tf_authenticationpolicylabel,tf_authenticationpolicy"),

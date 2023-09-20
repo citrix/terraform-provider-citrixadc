@@ -19,42 +19,42 @@ func resourceCitrixAdcLsnappsprofile() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"appsprofilename": &schema.Schema{
+			"appsprofilename": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"transportprotocol": &schema.Schema{
+			"transportprotocol": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"filtering": &schema.Schema{
+			"filtering": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ippooling": &schema.Schema{
+			"ippooling": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"l2info": &schema.Schema{
+			"l2info": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"mapping": &schema.Schema{
+			"mapping": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"tcpproxy": &schema.Schema{
+			"tcpproxy": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"td": &schema.Schema{
+			"td": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,

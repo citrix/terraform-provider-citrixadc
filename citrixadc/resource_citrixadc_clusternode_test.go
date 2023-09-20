@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -50,7 +50,7 @@ func TestAccClusternode_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckClusternodeDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccClusternode_basic_nogroup_config,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusternodeExist("citrixadc_clusternode.tf_clusternode", nil),
@@ -58,7 +58,7 @@ func TestAccClusternode_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_clusternode.tf_clusternode", "state", "PASSIVE"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccClusternode_update_nogroup_config,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusternodeExist("citrixadc_clusternode.tf_clusternode", nil),
@@ -98,7 +98,7 @@ func TestAccClusternode_group_config_yes(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckClusternodeDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccClusternode_basic_group_config_yes,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusternodeExist("citrixadc_clusternode.tf_clusternode", nil),
@@ -106,7 +106,7 @@ func TestAccClusternode_group_config_yes(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_clusternode.tf_clusternode", "state", "PASSIVE"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccClusternode_update_group_config_yes,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusternodeExist("citrixadc_clusternode.tf_clusternode", nil),
@@ -118,8 +118,7 @@ func TestAccClusternode_group_config_yes(t *testing.T) {
 	})
 }
 
-
-const testAccClusternode_basic_group_config_no= `
+const testAccClusternode_basic_group_config_no = `
 
 
 	resource "citrixadc_clusternode" "tf_clusternode" {
@@ -147,7 +146,7 @@ func TestAccClusternode_group_config_no(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckClusternodeDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccClusternode_basic_group_config_no,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusternodeExist("citrixadc_clusternode.tf_clusternode", nil),
@@ -155,7 +154,7 @@ func TestAccClusternode_group_config_no(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_clusternode.tf_clusternode", "state", "PASSIVE"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccClusternode_update_group_config_no,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusternodeExist("citrixadc_clusternode.tf_clusternode", nil),

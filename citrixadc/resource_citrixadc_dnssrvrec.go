@@ -22,47 +22,47 @@ func resourceCitrixAdcDnssrvrec() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"domain": &schema.Schema{
+			"domain": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"ecssubnet": &schema.Schema{
+			"ecssubnet": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"nodeid": &schema.Schema{
+			"nodeid": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"port": &schema.Schema{
+			"port": {
 				Type:     schema.TypeInt,
 				Required: true,
 				Computed: false,
 			},
-			"priority": &schema.Schema{
+			"priority": {
 				Type:     schema.TypeInt,
 				Required: true,
 				Computed: false,
 			},
-			"target": &schema.Schema{
+			"target": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"ttl": &schema.Schema{
+			"ttl": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"type": &schema.Schema{
+			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"weight": &schema.Schema{
+			"weight": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -116,13 +116,13 @@ func readDnssrvrecFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
-	
+
 	if len(dataArray) == 0 {
 		log.Printf("[WARN] citrixadc-provider: dns srvrec does not exist. Clearing state.")
 		d.SetId("")
 		return nil
 	}
-	
+
 	foundIndex := -1
 	for i, dnssrvrec := range dataArray {
 		match := true
@@ -218,10 +218,10 @@ func deleteDnssrvrecFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	argsMap := make(map[string]string)
 	argsMap["target"] = url.QueryEscape(d.Get("target").(string))
-	if ecs,ok := d.GetOk("ecssubnet"); ok{
+	if ecs, ok := d.GetOk("ecssubnet"); ok {
 		argsMap["ecssubnet"] = url.QueryEscape(ecs.(string))
 	}
-	err := client.DeleteResourceWithArgsMap(service.Dnssrvrec.Type(),d.Id(), argsMap)
+	err := client.DeleteResourceWithArgsMap(service.Dnssrvrec.Type(), d.Id(), argsMap)
 	if err != nil {
 		return err
 	}

@@ -21,28 +21,28 @@ func resourceCitrixAdcNstimer() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"interval": &schema.Schema{
+			"interval": {
 				Type:     schema.TypeInt,
 				Required: true,
 				Computed: false,
 			},
-			"comment": &schema.Schema{
+			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"unit": &schema.Schema{
+			"unit": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"newname": &schema.Schema{
+			"newname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

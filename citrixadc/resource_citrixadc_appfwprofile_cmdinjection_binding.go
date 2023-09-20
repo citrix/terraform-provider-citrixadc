@@ -7,8 +7,8 @@ import (
 
 	"fmt"
 	"log"
-	"strings"
 	"net/url"
+	"strings"
 )
 
 func resourceCitrixAdcAppfwprofile_cmdinjection_binding() *schema.Resource {
@@ -21,85 +21,85 @@ func resourceCitrixAdcAppfwprofile_cmdinjection_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"cmdinjection": &schema.Schema{
+			"cmdinjection": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"formactionurl_cmd": &schema.Schema{
+			"formactionurl_cmd": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"alertonly": &schema.Schema{
+			"alertonly": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"as_scan_location_cmd": &schema.Schema{
+			"as_scan_location_cmd": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"as_value_expr_cmd": &schema.Schema{
+			"as_value_expr_cmd": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"as_value_type_cmd": &schema.Schema{
+			"as_value_type_cmd": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"comment": &schema.Schema{
+			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"isautodeployed": &schema.Schema{
+			"isautodeployed": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"isregex_cmd": &schema.Schema{
+			"isregex_cmd": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"isvalueregex_cmd": &schema.Schema{
+			"isvalueregex_cmd": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"resourceid": &schema.Schema{
+			"resourceid": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"ruletype": &schema.Schema{
+			"ruletype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"state": &schema.Schema{
+			"state": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -241,7 +241,7 @@ func deleteAppfwprofile_cmdinjection_bindingFunc(d *schema.ResourceData, meta in
 	args := make([]string, 0)
 	args = append(args, fmt.Sprintf("cmdinjection:%s", cmdinjection))
 	args = append(args, fmt.Sprintf("formactionurl_cmd:%s", url.QueryEscape(formactionurl_cmd)))
-	
+
 	if val, ok := d.GetOk("as_scan_location_cmd"); ok {
 		args = append(args, fmt.Sprintf("as_scan_location_cmd:%s", url.QueryEscape(val.(string))))
 	}

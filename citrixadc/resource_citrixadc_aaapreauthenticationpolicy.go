@@ -21,16 +21,16 @@ func resourceCitrixAdcAaapreauthenticationpolicy() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"rule": &schema.Schema{
+			"rule": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"reqaction": &schema.Schema{
+			"reqaction": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -42,8 +42,7 @@ func resourceCitrixAdcAaapreauthenticationpolicy() *schema.Resource {
 func createAaapreauthenticationpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAaapreauthenticationpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
-	aaapreauthenticationpolicyName  := d.Get("name").(string)
-
+	aaapreauthenticationpolicyName := d.Get("name").(string)
 
 	aaapreauthenticationpolicy := aaa.Aaapreauthenticationpolicy{
 		Name:      d.Get("name").(string),
@@ -106,7 +105,7 @@ func updateAaapreauthenticationpolicyFunc(d *schema.ResourceData, meta interface
 	}
 
 	if hasChange {
-		err := client.UpdateUnnamedResource(service.Aaapreauthenticationpolicy.Type(),&aaapreauthenticationpolicy)
+		err := client.UpdateUnnamedResource(service.Aaapreauthenticationpolicy.Type(), &aaapreauthenticationpolicy)
 		if err != nil {
 			return fmt.Errorf("Error updating aaapreauthenticationpolicy %s", aaapreauthenticationpolicyName)
 		}

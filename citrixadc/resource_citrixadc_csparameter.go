@@ -19,7 +19,7 @@ func resourceCitrixAdcCsparameter() *schema.Resource {
 		Update:        updateCsparameterFunc,
 		Delete:        deleteCsparameterFunc,
 		Schema: map[string]*schema.Schema{
-			"stateupdate": &schema.Schema{
+			"stateupdate": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

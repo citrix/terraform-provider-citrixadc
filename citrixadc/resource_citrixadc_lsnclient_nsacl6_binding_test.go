@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -42,13 +42,13 @@ func TestAccLsnclient_nsacl6_binding_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLsnclient_nsacl6_bindingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccLsnclient_nsacl6_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLsnclient_nsacl6_bindingExist("citrixadc_lsnclient_nsacl6_binding.tf_lsnclient_nsacl6_binding", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccLsnclient_nsacl6_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLsnclient_nsacl6_bindingNotExist("citrixadc_lsnclient_nsacl6_binding.tf_lsnclient_nsacl6_binding", "my_lsn_client,my_acl6"),

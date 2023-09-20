@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -41,29 +41,29 @@ const testAccArp_update = `
 	}
 	
 `
+
 func TestAccArp_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckArpDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccArp_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckArpExist("citrixadc_arp.tf_arp", nil),
 					resource.TestCheckResourceAttr("citrixadc_arp.tf_arp", "mac", "3B:FD:37:27:A1:F8"),
 					resource.TestCheckResourceAttr("citrixadc_arp.tf_arp", "vxlan", "2"),
-
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccArp_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckArpExist("citrixadc_arp.tf_arp", nil),
 					resource.TestCheckResourceAttr("citrixadc_arp.tf_arp", "mac", "3B:FD:37:27:A1:F8"),
 					resource.TestCheckResourceAttr("citrixadc_arp.tf_arp", "vxlan", "4"),
 				),
-			},	
+			},
 		},
 	})
 }

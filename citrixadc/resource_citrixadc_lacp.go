@@ -7,8 +7,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
-	"strconv"
 	"log"
+	"strconv"
 )
 
 func resourceCitrixAdcLacp() *schema.Resource {
@@ -22,11 +22,11 @@ func resourceCitrixAdcLacp() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"syspriority": &schema.Schema{
+			"syspriority": {
 				Type:     schema.TypeInt,
 				Required: true,
 			},
-			"ownernode": &schema.Schema{
+			"ownernode": {
 				Type:     schema.TypeInt,
 				Required: true,
 			},
@@ -69,7 +69,7 @@ func readLacpFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
-	
+
 	d.Set("ownernode", data["ownernode"])
 	d.Set("syspriority", data["syspriority"])
 

@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -53,13 +53,13 @@ func TestAccAaagroup_authorizationpolicy_binding_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAaagroup_authorizationpolicy_bindingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAaagroup_authorizationpolicy_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAaagroup_authorizationpolicy_bindingExist("citrixadc_aaagroup_authorizationpolicy_binding.tf_aaagroup_authorizationpolicy_binding", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAaagroup_authorizationpolicy_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAaagroup_authorizationpolicy_bindingNotExist("citrixadc_aaagroup_authorizationpolicy_binding.tf_aaagroup_authorizationpolicy_binding", "my_group,tp-authorize-1"),

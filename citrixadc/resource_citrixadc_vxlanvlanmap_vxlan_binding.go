@@ -7,8 +7,8 @@ import (
 
 	"fmt"
 	"log"
-	"strings"
 	"strconv"
+	"strings"
 )
 
 func resourceCitrixAdcVxlanvlanmap_vxlan_binding() *schema.Resource {
@@ -21,19 +21,19 @@ func resourceCitrixAdcVxlanvlanmap_vxlan_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"vxlan": &schema.Schema{
+			"vxlan": {
 				Type:     schema.TypeInt,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"vlan": &schema.Schema{
+			"vlan": {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,

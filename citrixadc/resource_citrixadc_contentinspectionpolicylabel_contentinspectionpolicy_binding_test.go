@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -44,13 +44,13 @@ func TestAccContentinspectionpolicylabel_contentinspectionpolicy_binding_basic(t
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckContentinspectionpolicylabel_contentinspectionpolicy_bindingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccContentinspectionpolicylabel_contentinspectionpolicy_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContentinspectionpolicylabel_contentinspectionpolicy_bindingExist("citrixadc_contentinspectionpolicylabel_contentinspectionpolicy_binding.tf_ci_binding", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccContentinspectionpolicylabel_contentinspectionpolicy_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContentinspectionpolicylabel_contentinspectionpolicy_bindingNotExist("citrixadc_contentinspectionpolicylabel_contentinspectionpolicy_binding.tf_ci_binding", "my_ci_label,my_ci_policy"),

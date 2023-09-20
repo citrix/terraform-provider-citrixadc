@@ -20,13 +20,13 @@ func resourceCitrixAdcVpnvserver_vpnnexthopserver_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"nexthopserver": &schema.Schema{
+			"nexthopserver": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,

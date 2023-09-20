@@ -25,7 +25,7 @@ func resourceCitrixAdcSslcipher() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"ciphergroupname": &schema.Schema{
+			"ciphergroupname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -37,11 +37,11 @@ func resourceCitrixAdcSslcipher() *schema.Resource {
 				Set:      sslcipherCipherSuitebindingMappingHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"ciphername": &schema.Schema{
+						"ciphername": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"cipherpriority": &schema.Schema{
+						"cipherpriority": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
@@ -267,7 +267,7 @@ func readSslCipherCipherSuitebindings(d *schema.ResourceData, meta interface{}) 
 	log.Printf("bindings %v\n", bindings)
 
 	processedBindings := make([]interface{}, len(bindings))
-	for i, _ := range bindings {
+	for i := range bindings {
 		processedBindings[i] = make(map[string]interface{})
 		processedBindings[i].(map[string]interface{})["ciphername"] = bindings[i]["ciphername"].(string)
 		processedBindings[i].(map[string]interface{})["cipherpriority"], _ = strconv.Atoi(bindings[i]["cipherpriority"].(string))

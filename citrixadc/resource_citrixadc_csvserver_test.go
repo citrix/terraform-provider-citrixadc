@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -35,7 +35,7 @@ func TestAccCsvserver_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCsvserverDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccCsvserver_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCsvserverExist("citrixadc_csvserver.foo", nil),
@@ -66,7 +66,7 @@ func TestAccCsvserver_standalone_ciphersuites_mixed(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			// Initial
-			resource.TestStep{
+			{
 				Config: testCiphersuitesConfig(templateCsvserverCiphersConfig, []string{"HIGH", "TLS1.2-DHE-RSA-CHACHA20-POLY1305"}),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckCiphersuitesEqualToActual([]string{"HIGH", "TLS1.2-DHE-RSA-CHACHA20-POLY1305"}, "tf-acc-ciphers-test"),
@@ -74,7 +74,7 @@ func TestAccCsvserver_standalone_ciphersuites_mixed(t *testing.T) {
 				),
 			},
 			// Transpose
-			resource.TestStep{
+			{
 				Config: testCiphersuitesConfig(templateCsvserverCiphersConfig, []string{"TLS1.2-DHE-RSA-CHACHA20-POLY1305", "HIGH"}),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckCiphersuitesEqualToActual([]string{"TLS1.2-DHE-RSA-CHACHA20-POLY1305", "HIGH"}, "tf-acc-ciphers-test"),
@@ -82,7 +82,7 @@ func TestAccCsvserver_standalone_ciphersuites_mixed(t *testing.T) {
 				),
 			},
 			// Empty list
-			resource.TestStep{
+			{
 				Config: testCiphersuitesConfig(templateCsvserverCiphersConfig, nil),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckCiphersuitesEqualToActual([]string{}, "tf-acc-ciphers-test"),
@@ -103,7 +103,7 @@ func TestAccCsvserver_cluster_ciphersuites(t *testing.T) {
 		CheckDestroy: testAccCheckLbvserverDestroy,
 		Steps: []resource.TestStep{
 			// Initial
-			resource.TestStep{
+			{
 				Config: testCiphersuitesConfig(templateCsvserverCiphersConfig, []string{"SSL3-EXP-ADH-RC4-MD5", "TLS1.2-DHE-RSA-CHACHA20-POLY1305"}),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckCiphersuitesEqualToActual([]string{"SSL3-EXP-ADH-RC4-MD5", "TLS1.2-DHE-RSA-CHACHA20-POLY1305"}, "tf-acc-ciphers-test"),
@@ -111,7 +111,7 @@ func TestAccCsvserver_cluster_ciphersuites(t *testing.T) {
 				),
 			},
 			// Transpose
-			resource.TestStep{
+			{
 				Config: testCiphersuitesConfig(templateCsvserverCiphersConfig, []string{"TLS1.2-DHE-RSA-CHACHA20-POLY1305", "SSL3-EXP-ADH-RC4-MD5"}),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckCiphersuitesEqualToActual([]string{"TLS1.2-DHE-RSA-CHACHA20-POLY1305", "SSL3-EXP-ADH-RC4-MD5"}, "tf-acc-ciphers-test"),
@@ -119,7 +119,7 @@ func TestAccCsvserver_cluster_ciphersuites(t *testing.T) {
 				),
 			},
 			// Empty list
-			resource.TestStep{
+			{
 				Config: testCiphersuitesConfig(templateCsvserverCiphersConfig, nil),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckCiphersuitesEqualToActual([]string{}, "tf-acc-ciphers-test"),
@@ -143,7 +143,7 @@ func TestAccCsvserver_cluster_ciphers(t *testing.T) {
 		CheckDestroy: testAccCheckLbvserverDestroy,
 		Steps: []resource.TestStep{
 			// Initial
-			resource.TestStep{
+			{
 				Config: testCiphersConfig(templateCsvserverCiphersConfig, []string{"HIGH", "MEDIUM"}),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckCiphersEqualToActual([]string{"HIGH", "MEDIUM"}, "tf-acc-ciphers-test"),
@@ -151,7 +151,7 @@ func TestAccCsvserver_cluster_ciphers(t *testing.T) {
 				),
 			},
 			// Transpose
-			resource.TestStep{
+			{
 				Config: testCiphersConfig(templateCsvserverCiphersConfig, []string{"MEDIUM", "HIGH"}),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckCiphersEqualToActual([]string{"MEDIUM", "HIGH"}, "tf-acc-ciphers-test"),
@@ -159,7 +159,7 @@ func TestAccCsvserver_cluster_ciphers(t *testing.T) {
 				),
 			},
 			// Empty list
-			resource.TestStep{
+			{
 				Config: testCiphersConfig(templateCsvserverCiphersConfig, nil),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckCiphersEqualToActual([]string{}, "tf-acc-ciphers-test"),
@@ -347,7 +347,7 @@ func TestAccCsvserver_enable_disable(t *testing.T) {
 		CheckDestroy: testAccCheckCsvserverDestroy,
 		Steps: []resource.TestStep{
 			// Create enabled
-			resource.TestStep{
+			{
 				Config: testAccCsvserverEnableDisable_enabled,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCsvserverExist("citrixadc_csvserver.tf_test_acc_csvserver", nil),
@@ -355,7 +355,7 @@ func TestAccCsvserver_enable_disable(t *testing.T) {
 				),
 			},
 			// Disable
-			resource.TestStep{
+			{
 				Config: testAccCsvserverEnableDisable_disabled,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCsvserverExist("citrixadc_csvserver.tf_test_acc_csvserver", nil),
@@ -363,7 +363,7 @@ func TestAccCsvserver_enable_disable(t *testing.T) {
 				),
 			},
 			// Re enable
-			resource.TestStep{
+			{
 				Config: testAccCsvserverEnableDisable_enabled,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCsvserverExist("citrixadc_csvserver.tf_test_acc_csvserver", nil),
@@ -428,11 +428,11 @@ func TestAccCsvserver_lbvserverbinding(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCsvserverDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccCsvserver_binding_add,
 				Check:  resource.ComposeTestCheckFunc(testAccCheckCsvserverExist("citrixadc_csvserver.testbindingfoo", nil)),
 			},
-			resource.TestStep{
+			{
 				Config: testAccCsvserver_binding_update,
 				Check:  resource.ComposeTestCheckFunc(testAccCheckCsvserverExist("citrixadc_csvserver.testbindingfoo", nil)),
 			},
@@ -449,31 +449,31 @@ func TestAccCsvserver_snicerts(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLbvserverDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testSslcertificateBindingsConfig(sniCertsCsvserverTemplateConfig, "", "cert2-cert3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCsvserverExist("citrixadc_csvserver.cssni", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testSslcertificateBindingsConfig(sniCertsCsvserverTemplateConfig, "", "cert2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCsvserverExist("citrixadc_csvserver.cssni", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testSslcertificateBindingsConfig(sniCertsCsvserverTemplateConfig, "cert3", "cert2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCsvserverExist("citrixadc_csvserver.cssni", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testSslcertificateBindingsConfig(sniCertsCsvserverTemplateConfig, "cert3", ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCsvserverExist("citrixadc_csvserver.cssni", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testSslcertificateBindingsConfig(sniCertsCsvserverTemplateConfig, "cert2", "cert3-cert2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCsvserverExist("citrixadc_csvserver.cssni", nil),
@@ -524,25 +524,25 @@ func TestAccCsvserver_sslpolicy(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLbvserverDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: sslpolicy_config_step1,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCsvserverExist("citrixadc_csvserver.tf_csvserver", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: sslpolicy_config_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCsvserverExist("citrixadc_csvserver.tf_csvserver", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: sslpolicy_config_step3,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCsvserverExist("citrixadc_csvserver.tf_csvserver", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: sslpolicy_config_step4,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCsvserverExist("citrixadc_csvserver.tf_csvserver", nil),
@@ -719,25 +719,25 @@ func TestAccCsvserver_sslpolicy_cluster(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLbvserverDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: sslpolicy_config_cluster_step1,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCsvserverExist("citrixadc_csvserver.tf_csvserver", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: sslpolicy_config_cluster_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCsvserverExist("citrixadc_csvserver.tf_csvserver", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: sslpolicy_config_cluster_step3,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCsvserverExist("citrixadc_csvserver.tf_csvserver", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: sslpolicy_config_cluster_step4,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCsvserverExist("citrixadc_csvserver.tf_csvserver", nil),

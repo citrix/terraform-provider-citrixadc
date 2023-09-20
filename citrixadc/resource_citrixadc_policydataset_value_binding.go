@@ -8,8 +8,8 @@ import (
 
 	"fmt"
 	"log"
-	"strings"
 	"net/url"
+	"strings"
 )
 
 func resourceCitrixAdcPolicydataset_value_binding() *schema.Resource {
@@ -22,29 +22,29 @@ func resourceCitrixAdcPolicydataset_value_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"comment": &schema.Schema{
+			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"index": &schema.Schema{
+			"index": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"value": &schema.Schema{
+			"value": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"endrange": &schema.Schema{
+			"endrange": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -63,11 +63,11 @@ func createPolicydataset_value_bindingFunc(d *schema.ResourceData, meta interfac
 	valueBindingId := fmt.Sprintf("%s,%s", name, value)
 
 	policydataset_value_binding := policy.Policydatasetvaluebinding{
-		Comment: d.Get("comment").(string),
-		Index:   d.Get("index").(int),
-		Name:    d.Get("name").(string),
-		Value:   d.Get("value").(string),
-		Endrange:d.Get("endrange").(string),
+		Comment:  d.Get("comment").(string),
+		Index:    d.Get("index").(int),
+		Name:     d.Get("name").(string),
+		Value:    d.Get("value").(string),
+		Endrange: d.Get("endrange").(string),
 	}
 
 	err := client.UpdateUnnamedResource(service.Policydataset_value_binding.Type(), &policydataset_value_binding)

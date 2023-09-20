@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -69,13 +69,13 @@ func TestAccRewriteglobal_rewritepolicy_binding_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRewriteglobal_rewritepolicy_bindingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRewriteglobal_rewritepolicy_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRewriteglobal_rewritepolicy_bindingExist("citrixadc_rewriteglobal_rewritepolicy_binding.tf_rewriteglobal_rewritepolicy_binding", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRewriteglobal_rewritepolicy_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRewriteglobal_rewritepolicy_bindingNotExist("citrixadc_rewriteglobal_rewritepolicy_binding.tf_rewriteglobal_rewritepolicy_binding", "tf_rewrite_policy,5,REQ_DEFAULT"),

@@ -20,12 +20,12 @@ func resourceCitrixAdcAppflowaction_analyticsprofile_binding() *schema.Resource 
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"analyticsprofile": &schema.Schema{
+			"analyticsprofile": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -39,9 +39,9 @@ func createAppflowaction_analyticsprofile_bindingFunc(d *schema.ResourceData, me
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name")
 	analyticsprofile := d.Get("analyticsprofile")
-	
+
 	bindingId := fmt.Sprintf("%s,%s", name, analyticsprofile)
-	
+
 	appflowaction_analyticsprofile_binding := appflow.Appflowactionanalyticsprofilebinding{
 		Analyticsprofile: d.Get("analyticsprofile").(string),
 		Name:             d.Get("name").(string),

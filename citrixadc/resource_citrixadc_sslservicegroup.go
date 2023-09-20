@@ -22,77 +22,77 @@ func resourceCitrixAdcSslservicegroup() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"commonname": &schema.Schema{
+			"commonname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ocspstapling": &schema.Schema{
+			"ocspstapling": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sendclosenotify": &schema.Schema{
+			"sendclosenotify": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"serverauth": &schema.Schema{
+			"serverauth": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"servicegroupname": &schema.Schema{
+			"servicegroupname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"sessreuse": &schema.Schema{
+			"sessreuse": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sesstimeout": &schema.Schema{
+			"sesstimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"snienable": &schema.Schema{
+			"snienable": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ssl3": &schema.Schema{
+			"ssl3": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sslprofile": &schema.Schema{
+			"sslprofile": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"strictsigdigestcheck": &schema.Schema{
+			"strictsigdigestcheck": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"tls1": &schema.Schema{
+			"tls1": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"tls11": &schema.Schema{
+			"tls11": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"tls12": &schema.Schema{
+			"tls12": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"tls13": &schema.Schema{
+			"tls13": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

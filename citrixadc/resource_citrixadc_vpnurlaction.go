@@ -20,57 +20,57 @@ func resourceCitrixAdcVpnurlaction() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"actualurl": &schema.Schema{
+			"actualurl": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 			},
-			"linkname": &schema.Schema{
+			"linkname": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 			},
-			"applicationtype": &schema.Schema{
+			"applicationtype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"clientlessaccess": &schema.Schema{
+			"clientlessaccess": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"comment": &schema.Schema{
+			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"iconurl": &schema.Schema{
+			"iconurl": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"newname": &schema.Schema{
+			"newname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"samlssoprofile": &schema.Schema{
+			"samlssoprofile": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ssotype": &schema.Schema{
+			"ssotype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"vservername": &schema.Schema{
+			"vservername": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

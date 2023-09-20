@@ -4,7 +4,7 @@ subcategory: "Bot"
 
 # Resource: botsettings
 
-The botsettings  resource is used to create and update the ADC BOT settings.
+The botsettings resource is used to update the ADC BOT settings.
 
 
 ## Example usage
@@ -25,6 +25,7 @@ resource "citrixadc_botsettings" "default" {
 ## Argument Reference
 
 * `defaultprofile` - (Optional) Profile to use when a connection does not match any policy. Default setting is " ", which sends unmatched connections back to the Citrix ADC without attempting to filter them further.
+* `defaultnonintrusiveprofile` - (Optional) Profile to use when the feature is not enabled but feature is licensed. Default value: BOT_STATS, Possible values = BOT_BYPASS, BOT_STATS, BOT_LOG
 * `javascriptname` - (Optional) Name of the JavaScript that the Bot Management feature  uses in response. Must begin with a letter or number, and can consist of from 1 to 31 letters, numbers, and the hyphen (-) and underscore (_) symbols. The following requirement applies only to the Citrix ADC CLI: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my cookie name" or 'my cookie name').
 * `sessiontimeout` - (Optional) Timeout, in seconds, after which a user session is terminated.
 * `sessioncookiename` - (Optional) Name of the SessionCookie that the Bot Management feature uses for tracking. Must begin with a letter or number, and can consist of from 1 to 31 letters, numbers, and the hyphen (-) and underscore (_) symbols. The following requirement applies only to the Citrix ADC CLI: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my cookie name" or 'my cookie name').
@@ -43,7 +44,10 @@ In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the botsettings.It is a unique string prefixed with "tf-botsettings".
 
+## Import
+
+A appfwsettings can be imported using its id, e.g.
 
 ```shell
-terraform import citrixadc_csaction.tf_csaction tf_csaction
+terraform import citrixadc_botsettings.default tf-appfwsettings-1234567890
 ```

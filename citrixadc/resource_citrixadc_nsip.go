@@ -74,186 +74,186 @@ func resourceCitrixAdcNsip() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"ipaddress": &schema.Schema{
+			"ipaddress": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"netmask": &schema.Schema{
+			"netmask": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"advertiseondefaultpartition": &schema.Schema{
+			"advertiseondefaultpartition": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"arp": &schema.Schema{
+			"arp": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"arpresponse": &schema.Schema{
+			"arpresponse": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"bgp": &schema.Schema{
+			"bgp": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"decrementttl": &schema.Schema{
+			"decrementttl": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"dynamicrouting": &schema.Schema{
+			"dynamicrouting": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ftp": &schema.Schema{
+			"ftp": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"gui": &schema.Schema{
+			"gui": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"hostroute": &schema.Schema{
+			"hostroute": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"hostrtgw": &schema.Schema{
+			"hostrtgw": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"icmp": &schema.Schema{
+			"icmp": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"icmpresponse": &schema.Schema{
+			"icmpresponse": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"metric": &schema.Schema{
+			"metric": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"mgmtaccess": &schema.Schema{
+			"mgmtaccess": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"networkroute": &schema.Schema{
+			"networkroute": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ospf": &schema.Schema{
+			"ospf": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ospfarea": &schema.Schema{
+			"ospfarea": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"ospflsatype": &schema.Schema{
+			"ospflsatype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ownerdownresponse": &schema.Schema{
+			"ownerdownresponse": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ownernode": &schema.Schema{
+			"ownernode": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"restrictaccess": &schema.Schema{
+			"restrictaccess": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"rip": &schema.Schema{
+			"rip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"snmp": &schema.Schema{
+			"snmp": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ssh": &schema.Schema{
+			"ssh": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"state": &schema.Schema{
+			"state": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"tag": &schema.Schema{
+			"tag": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"td": &schema.Schema{
+			"td": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"telnet": &schema.Schema{
+			"telnet": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"type": &schema.Schema{
+			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"vrid": &schema.Schema{
+			"vrid": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"vserver": &schema.Schema{
+			"vserver": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"vserverrhilevel": &schema.Schema{
+			"vserverrhilevel": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"vserverrhimode": &schema.Schema{
+			"vserverrhimode": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"mptcpadvertise": &schema.Schema{
+			"mptcpadvertise": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

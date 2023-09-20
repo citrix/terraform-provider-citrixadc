@@ -19,107 +19,107 @@ func resourceCitrixAdcAaaldapparams() *schema.Resource {
 		Update:        updateAaaldapparamsFunc,
 		Delete:        deleteAaaldapparamsFunc,
 		Schema: map[string]*schema.Schema{
-			"authtimeout": &schema.Schema{
+			"authtimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"defaultauthenticationgroup": &schema.Schema{
+			"defaultauthenticationgroup": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"groupattrname": &schema.Schema{
+			"groupattrname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"groupnameidentifier": &schema.Schema{
+			"groupnameidentifier": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"groupsearchattribute": &schema.Schema{
+			"groupsearchattribute": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"groupsearchfilter": &schema.Schema{
+			"groupsearchfilter": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"groupsearchsubattribute": &schema.Schema{
+			"groupsearchsubattribute": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ldapbase": &schema.Schema{
+			"ldapbase": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ldapbinddn": &schema.Schema{
+			"ldapbinddn": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ldapbinddnpassword": &schema.Schema{
+			"ldapbinddnpassword": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ldaploginname": &schema.Schema{
+			"ldaploginname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"maxnestinglevel": &schema.Schema{
+			"maxnestinglevel": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"nestedgroupextraction": &schema.Schema{
+			"nestedgroupextraction": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"passwdchange": &schema.Schema{
+			"passwdchange": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"searchfilter": &schema.Schema{
+			"searchfilter": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sectype": &schema.Schema{
+			"sectype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"serverip": &schema.Schema{
+			"serverip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"serverport": &schema.Schema{
+			"serverport": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"ssonameattribute": &schema.Schema{
+			"ssonameattribute": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"subattributename": &schema.Schema{
+			"subattributename": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"svrtype": &schema.Schema{
+			"svrtype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

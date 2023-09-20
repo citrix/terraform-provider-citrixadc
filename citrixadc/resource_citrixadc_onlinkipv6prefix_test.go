@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -49,7 +49,7 @@ func TestAccOnlinkipv6prefix_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckOnlinkipv6prefixDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccOnlinkipv6prefix_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOnlinkipv6prefixExist("citrixadc_onlinkipv6prefix.tf_onlinkipv6prefix", nil),
@@ -57,7 +57,7 @@ func TestAccOnlinkipv6prefix_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_onlinkipv6prefix.tf_onlinkipv6prefix", "autonomusprefix", "NO"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccOnlinkipv6prefix_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOnlinkipv6prefixExist("citrixadc_onlinkipv6prefix.tf_onlinkipv6prefix", nil),

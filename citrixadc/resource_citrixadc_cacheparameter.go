@@ -19,42 +19,42 @@ func resourceCitrixAdcCacheparameter() *schema.Resource {
 		Update:        updateCacheparameterFunc,
 		Delete:        deleteCacheparameterFunc,
 		Schema: map[string]*schema.Schema{
-			"enablebypass": &schema.Schema{
+			"enablebypass": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"enablehaobjpersist": &schema.Schema{
+			"enablehaobjpersist": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"maxpostlen": &schema.Schema{
+			"maxpostlen": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"memlimit": &schema.Schema{
+			"memlimit": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"prefetchmaxpending": &schema.Schema{
+			"prefetchmaxpending": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"undefaction": &schema.Schema{
+			"undefaction": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"verifyusing": &schema.Schema{
+			"verifyusing": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"via": &schema.Schema{
+			"via": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -68,13 +68,13 @@ func createCacheparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	cacheparameterName := resource.PrefixedUniqueId("tf-cacheparameter-")
 	cacheparameter := make(map[string]interface{})
-	
+
 	if v, ok := d.GetOk("enablebypass"); ok {
 		cacheparameter["enablebypass"] = v.(int)
 	}
 	if v, ok := d.GetOkExists("enablehaobjpersist"); ok {
 		cacheparameter["enablehaobjpersist"] = v.(string)
-	} 
+	}
 	if v, ok := d.GetOkExists("maxpostlen"); ok {
 		cacheparameter["maxpostlen"] = v.(int)
 	}
@@ -83,7 +83,7 @@ func createCacheparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if v, ok := d.GetOk("prefetchmaxpending"); ok {
 		cacheparameter["prefetchmaxpending"] = v.(int)
-	} 
+	}
 	if v, ok := d.GetOk("undefaction"); ok {
 		cacheparameter["undefaction"] = v.(string)
 	}
@@ -93,9 +93,8 @@ func createCacheparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("via"); ok {
 		cacheparameter["via"] = v.(string)
 	}
-	
 
-	err := client.UpdateUnnamedResource(service.Cacheparameter.Type(),&cacheparameter)
+	err := client.UpdateUnnamedResource(service.Cacheparameter.Type(), &cacheparameter)
 	if err != nil {
 		return err
 	}
@@ -181,7 +180,7 @@ func updateCacheparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if hasChange {
-		 err := client.UpdateUnnamedResource(service.Cacheparameter.Type(), &cacheparameter)
+		err := client.UpdateUnnamedResource(service.Cacheparameter.Type(), &cacheparameter)
 		if err != nil {
 			return fmt.Errorf("Error updating cacheparameter")
 		}
