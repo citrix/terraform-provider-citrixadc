@@ -7,8 +7,8 @@ import (
 
 	"fmt"
 	"log"
-	"strings"
 	"strconv"
+	"strings"
 )
 
 func resourceCitrixAdcBridgegroup_vlan_binding() *schema.Resource {
@@ -21,13 +21,13 @@ func resourceCitrixAdcBridgegroup_vlan_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"bridgegroup_id": &schema.Schema{
+			"bridgegroup_id": {
 				Type:     schema.TypeInt,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"vlan": &schema.Schema{
+			"vlan": {
 				Type:     schema.TypeInt,
 				Required: true,
 				Computed: false,

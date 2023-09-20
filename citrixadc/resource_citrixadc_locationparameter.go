@@ -3,8 +3,8 @@ package citrixadc
 import (
 	"github.com/citrix/adc-nitro-go/resource/config/basic"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
@@ -19,42 +19,42 @@ func resourceCitrixAdcLocationparameter() *schema.Resource {
 		Update:        updateLocationparameterFunc,
 		Delete:        deleteLocationparameterFunc,
 		Schema: map[string]*schema.Schema{
-			"context": &schema.Schema{
+			"context": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"matchwildcardtoany": &schema.Schema{
+			"matchwildcardtoany": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"q1label": &schema.Schema{
+			"q1label": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"q2label": &schema.Schema{
+			"q2label": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"q3label": &schema.Schema{
+			"q3label": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"q4label": &schema.Schema{
+			"q4label": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"q5label": &schema.Schema{
+			"q5label": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"q6label": &schema.Schema{
+			"q6label": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -67,7 +67,7 @@ func createLocationparameterFunc(d *schema.ResourceData, meta interface{}) error
 	log.Printf("[DEBUG]  citrixadc-provider: In createLocationparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var locationparameterName string
-	
+
 	// there is no primary key in LOCATIONPARAMETER resource. Hence generate one for terraform state maintenance
 	locationparameterName = resource.PrefixedUniqueId("tf-locationparameter-")
 	locationparameter := basic.Locationparameter{

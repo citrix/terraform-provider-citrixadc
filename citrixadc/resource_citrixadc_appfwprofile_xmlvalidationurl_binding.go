@@ -7,8 +7,8 @@ import (
 
 	"fmt"
 	"log"
-	"strings"
 	"net/url"
+	"strings"
 )
 
 func resourceCitrixAdcAppfwprofile_xmlvalidationurl_binding() *schema.Resource {
@@ -21,91 +21,91 @@ func resourceCitrixAdcAppfwprofile_xmlvalidationurl_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"xmlvalidationurl": &schema.Schema{
+			"xmlvalidationurl": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"alertonly": &schema.Schema{
+			"alertonly": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"comment": &schema.Schema{
+			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"isautodeployed": &schema.Schema{
+			"isautodeployed": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"resourceid": &schema.Schema{
+			"resourceid": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"ruletype": &schema.Schema{
+			"ruletype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"state": &schema.Schema{
+			"state": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"xmladditionalsoapheaders": &schema.Schema{
+			"xmladditionalsoapheaders": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"xmlendpointcheck": &schema.Schema{
+			"xmlendpointcheck": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"xmlrequestschema": &schema.Schema{
+			"xmlrequestschema": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"xmlresponseschema": &schema.Schema{
+			"xmlresponseschema": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"xmlvalidateresponse": &schema.Schema{
+			"xmlvalidateresponse": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"xmlvalidatesoapenvelope": &schema.Schema{
+			"xmlvalidatesoapenvelope": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"xmlwsdl": &schema.Schema{
+			"xmlwsdl": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

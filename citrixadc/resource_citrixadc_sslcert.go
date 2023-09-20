@@ -17,85 +17,85 @@ func resourceCitrixAdcSslcert() *schema.Resource {
 		Read:          schema.Noop,
 		Delete:        schema.Noop,
 		Schema: map[string]*schema.Schema{
-			"certfile": &schema.Schema{
+			"certfile": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"reqfile": &schema.Schema{
+			"reqfile": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"certtype": &schema.Schema{
+			"certtype": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"cacert": &schema.Schema{
+			"cacert": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"cacertform": &schema.Schema{
+			"cacertform": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"cakey": &schema.Schema{
+			"cakey": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"cakeyform": &schema.Schema{
+			"cakeyform": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"caserial": &schema.Schema{
+			"caserial": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"certform": &schema.Schema{
+			"certform": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"days": &schema.Schema{
+			"days": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"keyfile": &schema.Schema{
+			"keyfile": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"keyform": &schema.Schema{
+			"keyform": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"pempassphrase": &schema.Schema{
+			"pempassphrase": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"subjectaltname": &schema.Schema{
+			"subjectaltname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

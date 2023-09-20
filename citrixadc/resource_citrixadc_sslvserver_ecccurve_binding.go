@@ -21,12 +21,12 @@ func resourceCitrixAdcSslvserver_ecccurve_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"ecccurvename": &schema.Schema{
+			"ecccurvename": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"vservername": &schema.Schema{
+			"vservername": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,

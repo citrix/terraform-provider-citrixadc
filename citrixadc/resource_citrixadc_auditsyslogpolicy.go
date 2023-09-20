@@ -11,8 +11,8 @@ import (
 	"bytes"
 	"fmt"
 	"log"
-	"strconv"
 	"net/url"
+	"strconv"
 )
 
 type Systemglobalauditsyslogpolicybinding struct {
@@ -36,17 +36,17 @@ func resourceCitrixAdcAuditsyslogpolicy() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"action": &schema.Schema{
+			"action": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"rule": &schema.Schema{
+			"rule": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -59,27 +59,27 @@ func resourceCitrixAdcAuditsyslogpolicy() *schema.Resource {
 				Set:      auditsyslogpolicyGlobalbindingMappingHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"feature": &schema.Schema{
+						"feature": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"globalbindtype": &schema.Schema{
+						"globalbindtype": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"gotopriorityexpression": &schema.Schema{
+						"gotopriorityexpression": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"nextfactor": &schema.Schema{
+						"nextfactor": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"priority": &schema.Schema{
+						"priority": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
@@ -175,7 +175,7 @@ func updateAuditsyslogpolicyFunc(d *schema.ResourceData, meta interface{}) error
 		auditsyslogpolicy.Rule = d.Get("rule").(string)
 		hasChange = true
 	}
-	
+
 	auditsyslogpolicyNameEscaped := url.QueryEscape(auditsyslogpolicyName)
 
 	if hasChange {
@@ -196,7 +196,7 @@ func deleteAuditsyslogpolicyFunc(d *schema.ResourceData, meta interface{}) error
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAuditsyslogpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	auditsyslogpolicyName := d.Id()
-	
+
 	auditsyslogpolicyNameEscaped := url.QueryEscape(auditsyslogpolicyName)
 
 	// Unbind from global if appropriate

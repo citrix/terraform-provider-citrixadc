@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -44,32 +44,33 @@ resource "citrixadc_systemparameter" "tf_systemparameter" {
     doppler = "DISABLED"
 }
 `
+
 func TestAccSystemparameter_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccSystemparameter_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSystemparameterExist("citrixadc_systemparameter.tf_systemparameter", nil),
-					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_systemparameter", "rbaonresponse" , "ENABLED"),
-					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_systemparameter", "natpcbforceflushlimit" , "3000"),
-					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_systemparameter", "natpcbrstontimeout" , "DISABLED"),
-					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_systemparameter", "timeout" , "500"),
-					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_systemparameter", "doppler" , "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_systemparameter", "rbaonresponse", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_systemparameter", "natpcbforceflushlimit", "3000"),
+					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_systemparameter", "natpcbrstontimeout", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_systemparameter", "timeout", "500"),
+					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_systemparameter", "doppler", "ENABLED"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccSystemparameter_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSystemparameterExist("citrixadc_systemparameter.tf_systemparameter", nil),
-					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_systemparameter", "rbaonresponse" , "DISABLED"),
-					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_systemparameter", "natpcbforceflushlimit" , "2000"),
-					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_systemparameter", "natpcbrstontimeout" , "ENABLED"),
-					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_systemparameter", "timeout" , "600"),
-					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_systemparameter", "doppler" , "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_systemparameter", "rbaonresponse", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_systemparameter", "natpcbforceflushlimit", "2000"),
+					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_systemparameter", "natpcbrstontimeout", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_systemparameter", "timeout", "600"),
+					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_systemparameter", "doppler", "DISABLED"),
 				),
 			},
 		},
@@ -109,4 +110,3 @@ func testAccCheckSystemparameterExist(n string, id *string) resource.TestCheckFu
 		return nil
 	}
 }
-

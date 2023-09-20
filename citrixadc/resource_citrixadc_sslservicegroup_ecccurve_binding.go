@@ -21,12 +21,12 @@ func resourceCitrixAdcSslservicegroup_ecccurve_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"ecccurvename": &schema.Schema{
+			"ecccurvename": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"servicegroupname": &schema.Schema{
+			"servicegroupname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,

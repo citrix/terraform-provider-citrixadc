@@ -7,8 +7,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
-	"strconv"
 	"log"
+	"strconv"
 )
 
 func resourceCitrixAdcHanode() *schema.Resource {
@@ -22,67 +22,67 @@ func resourceCitrixAdcHanode() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"ipaddress": &schema.Schema{
+			"ipaddress": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"hanode_id": &schema.Schema{
+			"hanode_id": {
 				Type:     schema.TypeInt,
 				Required: true,
 				ForceNew: true,
 			},
-			"deadinterval": &schema.Schema{
+			"deadinterval": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"failsafe": &schema.Schema{
+			"failsafe": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"haprop": &schema.Schema{
+			"haprop": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"hastatus": &schema.Schema{
+			"hastatus": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"hasync": &schema.Schema{
+			"hasync": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"hellointerval": &schema.Schema{
+			"hellointerval": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"inc": &schema.Schema{
+			"inc": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"maxflips": &schema.Schema{
+			"maxflips": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"maxfliptime": &schema.Schema{
+			"maxfliptime": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"syncstatusstrictmode": &schema.Schema{
+			"syncstatusstrictmode": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"syncvlan": &schema.Schema{
+			"syncvlan": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -95,25 +95,25 @@ func createHanodeFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createHanodeFunc")
 	client := meta.(*NetScalerNitroClient).client
 	hanodeName := strconv.Itoa(d.Get("hanode_id").(int))
-	
+
 	hanode := ha.Hanode{
-        Id:                   d.Get("hanode_id").(int),
-        Deadinterval:         d.Get("deadinterval").(int),
-		Inc:				  d.Get("inc").(string),
-        Failsafe:             d.Get("failsafe").(string),
-        Haprop:               d.Get("haprop").(string),
-        Hastatus:             d.Get("hastatus").(string),
-        Hasync:               d.Get("hasync").(string),
-        Hellointerval:        d.Get("hellointerval").(int),
-        Maxflips:             d.Get("maxflips").(int),
-        Maxfliptime:          d.Get("maxfliptime").(int),
-        Syncstatusstrictmode: d.Get("syncstatusstrictmode").(string),
-        Syncvlan:             d.Get("syncvlan").(int),
-		Ipaddress: 			  d.Get("ipaddress").(string),
-    }
-	var err error 
+		Id:                   d.Get("hanode_id").(int),
+		Deadinterval:         d.Get("deadinterval").(int),
+		Inc:                  d.Get("inc").(string),
+		Failsafe:             d.Get("failsafe").(string),
+		Haprop:               d.Get("haprop").(string),
+		Hastatus:             d.Get("hastatus").(string),
+		Hasync:               d.Get("hasync").(string),
+		Hellointerval:        d.Get("hellointerval").(int),
+		Maxflips:             d.Get("maxflips").(int),
+		Maxfliptime:          d.Get("maxfliptime").(int),
+		Syncstatusstrictmode: d.Get("syncstatusstrictmode").(string),
+		Syncvlan:             d.Get("syncvlan").(int),
+		Ipaddress:            d.Get("ipaddress").(string),
+	}
+	var err error
 	if d.Get("hanode_id").(int) != 0 {
-	_, err = client.AddResource(service.Hanode.Type(), hanodeName, &hanode)
+		_, err = client.AddResource(service.Hanode.Type(), hanodeName, &hanode)
 	} else {
 		err = client.UpdateUnnamedResource(service.Hanode.Type(), &hanode)
 	}
@@ -122,7 +122,6 @@ func createHanodeFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(hanodeName)
-
 
 	err = readHanodeFunc(d, meta)
 	if err != nil {
@@ -143,11 +142,16 @@ func readHanodeFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
+	// We recieve "UP" as value from the NetScaler, if the user has given "ENABLED"
+	// FIXME: Revisit once the API is fixed
+	if data["hastatus"] == "UP" {
+		d.Set("hastatus", "ENABLED")
+	}
 	d.Set("hanode_id", data["id"])
 	d.Set("deadinterval", data["deadinterval"])
 	d.Set("failsafe", data["failsafe"])
 	d.Set("haprop", data["haprop"])
-	d.Set("hastatus", data["hastatus"])
+	// d.Set("hastatus", data["hastatus"]) // We recieve "UP" as value from the NetScaler, if the user has given "ENABLED"
 	d.Set("hasync", data["hasync"])
 	d.Set("hellointerval", data["hellointerval"])
 	d.Set("inc", data["inc"])

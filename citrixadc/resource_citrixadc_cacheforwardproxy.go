@@ -7,8 +7,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
-	"strconv"
 	"log"
+	"strconv"
 )
 
 func resourceCitrixAdcCacheforwardproxy() *schema.Resource {
@@ -21,12 +21,12 @@ func resourceCitrixAdcCacheforwardproxy() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"ipaddress": &schema.Schema{
+			"ipaddress": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"port": &schema.Schema{
+			"port": {
 				Type:     schema.TypeInt,
 				Required: true,
 				ForceNew: true,

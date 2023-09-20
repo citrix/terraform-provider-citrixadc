@@ -23,361 +23,366 @@ func resourceCitrixAdcCsvserver() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"appflowlog": &schema.Schema{
+			"appflowlog": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"authentication": &schema.Schema{
+			"authentication": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"authenticationhost": &schema.Schema{
+			"authenticationhost": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"authn401": &schema.Schema{
+			"authn401": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"authnprofile": &schema.Schema{
+			"authnprofile": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"authnvsname": &schema.Schema{
+			"authnvsname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"backupip": &schema.Schema{
+			"backupip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"backupvserver": &schema.Schema{
+			"backupvserver": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"cacheable": &schema.Schema{
+			"cacheable": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"casesensitive": &schema.Schema{
+			"casesensitive": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"clttimeout": &schema.Schema{
+			"clttimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"comment": &schema.Schema{
+			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"cookiedomain": &schema.Schema{
+			"cookiedomain": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"cookietimeout": &schema.Schema{
+			"cookietimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"dbprofilename": &schema.Schema{
+			"dbprofilename": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"disableprimaryondown": &schema.Schema{
+			"disableprimaryondown": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"dnsprofilename": &schema.Schema{
+			"dnsprofilename": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"dnsrecordtype": &schema.Schema{
+			"dnsrecordtype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"domainname": &schema.Schema{
+			"domainname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"downstateflush": &schema.Schema{
+			"downstateflush": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"httpprofilename": &schema.Schema{
+			"httpprofilename": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"icmpvsrresponse": &schema.Schema{
+			"icmpvsrresponse": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"insertvserveripport": &schema.Schema{
+			"insertvserveripport": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ipmask": &schema.Schema{
+			"ipmask": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ippattern": &schema.Schema{
+			"ippattern": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ipset": &schema.Schema{
+			"ipset": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ipv46": &schema.Schema{
+			"ipv46": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"l2conn": &schema.Schema{
+			"l2conn": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"listenpolicy": &schema.Schema{
+			"listenpolicy": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"listenpriority": &schema.Schema{
+			"listenpriority": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"mssqlserverversion": &schema.Schema{
+			"mssqlserverversion": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"mysqlcharacterset": &schema.Schema{
+			"mysqlcharacterset": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"mysqlprotocolversion": &schema.Schema{
+			"mysqlprotocolversion": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"mysqlservercapabilities": &schema.Schema{
+			"mysqlservercapabilities": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"mysqlserverversion": &schema.Schema{
+			"mysqlserverversion": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"netprofile": &schema.Schema{
+			"netprofile": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"oracleserverversion": &schema.Schema{
+			"oracleserverversion": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"persistenceid": &schema.Schema{
+			"persistenceid": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"persistencetype": &schema.Schema{
+			"persistencetype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"port": &schema.Schema{
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"precedence": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"push": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"pushlabel": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"pushmulticlients": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"pushvserver": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"range": &schema.Schema{
+			"port": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"redirectportrewrite": &schema.Schema{
+			"precedence": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"redirecturl": &schema.Schema{
+			"push": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"rhistate": &schema.Schema{
+			"pushlabel": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"rtspnat": &schema.Schema{
+			"pushmulticlients": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"servicetype": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"sitedomainttl": &schema.Schema{
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-			"sobackupaction": &schema.Schema{
+			"pushvserver": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"somethod": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"sopersistence": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"sopersistencetimeout": &schema.Schema{
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-			"sothreshold": &schema.Schema{
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-			"state": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"stateupdate": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"targettype": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"tcpprofilename": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"td": &schema.Schema{
+			"range": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"ttl": &schema.Schema{
+			"redirectportrewrite": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"redirectfromport": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"vipheader": &schema.Schema{
+			"redirecturl": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sslcertkey": &schema.Schema{
+			"rhistate": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"rtspnat": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"servicetype": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"sitedomainttl": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"sobackupaction": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"somethod": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"sopersistence": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"sopersistencetimeout": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"sothreshold": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"state": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"stateupdate": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"targettype": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"tcpprofilename": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"td": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"ttl": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"vipheader": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"sslcertkey": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"snisslcertkeys": &schema.Schema{
+			"snisslcertkeys": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"sslprofile": &schema.Schema{
+			"sslprofile": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"ciphers": &schema.Schema{
+			"ciphers": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"ciphersuites": &schema.Schema{
+			"ciphersuites": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"lbvserverbinding": &schema.Schema{
+			"lbvserverbinding": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -388,37 +393,37 @@ func resourceCitrixAdcCsvserver() *schema.Resource {
 				Set:      sslpolicybindingMappingHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"gotopriorityexpression": &schema.Schema{
+						"gotopriorityexpression": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"invoke": &schema.Schema{
+						"invoke": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Computed: true,
 						},
-						"labelname": &schema.Schema{
+						"labelname": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"labeltype": &schema.Schema{
+						"labeltype": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"policyname": &schema.Schema{
+						"policyname": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"priority": &schema.Schema{
+						"priority": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 						},
-						"type": &schema.Schema{
+						"type": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -506,6 +511,7 @@ func createCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		Pushvserver:             d.Get("pushvserver").(string),
 		Range:                   d.Get("range").(int),
 		Redirectportrewrite:     d.Get("redirectportrewrite").(string),
+		Redirectfromport:        d.Get("redirectfromport").(int),
 		Redirecturl:             d.Get("redirecturl").(string),
 		Rhistate:                d.Get("rhistate").(string),
 		Rtspnat:                 d.Get("rtspnat").(string),
@@ -679,6 +685,7 @@ func readCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("pushvserver", data["pushvserver"])
 	d.Set("range", data["range"])
 	d.Set("redirectportrewrite", data["redirectportrewrite"])
+	setToInt("redirectfromport", d, data["redirectfromport"])
 	d.Set("redirecturl", data["redirecturl"])
 	d.Set("rhistate", data["rhistate"])
 	d.Set("rtspnat", data["rtspnat"])
@@ -982,6 +989,11 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("redirectportrewrite") {
 		log.Printf("[DEBUG] netscaler-provider:  Redirectportrewrite has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Redirectportrewrite = d.Get("redirectportrewrite").(string)
+		hasChange = true
+	}
+	if d.HasChange("redirectfromport") {
+		log.Printf("[DEBUG] netscaler-provider:  redirectfromport has changed for csvserver %s, starting update", csvserverName)
+		csvserver.Redirectfromport = d.Get("redirectfromport").(int)
 		hasChange = true
 	}
 	if d.HasChange("redirecturl") {

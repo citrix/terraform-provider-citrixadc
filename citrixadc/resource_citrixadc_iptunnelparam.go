@@ -19,42 +19,42 @@ func resourceCitrixAdcIptunnelparam() *schema.Resource {
 		Update:        updateIptunnelparamFunc,
 		Delete:        deleteIptunnelparamFunc,
 		Schema: map[string]*schema.Schema{
-			"dropfrag": &schema.Schema{
+			"dropfrag": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"dropfragcputhreshold": &schema.Schema{
+			"dropfragcputhreshold": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"enablestrictrx": &schema.Schema{
+			"enablestrictrx": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"enablestricttx": &schema.Schema{
+			"enablestricttx": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"mac": &schema.Schema{
+			"mac": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"srcip": &schema.Schema{
+			"srcip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"srciproundrobin": &schema.Schema{
+			"srciproundrobin": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"useclientsourceip": &schema.Schema{
+			"useclientsourceip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -99,7 +99,7 @@ func readIptunnelparamFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] citrixadc-provider:  In readIptunnelparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading iptunnelparam state")
-	data, err := client.FindResource(service.Iptunnelparam.Type(),"")
+	data, err := client.FindResource(service.Iptunnelparam.Type(), "")
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing iptunnelparam state")
 		d.SetId("")
@@ -176,7 +176,6 @@ func updateIptunnelparamFunc(d *schema.ResourceData, meta interface{}) error {
 
 func deleteIptunnelparamFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteIptunnelparamFunc")
-
 
 	d.SetId("")
 

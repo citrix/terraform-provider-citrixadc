@@ -17,163 +17,163 @@ func resourceCitrixAdcAppfwlearningsettings() *schema.Resource {
 		Create:        createAppfwlearningsettingsFunc,
 		Read:          readAppfwlearningsettingsFunc,
 		Update:        updateAppfwlearningsettingsFunc,
-		Delete:        deleteAppfwlearningsettingsFunc,// Thought appfwlearningsettings resource donot have DELETE operation, it is required to set ID to "" d.SetID("") to maintain terraform state
+		Delete:        deleteAppfwlearningsettingsFunc, // Thought appfwlearningsettings resource donot have DELETE operation, it is required to set ID to "" d.SetID("") to maintain terraform state
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"profilename": &schema.Schema{
+			"profilename": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"contenttypeautodeploygraceperiod": &schema.Schema{
+			"contenttypeautodeploygraceperiod": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"contenttypeminthreshold": &schema.Schema{
+			"contenttypeminthreshold": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"contenttypepercentthreshold": &schema.Schema{
+			"contenttypepercentthreshold": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"cookieconsistencyautodeploygraceperiod": &schema.Schema{
+			"cookieconsistencyautodeploygraceperiod": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"cookieconsistencyminthreshold": &schema.Schema{
+			"cookieconsistencyminthreshold": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"cookieconsistencypercentthreshold": &schema.Schema{
+			"cookieconsistencypercentthreshold": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"creditcardnumberminthreshold": &schema.Schema{
+			"creditcardnumberminthreshold": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"creditcardnumberpercentthreshold": &schema.Schema{
+			"creditcardnumberpercentthreshold": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"crosssitescriptingautodeploygraceperiod": &schema.Schema{
+			"crosssitescriptingautodeploygraceperiod": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"crosssitescriptingminthreshold": &schema.Schema{
+			"crosssitescriptingminthreshold": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"crosssitescriptingpercentthreshold": &schema.Schema{
+			"crosssitescriptingpercentthreshold": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"csrftagautodeploygraceperiod": &schema.Schema{
+			"csrftagautodeploygraceperiod": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"csrftagminthreshold": &schema.Schema{
+			"csrftagminthreshold": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"csrftagpercentthreshold": &schema.Schema{
+			"csrftagpercentthreshold": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"fieldconsistencyautodeploygraceperiod": &schema.Schema{
+			"fieldconsistencyautodeploygraceperiod": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"fieldconsistencyminthreshold": &schema.Schema{
+			"fieldconsistencyminthreshold": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"fieldconsistencypercentthreshold": &schema.Schema{
+			"fieldconsistencypercentthreshold": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"fieldformatautodeploygraceperiod": &schema.Schema{
+			"fieldformatautodeploygraceperiod": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"fieldformatminthreshold": &schema.Schema{
+			"fieldformatminthreshold": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"fieldformatpercentthreshold": &schema.Schema{
+			"fieldformatpercentthreshold": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"sqlinjectionautodeploygraceperiod": &schema.Schema{
+			"sqlinjectionautodeploygraceperiod": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"sqlinjectionminthreshold": &schema.Schema{
+			"sqlinjectionminthreshold": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"sqlinjectionpercentthreshold": &schema.Schema{
+			"sqlinjectionpercentthreshold": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"starturlautodeploygraceperiod": &schema.Schema{
+			"starturlautodeploygraceperiod": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"starturlminthreshold": &schema.Schema{
+			"starturlminthreshold": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"starturlpercentthreshold": &schema.Schema{
+			"starturlpercentthreshold": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"xmlattachmentminthreshold": &schema.Schema{
+			"xmlattachmentminthreshold": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"xmlattachmentpercentthreshold": &schema.Schema{
+			"xmlattachmentpercentthreshold": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"xmlwsiminthreshold": &schema.Schema{
+			"xmlwsiminthreshold": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"xmlwsipercentthreshold": &schema.Schema{
+			"xmlwsipercentthreshold": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -186,7 +186,7 @@ func createAppfwlearningsettingsFunc(d *schema.ResourceData, meta interface{}) e
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppfwlearningsettingsFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appfwlearningsettingsName := d.Get("profilename").(string)
-	
+
 	appfwlearningsettings := appfw.Appfwlearningsettings{
 		Contenttypeautodeploygraceperiod:        d.Get("contenttypeautodeploygraceperiod").(int),
 		Contenttypeminthreshold:                 d.Get("contenttypeminthreshold").(int),
@@ -454,7 +454,7 @@ func updateAppfwlearningsettingsFunc(d *schema.ResourceData, meta interface{}) e
 
 func deleteAppfwlearningsettingsFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppfwlearningsettingsFunc")
-	
+
 	d.SetId("")
 
 	return nil

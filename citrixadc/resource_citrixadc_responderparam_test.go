@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -48,7 +48,7 @@ func TestAccResponderparam_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckResponderparamDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccResponderparam_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponderparamExist("citrixadc_responderparam.tf_responderparam", nil),
@@ -56,7 +56,7 @@ func TestAccResponderparam_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_responderparam.tf_responderparam", "undefaction", "RESET"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccResponderparam_basic_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponderparamExist("citrixadc_responderparam.tf_responderparam", nil),

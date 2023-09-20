@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -50,7 +50,7 @@ const testAccNat64_add = `
 		netprofile = citrixadc_netprofile.tf_netprofile.name
 	}
 `
-const testAccNat64_update= `
+const testAccNat64_update = `
 	resource "citrixadc_nsacl6" "tf_nsacl6" {
 		acl6name   = "tf_nsacl6"
 		acl6action = "ALLOW"
@@ -84,7 +84,7 @@ func TestAccNat64_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNat64Destroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccNat64_add,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNat64Exist("citrixadc_nat64.tf_nat64", nil),
@@ -92,7 +92,7 @@ func TestAccNat64_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_nat64.tf_nat64", "netprofile", "tf_netprofile"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccNat64_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNat64Exist("citrixadc_nat64.tf_nat64", nil),

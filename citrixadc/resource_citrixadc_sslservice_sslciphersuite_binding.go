@@ -20,19 +20,19 @@ func resourceCitrixAdcSslservice_sslciphersuite_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"ciphername": &schema.Schema{
+			"ciphername": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"description": &schema.Schema{
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"servicename": &schema.Schema{
+			"servicename": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

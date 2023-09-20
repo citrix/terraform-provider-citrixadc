@@ -21,77 +21,77 @@ func resourceCitrixAdcDnskey() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"algorithm": &schema.Schema{
+			"algorithm": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"expires": &schema.Schema{
+			"expires": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"filenameprefix": &schema.Schema{
+			"filenameprefix": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"keyname": &schema.Schema{
+			"keyname": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 			},
-			"keysize": &schema.Schema{
+			"keysize": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"keytype": &schema.Schema{
+			"keytype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"notificationperiod": &schema.Schema{
+			"notificationperiod": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"password": &schema.Schema{
+			"password": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"privatekey": &schema.Schema{
+			"privatekey": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 			},
-			"publickey": &schema.Schema{
+			"publickey": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 			},
-			"src": &schema.Schema{
+			"src": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ttl": &schema.Schema{
+			"ttl": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"units1": &schema.Schema{
+			"units1": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"units2": &schema.Schema{
+			"units2": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"zonename": &schema.Schema{
+			"zonename": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

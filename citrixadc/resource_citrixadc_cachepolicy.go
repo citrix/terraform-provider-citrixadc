@@ -21,39 +21,39 @@ func resourceCitrixAdcCachepolicy() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"policyname": &schema.Schema{
+			"policyname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"action": &schema.Schema{
+			"action": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"rule": &schema.Schema{
+			"rule": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"invalgroups": &schema.Schema{
+			"invalgroups": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"invalobjects": &schema.Schema{
+			"invalobjects": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"storeingroup": &schema.Schema{
+			"storeingroup": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"undefaction": &schema.Schema{
+			"undefaction": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

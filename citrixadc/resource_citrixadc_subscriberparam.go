@@ -18,29 +18,28 @@ func resourceCitrixAdcSubscriberparam() *schema.Resource {
 		Update:        updateSubscriberparamFunc,
 		Delete:        deleteSubscriberparamFunc,
 		Schema: map[string]*schema.Schema{
-			"idleaction": &schema.Schema{
+			"idleaction": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"idlettl": &schema.Schema{
+			"idlettl": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"interfacetype": &schema.Schema{
+			"interfacetype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ipv6prefixlookuplist": &schema.Schema{
+			"ipv6prefixlookuplist": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeInt},
-
 			},
-			"keytype": &schema.Schema{
+			"keytype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -53,7 +52,7 @@ func createSubscriberparamFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSubscriberparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 	subscriberparamName := resource.PrefixedUniqueId("tf-subscriberparam-")
-	
+
 	subscriberparam := subscriber.Subscriberparam{
 		Idleaction:           d.Get("idleaction").(string),
 		Idlettl:              d.Get("idlettl").(int),

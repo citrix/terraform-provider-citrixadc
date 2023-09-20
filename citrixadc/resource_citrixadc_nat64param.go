@@ -7,8 +7,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
-	"strconv"
 	"log"
+	"strconv"
 )
 
 func resourceCitrixAdcNat64param() *schema.Resource {
@@ -19,27 +19,27 @@ func resourceCitrixAdcNat64param() *schema.Resource {
 		Update:        updateNat64paramFunc,
 		Delete:        deleteNat64paramFunc,
 		Schema: map[string]*schema.Schema{
-			"nat64fragheader": &schema.Schema{
+			"nat64fragheader": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"nat64ignoretos": &schema.Schema{
+			"nat64ignoretos": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"nat64v6mtu": &schema.Schema{
+			"nat64v6mtu": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"nat64zerochecksum": &schema.Schema{
+			"nat64zerochecksum": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"td": &schema.Schema{
+			"td": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -82,7 +82,7 @@ func readNat64paramFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNat64paramFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading nat64param state")
-	data, err := client.FindResource("nat64param","")
+	data, err := client.FindResource("nat64param", "")
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing nat64param state")
 		d.SetId("")
@@ -90,11 +90,11 @@ func readNat64paramFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("nat64fragheader", data["nat64fragheader"])
 	d.Set("nat64ignoretos", data["nat64ignoretos"])
-	val,_ := strconv.Atoi(data["nat64v6mtu"].(string))
+	val, _ := strconv.Atoi(data["nat64v6mtu"].(string))
 	d.Set("nat64v6mtu", val)
 	d.Set("nat64zerochecksum", data["nat64zerochecksum"])
-	val,_ = strconv.Atoi(data["td"].(string))
-	d.Set("td", val )
+	val, _ = strconv.Atoi(data["td"].(string))
+	d.Set("td", val)
 
 	return nil
 

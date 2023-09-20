@@ -23,39 +23,39 @@ func resourceCitrixAdcDnsmxrec() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"domain": &schema.Schema{
+			"domain": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"mx": &schema.Schema{
+			"mx": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"pref": &schema.Schema{
+			"pref": {
 				Type:     schema.TypeInt,
 				Required: true,
 				Computed: false,
 			},
-			"ecssubnet": &schema.Schema{
+			"ecssubnet": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			
-			"nodeid": &schema.Schema{
+
+			"nodeid": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			
-			"ttl": &schema.Schema{
+
+			"ttl": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"type": &schema.Schema{
+			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -105,7 +105,7 @@ func readDnsmxrecFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	pref1,_ := strconv.Atoi(data["pref"].(string))
+	pref1, _ := strconv.Atoi(data["pref"].(string))
 	d.Set("domain", data["domain"])
 	d.Set("ecssubnet", data["ecssubnet"])
 	d.Set("mx", data["mx"])
@@ -113,7 +113,7 @@ func readDnsmxrecFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("pref", pref1)
 	d.Set("ttl", data["ttl"])
 	d.Set("type", data["type"])
-	log.Printf("set functionality:  %v",data)
+	log.Printf("set functionality:  %v", data)
 	return nil
 
 }
@@ -124,7 +124,7 @@ func updateDnsmxrecFunc(d *schema.ResourceData, meta interface{}) error {
 	dnsmxrecName := d.Get("domain").(string)
 	dnsmxrec := dns.Dnsmxrec{
 		Domain: dnsmxrecName,
-		Mx: d.Get("mx").(string),
+		Mx:     d.Get("mx").(string),
 	}
 	hasChange := false
 	if d.HasChange("ecssubnet") {
@@ -169,12 +169,12 @@ func deleteDnsmxrecFunc(d *schema.ResourceData, meta interface{}) error {
 	argsMap := make(map[string]string)
 	argsMap["mx"] = url.QueryEscape(d.Get("mx").(string))
 
-	if ecscheck,ok := d.GetOk("ecssubnet");ok{
-		argsMap["ecssubnet"] = url.QueryEscape(ecscheck.(string))	
+	if ecscheck, ok := d.GetOk("ecssubnet"); ok {
+		argsMap["ecssubnet"] = url.QueryEscape(ecscheck.(string))
 	}
-		
-	//argsMap["domain"] = dnsmxrecName 
-	err := client.DeleteResourceWithArgsMap(service.Dnsmxrec.Type(), dnsmxrecName , argsMap)
+
+	//argsMap["domain"] = dnsmxrecName
+	err := client.DeleteResourceWithArgsMap(service.Dnsmxrec.Type(), dnsmxrecName, argsMap)
 	if err != nil {
 		return err
 	}

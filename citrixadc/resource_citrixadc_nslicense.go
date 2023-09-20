@@ -34,50 +34,50 @@ func resourceCitrixAdcNslicense() *schema.Resource {
 			Delete: schema.DefaultTimeout(20 * time.Minute),
 		},
 		Schema: map[string]*schema.Schema{
-			"license_file": &schema.Schema{
+			"license_file": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"ssh_host": &schema.Schema{
+			"ssh_host": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"ssh_username": &schema.Schema{
+			"ssh_username": {
 				Type:      schema.TypeString,
 				Optional:  true,
 				Sensitive: true,
 			},
-			"ssh_password": &schema.Schema{
+			"ssh_password": {
 				Type:      schema.TypeString,
 				Optional:  true,
 				Sensitive: true,
 			},
-			"ssh_port": &schema.Schema{
+			"ssh_port": {
 				Type:     schema.TypeInt,
 				Computed: true,
 				Optional: true,
 			},
-			"ssh_host_pubkey": &schema.Schema{
+			"ssh_host_pubkey": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"reboot": &schema.Schema{
+			"reboot": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
 			},
-			"poll_delay": &schema.Schema{
+			"poll_delay": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "60s",
 			},
-			"poll_interval": &schema.Schema{
+			"poll_interval": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "60s",
 			},
-			"poll_timeout": &schema.Schema{
+			"poll_timeout": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "10s",

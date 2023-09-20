@@ -7,8 +7,8 @@ import (
 
 	"fmt"
 	"log"
-	"strings"
 	"net/url"
+	"strings"
 )
 
 func resourceCitrixAdcAppfwprofile_jsondosurl_binding() *schema.Resource {
@@ -21,121 +21,121 @@ func resourceCitrixAdcAppfwprofile_jsondosurl_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"jsondosurl": &schema.Schema{
+			"jsondosurl": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"alertonly": &schema.Schema{
+			"alertonly": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"comment": &schema.Schema{
+			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"isautodeployed": &schema.Schema{
+			"isautodeployed": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"jsonmaxarraylength": &schema.Schema{
+			"jsonmaxarraylength": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"jsonmaxarraylengthcheck": &schema.Schema{
+			"jsonmaxarraylengthcheck": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"jsonmaxcontainerdepth": &schema.Schema{
+			"jsonmaxcontainerdepth": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"jsonmaxcontainerdepthcheck": &schema.Schema{
+			"jsonmaxcontainerdepthcheck": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"jsonmaxdocumentlength": &schema.Schema{
+			"jsonmaxdocumentlength": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"jsonmaxdocumentlengthcheck": &schema.Schema{
+			"jsonmaxdocumentlengthcheck": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"jsonmaxobjectkeycount": &schema.Schema{
+			"jsonmaxobjectkeycount": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"jsonmaxobjectkeycountcheck": &schema.Schema{
+			"jsonmaxobjectkeycountcheck": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"jsonmaxobjectkeylength": &schema.Schema{
+			"jsonmaxobjectkeylength": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"jsonmaxobjectkeylengthcheck": &schema.Schema{
+			"jsonmaxobjectkeylengthcheck": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"jsonmaxstringlength": &schema.Schema{
+			"jsonmaxstringlength": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"jsonmaxstringlengthcheck": &schema.Schema{
+			"jsonmaxstringlengthcheck": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"resourceid": &schema.Schema{
+			"resourceid": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"ruletype": &schema.Schema{
+			"ruletype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"state": &schema.Schema{
+			"state": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

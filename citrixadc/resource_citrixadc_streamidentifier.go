@@ -21,67 +21,67 @@ func resourceCitrixAdcStreamidentifier() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"acceptancethreshold": &schema.Schema{
+			"acceptancethreshold": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"appflowlog": &schema.Schema{
+			"appflowlog": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"breachthreshold": &schema.Schema{
+			"breachthreshold": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"interval": &schema.Schema{
+			"interval": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"maxtransactionthreshold": &schema.Schema{
+			"maxtransactionthreshold": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"mintransactionthreshold": &schema.Schema{
+			"mintransactionthreshold": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"samplecount": &schema.Schema{
+			"samplecount": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"selectorname": &schema.Schema{
+			"selectorname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"snmptrap": &schema.Schema{
+			"snmptrap": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sort": &schema.Schema{
+			"sort": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"trackackonlypackets": &schema.Schema{
+			"trackackonlypackets": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"tracktransactions": &schema.Schema{
+			"tracktransactions": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

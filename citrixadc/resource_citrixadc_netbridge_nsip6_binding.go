@@ -21,17 +21,17 @@ func resourceCitrixAdcNetbridge_nsip6_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"ipaddress": &schema.Schema{
+			"ipaddress": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"netmask": &schema.Schema{
+			"netmask": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

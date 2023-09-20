@@ -19,102 +19,102 @@ func resourceCitrixAdcRdpclientprofile() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"addusernameinrdpfile": &schema.Schema{
+			"addusernameinrdpfile": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"audiocapturemode": &schema.Schema{
+			"audiocapturemode": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"keyboardhook": &schema.Schema{
+			"keyboardhook": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"multimonitorsupport": &schema.Schema{
+			"multimonitorsupport": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"psk": &schema.Schema{
+			"psk": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"randomizerdpfilename": &schema.Schema{
+			"randomizerdpfilename": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"rdpcookievalidity": &schema.Schema{
+			"rdpcookievalidity": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"rdpcustomparams": &schema.Schema{
+			"rdpcustomparams": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"rdpfilename": &schema.Schema{
+			"rdpfilename": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"rdphost": &schema.Schema{
+			"rdphost": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"rdplinkattribute": &schema.Schema{
+			"rdplinkattribute": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"rdplistener": &schema.Schema{
+			"rdplistener": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"rdpurloverride": &schema.Schema{
+			"rdpurloverride": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"redirectclipboard": &schema.Schema{
+			"redirectclipboard": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"redirectcomports": &schema.Schema{
+			"redirectcomports": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"redirectdrives": &schema.Schema{
+			"redirectdrives": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"redirectpnpdevices": &schema.Schema{
+			"redirectpnpdevices": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"redirectprinters": &schema.Schema{
+			"redirectprinters": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"videoplaybackmode": &schema.Schema{
+			"videoplaybackmode": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

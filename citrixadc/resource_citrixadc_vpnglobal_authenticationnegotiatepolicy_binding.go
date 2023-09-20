@@ -20,31 +20,31 @@ func resourceCitrixAdcVpnglobal_authenticationnegotiatepolicy_binding() *schema.
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"policyname": &schema.Schema{
+			"policyname": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"gotopriorityexpression": &schema.Schema{
+			"gotopriorityexpression": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"groupextraction": &schema.Schema{
+			"groupextraction": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"priority": &schema.Schema{
+			"priority": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"secondary": &schema.Schema{
+			"secondary": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,

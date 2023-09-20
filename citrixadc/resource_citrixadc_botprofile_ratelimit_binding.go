@@ -7,8 +7,8 @@ import (
 
 	"fmt"
 	"log"
-	"strings"
 	"net/url"
+	"strings"
 )
 
 func resourceCitrixAdcBotprofile_ratelimit_binding() *schema.Resource {
@@ -21,68 +21,68 @@ func resourceCitrixAdcBotprofile_ratelimit_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"bot_rate_limit_type": &schema.Schema{
+			"bot_rate_limit_type": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"bot_bind_comment": &schema.Schema{
+			"bot_bind_comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"bot_ratelimit": &schema.Schema{
+			"bot_ratelimit": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"bot_rate_limit_action": &schema.Schema{
+			"bot_rate_limit_action": {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"bot_rate_limit_enabled": &schema.Schema{
+			"bot_rate_limit_enabled": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"bot_rate_limit_url": &schema.Schema{
+			"bot_rate_limit_url": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"cookiename": &schema.Schema{
+			"cookiename": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"logmessage": &schema.Schema{
+			"logmessage": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"rate": &schema.Schema{
+			"rate": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"timeslice": &schema.Schema{
+			"timeslice": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,

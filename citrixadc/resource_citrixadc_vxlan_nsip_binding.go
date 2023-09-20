@@ -7,9 +7,9 @@ import (
 
 	"fmt"
 	"log"
-	"strings"
-	"strconv"
 	"net/url"
+	"strconv"
+	"strings"
 )
 
 func resourceCitrixAdcVxlan_nsip_binding() *schema.Resource {
@@ -22,19 +22,19 @@ func resourceCitrixAdcVxlan_nsip_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"vxlanid": &schema.Schema{
+			"vxlanid": {
 				Type:     schema.TypeInt,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"ipaddress": &schema.Schema{
+			"ipaddress": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"netmask": &schema.Schema{
+			"netmask": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

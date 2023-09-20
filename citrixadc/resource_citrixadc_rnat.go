@@ -18,67 +18,67 @@ func resourceCitrixAdcRnat() *schema.Resource {
 		Update:        updateRnatFunc,
 		Delete:        deleteRnatFunc,
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"aclname": &schema.Schema{
+			"aclname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"connfailover": &schema.Schema{
+			"connfailover": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"natip": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"netmask": &schema.Schema{
+			"natip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"network": &schema.Schema{
+			"netmask": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"newname": &schema.Schema{
+			"network": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"newname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ownergroup": &schema.Schema{
+			"ownergroup": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"redirectport": &schema.Schema{
+			"redirectport": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"srcippersistency": &schema.Schema{
+			"srcippersistency": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"td": &schema.Schema{
+			"td": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"useproxyport": &schema.Schema{
+			"useproxyport": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -91,7 +91,7 @@ func createRnatFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createRnatFunc")
 	client := meta.(*NetScalerNitroClient).client
 	rnatName := d.Get("name").(string)
-	
+
 	rnat := network.Rnat{
 		Aclname:          d.Get("aclname").(string),
 		Connfailover:     d.Get("connfailover").(string),

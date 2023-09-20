@@ -21,22 +21,22 @@ func resourceCitrixAdcCrpolicy() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"policyname": &schema.Schema{
+			"policyname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"rule": &schema.Schema{
+			"rule": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 			},
-			"action": &schema.Schema{
+			"action": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"logaction": &schema.Schema{
+			"logaction": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

@@ -7,8 +7,8 @@ import (
 
 	"fmt"
 	"log"
-	"strings"
 	"net/url"
+	"strings"
 )
 
 func resourceCitrixAdcAppfwprofile_fieldconsistency_binding() *schema.Resource {
@@ -21,61 +21,61 @@ func resourceCitrixAdcAppfwprofile_fieldconsistency_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"fieldconsistency": &schema.Schema{
+			"fieldconsistency": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"formactionurl_ffc": &schema.Schema{
+			"formactionurl_ffc": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"alertonly": &schema.Schema{
+			"alertonly": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"comment": &schema.Schema{
+			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"isautodeployed": &schema.Schema{
+			"isautodeployed": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"isregex_ffc": &schema.Schema{
+			"isregex_ffc": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"resourceid": &schema.Schema{
+			"resourceid": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"ruletype": &schema.Schema{
+			"ruletype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"state": &schema.Schema{
+			"state": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -91,7 +91,7 @@ func createAppfwprofile_fieldconsistency_bindingFunc(d *schema.ResourceData, met
 	name := d.Get("name")
 	fieldconsistency := d.Get("fieldconsistency")
 	formactionurl_ffc := d.Get("formactionurl_ffc")
-	bindingId := fmt.Sprintf("%s,%s,%s", name, fieldconsistency,formactionurl_ffc)
+	bindingId := fmt.Sprintf("%s,%s,%s", name, fieldconsistency, formactionurl_ffc)
 	appfwprofile_fieldconsistency_binding := appfw.Appfwprofilefieldconsistencybinding{
 		Alertonly:        d.Get("alertonly").(string),
 		Comment:          d.Get("comment").(string),

@@ -7,9 +7,9 @@ import (
 
 	"fmt"
 	"log"
-	"strings"
-	"strconv"
 	"net/url"
+	"strconv"
+	"strings"
 )
 
 func resourceCitrixAdcBotpolicylabel_botpolicy_binding() *schema.Resource {
@@ -22,43 +22,43 @@ func resourceCitrixAdcBotpolicylabel_botpolicy_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"labelname": &schema.Schema{
+			"labelname": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"policyname": &schema.Schema{
+			"policyname": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"priority": &schema.Schema{
+			"priority": {
 				Type:     schema.TypeInt,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"gotopriorityexpression": &schema.Schema{
+			"gotopriorityexpression": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"invoke": &schema.Schema{
+			"invoke": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"invokelabelname": &schema.Schema{
+			"invokelabelname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"labeltype": &schema.Schema{
+			"labeltype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

@@ -21,50 +21,50 @@ func resourceCitrixAdcForwardingsession() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"netmask": &schema.Schema{
+			"netmask": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"network": &schema.Schema{
+			"network": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"acl6name": &schema.Schema{
+			"acl6name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"aclname": &schema.Schema{
+			"aclname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"connfailover": &schema.Schema{
+			"connfailover": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"processlocal": &schema.Schema{
+			"processlocal": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sourceroutecache": &schema.Schema{
+			"sourceroutecache": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"td": &schema.Schema{
+			"td": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -77,7 +77,7 @@ func createForwardingsessionFunc(d *schema.ResourceData, meta interface{}) error
 	log.Printf("[DEBUG]  citrixadc-provider: In createForwardingsessionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	forwardingsessionName := d.Get("name").(string)
-	
+
 	forwardingsession := network.Forwardingsession{
 		Acl6name:         d.Get("acl6name").(string),
 		Aclname:          d.Get("aclname").(string),

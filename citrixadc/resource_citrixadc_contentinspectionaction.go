@@ -19,37 +19,37 @@ func resourceCitrixAdcContentinspectionaction() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"type": &schema.Schema{
+			"type": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"icapprofilename": &schema.Schema{
+			"icapprofilename": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ifserverdown": &schema.Schema{
+			"ifserverdown": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"serverip": &schema.Schema{
+			"serverip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"servername": &schema.Schema{
+			"servername": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"serverport": &schema.Schema{
+			"serverport": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,

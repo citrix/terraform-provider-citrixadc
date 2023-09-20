@@ -21,50 +21,50 @@ func resourceCitrixAdcNsvariable() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"type": &schema.Schema{
+			"type": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"scope": &schema.Schema{
+			"scope": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"comment": &schema.Schema{
+			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"expires": &schema.Schema{
+			"expires": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"iffull": &schema.Schema{
+			"iffull": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ifnovalue": &schema.Schema{
+			"ifnovalue": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ifvaluetoobig": &schema.Schema{
+			"ifvaluetoobig": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"init": &schema.Schema{
+			"init": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

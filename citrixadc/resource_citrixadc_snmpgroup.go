@@ -21,17 +21,17 @@ func resourceCitrixAdcSnmpgroup() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"securitylevel": &schema.Schema{
+			"securitylevel": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"readviewname": &schema.Schema{
+			"readviewname": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -69,7 +69,7 @@ func readSnmpgroupFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	snmpgroupName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading snmpgroup state %s", snmpgroupName)
-	
+
 	dataArr, err := client.FindAllResources(service.Snmpgroup.Type())
 
 	if len(dataArr) == 0 {
@@ -77,7 +77,6 @@ func readSnmpgroupFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
-	
 
 	foundIndex := -1
 	for i, v := range dataArr {
@@ -86,14 +85,13 @@ func readSnmpgroupFunc(d *schema.ResourceData, meta interface{}) error {
 			break
 		}
 	}
-	
+
 	if foundIndex == -1 {
 		log.Printf("[DEBUG] citrixadc-provider: FindResourceAllResources snmpgroup not found in array")
-		log.Printf("[WARN] citrixadc-provider: Clearing snmpgroup state %s",snmpgroupName)
+		log.Printf("[WARN] citrixadc-provider: Clearing snmpgroup state %s", snmpgroupName)
 		d.SetId("")
 		return nil
 	}
-
 
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing snmpgroup state %s", snmpgroupName)
@@ -101,7 +99,6 @@ func readSnmpgroupFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	
 	data := dataArr[foundIndex]
 	d.Set("name", data["name"])
 	d.Set("readviewname", data["readviewname"])
@@ -117,9 +114,9 @@ func updateSnmpgroupFunc(d *schema.ResourceData, meta interface{}) error {
 	snmpgroupName := d.Get("name").(string)
 
 	snmpgroup := snmp.Snmpgroup{
-		Name: d.Get("name").(string),
+		Name:          d.Get("name").(string),
 		Securitylevel: d.Get("securitylevel").(string),
-		Readviewname: d.Get("readviewname").(string),
+		Readviewname:  d.Get("readviewname").(string),
 	}
 
 	hasChange := false
@@ -147,7 +144,7 @@ func deleteSnmpgroupFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSnmpgroupFunc")
 	client := meta.(*NetScalerNitroClient).client
 	snmpgroupName := d.Id()
-	
+
 	args := make([]string, 0)
 	args = append(args, fmt.Sprintf("securitylevel:%s", d.Get("securitylevel").(string)))
 

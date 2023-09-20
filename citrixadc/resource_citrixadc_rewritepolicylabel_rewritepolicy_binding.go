@@ -21,41 +21,41 @@ func resourceCitrixAdcRewritepolicylabel_rewritepolicy_binding() *schema.Resourc
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"gotopriorityexpression": &schema.Schema{
+			"gotopriorityexpression": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"invoke": &schema.Schema{
+			"invoke": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"invokelabelname": &schema.Schema{
+			"invokelabelname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"labelname": &schema.Schema{
+			"labelname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"labeltype": &schema.Schema{
+			"labeltype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"policyname": &schema.Schema{
+			"policyname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"priority": &schema.Schema{
+			"priority": {
 				Type:     schema.TypeInt,
 				Required: true,
 				ForceNew: true,

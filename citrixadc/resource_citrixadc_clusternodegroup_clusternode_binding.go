@@ -21,12 +21,12 @@ func resourceCitrixAdcClusternodegroup_clusternode_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"node": &schema.Schema{
+			"node": {
 				Type:     schema.TypeInt,
 				Required: true,
 				ForceNew: true,

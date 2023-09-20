@@ -28,119 +28,119 @@ func resourceCitrixAdcCluster() *schema.Resource {
 		Update:        updateClusterFunc,
 		Delete:        deleteClusterFunc,
 		Schema: map[string]*schema.Schema{
-			"backplanebasedview": &schema.Schema{
+			"backplanebasedview": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"clid": &schema.Schema{
+			"clid": {
 				Type:     schema.TypeInt,
 				Required: true,
 			},
-			"clip": &schema.Schema{
+			"clip": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"deadinterval": &schema.Schema{
+			"deadinterval": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"hellointerval": &schema.Schema{
+			"hellointerval": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"inc": &schema.Schema{
+			"inc": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"nodegroup": &schema.Schema{
+			"nodegroup": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: false,
 			},
-			"preemption": &schema.Schema{
+			"preemption": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"processlocal": &schema.Schema{
+			"processlocal": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"quorumtype": &schema.Schema{
+			"quorumtype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"retainconnectionsoncluster": &schema.Schema{
+			"retainconnectionsoncluster": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
 			// How long to wait before first poll
-			"bootstrap_poll_delay": &schema.Schema{
+			"bootstrap_poll_delay": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "60s",
 			},
 			// Interval between polls
-			"bootstrap_poll_interval": &schema.Schema{
+			"bootstrap_poll_interval": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "60s",
 			},
 			// Timeout for each individual HTTP poll
-			"bootstrap_poll_timeout": &schema.Schema{
+			"bootstrap_poll_timeout": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "10s",
 			},
 			// Timeout for the whole operation
-			"bootstrap_total_timeout": &schema.Schema{
+			"bootstrap_total_timeout": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "10m",
 			},
 			// Delay before first poll
-			"clip_migration_poll_delay": &schema.Schema{
+			"clip_migration_poll_delay": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "10s",
 			},
 			// Interval between polls
-			"clip_migration_poll_interval": &schema.Schema{
+			"clip_migration_poll_interval": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "30s",
 			},
 			// Timeout for each individual poll HTTP request
-			"clip_migration_poll_timeout": &schema.Schema{
+			"clip_migration_poll_timeout": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "10s",
 			},
 			// Timeout for the whole operation
-			"clip_migration_total_timeout": &schema.Schema{
+			"clip_migration_total_timeout": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "10m",
 			},
 			// Timeouts for the node add operation
-			"node_add_poll_delay": &schema.Schema{
+			"node_add_poll_delay": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "10s",
 			},
-			"node_add_poll_interval": &schema.Schema{
+			"node_add_poll_interval": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "30s",
 			},
-			"node_add_total_timeout": &schema.Schema{
+			"node_add_total_timeout": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "10m",
@@ -153,27 +153,27 @@ func resourceCitrixAdcCluster() *schema.Resource {
 				MinItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": &schema.Schema{
+						"name": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"priority": &schema.Schema{
+						"priority": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 						},
-						"state": &schema.Schema{
+						"state": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"sticky": &schema.Schema{
+						"sticky": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"strict": &schema.Schema{
+						"strict": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -189,63 +189,63 @@ func resourceCitrixAdcCluster() *schema.Resource {
 				MinItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"backplane": &schema.Schema{
+						"backplane": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"clearnodegroupconfig": &schema.Schema{
+						"clearnodegroupconfig": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: false,
 						},
-						"delay": &schema.Schema{
+						"delay": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 						},
-						"ipaddress": &schema.Schema{
+						"ipaddress": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"nodegroup": &schema.Schema{
+						"nodegroup": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"nodeid": &schema.Schema{
+						"nodeid": {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
-						"priority": &schema.Schema{
+						"priority": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 						},
-						"state": &schema.Schema{
+						"state": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"tunnelmode": &schema.Schema{
+						"tunnelmode": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
 						// Overrides for the particular node
 						// Needed in bootstraping and adding a new node
-						"endpoint": &schema.Schema{
+						"endpoint": {
 							Type:     schema.TypeString,
 							Required: true,
 							Computed: false,
 						},
-						"username": &schema.Schema{
+						"username": {
 							Type:      schema.TypeString,
 							Optional:  true,
 							Computed:  false,
 							Sensitive: true,
 						},
-						"password": &schema.Schema{
+						"password": {
 							Type:      schema.TypeString,
 							Optional:  true,
 							Computed:  false,
@@ -258,12 +258,12 @@ func resourceCitrixAdcCluster() *schema.Resource {
 							Default:     false,
 						},
 						// Flags for adding node SNIP to CLIP before joining
-						"snip_netmask": &schema.Schema{
+						"snip_netmask": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: false,
 						},
-						"snip_ipaddress": &schema.Schema{
+						"snip_ipaddress": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: false,

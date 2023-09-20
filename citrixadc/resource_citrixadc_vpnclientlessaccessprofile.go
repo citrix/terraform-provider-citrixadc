@@ -22,62 +22,62 @@ func resourceCitrixAdcVpnclientlessaccessprofile() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"clientconsumedcookies": &schema.Schema{
+			"clientconsumedcookies": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"javascriptrewritepolicylabel": &schema.Schema{
+			"javascriptrewritepolicylabel": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"profilename": &schema.Schema{
+			"profilename": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"regexforfindingcustomurls": &schema.Schema{
+			"regexforfindingcustomurls": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"regexforfindingurlincss": &schema.Schema{
+			"regexforfindingurlincss": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"regexforfindingurlinjavascript": &schema.Schema{
+			"regexforfindingurlinjavascript": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"regexforfindingurlinxcomponent": &schema.Schema{
+			"regexforfindingurlinxcomponent": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"regexforfindingurlinxml": &schema.Schema{
+			"regexforfindingurlinxml": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"reqhdrrewritepolicylabel": &schema.Schema{
+			"reqhdrrewritepolicylabel": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"requirepersistentcookie": &schema.Schema{
+			"requirepersistentcookie": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"reshdrrewritepolicylabel": &schema.Schema{
+			"reshdrrewritepolicylabel": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"urlrewritepolicylabel": &schema.Schema{
+			"urlrewritepolicylabel": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

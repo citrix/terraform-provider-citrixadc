@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,8 +19,8 @@ import (
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"testing"
 	"net/url"
+	"testing"
 )
 
 const testAccRadiusnode_basic = `
@@ -36,7 +36,7 @@ func TestAccRadiusnode_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRadiusnodeDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRadiusnode_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRadiusnodeExist("citrixadc_radiusnode.tf_radiusnode", nil),

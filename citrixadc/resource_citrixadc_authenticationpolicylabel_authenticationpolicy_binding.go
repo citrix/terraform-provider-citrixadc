@@ -7,8 +7,8 @@ import (
 
 	"fmt"
 	"log"
-	"strings"
 	"net/url"
+	"strings"
 )
 
 func resourceCitrixAdcAuthenticationpolicylabel_authenticationpolicy_binding() *schema.Resource {
@@ -21,31 +21,31 @@ func resourceCitrixAdcAuthenticationpolicylabel_authenticationpolicy_binding() *
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"labelname": &schema.Schema{
+			"labelname": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"policyname": &schema.Schema{
+			"policyname": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"priority": &schema.Schema{
+			"priority": {
 				Type:     schema.TypeInt,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"gotopriorityexpression": &schema.Schema{
+			"gotopriorityexpression": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"nextfactor": &schema.Schema{
+			"nextfactor": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -158,7 +158,7 @@ func deleteAuthenticationpolicylabel_authenticationpolicy_bindingFunc(d *schema.
 
 	args := make([]string, 0)
 	args = append(args, fmt.Sprintf("policyname:%s", policyname))
-	
+
 	if v, ok := d.GetOk("priority"); ok {
 		args = append(args, fmt.Sprintf("priority:%s", url.QueryEscape(fmt.Sprintf("%v", v))))
 	}

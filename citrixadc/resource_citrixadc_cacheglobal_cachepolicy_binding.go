@@ -19,46 +19,46 @@ func resourceCitrixAdcCacheglobal_cachepolicy_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"policy": &schema.Schema{
+			"policy": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"type": &schema.Schema{
+			"type": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"priority": &schema.Schema{
+			"priority": {
 				Type:     schema.TypeInt,
 				Required: true,
 				ForceNew: true,
 			},
-			"gotopriorityexpression": &schema.Schema{
+			"gotopriorityexpression": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"invoke": &schema.Schema{
+			"invoke": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"labelname": &schema.Schema{
+			"labelname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"labeltype": &schema.Schema{
+			"labeltype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"precededefrules": &schema.Schema{
+			"precededefrules": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -83,7 +83,7 @@ func createCacheglobal_cachepolicy_bindingFunc(d *schema.ResourceData, meta inte
 		Type:                   d.Get("type").(string),
 	}
 
-	err := client.UpdateUnnamedResource(service.Cacheglobal_cachepolicy_binding.Type(),&cacheglobal_cachepolicy_binding)
+	err := client.UpdateUnnamedResource(service.Cacheglobal_cachepolicy_binding.Type(), &cacheglobal_cachepolicy_binding)
 	if err != nil {
 		return err
 	}

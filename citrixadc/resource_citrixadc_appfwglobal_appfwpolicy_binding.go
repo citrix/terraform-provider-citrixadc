@@ -20,55 +20,55 @@ func resourceCitrixAdcAppfwglobal_appfwpolicy_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"policyname": &schema.Schema{
+			"policyname": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"priority": &schema.Schema{
+			"priority": {
 				Type:     schema.TypeInt,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"globalbindtype": &schema.Schema{
+			"globalbindtype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"gotopriorityexpression": &schema.Schema{
+			"gotopriorityexpression": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"invoke": &schema.Schema{
+			"invoke": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"labelname": &schema.Schema{
+			"labelname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"labeltype": &schema.Schema{
+			"labeltype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"state": &schema.Schema{
+			"state": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"type": &schema.Schema{
+			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -118,7 +118,7 @@ func readAppfwglobal_appfwpolicy_bindingFunc(d *schema.ResourceData, meta interf
 
 	findParams := service.FindParams{
 		ResourceType:             "appfwglobal_appfwpolicy_binding",
-		ArgsMap: 				  map[string]string{ "type":d.Get("type").(string) },
+		ArgsMap:                  map[string]string{"type": d.Get("type").(string)},
 		ResourceMissingErrorCode: 258,
 	}
 	dataArr, err := client.FindResourceArrayWithParams(findParams)
@@ -184,7 +184,7 @@ func deleteAppfwglobal_appfwpolicy_bindingFunc(d *schema.ResourceData, meta inte
 	}
 	if val, ok := d.GetOk("priority"); ok {
 		args = append(args, fmt.Sprintf("priority:%d", val.(int)))
-	}	
+	}
 
 	err := client.DeleteResourceWithArgs(service.Appfwglobal_appfwpolicy_binding.Type(), "", args)
 	if err != nil {

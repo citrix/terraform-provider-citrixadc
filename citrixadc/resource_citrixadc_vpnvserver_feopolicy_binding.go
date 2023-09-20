@@ -7,8 +7,8 @@ import (
 
 	"fmt"
 	"log"
-	"strings"
 	"net/url"
+	"strings"
 )
 
 func resourceCitrixAdcVpnvserver_feopolicy_binding() *schema.Resource {
@@ -21,43 +21,43 @@ func resourceCitrixAdcVpnvserver_feopolicy_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"policy": &schema.Schema{
+			"policy": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"bindpoint": &schema.Schema{
+			"bindpoint": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"gotopriorityexpression": &schema.Schema{
+			"gotopriorityexpression": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"groupextraction": &schema.Schema{
+			"groupextraction": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"priority": &schema.Schema{
+			"priority": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"secondary": &schema.Schema{
+			"secondary": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
@@ -83,7 +83,7 @@ func createVpnvserver_feopolicy_bindingFunc(d *schema.ResourceData, meta interfa
 		Secondary:              d.Get("secondary").(bool),
 	}
 
-	err := client.UpdateUnnamedResource(service.Vpnvserver_feopolicy_binding.Type(),  &vpnvserver_feopolicy_binding)
+	err := client.UpdateUnnamedResource(service.Vpnvserver_feopolicy_binding.Type(), &vpnvserver_feopolicy_binding)
 	if err != nil {
 		return err
 	}
@@ -133,7 +133,7 @@ func readVpnvserver_feopolicy_bindingFunc(d *schema.ResourceData, meta interface
 	// Iterate through results to find the one with the right id
 	foundIndex := -1
 	for i, v := range dataArr {
-		if v["policyname"].(string) == policy {  // We receieve it as policyname not policy
+		if v["policyname"].(string) == policy { // We receieve it as policyname not policy
 			foundIndex = i
 			break
 		}

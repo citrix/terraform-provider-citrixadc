@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -71,13 +71,13 @@ func TestAccAaauser_auditsyslogpolicy_binding_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAaauser_auditsyslogpolicy_bindingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAaauser_auditsyslogpolicy_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAaauser_auditsyslogpolicy_bindingExist("citrixadc_aaauser_auditsyslogpolicy_binding.tf_aaauser_auditsyslogpolicy_binding", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAaauser_auditsyslogpolicy_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAaauser_auditsyslogpolicy_bindingNotExist("citrixadc_aaauser_auditsyslogpolicy_binding.tf_aaauser_auditsyslogpolicy_binding", "user1,tf_auditsyslogpolicy"),

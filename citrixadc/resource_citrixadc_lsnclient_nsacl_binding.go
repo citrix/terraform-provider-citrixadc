@@ -20,17 +20,17 @@ func resourceCitrixAdcLsnclient_nsacl_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"aclname": &schema.Schema{
+			"aclname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"clientname": &schema.Schema{
+			"clientname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"td": &schema.Schema{
+			"td": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,

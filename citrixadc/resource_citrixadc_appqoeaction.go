@@ -7,8 +7,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
-	"strconv"
 	"log"
+	"strconv"
 )
 
 func resourceCitrixAdcAppqoeaction() *schema.Resource {
@@ -22,82 +22,82 @@ func resourceCitrixAdcAppqoeaction() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"priority": &schema.Schema{
+			"priority": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"altcontentpath": &schema.Schema{
+			"altcontentpath": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"altcontentsvcname": &schema.Schema{
+			"altcontentsvcname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"customfile": &schema.Schema{
+			"customfile": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"delay": &schema.Schema{
+			"delay": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"dosaction": &schema.Schema{
+			"dosaction": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"dostrigexpression": &schema.Schema{
+			"dostrigexpression": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"maxconn": &schema.Schema{
+			"maxconn": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"numretries": &schema.Schema{
+			"numretries": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"polqdepth": &schema.Schema{
+			"polqdepth": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"priqdepth": &schema.Schema{
+			"priqdepth": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"respondwith": &schema.Schema{
+			"respondwith": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"retryonreset": &schema.Schema{
+			"retryonreset": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"retryontimeout": &schema.Schema{
+			"retryontimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"tcpprofile": &schema.Schema{
+			"tcpprofile": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -42,13 +42,13 @@ func TestAccLsnclient_network6_binding_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLsnclient_network6_bindingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccLsnclient_network6_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLsnclient_network6_bindingExist("citrixadc_lsnclient_network6_binding.tf_lsnclient_network6_binding", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccLsnclient_network6_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLsnclient_network6_bindingNotExist("citrixadc_lsnclient_network6_binding.tf_lsnclient_network6_binding", "my_lsn_client,2001:db8:5001::/96"),
@@ -101,7 +101,7 @@ func testAccCheckLsnclient_network6_bindingExist(n string, id *string) resource.
 		// Iterate through results to find the one with the matching network6
 		found := false
 		for _, v := range dataArr {
-			if strings.ToLower(v["network6"].(string))  == strings.ToLower(network6) {
+			if strings.ToLower(v["network6"].(string)) == strings.ToLower(network6) {
 				found = true
 				break
 			}
@@ -142,7 +142,7 @@ func testAccCheckLsnclient_network6_bindingNotExist(n string, id string) resourc
 		// Iterate through results to hopefully not find the one with the matching network6
 		found := false
 		for _, v := range dataArr {
-			if strings.ToLower(v["network6"].(string))  == strings.ToLower(network6) {
+			if strings.ToLower(v["network6"].(string)) == strings.ToLower(network6) {
 				found = true
 				break
 			}

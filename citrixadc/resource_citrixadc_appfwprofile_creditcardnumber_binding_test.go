@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -108,13 +108,13 @@ func TestAccAppfwprofile_creditcardnumber_binding_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppfwprofile_creditcardnumber_bindingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAppfwprofile_creditcardnumber_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppfwprofile_creditcardnumber_bindingExist("citrixadc_appfwprofile_creditcardnumber_binding.tf_binding", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAppfwprofile_creditcardnumber_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppfwprofile_creditcardnumber_bindingNotExist("citrixadc_appfwprofile_creditcardnumber_binding.tf_binding", "tf_appfwprofile,123456789,www.example.com,"),
@@ -169,7 +169,7 @@ func testAccCheckAppfwprofile_creditcardnumber_bindingExist(n string, id *string
 		found := false
 		for _, v := range dataArr {
 			if v["creditcardnumber"].(string) == creditcardnumber {
-				if v["creditcardnumberurl"].(string) == creditcardnumberurl{
+				if v["creditcardnumberurl"].(string) == creditcardnumberurl {
 					found = true
 					break
 				}
@@ -197,7 +197,6 @@ func testAccCheckAppfwprofile_creditcardnumber_bindingNotExist(n string, id stri
 		creditcardnumber := idSlice[1]
 		creditcardnumberurl := idSlice[2]
 
-
 		findParams := service.FindParams{
 			ResourceType:             "appfwprofile_creditcardnumber_binding",
 			ResourceName:             name,
@@ -214,7 +213,7 @@ func testAccCheckAppfwprofile_creditcardnumber_bindingNotExist(n string, id stri
 		found := false
 		for _, v := range dataArr {
 			if v["creditcardnumber"].(string) == creditcardnumber {
-				if v["creditcardnumberurl"].(string) == creditcardnumberurl{
+				if v["creditcardnumberurl"].(string) == creditcardnumberurl {
 					found = true
 					break
 				}

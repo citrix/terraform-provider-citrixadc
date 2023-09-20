@@ -1,3 +1,58 @@
+## 1.36.0 (July 27, 2023)
+
+BUG FIXES
+
+* **citrixadc_systemuser**: Updated Read function to set the username attribute value, that we get from the NetScaler.
+* **citrixadc_dnsaddrec**: Updated Read function to split the id and parse the data that we get from the NetScaler to match the Id.
+* **citrixadc_servicegroup**: Updated update operation to formulate appropriate playload whenever there is change in `cipheader` attribute.
+* **citrixadc_snmpcommunity**: Updated `permissions` attribute property to required from optional, updated documentation with possible values.
+
+ENHANCEMENTS
+
+* **citrixadc_nstcpprofile**: Updated the resource with additional supported `sendclientportintcpoption` and `slowstartthreshold` attributes and also handled converting of string to integer for some attributes in the read function.
+* **citrixadc_botsettings**: Updated the resource with additional supported `defaultnonintrusiveprofile` attribute and also supported import functionality.
+* **citrixadc_lbvserver**: Updated the resource with additional supported `probeport` and `probeprotocol` attribute.
+* **citrixadc_csvserver**: Updated the resource with additional supported `redirectfromport` attributes.
+
+
+## 1.35.0 (May 26, 2023)
+
+FEATURES
+
+* **New Resource**: videooptimizationpacingaction 
+* **New Resource**: videooptimizationpacingpolicy 
+
+BUG FIXES
+
+* **citrixadc_ntpsync**: Updated create operation to call appropriate API call.
+* **citrixadc_appfwprofile**: Updated the read function to not to set values for some attributes that are not recieved from the NetScaler.
+* **citrixadc_vpnvserver_appflowpolicy_binding**: Updated Id of the resource and Updated read operation to make it backward compatible. 
+
+ENHANCEMENTS
+
+* **citrixadc_appfwprofile_jsonsqlurl_binding**: Updated ppfwprofile_jsonsqlurl_binding resource with additional attributes.
+* **citrixadc_lbparameter**: Added `sessionsthreshold` attribute to the schema of the resource.
+
+
+## 1.34.0 (May 05, 2023)
+
+FEATURES
+
+* **New Resource**: lbmetrictable_metric_binding 
+* **New Resource**: citrixadc_videooptimizationdetectionaction 
+* **New Resource**: citrixadc_videooptimizationdetectionpolicy 
+* **New Resource**: citrixadc_aaapreauthenticationaction 
+
+BUG FIXES
+
+* **citrixadc_snmptrap**: Updated read operation to make it backward compatible, appended the attribute value to old Id. 
+* **citrixadc_policystringmap_pattern_binding**: Updated delete operation with QueryEscape function while making API call.
+* **citrixadc_nspbr**: Updated the read function to not to set values for some attributes that are not recieved from the NetScaler. In the Update function, added the dependent attributes into the payload when there is update called to some attributes.
+* **citrixadc_dnsnameserver**: Updated read operation to make it backward compatible, appended an attribute to old Id. 
+* **citrixadc_systemfile**: Updated the read function to handle recreating of resource in case file doesnot exist in NetScaler.
+* **citrixadc_hanode**: Updated read operation to handle the correct state of `hastatus` attribute. 
+
+
 ## 1.33.0 (April 03, 2023)
 
 FEATURES

@@ -8,6 +8,7 @@ import (
 
 	"fmt"
 	"log"
+	"net/url"
 	"strings"
 )
 
@@ -21,17 +22,17 @@ func resourceCitrixAdcPolicystringmap_pattern_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"key": &schema.Schema{
+			"key": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"value": &schema.Schema{
+			"value": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -136,7 +137,7 @@ func deletePolicystringmap_pattern_bindingFunc(d *schema.ResourceData, meta inte
 	key := idSlice[1]
 
 	args := make([]string, 0)
-	args = append(args, fmt.Sprintf("key:%s", key))
+	args = append(args, fmt.Sprintf("key:%s", url.QueryEscape(key)))
 
 	err := client.DeleteResourceWithArgs("policystringmap_pattern_binding", name, args)
 	if err != nil {

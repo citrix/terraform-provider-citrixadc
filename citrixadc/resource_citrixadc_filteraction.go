@@ -21,33 +21,33 @@ func resourceCitrixAdcFilteraction() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"qual": &schema.Schema{
+			"qual": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 			},
-			"page": &schema.Schema{
+			"page": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"respcode": &schema.Schema{
+			"respcode": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"servicename": &schema.Schema{
+			"servicename": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"value": &schema.Schema{
+			"value": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

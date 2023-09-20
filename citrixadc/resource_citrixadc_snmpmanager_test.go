@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -47,7 +47,7 @@ func TestAccSnmpmanager_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSnmpmanagerDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccSnmpmanager_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnmpmanagerExist("citrixadc_snmpmanager.tf_snmpmanager", nil),
@@ -55,7 +55,7 @@ func TestAccSnmpmanager_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_snmpmanager.tf_snmpmanager", "netmask", "255.255.255.255"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccSnmpmanager_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnmpmanagerExist("citrixadc_snmpmanager.tf_snmpmanager", nil),
@@ -97,15 +97,15 @@ func testAccCheckSnmpmanagerExist(n string, id *string) resource.TestCheckFunc {
 		found := false
 		for _, v := range dataArr {
 			if v["ipaddress"] == snmpmanagerName {
-			found = true 
-			break
+				found = true
+				break
 			}
 		}
 
 		if !found {
 			return fmt.Errorf("snmpmanager %s not found", n)
 		}
-		
+
 		return nil
 	}
 }
@@ -129,15 +129,15 @@ func testAccCheckSnmpmanagerDestroy(s *terraform.State) error {
 		if err != nil {
 			return err
 		}
-		
+
 		found := false
 		for _, v := range dataArr {
 			if v["ipaddress"] == snmpmanagerName {
-			found = true 
-			break
+				found = true
+				break
 			}
 		}
-		
+
 		if found {
 			return fmt.Errorf("snmpmanager %s still exists", snmpmanagerName)
 		}

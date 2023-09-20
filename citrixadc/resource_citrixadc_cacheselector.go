@@ -21,12 +21,12 @@ func resourceCitrixAdcCacheselector() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"selectorname": &schema.Schema{
+			"selectorname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"rule": &schema.Schema{
+			"rule": {
 				Type:     schema.TypeList,
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},

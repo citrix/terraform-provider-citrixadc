@@ -22,501 +22,501 @@ func resourceCitrixAdcLbmonitor() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"action": &schema.Schema{
+			"action": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"alertretries": &schema.Schema{
+			"alertretries": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"application": &schema.Schema{
+			"application": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"attribute": &schema.Schema{
+			"attribute": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"basedn": &schema.Schema{
+			"basedn": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"binddn": &schema.Schema{
+			"binddn": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"customheaders": &schema.Schema{
+			"customheaders": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"database": &schema.Schema{
+			"database": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"destip": &schema.Schema{
+			"destip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"destport": &schema.Schema{
+			"destport": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"deviation": &schema.Schema{
+			"deviation": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"dispatcherip": &schema.Schema{
+			"dispatcherip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"dispatcherport": &schema.Schema{
+			"dispatcherport": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"domain": &schema.Schema{
+			"domain": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"downtime": &schema.Schema{
+			"downtime": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"evalrule": &schema.Schema{
+			"evalrule": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"failureretries": &schema.Schema{
+			"failureretries": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"filename": &schema.Schema{
+			"filename": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"filter": &schema.Schema{
+			"filter": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"firmwarerevision": &schema.Schema{
+			"firmwarerevision": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"group": &schema.Schema{
+			"group": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"hostipaddress": &schema.Schema{
+			"hostipaddress": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"hostname": &schema.Schema{
+			"hostname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"httprequest": &schema.Schema{
+			"httprequest": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"inbandsecurityid": &schema.Schema{
+			"inbandsecurityid": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"interval": &schema.Schema{
+			"interval": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"ipaddress": &schema.Schema{
+			"ipaddress": {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 				Computed: true,
 			},
-			"iptunnel": &schema.Schema{
+			"iptunnel": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"kcdaccount": &schema.Schema{
+			"kcdaccount": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"lasversion": &schema.Schema{
+			"lasversion": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"logonpointname": &schema.Schema{
+			"logonpointname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"lrtm": &schema.Schema{
+			"lrtm": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"maxforwards": &schema.Schema{
+			"maxforwards": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"metric": &schema.Schema{
+			"metric": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"metrictable": &schema.Schema{
+			"metrictable": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"metricthreshold": &schema.Schema{
+			"metricthreshold": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"metricweight": &schema.Schema{
+			"metricweight": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"monitorname": &schema.Schema{
+			"monitorname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"mssqlprotocolversion": &schema.Schema{
+			"mssqlprotocolversion": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"netprofile": &schema.Schema{
+			"netprofile": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"oraclesid": &schema.Schema{
+			"oraclesid": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"originhost": &schema.Schema{
+			"originhost": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"originrealm": &schema.Schema{
+			"originrealm": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"password": &schema.Schema{
+			"password": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"productname": &schema.Schema{
+			"productname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"query": &schema.Schema{
+			"query": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"querytype": &schema.Schema{
+			"querytype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"radaccountsession": &schema.Schema{
+			"radaccountsession": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"radaccounttype": &schema.Schema{
+			"radaccounttype": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"radapn": &schema.Schema{
+			"radapn": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"radframedip": &schema.Schema{
+			"radframedip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"radkey": &schema.Schema{
+			"radkey": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"radmsisdn": &schema.Schema{
+			"radmsisdn": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"radnasid": &schema.Schema{
+			"radnasid": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"radnasip": &schema.Schema{
+			"radnasip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"recv": &schema.Schema{
+			"recv": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"resptimeout": &schema.Schema{
+			"resptimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"resptimeoutthresh": &schema.Schema{
+			"resptimeoutthresh": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"retries": &schema.Schema{
+			"retries": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"reverse": &schema.Schema{
+			"reverse": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"rtsprequest": &schema.Schema{
+			"rtsprequest": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"scriptargs": &schema.Schema{
+			"scriptargs": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"scriptname": &schema.Schema{
+			"scriptname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"secondarypassword": &schema.Schema{
+			"secondarypassword": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"secure": &schema.Schema{
+			"secure": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"send": &schema.Schema{
+			"send": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"servicegroupname": &schema.Schema{
+			"servicegroupname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"servicename": &schema.Schema{
+			"servicename": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"sipmethod": &schema.Schema{
+			"sipmethod": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sipreguri": &schema.Schema{
+			"sipreguri": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sipuri": &schema.Schema{
+			"sipuri": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sitepath": &schema.Schema{
+			"sitepath": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"snmpcommunity": &schema.Schema{
+			"snmpcommunity": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"snmpoid": &schema.Schema{
+			"snmpoid": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"snmpthreshold": &schema.Schema{
+			"snmpthreshold": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"snmpversion": &schema.Schema{
+			"snmpversion": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sqlquery": &schema.Schema{
+			"sqlquery": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sslprofile": &schema.Schema{
+			"sslprofile": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"state": &schema.Schema{
+			"state": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"storedb": &schema.Schema{
+			"storedb": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"storefrontacctservice": &schema.Schema{
+			"storefrontacctservice": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"storefrontcheckbackendservices": &schema.Schema{
+			"storefrontcheckbackendservices": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"storename": &schema.Schema{
+			"storename": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"successretries": &schema.Schema{
+			"successretries": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"tos": &schema.Schema{
+			"tos": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"tosid": &schema.Schema{
+			"tosid": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"transparent": &schema.Schema{
+			"transparent": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"trofscode": &schema.Schema{
+			"trofscode": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"trofsstring": &schema.Schema{
+			"trofsstring": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"type": &schema.Schema{
+			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"units1": &schema.Schema{
+			"units1": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"units2": &schema.Schema{
+			"units2": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"units3": &schema.Schema{
+			"units3": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"units4": &schema.Schema{
+			"units4": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"username": &schema.Schema{
+			"username": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"validatecred": &schema.Schema{
+			"validatecred": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"vendorid": &schema.Schema{
+			"vendorid": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"vendorspecificvendorid": &schema.Schema{
+			"vendorspecificvendorid": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"respcode": &schema.Schema{
+			"respcode": {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,

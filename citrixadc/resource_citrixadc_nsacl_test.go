@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -33,7 +33,7 @@ func TestAccNsacl_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNsaclDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccNsacl_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNsaclExist("citrixadc_nsacl.foo", nil),
@@ -157,7 +157,7 @@ func TestAccNsacl_enable_disable(t *testing.T) {
 		CheckDestroy: testAccCheckNsaclDestroy,
 		Steps: []resource.TestStep{
 			// Create enabled
-			resource.TestStep{
+			{
 				Config: testAccNsaclEnableDisable_enabled,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNsaclExist("citrixadc_nsacl.tf_test_acc_nsacl", nil),
@@ -165,7 +165,7 @@ func TestAccNsacl_enable_disable(t *testing.T) {
 				),
 			},
 			// Disable
-			resource.TestStep{
+			{
 				Config: testAccNsaclEnableDisable_disabled,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNsaclExist("citrixadc_nsacl.tf_test_acc_nsacl", nil),
@@ -173,7 +173,7 @@ func TestAccNsacl_enable_disable(t *testing.T) {
 				),
 			},
 			// Re enable
-			resource.TestStep{
+			{
 				Config: testAccNsaclEnableDisable_enabled,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNsaclExist("citrixadc_nsacl.tf_test_acc_nsacl", nil),

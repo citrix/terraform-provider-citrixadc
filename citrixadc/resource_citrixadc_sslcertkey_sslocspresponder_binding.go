@@ -20,17 +20,17 @@ func resourceCitrixAdcSslcertkey_sslocspresponder_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"certkey": &schema.Schema{
+			"certkey": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"ocspresponder": &schema.Schema{
+			"ocspresponder": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"priority": &schema.Schema{
+			"priority": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,

@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -39,7 +39,6 @@ resource "citrixadc_cmpglobal_cmppolicy_binding" "tf_cmpglobal_cmppolicy_binding
   }
 `
 
-
 const testAccCmpglobal_cmppolicy_binding_basic_step2 = `
 	  
 resource "citrixadc_cmppolicy" "tf_cmppolicy" {
@@ -55,13 +54,13 @@ func TestAccCmpglobal_cmppolicy_binding_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCmpglobal_cmppolicy_bindingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccCmpglobal_cmppolicy_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCmpglobal_cmppolicy_bindingExist("citrixadc_cmpglobal_cmppolicy_binding.tf_cmpglobal_cmppolicy_binding", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccCmpglobal_cmppolicy_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCmpglobal_cmppolicy_bindingNotExist("citrixadc_cmpglobal_cmppolicy_binding.tf_cmpglobal_cmppolicy_binding", "tf_cmppolicy", "RES_DEFAULT"),
@@ -96,11 +95,10 @@ func testAccCheckCmpglobal_cmppolicy_bindingExist(n string, id *string) resource
 		argsMap := make(map[string]string)
 		argsMap["type"] = url.QueryEscape(rs.Primary.Attributes["type"])
 
-
 		findParams := service.FindParams{
 			ResourceType:             "cmpglobal_cmppolicy_binding",
-			ArgsMap:                   argsMap,
-			ResourceMissingErrorCode:  258,
+			ArgsMap:                  argsMap,
+			ResourceMissingErrorCode: 258,
 		}
 		dataArr, err := client.FindResourceArrayWithParams(findParams)
 
@@ -131,11 +129,11 @@ func testAccCheckCmpglobal_cmppolicy_bindingNotExist(n string, id string, typena
 		client := testAccProvider.Meta().(*NetScalerNitroClient).client
 
 		policyname := id
-	
+
 		findParams := service.FindParams{
 			ResourceType:             "cmpglobal_cmppolicy_binding",
-			ArgsMap:                  map[string]string{ "type":typename},
-			ResourceMissingErrorCode:  258,
+			ArgsMap:                  map[string]string{"type": typename},
+			ResourceMissingErrorCode: 258,
 		}
 		dataArr, err := client.FindResourceArrayWithParams(findParams)
 

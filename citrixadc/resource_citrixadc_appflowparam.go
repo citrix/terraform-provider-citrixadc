@@ -22,257 +22,257 @@ func resourceCitrixAdcAppflowparam() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"aaausername": &schema.Schema{
+			"aaausername": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"analyticsauthtoken": &schema.Schema{
+			"analyticsauthtoken": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"appnamerefresh": &schema.Schema{
+			"appnamerefresh": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"auditlogs": &schema.Schema{
+			"auditlogs": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"cacheinsight": &schema.Schema{
+			"cacheinsight": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"clienttrafficonly": &schema.Schema{
+			"clienttrafficonly": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"connectionchaining": &schema.Schema{
+			"connectionchaining": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"cqareporting": &schema.Schema{
+			"cqareporting": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"distributedtracing": &schema.Schema{
+			"distributedtracing": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"disttracingsamplingrate": &schema.Schema{
+			"disttracingsamplingrate": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"emailaddress": &schema.Schema{
+			"emailaddress": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"events": &schema.Schema{
+			"events": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"flowrecordinterval": &schema.Schema{
+			"flowrecordinterval": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"gxsessionreporting": &schema.Schema{
+			"gxsessionreporting": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"httpauthorization": &schema.Schema{
+			"httpauthorization": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"httpcontenttype": &schema.Schema{
+			"httpcontenttype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"httpcookie": &schema.Schema{
+			"httpcookie": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"httpdomain": &schema.Schema{
+			"httpdomain": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"httphost": &schema.Schema{
+			"httphost": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"httplocation": &schema.Schema{
+			"httplocation": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"httpmethod": &schema.Schema{
+			"httpmethod": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"httpquerywithurl": &schema.Schema{
+			"httpquerywithurl": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"httpreferer": &schema.Schema{
+			"httpreferer": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"httpsetcookie": &schema.Schema{
+			"httpsetcookie": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"httpsetcookie2": &schema.Schema{
+			"httpsetcookie2": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"httpurl": &schema.Schema{
+			"httpurl": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"httpuseragent": &schema.Schema{
+			"httpuseragent": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"httpvia": &schema.Schema{
+			"httpvia": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"httpxforwardedfor": &schema.Schema{
+			"httpxforwardedfor": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"identifiername": &schema.Schema{
+			"identifiername": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"identifiersessionname": &schema.Schema{
+			"identifiersessionname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"logstreamovernsip": &schema.Schema{
+			"logstreamovernsip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"lsnlogging": &schema.Schema{
+			"lsnlogging": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"metrics": &schema.Schema{
+			"metrics": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"observationdomainid": &schema.Schema{
+			"observationdomainid": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"observationdomainname": &schema.Schema{
+			"observationdomainname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"observationpointid": &schema.Schema{
+			"observationpointid": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"securityinsightrecordinterval": &schema.Schema{
+			"securityinsightrecordinterval": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"securityinsighttraffic": &schema.Schema{
+			"securityinsighttraffic": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"skipcacheredirectionhttptransaction": &schema.Schema{
+			"skipcacheredirectionhttptransaction": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"subscriberawareness": &schema.Schema{
+			"subscriberawareness": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"subscriberidobfuscation": &schema.Schema{
+			"subscriberidobfuscation": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"subscriberidobfuscationalgo": &schema.Schema{
+			"subscriberidobfuscationalgo": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"tcpattackcounterinterval": &schema.Schema{
+			"tcpattackcounterinterval": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"templaterefresh": &schema.Schema{
+			"templaterefresh": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"timeseriesovernsip": &schema.Schema{
+			"timeseriesovernsip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"udppmtu": &schema.Schema{
+			"udppmtu": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"urlcategory": &schema.Schema{
+			"urlcategory": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"usagerecordinterval": &schema.Schema{
+			"usagerecordinterval": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"videoinsight": &schema.Schema{
+			"videoinsight": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"websaasappusagereporting": &schema.Schema{
+			"websaasappusagereporting": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -284,9 +284,9 @@ func resourceCitrixAdcAppflowparam() *schema.Resource {
 func createAppflowparamFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppflowparamFunc")
 	client := meta.(*NetScalerNitroClient).client
-	
+
 	appflowparamName := resource.PrefixedUniqueId("tf-appflowparam-")
-	
+
 	appflowparam := appflow.Appflowparam{
 		Aaausername:                         d.Get("aaausername").(string),
 		Analyticsauthtoken:                  d.Get("analyticsauthtoken").(string),
@@ -427,7 +427,7 @@ func updateAppflowparamFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAppflowparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appflowparam := appflow.Appflowparam{}
-	
+
 	hasChange := false
 	if d.HasChange("aaausername") {
 		log.Printf("[DEBUG]  citrixadc-provider: Aaausername has changed for appflowparam, starting update")

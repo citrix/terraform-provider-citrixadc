@@ -20,27 +20,27 @@ func resourceCitrixAdcSsllogprofile() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"ssllogclauth": &schema.Schema{
+			"ssllogclauth": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ssllogclauthfailures": &schema.Schema{
+			"ssllogclauthfailures": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sslloghs": &schema.Schema{
+			"sslloghs": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sslloghsfailures": &schema.Schema{
+			"sslloghsfailures": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

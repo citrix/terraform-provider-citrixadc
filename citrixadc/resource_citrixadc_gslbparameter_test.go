@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -43,31 +43,30 @@ resource "citrixadc_gslbparameter" "tf_gslbparameter" {
 
 func TestAccGslbparameter_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
 		// gslb resource do not have DELETE operation
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccGslbparameter_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGslbparameterExist("citrixadc_gslbparameter.tf_gslbparameter", nil),
-					resource.TestCheckResourceAttr("citrixadc_gslbparameter.tf_gslbparameter", "ldnsentrytimeout" , "50"),
-					resource.TestCheckResourceAttr("citrixadc_gslbparameter.tf_gslbparameter", "rtttolerance" , "6"),
-					resource.TestCheckResourceAttr("citrixadc_gslbparameter.tf_gslbparameter", "ldnsmask" , "255.255.255.255"),
+					resource.TestCheckResourceAttr("citrixadc_gslbparameter.tf_gslbparameter", "ldnsentrytimeout", "50"),
+					resource.TestCheckResourceAttr("citrixadc_gslbparameter.tf_gslbparameter", "rtttolerance", "6"),
+					resource.TestCheckResourceAttr("citrixadc_gslbparameter.tf_gslbparameter", "ldnsmask", "255.255.255.255"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccGslbparameter_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGslbparameterExist("citrixadc_gslbparameter.tf_gslbparameter", nil),
-					resource.TestCheckResourceAttr("citrixadc_gslbparameter.tf_gslbparameter", "ldnsentrytimeout" , "70"),
-					resource.TestCheckResourceAttr("citrixadc_gslbparameter.tf_gslbparameter", "rtttolerance" , "8"),
-					resource.TestCheckResourceAttr("citrixadc_gslbparameter.tf_gslbparameter", "ldnsmask" , "255.255.255.254"),
+					resource.TestCheckResourceAttr("citrixadc_gslbparameter.tf_gslbparameter", "ldnsentrytimeout", "70"),
+					resource.TestCheckResourceAttr("citrixadc_gslbparameter.tf_gslbparameter", "rtttolerance", "8"),
+					resource.TestCheckResourceAttr("citrixadc_gslbparameter.tf_gslbparameter", "ldnsmask", "255.255.255.254"),
 				),
 			},
 		},
-		
 	})
 }
 
@@ -104,4 +103,3 @@ func testAccCheckGslbparameterExist(n string, id *string) resource.TestCheckFunc
 		return nil
 	}
 }
-

@@ -20,12 +20,12 @@ func resourceCitrixAdcAppfwjsoncontenttype() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"isregex": &schema.Schema{
+			"isregex": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"jsoncontenttypevalue": &schema.Schema{
+			"jsoncontenttypevalue": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,

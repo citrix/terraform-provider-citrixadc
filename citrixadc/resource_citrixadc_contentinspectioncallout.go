@@ -20,45 +20,45 @@ func resourceCitrixAdcContentinspectioncallout() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"type": &schema.Schema{
+			"type": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"resultexpr": &schema.Schema{
+			"resultexpr": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"returntype": &schema.Schema{
+			"returntype": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"comment": &schema.Schema{
+			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"profilename": &schema.Schema{
+			"profilename": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"serverip": &schema.Schema{
+			"serverip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"servername": &schema.Schema{
+			"servername": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"serverport": &schema.Schema{
+			"serverport": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,

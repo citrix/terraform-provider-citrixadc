@@ -6,8 +6,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
-	"net/url"
 	"log"
+	"net/url"
 )
 
 func resourceCitrixAdcResponderglobal_responderpolicy_binding() *schema.Resource {
@@ -20,47 +20,47 @@ func resourceCitrixAdcResponderglobal_responderpolicy_binding() *schema.Resource
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"policyname": &schema.Schema{
+			"policyname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"priority": &schema.Schema{
+			"priority": {
 				Type:     schema.TypeInt,
 				Required: true,
 				ForceNew: true,
 			},
-			"globalbindtype": &schema.Schema{
+			"globalbindtype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"gotopriorityexpression": &schema.Schema{
+			"gotopriorityexpression": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"invoke": &schema.Schema{
+			"invoke": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"labelname": &schema.Schema{
+			"labelname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"labeltype": &schema.Schema{
+			"labeltype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"type": &schema.Schema{
+			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -110,7 +110,7 @@ func readResponderglobal_responderpolicy_bindingFunc(d *schema.ResourceData, met
 	argsMap := make(map[string]string)
 	if v, ok := d.GetOk("type"); ok {
 		argsMap["type"] = url.QueryEscape(v.(string))
-	//if type is not set by user, we set it with the default value, "RES_DEFAULT"
+		//if type is not set by user, we set it with the default value, "RES_DEFAULT"
 	} else {
 		argsMap["type"] = url.QueryEscape("REQ_DEFAULT")
 	}
@@ -173,7 +173,7 @@ func deleteResponderglobal_responderpolicy_bindingFunc(d *schema.ResourceData, m
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteResponderglobal_responderpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
-	policyname:= d.Id()
+	policyname := d.Id()
 	args := make([]string, 0)
 	args = append(args, fmt.Sprintf("policyname:%s", url.QueryEscape(policyname)))
 

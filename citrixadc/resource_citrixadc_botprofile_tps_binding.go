@@ -20,50 +20,50 @@ func resourceCitrixAdcBotprofile_tps_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"bot_tps_type": &schema.Schema{
+			"bot_tps_type": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"bot_bind_comment": &schema.Schema{
+			"bot_bind_comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"bot_tps": &schema.Schema{
+			"bot_tps": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"bot_tps_action": &schema.Schema{
+			"bot_tps_action": {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"logmessage": &schema.Schema{
+			"logmessage": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"percentage": &schema.Schema{
+			"percentage": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"threshold": &schema.Schema{
+			"threshold": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,

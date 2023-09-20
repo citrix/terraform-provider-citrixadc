@@ -20,28 +20,28 @@ func resourceCitrixAdcChangePassword() *schema.Resource {
 		Read:          schema.Noop,
 		Delete:        schema.Noop,
 		Schema: map[string]*schema.Schema{
-			"username": &schema.Schema{
+			"username": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"password": &schema.Schema{
+			"password": {
 				Type:      schema.TypeString,
 				Required:  true,
 				Sensitive: true,
 				ForceNew:  true,
 			},
-			"new_password": &schema.Schema{
+			"new_password": {
 				Type:      schema.TypeString,
 				Required:  true,
 				Sensitive: true,
 				ForceNew:  true,
 			},
-			"first_time_password_reset": &schema.Schema{
-				Type:      schema.TypeBool,
+			"first_time_password_reset": {
+				Type:        schema.TypeBool,
 				Description: "Value is 'true' if the user is changing the default password, else value is 'false' if user wants to change password at any point later",
-				Required:  true,
-				ForceNew:  true,
+				Required:    true,
+				ForceNew:    true,
 			},
 		},
 	}
@@ -63,11 +63,11 @@ func createChangePassword(d *schema.ResourceData, meta interface{}) error {
 		_, err := client.AddResource("login", "", &payload)
 		if err != nil {
 			return err
-		} 
+		}
 	} else {
 		new_payload := changePasswordPayload{
-			Username:     d.Get("username").(string),
-			Password:     d.Get("new_password").(string),
+			Username: d.Get("username").(string),
+			Password: d.Get("new_password").(string),
 		}
 		err := client.UpdateUnnamedResource("systemuser", &new_payload)
 		if err != nil {
@@ -79,4 +79,3 @@ func createChangePassword(d *schema.ResourceData, meta interface{}) error {
 
 	return nil
 }
-

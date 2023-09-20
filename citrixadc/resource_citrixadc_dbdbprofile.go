@@ -18,32 +18,32 @@ func resourceCitrixAdcDbdbprofile() *schema.Resource {
 		Update:        updateDbdbprofileFunc,
 		Delete:        deleteDbdbprofileFunc,
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"conmultiplex": &schema.Schema{
+			"conmultiplex": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"enablecachingconmuxoff": &schema.Schema{
+			"enablecachingconmuxoff": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"interpretquery": &schema.Schema{
+			"interpretquery": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"kcdaccount": &schema.Schema{
+			"kcdaccount": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"stickiness": &schema.Schema{
+			"stickiness": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

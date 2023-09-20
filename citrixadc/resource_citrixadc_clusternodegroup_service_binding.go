@@ -21,12 +21,12 @@ func resourceCitrixAdcClusternodegroup_service_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"service": &schema.Schema{
+			"service": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,

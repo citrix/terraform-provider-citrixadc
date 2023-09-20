@@ -20,37 +20,37 @@ func resourceCitrixAdcContentinspectionprofile() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"type": &schema.Schema{
+			"type": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"egressinterface": &schema.Schema{
+			"egressinterface": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"egressvlan": &schema.Schema{
+			"egressvlan": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"ingressinterface": &schema.Schema{
+			"ingressinterface": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ingressvlan": &schema.Schema{
+			"ingressvlan": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"iptunnel": &schema.Schema{
+			"iptunnel": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

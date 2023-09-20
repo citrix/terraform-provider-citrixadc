@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -37,7 +37,7 @@ func TestAccAppqoecustomresp_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppqoecustomrespDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAppqoecustomresp_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppqoecustomrespExist("citrixadc_appqoecustomresp.tf_appqoecustomresp", nil),
@@ -74,7 +74,7 @@ func testAccCheckAppqoecustomrespExist(n string, id *string) resource.TestCheckF
 		if len(dataArr) == 0 {
 			return fmt.Errorf("appqoecustomresp %s not found", n)
 		}
-		
+
 		found := false
 		for _, v := range dataArr {
 			if v["name"].(string) == rs.Primary.ID {
@@ -86,7 +86,7 @@ func testAccCheckAppqoecustomrespExist(n string, id *string) resource.TestCheckF
 		if !found {
 			return fmt.Errorf("appqoecustomresp %s not found", n)
 		}
-			
+
 		return nil
 	}
 }

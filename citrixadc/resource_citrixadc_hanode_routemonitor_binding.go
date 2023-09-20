@@ -6,8 +6,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
-	"strconv"
 	"log"
+	"strconv"
 	"strings"
 )
 
@@ -21,17 +21,17 @@ func resourceCitrixAdcHanode_routemonitor_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"hanode_id": &schema.Schema{
+			"hanode_id": {
 				Type:     schema.TypeInt,
 				Required: true,
 				ForceNew: true,
 			},
-			"netmask": &schema.Schema{
+			"netmask": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"routemonitor": &schema.Schema{
+			"routemonitor": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,

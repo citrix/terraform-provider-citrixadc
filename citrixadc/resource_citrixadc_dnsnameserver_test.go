@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,8 +17,8 @@ package citrixadc
 
 import (
 	"fmt"
-	"testing"
 	"strings"
+	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -52,7 +52,7 @@ func TestAccDnsnameserver_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDnsnameserverDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDnsnameserver_add,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDnsnameserverExist("citrixadc_dnsnameserver.dnsnameserver", nil),
@@ -60,7 +60,7 @@ func TestAccDnsnameserver_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_dnsnameserver.dnsnameserver", "dnsprofilename", "tf_pr"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccDnsnameserver_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDnsnameserverExist("citrixadc_dnsnameserver.dnsnameserver", nil),
@@ -95,7 +95,7 @@ func testAccCheckDnsnameserverExist(n string, id *string) resource.TestCheckFunc
 		idSlice := strings.SplitN(PrimaryId, ",", 2)
 		name := idSlice[0]
 		dns_type := idSlice[1]
-	
+
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
 		dataArr, err := nsClient.FindAllResources(service.Dnsnameserver.Type())
 
@@ -135,12 +135,12 @@ func testAccCheckDnsnameserverDestroy(s *terraform.State) error {
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("No name is set")
 		}
-		
+
 		PrimaryId := rs.Primary.ID
 		idSlice := strings.SplitN(PrimaryId, ",", 2)
 		name := idSlice[0]
 		dns_type := idSlice[1]
-	
+
 		dataArr, err := nsClient.FindAllResources(service.Dnsnameserver.Type())
 
 		if err != nil {

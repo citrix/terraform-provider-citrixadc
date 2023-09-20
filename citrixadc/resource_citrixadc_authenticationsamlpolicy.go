@@ -21,18 +21,18 @@ func resourceCitrixAdcAuthenticationsamlpolicy() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"reqaction": &schema.Schema{
+			"reqaction": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 			},
-			"rule": &schema.Schema{
+			"rule": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,

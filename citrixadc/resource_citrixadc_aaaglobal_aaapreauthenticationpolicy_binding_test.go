@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -40,13 +40,13 @@ func TestAccAaaglobal_aaapreauthenticationpolicy_binding_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAaaglobal_aaapreauthenticationpolicy_bindingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAaaglobal_aaapreauthenticationpolicy_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAaaglobal_aaapreauthenticationpolicy_bindingExist("citrixadc_aaaglobal_aaapreauthenticationpolicy_binding.tf_aaaglobal_aaapreauthenticationpolicy_binding", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAaaglobal_aaapreauthenticationpolicy_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAaaglobal_aaapreauthenticationpolicy_bindingNotExist("citrixadc_aaaglobal_aaapreauthenticationpolicy_binding.tf_aaaglobal_aaapreauthenticationpolicy_binding", "policy"),
@@ -110,7 +110,7 @@ func testAccCheckAaaglobal_aaapreauthenticationpolicy_bindingExist(n string, id 
 func testAccCheckAaaglobal_aaapreauthenticationpolicy_bindingNotExist(n string, id string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		client := testAccProvider.Meta().(*NetScalerNitroClient).client
-		
+
 		policy := id
 
 		findParams := service.FindParams{

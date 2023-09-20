@@ -19,11 +19,11 @@ func resourceCitrixAdcNsencryptionparams() *schema.Resource {
 		Update:        updateNsencryptionparamsFunc,
 		Delete:        deleteNsencryptionparamsFunc,
 		Schema: map[string]*schema.Schema{
-			"method": &schema.Schema{
+			"method": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"keyvalue": &schema.Schema{
+			"keyvalue": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -49,7 +49,7 @@ func createNsencryptionparamsFunc(d *schema.ResourceData, meta interface{}) erro
 
 	err = readNsencryptionparamsFunc(d, meta)
 	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this nsencryptionparams but we can't read it ??", )
+		log.Printf("[ERROR] netscaler-provider: ?? we just created this nsencryptionparams but we can't read it ??")
 		return nil
 	}
 	return nil
@@ -78,7 +78,7 @@ func updateNsencryptionparamsFunc(d *schema.ResourceData, meta interface{}) erro
 
 	nsencryptionparams := ns.Nsencryptionparams{}
 	hasChange := false
-	
+
 	if d.HasChange("keyvalue") {
 		log.Printf("[DEBUG]  citrixadc-provider: Keyvalue has changed for nsencryptionparams, starting update")
 		nsencryptionparams.Keyvalue = d.Get("keyvalue").(string)

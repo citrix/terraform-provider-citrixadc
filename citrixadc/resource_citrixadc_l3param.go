@@ -19,77 +19,77 @@ func resourceCitrixAdcL3param() *schema.Resource {
 		Update:        updateL3paramFunc,
 		Delete:        deleteL3paramFunc,
 		Schema: map[string]*schema.Schema{
-			"acllogtime": &schema.Schema{
+			"acllogtime": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"allowclasseipv4": &schema.Schema{
+			"allowclasseipv4": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"dropdfflag": &schema.Schema{
+			"dropdfflag": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"dropipfragments": &schema.Schema{
+			"dropipfragments": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"dynamicrouting": &schema.Schema{
+			"dynamicrouting": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"externalloopback": &schema.Schema{
+			"externalloopback": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"forwardicmpfragments": &schema.Schema{
+			"forwardicmpfragments": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"icmpgenratethreshold": &schema.Schema{
+			"icmpgenratethreshold": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"implicitaclallow": &schema.Schema{
+			"implicitaclallow": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ipv6dynamicrouting": &schema.Schema{
+			"ipv6dynamicrouting": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"miproundrobin": &schema.Schema{
+			"miproundrobin": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"overridernat": &schema.Schema{
+			"overridernat": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"srcnat": &schema.Schema{
+			"srcnat": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"tnlpmtuwoconn": &schema.Schema{
+			"tnlpmtuwoconn": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"usipserverstraypkt": &schema.Schema{
+			"usipserverstraypkt": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

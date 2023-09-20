@@ -19,25 +19,25 @@ func resourceCitrixAdcIp6tunnel() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"local": &schema.Schema{
+			"local": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"remote": &schema.Schema{
+			"remote": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"ownergroup": &schema.Schema{
+			"ownergroup": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

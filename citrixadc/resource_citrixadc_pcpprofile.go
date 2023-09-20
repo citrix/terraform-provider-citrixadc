@@ -6,8 +6,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
-	"strconv"
 	"log"
+	"strconv"
 )
 
 func resourceCitrixAdcPcpprofile() *schema.Resource {
@@ -21,37 +21,37 @@ func resourceCitrixAdcPcpprofile() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"announcemulticount": &schema.Schema{
+			"announcemulticount": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"mapping": &schema.Schema{
+			"mapping": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"maxmaplife": &schema.Schema{
+			"maxmaplife": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"minmaplife": &schema.Schema{
+			"minmaplife": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"peer": &schema.Schema{
+			"peer": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"thirdparty": &schema.Schema{
+			"thirdparty": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -64,11 +64,11 @@ func createPcpprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createPcpprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	pcpprofileName := d.Get("name").(string)
-	
+
 	pcpprofile := make(map[string]interface{})
 	if v, ok := d.GetOkExists("thirdparty"); ok {
 		pcpprofile["thirdparty"] = v.(string)
-	} 
+	}
 	if v, ok := d.GetOk("peer"); ok {
 		pcpprofile["peer"] = v.(string)
 	}
@@ -80,7 +80,7 @@ func createPcpprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if v, ok := d.GetOkExists("maxmaplife"); ok {
 		pcpprofile["maxmaplife"] = v.(int)
-	} 
+	}
 	if v, ok := d.GetOk("mapping"); ok {
 		pcpprofile["mapping"] = v.(string)
 	}
@@ -88,7 +88,7 @@ func createPcpprofileFunc(d *schema.ResourceData, meta interface{}) error {
 		val, _ := strconv.Atoi(v.(string))
 		pcpprofile["announcemulticount"] = val
 	}
-	
+
 	_, err := client.AddResource("pcpprofile", pcpprofileName, &pcpprofile)
 	if err != nil {
 		return err

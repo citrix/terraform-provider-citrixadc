@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -47,22 +47,22 @@ func TestAccIpv6_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckIpv6Destroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccIpv6_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIpv6Exist("citrixadc_ipv6.tf_ipv6", nil),
 					resource.TestCheckResourceAttr("citrixadc_ipv6.tf_ipv6", "ralearning", "DISABLED"),
 					resource.TestCheckResourceAttr("citrixadc_ipv6.tf_ipv6", "ndbasereachtime", "4000"),
-					resource.TestCheckResourceAttr("citrixadc_ipv6.tf_ipv6", "routerredirection", "DISABLED"),		
+					resource.TestCheckResourceAttr("citrixadc_ipv6.tf_ipv6", "routerredirection", "DISABLED"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccIpv6_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIpv6Exist("citrixadc_ipv6.tf_ipv6", nil),
 					resource.TestCheckResourceAttr("citrixadc_ipv6.tf_ipv6", "ralearning", "ENABLED"),
 					resource.TestCheckResourceAttr("citrixadc_ipv6.tf_ipv6", "ndbasereachtime", "4000"),
-					resource.TestCheckResourceAttr("citrixadc_ipv6.tf_ipv6", "routerredirection", "ENABLED"),		
+					resource.TestCheckResourceAttr("citrixadc_ipv6.tf_ipv6", "routerredirection", "ENABLED"),
 				),
 			},
 		},

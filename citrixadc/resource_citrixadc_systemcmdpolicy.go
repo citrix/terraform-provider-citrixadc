@@ -21,15 +21,15 @@ func resourceCitrixAdcSystemcmdpolicy() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"action": &schema.Schema{
+			"action": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"cmdspec": &schema.Schema{
+			"cmdspec": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"policyname": &schema.Schema{
+			"policyname": {
 				Type:     schema.TypeString,
 				Required: true,
 			},

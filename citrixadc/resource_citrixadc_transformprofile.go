@@ -21,21 +21,21 @@ func resourceCitrixAdcTransformprofile() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"comment": &schema.Schema{
+			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"onlytransformabsurlinbody": &schema.Schema{
+			"onlytransformabsurlinbody": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"type": &schema.Schema{
+			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

@@ -7,8 +7,8 @@ import (
 
 	"fmt"
 	"log"
-	"strings"
 	"net/url"
+	"strings"
 )
 
 func resourceCitrixAdcNetprofile_natrule_binding() *schema.Resource {
@@ -21,25 +21,25 @@ func resourceCitrixAdcNetprofile_natrule_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"natrule": &schema.Schema{
+			"natrule": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"netmask": &schema.Schema{
+			"netmask": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"rewriteip": &schema.Schema{
+			"rewriteip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

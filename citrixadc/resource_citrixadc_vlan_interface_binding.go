@@ -24,23 +24,23 @@ func resourceCitrixAdcVlan_interface_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"vlanid": &schema.Schema{
+			"vlanid": {
 				Type:     schema.TypeInt,
 				Required: true,
 				ForceNew: true,
 			},
-			"ifnum": &schema.Schema{
+			"ifnum": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"ownergroup": &schema.Schema{
+			"ownergroup": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"tagged": &schema.Schema{
+			"tagged": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,

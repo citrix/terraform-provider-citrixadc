@@ -7,8 +7,8 @@ import (
 
 	"fmt"
 	"log"
-	"strings"
 	"net/url"
+	"strings"
 )
 
 func resourceCitrixAdcVpnvserver_appcontroller_binding() *schema.Resource {
@@ -21,13 +21,13 @@ func resourceCitrixAdcVpnvserver_appcontroller_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"appcontroller": &schema.Schema{
+			"appcontroller": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,

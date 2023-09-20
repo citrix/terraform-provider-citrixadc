@@ -12,92 +12,92 @@ func dataSourceCitrixAdcHanode() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceCitrixAdcHanodeRead,
 		Schema: map[string]*schema.Schema{
-			"hanode_id": &schema.Schema{
+			"hanode_id": {
 				Type:     schema.TypeInt,
 				Required: true,
 				ForceNew: true,
 			},
-			"ipaddress": &schema.Schema{
+			"ipaddress": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"curflips": &schema.Schema{
+			"curflips": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"completedfliptime": &schema.Schema{
+			"completedfliptime": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"deadinterval": &schema.Schema{
+			"deadinterval": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"enaifaces": &schema.Schema{
+			"enaifaces": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"failsafe": &schema.Schema{
+			"failsafe": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"haprop": &schema.Schema{
+			"haprop": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"hastatus": &schema.Schema{
+			"hastatus": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"hasync": &schema.Schema{
+			"hasync": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"hellointerval": &schema.Schema{
+			"hellointerval": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"inc": &schema.Schema{
+			"inc": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"masterstatetime": &schema.Schema{
+			"masterstatetime": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"maxflips": &schema.Schema{
+			"maxflips": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"maxfliptime": &schema.Schema{
+			"maxfliptime": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"netmask": &schema.Schema{
+			"netmask": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"routemonitor": &schema.Schema{
+			"routemonitor": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"routemonitorstate": &schema.Schema{
+			"routemonitorstate": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"ssl2": &schema.Schema{
+			"ssl2": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"state": &schema.Schema{
+			"state": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"syncstatusstrictmode": &schema.Schema{
+			"syncstatusstrictmode": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"syncvlan": &schema.Schema{
+			"syncvlan": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},

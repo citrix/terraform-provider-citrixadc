@@ -25,281 +25,281 @@ func resourceCitrixAdcServicegroup() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"appflowlog": &schema.Schema{
+			"appflowlog": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"autodisabledelay": &schema.Schema{
+			"autodisabledelay": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"autodisablegraceful": &schema.Schema{
+			"autodisablegraceful": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"autoscale": &schema.Schema{
+			"autoscale": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"cacheable": &schema.Schema{
+			"cacheable": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"cachetype": &schema.Schema{
+			"cachetype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"cip": &schema.Schema{
+			"cip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"cipheader": &schema.Schema{
+			"cipheader": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"cka": &schema.Schema{
+			"cka": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"clttimeout": &schema.Schema{
+			"clttimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"cmp": &schema.Schema{
+			"cmp": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"comment": &schema.Schema{
+			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"customserverid": &schema.Schema{
+			"customserverid": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"dbsttl": &schema.Schema{
+			"dbsttl": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"delay": &schema.Schema{
+			"delay": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"downstateflush": &schema.Schema{
+			"downstateflush": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"dupweight": &schema.Schema{
+			"dupweight": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"graceful": &schema.Schema{
+			"graceful": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"hashid": &schema.Schema{
+			"hashid": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"healthmonitor": &schema.Schema{
+			"healthmonitor": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"httpprofilename": &schema.Schema{
+			"httpprofilename": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"includemembers": &schema.Schema{
+			"includemembers": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"maxbandwidth": &schema.Schema{
+			"maxbandwidth": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"maxclient": &schema.Schema{
+			"maxclient": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"maxreq": &schema.Schema{
+			"maxreq": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"memberport": &schema.Schema{
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"monconnectionclose": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"monitornamesvc": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"monthreshold": &schema.Schema{
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-			"nameserver": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"netprofile": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"pathmonitor": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"pathmonitorindv": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"port": &schema.Schema{
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-			"riseapbrstatsmsgcode": &schema.Schema{
+			"memberport": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"rtspsessionidremap": &schema.Schema{
+			"monconnectionclose": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sc": &schema.Schema{
+			"monitornamesvc": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"serverid": &schema.Schema{
+			"monthreshold": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"servername": &schema.Schema{
+			"nameserver": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"servicegroupname": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"servicetype": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"sp": &schema.Schema{
+			"netprofile": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"state": &schema.Schema{
+			"pathmonitor": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"svrtimeout": &schema.Schema{
+			"pathmonitorindv": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"port": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"tcpb": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"tcpprofilename": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"td": &schema.Schema{
+			"riseapbrstatsmsgcode": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"useproxyport": &schema.Schema{
+			"rtspsessionidremap": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"usip": &schema.Schema{
+			"sc": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"weight": &schema.Schema{
+			"serverid": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"lbvservers": &schema.Schema{
+			"servername": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"servicegroupname": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"servicetype": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"sp": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"state": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"svrtimeout": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"tcpb": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"tcpprofilename": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"td": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"useproxyport": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"usip": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"weight": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"lbvservers": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
-			"lbmonitor": &schema.Schema{
+			"lbmonitor": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"servicegroupmembers": &schema.Schema{
+			"servicegroupmembers": {
 				Optional: true,
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
-			"servicegroupmembers_by_servername": &schema.Schema{
+			"servicegroupmembers_by_servername": {
 				Optional: true,
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -764,6 +764,7 @@ func updateServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("cipheader") {
 		log.Printf("[DEBUG]  netscaler-provider: Cipheader has changed for servicegroup %s, starting update", servicegroupName)
 		servicegroup.Cipheader = d.Get("cipheader").(string)
+		servicegroup.Cip = d.Get("cip").(string)
 		hasChange = true
 	}
 	if d.HasChange("cka") {

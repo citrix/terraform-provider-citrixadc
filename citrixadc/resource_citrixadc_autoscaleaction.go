@@ -21,37 +21,37 @@ func resourceCitrixAdcAutoscaleaction() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"parameters": &schema.Schema{
+			"parameters": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"profilename": &schema.Schema{
+			"profilename": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"quiettime": &schema.Schema{
+			"quiettime": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"type": &schema.Schema{
+			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"vmdestroygraceperiod": &schema.Schema{
+			"vmdestroygraceperiod": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"vserver": &schema.Schema{
+			"vserver": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

@@ -18,37 +18,37 @@ func resourceCitrixAdcNtpserver() *schema.Resource {
 		Update:        updateNtpserverFunc,
 		Delete:        deleteNtpserverFunc,
 		Schema: map[string]*schema.Schema{
-			"serverip": &schema.Schema{
+			"serverip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"servername": &schema.Schema{
+			"servername": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"autokey": &schema.Schema{
+			"autokey": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"key": &schema.Schema{
+			"key": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"maxpoll": &schema.Schema{
+			"maxpoll": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"minpoll": &schema.Schema{
+			"minpoll": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"preferredntpserver": &schema.Schema{
+			"preferredntpserver": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -63,7 +63,7 @@ func createNtpserverFunc(d *schema.ResourceData, meta interface{}) error {
 	var ntpserverName string
 	if v, ok := d.GetOk("serverip"); ok {
 		ntpserverName = v.(string)
-	} else  if v, ok := d.GetOk("servername"); ok {
+	} else if v, ok := d.GetOk("servername"); ok {
 		ntpserverName = v.(string)
 	}
 	ntpserver := ntp.Ntpserver{
@@ -117,7 +117,7 @@ func readNtpserverFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
-	
+
 	data := dataArr[foundIndex]
 	d.Set("autokey", data["autokey"])
 	d.Set("key", data["key"])
@@ -136,13 +136,13 @@ func updateNtpserverFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	ntpserverName := d.Id()
 	ntpserver := ntp.Ntpserver{}
-	
+
 	if v, ok := d.GetOk("serverip"); ok {
 		ntpserver.Serverip = v.(string)
-	} else  if v, ok := d.GetOk("servername"); ok {
+	} else if v, ok := d.GetOk("servername"); ok {
 		ntpserver.Servername = v.(string)
 	}
-	
+
 	hasChange := false
 	if d.HasChange("autokey") {
 		log.Printf("[DEBUG]  citrixadc-provider: Autokey has changed for ntpserver %s, starting update", ntpserverName)

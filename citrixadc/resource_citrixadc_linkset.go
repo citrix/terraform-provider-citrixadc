@@ -21,12 +21,12 @@ func resourceCitrixAdcLinkset() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"linkset_id": &schema.Schema{
+			"linkset_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"interfacebinding": &schema.Schema{
+			"interfacebinding": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true, // to avoid this error: https://github.com/hashicorp/terraform-plugin-sdk/blob/master/helper/schema/resource.go#L635

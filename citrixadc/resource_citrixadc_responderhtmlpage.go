@@ -16,30 +16,30 @@ func resourceCitrixAdcResponderhtmlpage() *schema.Resource {
 		Read:          readResponderhtmlpageFunc,
 		Delete:        deleteResponderhtmlpageFunc,
 		Schema: map[string]*schema.Schema{
-			"cacertfile": &schema.Schema{
+			"cacertfile": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"comment": &schema.Schema{
+			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"overwrite": &schema.Schema{
+			"overwrite": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"src": &schema.Schema{
+			"src": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

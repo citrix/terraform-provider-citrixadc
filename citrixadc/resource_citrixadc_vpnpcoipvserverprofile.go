@@ -16,18 +16,18 @@ func resourceCitrixAdcVpnpcoipvserverprofile() *schema.Resource {
 		Update:        updateVpnpcoipvserverprofileFunc,
 		Delete:        deleteVpnpcoipvserverprofileFunc,
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"logindomain": &schema.Schema{
+			"logindomain": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 			},
-			"udpport": &schema.Schema{
+			"udpport": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,

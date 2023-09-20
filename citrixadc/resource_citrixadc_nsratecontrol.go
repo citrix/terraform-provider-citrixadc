@@ -20,22 +20,22 @@ func resourceCitrixAdcNsratecontrol() *schema.Resource {
 		Update:        updateNsratecontrolFunc,
 		Delete:        deleteNsratecontrolFunc,
 		Schema: map[string]*schema.Schema{
-			"icmpthreshold": &schema.Schema{
+			"icmpthreshold": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"tcprstthreshold": &schema.Schema{
+			"tcprstthreshold": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"tcpthreshold": &schema.Schema{
+			"tcpthreshold": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"udpthreshold": &schema.Schema{
+			"udpthreshold": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -81,13 +81,13 @@ func readNsratecontrolFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
-	value,_ := strconv.Atoi(data["icmpthreshold"].(string))
+	value, _ := strconv.Atoi(data["icmpthreshold"].(string))
 	d.Set("icmpthreshold", value)
-	value,_ = strconv.Atoi(data["tcprstthreshold"].(string))
+	value, _ = strconv.Atoi(data["tcprstthreshold"].(string))
 	d.Set("tcprstthreshold", value)
-	value,_ = strconv.Atoi(data["tcpthreshold"].(string))
+	value, _ = strconv.Atoi(data["tcpthreshold"].(string))
 	d.Set("tcpthreshold", value)
-	value,_ = strconv.Atoi(data["udpthreshold"].(string))
+	value, _ = strconv.Atoi(data["udpthreshold"].(string))
 	d.Set("udpthreshold", value)
 
 	return nil

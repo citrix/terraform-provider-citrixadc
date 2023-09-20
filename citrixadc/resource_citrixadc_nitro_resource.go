@@ -25,21 +25,21 @@ func resourceCitrixAdcNintroResource() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"workflows_file": &schema.Schema{
+			"workflows_file": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"workflow": &schema.Schema{
+			"workflow": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"attributes": &schema.Schema{
+			"attributes": {
 				Type:     schema.TypeMap,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 				Computed: true,
 			},
-			"non_updateable_attributes": &schema.Schema{
+			"non_updateable_attributes": {
 				Type:     schema.TypeMap,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,

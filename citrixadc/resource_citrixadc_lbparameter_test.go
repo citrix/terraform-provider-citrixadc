@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -82,13 +82,13 @@ func TestAccLbparameter_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLbparameterDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccLbparameter_basic_step1,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLbparameterExist("citrixadc_lbparameter.tf_lbparameter", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccLbparameter_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLbparameterExist("citrixadc_lbparameter.tf_lbparameter", nil),

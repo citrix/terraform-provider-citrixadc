@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -61,13 +61,13 @@ func TestAccCsvserver_feopolicy_binding_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCsvserver_feopolicy_bindingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccCsvserver_feopolicy_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCsvserver_feopolicy_bindingExist("citrixadc_csvserver_feopolicy_binding.tf_csvserver_feopolicy_binding", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccCsvserver_feopolicy_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCsvserver_feopolicy_bindingNotExist("citrixadc_csvserver_feopolicy_binding.tf_csvserver_feopolicy_binding", "tf_csvserver,tf_feopolicy"),

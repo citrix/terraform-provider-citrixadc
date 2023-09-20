@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -51,7 +51,7 @@ func TestAccTmtrafficaction_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckTmtrafficactionDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccTmtrafficaction_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTmtrafficactionExist("citrixadc_tmtrafficaction.tf_tmtrafficaction", nil),
@@ -61,7 +61,7 @@ func TestAccTmtrafficaction_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_tmtrafficaction.tf_tmtrafficaction", "persistentcookie", "ON"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccTmtrafficaction_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTmtrafficactionExist("citrixadc_tmtrafficaction.tf_tmtrafficaction", nil),

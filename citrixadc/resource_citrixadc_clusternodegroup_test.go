@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -37,26 +37,27 @@ resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
 	strict = "NO"
   }
 `
+
 func TestAccClusternodegroup_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckClusternodegroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccClusternodegroup_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusternodegroupExist("citrixadc_clusternodegroup.tf_clusternodegroup", nil),
-					resource.TestCheckResourceAttr("citrixadc_clusternodegroup.tf_clusternodegroup","name", "my_clusternode"),
-					resource.TestCheckResourceAttr("citrixadc_clusternodegroup.tf_clusternodegroup","strict", "YES"),
+					resource.TestCheckResourceAttr("citrixadc_clusternodegroup.tf_clusternodegroup", "name", "my_clusternode"),
+					resource.TestCheckResourceAttr("citrixadc_clusternodegroup.tf_clusternodegroup", "strict", "YES"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccClusternodegroup_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusternodegroupExist("citrixadc_clusternodegroup.tf_clusternodegroup", nil),
-					resource.TestCheckResourceAttr("citrixadc_clusternodegroup.tf_clusternodegroup","name", "my_clusternode"),
-					resource.TestCheckResourceAttr("citrixadc_clusternodegroup.tf_clusternodegroup","strict", "NO"),
+					resource.TestCheckResourceAttr("citrixadc_clusternodegroup.tf_clusternodegroup", "name", "my_clusternode"),
+					resource.TestCheckResourceAttr("citrixadc_clusternodegroup.tf_clusternodegroup", "strict", "NO"),
 				),
 			},
 		},
@@ -89,7 +90,6 @@ func testAccCheckClusternodegroupExist(n string, id *string) resource.TestCheckF
 			return err
 		}
 
-		
 		if data == nil {
 			return fmt.Errorf("clusternodegroup %s not found", n)
 		}

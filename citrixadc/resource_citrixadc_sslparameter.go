@@ -22,122 +22,122 @@ func resourceCitrixAdcSslparameter() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"crlmemorysizemb": &schema.Schema{
+			"crlmemorysizemb": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"cryptodevdisablelimit": &schema.Schema{
+			"cryptodevdisablelimit": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"defaultprofile": &schema.Schema{
+			"defaultprofile": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"denysslreneg": &schema.Schema{
+			"denysslreneg": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"dropreqwithnohostheader": &schema.Schema{
+			"dropreqwithnohostheader": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"encrypttriggerpktcount": &schema.Schema{
+			"encrypttriggerpktcount": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"heterogeneoussslhw": &schema.Schema{
+			"heterogeneoussslhw": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"hybridfipsmode": &schema.Schema{
+			"hybridfipsmode": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"insertcertspace": &schema.Schema{
+			"insertcertspace": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"insertionencoding": &schema.Schema{
+			"insertionencoding": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ndcppcompliancecertcheck": &schema.Schema{
+			"ndcppcompliancecertcheck": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ocspcachesize": &schema.Schema{
+			"ocspcachesize": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"pushenctriggertimeout": &schema.Schema{
+			"pushenctriggertimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"pushflag": &schema.Schema{
+			"pushflag": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"quantumsize": &schema.Schema{
+			"quantumsize": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sendclosenotify": &schema.Schema{
+			"sendclosenotify": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"snihttphostmatch": &schema.Schema{
+			"snihttphostmatch": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"softwarecryptothreshold": &schema.Schema{
+			"softwarecryptothreshold": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"sslierrorcache": &schema.Schema{
+			"sslierrorcache": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sslimaxerrorcachemem": &schema.Schema{
+			"sslimaxerrorcachemem": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"ssltriggertimeout": &schema.Schema{
+			"ssltriggertimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"strictcachecks": &schema.Schema{
+			"strictcachecks": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"undefactioncontrol": &schema.Schema{
+			"undefactioncontrol": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"undefactiondata": &schema.Schema{
+			"undefactiondata": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

@@ -24,199 +24,199 @@ func resourceCitrixAdcGslbvserver() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"appflowlog": &schema.Schema{
+			"appflowlog": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"backupip": &schema.Schema{
+			"backupip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"backuplbmethod": &schema.Schema{
+			"backuplbmethod": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"backupsessiontimeout": &schema.Schema{
+			"backupsessiontimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"backupvserver": &schema.Schema{
+			"backupvserver": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"comment": &schema.Schema{
+			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"considereffectivestate": &schema.Schema{
+			"considereffectivestate": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"cookiedomain": &schema.Schema{
+			"cookiedomain": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"cookietimeout": &schema.Schema{
+			"cookietimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"disableprimaryondown": &schema.Schema{
+			"disableprimaryondown": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"dnsrecordtype": &schema.Schema{
+			"dnsrecordtype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"domainname": &schema.Schema{
+			"domainname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"dynamicweight": &schema.Schema{
+			"dynamicweight": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ecs": &schema.Schema{
+			"ecs": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ecsaddrvalidation": &schema.Schema{
+			"ecsaddrvalidation": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"edr": &schema.Schema{
+			"edr": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"iptype": &schema.Schema{
+			"iptype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"lbmethod": &schema.Schema{
+			"lbmethod": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"mir": &schema.Schema{
+			"mir": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"netmask": &schema.Schema{
+			"netmask": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"persistenceid": &schema.Schema{
+			"persistenceid": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"persistencetype": &schema.Schema{
+			"persistencetype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"persistmask": &schema.Schema{
+			"persistmask": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"servicename": &schema.Schema{
+			"servicename": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"servicetype": &schema.Schema{
+			"servicetype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"sitedomainttl": &schema.Schema{
+			"sitedomainttl": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"sobackupaction": &schema.Schema{
+			"sobackupaction": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"somethod": &schema.Schema{
+			"somethod": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sopersistence": &schema.Schema{
+			"sopersistence": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sopersistencetimeout": &schema.Schema{
+			"sopersistencetimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"sothreshold": &schema.Schema{
+			"sothreshold": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"state": &schema.Schema{
+			"state": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"timeout": &schema.Schema{
+			"timeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"tolerance": &schema.Schema{
+			"tolerance": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"ttl": &schema.Schema{
+			"ttl": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"v6netmasklen": &schema.Schema{
+			"v6netmasklen": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"v6persistmasklen": &schema.Schema{
+			"v6persistmasklen": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"weight": &schema.Schema{
+			"weight": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -227,47 +227,47 @@ func resourceCitrixAdcGslbvserver() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"backupip": &schema.Schema{
+						"backupip": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"backupipflag": &schema.Schema{
+						"backupipflag": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Computed: true,
 						},
-						"cookiedomain": &schema.Schema{
+						"cookiedomain": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"cookiedomainflag": &schema.Schema{
+						"cookiedomainflag": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Computed: true,
 						},
-						"cookietimeout": &schema.Schema{
+						"cookietimeout": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 						},
-						"domainname": &schema.Schema{
+						"domainname": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"name": &schema.Schema{
+						"name": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"sitedomainttl": &schema.Schema{
+						"sitedomainttl": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 						},
-						"ttl": &schema.Schema{
+						"ttl": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
@@ -275,20 +275,20 @@ func resourceCitrixAdcGslbvserver() *schema.Resource {
 					},
 				},
 			},
-			"service": &schema.Schema{
+			"service": {
 				Type: schema.TypeSet,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"domainname": &schema.Schema{
+						"domainname": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"servicename": &schema.Schema{
+						"servicename": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"weight": &schema.Schema{
+						"weight": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,

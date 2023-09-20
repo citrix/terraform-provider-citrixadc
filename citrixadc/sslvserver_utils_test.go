@@ -101,7 +101,7 @@ func testCheckCiphersConfiguredExpected(resourceString string, ciphers []string)
 			return fmt.Errorf("Not found: %s", resourceString)
 		}
 		keys := make([]string, 0, len(rs.Primary.Attributes))
-		for k, _ := range rs.Primary.Attributes {
+		for k := range rs.Primary.Attributes {
 			keys = append(keys, k)
 		}
 		// Verify correct order of ciphers
@@ -125,7 +125,7 @@ func testCheckCiphersuitesConfiguredExpected(resourceString string, ciphersuites
 			return fmt.Errorf("Not found: %s", resourceString)
 		}
 		keys := make([]string, 0, len(rs.Primary.Attributes))
-		for k, _ := range rs.Primary.Attributes {
+		for k := range rs.Primary.Attributes {
 			keys = append(keys, k)
 		}
 		// Verify correct order of ciphers

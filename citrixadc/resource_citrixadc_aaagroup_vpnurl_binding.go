@@ -20,18 +20,18 @@ func resourceCitrixAdcAaagroup_vpnurl_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"gotopriorityexpression": &schema.Schema{
+			"gotopriorityexpression": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"groupname": &schema.Schema{
+			"groupname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"urlname": &schema.Schema{
+			"urlname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,

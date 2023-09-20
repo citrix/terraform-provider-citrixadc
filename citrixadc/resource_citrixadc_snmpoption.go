@@ -17,24 +17,24 @@ func resourceCitrixAdcSnmpoption() *schema.Resource {
 		Create:        createSnmpoptionFunc,
 		Read:          readSnmpoptionFunc,
 		Update:        updateSnmpoptionFunc,
-		Delete:        deleteSnmpoptionFunc,  // Thought snmpoption resource donot have DELETE operation, it is required to set ID to "" d.SetID("") to maintain terraform state
+		Delete:        deleteSnmpoptionFunc, // Thought snmpoption resource donot have DELETE operation, it is required to set ID to "" d.SetID("") to maintain terraform state
 		Schema: map[string]*schema.Schema{
-			"partitionnameintrap": &schema.Schema{
+			"partitionnameintrap": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"snmpset": &schema.Schema{
+			"snmpset": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"snmptraplogging": &schema.Schema{
+			"snmptraplogging": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"snmptraplogginglevel": &schema.Schema{
+			"snmptraplogginglevel": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -47,7 +47,7 @@ func createSnmpoptionFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSnmpoptionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	snmpoptionName := resource.PrefixedUniqueId("tf-snmpoption-")
-	
+
 	snmpoption := snmp.Snmpoption{
 		Partitionnameintrap:  d.Get("partitionnameintrap").(string),
 		Snmpset:              d.Get("snmpset").(string),
@@ -93,7 +93,7 @@ func updateSnmpoptionFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateSnmpoptionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	snmpoption := snmp.Snmpoption{}
-	
+
 	hasChange := false
 	if d.HasChange("partitionnameintrap") {
 		log.Printf("[DEBUG]  citrixadc-provider: Partitionnameintrap has changed for snmpoption, starting update")

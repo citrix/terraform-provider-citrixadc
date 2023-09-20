@@ -21,28 +21,28 @@ func resourceCitrixAdcCsaction() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"comment": &schema.Schema{
+			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
 
-			"targetlbvserver": &schema.Schema{
+			"targetlbvserver": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"targetvserver": &schema.Schema{
+			"targetvserver": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"targetvserverexpr": &schema.Schema{
+			"targetvserverexpr": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

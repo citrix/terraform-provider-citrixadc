@@ -18,27 +18,27 @@ func resourceCitrixAdcAppfwfieldtype() *schema.Resource {
 		Update:        updateAppfwfieldtypeFunc,
 		Delete:        deleteAppfwfieldtypeFunc,
 		Schema: map[string]*schema.Schema{
-			"comment": &schema.Schema{
+			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"nocharmaps": &schema.Schema{
+			"nocharmaps": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"priority": &schema.Schema{
+			"priority": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"regex": &schema.Schema{
+			"regex": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,

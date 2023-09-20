@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,7 +22,7 @@ import (
 	"testing"
 )
 
-const testAccRdpserverprofile_basic= `
+const testAccRdpserverprofile_basic = `
 
 resource "citrixadc_rdpserverprofile" "tf_rdpserverprofile" {
 	name           = "my_rdpserverprofile"
@@ -51,7 +51,7 @@ func TestAccRdpserverprofile_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRdpserverprofileDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRdpserverprofile_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRdpserverprofileExist("citrixadc_rdpserverprofile.tf_rdpserverprofile", nil),
@@ -61,7 +61,7 @@ func TestAccRdpserverprofile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_rdpserverprofile.tf_rdpserverprofile", "rdpport", "4000"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRdpserverprofile_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRdpserverprofileExist("citrixadc_rdpserverprofile.tf_rdpserverprofile", nil),

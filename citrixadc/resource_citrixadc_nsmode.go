@@ -17,109 +17,109 @@ func resourceCitrixAdcNsmode() *schema.Resource {
 		Read:          readNsmodeFunc,
 		Delete:        deleteNsmodeFunc,
 		Schema: map[string]*schema.Schema{
-			"fr": &schema.Schema{
+			"fr": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"l2": &schema.Schema{
+			"l2": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"usip": &schema.Schema{
+			"usip": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"cka": &schema.Schema{
+			"cka": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"tcpb": &schema.Schema{
+			"tcpb": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"mbf": &schema.Schema{
+			"mbf": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"edge": &schema.Schema{
+			"edge": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"usnip": &schema.Schema{
+			"usnip": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"l3": &schema.Schema{
+			"l3": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"pmtud": &schema.Schema{
+			"pmtud": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"mediaclassification": &schema.Schema{
+			"mediaclassification": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"sradv": &schema.Schema{
+			"sradv": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"dradv": &schema.Schema{
+			"dradv": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"iradv": &schema.Schema{
+			"iradv": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"sradv6": &schema.Schema{
+			"sradv6": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"dradv6": &schema.Schema{
+			"dradv6": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"bridgebpdus": &schema.Schema{
+			"bridgebpdus": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"ulfd": &schema.Schema{
+			"ulfd": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,

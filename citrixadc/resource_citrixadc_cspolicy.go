@@ -22,60 +22,60 @@ func resourceCitrixAdcCspolicy() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"action": &schema.Schema{
+			"action": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"boundto": &schema.Schema{
+			"boundto": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"domain": &schema.Schema{
+			"domain": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"logaction": &schema.Schema{
+			"logaction": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"policyname": &schema.Schema{
+			"policyname": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"rule": &schema.Schema{
+			"rule": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"url": &schema.Schema{
+			"url": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
 
-			"csvserver": &schema.Schema{
+			"csvserver": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"targetlbvserver": &schema.Schema{
+			"targetlbvserver": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"forcenew_id_set": &schema.Schema{
+			"forcenew_id_set": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: false,
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"priority": &schema.Schema{
+			"priority": {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
@@ -93,7 +93,7 @@ func createCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	action, aok := d.GetOk("action")
 	_, bok := d.GetOk("boundto")
 	_, bok1 := d.GetOk("domain")
-	if (bok && bok1){
+	if bok && bok1 {
 		return fmt.Errorf("Both domain and boundto cant be specified. Use domain for ADC version 13.0 and lesser else use boundto for higher versions above 13.1")
 	}
 	dok := bok || bok1

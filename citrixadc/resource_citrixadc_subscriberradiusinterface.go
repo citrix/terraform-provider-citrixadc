@@ -18,12 +18,12 @@ func resourceCitrixAdcSubscriberradiusinterface() *schema.Resource {
 		Update:        updateSubscriberradiusinterfaceFunc,
 		Delete:        deleteSubscriberradiusinterfaceFunc,
 		Schema: map[string]*schema.Schema{
-			"listeningservice": &schema.Schema{
+			"listeningservice": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"radiusinterimasstart": &schema.Schema{
+			"radiusinterimasstart": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

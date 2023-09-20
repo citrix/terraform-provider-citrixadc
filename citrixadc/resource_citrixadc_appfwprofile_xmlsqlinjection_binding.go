@@ -7,8 +7,8 @@ import (
 
 	"fmt"
 	"log"
-	"strings"
 	"net/url"
+	"strings"
 )
 
 func resourceCitrixAdcAppfwprofile_xmlsqlinjection_binding() *schema.Resource {
@@ -21,61 +21,61 @@ func resourceCitrixAdcAppfwprofile_xmlsqlinjection_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"xmlsqlinjection": &schema.Schema{
+			"xmlsqlinjection": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"as_scan_location_xmlsql": &schema.Schema{
+			"as_scan_location_xmlsql": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"alertonly": &schema.Schema{
+			"alertonly": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"comment": &schema.Schema{
+			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"isautodeployed": &schema.Schema{
+			"isautodeployed": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"isregex_xmlsql": &schema.Schema{
+			"isregex_xmlsql": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"resourceid": &schema.Schema{
+			"resourceid": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"ruletype": &schema.Schema{
+			"ruletype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"state": &schema.Schema{
+			"state": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -172,7 +172,7 @@ func readAppfwprofile_xmlsqlinjection_bindingFunc(d *schema.ResourceData, meta i
 	// Fallthrough
 
 	data := dataArr[foundIndex]
-	
+
 	// d.Set("alertonly", data["alertonly"])
 	d.Set("as_scan_location_xmlsql", data["as_scan_location_xmlsql"])
 	d.Set("comment", data["comment"])

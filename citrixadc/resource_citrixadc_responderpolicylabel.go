@@ -19,19 +19,19 @@ func resourceCitrixAdcResponderpolicylabel() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"comment": &schema.Schema{
+			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"labelname": &schema.Schema{
+			"labelname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"policylabeltype": &schema.Schema{
+			"policylabeltype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

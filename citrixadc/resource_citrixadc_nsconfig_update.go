@@ -18,27 +18,27 @@ func resourceCitrixAdcNsconfigUpdate() *schema.Resource {
 		Update:        updateNsconfigUpdateFunc,
 		Delete:        schema.Noop, // Should we call `unset ns config` here?
 		Schema: map[string]*schema.Schema{
-			"ipaddress": &schema.Schema{
+			"ipaddress": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"netmask": &schema.Schema{
+			"netmask": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"nsvlan": &schema.Schema{
+			"nsvlan": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"ifnum": &schema.Schema{
+			"ifnum": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tagged": &schema.Schema{
+			"tagged": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

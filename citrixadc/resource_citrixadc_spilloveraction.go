@@ -19,12 +19,12 @@ func resourceCitrixAdcSpilloveraction() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"action": &schema.Schema{
+			"action": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -38,8 +38,8 @@ func createSpilloveractionFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	spilloveractionName := d.Get("name").(string)
 	spilloveraction := spillover.Spilloveraction{
-		Action:  d.Get("action").(string),
-		Name:    d.Get("name").(string),
+		Action: d.Get("action").(string),
+		Name:   d.Get("name").(string),
 	}
 
 	_, err := client.AddResource(service.Spilloveraction.Type(), spilloveractionName, &spilloveraction)

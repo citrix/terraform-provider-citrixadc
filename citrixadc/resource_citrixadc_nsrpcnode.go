@@ -21,23 +21,23 @@ func resourceCitrixAdcNsrpcnode() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"ipaddress": &schema.Schema{
+			"ipaddress": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"password": &schema.Schema{
+			"password": {
 				Type:      schema.TypeString,
 				Optional:  true,
 				Computed:  true,
 				Sensitive: true,
 			},
-			"secure": &schema.Schema{
+			"secure": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"srcip": &schema.Schema{
+			"srcip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

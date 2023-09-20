@@ -19,25 +19,25 @@ func resourceCitrixAdcAppfwxmlschema() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"src": &schema.Schema{
+			"src": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"comment": &schema.Schema{
+			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"overwrite": &schema.Schema{
+			"overwrite": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,

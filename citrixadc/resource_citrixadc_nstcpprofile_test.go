@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -33,13 +33,13 @@ func TestAccNstcpprofile_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNstcpprofileDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccNstcpprofile_basic_step1,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNstcpprofileExist("citrixadc_nstcpprofile.tf_test_profile", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccNstcpprofile_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNstcpprofileExist("citrixadc_nstcpprofile.tf_test_profile", nil),
@@ -71,7 +71,7 @@ func TestAccNstcpprofile_mpcapablecbit(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNstcpprofileDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccNstcpprofile_mpcapablecbit,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNstcpprofileExist("citrixadc_nstcpprofile.tf_test_profile_mpcapablecbit", nil),

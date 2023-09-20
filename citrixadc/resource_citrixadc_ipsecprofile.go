@@ -19,86 +19,86 @@ func resourceCitrixAdcIpsecprofile() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"encalgo": &schema.Schema{
+			"encalgo": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"hashalgo": &schema.Schema{
+			"hashalgo": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"ikeretryinterval": &schema.Schema{
+			"ikeretryinterval": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"ikeversion": &schema.Schema{
+			"ikeversion": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"lifetime": &schema.Schema{
+			"lifetime": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"livenesscheckinterval": &schema.Schema{
+			"livenesscheckinterval": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"peerpublickey": &schema.Schema{
+			"peerpublickey": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"perfectforwardsecrecy": &schema.Schema{
+			"perfectforwardsecrecy": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"privatekey": &schema.Schema{
+			"privatekey": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"psk": &schema.Schema{
+			"psk": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"publickey": &schema.Schema{
+			"publickey": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"replaywindowsize": &schema.Schema{
+			"replaywindowsize": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"retransmissiontime": &schema.Schema{
+			"retransmissiontime": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -112,7 +112,7 @@ func createIpsecprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createIpsecprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	ipsecprofileName := d.Get("name").(string)
-	
+
 	ipsecprofile := ipsec.Ipsecprofile{
 		Encalgo:               toStringList(d.Get("encalgo").([]interface{})),
 		Hashalgo:              toStringList(d.Get("hashalgo").([]interface{})),

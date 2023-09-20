@@ -20,30 +20,30 @@ func resourceCitrixAdcAuditsyslogglobal_auditsyslogpolicy_binding() *schema.Reso
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"policyname": &schema.Schema{
+			"policyname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"priority": &schema.Schema{
+			"priority": {
 				Type:     schema.TypeInt,
 				Required: true,
 				ForceNew: true,
 			},
-			"builtin": &schema.Schema{
+			"builtin": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"feature": &schema.Schema{
+			"feature": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"globalbindtype": &schema.Schema{
+			"globalbindtype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -147,7 +147,7 @@ func deleteAuditsyslogglobal_auditsyslogpolicy_bindingFunc(d *schema.ResourceDat
 		bind_type := v.(string)
 		args = append(args, fmt.Sprintf("globalbindtype:%s", bind_type))
 	} else {
-		args = append(args,fmt.Sprintf("globalbindtype:SYSTEM_GLOBAL"))
+		args = append(args, fmt.Sprintf("globalbindtype:SYSTEM_GLOBAL"))
 	}
 	err := client.DeleteResourceWithArgs("auditsyslogglobal_auditsyslogpolicy_binding", "", args)
 	if err != nil {

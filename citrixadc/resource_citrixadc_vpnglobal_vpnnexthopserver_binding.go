@@ -19,13 +19,13 @@ func resourceCitrixAdcVpnglobal_vpnnexthopserver_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"nexthopserver": &schema.Schema{
+			"nexthopserver": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"gotopriorityexpression": &schema.Schema{
+			"gotopriorityexpression": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -63,7 +63,7 @@ func readVpnglobal_vpnnexthopserver_bindingFunc(d *schema.ResourceData, meta int
 	log.Printf("[DEBUG] citrixadc-provider:  In readVpnglobal_vpnnexthopserver_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nexthopserver := d.Id()
-	
+
 	log.Printf("[DEBUG] citrixadc-provider: Reading vpnglobal_vpnnexthopserver_binding state %s", nexthopserver)
 
 	findParams := service.FindParams{
@@ -118,7 +118,7 @@ func deleteVpnglobal_vpnnexthopserver_bindingFunc(d *schema.ResourceData, meta i
 	client := meta.(*NetScalerNitroClient).client
 
 	nexthopserver := d.Id()
-	
+
 	args := make([]string, 0)
 	args = append(args, fmt.Sprintf("nexthopserver:%s", nexthopserver))
 

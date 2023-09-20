@@ -7,8 +7,8 @@ import (
 
 	"fmt"
 	"log"
-	"strings"
 	"net/url"
+	"strings"
 )
 
 func resourceCitrixAdcMapbmr_bmrv4network_binding() *schema.Resource {
@@ -21,19 +21,19 @@ func resourceCitrixAdcMapbmr_bmrv4network_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"network": &schema.Schema{
+			"network": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"netmask": &schema.Schema{
+			"netmask": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -49,7 +49,7 @@ func createMapbmr_bmrv4network_bindingFunc(d *schema.ResourceData, meta interfac
 	name := d.Get("name")
 	networkid := d.Get("network")
 	bindingId := fmt.Sprintf("%s,%s", name, networkid)
-	mapbmr_bmrv4network_binding := network.Mapbmrbmrv4networkbinding {
+	mapbmr_bmrv4network_binding := network.Mapbmrbmrv4networkbinding{
 		Name:    d.Get("name").(string),
 		Netmask: d.Get("netmask").(string),
 		Network: d.Get("network").(string),
@@ -145,7 +145,6 @@ func deleteMapbmr_bmrv4network_bindingFunc(d *schema.ResourceData, meta interfac
 	if val, ok := d.GetOk("netmask"); ok {
 		args = append(args, fmt.Sprintf("netmask:%s", url.QueryEscape(val.(string))))
 	}
-
 
 	err := client.DeleteResourceWithArgs("mapbmr_bmrv4network_binding", name, args)
 	if err != nil {

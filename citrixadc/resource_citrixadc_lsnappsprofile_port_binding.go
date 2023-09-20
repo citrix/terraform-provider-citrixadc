@@ -20,12 +20,12 @@ func resourceCitrixAdcLsnappsprofile_port_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"appsprofilename": &schema.Schema{
+			"appsprofilename": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"lsnport": &schema.Schema{
+			"lsnport": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
