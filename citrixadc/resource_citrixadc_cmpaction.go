@@ -21,26 +21,26 @@ func resourceCitrixAdcCmpaction() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"cmptype": &schema.Schema{
+			"cmptype": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"addvaryheader": &schema.Schema{
+			"addvaryheader": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"deltatype": &schema.Schema{
+			"deltatype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"varyheadervalue": &schema.Schema{
+			"varyheadervalue": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

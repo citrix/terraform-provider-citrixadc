@@ -21,168 +21,168 @@ func resourceCitrixAdcNspbr6() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"action": &schema.Schema{
+			"action": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 			},
-			"destipop": &schema.Schema{
+			"destipop": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"destipv6": &schema.Schema{
+			"destipv6": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"destipv6val": &schema.Schema{
+			"destipv6val": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"destport": &schema.Schema{
+			"destport": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"destportop": &schema.Schema{
+			"destportop": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"destportval": &schema.Schema{
+			"destportval": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"detail": &schema.Schema{
+			"detail": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"interface": &schema.Schema{
+			"interface": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"iptunnel": &schema.Schema{
+			"iptunnel": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"monitor": &schema.Schema{
+			"monitor": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"msr": &schema.Schema{
+			"msr": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"nexthop": &schema.Schema{
+			"nexthop": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"nexthopval": &schema.Schema{
+			"nexthopval": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"nexthopvlan": &schema.Schema{
+			"nexthopvlan": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"ownergroup": &schema.Schema{
+			"ownergroup": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"priority": &schema.Schema{
+			"priority": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"protocol": &schema.Schema{
+			"protocol": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"protocolnumber": &schema.Schema{
+			"protocolnumber": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"srcipop": &schema.Schema{
+			"srcipop": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"srcipv6": &schema.Schema{
+			"srcipv6": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"srcipv6val": &schema.Schema{
+			"srcipv6val": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"srcmac": &schema.Schema{
+			"srcmac": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"srcmacmask": &schema.Schema{
+			"srcmacmask": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"srcport": &schema.Schema{
+			"srcport": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"srcportop": &schema.Schema{
+			"srcportop": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"srcportval": &schema.Schema{
+			"srcportval": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"state": &schema.Schema{
+			"state": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"td": &schema.Schema{
+			"td": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"vlan": &schema.Schema{
+			"vlan": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"vxlan": &schema.Schema{
+			"vxlan": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"vxlanvlanmap": &schema.Schema{
+			"vxlanvlanmap": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

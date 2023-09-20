@@ -21,57 +21,57 @@ func resourceCitrixAdcTmsessionaction() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"defaultauthorizationaction": &schema.Schema{
+			"defaultauthorizationaction": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"homepage": &schema.Schema{
+			"homepage": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"httponlycookie": &schema.Schema{
+			"httponlycookie": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"kcdaccount": &schema.Schema{
+			"kcdaccount": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"persistentcookie": &schema.Schema{
+			"persistentcookie": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"persistentcookievalidity": &schema.Schema{
+			"persistentcookievalidity": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"sesstimeout": &schema.Schema{
+			"sesstimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"sso": &schema.Schema{
+			"sso": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ssocredential": &schema.Schema{
+			"ssocredential": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ssodomain": &schema.Schema{
+			"ssodomain": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -84,7 +84,7 @@ func createTmsessionactionFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createTmsessionactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	tmsessionactionName := d.Get("name").(string)
-	
+
 	tmsessionaction := tm.Tmsessionaction{
 		Defaultauthorizationaction: d.Get("defaultauthorizationaction").(string),
 		Homepage:                   d.Get("homepage").(string),

@@ -21,43 +21,43 @@ func resourceCitrixAdcNslimitidentifier() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"limitidentifier": &schema.Schema{
+			"limitidentifier": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"limittype": &schema.Schema{
+			"limittype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"maxbandwidth": &schema.Schema{
+			"maxbandwidth": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"mode": &schema.Schema{
+			"mode": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"selectorname": &schema.Schema{
+			"selectorname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"threshold": &schema.Schema{
+			"threshold": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"timeslice": &schema.Schema{
+			"timeslice": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"trapsintimeslice": &schema.Schema{
+			"trapsintimeslice": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,

@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -62,13 +62,13 @@ func TestAccTransformpolicylabel_transformpolicy_binding_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckTransformpolicylabel_transformpolicy_bindingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccTransformpolicylabel_transformpolicy_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransformpolicylabel_transformpolicy_bindingExist("citrixadc_transformpolicylabel_transformpolicy_binding.transformpolicylabel_transformpolicy_binding", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccTransformpolicylabel_transformpolicy_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransformpolicylabel_transformpolicy_bindingNotExist("citrixadc_transformpolicylabel_transformpolicy_binding.transformpolicylabel_transformpolicy_binding", "label_1,tf_trans_policy"),

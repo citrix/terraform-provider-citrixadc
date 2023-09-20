@@ -19,62 +19,62 @@ func resourceCitrixAdcLsntransportprofile() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"transportprofilename": &schema.Schema{
+			"transportprofilename": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"transportprotocol": &schema.Schema{
+			"transportprotocol": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"finrsttimeout": &schema.Schema{
+			"finrsttimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"groupsessionlimit": &schema.Schema{
+			"groupsessionlimit": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"portpreserveparity": &schema.Schema{
+			"portpreserveparity": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"portpreserverange": &schema.Schema{
+			"portpreserverange": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"portquota": &schema.Schema{
+			"portquota": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"sessionquota": &schema.Schema{
+			"sessionquota": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"sessiontimeout": &schema.Schema{
+			"sessiontimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"stuntimeout": &schema.Schema{
+			"stuntimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"syncheck": &schema.Schema{
+			"syncheck": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"synidletimeout": &schema.Schema{
+			"synidletimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,

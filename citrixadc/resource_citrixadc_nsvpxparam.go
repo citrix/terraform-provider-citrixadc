@@ -26,19 +26,19 @@ func resourceCitrixAdcNsvpxparam() *schema.Resource {
 		Read:          readNsvpxparamFunc,
 		Delete:        deleteNsvpxparamFunc,
 		Schema: map[string]*schema.Schema{
-			"cpuyield": &schema.Schema{
+			"cpuyield": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"masterclockcpu1": &schema.Schema{
+			"masterclockcpu1": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"ownernode": &schema.Schema{
+			"ownernode": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

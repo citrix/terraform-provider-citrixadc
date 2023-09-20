@@ -7,9 +7,8 @@ import (
 
 	"fmt"
 	"log"
-    "strings"
+	"strings"
 )
-
 
 func resourceCitrixAdcGslbservice_lbmonitor_binding() *schema.Resource {
 	return &schema.Resource{
@@ -21,29 +20,28 @@ func resourceCitrixAdcGslbservice_lbmonitor_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"monitor_name": &schema.Schema{
+			"monitor_name": {
 				Type:     schema.TypeString,
 				Required: true,
-                ForceNew: true,
+				ForceNew: true,
 			},
-			"monstate": &schema.Schema{
+			"monstate": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
-                ForceNew: true,
+				ForceNew: true,
 			},
-			"servicename": &schema.Schema{
+			"servicename": {
 				Type:     schema.TypeString,
 				Required: true,
-                ForceNew: true,
+				ForceNew: true,
 			},
-			"weight": &schema.Schema{
+			"weight": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
-                ForceNew: true,
+				ForceNew: true,
 			},
-			
 		},
 	}
 }
@@ -51,16 +49,15 @@ func resourceCitrixAdcGslbservice_lbmonitor_binding() *schema.Resource {
 func createGslbservice_lbmonitor_bindingFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createGslbservice_lbmonitor_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
-    servicename:= d.Get("servicename").(string)
-    monitor_name := d.Get("monitor_name").(string)
-	
+	servicename := d.Get("servicename").(string)
+	monitor_name := d.Get("monitor_name").(string)
+
 	bindingId := fmt.Sprintf("%s,%s", servicename, monitor_name)
 	gslbservice_lbmonitor_binding := gslb.Gslbservicelbmonitorbinding{
-		Monitorname:           d.Get("monitor_name").(string),
-		Monstate:           d.Get("monstate").(string),
-		Servicename:           d.Get("servicename").(string),
-		Weight:           d.Get("weight").(int),
-		
+		Monitorname: d.Get("monitor_name").(string),
+		Monstate:    d.Get("monstate").(string),
+		Servicename: d.Get("servicename").(string),
+		Weight:      d.Get("weight").(int),
 	}
 
 	err := client.UpdateUnnamedResource(service.Gslbservice_lbmonitor_binding.Type(), &gslbservice_lbmonitor_binding)
@@ -81,7 +78,7 @@ func createGslbservice_lbmonitor_bindingFunc(d *schema.ResourceData, meta interf
 func readGslbservice_lbmonitor_bindingFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] citrixadc-provider:  In readGslbservice_lbmonitor_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
-	bindingId:= d.Id()
+	bindingId := d.Id()
 	idSlice := strings.SplitN(bindingId, ",", 2)
 
 	if len(idSlice) < 2 {
@@ -92,8 +89,8 @@ func readGslbservice_lbmonitor_bindingFunc(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("Too many separators \",\" in id string")
 	}
 
-    servicename:= idSlice[0]
-    monitor_name := idSlice[1]
+	servicename := idSlice[0]
+	monitor_name := idSlice[1]
 
 	log.Printf("[DEBUG] citrixadc-provider: Reading gslbservice_lbmonitor_binding state %s", bindingId)
 
@@ -118,7 +115,7 @@ func readGslbservice_lbmonitor_bindingFunc(d *schema.ResourceData, meta interfac
 		return nil
 	}
 
-	// Iterate through results to find the one with the right id 
+	// Iterate through results to find the one with the right id
 	foundIndex := -1
 	for i, v := range dataArr {
 		if v["monitor_name"].(string) == monitor_name {
@@ -138,12 +135,10 @@ func readGslbservice_lbmonitor_bindingFunc(d *schema.ResourceData, meta interfac
 
 	data := dataArr[foundIndex]
 
-
 	d.Set("monitor_name", data["monitor_name"])
 	d.Set("monstate", data["monstate"])
 	d.Set("servicename", data["servicename"])
 	d.Set("weight", data["weight"])
-	
 
 	return nil
 
@@ -157,10 +152,10 @@ func deleteGslbservice_lbmonitor_bindingFunc(d *schema.ResourceData, meta interf
 	idSlice := strings.SplitN(bindingId, ",", 2)
 
 	name := idSlice[0]
-	monitor_name  := idSlice[1]
+	monitor_name := idSlice[1]
 
-	args := make([]string, 0) 
-	args = append(args, fmt.Sprintf("monitor_name:%s", monitor_name ))
+	args := make([]string, 0)
+	args = append(args, fmt.Sprintf("monitor_name:%s", monitor_name))
 
 	err := client.DeleteResourceWithArgs(service.Gslbservice_lbmonitor_binding.Type(), name, args)
 	if err != nil {

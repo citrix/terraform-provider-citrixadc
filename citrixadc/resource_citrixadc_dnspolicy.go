@@ -21,48 +21,48 @@ func resourceCitrixAdcDnspolicy() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"rule": &schema.Schema{
+			"rule": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 			},
-			"actionname": &schema.Schema{
+			"actionname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"cachebypass": &schema.Schema{
+			"cachebypass": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"drop": &schema.Schema{
+			"drop": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"logaction": &schema.Schema{
+			"logaction": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"preferredlocation": &schema.Schema{
+			"preferredlocation": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"preferredloclist": &schema.Schema{
+			"preferredloclist": {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 				Computed: true,
 			},
-			"viewname": &schema.Schema{
+			"viewname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

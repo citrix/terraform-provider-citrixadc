@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -32,10 +32,10 @@ const testAccNspbrs_basic = `
 func TestAccNspbrs_basic(t *testing.T) {
 	t.Skip("TODO: Need to find a way to test this resource!")
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccNspbrs_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNspbrsExist("citrixadc_nspbrs_apply.foo", nil),

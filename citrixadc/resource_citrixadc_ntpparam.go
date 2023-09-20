@@ -1,7 +1,6 @@
 package citrixadc
 
 import (
-
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -18,22 +17,22 @@ func resourceCitrixAdcNtpparam() *schema.Resource {
 		Update:        updateNtpparamFunc,
 		Delete:        deleteNtpparamFunc,
 		Schema: map[string]*schema.Schema{
-			"authentication": &schema.Schema{
+			"authentication": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"autokeylogsec": &schema.Schema{
+			"autokeylogsec": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"revokelogsec": &schema.Schema{
+			"revokelogsec": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"trustedkey": &schema.Schema{
+			"trustedkey": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
@@ -49,7 +48,7 @@ func createNtpparamFunc(d *schema.ResourceData, meta interface{}) error {
 	ntpparamName := resource.PrefixedUniqueId("tf-ntpparam-")
 
 	ntpparam := make(map[string]interface{})
-	
+
 	if v, ok := d.GetOk("authentication"); ok {
 		ntpparam["authentication"] = v.(string)
 	}

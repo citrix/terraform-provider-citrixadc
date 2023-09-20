@@ -21,16 +21,16 @@ func resourceCitrixAdcTmtrafficpolicy() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"action": &schema.Schema{
+			"action": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"rule": &schema.Schema{
+			"rule": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -42,7 +42,7 @@ func createTmtrafficpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createTmtrafficpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	tmtrafficpolicyName := d.Get("name").(string)
-	
+
 	tmtrafficpolicy := tm.Tmtrafficpolicy{
 		Action: d.Get("action").(string),
 		Name:   d.Get("name").(string),

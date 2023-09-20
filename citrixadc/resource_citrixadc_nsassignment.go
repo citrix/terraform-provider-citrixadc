@@ -21,48 +21,48 @@ func resourceCitrixAdcNsassignment() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"variable": &schema.Schema{
+			"variable": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 			},
-			"add": &schema.Schema{
+			"add": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"append": &schema.Schema{
+			"append": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"clear": &schema.Schema{
+			"clear": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"comment": &schema.Schema{
+			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"newname": &schema.Schema{
+			"newname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"set": &schema.Schema{
+			"set": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sub": &schema.Schema{
+			"sub": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

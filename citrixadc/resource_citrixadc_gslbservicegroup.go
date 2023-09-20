@@ -19,147 +19,147 @@ func resourceCitrixAdcGslbservicegroup() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"servicegroupname": &schema.Schema{
+			"servicegroupname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"appflowlog": &schema.Schema{
+			"appflowlog": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"autoscale": &schema.Schema{
+			"autoscale": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"cip": &schema.Schema{
+			"cip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"cipheader": &schema.Schema{
+			"cipheader": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"clttimeout": &schema.Schema{
+			"clttimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"comment": &schema.Schema{
+			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"delay": &schema.Schema{
+			"delay": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"downstateflush": &schema.Schema{
+			"downstateflush": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"dupweight": &schema.Schema{
+			"dupweight": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"graceful": &schema.Schema{
+			"graceful": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"hashid": &schema.Schema{
+			"hashid": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"healthmonitor": &schema.Schema{
+			"healthmonitor": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"includemembers": &schema.Schema{
+			"includemembers": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"maxbandwidth": &schema.Schema{
+			"maxbandwidth": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"maxclient": &schema.Schema{
+			"maxclient": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"monitornamesvc": &schema.Schema{
+			"monitornamesvc": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"monthreshold": &schema.Schema{
+			"monthreshold": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"port": &schema.Schema{
+			"port": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"publicip": &schema.Schema{
+			"publicip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"publicport": &schema.Schema{
+			"publicport": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"servername": &schema.Schema{
+			"servername": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"servicetype": &schema.Schema{
+			"servicetype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sitename": &schema.Schema{
+			"sitename": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sitepersistence": &schema.Schema{
+			"sitepersistence": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"siteprefix": &schema.Schema{
+			"siteprefix": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"state": &schema.Schema{
+			"state": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"svrtimeout": &schema.Schema{
+			"svrtimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"weight": &schema.Schema{
+			"weight": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,

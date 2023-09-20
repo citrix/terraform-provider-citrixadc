@@ -16,12 +16,12 @@ func resourceCitrixAdcAppfwpolicylabel() *schema.Resource {
 		Read:          readAppfwpolicylabelFunc,
 		Delete:        deleteAppfwpolicylabelFunc,
 		Schema: map[string]*schema.Schema{
-			"labelname": &schema.Schema{
+			"labelname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"policylabeltype": &schema.Schema{
+			"policylabeltype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

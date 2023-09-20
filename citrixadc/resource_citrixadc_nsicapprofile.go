@@ -20,78 +20,78 @@ func resourceCitrixAdcNsicapprofile() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"mode": &schema.Schema{
+			"mode": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 			},
-			"uri": &schema.Schema{
+			"uri": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 			},
-			"allow204": &schema.Schema{
+			"allow204": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"connectionkeepalive": &schema.Schema{
+			"connectionkeepalive": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"hostheader": &schema.Schema{
+			"hostheader": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"inserthttprequest": &schema.Schema{
+			"inserthttprequest": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"inserticapheaders": &schema.Schema{
+			"inserticapheaders": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"logaction": &schema.Schema{
+			"logaction": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"preview": &schema.Schema{
+			"preview": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"previewlength": &schema.Schema{
+			"previewlength": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"queryparams": &schema.Schema{
+			"queryparams": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"reqtimeout": &schema.Schema{
+			"reqtimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"reqtimeoutaction": &schema.Schema{
+			"reqtimeoutaction": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"useragent": &schema.Schema{
+			"useragent": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

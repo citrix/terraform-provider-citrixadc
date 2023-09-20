@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -46,7 +46,7 @@ func TestAccDbdbprofile_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDbdbprofileDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDbdbprofile_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDbdbprofileExist("citrixadc_dbdbprofile.tf_dbdbprofile", nil),
@@ -56,7 +56,7 @@ func TestAccDbdbprofile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_dbdbprofile.tf_dbdbprofile", "interpretquery", "YES"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccDbdbprofile_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDbdbprofileExist("citrixadc_dbdbprofile.tf_dbdbprofile", nil),

@@ -21,242 +21,242 @@ func resourceCitrixAdcCrvserver() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"servicetype": &schema.Schema{
+			"servicetype": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 			},
-			"appflowlog": &schema.Schema{
+			"appflowlog": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"arp": &schema.Schema{
+			"arp": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"backendssl": &schema.Schema{
+			"backendssl": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"backupvserver": &schema.Schema{
+			"backupvserver": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"cachetype": &schema.Schema{
+			"cachetype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"cachevserver": &schema.Schema{
+			"cachevserver": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"clttimeout": &schema.Schema{
+			"clttimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"comment": &schema.Schema{
+			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"destinationvserver": &schema.Schema{
+			"destinationvserver": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"disableprimaryondown": &schema.Schema{
+			"disableprimaryondown": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"dnsvservername": &schema.Schema{
+			"dnsvservername": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"domain": &schema.Schema{
+			"domain": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"downstateflush": &schema.Schema{
+			"downstateflush": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"format": &schema.Schema{
+			"format": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ghost": &schema.Schema{
+			"ghost": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"httpprofilename": &schema.Schema{
+			"httpprofilename": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"icmpvsrresponse": &schema.Schema{
+			"icmpvsrresponse": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ipset": &schema.Schema{
+			"ipset": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ipv46": &schema.Schema{
+			"ipv46": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"l2conn": &schema.Schema{
+			"l2conn": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"listenpolicy": &schema.Schema{
+			"listenpolicy": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"listenpriority": &schema.Schema{
+			"listenpriority": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"map": &schema.Schema{
+			"map": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"netprofile": &schema.Schema{
+			"netprofile": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"onpolicymatch": &schema.Schema{
+			"onpolicymatch": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"originusip": &schema.Schema{
+			"originusip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"port": &schema.Schema{
+			"port": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"precedence": &schema.Schema{
+			"precedence": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"probeport": &schema.Schema{
+			"probeport": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"probeprotocol": &schema.Schema{
+			"probeprotocol": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"probesuccessresponsecode": &schema.Schema{
+			"probesuccessresponsecode": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"range": &schema.Schema{
+			"range": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"redirect": &schema.Schema{
+			"redirect": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"redirecturl": &schema.Schema{
+			"redirecturl": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"reuse": &schema.Schema{
+			"reuse": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"rhistate": &schema.Schema{
+			"rhistate": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sopersistencetimeout": &schema.Schema{
+			"sopersistencetimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"sothreshold": &schema.Schema{
+			"sothreshold": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"srcipexpr": &schema.Schema{
+			"srcipexpr": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"state": &schema.Schema{
+			"state": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"tcpprobeport": &schema.Schema{
+			"tcpprobeport": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"tcpprofilename": &schema.Schema{
+			"tcpprofilename": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"td": &schema.Schema{
+			"td": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"useoriginipportforcache": &schema.Schema{
+			"useoriginipportforcache": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"useportrange": &schema.Schema{
+			"useportrange": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"via": &schema.Schema{
+			"via": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

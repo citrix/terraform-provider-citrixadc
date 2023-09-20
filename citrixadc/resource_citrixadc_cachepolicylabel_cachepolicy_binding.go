@@ -20,40 +20,40 @@ func resourceCitrixAdcCachepolicylabel_cachepolicy_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"policyname": &schema.Schema{
+			"policyname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"priority": &schema.Schema{
+			"priority": {
 				Type:     schema.TypeInt,
 				Required: true,
 				ForceNew: true,
 			},
-			"labelname": &schema.Schema{
+			"labelname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"gotopriorityexpression": &schema.Schema{
+			"gotopriorityexpression": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"invoke": &schema.Schema{
+			"invoke": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"invokelabelname": &schema.Schema{
+			"invokelabelname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"labeltype": &schema.Schema{
+			"labeltype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -170,7 +170,7 @@ func deleteCachepolicylabel_cachepolicy_bindingFunc(d *schema.ResourceData, meta
 
 	args := make([]string, 0)
 	args = append(args, fmt.Sprintf("policyname:%s", policyname))
-	args = append(args, fmt.Sprintf("priority:%v" , d.Get("priority").(int)))
+	args = append(args, fmt.Sprintf("priority:%v", d.Get("priority").(int)))
 
 	err := client.DeleteResourceWithArgs(service.Cachepolicylabel_cachepolicy_binding.Type(), name, args)
 	if err != nil {

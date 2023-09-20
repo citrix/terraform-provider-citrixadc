@@ -19,151 +19,151 @@ func resourceCitrixAdcAnalyticsprofile() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"type": &schema.Schema{
+			"type": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"allhttpheaders": &schema.Schema{
+			"allhttpheaders": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"auditlogs": &schema.Schema{
+			"auditlogs": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"collectors": &schema.Schema{
+			"collectors": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"cqareporting": &schema.Schema{
+			"cqareporting": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"events": &schema.Schema{
+			"events": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"grpcstatus": &schema.Schema{
+			"grpcstatus": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"httpauthentication": &schema.Schema{
+			"httpauthentication": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"httpclientsidemeasurements": &schema.Schema{
+			"httpclientsidemeasurements": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"httpcontenttype": &schema.Schema{
+			"httpcontenttype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"httpcookie": &schema.Schema{
+			"httpcookie": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"httpdomainname": &schema.Schema{
+			"httpdomainname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"httphost": &schema.Schema{
+			"httphost": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"httplocation": &schema.Schema{
+			"httplocation": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"httpmethod": &schema.Schema{
+			"httpmethod": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"httppagetracking": &schema.Schema{
+			"httppagetracking": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"httpreferer": &schema.Schema{
+			"httpreferer": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"httpsetcookie": &schema.Schema{
+			"httpsetcookie": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"httpsetcookie2": &schema.Schema{
+			"httpsetcookie2": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"httpurl": &schema.Schema{
+			"httpurl": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"httpurlquery": &schema.Schema{
+			"httpurlquery": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"httpuseragent": &schema.Schema{
+			"httpuseragent": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"httpvia": &schema.Schema{
+			"httpvia": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"httpxforwardedforheader": &schema.Schema{
+			"httpxforwardedforheader": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"integratedcache": &schema.Schema{
+			"integratedcache": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"metrics": &schema.Schema{
+			"metrics": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"outputmode": &schema.Schema{
+			"outputmode": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"tcpburstreporting": &schema.Schema{
+			"tcpburstreporting": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"urlcategory": &schema.Schema{
+			"urlcategory": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

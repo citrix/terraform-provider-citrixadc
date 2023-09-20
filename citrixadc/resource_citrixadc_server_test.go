@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -36,7 +36,7 @@ func TestAccServer_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServerDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccServer_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExist("citrixadc_server.foo", nil),
@@ -199,7 +199,7 @@ func TestAccServer_enable_disable(t *testing.T) {
 		CheckDestroy: testAccCheckServerDestroy,
 		Steps: []resource.TestStep{
 			// Create enabled
-			resource.TestStep{
+			{
 				Config: testAccServerEnableDisable_enabled,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExist("citrixadc_server.tf_enable_disable_test_svr", nil),
@@ -207,7 +207,7 @@ func TestAccServer_enable_disable(t *testing.T) {
 				),
 			},
 			// Disable
-			resource.TestStep{
+			{
 				Config: testAccServerEnableDisable_disabled,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExist("citrixadc_server.tf_enable_disable_test_svr", nil),
@@ -215,7 +215,7 @@ func TestAccServer_enable_disable(t *testing.T) {
 				),
 			},
 			// Re enable
-			resource.TestStep{
+			{
 				Config: testAccServerEnableDisable_enabled,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExist("citrixadc_server.tf_enable_disable_test_svr", nil),

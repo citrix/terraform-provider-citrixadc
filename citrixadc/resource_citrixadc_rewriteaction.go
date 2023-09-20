@@ -23,47 +23,47 @@ func resourceCitrixAdcRewriteaction() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"bypasssafetycheck": &schema.Schema{
+			"bypasssafetycheck": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"comment": &schema.Schema{
+			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"pattern": &schema.Schema{
+			"pattern": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"refinesearch": &schema.Schema{
+			"refinesearch": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"search": &schema.Schema{
+			"search": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"stringbuilderexpr": &schema.Schema{
+			"stringbuilderexpr": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"target": &schema.Schema{
+			"target": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"type": &schema.Schema{
+			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

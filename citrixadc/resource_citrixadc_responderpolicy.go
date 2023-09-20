@@ -28,37 +28,37 @@ func resourceCitrixAdcResponderpolicy() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"action": &schema.Schema{
+			"action": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"appflowaction": &schema.Schema{
+			"appflowaction": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"comment": &schema.Schema{
+			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"logaction": &schema.Schema{
+			"logaction": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"rule": &schema.Schema{
+			"rule": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"undefaction": &schema.Schema{
+			"undefaction": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -70,37 +70,37 @@ func resourceCitrixAdcResponderpolicy() *schema.Resource {
 				Set:      globalbindingMappingHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"gotopriorityexpression": &schema.Schema{
+						"gotopriorityexpression": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"invoke": &schema.Schema{
+						"invoke": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Computed: true,
 						},
-						"labelname": &schema.Schema{
+						"labelname": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"labeltype": &schema.Schema{
+						"labeltype": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"policyname": &schema.Schema{
+						"policyname": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"priority": &schema.Schema{
+						"priority": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 						},
-						"type": &schema.Schema{
+						"type": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -115,37 +115,37 @@ func resourceCitrixAdcResponderpolicy() *schema.Resource {
 				Set:      lbVserverMappingHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"bindpoint": &schema.Schema{
+						"bindpoint": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"gotopriorityexpression": &schema.Schema{
+						"gotopriorityexpression": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"invoke": &schema.Schema{
+						"invoke": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Computed: true,
 						},
-						"labelname": &schema.Schema{
+						"labelname": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"labeltype": &schema.Schema{
+						"labeltype": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"name": &schema.Schema{
+						"name": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"priority": &schema.Schema{
+						"priority": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
@@ -159,47 +159,47 @@ func resourceCitrixAdcResponderpolicy() *schema.Resource {
 				Computed: false,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"bindpoint": &schema.Schema{
+						"bindpoint": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"gotopriorityexpression": &schema.Schema{
+						"gotopriorityexpression": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"invoke": &schema.Schema{
+						"invoke": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Computed: true,
 						},
-						"labelname": &schema.Schema{
+						"labelname": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"labeltype": &schema.Schema{
+						"labeltype": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"name": &schema.Schema{
+						"name": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"policyname": &schema.Schema{
+						"policyname": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"priority": &schema.Schema{
+						"priority": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 						},
-						"targetlbvserver": &schema.Schema{
+						"targetlbvserver": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -626,7 +626,7 @@ func readLbvserverBindings(d *schema.ResourceData, meta interface{}) error {
 	// Process values into new list of maps
 	processedBindings := make([]interface{}, len(lbVserverBindings))
 	// Initialize maps
-	for i, _ := range processedBindings {
+	for i := range processedBindings {
 		processedBindings[i] = make(map[string]interface{})
 	}
 
@@ -812,7 +812,7 @@ func readCsvserverBindings(d *schema.ResourceData, meta interface{}) error {
 	// Process values into new list of maps
 	processedBindings := make([]interface{}, len(csVserverBindings))
 	// Initialize maps
-	for i, _ := range processedBindings {
+	for i := range processedBindings {
 		processedBindings[i] = make(map[string]interface{})
 	}
 

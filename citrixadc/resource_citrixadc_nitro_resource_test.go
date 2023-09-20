@@ -86,7 +86,7 @@ func TestAccNitroResource_object_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckObjectDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccNitroResource_object_basic_step1,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists("citrixadc_nitro_resource.tf_lbvserver", nil),
@@ -96,7 +96,7 @@ func TestAccNitroResource_object_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_nitro_resource.tf_lbvserver", "attributes.ipv46", "10.10.10.33"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccNitroResource_object_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists("citrixadc_nitro_resource.tf_lbvserver", nil),
@@ -106,7 +106,7 @@ func TestAccNitroResource_object_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_nitro_resource.tf_lbvserver", "attributes.ipv46", "10.10.10.44"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccNitroResource_object_basic_step3,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists("citrixadc_nitro_resource.tf_lbvserver", nil),
@@ -274,14 +274,14 @@ func TestAccNitroResource_binding_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBindingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccNitroResource_binding_basic_step1,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBindingExists("citrixadc_nitro_resource.tf_lbvserver_service_bind", nil),
 					resource.TestCheckResourceAttr("citrixadc_nitro_resource.tf_lbvserver_service_bind", "non_updateable_attributes.weight", "2"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccNitroResource_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBindingExists("citrixadc_nitro_resource.tf_lbvserver_service_bind", nil),
@@ -499,7 +499,7 @@ func TestAccNitroResource_object_by_args_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckObjectByArgsDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccNitroResource_object_by_args_basic_step1,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectByArgsExists("citrixadc_nitro_resource.tf_snmpmanager", nil),
@@ -507,7 +507,7 @@ func TestAccNitroResource_object_by_args_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_nitro_resource.tf_snmpmanager", "attributes.domainresolveretry", "10"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccNitroResource_object_by_args_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectByArgsExists("citrixadc_nitro_resource.tf_snmpmanager", nil),
@@ -515,7 +515,7 @@ func TestAccNitroResource_object_by_args_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_nitro_resource.tf_snmpmanager", "attributes.domainresolveretry", "30"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccNitroResource_object_by_args_basic_step3,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectByArgsExists("citrixadc_nitro_resource.tf_snmpmanager", nil),

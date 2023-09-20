@@ -18,7 +18,7 @@ func resourceCitrixAdcDnssuffix() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"dnssuffix": &schema.Schema{
+			"dnssuffix": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,

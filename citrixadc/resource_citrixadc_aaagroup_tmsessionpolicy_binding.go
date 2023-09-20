@@ -20,28 +20,28 @@ func resourceCitrixAdcAaagroup_tmsessionpolicy_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"groupname": &schema.Schema{
+			"groupname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"priority": &schema.Schema{
+			"priority": {
 				Type:     schema.TypeInt,
 				Required: true,
 				ForceNew: true,
 			},
-			"policy": &schema.Schema{
+			"policy": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"gotopriorityexpression": &schema.Schema{
+			"gotopriorityexpression": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"type": &schema.Schema{
+			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -65,7 +65,7 @@ func createAaagroup_tmsessionpolicy_bindingFunc(d *schema.ResourceData, meta int
 		Type:                   d.Get("type").(string),
 	}
 
-	err := client.UpdateUnnamedResource(service.Aaagroup_tmsessionpolicy_binding.Type(),&aaagroup_tmsessionpolicy_binding)
+	err := client.UpdateUnnamedResource(service.Aaagroup_tmsessionpolicy_binding.Type(), &aaagroup_tmsessionpolicy_binding)
 	if err != nil {
 		return err
 	}

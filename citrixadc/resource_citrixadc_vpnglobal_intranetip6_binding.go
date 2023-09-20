@@ -20,19 +20,19 @@ func resourceCitrixAdcVpnglobal_intranetip6_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"intranetip6": &schema.Schema{
+			"intranetip6": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"gotopriorityexpression": &schema.Schema{
+			"gotopriorityexpression": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"numaddr": &schema.Schema{
+			"numaddr": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -46,7 +46,7 @@ func createVpnglobal_intranetip6_bindingFunc(d *schema.ResourceData, meta interf
 	log.Printf("[DEBUG]  citrixadc-provider: In createVpnglobal_intranetip6_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	intranetip6 := d.Get("intranetip6").(string)
-	
+
 	vpnglobal_intranetip6_binding := vpn.Vpnglobalintranetip6binding{
 		Gotopriorityexpression: d.Get("gotopriorityexpression").(string),
 		Intranetip6:            d.Get("intranetip6").(string),
@@ -72,7 +72,7 @@ func readVpnglobal_intranetip6_bindingFunc(d *schema.ResourceData, meta interfac
 	log.Printf("[DEBUG] citrixadc-provider:  In readVpnglobal_intranetip6_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	intranetip6 := d.Id()
-	
+
 	log.Printf("[DEBUG] citrixadc-provider: Reading vpnglobal_intranetip6_binding state %s", intranetip6)
 
 	findParams := service.FindParams{

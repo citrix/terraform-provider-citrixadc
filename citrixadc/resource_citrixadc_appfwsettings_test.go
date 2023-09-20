@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -83,7 +83,7 @@ func TestAccAppfwsettings_basic(t *testing.T) {
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAppfwsettings_basic_step1,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppfwsettingsExist("citrixadc_appfwsettings.tf_appfwsettings", nil),
@@ -108,7 +108,7 @@ func TestAccAppfwsettings_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_appfwsettings.tf_appfwsettings", "proxyport", "9090"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAppfwsettings_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppfwsettingsExist("citrixadc_appfwsettings.tf_appfwsettings", nil),

@@ -19,47 +19,47 @@ func resourceCitrixAdcAaatacacsparams() *schema.Resource {
 		Update:        updateAaatacacsparamsFunc,
 		Delete:        deleteAaatacacsparamsFunc,
 		Schema: map[string]*schema.Schema{
-			"accounting": &schema.Schema{
+			"accounting": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"auditfailedcmds": &schema.Schema{
+			"auditfailedcmds": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"authorization": &schema.Schema{
+			"authorization": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"authtimeout": &schema.Schema{
+			"authtimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"defaultauthenticationgroup": &schema.Schema{
+			"defaultauthenticationgroup": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"groupattrname": &schema.Schema{
+			"groupattrname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"serverip": &schema.Schema{
+			"serverip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"serverport": &schema.Schema{
+			"serverport": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"tacacssecret": &schema.Schema{
+			"tacacssecret": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -72,7 +72,7 @@ func createAaatacacsparamsFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAaatacacsparamsFunc")
 	client := meta.(*NetScalerNitroClient).client
 	aaatacacsparamsName := resource.PrefixedUniqueId("tf-aaatacacsparams-")
-	
+
 	aaatacacsparams := aaa.Aaatacacsparams{
 		Accounting:                 d.Get("accounting").(string),
 		Auditfailedcmds:            d.Get("auditfailedcmds").(string),

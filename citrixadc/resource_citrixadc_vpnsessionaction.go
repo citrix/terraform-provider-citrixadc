@@ -723,7 +723,7 @@ func updateVpnsessionactionFunc(d *schema.ResourceData, meta interface{}) error 
 	}
 	if d.HasChange("forcecleanup") {
 		log.Printf("[DEBUG]  citrixadc-provider: Forcecleanup has changed for vpnsessionaction %s, starting update", vpnsessionactionName)
-		vpnsessionaction.Forcecleanup = toStringList(d.Get("forcecleanup").([]interface{})) 
+		vpnsessionaction.Forcecleanup = toStringList(d.Get("forcecleanup").([]interface{}))
 		hasChange = true
 	}
 	if d.HasChange("forcedtimeout") {
@@ -758,7 +758,7 @@ func updateVpnsessionactionFunc(d *schema.ResourceData, meta interface{}) error 
 	}
 	if d.HasChange("httpport") {
 		log.Printf("[DEBUG]  citrixadc-provider: Httpport has changed for vpnsessionaction %s, starting update", vpnsessionactionName)
-		vpnsessionaction.Httpport = toIntegerList(d.Get("httpport").([]interface{})) 
+		vpnsessionaction.Httpport = toIntegerList(d.Get("httpport").([]interface{}))
 		hasChange = true
 	}
 	if d.HasChange("httpproxy") {

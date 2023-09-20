@@ -19,12 +19,12 @@ func resourceCitrixAdcNslicenseparameters() *schema.Resource {
 		Update:        updateNslicenseparametersFunc,
 		Delete:        deleteNslicenseparametersFunc,
 		Schema: map[string]*schema.Schema{
-			"alert1gracetimeout": &schema.Schema{
+			"alert1gracetimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"alert2gracetimeout": &schema.Schema{
+			"alert2gracetimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -70,9 +70,9 @@ func readNslicenseparametersFunc(d *schema.ResourceData, meta interface{}) error
 		return nil
 	}
 	log.Println(data)
-	val,_ := strconv.Atoi(data["alert1gracetimeout"].(string))
+	val, _ := strconv.Atoi(data["alert1gracetimeout"].(string))
 	d.Set("alert1gracetimeout", val)
-	val,_ = strconv.Atoi(data["alert2gracetimeout"].(string))
+	val, _ = strconv.Atoi(data["alert2gracetimeout"].(string))
 	d.Set("alert2gracetimeout", val)
 
 	return nil
@@ -95,13 +95,12 @@ func updateNslicenseparametersFunc(d *schema.ResourceData, meta interface{}) err
 	if err != nil {
 		return fmt.Errorf("Error updating nslicenseparameters")
 	}
-	
+
 	return readNslicenseparametersFunc(d, meta)
 }
 
 func deleteNslicenseparametersFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNslicenseparametersFunc")
-
 
 	d.SetId("")
 

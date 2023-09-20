@@ -30,7 +30,7 @@ resource "citrixadc_vpnvserver_appflowpolicy_binding" "tf_bind" {
 
 * `name` - (Required) Name of the virtual server.
 * `policy` - (Required) The name of the policy, if any, bound to the VPN virtual server.
-* `bindpoint` - (Optional) Bindpoint to which the policy is bound.
+* `bindpoint` - (Required) Bindpoint to which the policy is bound.
 * `gotopriorityexpression` - (Optional) Next priority expression.
 * `groupextraction` - (Optional) Binds the authentication policy to a tertiary chain which will be used only for group extraction.  The user will not authenticate against this server, and this will only be called if primary and/or secondary authentication has succeeded.
 * `priority` - (Optional) Integer specifying the policy's priority. The lower the number, the higher the priority. Policies are evaluated in the order of their priority numbers. Maximum value for default syntax policies is 2147483647 and for classic policies is 64000.
@@ -41,7 +41,7 @@ resource "citrixadc_vpnvserver_appflowpolicy_binding" "tf_bind" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the vpnvserver_appflowpolicy_binding. t is the concatenation of the `name` and `policy` attributes separated by a comma.
+* `id` - The id of the vpnvserver_appflowpolicy_binding. It is the concatenation of the `name`, `policy` and `bindpoint` attributes separated by a comma.
 
 
 ## Import
@@ -49,5 +49,5 @@ In addition to the arguments, the following attributes are available:
 A vpnvserver_appflowpolicy_binding can be imported using its id, e.g.
 
 ```shell
-terraform import citrixadc_vpnvserver_appflowpolicy_binding.tf_bind tf_vpnvserver,tf_appflowpolicy
+terraform import citrixadc_vpnvserver_appflowpolicy_binding.tf_bind tf_vpnvserver,tf_appflowpolicy,ICA_REQUEST
 ```

@@ -19,7 +19,7 @@ func resourceCitrixAdcNsconsoleloginprompt() *schema.Resource {
 		Update:        updateNsconsoleloginpromptFunc,
 		Delete:        deleteNsconsoleloginpromptFunc,
 		Schema: map[string]*schema.Schema{
-			"promptstring": &schema.Schema{
+			"promptstring": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
@@ -92,7 +92,7 @@ func updateNsconsoleloginpromptFunc(d *schema.ResourceData, meta interface{}) er
 
 func deleteNsconsoleloginpromptFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNsconsoleloginpromptFunc")
-	
+
 	// nsconsoleloginprompt do not have DELETE operation, but this function is required to set the ID to ""
 	d.SetId("")
 

@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -57,14 +57,14 @@ func TestAccServicegroup_servicegroupmember_binding_ipv4(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServicegroup_servicegroupmember_bindingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccServicegroup_servicegroupmember_binding_ipv4_step1,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServicegroup_servicegroupmember_bindingExist("citrixadc_servicegroup_servicegroupmember_binding.tf_binding", nil),
 					testAccCheckServicegroup_servicegroupmember_binding_not_exists("tf_servicegroup,10.78.22.33,80", true),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccServicegroup_servicegroupmember_binding_ipv4_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServicegroup_servicegroupmember_binding_not_exists("tf_servicegroup,10.78.22.33,80", false),
@@ -105,14 +105,14 @@ func TestAccServicegroup_servicegroupmember_binding_ipv6(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServicegroup_servicegroupmember_bindingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccServicegroup_servicegroupmember_binding_ipv6_step1,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServicegroup_servicegroupmember_bindingExist("citrixadc_servicegroup_servicegroupmember_binding.tf_binding", nil),
 					testAccCheckServicegroup_servicegroupmember_binding_not_exists("tf_servicegroup,ff::8839,80", true),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccServicegroup_servicegroupmember_binding_ipv6_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServicegroup_servicegroupmember_binding_not_exists("tf_servicegroup,ff::8839,80", false),
@@ -164,14 +164,14 @@ func TestAccServicegroup_servicegroupmember_binding_server_no_port(t *testing.T)
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServicegroup_servicegroupmember_bindingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccServicegroup_servicegroupmember_binding_server_no_port_step1,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServicegroup_servicegroupmember_bindingExist("citrixadc_servicegroup_servicegroupmember_binding.tf_binding", nil),
 					testAccCheckServicegroup_servicegroupmember_binding_not_exists("tf_servicegroup,tf_server", true),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccServicegroup_servicegroupmember_binding_server_no_port_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServicegroup_servicegroupmember_binding_not_exists("tf_servicegroup,tf_server", false),
@@ -223,14 +223,14 @@ func TestAccServicegroup_servicegroupmember_binding_server_with_port(t *testing.
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServicegroup_servicegroupmember_bindingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccServicegroup_servicegroupmember_binding_server_with_port_step1,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServicegroup_servicegroupmember_bindingExist("citrixadc_servicegroup_servicegroupmember_binding.tf_binding", nil),
 					testAccCheckServicegroup_servicegroupmember_binding_not_exists("tf_servicegroup,tf_server,80", true),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccServicegroup_servicegroupmember_binding_server_with_port_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServicegroup_servicegroupmember_binding_not_exists("tf_servicegroup,tf_server,80", false),
@@ -289,7 +289,7 @@ func TestAccServicegroup_servicegroupmember_binding_mixed_bindings(t *testing.T)
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServicegroup_servicegroupmember_bindingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccServicegroup_servicegroupmember_binding_mixed_bindings_step1,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServicegroup_servicegroupmember_bindingExist("citrixadc_servicegroup_servicegroupmember_binding.tf_binding", nil),
@@ -298,7 +298,7 @@ func TestAccServicegroup_servicegroupmember_binding_mixed_bindings(t *testing.T)
 					testAccCheckServicegroup_servicegroupmember_binding_not_exists("tf_servicegroup,10.78.22.33,80", true),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccServicegroup_servicegroupmember_binding_mixed_bindings_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServicegroup_servicegroupmember_binding_not_exists("tf_servicegroup,tf_server", false),

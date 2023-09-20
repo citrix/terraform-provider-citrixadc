@@ -19,22 +19,22 @@ func resourceCitrixAdcLsnrtspalgprofile() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"rtspalgprofilename": &schema.Schema{
+			"rtspalgprofilename": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"rtspportrange": &schema.Schema{
+			"rtspportrange": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"rtspidletimeout": &schema.Schema{
+			"rtspidletimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"rtsptransportprotocol": &schema.Schema{
+			"rtsptransportprotocol": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

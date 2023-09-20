@@ -21,31 +21,31 @@ func resourceCitrixAdcSnmpuser() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"group": &schema.Schema{
+			"group": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"authpasswd": &schema.Schema{
+			"authpasswd": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"authtype": &schema.Schema{
+			"authtype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"privpasswd": &schema.Schema{
+			"privpasswd": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"privtype": &schema.Schema{
+			"privtype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -58,7 +58,7 @@ func createSnmpuserFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSnmpuserFunc")
 	client := meta.(*NetScalerNitroClient).client
 	snmpuserName := d.Get("name").(string)
-	
+
 	snmpuser := snmp.Snmpuser{
 		Authpasswd: d.Get("authpasswd").(string),
 		Authtype:   d.Get("authtype").(string),

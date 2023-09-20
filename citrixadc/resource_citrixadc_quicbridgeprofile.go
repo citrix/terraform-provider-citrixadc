@@ -22,17 +22,17 @@ func resourceCitrixAdcQuicbridgeprofile() *schema.Resource {
 		Update:        updateQuicbridgeprofileFunc,
 		Delete:        deleteQuicbridgeprofileFunc,
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"routingalgorithm": &schema.Schema{
+			"routingalgorithm": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"serveridlength": &schema.Schema{
+			"serveridlength": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,

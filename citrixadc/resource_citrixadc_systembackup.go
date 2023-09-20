@@ -3,8 +3,8 @@ package citrixadc
 import (
 	"github.com/citrix/adc-nitro-go/resource/config/system"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"log"
@@ -17,7 +17,7 @@ func resourceCitrixAdcSystembackup() *schema.Resource {
 		Read:          schema.Noop,
 		Delete:        deleteSystembackupFunc,
 		Schema: map[string]*schema.Schema{
-			"filename": &schema.Schema{
+			"filename": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -29,13 +29,13 @@ func resourceCitrixAdcSystembackup() *schema.Resource {
 func createSystembackupFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSystembackupFunc")
 	client := meta.(*NetScalerNitroClient).client
-	systembackupName :=  resource.PrefixedUniqueId(d.Get("filename").(string) + "-")
+	systembackupName := resource.PrefixedUniqueId(d.Get("filename").(string) + "-")
 
 	systembackup := system.Systembackup{
-		Filename:         d.Get("filename").(string),
+		Filename: d.Get("filename").(string),
 	}
 
-	_, err := client.AddResource(service.Systembackup.Type(), systembackupName, &systembackup, )
+	_, err := client.AddResource(service.Systembackup.Type(), systembackupName, &systembackup)
 	if err != nil {
 		return err
 	}

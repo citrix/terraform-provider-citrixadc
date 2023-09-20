@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -51,26 +51,26 @@ func TestAccUservserver_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckUservserverDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccUservserver_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUservserverExist("citrixadc_uservserver.tf_uservserver", nil),
-					resource.TestCheckResourceAttr("citrixadc_uservserver.tf_uservserver", "name", "my_user_vserver"), 
-					resource.TestCheckResourceAttr("citrixadc_uservserver.tf_uservserver", "userprotocol", "MQTT"), 
-					resource.TestCheckResourceAttr("citrixadc_uservserver.tf_uservserver", "ipaddress", "10.222.74.180"), 
+					resource.TestCheckResourceAttr("citrixadc_uservserver.tf_uservserver", "name", "my_user_vserver"),
+					resource.TestCheckResourceAttr("citrixadc_uservserver.tf_uservserver", "userprotocol", "MQTT"),
+					resource.TestCheckResourceAttr("citrixadc_uservserver.tf_uservserver", "ipaddress", "10.222.74.180"),
 					resource.TestCheckResourceAttr("citrixadc_uservserver.tf_uservserver", "port", "3200"),
-					resource.TestCheckResourceAttr("citrixadc_uservserver.tf_uservserver", "defaultlb", "mysv"), 
+					resource.TestCheckResourceAttr("citrixadc_uservserver.tf_uservserver", "defaultlb", "mysv"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccUservserver_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUservserverExist("citrixadc_uservserver.tf_uservserver", nil),
-					resource.TestCheckResourceAttr("citrixadc_uservserver.tf_uservserver", "name", "my_user_vserver"), 
-					resource.TestCheckResourceAttr("citrixadc_uservserver.tf_uservserver", "userprotocol", "my_user_protocol"), 
-					resource.TestCheckResourceAttr("citrixadc_uservserver.tf_uservserver", "ipaddress", "10.222.74.200"), 
+					resource.TestCheckResourceAttr("citrixadc_uservserver.tf_uservserver", "name", "my_user_vserver"),
+					resource.TestCheckResourceAttr("citrixadc_uservserver.tf_uservserver", "userprotocol", "my_user_protocol"),
+					resource.TestCheckResourceAttr("citrixadc_uservserver.tf_uservserver", "ipaddress", "10.222.74.200"),
 					resource.TestCheckResourceAttr("citrixadc_uservserver.tf_uservserver", "port", "3500"),
-					resource.TestCheckResourceAttr("citrixadc_uservserver.tf_uservserver", "defaultlb", "mysv"), 
+					resource.TestCheckResourceAttr("citrixadc_uservserver.tf_uservserver", "defaultlb", "mysv"),
 				),
 			},
 		},

@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -64,13 +64,13 @@ func TestAccVpnvserver_responderpolicy_binding_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpnvserver_responderpolicy_bindingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccVpnvserver_responderpolicy_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnvserver_responderpolicy_bindingExist("citrixadc_vpnvserver_responderpolicy_binding.tf_bind", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccVpnvserver_responderpolicy_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnvserver_responderpolicy_bindingNotExist("citrixadc_vpnvserver_responderpolicy_binding.tf_bind", "tf_examplevserver,tf_responder_policy"),

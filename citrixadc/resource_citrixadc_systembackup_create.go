@@ -3,8 +3,8 @@ package citrixadc
 import (
 	"github.com/citrix/adc-nitro-go/resource/config/system"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"log"
@@ -17,27 +17,27 @@ func resourceCitrixAdcSystemCreatebackup() *schema.Resource {
 		Read:          readSystembackupCreateFunc,
 		Delete:        deleteSystembackupCreateFunc,
 		Schema: map[string]*schema.Schema{
-			"comment": &schema.Schema{
+			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"filename": &schema.Schema{
+			"filename": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"includekernel": &schema.Schema{
+			"includekernel": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"level": &schema.Schema{
+			"level": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"uselocaltimezone": &schema.Schema{
+			"uselocaltimezone": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				ForceNew: true,
@@ -49,12 +49,12 @@ func resourceCitrixAdcSystemCreatebackup() *schema.Resource {
 func createSystembackupCreateFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSystembackupFunc")
 	client := meta.(*NetScalerNitroClient).client
-	systembackupName :=  resource.PrefixedUniqueId(d.Get("filename").(string) + "-")
+	systembackupName := resource.PrefixedUniqueId(d.Get("filename").(string) + "-")
 
 	systembackup := system.Systembackup{
 		Filename:         d.Get("filename").(string),
 		Uselocaltimezone: d.Get("uselocaltimezone").(bool),
-		Level: 			  d.Get("level").(string),
+		Level:            d.Get("level").(string),
 		Includekernel:    d.Get("includekernel").(string),
 		Comment:          d.Get("comment").(string),
 	}
@@ -74,13 +74,12 @@ func createSystembackupCreateFunc(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-
 func readSystembackupCreateFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSystembackupFunc")
 	client := meta.(*NetScalerNitroClient).client
 	systembackupName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading systembackup state %s", systembackupName)
-	data, err := client.FindResource(service.Systembackup.Type(), d.Get("filename").(string) + ".tgz")
+	data, err := client.FindResource(service.Systembackup.Type(), d.Get("filename").(string)+".tgz")
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing systembackup state %s", systembackupName)
 		d.SetId("")

@@ -19,23 +19,23 @@ func resourceCitrixAdcNshmackey() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"digest": &schema.Schema{
+			"digest": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 			},
-			"comment": &schema.Schema{
+			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"keyvalue": &schema.Schema{
+			"keyvalue": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

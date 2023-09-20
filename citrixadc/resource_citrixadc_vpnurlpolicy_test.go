@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -66,7 +66,7 @@ func TestAccVpnurlpolicy_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpnurlpolicyDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccVpnurlpolicy_add,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnurlpolicyExist("citrixadc_vpnurlpolicy.tf_vpnurlpolicy", nil),
@@ -75,7 +75,7 @@ func TestAccVpnurlpolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_vpnurlpolicy.tf_vpnurlpolicy", "action", "tf_vpnurlaction"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccVpnurlpolicy_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnurlpolicyExist("citrixadc_vpnurlpolicy.tf_vpnurlpolicy", nil),

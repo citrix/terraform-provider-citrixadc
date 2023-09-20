@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -44,7 +44,7 @@ func TestAccAaapreauthenticationparameter_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAaapreauthenticationparameter_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAaapreauthenticationparameterExist("citrixadc_aaapreauthenticationparameter.tf_aaapreauthenticationparameter", nil),
@@ -52,7 +52,7 @@ func TestAccAaapreauthenticationparameter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_aaapreauthenticationparameter.tf_aaapreauthenticationparameter", "deletefiles", "/var/tmp/*.files"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAaapreauthenticationparameter_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAaapreauthenticationparameterExist("citrixadc_aaapreauthenticationparameter.tf_aaapreauthenticationparameter", nil),

@@ -6,9 +6,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
-	"strconv"
 	"log"
 	"net/url"
+	"strconv"
 	"strings"
 )
 
@@ -22,17 +22,17 @@ func resourceCitrixAdcClusternode_routemonitor_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"nodeid": &schema.Schema{
+			"nodeid": {
 				Type:     schema.TypeInt,
 				Required: true,
 				ForceNew: true,
 			},
-			"routemonitor": &schema.Schema{
+			"routemonitor": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"netmask": &schema.Schema{
+			"netmask": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -120,7 +120,7 @@ func readClusternode_routemonitor_bindingFunc(d *schema.ResourceData, meta inter
 
 	data := dataArr[foundIndex]
 	nodeid_int, err := strconv.Atoi(data["nodeid"].(string))
-	if err !=nil {
+	if err != nil {
 		return err
 	}
 	d.Set("netmask", data["netmask"])
@@ -142,9 +142,8 @@ func deleteClusternode_routemonitor_bindingFunc(d *schema.ResourceData, meta int
 	routemonitor := idSlice[1]
 
 	args := make([]string, 0)
-	args = append(args, fmt.Sprintf("routemonitor:%s",url.QueryEscape(routemonitor)))
+	args = append(args, fmt.Sprintf("routemonitor:%s", url.QueryEscape(routemonitor)))
 	args = append(args, fmt.Sprintf("netmask:%s", url.QueryEscape(d.Get("netmask").(string))))
-
 
 	err := client.DeleteResourceWithArgs("clusternode_routemonitor_binding", name, args)
 	if err != nil {

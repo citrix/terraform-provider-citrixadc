@@ -45,107 +45,112 @@ func resourceCitrixAdcLbparameter() *schema.Resource {
 		Update:        updateLbparameterFunc,
 		Delete:        deleteLbparameterFunc,
 		Schema: map[string]*schema.Schema{
-			"allowboundsvcremoval": &schema.Schema{
+			"allowboundsvcremoval": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"computedadccookieattribute": &schema.Schema{
+			"computedadccookieattribute": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"consolidatedlconn": &schema.Schema{
+			"consolidatedlconn": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"cookiepassphrase": &schema.Schema{
+			"cookiepassphrase": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"dbsttl": &schema.Schema{
+			"dbsttl": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"dropmqttjumbomessage": &schema.Schema{
+			"dropmqttjumbomessage": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"httponlycookieflag": &schema.Schema{
+			"httponlycookieflag": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"literaladccookieattribute": &schema.Schema{
+			"literaladccookieattribute": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"maxpipelinenat": &schema.Schema{
+			"maxpipelinenat": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"monitorconnectionclose": &schema.Schema{
+			"monitorconnectionclose": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"monitorskipmaxclient": &schema.Schema{
+			"monitorskipmaxclient": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"preferdirectroute": &schema.Schema{
+			"preferdirectroute": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"retainservicestate": &schema.Schema{
+			"retainservicestate": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"startuprrfactor": &schema.Schema{
+			"startuprrfactor": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"storemqttclientidandusername": &schema.Schema{
+			"storemqttclientidandusername": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"useencryptedpersistencecookie": &schema.Schema{
+			"sessionsthreshold": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"useencryptedpersistencecookie": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"useportforhashlb": &schema.Schema{
+			"useportforhashlb": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"usesecuredpersistencecookie": &schema.Schema{
+			"usesecuredpersistencecookie": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"vserverspecificmac": &schema.Schema{
+			"vserverspecificmac": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"lbhashalgorithm": &schema.Schema{
+			"lbhashalgorithm": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"lbhashfingers": &schema.Schema{
+			"lbhashfingers": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -174,6 +179,7 @@ func createLbparameterFunc(d *schema.ResourceData, meta interface{}) error {
 		Retainservicestate:            d.Get("retainservicestate").(string),
 		Startuprrfactor:               d.Get("startuprrfactor").(int),
 		Storemqttclientidandusername:  d.Get("storemqttclientidandusername").(string),
+		Sessionsthreshold:             d.Get("sessionsthreshold").(int),
 		Useencryptedpersistencecookie: d.Get("useencryptedpersistencecookie").(string),
 		Useportforhashlb:              d.Get("useportforhashlb").(string),
 		Usesecuredpersistencecookie:   d.Get("usesecuredpersistencecookie").(string),
@@ -224,6 +230,7 @@ func readLbparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("retainservicestate", data["retainservicestate"])
 	d.Set("startuprrfactor", data["startuprrfactor"])
 	d.Set("storemqttclientidandusername", data["storemqttclientidandusername"])
+	// d.Set("sessionsthreshold", data["sessionsthreshold"])
 	d.Set("useencryptedpersistencecookie", data["useencryptedpersistencecookie"])
 	d.Set("useportforhashlb", data["useportforhashlb"])
 	d.Set("usesecuredpersistencecookie", data["usesecuredpersistencecookie"])
@@ -316,6 +323,11 @@ func updateLbparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("storemqttclientidandusername") {
 		log.Printf("[DEBUG]  citrixadc-provider: Storemqttclientidandusername has changed for lbparameter %s, starting update", lbparameterName)
 		lbparameter.Storemqttclientidandusername = d.Get("storemqttclientidandusername").(string)
+		hasChange = true
+	}
+	if d.HasChange("sessionsthreshold") {
+		log.Printf("[DEBUG]  citrixadc-provider: Storemqttclientidandusername has changed for lbparameter %s, starting update", lbparameterName)
+		lbparameter.Sessionsthreshold = d.Get("sessionsthreshold").(int)
 		hasChange = true
 	}
 	if d.HasChange("useencryptedpersistencecookie") {

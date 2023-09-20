@@ -20,18 +20,18 @@ func resourceCitrixAdcGslbservice_dnsview_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"servicename": &schema.Schema{
+			"servicename": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"viewip": &schema.Schema{
+			"viewip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"viewname": &schema.Schema{
+			"viewname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -45,7 +45,7 @@ func createGslbservice_dnsview_bindingFunc(d *schema.ResourceData, meta interfac
 	client := meta.(*NetScalerNitroClient).client
 	servicename := d.Get("servicename")
 	viewname := d.Get("viewname")
-	
+
 	bindingId := fmt.Sprintf("%s,%s", servicename, viewname)
 	gslbservice_dnsview_binding := gslb.Gslbservicednsviewbinding{
 		Servicename: d.Get("servicename").(string),
@@ -75,7 +75,7 @@ func readGslbservice_dnsview_bindingFunc(d *schema.ResourceData, meta interface{
 	idSlice := strings.SplitN(bindingId, ",", 2)
 
 	servicename := idSlice[0]
-	viewname:= idSlice[1]
+	viewname := idSlice[1]
 
 	log.Printf("[DEBUG] citrixadc-provider: Reading gslbservice_dnsview_binding state %s", bindingId)
 

@@ -7,8 +7,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
-	"strconv"
 	"log"
+	"strconv"
 )
 
 func resourceCitrixAdcNd6ravariables() *schema.Resource {
@@ -22,71 +22,71 @@ func resourceCitrixAdcNd6ravariables() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"vlan": &schema.Schema{
+			"vlan": {
 				Type:     schema.TypeInt,
 				Required: true,
 			},
-			"ceaserouteradv": &schema.Schema{
+			"ceaserouteradv": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"currhoplimit": &schema.Schema{
+			"currhoplimit": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"defaultlifetime": &schema.Schema{
+			"defaultlifetime": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"linkmtu": &schema.Schema{
+			"linkmtu": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"managedaddrconfig": &schema.Schema{
+			"managedaddrconfig": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"maxrtadvinterval": &schema.Schema{
+			"maxrtadvinterval": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"minrtadvinterval": &schema.Schema{
+			"minrtadvinterval": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"onlyunicastrtadvresponse": &schema.Schema{
+			"onlyunicastrtadvresponse": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"otheraddrconfig": &schema.Schema{
+			"otheraddrconfig": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"reachabletime": &schema.Schema{
+			"reachabletime": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"retranstime": &schema.Schema{
+			"retranstime": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"sendrouteradv": &schema.Schema{
+			"sendrouteradv": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"srclinklayeraddroption": &schema.Schema{
+			"srclinklayeraddroption": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -142,7 +142,7 @@ func readNd6ravariablesFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
-	vlan_int,_ := strconv.Atoi(data["vlan"].(string))
+	vlan_int, _ := strconv.Atoi(data["vlan"].(string))
 	d.Set("vlan", vlan_int)
 	d.Set("ceaserouteradv", data["ceaserouteradv"])
 	d.Set("currhoplimit", data["currhoplimit"])

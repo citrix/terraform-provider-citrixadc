@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -35,7 +35,7 @@ func TestAccSslcertkey_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSslcertkeyDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccSslcertkey_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSslcertkeyExist("citrixadc_sslcertkey.foo", nil),
@@ -159,7 +159,7 @@ func TestAccSslcertkey_linkcert(t *testing.T) {
 		Steps: []resource.TestStep{
 
 			// Check initial link
-			resource.TestStep{
+			{
 				Config: testAccSslcertkey_linkcert_linked,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSslcertkeyExist("citrixadc_sslcertkey.client", nil),
@@ -171,7 +171,7 @@ func TestAccSslcertkey_linkcert(t *testing.T) {
 			},
 
 			// Check unlink
-			resource.TestStep{
+			{
 				Config: testAccSslcertkey_linkcert_nolink,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSslcertkeyExist("citrixadc_sslcertkey.client", nil),
@@ -183,7 +183,7 @@ func TestAccSslcertkey_linkcert(t *testing.T) {
 			},
 
 			// Check relink
-			resource.TestStep{
+			{
 				Config: testAccSslcertkey_linkcert_linked,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSslcertkeyExist("citrixadc_sslcertkey.client", nil),
@@ -195,7 +195,7 @@ func TestAccSslcertkey_linkcert(t *testing.T) {
 			},
 
 			// Check removal of linked key
-			resource.TestStep{
+			{
 				Config: testAccSslcertkey_linkcert_client_key_removed,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSslcertkeyExist("citrixadc_sslcertkey.intermediate", nil),
@@ -203,7 +203,7 @@ func TestAccSslcertkey_linkcert(t *testing.T) {
 			},
 
 			// Recreate unlinked to check subsequent removal
-			resource.TestStep{
+			{
 				Config: testAccSslcertkey_linkcert_nolink,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSslcertkeyExist("citrixadc_sslcertkey.client", nil),
@@ -215,7 +215,7 @@ func TestAccSslcertkey_linkcert(t *testing.T) {
 			},
 
 			// Check removal of unlinked key
-			resource.TestStep{
+			{
 				Config: testAccSslcertkey_linkcert_client_key_removed,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSslcertkeyExist("citrixadc_sslcertkey.intermediate", nil),
@@ -223,7 +223,7 @@ func TestAccSslcertkey_linkcert(t *testing.T) {
 			},
 
 			// Relink to test removal of both entries by end of test
-			resource.TestStep{
+			{
 				Config: testAccSslcertkey_linkcert_linked,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSslcertkeyExist("citrixadc_sslcertkey.client", nil),

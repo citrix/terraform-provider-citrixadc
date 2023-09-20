@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -105,13 +105,13 @@ func TestAccAppfwprofile_fileuploadtype_binding_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppfwprofile_fileuploadtype_bindingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAppfwprofile_fileuploadtype_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppfwprofile_fileuploadtype_bindingExist("citrixadc_appfwprofile_fileuploadtype_binding.tf_binding", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAppfwprofile_fileuploadtype_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppfwprofile_fileuploadtype_bindingNotExist("citrixadc_appfwprofile_fileuploadtype_binding.tf_binding", "tf_appfwprofile,tf_uploadtype,www.example.com"),
@@ -150,7 +150,6 @@ func testAccCheckAppfwprofile_fileuploadtype_bindingExist(n string, id *string) 
 		fileuploadtype := idSlice[1]
 		as_fileuploadtypes_url := idSlice[2]
 
-
 		findParams := service.FindParams{
 			ResourceType:             "appfwprofile_fileuploadtype_binding",
 			ResourceName:             name,
@@ -171,7 +170,7 @@ func testAccCheckAppfwprofile_fileuploadtype_bindingExist(n string, id *string) 
 					found = true
 					break
 				}
-				
+
 			}
 		}
 
@@ -213,10 +212,10 @@ func testAccCheckAppfwprofile_fileuploadtype_bindingNotExist(n string, id string
 		for _, v := range dataArr {
 			if v["fileuploadtype"].(string) == fileuploadtype {
 				if v["as_fileuploadtypes_url"].(string) == as_fileuploadtypes_url {
-					found = true 
+					found = true
 					break
 				}
-				
+
 			}
 		}
 

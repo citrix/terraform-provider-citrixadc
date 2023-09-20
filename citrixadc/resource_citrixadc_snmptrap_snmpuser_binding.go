@@ -8,10 +8,9 @@ import (
 	"fmt"
 	"log"
 	"net/url"
-	"strings"
 	"strconv"
+	"strings"
 )
-
 
 func resourceCitrixAdcSnmptrap_snmpuser_binding() *schema.Resource {
 	return &schema.Resource{
@@ -23,38 +22,38 @@ func resourceCitrixAdcSnmptrap_snmpuser_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"trapclass": &schema.Schema{
+			"trapclass": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"trapdestination": &schema.Schema{
+			"trapdestination": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"username": &schema.Schema{
+			"username": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"securitylevel": &schema.Schema{
+			"securitylevel": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"td": &schema.Schema{
+			"td": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: false,
 				ForceNew: true,
 				Default:  0,
 			},
-			"version": &schema.Schema{
+			"version": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: false,
@@ -100,7 +99,7 @@ func readSnmptrap_snmpuser_bindingFunc(d *schema.ResourceData, meta interface{})
 	log.Printf("[DEBUG] citrixadc-provider:  In readSnmptrap_snmpuser_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
-	
+
 	idSlice := strings.SplitN(bindingId, ",", 3)
 
 	trapclass := idSlice[0]
@@ -110,7 +109,7 @@ func readSnmptrap_snmpuser_bindingFunc(d *schema.ResourceData, meta interface{})
 	args := make(map[string]string, 0)
 	args["trapclass"] = trapclass
 	args["trapdestination"] = trapdestination
-	
+
 	// Check if the `version` is given by user, if not then set the default value, because this is needed for GET api call in args
 	if val, ok := d.GetOk("version"); ok {
 		args["version"] = val.(string)
@@ -124,7 +123,6 @@ func readSnmptrap_snmpuser_bindingFunc(d *schema.ResourceData, meta interface{})
 	} else {
 		args["td"] = "0"
 	}
-
 
 	log.Printf("[DEBUG] citrixadc-provider: Reading snmptrap_snmpuser_binding state %s", bindingId)
 

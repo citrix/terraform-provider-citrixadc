@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -43,13 +43,13 @@ func TestAccLsngroup_lsnpool_binding_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLsngroup_lsnpool_bindingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccLsngroup_lsnpool_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLsngroup_lsnpool_bindingExist("citrixadc_lsngroup_lsnpool_binding.tf_lsngroup_lsnpool_binding", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccLsngroup_lsnpool_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLsngroup_lsnpool_bindingNotExist("citrixadc_lsngroup_lsnpool_binding.tf_lsngroup_lsnpool_binding", "my_lsn_group,my_pool"),

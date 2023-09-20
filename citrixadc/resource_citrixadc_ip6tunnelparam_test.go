@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -58,7 +58,7 @@ func TestAccIp6tunnelparam_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccIp6tunnelparam_add,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIp6tunnelparamExist("citrixadc_ip6tunnelparam.tf_ip6tunnelparam", nil),
@@ -68,7 +68,7 @@ func TestAccIp6tunnelparam_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_ip6tunnelparam.tf_ip6tunnelparam", "srciproundrobin", "YES"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccIp6tunnelparam_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIp6tunnelparamExist("citrixadc_ip6tunnelparam.tf_ip6tunnelparam", nil),

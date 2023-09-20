@@ -19,27 +19,27 @@ func resourceCitrixAdcIpsecalgprofile() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"connfailover": &schema.Schema{
+			"connfailover": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"espgatetimeout": &schema.Schema{
+			"espgatetimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"espsessiontimeout": &schema.Schema{
+			"espsessiontimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"ikesessiontimeout": &schema.Schema{
+			"ikesessiontimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -127,7 +127,7 @@ func updateIpsecalgprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if hasChange {
-			err := client.UpdateUnnamedResource("ipsecalgprofile", &ipsecalgprofile)
+		err := client.UpdateUnnamedResource("ipsecalgprofile", &ipsecalgprofile)
 		if err != nil {
 			return fmt.Errorf("Error updating ipsecalgprofile %s", ipsecalgprofileName)
 		}

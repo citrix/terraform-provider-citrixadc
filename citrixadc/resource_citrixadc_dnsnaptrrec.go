@@ -20,62 +20,62 @@ func resourceCitrixAdcDnsnaptrrec() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"domain": &schema.Schema{
+			"domain": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"ecssubnet": &schema.Schema{
+			"ecssubnet": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"flags": &schema.Schema{
+			"flags": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"nodeid": &schema.Schema{
+			"nodeid": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				ForceNew: true,
 			},
-			"order": &schema.Schema{
-				Type:     schema.TypeInt,
-				Required: true,
-				ForceNew: true,
-			},
-			"preference": &schema.Schema{
+			"order": {
 				Type:     schema.TypeInt,
 				Required: true,
 				ForceNew: true,
 			},
-			"recordid": &schema.Schema{
+			"preference": {
+				Type:     schema.TypeInt,
+				Required: true,
+				ForceNew: true,
+			},
+			"recordid": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				ForceNew: true,
 			},
-			"regexp": &schema.Schema{
+			"regexp": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"replacement": &schema.Schema{
+			"replacement": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"services": &schema.Schema{
+			"services": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"ttl": &schema.Schema{
+			"ttl": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				ForceNew: true,
 			},
-			"type": &schema.Schema{
+			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -157,11 +157,11 @@ func deleteDnsnaptrrecFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	argsMap := make(map[string]string)
-	
-	if _, ok :=  data["recordid"]; ok{
+
+	if _, ok := data["recordid"]; ok {
 		argsMap["recordid"] = fmt.Sprintf("%v", data["recordid"])
 	}
-	
+
 	err = client.DeleteResourceWithArgsMap(service.Dnsnaptrrec.Type(), dnsnaptrrecName, argsMap)
 	if err != nil {
 		return err

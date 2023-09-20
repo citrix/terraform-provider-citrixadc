@@ -19,22 +19,22 @@ func resourceCitrixAdcLsnappsattributes() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"port": &schema.Schema{
+			"port": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"sessiontimeout": &schema.Schema{
+			"sessiontimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"transportprotocol": &schema.Schema{
+			"transportprotocol": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,

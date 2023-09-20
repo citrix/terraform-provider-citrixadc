@@ -20,27 +20,27 @@ func resourceCitrixAdcIp6tunnelparam() *schema.Resource {
 		Update:        updateIp6tunnelparamFunc,
 		Delete:        deleteIp6tunnelparamFunc,
 		Schema: map[string]*schema.Schema{
-			"dropfrag": &schema.Schema{
+			"dropfrag": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"dropfragcputhreshold": &schema.Schema{
+			"dropfragcputhreshold": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"srcip": &schema.Schema{
+			"srcip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"srciproundrobin": &schema.Schema{
+			"srciproundrobin": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"useclientsourceipv6": &schema.Schema{
+			"useclientsourceipv6": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -89,7 +89,7 @@ func readIp6tunnelparamFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	d.Set("dropfrag", data["dropfrag"])
-	val,_ := strconv.Atoi(data["dropfragcputhreshold"].(string))
+	val, _ := strconv.Atoi(data["dropfragcputhreshold"].(string))
 	d.Set("dropfragcputhreshold", val)
 	d.Set("srcip", data["srcip"])
 	d.Set("srciproundrobin", data["srciproundrobin"])
@@ -144,11 +144,11 @@ func deleteIp6tunnelparamFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteIp6tunnelparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 	type ip6tunnelparamRemove struct {
-		Srcip 					bool `json:"srcip,omitempty"`
-		Dropfrag  				bool `json:"dropfrag,omitempty"`
-		Dropfragcputhreshold    bool `json:"dropfragcputhreshold,omitempty"`
-		Srciproundrobin      	bool `json:"srciproundrobin,omitempty"`
-		Useclientsourceipv6     bool `json:"useclientsourceipv6,omitempty"`
+		Srcip                bool `json:"srcip,omitempty"`
+		Dropfrag             bool `json:"dropfrag,omitempty"`
+		Dropfragcputhreshold bool `json:"dropfragcputhreshold,omitempty"`
+		Srciproundrobin      bool `json:"srciproundrobin,omitempty"`
+		Useclientsourceipv6  bool `json:"useclientsourceipv6,omitempty"`
 	}
 	ip6tunnelparam := ip6tunnelparamRemove{}
 	log.Printf("ip6tunnelparamdelete struct %v", ip6tunnelparam)

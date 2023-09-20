@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -37,7 +37,7 @@ func TestAccGslbservice_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGslbserviceDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccGslbservice_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGslbserviceExist("citrixadc_gslbservice.foo", nil),
@@ -304,7 +304,7 @@ func TestAccGslbservice_enable_disable(t *testing.T) {
 		CheckDestroy: testAccCheckGslbserviceDestroy,
 		Steps: []resource.TestStep{
 			// Create enabled
-			resource.TestStep{
+			{
 				Config: testAccGslbserviceEnableDisable_enabled,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGslbserviceExist("citrixadc_gslbservice.tf_test_acc_gslbservice", nil),
@@ -312,7 +312,7 @@ func TestAccGslbservice_enable_disable(t *testing.T) {
 				),
 			},
 			// Disable
-			resource.TestStep{
+			{
 				Config: testAccGslbserviceEnableDisable_disabled,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGslbserviceExist("citrixadc_gslbservice.tf_test_acc_gslbservice", nil),
@@ -320,7 +320,7 @@ func TestAccGslbservice_enable_disable(t *testing.T) {
 				),
 			},
 			// Re enable
-			resource.TestStep{
+			{
 				Config: testAccGslbserviceEnableDisable_enabled,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGslbserviceExist("citrixadc_gslbservice.tf_test_acc_gslbservice", nil),
@@ -340,7 +340,7 @@ func TestAccGslbservice_lbmonitorbinding(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGslbserviceDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccGslbservicelbmonitor_two,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGslbserviceExist("citrixadc_gslbservice.tf_test_gslbservice", nil),
@@ -348,7 +348,7 @@ func TestAccGslbservice_lbmonitorbinding(t *testing.T) {
 					verifyLbmonitorbindingExists("tf_test_gslbservice", "tf_test_monitor2", false),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccGslbservicelbmonitor_none,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGslbserviceExist("citrixadc_gslbservice.tf_test_gslbservice", nil),
@@ -356,7 +356,7 @@ func TestAccGslbservice_lbmonitorbinding(t *testing.T) {
 					verifyLbmonitorbindingExists("tf_test_gslbservice", "tf_test_monitor2", true),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccGslbservicelbmonitor_one,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGslbserviceExist("citrixadc_gslbservice.tf_test_gslbservice", nil),

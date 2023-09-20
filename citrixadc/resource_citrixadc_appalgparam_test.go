@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -42,14 +42,14 @@ func TestAccAppalgparam_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAppalgparam_add,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppalgparamExist("citrixadc_appalgparam.tf_appalgparam", nil),
 					resource.TestCheckResourceAttr("citrixadc_appalgparam.tf_appalgparam", "pptpgreidletimeout", "8000"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAppalgparam_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppalgparamExist("citrixadc_appalgparam.tf_appalgparam", nil),

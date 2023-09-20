@@ -19,27 +19,27 @@ func resourceCitrixAdcSnmpmib() *schema.Resource {
 		Update:        updateSnmpmibFunc,
 		Delete:        deleteSnmpmibFunc, // Thought snmpmib resource donot have DELETE operation, it is required to set ID to "" d.SetID("") to maintain terraform state
 		Schema: map[string]*schema.Schema{
-			"contact": &schema.Schema{
+			"contact": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"customid": &schema.Schema{
+			"customid": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"location": &schema.Schema{
+			"location": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ownernode": &schema.Schema{
+			"ownernode": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -51,10 +51,10 @@ func resourceCitrixAdcSnmpmib() *schema.Resource {
 func createSnmpmibFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSnmpmibFunc")
 	client := meta.(*NetScalerNitroClient).client
-	
+
 	// there is no primary key in snmpmib resource. Hence generate one for terraform state maintenance
 	snmpmibName := resource.PrefixedUniqueId("tf-snmpmib-")
-	
+
 	snmpmib := snmp.Snmpmib{
 		Contact:   d.Get("contact").(string),
 		Customid:  d.Get("customid").(string),
@@ -102,7 +102,7 @@ func updateSnmpmibFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateSnmpmibFunc")
 	client := meta.(*NetScalerNitroClient).client
 	snmpmib := snmp.Snmpmib{}
-	
+
 	hasChange := false
 	if d.HasChange("contact") {
 		log.Printf("[DEBUG]  citrixadc-provider: Contact has changed for snmpmib, starting update")

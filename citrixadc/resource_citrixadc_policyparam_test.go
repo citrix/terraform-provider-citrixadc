@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -44,14 +44,14 @@ func TestAccPolicyparam_basic(t *testing.T) {
 		// policyparam resource does not have DELETE operation
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccPolicyparam_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyparamExist("citrixadc_policyparam.tf_policyparam", nil),
 					resource.TestCheckResourceAttr("citrixadc_policyparam.tf_policyparam", "timeout", "5"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccPolicyparam_basic_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyparamExist("citrixadc_policyparam.tf_policyparam", nil),

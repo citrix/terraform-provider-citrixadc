@@ -6,8 +6,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
-	"strconv"
 	"log"
+	"strconv"
 )
 
 func resourceCitrixAdcInatparam() *schema.Resource {
@@ -18,32 +18,32 @@ func resourceCitrixAdcInatparam() *schema.Resource {
 		Update:        updateInatparamFunc,
 		Delete:        deleteInatparamFunc,
 		Schema: map[string]*schema.Schema{
-			"nat46fragheader": &schema.Schema{
+			"nat46fragheader": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"nat46ignoretos": &schema.Schema{
+			"nat46ignoretos": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"nat46v6mtu": &schema.Schema{
+			"nat46v6mtu": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"nat46v6prefix": &schema.Schema{
+			"nat46v6prefix": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"nat46zerochecksum": &schema.Schema{
+			"nat46zerochecksum": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"td": &schema.Schema{
+			"td": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -60,22 +60,22 @@ func createInatparamFunc(d *schema.ResourceData, meta interface{}) error {
 	inatparam := make(map[string]interface{})
 
 	if v, ok := d.GetOk("nat46fragheader"); ok {
-		inatparam["nat46fragheader"] = v.(string)	
+		inatparam["nat46fragheader"] = v.(string)
 	}
 	if v, ok := d.GetOk("nat46ignoretos"); ok {
-		inatparam["nat46ignoretos"] = v.(string)	
+		inatparam["nat46ignoretos"] = v.(string)
 	}
 	if v, ok := d.GetOk("nat46v6mtu"); ok {
-		inatparam["nat46v6mtu"] = v.(int)	
+		inatparam["nat46v6mtu"] = v.(int)
 	}
 	if v, ok := d.GetOk("nat46v6prefix"); ok {
-		inatparam["nat46v6prefix"] = v.(string)	
+		inatparam["nat46v6prefix"] = v.(string)
 	}
 	if v, ok := d.GetOk("nat46zerochecksum"); ok {
-		inatparam["nat46zerochecksum"] = v.(string)	
+		inatparam["nat46zerochecksum"] = v.(string)
 	}
 	if v, ok := d.GetOk("td"); ok {
-		inatparam["td"] = v.(int)	
+		inatparam["td"] = v.(int)
 	}
 
 	err := client.UpdateUnnamedResource(service.Inatparam.Type(), &inatparam)

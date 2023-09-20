@@ -24,28 +24,28 @@ func resourceCitrixAdcSystemgroup() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"groupname": &schema.Schema{
+			"groupname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"promptstring": &schema.Schema{
+			"promptstring": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"timeout": &schema.Schema{
+			"timeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"allowedmanagementinterface": &schema.Schema{
+			"allowedmanagementinterface": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"systemusers": &schema.Schema{
+			"systemusers": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -57,12 +57,12 @@ func resourceCitrixAdcSystemgroup() *schema.Resource {
 				Set:      systemgroupCmdpolicybindingMappingHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"policyname": &schema.Schema{
+						"policyname": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"priority": &schema.Schema{
+						"priority": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
@@ -293,7 +293,7 @@ func readSystemgroupCmdpolicybindings(d *schema.ResourceData, meta interface{}) 
 	log.Printf("bindings %v\n", bindings)
 
 	processedBindings := make([]interface{}, len(bindings))
-	for i, _ := range bindings {
+	for i := range bindings {
 		processedBindings[i] = make(map[string]interface{})
 		processedBindings[i].(map[string]interface{})["policyname"] = bindings[i]["policyname"].(string)
 		processedBindings[i].(map[string]interface{})["priority"], _ = strconv.Atoi(bindings[i]["priority"].(string))

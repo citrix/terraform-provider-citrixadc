@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -41,14 +41,13 @@ func TestAccDnstxtrec_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDnstxtrecDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDnstxtrec_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDnstxtrecExist("citrixadc_dnstxtrec.dnstxtrec", nil),
 					resource.TestCheckResourceAttr("citrixadc_dnstxtrec.dnstxtrec", "domain", "asoighewgoadfa.net"),
 					//resource.TestCheckResourceAttr("citrixadc_dnstxtrec.dnstxtrec", "string", "[\"v=spf1 a mxrec include:websitewelcome.com ~all\"]"),
 					resource.TestCheckResourceAttr("citrixadc_dnstxtrec.dnstxtrec", "ttl", "3600"),
-
 				),
 			},
 		},

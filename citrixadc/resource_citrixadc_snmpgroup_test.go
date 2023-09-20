@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,12 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
-	"log"
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"log"
 	"testing"
 )
+
 const testAccSnmpgroup_basic = `
 	resource "citrixadc_snmpgroup" "tf_snmpgroup" {
 	name          = "test_group"
@@ -44,22 +45,20 @@ func TestAccSnmpgroup_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSnmpgroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccSnmpgroup_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnmpgroupExist("citrixadc_snmpgroup.tf_snmpgroup", nil),
-					resource.TestCheckResourceAttr("citrixadc_snmpgroup.tf_snmpgroup", "securitylevel", "noAuthNoPriv" ),
-					resource.TestCheckResourceAttr("citrixadc_snmpgroup.tf_snmpgroup", "readviewname", "test_name" ),
-
+					resource.TestCheckResourceAttr("citrixadc_snmpgroup.tf_snmpgroup", "securitylevel", "noAuthNoPriv"),
+					resource.TestCheckResourceAttr("citrixadc_snmpgroup.tf_snmpgroup", "readviewname", "test_name"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccSnmpgroup_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnmpgroupExist("citrixadc_snmpgroup.tf_snmpgroup", nil),
-					resource.TestCheckResourceAttr("citrixadc_snmpgroup.tf_snmpgroup", "securitylevel", "noAuthNoPriv" ),
-					resource.TestCheckResourceAttr("citrixadc_snmpgroup.tf_snmpgroup", "readviewname", "test2_name" ),
-
+					resource.TestCheckResourceAttr("citrixadc_snmpgroup.tf_snmpgroup", "securitylevel", "noAuthNoPriv"),
+					resource.TestCheckResourceAttr("citrixadc_snmpgroup.tf_snmpgroup", "readviewname", "test2_name"),
 				),
 			},
 		},
@@ -92,14 +91,14 @@ func testAccCheckSnmpgroupExist(n string, id *string) resource.TestCheckFunc {
 		if err != nil {
 			return err
 		}
-		
+
 		if len(dataArr) == 0 {
 			log.Printf("[WARN] citrix-provider: acceptance test: snmpgroup does not exist. Clearing state.")
 			return nil
 		}
-		
+
 		found := false
-		for _, v := range  dataArr {
+		for _, v := range dataArr {
 			if v["name"] == snmpgroupName {
 				found = true
 				break
@@ -129,24 +128,24 @@ func testAccCheckSnmpgroupDestroy(s *terraform.State) error {
 		snmpgroupName := rs.Primary.ID
 
 		dataArr, err := nsClient.FindAllResources(service.Snmpgroup.Type())
-		
+
 		if err != nil {
 			return err
 		}
-		
+
 		found := false
-		for _, v := range  dataArr{
+		for _, v := range dataArr {
 			if v["name"] == snmpgroupName {
 				found = true
 				break
 			}
-		
+
 			if found {
 				return fmt.Errorf("snmpgroup %s still exists", rs.Primary.ID)
 			}
 
 		}
-	
+
 	}
 	return nil
 }

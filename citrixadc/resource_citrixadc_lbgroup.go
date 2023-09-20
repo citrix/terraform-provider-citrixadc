@@ -20,57 +20,57 @@ func resourceCitrixAdcLbgroup() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"persistencetype": &schema.Schema{
+			"persistencetype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"persistencebackup": &schema.Schema{
+			"persistencebackup": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"backuppersistencetimeout": &schema.Schema{
+			"backuppersistencetimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"persistmask": &schema.Schema{
+			"persistmask": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"cookiename": &schema.Schema{
+			"cookiename": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"v6persistmasklen": &schema.Schema{
+			"v6persistmasklen": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"cookiedomain": &schema.Schema{
+			"cookiedomain": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"timeout": &schema.Schema{
+			"timeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"rule": &schema.Schema{
+			"rule": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"usevserverpersistency": &schema.Schema{
+			"usevserverpersistency": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

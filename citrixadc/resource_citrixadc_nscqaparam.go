@@ -18,102 +18,102 @@ func resourceCitrixAdcNscqaparam() *schema.Resource {
 		Update:        updateNscqaparamFunc,
 		Delete:        deleteNscqaparamFunc,
 		Schema: map[string]*schema.Schema{
-			"net1label": &schema.Schema{
+			"net1label": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"net2label": &schema.Schema{
+			"net2label": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"net3label": &schema.Schema{
+			"net3label": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"harqretxdelay": &schema.Schema{
+			"harqretxdelay": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"lr1coeflist": &schema.Schema{
+			"lr1coeflist": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"lr1probthresh": &schema.Schema{
+			"lr1probthresh": {
 				Type:     schema.TypeFloat,
 				Optional: true,
 				Computed: true,
 			},
-			"lr2coeflist": &schema.Schema{
+			"lr2coeflist": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"lr2probthresh": &schema.Schema{
+			"lr2probthresh": {
 				Type:     schema.TypeFloat,
 				Optional: true,
 				Computed: true,
 			},
-			"minrttnet1": &schema.Schema{
+			"minrttnet1": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"minrttnet2": &schema.Schema{
+			"minrttnet2": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"minrttnet3": &schema.Schema{
+			"minrttnet3": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"net1cclscale": &schema.Schema{
+			"net1cclscale": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"net1csqscale": &schema.Schema{
+			"net1csqscale": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"net1logcoef": &schema.Schema{
+			"net1logcoef": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"net2cclscale": &schema.Schema{
+			"net2cclscale": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"net2csqscale": &schema.Schema{
+			"net2csqscale": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"net2logcoef": &schema.Schema{
+			"net2logcoef": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"net3cclscale": &schema.Schema{
+			"net3cclscale": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"net3csqscale": &schema.Schema{
+			"net3csqscale": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"net3logcoef": &schema.Schema{
+			"net3logcoef": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

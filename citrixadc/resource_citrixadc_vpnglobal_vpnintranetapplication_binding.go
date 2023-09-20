@@ -19,13 +19,13 @@ func resourceCitrixAdcVpnglobal_vpnintranetapplication_binding() *schema.Resourc
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"intranetapplication": &schema.Schema{
+			"intranetapplication": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"gotopriorityexpression": &schema.Schema{
+			"gotopriorityexpression": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -63,7 +63,6 @@ func readVpnglobal_vpnintranetapplication_bindingFunc(d *schema.ResourceData, me
 	log.Printf("[DEBUG] citrixadc-provider:  In readVpnglobal_vpnintranetapplication_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	intranetapplication := d.Id()
-	
 
 	log.Printf("[DEBUG] citrixadc-provider: Reading vpnglobal_vpnintranetapplication_binding state %s", intranetapplication)
 
@@ -123,7 +122,7 @@ func deleteVpnglobal_vpnintranetapplication_bindingFunc(d *schema.ResourceData, 
 	args := make([]string, 0)
 	args = append(args, fmt.Sprintf("intranetapplication:%s", intranetapplication))
 
-	err := client.DeleteResourceWithArgs(service.Vpnglobal_vpnintranetapplication_binding.Type(),"", args)
+	err := client.DeleteResourceWithArgs(service.Vpnglobal_vpnintranetapplication_binding.Type(), "", args)
 	if err != nil {
 		return err
 	}

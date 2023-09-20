@@ -16,22 +16,22 @@ func resourceCitrixAdcNsconfigClear() *schema.Resource {
 		Read:          schema.Noop,
 		Delete:        schema.Noop,
 		Schema: map[string]*schema.Schema{
-			"level": &schema.Schema{
+			"level": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"force": &schema.Schema{
+			"force": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				ForceNew: true,
 			},
-			"rbaconfig": &schema.Schema{
+			"rbaconfig": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"timestamp": &schema.Schema{
+			"timestamp": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,

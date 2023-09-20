@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -41,13 +41,13 @@ func TestAccClusternodegroup_csvserver_binding_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckClusternodegroup_csvserver_bindingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccClusternodegroup_csvserver_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusternodegroup_csvserver_bindingExist("citrixadc_clusternodegroup_csvserver_binding.tf_clusternodegroup_csvserver_binding", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccClusternodegroup_csvserver_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusternodegroup_csvserver_bindingNotExist("citrixadc_clusternodegroup_csvserver_binding.tf_clusternodegroup_csvserver_binding", "my_cs_group,my_csvserver"),

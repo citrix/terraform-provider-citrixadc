@@ -19,67 +19,67 @@ func resourceCitrixAdcLsnsipalgprofile() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"sipalgprofilename": &schema.Schema{
+			"sipalgprofilename": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"datasessionidletimeout": &schema.Schema{
+			"datasessionidletimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"opencontactpinhole": &schema.Schema{
+			"opencontactpinhole": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"openrecordroutepinhole": &schema.Schema{
+			"openrecordroutepinhole": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"openregisterpinhole": &schema.Schema{
+			"openregisterpinhole": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"openroutepinhole": &schema.Schema{
+			"openroutepinhole": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"openviapinhole": &schema.Schema{
+			"openviapinhole": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"registrationtimeout": &schema.Schema{
+			"registrationtimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"rport": &schema.Schema{
+			"rport": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sipdstportrange": &schema.Schema{
+			"sipdstportrange": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"sipsessiontimeout": &schema.Schema{
+			"sipsessiontimeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"sipsrcportrange": &schema.Schema{
+			"sipsrcportrange": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"siptransportprotocol": &schema.Schema{
+			"siptransportprotocol": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

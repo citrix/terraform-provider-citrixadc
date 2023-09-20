@@ -22,34 +22,34 @@ func resourceCitrixAdcDnsnameserver() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"dnsprofilename": &schema.Schema{
+			"dnsprofilename": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"dnsvservername": &schema.Schema{
+			"dnsvservername": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"ip": &schema.Schema{
+			"ip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"local": &schema.Schema{
+			"local": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true, // Computed is often used to represent values that are not user configurable or can not be known at time of terraform plan or apply
 				ForceNew: true,
 			},
-			"state": &schema.Schema{
+			"state": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true, // Computed is often used to represent values that are not user configurable or can not be known at time of terraform plan or apply
 				ForceNew: true,
 			},
-			"type": &schema.Schema{
+			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true, // Computed is often used to represent values that are not user configurable or can not be known at time of terraform plan or apply
@@ -102,6 +102,21 @@ func readDnsnameserverFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] citrixadc-provider:  In readDnsnameserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	PrimaryId := d.Id()
+
+	// To make the resource backward compatible, in the prev state file user will have ID with 1 value, but in release v1.27.0 we have updated Id. So here we are changing the code to make it backward compatible
+	// here we are checking for id, if it has 1 elements then we are appending the 2rd attribute to the old Id.
+	oldIdSlice := strings.Split(PrimaryId, ",")
+
+	if len(oldIdSlice) == 1 {
+		if val, ok := d.GetOk("type"); ok {
+			PrimaryId = PrimaryId + "," + val.(string)
+		} else {
+			PrimaryId = PrimaryId + ",UDP"
+		}
+
+		d.SetId(PrimaryId)
+	}
+
 	log.Printf("[DEBUG] citrixadc-provider: Reading dnsnameserver state %s", PrimaryId)
 	findParams := service.FindParams{
 		ResourceType: service.Dnsnameserver.Type(),
@@ -212,7 +227,7 @@ func deleteDnsnameserverFunc(d *schema.ResourceData, meta interface{}) error {
 	dns_type := idSlice[1]
 
 	argsMap := make(map[string]string)
-	if val, ok := d.GetOk("dnsvservername"); ok && Name == val {	// if the user gives `dnsvservername`, then we need to directly call delete operation.
+	if val, ok := d.GetOk("dnsvservername"); ok && Name == val { // if the user gives `dnsvservername`, then we need to directly call delete operation.
 		err := client.DeleteResource(service.Dnsnameserver.Type(), Name)
 		if err != nil {
 			return err

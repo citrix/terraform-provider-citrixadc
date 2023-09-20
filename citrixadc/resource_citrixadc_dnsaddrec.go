@@ -8,6 +8,7 @@ import (
 
 	"log"
 	"net/url"
+	"strings"
 )
 
 func resourceCitrixAdcDnsaddrec() *schema.Resource {
@@ -20,32 +21,32 @@ func resourceCitrixAdcDnsaddrec() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"ecssubnet": &schema.Schema{
+			"ecssubnet": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"hostname": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"ipaddress": &schema.Schema{
+			"hostname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"nodeid": &schema.Schema{
+			"ipaddress": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"nodeid": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				ForceNew: true,
 			},
-			"ttl": &schema.Schema{
+			"ttl": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				ForceNew: true,
 			},
-			"type": &schema.Schema{
+			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -87,13 +88,18 @@ func readDnsaddrecFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] citrixadc-provider:  In readDnsaddrecFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnsaddrecId := d.Id()
+	idSlice := strings.SplitN(dnsaddrecId, ",", 2)
+
+	hostname := idSlice[0]
+	ipaddress := idSlice[1]
+
 	log.Printf("[DEBUG] citrixadc-provider: Reading dnsaddrec state %s", dnsaddrecId)
 	dataArr, err := client.FindAllResources(service.Dnsaddrec.Type())
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing dnsaddrec state %s", dnsaddrecId)
 		d.SetId("")
 		return nil
-	}	
+	}
 	if len(dataArr) == 0 {
 		log.Printf("[WARN] citrixadc-provider: dnsaddrec does not exist. Clearing state.")
 		d.SetId("")
@@ -102,12 +108,12 @@ func readDnsaddrecFunc(d *schema.ResourceData, meta interface{}) error {
 
 	foundIndex := -1
 	for i, v := range dataArr {
-		if v["hostname"].(string) == d.Get("hostname").(string) && v["ipaddress"].(string) == d.Get("ipaddress").(string) {
+		if v["hostname"].(string) == hostname && v["ipaddress"].(string) == ipaddress {
 			foundIndex = i
 			break
 		}
 	}
-	
+
 	if foundIndex == -1 {
 		log.Printf("[DEBUG] citrixadc-provider: FindResourceArrayWithParams dnsaddrec not found in array")
 		log.Printf("[WARN] citrixadc-provider: Clearing dnsaddrec state %s", dnsaddrecId)
@@ -130,8 +136,8 @@ func readDnsaddrecFunc(d *schema.ResourceData, meta interface{}) error {
 func deleteDnsaddrecFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteDnsaddrecFunc")
 	client := meta.(*NetScalerNitroClient).client
-	argsMap := make(map[string]string) 
-	if ecs,ok := d.GetOk("ecssubnet");ok{
+	argsMap := make(map[string]string)
+	if ecs, ok := d.GetOk("ecssubnet"); ok {
 		argsMap["ecssubnet"] = url.QueryEscape(ecs.(string))
 	}
 	argsMap["ipaddress"] = url.QueryEscape(d.Get("ipaddress").(string))

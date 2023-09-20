@@ -21,27 +21,27 @@ func resourceCitrixAdcSpilloverpolicy() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"rule": &schema.Schema{
+			"rule": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 			},
-			"action": &schema.Schema{
+			"action": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 			},
-			"comment": &schema.Schema{
+			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"newname": &schema.Schema{
+			"newname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -53,7 +53,7 @@ func resourceCitrixAdcSpilloverpolicy() *schema.Resource {
 func createSpilloverpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSpilloverpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
-	spilloverpolicyName:= d.Get("name").(string)
+	spilloverpolicyName := d.Get("name").(string)
 	spilloverpolicy := spillover.Spilloverpolicy{
 		Action:  d.Get("action").(string),
 		Comment: d.Get("comment").(string),

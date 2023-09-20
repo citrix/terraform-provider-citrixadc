@@ -20,62 +20,62 @@ func resourceCitrixAdcLbprofile() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"lbprofilename": &schema.Schema{
+			"lbprofilename": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"dbslb": &schema.Schema{
+			"dbslb": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"processlocal": &schema.Schema{
+			"processlocal": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"httponlycookieflag": &schema.Schema{
+			"httponlycookieflag": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"cookiepassphrase": &schema.Schema{
+			"cookiepassphrase": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"usesecuredpersistencecookie": &schema.Schema{
+			"usesecuredpersistencecookie": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"useencryptedpersistencecookie": &schema.Schema{
+			"useencryptedpersistencecookie": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"literaladccookieattribute": &schema.Schema{
+			"literaladccookieattribute": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"computedadccookieattribute": &schema.Schema{
+			"computedadccookieattribute": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"storemqttclientidandusername": &schema.Schema{
+			"storemqttclientidandusername": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"lbhashalgorithm": &schema.Schema{
+			"lbhashalgorithm": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"lbhashfingers": &schema.Schema{
+			"lbhashfingers": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,

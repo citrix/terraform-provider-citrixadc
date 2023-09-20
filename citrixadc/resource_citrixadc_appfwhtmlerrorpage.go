@@ -19,25 +19,25 @@ func appfwhtmlerrorpage() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"comment": &schema.Schema{
+			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"overwrite": &schema.Schema{
+			"overwrite": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"src": &schema.Schema{
+			"src": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -51,7 +51,7 @@ func createAppfwhtmlerrorpageFunc(d *schema.ResourceData, meta interface{}) erro
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppfwhtmlerrorpageFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appfwhtmlerrorpageName := d.Get("name").(string)
-	
+
 	appfwhtmlerrorpage := appfw.Appfwhtmlerrorpage{
 		Comment:   d.Get("comment").(string),
 		Name:      d.Get("name").(string),

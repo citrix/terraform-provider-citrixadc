@@ -17,12 +17,12 @@ func resourceCitrixAdcCspolicylabel() *schema.Resource {
 		Read:          readCspolicylabelFunc,
 		Delete:        deleteCspolicylabelFunc,
 		Schema: map[string]*schema.Schema{
-			"cspolicylabeltype": &schema.Schema{
+			"cspolicylabeltype": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"labelname": &schema.Schema{
+			"labelname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,

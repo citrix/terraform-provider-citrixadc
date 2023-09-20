@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -33,7 +33,6 @@ resource "citrixadc_subscriberprofile" "tf_subscriberprofile" {
   
 `
 
-
 const testAccSubscriberprofile_update = `
 
 
@@ -51,7 +50,7 @@ func TestAccSubscriberprofile_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSubscriberprofileDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccSubscriberprofile_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubscriberprofileExist("citrixadc_subscriberprofile.tf_subscriberprofile", nil),
@@ -60,7 +59,7 @@ func TestAccSubscriberprofile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_subscriberprofile.tf_subscriberprofile", "subscriptionidvalue", "5"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccSubscriberprofile_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubscriberprofileExist("citrixadc_subscriberprofile.tf_subscriberprofile", nil),

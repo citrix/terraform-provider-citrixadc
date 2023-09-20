@@ -21,58 +21,58 @@ func resourceCitrixAdcTransformaction() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"comment": &schema.Schema{
+			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"cookiedomainfrom": &schema.Schema{
+			"cookiedomainfrom": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"cookiedomaininto": &schema.Schema{
+			"cookiedomaininto": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"priority": &schema.Schema{
+			"priority": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"profilename": &schema.Schema{
+			"profilename": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"requrlfrom": &schema.Schema{
+			"requrlfrom": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"requrlinto": &schema.Schema{
+			"requrlinto": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"resurlfrom": &schema.Schema{
+			"resurlfrom": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"resurlinto": &schema.Schema{
+			"resurlinto": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"state": &schema.Schema{
+			"state": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

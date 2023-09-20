@@ -7,8 +7,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"log"
 	"fmt"
+	"log"
 )
 
 func resourceCitrixAdcNspbrs() *schema.Resource {
@@ -18,7 +18,7 @@ func resourceCitrixAdcNspbrs() *schema.Resource {
 		Read:          schema.Noop,
 		Delete:        schema.Noop,
 		Schema: map[string]*schema.Schema{
-			"action": &schema.Schema{
+			"action": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,

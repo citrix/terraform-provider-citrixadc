@@ -21,13 +21,13 @@ func resourceCitrixAdcNsservicefunction() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"servicefunctionname": &schema.Schema{
+			"servicefunctionname": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"ingressvlan": &schema.Schema{
+			"ingressvlan": {
 				Type:     schema.TypeInt,
 				Required: true,
 				Computed: false,
@@ -40,7 +40,7 @@ func createNsservicefunctionFunc(d *schema.ResourceData, meta interface{}) error
 	log.Printf("[DEBUG]  citrixadc-provider: In createNsservicefunctionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nsservicefunctionName := d.Get("servicefunctionname").(string)
-	
+
 	nsservicefunction := ns.Nsservicefunction{
 		Ingressvlan:         d.Get("ingressvlan").(int),
 		Servicefunctionname: d.Get("servicefunctionname").(string),

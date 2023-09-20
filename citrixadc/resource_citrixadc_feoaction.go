@@ -20,118 +20,118 @@ func resourceCitrixAdcFeoaction() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"cachemaxage": &schema.Schema{
+			"cachemaxage": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"clientsidemeasurements": &schema.Schema{
+			"clientsidemeasurements": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"convertimporttolink": &schema.Schema{
+			"convertimporttolink": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"csscombine": &schema.Schema{
+			"csscombine": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"cssimginline": &schema.Schema{
+			"cssimginline": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"cssinline": &schema.Schema{
+			"cssinline": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"cssminify": &schema.Schema{
+			"cssminify": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"cssmovetohead": &schema.Schema{
+			"cssmovetohead": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"dnsshards": &schema.Schema{
+			"dnsshards": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"domainsharding": &schema.Schema{
+			"domainsharding": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"htmlminify": &schema.Schema{
+			"htmlminify": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"imggiftopng": &schema.Schema{
+			"imggiftopng": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"imginline": &schema.Schema{
+			"imginline": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"imglazyload": &schema.Schema{
+			"imglazyload": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"imgshrinktoattrib": &schema.Schema{
+			"imgshrinktoattrib": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"imgtojpegxr": &schema.Schema{
+			"imgtojpegxr": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"imgtowebp": &schema.Schema{
+			"imgtowebp": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"jpgoptimize": &schema.Schema{
+			"jpgoptimize": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"jsinline": &schema.Schema{
+			"jsinline": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"jsminify": &schema.Schema{
+			"jsminify": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"jsmovetoend": &schema.Schema{
+			"jsmovetoend": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"pageextendcache": &schema.Schema{
+			"pageextendcache": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,

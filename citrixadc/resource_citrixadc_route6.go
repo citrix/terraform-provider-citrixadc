@@ -7,9 +7,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
-	"strconv"
-	"net/url"
 	"log"
+	"net/url"
+	"strconv"
 )
 
 func resourceCitrixAdcRoute6() *schema.Resource {
@@ -23,72 +23,72 @@ func resourceCitrixAdcRoute6() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"network": &schema.Schema{
+			"network": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"advertise": &schema.Schema{
+			"advertise": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"cost": &schema.Schema{
+			"cost": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"detail": &schema.Schema{
+			"detail": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"distance": &schema.Schema{
+			"distance": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"gateway": &schema.Schema{
+			"gateway": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"monitor": &schema.Schema{
+			"monitor": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"msr": &schema.Schema{
+			"msr": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ownergroup": &schema.Schema{
+			"ownergroup": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"routetype": &schema.Schema{
+			"routetype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"td": &schema.Schema{
+			"td": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"vlan": &schema.Schema{
+			"vlan": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"vxlan": &schema.Schema{
+			"vxlan": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"weight": &schema.Schema{
+			"weight": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -146,9 +146,9 @@ func readRoute6Func(d *schema.ResourceData, meta interface{}) error {
 	for i, v := range dataArr {
 		if v["network"] == route6Network &&
 			v["vlan"] == strconv.Itoa(d.Get("vlan").(int)) {
-				foundIndex = i
-				break
-			}
+			foundIndex = i
+			break
+		}
 	}
 	if foundIndex == -1 {
 		log.Printf("[DEBUG] citrixadc-provider: FindAllresources network and vlan not found in array")

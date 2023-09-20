@@ -20,31 +20,31 @@ func resourceCitrixAdcVpnglobal_authenticationradiuspolicy_binding() *schema.Res
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"policyname": &schema.Schema{
+			"policyname": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"gotopriorityexpression": &schema.Schema{
+			"gotopriorityexpression": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"groupextraction": &schema.Schema{
+			"groupextraction": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"priority": &schema.Schema{
+			"priority": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"secondary": &schema.Schema{
+			"secondary": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
@@ -58,7 +58,7 @@ func createVpnglobal_authenticationradiuspolicy_bindingFunc(d *schema.ResourceDa
 	log.Printf("[DEBUG]  citrixadc-provider: In createVpnglobal_authenticationradiuspolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policyname := d.Get("policyname").(string)
-	
+
 	vpnglobal_authenticationradiuspolicy_binding := vpn.Vpnglobalauthenticationradiuspolicybinding{
 		Gotopriorityexpression: d.Get("gotopriorityexpression").(string),
 		Groupextraction:        d.Get("groupextraction").(bool),
@@ -147,7 +147,7 @@ func deleteVpnglobal_authenticationradiuspolicy_bindingFunc(d *schema.ResourceDa
 
 	args := make([]string, 0)
 	args = append(args, fmt.Sprintf("policyname:%s", policyname))
-	
+
 	if val, ok := d.GetOk("secondary"); ok {
 		args = append(args, fmt.Sprintf("secondary:%s", url.QueryEscape(val.(string))))
 	}

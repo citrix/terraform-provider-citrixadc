@@ -30,23 +30,23 @@ func resourceCitrixAdcSystemfile() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"filecontent": &schema.Schema{
+			"filecontent": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"fileencoding": &schema.Schema{
+			"fileencoding": {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Default:  "BASE64",
 				Optional: true,
 			},
-			"filelocation": &schema.Schema{
+			"filelocation": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"filename": &schema.Schema{
+			"filename": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -116,7 +116,7 @@ func readSystemfileFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	dataArray, err := client.FindResourceArrayWithParams(findParams)
 	if err != nil {
-		return err
+		d.SetId("") // If the file doesnot exist, then we are setting Id is null so that the resource will be created.
 	}
 
 	if len(dataArray) == 0 {

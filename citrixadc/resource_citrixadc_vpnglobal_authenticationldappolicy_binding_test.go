@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -39,7 +39,7 @@ const testAccVpnglobal_authenticationldappolicy_binding_basic = `
 `
 const testAccVpnglobal_authenticationldappolicy_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
-` 
+`
 
 func TestAccVpnglobal_authenticationldappolicy_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
@@ -47,13 +47,13 @@ func TestAccVpnglobal_authenticationldappolicy_binding_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpnglobal_authenticationldappolicy_bindingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccVpnglobal_authenticationldappolicy_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnglobal_authenticationldappolicy_bindingExist("citrixadc_vpnglobal_authenticationldappolicy_binding.tf_bind", nil),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccVpnglobal_authenticationldappolicy_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnglobal_authenticationldappolicy_bindingNotExist("citrixadc_vpnglobal_authenticationldappolicy_binding.tf_bind", "tf_ldappolicy"),

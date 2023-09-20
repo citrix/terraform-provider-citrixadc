@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -83,7 +83,7 @@ func TestAccSslocspresponder_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSslocspresponderDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccSslocspresponder_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSslocspresponderExist("citrixadc_sslocspresponder.tf_sslocspresponder", nil),
@@ -101,7 +101,7 @@ func TestAccSslocspresponder_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_sslocspresponder.tf_sslocspresponder", "usenonce", "NO"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccSslocspresponder_basic_update1,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSslocspresponderExist("citrixadc_sslocspresponder.tf_sslocspresponder", nil),
@@ -119,7 +119,7 @@ func TestAccSslocspresponder_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_sslocspresponder.tf_sslocspresponder", "usenonce", "YES"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccSslocspresponder_basic_update2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSslocspresponderExist("citrixadc_sslocspresponder.tf_sslocspresponder", nil),

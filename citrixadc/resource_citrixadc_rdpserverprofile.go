@@ -20,27 +20,27 @@ func resourceCitrixAdcRdpserverprofile() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"psk": &schema.Schema{
+			"psk": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"rdpip": &schema.Schema{
+			"rdpip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"rdpport": &schema.Schema{
+			"rdpport": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"rdpredirection": &schema.Schema{
+			"rdpredirection": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

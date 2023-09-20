@@ -7,8 +7,8 @@ import (
 
 	"fmt"
 	"log"
-	"strconv"
 	"net/url"
+	"strconv"
 	"strings"
 )
 
@@ -22,12 +22,12 @@ func resourceCitrixAdcNd6ravariables_onlinkipv6prefix_binding() *schema.Resource
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"ipv6prefix": &schema.Schema{
+			"ipv6prefix": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"vlan": &schema.Schema{
+			"vlan": {
 				Type:     schema.TypeInt,
 				Required: true,
 				ForceNew: true,

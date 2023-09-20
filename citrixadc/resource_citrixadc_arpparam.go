@@ -20,12 +20,12 @@ func resourceCitrixAdcArpparam() *schema.Resource {
 		Update:        updateArpparamFunc,
 		Delete:        deleteArpparamFunc,
 		Schema: map[string]*schema.Schema{
-			"spoofvalidation": &schema.Schema{
+			"spoofvalidation": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"timeout": &schema.Schema{
+			"timeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -71,7 +71,7 @@ func readArpparamFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	d.Set("spoofvalidation", data["spoofvalidation"])
-	val,_ := strconv.Atoi(data["timeout"].(string))
+	val, _ := strconv.Atoi(data["timeout"].(string))
 	d.Set("timeout", val)
 
 	return nil

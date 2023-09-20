@@ -19,29 +19,29 @@ func resourceCitrixAdcTmglobal_tmtrafficpolicy_binding() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"policyname": &schema.Schema{
+			"policyname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"priority": &schema.Schema{
+			"priority": {
 				Type:     schema.TypeInt,
 				Required: true,
 				ForceNew: true,
 			},
-			"globalbindtype": &schema.Schema{
+			"globalbindtype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"gotopriorityexpression": &schema.Schema{
+			"gotopriorityexpression": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"type": &schema.Schema{
+			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -82,7 +82,6 @@ func readTmglobal_tmtrafficpolicy_bindingFunc(d *schema.ResourceData, meta inter
 	log.Printf("[DEBUG] citrixadc-provider:  In readTmglobal_tmtrafficpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policyname := d.Id()
-
 
 	log.Printf("[DEBUG] citrixadc-provider: Reading tmglobal_tmtrafficpolicy_binding state %s", policyname)
 

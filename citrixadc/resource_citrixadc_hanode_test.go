@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -47,7 +47,7 @@ func TestAccHanodeLocal_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccHanodeLocal_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHanodeExist("citrixadc_hanode.local_node", nil),
@@ -56,7 +56,7 @@ func TestAccHanodeLocal_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_hanode.local_node", "deadinterval", "5"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccHanodeLocal_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHanodeExist("citrixadc_hanode.local_node", nil),
@@ -85,13 +85,14 @@ const testAccHanodeRemote_update = `
 	}
 	
 `
+
 func TestAccHanodeRemote_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckHanodeDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccHanodeRemote_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHanodeExist("citrixadc_hanode.remote_node", nil),
@@ -99,7 +100,7 @@ func TestAccHanodeRemote_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_hanode.remote_node", "ipaddress", "10.222.74.145"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccHanodeRemote_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHanodeExist("citrixadc_hanode.remote_node", nil),

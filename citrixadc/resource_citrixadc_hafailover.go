@@ -19,18 +19,18 @@ func resourceCitrixAdcHafailover() *schema.Resource {
 		Read:          readHafailoverFunc,
 		Delete:        deleteHafailoverFunc,
 		Schema: map[string]*schema.Schema{
-			"force": &schema.Schema{
+			"force": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"ipaddress": &schema.Schema{
+			"ipaddress": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"state": &schema.Schema{
+			"state": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,

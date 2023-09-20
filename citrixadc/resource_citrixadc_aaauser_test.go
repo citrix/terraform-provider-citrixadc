@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -30,7 +30,7 @@ const testAccAaauser_basic = `
 		password = "my_pass"
 	}
 `
-const testAccAaauser_update= `
+const testAccAaauser_update = `
 
 	resource "citrixadc_aaauser" "tf_aaauser" {
 		username = "john"
@@ -44,7 +44,7 @@ func TestAccAaauser_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAaauserDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAaauser_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAaauserExist("citrixadc_aaauser.tf_aaauser", nil),
@@ -52,7 +52,7 @@ func TestAccAaauser_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_aaauser.tf_aaauser", "password", "my_pass"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAaauser_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAaauserExist("citrixadc_aaauser.tf_aaauser", nil),

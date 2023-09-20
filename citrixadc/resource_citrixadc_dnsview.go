@@ -5,7 +5,7 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	
+
 	"log"
 )
 
@@ -19,7 +19,7 @@ func resourceCitrixAdcDnsview() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"viewname": &schema.Schema{
+			"viewname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -67,7 +67,6 @@ func readDnsviewFunc(d *schema.ResourceData, meta interface{}) error {
 	return nil
 
 }
-
 
 func deleteDnsviewFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteDnsviewFunc")

@@ -20,22 +20,22 @@ func resourceCitrixAdcFeoparameter() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"cssinlinethressize": &schema.Schema{
+			"cssinlinethressize": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"imginlinethressize": &schema.Schema{
+			"imginlinethressize": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"jpegqualitypercent": &schema.Schema{
+			"jpegqualitypercent": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"jsinlinethressize": &schema.Schema{
+			"jsinlinethressize": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -55,7 +55,7 @@ func createFeoparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if v, ok := d.GetOkExists("jpegqualitypercent"); ok {
 		feoparameter["jpegqualitypercent"] = v.(int)
-	} 
+	}
 	if v, ok := d.GetOk("imginlinethressize"); ok {
 		feoparameter["imginlinethressize"] = v.(int)
 	}

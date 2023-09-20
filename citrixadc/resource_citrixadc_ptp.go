@@ -19,7 +19,7 @@ func resourceCitrixAdcPtp() *schema.Resource {
 		Update:        updatePtpFunc,
 		Delete:        deletePtpFunc,
 		Schema: map[string]*schema.Schema{
-			"state": &schema.Schema{
+			"state": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,

@@ -20,49 +20,49 @@ func resourceCitrixAdcTransformglobal_transformpolicy_binding() *schema.Resource
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"policyname": &schema.Schema{
+			"policyname": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"priority": &schema.Schema{
+			"priority": {
 				Type:     schema.TypeInt,
 				Required: true,
 				Computed: false,
 				ForceNew: true,
 			},
-			"globalbindtype": &schema.Schema{
+			"globalbindtype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"gotopriorityexpression": &schema.Schema{
+			"gotopriorityexpression": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"invoke": &schema.Schema{
+			"invoke": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"labelname": &schema.Schema{
+			"labelname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"labeltype": &schema.Schema{
+			"labeltype": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"type": &schema.Schema{
+			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -109,7 +109,7 @@ func readTransformglobal_transformpolicy_bindingFunc(d *schema.ResourceData, met
 
 	findParams := service.FindParams{
 		ResourceType:             "transformglobal_transformpolicy_binding",
-		ArgsMap:             	  map[string]string{ "type":d.Get("type").(string) },
+		ArgsMap:                  map[string]string{"type": d.Get("type").(string)},
 		ResourceMissingErrorCode: 258,
 	}
 	dataArr, err := client.FindResourceArrayWithParams(findParams)
@@ -174,7 +174,7 @@ func deleteTransformglobal_transformpolicy_bindingFunc(d *schema.ResourceData, m
 	}
 	if val, ok := d.GetOk("priority"); ok {
 		args = append(args, fmt.Sprintf("priority:%d", val.(int)))
-	}	
+	}
 	err := client.DeleteResourceWithArgs(service.Transformglobal_transformpolicy_binding.Type(), "", args)
 	if err != nil {
 		return err

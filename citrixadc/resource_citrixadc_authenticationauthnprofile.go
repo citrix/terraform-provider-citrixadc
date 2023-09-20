@@ -20,27 +20,27 @@ func resourceCitrixAdcAuthenticationauthnprofile() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"authnvsname": &schema.Schema{
+			"authnvsname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"authenticationdomain": &schema.Schema{
+			"authenticationdomain": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"authenticationhost": &schema.Schema{
+			"authenticationhost": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"authenticationlevel": &schema.Schema{
+			"authenticationlevel": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,

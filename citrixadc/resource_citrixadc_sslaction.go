@@ -19,168 +19,168 @@ func resourceCitrixAdcSslaction() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"cacertgrpname": &schema.Schema{
+			"cacertgrpname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"certfingerprintdigest": &schema.Schema{
+			"certfingerprintdigest": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"certfingerprintheader": &schema.Schema{
+			"certfingerprintheader": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"certhashheader": &schema.Schema{
+			"certhashheader": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"certheader": &schema.Schema{
+			"certheader": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"certissuerheader": &schema.Schema{
+			"certissuerheader": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"certnotafterheader": &schema.Schema{
+			"certnotafterheader": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"certnotbeforeheader": &schema.Schema{
+			"certnotbeforeheader": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"certserialheader": &schema.Schema{
+			"certserialheader": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"certsubjectheader": &schema.Schema{
+			"certsubjectheader": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"cipher": &schema.Schema{
+			"cipher": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"cipherheader": &schema.Schema{
+			"cipherheader": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"clientauth": &schema.Schema{
+			"clientauth": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"clientcert": &schema.Schema{
+			"clientcert": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"clientcertfingerprint": &schema.Schema{
+			"clientcertfingerprint": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"clientcerthash": &schema.Schema{
+			"clientcerthash": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"clientcertissuer": &schema.Schema{
+			"clientcertissuer": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"clientcertnotafter": &schema.Schema{
+			"clientcertnotafter": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"clientcertnotbefore": &schema.Schema{
+			"clientcertnotbefore": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"clientcertserialnumber": &schema.Schema{
+			"clientcertserialnumber": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"clientcertsubject": &schema.Schema{
+			"clientcertsubject": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"clientcertverification": &schema.Schema{
+			"clientcertverification": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"forward": &schema.Schema{
+			"forward": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"owasupport": &schema.Schema{
+			"owasupport": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"sessionid": &schema.Schema{
+			"sessionid": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"sessionidheader": &schema.Schema{
+			"sessionidheader": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"ssllogprofile": &schema.Schema{
+			"ssllogprofile": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

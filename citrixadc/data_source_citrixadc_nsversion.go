@@ -14,16 +14,16 @@ func dataSourceCitrixAdcNsversion() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceCitrixAdcNsversionRead,
 		Schema: map[string]*schema.Schema{
-			"installedversion": &schema.Schema{
+			"installedversion": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"version": &schema.Schema{
+			"version": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"mode": &schema.Schema{
+			"mode": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},

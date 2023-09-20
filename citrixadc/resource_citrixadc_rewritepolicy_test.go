@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -34,14 +34,14 @@ func TestAccRewritepolicy_globalbinding(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRewritepolicyDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRewritepolicy_globalbinding_not_exists,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRewritepolicyExist("citrixadc_rewritepolicy.tf_rewrite_policy", nil),
 					verifyRewriteGlobalBindingExists("REQ_OVERRIDE", "tf_rewrite_policy", true),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRewritepolicy_globalbinding_exists,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRewritepolicyExist("citrixadc_rewritepolicy.tf_rewrite_policy", nil),
@@ -71,7 +71,7 @@ func TestAccRewritepolicy_lbvserverbinding(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRewritepolicyDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRewritepolicy_lbvserverbindings_none,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRewritepolicyExist("citrixadc_rewritepolicy.tf_rewrite_policy", nil),
@@ -79,7 +79,7 @@ func TestAccRewritepolicy_lbvserverbinding(t *testing.T) {
 					verifyRewriteLbvserverBindingExists("tf_lbvserver2", "tf_rewrite_policy", true),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRewritepolicy_lbvserverbindings_both,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRewritepolicyExist("citrixadc_rewritepolicy.tf_rewrite_policy", nil),
@@ -87,7 +87,7 @@ func TestAccRewritepolicy_lbvserverbinding(t *testing.T) {
 					verifyRewriteLbvserverBindingExists("tf_lbvserver2", "tf_rewrite_policy", false),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRewritepolicy_lbvserverbindings_one,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRewritepolicyExist("citrixadc_rewritepolicy.tf_rewrite_policy", nil),
@@ -108,7 +108,7 @@ func TestAccRewritepolicy_csvserverbinding(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRewritepolicyDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRewritepolicy_csvserverbindings_none,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRewritepolicyExist("citrixadc_rewritepolicy.tf_rewrite_policy", nil),
@@ -116,7 +116,7 @@ func TestAccRewritepolicy_csvserverbinding(t *testing.T) {
 					//verifyRewriteLbvserverBindingExists("tf_lbvserver2", "tf_rewrite_policy", true),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRewritepolicy_csvserverbindings_both,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRewritepolicyExist("citrixadc_rewritepolicy.tf_rewrite_policy", nil),
@@ -124,7 +124,7 @@ func TestAccRewritepolicy_csvserverbinding(t *testing.T) {
 					//verifyRewriteLbvserverBindingExists("tf_lbvserver2", "tf_rewrite_policy", true),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRewritepolicy_csvserverbindings_one,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRewritepolicyExist("citrixadc_rewritepolicy.tf_rewrite_policy", nil),

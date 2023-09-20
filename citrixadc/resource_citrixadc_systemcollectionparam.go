@@ -19,17 +19,17 @@ func resourceCitrixAdcSystemcollectionparam() *schema.Resource {
 		Update:        updateSystemcollectionparamFunc,
 		Delete:        deleteSystemcollectionparamFunc,
 		Schema: map[string]*schema.Schema{
-			"communityname": &schema.Schema{
+			"communityname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"datapath": &schema.Schema{
+			"datapath": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"loglevel": &schema.Schema{
+			"loglevel": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -42,7 +42,7 @@ func createSystemcollectionparamFunc(d *schema.ResourceData, meta interface{}) e
 	log.Printf("[DEBUG]  citrixadc-provider: In createSystemcollectionparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 	systemcollectionparamName := resource.PrefixedUniqueId("tf-systemcollectionparam-")
-	
+
 	systemcollectionparam := system.Systemcollectionparam{
 		Communityname: d.Get("communityname").(string),
 		Datapath:      d.Get("datapath").(string),
@@ -85,7 +85,7 @@ func readSystemcollectionparamFunc(d *schema.ResourceData, meta interface{}) err
 func updateSystemcollectionparamFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateSystemcollectionparamFunc")
 	client := meta.(*NetScalerNitroClient).client
-	
+
 	systemcollectionparam := system.Systemcollectionparam{}
 	hasChange := false
 	if d.HasChange("communityname") {

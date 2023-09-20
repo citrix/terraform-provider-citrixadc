@@ -19,35 +19,35 @@ func resourceCitrixAdcTunnelglobal_tunneltrafficpolicy_binding() *schema.Resourc
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"policyname": &schema.Schema{
+			"policyname": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"type": &schema.Schema{
+			"type": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"feature": &schema.Schema{
+			"feature": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"gotopriorityexpression": &schema.Schema{
+			"gotopriorityexpression": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"priority": &schema.Schema{
+			"priority": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"state": &schema.Schema{
+			"state": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -91,7 +91,7 @@ func readTunnelglobal_tunneltrafficpolicy_bindingFunc(d *schema.ResourceData, me
 	policyname := d.Id()
 
 	log.Printf("[DEBUG] citrixadc-provider: Reading tunnelglobal_tunneltrafficpolicy_binding state %s", policyname)
-	
+
 	findParams := service.FindParams{
 		ResourceType:             "tunnelglobal_tunneltrafficpolicy_binding",
 		ArgsMap:                  map[string]string{"type": d.Get("type").(string)},

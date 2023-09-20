@@ -5,8 +5,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
-	"strconv"
 	"log"
+	"strconv"
 )
 
 func resourceCitrixAdcArp() *schema.Resource {
@@ -16,58 +16,58 @@ func resourceCitrixAdcArp() *schema.Resource {
 		Read:          readArpFunc,
 		Delete:        deleteArpFunc,
 		Schema: map[string]*schema.Schema{
-			"ipaddress": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew:true,
-			},
-			"mac": &schema.Schema{
+			"ipaddress": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"all": &schema.Schema{
+			"mac": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"all": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"ifnum": &schema.Schema{
+			"ifnum": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"nodeid": &schema.Schema{
+			"nodeid": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"ownernode": &schema.Schema{
+			"ownernode": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"td": &schema.Schema{
+			"td": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"vlan": &schema.Schema{
+			"vlan": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"vtep": &schema.Schema{
+			"vtep": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"vxlan": &schema.Schema{
+			"vxlan": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -186,9 +186,9 @@ func deleteArpFunc(d *schema.ResourceData, meta interface{}) error {
 	var err error
 	if len(args) == 0 {
 		err = client.DeleteResource(service.Arp.Type(), arpName)
-	} else  if len(args) > 0 {
-		err = client.DeleteResourceWithArgs(service.Arp.Type(), arpName,args)
-	}	
+	} else if len(args) > 0 {
+		err = client.DeleteResourceWithArgs(service.Arp.Type(), arpName, args)
+	}
 	if err != nil {
 		return err
 	}
