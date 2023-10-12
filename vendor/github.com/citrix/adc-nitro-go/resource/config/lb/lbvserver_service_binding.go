@@ -47,6 +47,10 @@ type Lbvserverservicebinding struct {
 	/**
 	* Dynamic weight
 	*/
+	Order int `json:"order,omitempty"`
+	/**
+	* Order number to be assigned to the service when it is bound to the lb vserver.
+	*/
 	Dynamicweight int `json:"dynamicweight,omitempty"`
 	/**
 	* Encryped Ip address and port of the service that is inserted into the set-cookie http header
