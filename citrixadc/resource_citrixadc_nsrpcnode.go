@@ -42,6 +42,11 @@ func resourceCitrixAdcNsrpcnode() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"validatecert": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -52,10 +57,11 @@ func createNsrpcnodeFunc(d *schema.ResourceData, meta interface{}) error {
 	nsrpcnodeIpaddress := d.Get("ipaddress").(string)
 
 	nsrpcnode := ns.Nsrpcnode{
-		Ipaddress: d.Get("ipaddress").(string),
-		Password:  d.Get("password").(string),
-		Secure:    d.Get("secure").(string),
-		Srcip:     d.Get("srcip").(string),
+		Ipaddress:    d.Get("ipaddress").(string),
+		Password:     d.Get("password").(string),
+		Secure:       d.Get("secure").(string),
+		Srcip:        d.Get("srcip").(string),
+		Validatecert: d.Get("validatecert").(string),
 	}
 
 	err := client.UpdateUnnamedResource(service.Nsrpcnode.Type(), &nsrpcnode)
@@ -100,6 +106,7 @@ func readNsrpcnodeFunc(d *schema.ResourceData, meta interface{}) error {
 	//d.Set("password", data["password"])
 	d.Set("secure", data["secure"])
 	d.Set("srcip", data["srcip"])
+	d.Set("validatecert", data["validatecert"])
 
 	return nil
 
@@ -127,6 +134,12 @@ func updateNsrpcnodeFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("srcip") {
 		log.Printf("[DEBUG]  citrixadc-provider: Srcip has changed for nsrpcnode %s, starting update", nsrpcnodeIpaddress)
 		nsrpcnode.Srcip = d.Get("srcip").(string)
+		hasChange = true
+	}
+	if d.HasChange("validatecert") {
+		log.Printf("[DEBUG]  citrixadc-provider: Validatecert has changed for nsrpcnode %s, starting update", nsrpcnodeIpaddress)
+		nsrpcnode.Validatecert = d.Get("validatecert").(string)
+		nsrpcnode.Secure = d.Get("secure").(string)
 		hasChange = true
 	}
 

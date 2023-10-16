@@ -24,7 +24,8 @@ resource "citrixadc_nsrpcnode" "tf_nsrpcnode" {
 * `ipaddress` - (Required) IP address of the node. This has to be in the same subnet as the NSIP address.
 * `password` - (Optional) Password to be used in authentication with the peer system node.
 * `srcip` - (Optional) Source IP address to be used to communicate with the peer system node. The default value is 0, which means that the appliance uses the NSIP address as the source IP address.
-* `secure` - (Optional) State of the channel when talking to the node. Possible values: [ YES, NO ]
+* `secure` - (Optional) State of the channel when talking to the node. Default value: ON | Possible values: [ ON, OFF ]
+* `validatecert` - (Optional) validate the server certificate for secure SSL connections. Default value: NO | Possible values: [ YES, NO ]
 
 
 ## Attribute Reference
