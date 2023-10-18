@@ -837,6 +837,7 @@ func updateSslprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("sesstimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Sesstimeout has changed for sslprofile %s, starting update", sslprofileName)
 		sslprofile.Sesstimeout = d.Get("sesstimeout").(int)
+		sslprofile.Sessreuse = d.Get("sessreuse").(string)
 		hasChange = true
 	}
 	if d.HasChange("skipclientcertpolicycheck") {
