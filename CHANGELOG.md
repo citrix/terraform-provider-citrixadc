@@ -7,6 +7,7 @@ BUG FIXES
 * **citrixadc_sslprofile**: Updated updated function to handle the updation of `sesstimeout` attribute.
 * **citrixadc_nsparam**: Updated the read function to not to set value for `timezone` attribute, as we recieve different value from the NetScaler.
 * **citrixadc_lbmonitor**: Updated the read function to not to set value for `respcode` attribute, as we recieve different value from the NetScaler.
+* **citrixadc_sslprofile**: Added ForceNew property to `sslprofiletype` argument.
 
 ENHANCEMENTS
 
