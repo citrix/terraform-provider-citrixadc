@@ -143,6 +143,14 @@ type Analyticsprofile struct {
 	* This option indicates the whether auditlog should be sent to the REST collector.
 	*/
 	Auditlogs string `json:"auditlogs,omitempty"`
+	/**
+	* This option is for setting the mode of how data is provided.
+	*/
+	Servemode string `json:"servemode,omitempty"`
+	/**
+	* This option is for configuring json schema file containing a list of counters to be exported by metricscollector.
+	*/
+	Schemafile string `json:"schemafile,omitempty"`
 
 	//------- Read only Parameter ---------;
 

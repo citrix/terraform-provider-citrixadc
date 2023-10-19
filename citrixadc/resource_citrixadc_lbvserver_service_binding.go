@@ -37,6 +37,12 @@ func resourceCitrixAdcLbvserver_service_binding() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
+			"order": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -54,6 +60,7 @@ func createLbvserver_service_bindingFunc(d *schema.ResourceData, meta interface{
 		Name:        d.Get("name").(string),
 		Servicename: d.Get("servicename").(string),
 		Weight:      d.Get("weight").(int),
+		Order:       d.Get("order").(int),
 	}
 
 	_, err := client.AddResource(service.Lbvserver_service_binding.Type(), name, &lbvserver_service_binding)
@@ -124,7 +131,8 @@ func readLbvserver_service_bindingFunc(d *schema.ResourceData, meta interface{})
 
 	d.Set("name", data["name"])
 	d.Set("servicename", data["servicename"])
-	d.Set("weight", data["weight"])
+	setToInt("weight", d, data["weight"])
+	setToInt("order", d, data["order"])
 
 	return nil
 

@@ -28,6 +28,7 @@ resource "citrixadc_lbvserver_service_binding" "tf_binding" {
   name = citrixadc_lbvserver.tf_lbvserver.name
   servicename = citrixadc_service.tf_service.name
   weight = 1
+  order = 10
 }
 ```
 
@@ -36,6 +37,7 @@ resource "citrixadc_lbvserver_service_binding" "tf_binding" {
 
 * `servicename` - (Required) Service to bind to the virtual server.
 * `weight` - (Optional) Weight to assign to the specified service.
+* `order` - (Optional) Order number to be assigned to the service when it is bound to the lb vserver.
 * `name` - (Required) Name for the virtual server. Must begin with an ASCII alphanumeric or underscore (\_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at sign (@), equal sign (=), and hyphen (-) characters. Can be changed after the virtual server is created.  CLI Users: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my vserver" or 'my vserver'). .
 
 
