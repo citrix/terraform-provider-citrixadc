@@ -161,7 +161,7 @@ func readLbvserver_transformpolicy_bindingFunc(d *schema.ResourceData, meta inte
 	d.Set("labeltype", data["labeltype"])
 	d.Set("name", data["name"])
 	d.Set("policyname", data["policyname"])
-	d.Set("priority", data["priority"])
+	setToInt("priority", d, data["priority"])
 
 	return nil
 

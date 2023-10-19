@@ -280,7 +280,7 @@ func readNsparamFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("grantquotaspillover", data["grantquotaspillover"])
 	d.Set("internaluserlogin", data["internaluserlogin"])
 	d.Set("maxconn", data["maxconn"])
-	d.Set("maxreq", data["maxreq"])
+	setToInt("maxreq", d, data["maxreq"])
 	d.Set("mgmthttpport", data["mgmthttpport"])
 	d.Set("mgmthttpsport", data["mgmthttpsport"])
 	d.Set("pmtumin", data["pmtumin"])

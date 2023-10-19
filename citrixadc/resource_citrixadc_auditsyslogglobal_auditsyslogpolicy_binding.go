@@ -129,7 +129,7 @@ func readAuditsyslogglobal_auditsyslogpolicy_bindingFunc(d *schema.ResourceData,
 	d.Set("feature", data["feature"])
 	d.Set("globalbindtype", data["globalbindtype"])
 	d.Set("policyname", data["policyname"])
-	d.Set("priority", data["priority"])
+	setToInt("priority", d, data["priority"])
 
 	return nil
 

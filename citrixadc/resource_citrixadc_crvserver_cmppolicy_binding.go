@@ -171,7 +171,7 @@ func readCrvserver_cmppolicy_bindingFunc(d *schema.ResourceData, meta interface{
 	d.Set("labeltype", data["labeltype"])
 	d.Set("name", data["name"])
 	d.Set("policyname", data["policyname"])
-	d.Set("priority", data["priority"])
+	setToInt("priority", d, data["priority"])
 	d.Set("targetvserver", data["targetvserver"])
 
 	return nil

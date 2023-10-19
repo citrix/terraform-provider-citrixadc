@@ -134,7 +134,7 @@ func readAaauser_vpntrafficpolicy_bindingFunc(d *schema.ResourceData, meta inter
 
 	d.Set("gotopriorityexpression", data["gotopriorityexpression"])
 	d.Set("policy", data["policy"])
-	d.Set("priority", data["priority"])
+	setToInt("priority", d, data["priority"])
 	d.Set("type", data["type"])
 	d.Set("username", data["username"])
 

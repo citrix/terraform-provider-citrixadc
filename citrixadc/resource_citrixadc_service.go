@@ -533,8 +533,8 @@ func readServiceFunc(d *schema.ResourceData, meta interface{}) error {
 		}*/
 	d.Set("ipaddress", data["ipaddress"])
 	d.Set("maxbandwidth", data["maxbandwidth"])
-	d.Set("maxclient", data["maxclient"])
-	d.Set("maxreq", data["maxreq"])
+	setToInt("maxclient", d, data["maxclient"])
+	setToInt("maxreq", d, data["maxreq"])
 	d.Set("monconnectionclose", data["monconnectionclose"])
 	d.Set("monitornamesvc", data["monitornamesvc"])
 	d.Set("monthreshold", data["monthreshold"])

@@ -148,7 +148,7 @@ func readDnssrvrecFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("ecssubnet", data["ecssubnet"])
 	d.Set("nodeid", data["nodeid"])
 	d.Set("port", data["port"])
-	d.Set("priority", data["priority"])
+	setToInt("priority", d, data["priority"])
 	d.Set("target", data["target"])
 	d.Set("ttl", data["ttl"])
 	d.Set("type", data["type"])

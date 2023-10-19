@@ -89,7 +89,7 @@ func readAppfwfieldtypeFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("comment", data["comment"])
 	d.Set("name", data["name"])
 	d.Set("nocharmaps", data["nocharmaps"])
-	d.Set("priority", data["priority"])
+	setToInt("priority", d, data["priority"])
 	d.Set("regex", data["regex"])
 
 	return nil

@@ -146,7 +146,7 @@ func readSystemglobal_authenticationlocalpolicy_bindingFunc(d *schema.ResourceDa
 	d.Set("gotopriorityexpression", data["gotopriorityexpression"])
 	d.Set("nextfactor", data["nextfactor"])
 	d.Set("policyname", data["policyname"])
-	d.Set("priority", data["priority"])
+	setToInt("priority", d, data["priority"])
 
 	return nil
 

@@ -127,7 +127,7 @@ func readIcaglobal_icapolicy_bindingFunc(d *schema.ResourceData, meta interface{
 	d.Set("globalbindtype", data["globalbindtype"])
 	d.Set("gotopriorityexpression", data["gotopriorityexpression"])
 	d.Set("policyname", data["policyname"])
-	d.Set("priority", data["priority"])
+	setToInt("priority", d, data["priority"])
 	d.Set("type", data["type"])
 
 	return nil

@@ -282,7 +282,7 @@ func readNsaclFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("icmptype", data["icmptype"])
 	d.Set("interface", data["interface"])
 	d.Set("logstate", data["logstate"])
-	d.Set("priority", data["priority"])
+	setToInt("priority", d, data["priority"])
 	d.Set("protocol", data["protocol"])
 	d.Set("protocolnumber", data["protocolnumber"])
 	d.Set("ratelimit", data["ratelimit"])

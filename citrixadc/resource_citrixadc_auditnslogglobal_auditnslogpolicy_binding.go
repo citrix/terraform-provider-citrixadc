@@ -121,7 +121,7 @@ func readAuditnslogglobal_auditnslogpolicy_bindingFunc(d *schema.ResourceData, m
 	d.Set("builtin", data["builtin"])
 	d.Set("globalbindtype", data["globalbindtype"])
 	d.Set("policyname", data["policyname"])
-	d.Set("priority", data["priority"])
+	setToInt("priority", d, data["priority"])
 
 	return nil
 

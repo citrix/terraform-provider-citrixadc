@@ -155,7 +155,7 @@ func readVpnvserver_feopolicy_bindingFunc(d *schema.ResourceData, meta interface
 	d.Set("groupextraction", data["groupextraction"])
 	d.Set("name", data["name"])
 	d.Set("policyname", data["policy"]) // we are getting policy as policyname
-	d.Set("priority", data["priority"])
+	setToInt("priority", d, data["priority"])
 	d.Set("secondary", data["secondary"])
 
 	return nil

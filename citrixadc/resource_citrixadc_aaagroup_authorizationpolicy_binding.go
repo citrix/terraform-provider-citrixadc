@@ -135,7 +135,7 @@ func readAaagroup_authorizationpolicy_bindingFunc(d *schema.ResourceData, meta i
 	d.Set("gotopriorityexpression", data["gotopriorityexpression"])
 	d.Set("groupname", data["groupname"])
 	d.Set("policy", data["policy"])
-	d.Set("priority", data["priority"])
+	setToInt("priority", d, data["priority"])
 	d.Set("type", data["type"])
 
 	return nil

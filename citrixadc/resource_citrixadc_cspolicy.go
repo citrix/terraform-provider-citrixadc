@@ -127,7 +127,7 @@ func createCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 		cspolicyName = v.(string)
 	} else {
 		cspolicyName = resource.PrefixedUniqueId("tf-cspolicy-")
-		d.Set("name", cspolicyName)
+		d.Set("policyname", cspolicyName)
 	}
 	cspolicy := cs.Cspolicy{
 		Policyname: d.Get("policyname").(string),

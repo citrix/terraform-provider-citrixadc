@@ -137,7 +137,7 @@ func readGslbvserver_spilloverpolicy_bindingFunc(d *schema.ResourceData, meta in
 	d.Set("gotopriorityexpression", data["gotopriorityexpression"])
 	d.Set("name", data["name"])
 	d.Set("policyname", data["policyname"])
-	d.Set("priority", data["priority"])
+	setToInt("priority", d, data["priority"])
 	d.Set("type", data["type"])
 
 	return nil

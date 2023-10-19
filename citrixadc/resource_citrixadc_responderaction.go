@@ -122,7 +122,7 @@ func readResponderactionFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("htmlpage", data["htmlpage"])
 	d.Set("name", data["name"])
 	d.Set("reasonphrase", data["reasonphrase"])
-	d.Set("responsestatuscode", data["responsestatuscode"])
+	setToInt("responsestatuscode", d, data["responsestatuscode"])
 	d.Set("target", data["target"])
 	d.Set("type", data["type"])
 

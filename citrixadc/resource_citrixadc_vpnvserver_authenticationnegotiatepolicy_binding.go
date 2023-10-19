@@ -155,7 +155,7 @@ func readVpnvserver_authenticationnegotiatepolicy_bindingFunc(d *schema.Resource
 	d.Set("groupextraction", data["groupextraction"])
 	d.Set("name", data["name"])
 	d.Set("policy", data["policy"])
-	d.Set("priority", data["priority"])
+	setToInt("priority", d, data["priority"])
 	d.Set("secondary", data["secondary"])
 
 	return nil

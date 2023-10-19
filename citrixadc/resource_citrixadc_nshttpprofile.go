@@ -405,7 +405,7 @@ func readNshttpprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("markrfc7230noncompliantinval", data["markrfc7230noncompliantinval"])
 	d.Set("marktracereqinval", data["marktracereqinval"])
 	d.Set("maxheaderlen", data["maxheaderlen"])
-	d.Set("maxreq", data["maxreq"])
+	setToInt("maxreq", d, data["maxreq"])
 	d.Set("maxreusepool", data["maxreusepool"])
 	d.Set("minreusepool", data["minreusepool"])
 	d.Set("name", data["name"])

@@ -352,7 +352,7 @@ func readCrvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("backupvserver", data["backupvserver"])
 	d.Set("cachetype", data["cachetype"])
 	d.Set("cachevserver", data["cachevserver"])
-	d.Set("clttimeout", data["clttimeout"])
+	setToInt("clttimeout", d, data["clttimeout"])
 	d.Set("comment", data["comment"])
 	d.Set("destinationvserver", data["destinationvserver"])
 	d.Set("disableprimaryondown", data["disableprimaryondown"])

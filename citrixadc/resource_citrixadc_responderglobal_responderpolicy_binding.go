@@ -162,7 +162,7 @@ func readResponderglobal_responderpolicy_bindingFunc(d *schema.ResourceData, met
 	d.Set("labelname", data["labelname"])
 	d.Set("labeltype", data["labeltype"])
 	d.Set("policyname", data["policyname"])
-	d.Set("priority", data["priority"])
+	setToInt("priority", d, data["priority"])
 	d.Set("type", data["type"])
 
 	return nil

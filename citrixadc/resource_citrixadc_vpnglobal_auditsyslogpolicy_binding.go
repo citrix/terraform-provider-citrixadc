@@ -130,7 +130,7 @@ func readVpnglobal_auditsyslogpolicy_bindingFunc(d *schema.ResourceData, meta in
 	//d.Set("gotopriorityexpression", data["gotopriorityexpression"]) It is not returned by NitroApi call from ADC
 	d.Set("groupextraction", data["groupextraction"])
 	d.Set("policyname", data["policyname"])
-	d.Set("priority", data["priority"])
+	setToInt("priority", d, data["priority"])
 	d.Set("secondary", data["secondary"])
 
 	return nil

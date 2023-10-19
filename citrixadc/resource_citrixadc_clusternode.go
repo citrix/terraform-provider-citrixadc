@@ -117,7 +117,7 @@ func readClusternodeFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("delay", data["delay"])
 	d.Set("ipaddress", data["ipaddress"])
 	d.Set("nodegroup", data["nodegroup"])
-	d.Set("priority", data["priority"])
+	setToInt("priority", d, data["priority"])
 	d.Set("state", data["state"])
 	d.Set("tunnelmode", data["tunnelmode"])
 
