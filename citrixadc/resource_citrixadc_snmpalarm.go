@@ -100,7 +100,7 @@ func readSnmpalarmFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("trapname", data["trapname"])
 	d.Set("logging", data["logging"])
-	d.Set("normalvalue", data["normalvalue"])
+	// d.Set("normalvalue", data["normalvalue"]) TODO: Not received from NetScaler
 	d.Set("severity", data["severity"])
 	d.Set("state", data["state"])
 	d.Set("thresholdvalue", data["thresholdvalue"])
