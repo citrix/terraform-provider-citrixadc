@@ -51,6 +51,8 @@ resource "citrixadc_analyticsprofile" "tf_analyticsprofile" {
 * `metrics` - (Optional) This option indicates the whether metrics should be sent to the REST collector. Possible values: [ ENABLED, DISABLED ]
 * `events` - (Optional) This option indicates the whether events should be sent to the REST collector. Possible values: [ ENABLED, DISABLED ]
 * `auditlogs` - (Optional) This option indicates the whether auditlog should be sent to the REST collector. Possible values: [ ENABLED, DISABLED ]
+* `servemode` - (Optional) This option is for setting the mode of how data is provided. Default value: Push | Possible values: [ Push, Pull ]
+* `auditlogs` - (Optional) This option indicates the whether auditlog should be sent to the REST collector. Possible values: [ ENABLED, DISABLED ]
 
 
 ## Attribute Reference

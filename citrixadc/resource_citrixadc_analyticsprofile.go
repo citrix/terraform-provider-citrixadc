@@ -168,6 +168,16 @@ func resourceCitrixAdcAnalyticsprofile() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"servemode": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"schemafile": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -207,6 +217,8 @@ func createAnalyticsprofileFunc(d *schema.ResourceData, meta interface{}) error 
 		Tcpburstreporting:          d.Get("tcpburstreporting").(string),
 		Type:                       d.Get("type").(string),
 		Urlcategory:                d.Get("urlcategory").(string),
+		Servemode:                  d.Get("servemode").(string),
+		Schemafile:                 d.Get("schemafile").(string),
 	}
 
 	_, err := client.AddResource("analyticsprofile", analyticsprofileName, &analyticsprofile)
@@ -265,6 +277,8 @@ func readAnalyticsprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("tcpburstreporting", data["tcpburstreporting"])
 	d.Set("type", data["type"])
 	d.Set("urlcategory", data["urlcategory"])
+	d.Set("servemode", data["servemode"])
+	d.Set("schemafile", data["schemafile"])
 
 	return nil
 
@@ -422,6 +436,16 @@ func updateAnalyticsprofileFunc(d *schema.ResourceData, meta interface{}) error 
 	if d.HasChange("urlcategory") {
 		log.Printf("[DEBUG]  citrixadc-provider: Urlcategory has changed for analyticsprofile %s, starting update", analyticsprofileName)
 		analyticsprofile.Urlcategory = d.Get("urlcategory").(string)
+		hasChange = true
+	}
+	if d.HasChange("servemode") {
+		log.Printf("[DEBUG]  citrixadc-provider: Servemode has changed for analyticsprofile %s, starting update", analyticsprofileName)
+		analyticsprofile.Servemode = d.Get("servemode").(string)
+		hasChange = true
+	}
+	if d.HasChange("schemafile") {
+		log.Printf("[DEBUG]  citrixadc-provider: Schemafile has changed for analyticsprofile %s, starting update", analyticsprofileName)
+		analyticsprofile.Schemafile = d.Get("schemafile").(string)
 		hasChange = true
 	}
 
