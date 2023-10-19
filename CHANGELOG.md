@@ -1,3 +1,20 @@
+## 1.37.0 (Oct 19, 2023)
+
+BUG FIXES
+
+* **citrixadc_snmpalarm**: Updated the read function to not to set value for `normalvalue` attribute, that is not recieved from the NetScaler.
+* **citrixadc_lbvserver**: Updated attribute `timeout` to accept 0 value from the user and set defalut value to 2.
+* **citrixadc_sslprofile**: Updated updated function to handle the updation of `sesstimeout` attribute.
+* **citrixadc_nsparam**: Updated the read function to not to set value for `timezone` attribute, as we recieve different value from the NetScaler.
+* **citrixadc_lbmonitor**: Updated the read function to not to set value for `respcode` attribute, as we recieve different value from the NetScaler.
+
+ENHANCEMENTS
+
+* **lbvserver_service_binding**: Updated the resource with additional supported `order` attribute.
+* **citrixadc_analyticsprofile**: Updated the resource with additional supported `servemode` and `schemafile` attributes.
+* **citrixadc_nsrpcnode**: Updated the resource with additional supported `validatecert` attribute and updated docs for `secure` attribute.
+* **citrixadc_dnsaddrec**: Updated read operation to make it backward compatible, appended the attribute value to old Id. 
+  
 ## 1.36.0 (July 27, 2023)
 
 BUG FIXES
