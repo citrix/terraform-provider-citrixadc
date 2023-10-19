@@ -520,7 +520,7 @@ func resourceCitrixAdcLbmonitor() *schema.Resource {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
-				Computed: true,
+				Computed: false,
 			},
 		},
 	}
@@ -767,7 +767,7 @@ func readLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("validatecred", data["validatecred"])
 	d.Set("vendorid", data["vendorid"])
 	d.Set("vendorspecificvendorid", data["vendorspecificvendorid"])
-	d.Set("respcode", data["respcode"])
+	// d.Set("respcode", data["respcode"]) // we receive different value from NetScaler
 
 	return nil
 
