@@ -289,7 +289,7 @@ func readNsparamFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("securecookie", data["securecookie"])
 	d.Set("servicepathingressvlan", data["servicepathingressvlan"])
 	d.Set("tcpcip", data["tcpcip"])
-	d.Set("timezone", data["timezone"])
+	// d.Set("timezone", data["timezone"]) // This is received as different value from the NetScaler
 	d.Set("useproxyport", data["useproxyport"])
 
 	return nil
