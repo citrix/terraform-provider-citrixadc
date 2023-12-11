@@ -1,0 +1,2 @@
+username = "nsuser"
+password = "verysecretpassword"
