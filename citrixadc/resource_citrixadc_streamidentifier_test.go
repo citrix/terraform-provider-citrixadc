@@ -25,25 +25,34 @@ import (
 
 const testAccStreamidentifier_basic = `
 
-resource "citrixadc_streamidentifier" "tf_streamidentifier" {
-	name         = "my_streamidentifier"
-	selectorname = "my_streamselector"
-	samplecount  = 10
-	sort         = "CONNECTIONS"
-	snmptrap     = "ENABLED"
-  }
+	resource "citrixadc_streamselector" "tf_streamselector" {
+		name = "my_streamselector"
+		rule = ["HTTP.REQ.URL", "CLIENT.IP.SRC"]
+	}
+	resource "citrixadc_streamidentifier" "tf_streamidentifier" {
+		name         = "my_streamidentifier"
+		selectorname = citrixadc_streamselector.tf_streamselector.name
+		samplecount  = 10
+		sort         = "CONNECTIONS"
+		snmptrap     = "ENABLED"
+	}
   
 `
 
 const testAccStreamidentifier_update = `
 
-resource "citrixadc_streamidentifier" "tf_streamidentifier" {
-	name         = "my_streamidentifier"
-	selectorname = "my_streamselector"
-	samplecount  = 20
-	sort         = "REQUESTS"
-	snmptrap     = "DISABLED"
-  }
+	resource "citrixadc_streamselector" "tf_streamselector" {
+		name = "my_streamselector"
+		rule = ["HTTP.REQ.URL", "CLIENT.IP.SRC"]
+	}
+
+	resource "citrixadc_streamidentifier" "tf_streamidentifier" {
+		name         = "my_streamidentifier"
+		selectorname = citrixadc_streamselector.tf_streamselector.name
+		samplecount  = 20
+		sort         = "REQUESTS"
+		snmptrap     = "DISABLED"
+	}
   
 `
 

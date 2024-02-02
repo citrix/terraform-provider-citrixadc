@@ -34,6 +34,7 @@ const testAccAdmparameter_update = `
 `
 
 func TestAccAdmparameter_basic(t *testing.T) {
+	t.Skip("Autoconnect cannot be disabled for Citrix Internal NetScalers")
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,

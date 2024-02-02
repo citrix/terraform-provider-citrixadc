@@ -25,18 +25,30 @@ import (
 
 const testAccAppqoepolicy_basic = `
 
+	resource "citrixadc_appqoeaction" "tf_appqoeaction" {
+		name        = "my_appqoeaction"
+		priority    = "LOW"
+		respondwith = "NS"
+		delay       = 40
+	}
 	resource "citrixadc_appqoepolicy" "tf_appqoepolicy" {
 		name   = "my_appqoepolicy"
 		rule   = "true"
-		action = "my_act"
+		action = citrixadc_appqoeaction.tf_appqoeaction.name
 	}
 `
 const testAccAppqoepolicy_update = `
 
+	resource "citrixadc_appqoeaction" "tf_appqoeaction" {
+		name        = "my_appqoeaction"
+		priority    = "LOW"
+		respondwith = "NS"
+		delay       = 40
+	}
 	resource "citrixadc_appqoepolicy" "tf_appqoepolicy" {
 		name   = "my_appqoepolicy"
 		rule   = "false"
-		action = "my_act"
+		action = citrixadc_appqoeaction.tf_appqoeaction.name
 	}
 `
 
@@ -52,7 +64,7 @@ func TestAccAppqoepolicy_basic(t *testing.T) {
 					testAccCheckAppqoepolicyExist("citrixadc_appqoepolicy.tf_appqoepolicy", nil),
 					resource.TestCheckResourceAttr("citrixadc_appqoepolicy.tf_appqoepolicy", "name", "my_appqoepolicy"),
 					resource.TestCheckResourceAttr("citrixadc_appqoepolicy.tf_appqoepolicy", "rule", "true"),
-					resource.TestCheckResourceAttr("citrixadc_appqoepolicy.tf_appqoepolicy", "action", "my_act"),
+					resource.TestCheckResourceAttr("citrixadc_appqoepolicy.tf_appqoepolicy", "action", "my_appqoeaction"),
 				),
 			},
 			{
@@ -61,7 +73,7 @@ func TestAccAppqoepolicy_basic(t *testing.T) {
 					testAccCheckAppqoepolicyExist("citrixadc_appqoepolicy.tf_appqoepolicy", nil),
 					resource.TestCheckResourceAttr("citrixadc_appqoepolicy.tf_appqoepolicy", "name", "my_appqoepolicy"),
 					resource.TestCheckResourceAttr("citrixadc_appqoepolicy.tf_appqoepolicy", "rule", "false"),
-					resource.TestCheckResourceAttr("citrixadc_appqoepolicy.tf_appqoepolicy", "action", "my_act"),
+					resource.TestCheckResourceAttr("citrixadc_appqoepolicy.tf_appqoepolicy", "action", "my_appqoeaction"),
 				),
 			},
 		},

@@ -26,10 +26,12 @@ import (
 )
 
 const testAccTransformpolicylabel_transformpolicy_binding_basic = `
-  
+resource "citrixadc_transformprofile" "tf_trans_profile1" {
+	name = "pro_1"
+  }
   resource "citrixadc_transformpolicy" "tf_trans_policy" {
 	  name = "tf_trans_policy"
-	  profilename = "pro_1"
+	  profilename = citrixadc_transformprofile.tf_trans_profile1.name
 	  rule = "http.REQ.URL.CONTAINS(\"test_url\")"
   }
   resource "citrixadc_transformpolicylabel" "transformpolicylabel" {
@@ -44,10 +46,13 @@ const testAccTransformpolicylabel_transformpolicy_binding_basic = `
 `
 
 const testAccTransformpolicylabel_transformpolicy_binding_basic_step2 = `
+resource "citrixadc_transformprofile" "tf_trans_profile1" {
+	name = "pro_1"
+  }
   
   resource "citrixadc_transformpolicy" "tf_trans_policy" {
 	  name = "tf_trans_policy"
-	  profilename = "pro_1"
+	  profilename = citrixadc_transformprofile.tf_trans_profile1.name
 	  rule = "http.REQ.URL.CONTAINS(\"test_url\")"
   }
   resource "citrixadc_transformpolicylabel" "transformpolicylabel" {

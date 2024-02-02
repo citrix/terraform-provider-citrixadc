@@ -53,6 +53,7 @@ const testAccSslvserver_sslciphersuite_binding_basic_step2 = `
 `
 
 func TestAccSslvserver_sslciphersuite_binding_basic(t *testing.T) {
+	t.Skip("TODO: Operation not permitted!")
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,

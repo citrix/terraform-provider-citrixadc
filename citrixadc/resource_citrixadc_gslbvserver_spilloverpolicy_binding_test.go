@@ -25,14 +25,21 @@ import (
 )
 
 const testAccGslbvserver_spilloverpolicy_binding_basic = `
-# Since the spilloverpolicy resource is not yet available on Terraform,
-# the tf_spilloverpolicy policy must be created by hand in order for the script to run correctly.
-# You can do that by using the following Citrix ADC cli command:
-# add spillover policy tf_spilloverpolicy -rule TRUE -action SPILLOVER
+
+	resource "citrixadc_spilloveraction" "tf_spilloveraction" {
+		name   = "my_spilloveraction"
+		action = "SPILLOVER"
+	}
+	resource "citrixadc_spilloverpolicy" "tf_spilloverpolicy" {
+		name    = "tf_spilloverpolicy"
+		rule    = "true"
+		action  = citrixadc_spilloveraction.tf_spilloveraction.name
+		comment = "This is example of spilloverpolicy"
+	}
 
 resource "citrixadc_gslbvserver_spilloverpolicy_binding" "tf_gslbvserver_spilloverpolicy_binding" {
 	name       = citrixadc_gslbvserver.tf_gslbvserver.name
-	policyname = "tf_spilloverpolicy"
+	policyname = citrixadc_spilloverpolicy.tf_spilloverpolicy.name
 	priority   = 100
   
   }
@@ -53,6 +60,17 @@ resource "citrixadc_gslbvserver_spilloverpolicy_binding" "tf_gslbvserver_spillov
 `
 
 const testAccGslbvserver_spilloverpolicy_binding_basic_step2 = `
+
+	resource "citrixadc_spilloveraction" "tf_spilloveraction" {
+		name   = "my_spilloveraction"
+		action = "SPILLOVER"
+	}
+	resource "citrixadc_spilloverpolicy" "tf_spilloverpolicy" {
+		name    = "tf_spilloverpolicy"
+		rule    = "true"
+		action  = citrixadc_spilloveraction.tf_spilloveraction.name
+		comment = "This is example of spilloverpolicy"
+	}
 
   resource "citrixadc_gslbvserver" "tf_gslbvserver" {
 	dnsrecordtype = "A"

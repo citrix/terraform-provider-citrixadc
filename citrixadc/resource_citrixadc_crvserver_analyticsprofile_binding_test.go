@@ -26,23 +26,37 @@ import (
 
 const testAccCrvserver_analyticsprofile_binding_basic = `
 
-resource "citrixadc_crvserver" "crvserver" {
-	name        = "my_vserver"
-	servicetype = "HTTP"
-	arp         = "OFF"
-  }
-  resource "citrixadc_crvserver_analyticsprofile_binding" "crvserver_analyticsprofile_binding" {
-	name        = citrixadc_crvserver.crvserver.name
-	analyticsprofile = "new_profile"
-  }
-`
-
-const testAccCrvserver_analyticsprofile_binding_basic_step2 = `
-	# Keep the above bound resources without the actual binding to check proper deletion
 	resource "citrixadc_crvserver" "crvserver" {
 		name        = "my_vserver"
 		servicetype = "HTTP"
 		arp         = "OFF"
+	}
+	resource "citrixadc_analyticsprofile" "tf_analyticsprofile" {
+		name             = "new_profile"
+		type             = "webinsight"
+		httppagetracking = "DISABLED"
+		httpurl          = "ENABLED"
+	}
+
+	resource "citrixadc_crvserver_analyticsprofile_binding" "crvserver_analyticsprofile_binding" {
+		name        	 = citrixadc_crvserver.crvserver.name
+		analyticsprofile = citrixadc_analyticsprofile.tf_analyticsprofile.name
+	}
+`
+
+const testAccCrvserver_analyticsprofile_binding_basic_step2 = `
+	# Keep the above bound resources without the actual binding to check proper deletion
+
+	resource "citrixadc_crvserver" "crvserver" {
+		name        = "my_vserver"
+		servicetype = "HTTP"
+		arp         = "OFF"
+	  }
+	  resource "citrixadc_analyticsprofile" "tf_analyticsprofile" {
+		name             = "new_profile"
+		type             = "webinsight"
+		httppagetracking = "DISABLED"
+		httpurl          = "ENABLED"
 	  }
 `
 

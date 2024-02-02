@@ -25,14 +25,15 @@ import (
 )
 
 const testAccCsvserver_vpnvserver_binding_basic = `
-# Since the vpnvserver resource is not yet available on Terraform,
-# the tf_vpnvserver vserver must be created by hand in order for the script to run correctly.
-# You can do that by using the following Citrix ADC cli command:
-# add vpn vserver tf_vpnvserver SSL
+
+resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+	name           = "tf_vpnvserver"
+	servicetype    = "SSL"
+}
 
 resource "citrixadc_csvserver_vpnvserver_binding" "tf_csvserver_vpnvserver_binding" {
 	name = citrixadc_csvserver.tf_csvserver.name
-	vserver = "tf_vpnvserver"
+	vserver = citrixadc_vpnvserver.tf_vpnvserver.name
 }
 
 resource "citrixadc_csvserver" "tf_csvserver" {
@@ -50,6 +51,11 @@ resource "citrixadc_sslprofile" "tf_sslprofile" {
 `
 
 const testAccCsvserver_vpnvserver_binding_basic_step2 = `
+
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name           = "tf_vpnvserver"
+		servicetype    = "SSL"
+	}
 	resource "citrixadc_csvserver" "tf_csvserver" {
 		name = "tf_csvserver"
 		ipv46 = "10.202.11.11"

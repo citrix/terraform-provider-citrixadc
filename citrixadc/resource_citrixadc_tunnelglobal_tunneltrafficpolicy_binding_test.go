@@ -25,9 +25,15 @@ import (
 
 const testAccTunnelglobal_tunneltrafficpolicy_binding_basic = `
 
+resource "citrixadc_tunneltrafficpolicy" "tf_tunneltrafficpolicy" {
+	name   = "my_tunneltrafficpolicy"
+	rule   = "true"
+	action = "COMPRESS"
+  }
+
 resource "citrixadc_tunnelglobal_tunneltrafficpolicy_binding" "tf_tunnelglobal_tunneltrafficpolicy_binding" {
 	priority   = 50
-	policyname = "my_tunneltrafficpolicy"
+	policyname = citrixadc_tunneltrafficpolicy.tf_tunneltrafficpolicy.name
 	type       = "REQ_DEFAULT"
   }
   
@@ -35,6 +41,12 @@ resource "citrixadc_tunnelglobal_tunneltrafficpolicy_binding" "tf_tunnelglobal_t
 
 const testAccTunnelglobal_tunneltrafficpolicy_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
+
+	resource "citrixadc_tunneltrafficpolicy" "tf_tunneltrafficpolicy" {
+		name   = "my_tunneltrafficpolicy"
+		rule   = "true"
+		action = "COMPRESS"
+	  }
 `
 
 func TestAccTunnelglobal_tunneltrafficpolicy_binding_basic(t *testing.T) {

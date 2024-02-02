@@ -39,6 +39,9 @@ resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
 `
 
 func TestAccClusternodegroup_basic(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,

@@ -27,9 +27,6 @@ import (
 )
 
 func TestAccCsvserver_basic(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -55,12 +52,9 @@ func TestAccCsvserver_basic(t *testing.T) {
 }
 
 func TestAccCsvserver_standalone_ciphersuites_mixed(t *testing.T) {
-	if isCluster {
-		t.Skip("cluster ADC deployment")
-	}
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
+	// if isCluster {
+	// 	t.Skip("cluster ADC deployment")
+	// }
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -94,9 +88,6 @@ func TestAccCsvserver_standalone_ciphersuites_mixed(t *testing.T) {
 }
 
 func TestAccCsvserver_cluster_ciphersuites(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -131,9 +122,9 @@ func TestAccCsvserver_cluster_ciphersuites(t *testing.T) {
 }
 
 func TestAccCsvserver_cluster_ciphers(t *testing.T) {
-	if !isCluster {
-		t.Skip("standalone ADC deployment")
-	}
+	// if !isCluster {
+	// 	t.Skip("standalone ADC deployment")
+	// }
 	if adcTestbed != "CLUSTER" {
 		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
 	}
@@ -258,10 +249,6 @@ func TestAccCsvserver_AssertNonUpdateableAttributes(t *testing.T) {
 		t.Skip("TF_ACC not set. Skipping acceptance test.")
 	}
 
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
-
 	c, err := testHelperInstantiateClient("", "", "", false)
 	if err != nil {
 		t.Fatalf("Failed to instantiate client. %v\n", err)
@@ -338,9 +325,6 @@ resource "citrixadc_csvserver" "tf_test_acc_csvserver" {
 `
 
 func TestAccCsvserver_enable_disable(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -420,9 +404,6 @@ const testAccCsvserver_binding_update = `
 `
 
 func TestAccCsvserver_lbvserverbinding(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -441,9 +422,6 @@ func TestAccCsvserver_lbvserverbinding(t *testing.T) {
 }
 
 func TestAccCsvserver_snicerts(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { doPreChecks(t) },
 		Providers:    testAccProviders,
@@ -510,14 +488,11 @@ const sniCertsCsvserverTemplateConfig = `
 `
 
 func TestAccCsvserver_sslpolicy(t *testing.T) {
-	if isCluster {
-		t.Skip("cluster ADC deployment")
-	}
+	// if isCluster {
+	// 	t.Skip("cluster ADC deployment")
+	// }
 	if isCpxRun {
 		t.Skip("TODO fix sslaction for CPX")
-	}
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
 	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { doPreChecks(t) },
@@ -708,12 +683,9 @@ resource "citrixadc_csvserver" "tf_csvserver" {
 `
 
 func TestAccCsvserver_sslpolicy_cluster(t *testing.T) {
-	if !isCluster {
-		t.Skip("standalone ADC deployment")
-	}
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
+	// if !isCluster {
+	// 	t.Skip("standalone ADC deployment")
+	// }
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { doPreChecks(t) },
 		Providers:    testAccProviders,
@@ -777,17 +749,17 @@ resource "citrixadc_csvserver" "tf_csvserver" {
      policyname = citrixadc_sslpolicy.tf_sslpolicy.name
      priority = 100
 	 gotopriorityexpression = "END"
-	 type = "REQUEST"
   }
   sslpolicybinding {
      policyname = citrixadc_sslpolicy.tf_sslpolicy2.name
      priority = 200
 	 gotopriorityexpression = "END"
-	 type = "REQUEST"
   }
 
 }
 `
+
+// type = "REQUEST"
 
 const sslpolicy_config_cluster_step2 = `
 resource "citrixadc_sslaction" "tf_sslaction" {
@@ -819,13 +791,11 @@ resource "citrixadc_csvserver" "tf_csvserver" {
      policyname = citrixadc_sslpolicy.tf_sslpolicy.name
      priority = 300
 	 gotopriorityexpression = "END"
-	 type = "REQUEST"
   }
   sslpolicybinding {
      policyname = citrixadc_sslpolicy.tf_sslpolicy2.name
      priority = 100
 	 gotopriorityexpression = "END"
-	 type = "REQUEST"
   }
 
 }
@@ -861,7 +831,6 @@ resource "citrixadc_csvserver" "tf_csvserver" {
      policyname = citrixadc_sslpolicy.tf_sslpolicy2.name
      priority = 100
 	 gotopriorityexpression = "END"
-	 type = "REQUEST"
   }
 
 }
@@ -897,13 +866,11 @@ resource "citrixadc_csvserver" "tf_csvserver" {
      policyname = citrixadc_sslpolicy.tf_sslpolicy.name
      priority = 300
 	 gotopriorityexpression = "END"
-	 type = "REQUEST"
   }
   sslpolicybinding {
      policyname = citrixadc_sslpolicy.tf_sslpolicy2.name
      priority = 100
 	 gotopriorityexpression = "END"
-	 type = "REQUEST"
   }
 
 }

@@ -25,15 +25,35 @@ import (
 
 const testAccIcaglobal_icapolicy_binding_basic = `
 
-resource "citrixadc_icaglobal_icapolicy_binding" "tf_icaglobal_icapolicy_binding" {
-	policyname = "my_ica_policy"
-	priority   = 100
-	type       = "ICA_REQ_DEFAULT"
-  }
+	resource "citrixadc_icaaction" "tf_icaaction" {
+		name              = "tf_icaaction"
+		accessprofilename = "default_ica_accessprofile"
+	}
+	resource "citrixadc_icapolicy" "tf_icapolicy" {
+		name   = "tf_icapolicy"
+		rule   = true
+		action = citrixadc_icaaction.tf_icaaction.name
+	}
+
+	resource "citrixadc_icaglobal_icapolicy_binding" "tf_icaglobal_icapolicy_binding" {
+		policyname = citrixadc_icapolicy.tf_icapolicy.name
+		priority   = 100
+		type       = "ICA_REQ_DEFAULT"
+	}
 `
 
 const testAccIcaglobal_icapolicy_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
+
+	resource "citrixadc_icaaction" "tf_icaaction" {
+		name              = "tf_icaaction"
+		accessprofilename = "default_ica_accessprofile"
+	}
+	resource "citrixadc_icapolicy" "tf_icapolicy" {
+		name   = "tf_icapolicy"
+		rule   = true
+		action = citrixadc_icaaction.tf_icaaction.name
+	}
 `
 
 func TestAccIcaglobal_icapolicy_binding_basic(t *testing.T) {
@@ -51,7 +71,7 @@ func TestAccIcaglobal_icapolicy_binding_basic(t *testing.T) {
 			{
 				Config: testAccIcaglobal_icapolicy_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIcaglobal_icapolicy_bindingNotExist("citrixadc_icaglobal_icapolicy_binding.tf_icaglobal_icapolicy_binding", "my_ica_policy", "ICA_REQ_DEFAULT"),
+					testAccCheckIcaglobal_icapolicy_bindingNotExist("citrixadc_icaglobal_icapolicy_binding.tf_icaglobal_icapolicy_binding", "tf_icapolicy", "ICA_REQ_DEFAULT"),
 				),
 			},
 		},

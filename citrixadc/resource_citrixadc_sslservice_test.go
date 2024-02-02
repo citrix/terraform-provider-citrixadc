@@ -150,9 +150,9 @@ resource "citrixadc_service" "tf_service" {
 `
 
 func TestAccSslservice_basic(t *testing.T) {
-	if adcTestbed != "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE_NON_DEFAULT_SSL_PROFILE.", adcTestbed)
-	}
+	// if adcTestbed != "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
+	// 	t.Skipf("ADC testbed is %s. Expected STANDALONE_NON_DEFAULT_SSL_PROFILE.", adcTestbed)
+	// }
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,

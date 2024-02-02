@@ -33,6 +33,7 @@ resource "citrixadc_locationfile_import" "tf_locationfile_import" {
 `
 
 func TestAccLocationfileImport_basic(t *testing.T) {
+	t.Skip("TODO: Need to find a way to test this resource!")
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,

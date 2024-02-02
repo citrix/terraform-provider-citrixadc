@@ -9,20 +9,20 @@ variable "ns" {
 
 variable "config_done" {
     default = false
-    "description" = "whether the config is done. set to false to re-apply"
+    description = "whether the config is done. set to false to re-apply"
 }
 
 variable "rnat_config" {
     type = "list"
-    "description" = "all the rnat rules"
+    description = "all the rnat rules"
 }
 
 variable "vlan_config" {
     type = "list"
-    "description" = "all the vlans"
+    description = "all the vlans"
 }
 
 variable "nsconfig" {
     type = "map"
-    "description" = "Basic IP address information"
+    description = "Basic IP address information"
 }

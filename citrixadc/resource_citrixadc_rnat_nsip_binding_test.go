@@ -26,15 +26,44 @@ import (
 
 const testAccRnat_nsip_binding_basic = `
 
+	resource "citrixadc_rnat" "tfrnat" {
+		name             = "my_rnat"
+		network          = "10.2.2.0"
+		netmask          = "255.255.255.255"
+		useproxyport     = "ENABLED"
+		srcippersistency = "DISABLED"
+		connfailover     = "DISABLED"
+	}
+	resource "citrixadc_nsip" "tf_nsip" {
+		ipaddress = "10.222.74.200"
+		type      = "VIP"
+		netmask   = "255.255.255.0"
+		icmp      = "ENABLED"
+	}
 	resource "citrixadc_rnat_nsip_binding" "tf_rnat_nsip_binding" {
-		name  = "my_rnat"
-		natip = "10.222.74.200"
+		name  = citrixadc_rnat.tfrnat.name
+		natip = citrixadc_nsip.tf_nsip.ipaddress
 	}
   
 `
 
 const testAccRnat_nsip_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
+
+	resource "citrixadc_rnat" "tfrnat" {
+		name             = "my_rnat"
+		network          = "10.2.2.0"
+		netmask          = "255.255.255.255"
+		useproxyport     = "ENABLED"
+		srcippersistency = "DISABLED"
+		connfailover     = "DISABLED"
+	}
+	resource "citrixadc_nsip" "tf_nsip" {
+		ipaddress = "10.222.74.200"
+		type      = "VIP"
+		netmask   = "255.255.255.0"
+		icmp      = "ENABLED"
+	}
 `
 
 func TestAccRnat_nsip_binding_basic(t *testing.T) {

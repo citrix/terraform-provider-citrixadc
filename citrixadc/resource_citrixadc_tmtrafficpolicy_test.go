@@ -25,21 +25,32 @@ import (
 
 const testAccTmtrafficpolicy_basic = `
 
+	resource "citrixadc_tmtrafficaction" "tf_tmtrafficaction" {
+		name             = "my_tmtraffic_action"
+		apptimeout       = 5
+		sso              = "OFF"
+		persistentcookie = "ON"
+	}
 
-resource "citrixadc_tmtrafficpolicy" "tf_tmtrafficpolicy" {
-	name   = "my_tmtraffic_policy"
-	rule   = "true"
-	action = "my_tmtraffic_action"
-  }
+	resource "citrixadc_tmtrafficpolicy" "tf_tmtrafficpolicy" {
+		name   = "my_tmtraffic_policy"
+		rule   = "true"
+		action = citrixadc_tmtrafficaction.tf_tmtrafficaction.name
+	}
 `
 const testAccTmtrafficpolicy_update = `
 
-
-resource "citrixadc_tmtrafficpolicy" "tf_tmtrafficpolicy" {
-	name   = "my_tmtraffic_policy"
-	rule   = "false"
-	action = "my_tmtraffic_action2"
-  }
+	resource "citrixadc_tmtrafficaction" "tf_tmtrafficaction" {
+		name             = "my_tmtraffic_action"
+		apptimeout       = 5
+		sso              = "OFF"
+		persistentcookie = "ON"
+	}
+	resource "citrixadc_tmtrafficpolicy" "tf_tmtrafficpolicy" {
+		name   = "my_tmtraffic_policy"
+		rule   = "false"
+		action = citrixadc_tmtrafficaction.tf_tmtrafficaction.name
+	}
 `
 
 func TestAccTmtrafficpolicy_basic(t *testing.T) {
@@ -62,7 +73,7 @@ func TestAccTmtrafficpolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTmtrafficpolicyExist("citrixadc_tmtrafficpolicy.tf_tmtrafficpolicy", nil),
 					resource.TestCheckResourceAttr("citrixadc_tmtrafficpolicy.tf_tmtrafficpolicy", "name", "my_tmtraffic_policy"),
-					resource.TestCheckResourceAttr("citrixadc_tmtrafficpolicy.tf_tmtrafficpolicy", "action", "my_tmtraffic_action2"),
+					resource.TestCheckResourceAttr("citrixadc_tmtrafficpolicy.tf_tmtrafficpolicy", "action", "my_tmtraffic_action"),
 					resource.TestCheckResourceAttr("citrixadc_tmtrafficpolicy.tf_tmtrafficpolicy", "rule", "false"),
 				),
 			},

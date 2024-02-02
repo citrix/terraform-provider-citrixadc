@@ -25,10 +25,17 @@ import (
 )
 
 const testAccVlan_channel_binding_basic = `
-
-	resource "citrixadc_vlan_channel_binding" "tf_vlan_channel_binding" {
+	resource "citrixadc_vlan" "tf_vlan" {
 		vlanid = 2
-		ifnum  = "LA/2"
+	}
+	resource "citrixadc_channel" "tf_channel" {
+		channel_id = "LA/3"
+		tagall     = "ON"
+		speed      = "1000"
+	}
+	resource "citrixadc_vlan_channel_binding" "tf_vlan_channel_binding" {
+		vlanid = citrixadc_vlan.tf_vlan.vlanid
+		ifnum  = citrixadc_channel.tf_channel.channel_id
 		tagged = false
 	}
 	
@@ -36,9 +43,18 @@ const testAccVlan_channel_binding_basic = `
 
 const testAccVlan_channel_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
+	resource "citrixadc_vlan" "tf_vlan" {
+		vlanid = 2
+	}
+	resource "citrixadc_channel" "tf_channel" {
+		channel_id = "LA/3"
+		tagall     = "ON"
+		speed      = "1000"
+	}
 `
 
 func TestAccVlan_channel_binding_basic(t *testing.T) {
+	// t.Skipf("Need Channel")
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,

@@ -28,7 +28,7 @@ const testAccVpnglobal_vpnurlpolicy_binding_basic = `
 	resource "citrixadc_vpnurlaction" "tf_vpnurlaction" {
 		name             = "tf_vpnurlaction"
 		linkname         = "new_link"
-		actualurl        = "www.citrix.com"
+		actualurl        = "http://www.citrix.com"
 		applicationtype  = "CVPN"
 		clientlessaccess = "OFF"
 		comment          = "Testing"
@@ -52,7 +52,7 @@ const testAccVpnglobal_vpnurlpolicy_binding_basic_step2 = `
 	resource "citrixadc_vpnurlaction" "tf_vpnurlaction" {
 		name             = "tf_vpnurlaction"
 		linkname         = "new_link"
-		actualurl        = "www.citrix.com"
+		actualurl        = "http://www.citrix.com"
 		applicationtype  = "CVPN"
 		clientlessaccess = "OFF"
 		comment          = "Testing"

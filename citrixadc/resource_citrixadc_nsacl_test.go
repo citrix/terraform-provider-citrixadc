@@ -25,9 +25,6 @@ import (
 )
 
 func TestAccNsacl_basic(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -148,9 +145,6 @@ resource "citrixadc_nsacl" "tf_test_acc_nsacl" {
 `
 
 func TestAccNsacl_enable_disable(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,

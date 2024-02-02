@@ -26,19 +26,46 @@ import (
 const testAccAutoscalepolicy_basic = `
 
 
+resource "citrixadc_autoscaleprofile" "tf_autoscaleprofile" {
+	name         = "my_profile"
+	type         = "CLOUDSTACK"
+	apikey       = "7c177611-4a18-42b0-a7c5-bfd811fd590f"
+	url          = "www.service.example.com"
+	sharedsecret = "YZEH6jkTqZWQ8r0o6kWj0mWruN3vXbtT"
+}
+resource "citrixadc_autoscaleaction" "tf_autoscaleaction" {
+	name        = "my_autoscaleaction"
+	type        = "SCALE_UP"
+	profilename = citrixadc_autoscaleprofile.tf_autoscaleprofile.name
+	vserver     = "my_vserver"
+	parameters  = "my_parameters"
+}
 resource "citrixadc_autoscalepolicy" "tf_autoscalepolicy" {
 	name         = "my_autoscaleprofile"
 	rule         = "true"
-	action       = "my_autoscaleaction"
+	action       = citrixadc_autoscaleaction.tf_autoscaleaction.name
   }
 `
 const testAccAutoscalepolicy_update = `
 
-
+resource "citrixadc_autoscaleprofile" "tf_autoscaleprofile" {
+	name         = "my_profile"
+	type         = "CLOUDSTACK"
+	apikey       = "7c177611-4a18-42b0-a7c5-bfd811fd590f"
+	url          = "www.service.example.com"
+	sharedsecret = "YZEH6jkTqZWQ8r0o6kWj0mWruN3vXbtT"
+}
+resource "citrixadc_autoscaleaction" "tf_autoscaleaction" {
+	name        = "my_autoscaleaction"
+	type        = "SCALE_UP"
+	profilename = citrixadc_autoscaleprofile.tf_autoscaleprofile.name
+	vserver     = "my_vserver"
+	parameters  = "my_parameters"
+}
 resource "citrixadc_autoscalepolicy" "tf_autoscalepolicy" {
 	name         = "my_autoscaleprofile"
 	rule         = "false"
-	action       = "my_autoscaleaction"
+	action       = citrixadc_autoscaleaction.tf_autoscaleaction.name
   }
 `
 

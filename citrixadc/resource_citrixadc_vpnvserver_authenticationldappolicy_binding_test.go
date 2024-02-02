@@ -25,12 +25,19 @@ import (
 )
 
 const testAccVpnvserver_authenticationldappolicy_binding_basic = `
-# Since the authenticationldappolicy resource is not yet available on Terraform,
-# the tf_ldappolicy policy must be created by hand in order for the script to run correctly.
-# You can do that by using the following Citrix ADC cli commands:
-# add authenticationldapaction tf_ldapaction -serverIP 5.5.5.5
-# add authenticationldappolicy tf_ldappolicy ns_true tf_ldapaction
-# TODO authenticationldappolicy resource 
+
+	resource "citrixadc_authenticationldapaction" "tf_authenticationldapaction" {
+		name          = "tf_ldapaction"
+		serverip      = "5.5.5.5"
+		serverport    = 8080
+		authtimeout   = 1
+		ldaploginname = "username"
+	}
+	resource "citrixadc_authenticationldappolicy" "tf_authenticationldappolicy" {
+		name      = "tf_ldappolicy"
+		rule      = "NS_TRUE"
+		reqaction = citrixadc_authenticationldapaction.tf_authenticationldapaction.name
+	}
 
 	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
 		name        = "vpn_vserver"
@@ -38,13 +45,26 @@ const testAccVpnvserver_authenticationldappolicy_binding_basic = `
 	}
 	resource "citrixadc_vpnvserver_authenticationldappolicy_binding" "tf_bind" {
 		name      = citrixadc_vpnvserver.tf_vpnvserver.name
-		policy    = "tf_ldappolicy"
+		policy    = citrixadc_authenticationldappolicy.tf_authenticationldappolicy.name
 		priority  = 20
 	}
 `
 
 const testAccVpnvserver_authenticationldappolicy_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
+
+	resource "citrixadc_authenticationldapaction" "tf_authenticationldapaction" {
+		name          = "tf_ldapaction"
+		serverip      = "5.5.5.5"
+		serverport    = 8080
+		authtimeout   = 1
+		ldaploginname = "username"
+	}
+	resource "citrixadc_authenticationldappolicy" "tf_authenticationldappolicy" {
+		name      = "tf_ldappolicy"
+		rule      = "NS_TRUE"
+		reqaction = citrixadc_authenticationldapaction.tf_authenticationldapaction.name
+	}
 	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
 		name        = "vpn_vserver"
 		servicetype = "SSL"

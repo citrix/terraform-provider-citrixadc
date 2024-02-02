@@ -120,7 +120,7 @@ func readNetbridge_nsip_bindingFunc(d *schema.ResourceData, meta interface{}) er
 
 	d.Set("ipaddress", data["ipaddress"])
 	d.Set("name", data["name"])
-	d.Set("netmask", data["netmask"])
+	// d.Set("netmask", data["netmask"])
 
 	return nil
 

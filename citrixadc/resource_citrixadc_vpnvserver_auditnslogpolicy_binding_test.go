@@ -25,12 +25,17 @@ import (
 )
 
 const testAccVpnvserver_auditnslogpolicy_binding_basic = `
-# Since the auditnslogpolicy resource is not yet available on Terraform,
-# the tf_auditnslogpolicy policy must be created by hand in order for the script to run correctly.
-# You can do that by using the following Citrix ADC cli commands:
-# add audit nslogAction tf_auditnslogaction 1.1.1.1 -loglevel NONE
-# add audit nslogPolicy tf_auditnslogpolicy ns_true tf_auditnslogaction
 
+	resource "citrixadc_auditnslogaction" "tf_auditnslogaction" {
+		name     = "tf_auditnslogaction"
+		serverip = "1.1.1.1"
+		loglevel = ["ALERT", "CRITICAL"]
+	}
+	resource "citrixadc_auditnslogpolicy" "tf_auditnslogpolicy" {
+		name   = "tf_auditnslogpolicy"
+		rule   = "ns_true"
+		action = citrixadc_auditnslogaction.tf_auditnslogaction.name
+	}
 	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
 		name        = "tf_vpnvserver"
 		servicetype = "SSL"
@@ -39,7 +44,7 @@ const testAccVpnvserver_auditnslogpolicy_binding_basic = `
 	}
 	resource "citrixadc_vpnvserver_auditnslogpolicy_binding" "tf_bind" {
 		name      = citrixadc_vpnvserver.tf_vpnvserver.name
-		policy    = "tf_auditnslogpolicy"
+		policy    = citrixadc_auditnslogpolicy.tf_auditnslogpolicy.name
 		bindpoint = "REQUEST"
 		priority  = 200
 	  }
@@ -49,6 +54,17 @@ const testAccVpnvserver_auditnslogpolicy_binding_basic = `
 
 const testAccVpnvserver_auditnslogpolicy_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
+
+	resource "citrixadc_auditnslogaction" "tf_auditnslogaction" {
+		name     = "tf_auditnslogaction"
+		serverip = "1.1.1.1"
+		loglevel = ["ALERT", "CRITICAL"]
+	}
+	resource "citrixadc_auditnslogpolicy" "tf_auditnslogpolicy" {
+		name   = "tf_auditnslogpolicy"
+		rule   = "ns_true"
+		action = citrixadc_auditnslogaction.tf_auditnslogaction.name
+	}
 	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
 		name        = "tf_vpnvserver"
 		servicetype = "SSL"

@@ -25,22 +25,20 @@ import (
 
 const testAccCrvserver_add = `
 
-
-resource "citrixadc_crvserver" "crvserver" {
-    name = "my_vserver1"
-    servicetype = "HTTP"
-    arp = "OFF"
-}
+	resource "citrixadc_crvserver" "crvserver" {
+		name = "my_vserver"
+		servicetype = "HTTP"
+		arp = "OFF"
+	}
 `
 
 const testAccCrvserver_update = `
 
-
-resource "citrixadc_crvserver" "crvserver" {
-    name = "my_vserver"
-    servicetype = "HTTP"
-    arp = "ON"
-}
+	resource "citrixadc_crvserver" "crvserver" {
+		name = "my_vserver"
+		servicetype = "HTTP"
+		arp = "ON"
+	}
 `
 
 func TestAccCrvserver_basic(t *testing.T) {

@@ -25,16 +25,49 @@ import (
 )
 
 const testAccAaagroup_tmsessionpolicy_binding_basic = `
+	resource "citrixadc_aaagroup" "tf_aaagroup" {
+		groupname = "my_group"
+		weight    = 100
+		loggedin  = false
+	}
+	resource "citrixadc_tmsessionaction" "tf_tmsessionaction" {
+		name                       = "my_tmsession_action"
+		sesstimeout                = 10
+		defaultauthorizationaction = "ALLOW"
+		sso                        = "OFF"
+	}
+	resource "citrixadc_tmsessionpolicy" "tf_tmsessionpolicy" {
+		name   = "my_tmsession_policy"
+		rule   = "true"
+		action = citrixadc_tmsessionaction.tf_tmsessionaction.name
+	}
 
-resource "citrixadc_aaagroup_tmsessionpolicy_binding" "tf_aaagroup_tmsessionpolicy_binding" {
-	groupname = "my_group"
-	policy    = "tf_tmsesspolicy"
-	priority  = 50
-  }
+
+	resource "citrixadc_aaagroup_tmsessionpolicy_binding" "tf_aaagroup_tmsessionpolicy_binding" {
+		groupname = citrixadc_aaagroup.tf_aaagroup.groupname
+		policy    = citrixadc_tmsessionpolicy.tf_tmsessionpolicy.name
+		priority  = 50
+	}
 `
 
 const testAccAaagroup_tmsessionpolicy_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
+	resource "citrixadc_aaagroup" "tf_aaagroup" {
+		groupname = "my_group"
+		weight    = 100
+		loggedin  = false
+	}
+	resource "citrixadc_tmsessionaction" "tf_tmsessionaction" {
+		name                       = "my_tmsession_action"
+		sesstimeout                = 10
+		defaultauthorizationaction = "ALLOW"
+		sso                        = "OFF"
+	}
+	resource "citrixadc_tmsessionpolicy" "tf_tmsessionpolicy" {
+		name   = "my_tmsession_policy"
+		rule   = "true"
+		action = citrixadc_tmsessionaction.tf_tmsessionaction.name
+	}
 `
 
 func TestAccAaagroup_tmsessionpolicy_binding_basic(t *testing.T) {

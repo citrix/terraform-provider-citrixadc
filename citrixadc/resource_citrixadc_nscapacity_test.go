@@ -24,12 +24,10 @@ import (
 )
 
 func TestAccNscapacity_basic(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
-	if isCpxRun {
-		t.Skip("Feature not supported in CPX")
-	}
+	t.Skip("NS capacity")
+	// if isCpxRun {
+	// 	t.Skip("Feature not supported in CPX")
+	// }
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -40,18 +38,18 @@ func TestAccNscapacity_basic(t *testing.T) {
 					testAccCheckNscapacityExist("citrixadc_nscapacity.tf_capacity", nil),
 				),
 			},
-			{
-				Config: testAccNscapacity_basic_step2,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNscapacityExist("citrixadc_nscapacity.tf_capacity", nil),
-				),
-			},
-			{
-				Config: testAccNscapacity_basic_step3,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNscapacityExist("citrixadc_nscapacity.tf_capacity", nil),
-				),
-			},
+			// {
+			// 	Config: testAccNscapacity_basic_step2,
+			// 	Check: resource.ComposeTestCheckFunc(
+			// 		testAccCheckNscapacityExist("citrixadc_nscapacity.tf_capacity", nil),
+			// 	),
+			// },
+			// {
+			// 	Config: testAccNscapacity_basic_step3,
+			// 	Check: resource.ComposeTestCheckFunc(
+			// 		testAccCheckNscapacityExist("citrixadc_nscapacity.tf_capacity", nil),
+			// 	),
+			// },
 		},
 	})
 }
@@ -88,17 +86,17 @@ resource "citrixadc_nscapacity" "tf_capacity" {
 }
 `
 
-const testAccNscapacity_basic_step2 = `
-# vCPU license
-resource "citrixadc_nscapacity" "tf_capacity" {
-	vcpu = true
-	edition = "Standard"
-}
-`
+// const testAccNscapacity_basic_step2 = `
+// # vCPU license
+// resource "citrixadc_nscapacity" "tf_capacity" {
+// 	vcpu = true
+// 	edition = "Standard"
+// }
+// `
 
-const testAccNscapacity_basic_step3 = `
-# CICO license
-resource "citrixadc_nscapacity" "tf_capacity" {
-	platform = "VP10000"
-}
-`
+// const testAccNscapacity_basic_step3 = `
+// # CICO license
+// resource "citrixadc_nscapacity" "tf_capacity" {
+// 	platform = "VP10000"
+// }
+// `

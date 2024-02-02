@@ -33,9 +33,14 @@ resource "citrixadc_lbvserver" "tf_lbvserver" {
   servicetype = "HTTP"
 }
 
+resource "citrixadc_server" "tf_test_svr" {
+	name = "192.168.43.33"
+	ipaddress = "192.168.43.33"
+}
+
 resource "citrixadc_service" "tf_service" {
     name = "tf_service"
-    ip = "192.168.43.33"
+    ip = citrixadc_server.tf_test_svr.ipaddress
     servicetype  = "HTTP"
     port = 80
 }
@@ -55,9 +60,14 @@ resource "citrixadc_lbvserver" "tf_lbvserver" {
   servicetype = "HTTP"
 }
 
+resource "citrixadc_server" "tf_test_svr" {
+	name = "192.168.43.33"
+	ipaddress = "192.168.43.33"
+}
+
 resource "citrixadc_service" "tf_service" {
     name = "tf_service"
-    ip = "192.168.43.33"
+    ip = citrixadc_server.tf_test_svr.ipaddress
     servicetype  = "HTTP"
     port = 80
 }
@@ -70,9 +80,6 @@ resource "citrixadc_lbvserver_service_binding" "tf_binding" {
 `
 
 func TestAccLbvserver_service_binding_basic(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,

@@ -25,10 +25,11 @@ import (
 )
 
 const testAccVpnvserver_analyticsprofile_binding_basic = `
-# Since the analyticsprofile resource is not yet available on Terraform,
-# the new_profile profile must be created by hand(manually) in order for the script to run correctly.
-# You can do that by using the following Citrix ADC cli commands:
-# add analyticsprofile new_profile -type tcpinsight
+
+	resource "citrixadc_analyticsprofile" "tf_analyticsprofile" {
+		name = "new_profile"
+		type = "tcpinsight"
+	}
 	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
 		name           = "tf_vserver"
 		servicetype    = "SSL"
@@ -37,12 +38,17 @@ const testAccVpnvserver_analyticsprofile_binding_basic = `
 	}
 	resource "citrixadc_vpnvserver_analyticsprofile_binding" "tf_bind" {
 		name 			 = citrixadc_vpnvserver.tf_vpnvserver.name
-		analyticsprofile = "new_profile"
+		analyticsprofile = citrixadc_analyticsprofile.tf_analyticsprofile.name
 	}
 `
 
 const testAccVpnvserver_analyticsprofile_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
+	
+	resource "citrixadc_analyticsprofile" "tf_analyticsprofile" {
+		name = "new_profile"
+		type = "tcpinsight"
+	}
 	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
 		name           = "tf_vserver"
 		servicetype    = "SSL"

@@ -21,14 +21,36 @@ import (
 
 const testAccSystemglobal_auditnslogpolicy_binding_basic = `
 
+	resource "citrixadc_auditnslogaction" "tf_auditnslogaction" {
+		name     = "tf_auditnslogaction"
+		serverip = "1.1.1.1"
+		loglevel = ["ALERT", "CRITICAL"]
+	}
+	resource "citrixadc_auditnslogpolicy" "tf_auditnslogpolicy" {
+		name   = "tf_auditnslogpolicy"
+		rule   = "ns_true"
+		action = citrixadc_auditnslogaction.tf_auditnslogaction.name
+	}
+
 	resource "citrixadc_systemglobal_auditnslogpolicy_binding" "tf_systemglobal_auditnslogpolicy_binding" {
-		policyname = "tf_auditnslogpolicy"
+		policyname = citrixadc_auditnslogpolicy.tf_auditnslogpolicy.name
 		priority   = 50
 	}
 `
 
 const testAccSystemglobal_auditnslogpolicy_binding_basic_step2 = `
-        # Keep the above bound resources without the actual binding to check proper deletion
+	# Keep the above bound resources without the actual binding to check proper deletion
+
+	resource "citrixadc_auditnslogaction" "tf_auditnslogaction" {
+		name     = "tf_auditnslogaction"
+		serverip = "1.1.1.1"
+		loglevel = ["ALERT", "CRITICAL"]
+	}
+	resource "citrixadc_auditnslogpolicy" "tf_auditnslogpolicy" {
+		name   = "tf_auditnslogpolicy"
+		rule   = "ns_true"
+		action = citrixadc_auditnslogaction.tf_auditnslogaction.name
+	}
 `
 
 func TestAccSystemglobal_auditnslogpolicy_binding_basic(t *testing.T) {

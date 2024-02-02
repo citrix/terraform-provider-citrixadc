@@ -25,31 +25,38 @@ import (
 )
 
 const testAccCrvserver_cachepolicy_binding_basic = `
-# Since the cachepolicy resource is not yet available on Terraform,
-# the tf_cachepolicy policy must be created by hand in order for the script to run correctly.
-# You can do that by using the following Citrix ADC cli command:
-# add cache policy tf_cachepolicy -rule "http.req.url.query.contains(\"IssuePage\")" -action CACHE
-resource "citrixadc_crvserver" "crvserver" {
-	name        = "my_vserver"
-	servicetype = "HTTP"
-	arp         = "OFF"
-  }
-  resource "citrixadc_crvserver_cachepolicy_binding" "crvserver_cachepolicy_binding" {
-	name       = citrixadc_crvserver.crvserver.name
-	policyname = "tf_cachepolicy"
-	priority   = 10
-	bindpoint =  "REQUEST"
-  
-  }
-`
 
-const testAccCrvserver_cachepolicy_binding_basic_step2 = `
-	# Keep the above bound resources without the actual binding to check proper deletion
+	resource "citrixadc_cachepolicy" "tf_cachepolicy" {
+		policyname  = "my_cachepolicy"
+		rule        = "true"
+		action      = "CACHE"
+	}
 	resource "citrixadc_crvserver" "crvserver" {
 		name        = "my_vserver"
 		servicetype = "HTTP"
 		arp         = "OFF"
-	  }
+	}
+	resource "citrixadc_crvserver_cachepolicy_binding" "crvserver_cachepolicy_binding" {
+		name       = citrixadc_crvserver.crvserver.name
+		policyname = citrixadc_cachepolicy.tf_cachepolicy.policyname
+		priority   = 10
+		bindpoint  =  "REQUEST"
+	}
+`
+
+const testAccCrvserver_cachepolicy_binding_basic_step2 = `
+	# Keep the above bound resources without the actual binding to check proper deletion
+
+	resource "citrixadc_cachepolicy" "tf_cachepolicy" {
+		policyname  = "my_cachepolicy"
+		rule        = "true"
+		action      = "CACHE"
+	}
+	resource "citrixadc_crvserver" "crvserver" {
+		name        = "my_vserver"
+		servicetype = "HTTP"
+		arp         = "OFF"
+	}
 `
 
 func TestAccCrvserver_cachepolicy_binding_basic(t *testing.T) {

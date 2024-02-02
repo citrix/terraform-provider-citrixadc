@@ -200,9 +200,6 @@ resource "citrixadc_sslvserver_sslcertkey_binding" "tf_binding" {
 `
 
 func TestAccSslvserver_sslcertkey_binding_lb(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -231,9 +228,6 @@ func TestAccSslvserver_sslcertkey_binding_lb(t *testing.T) {
 }
 
 func TestAccSslvserver_sslcertkey_binding_cs(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,

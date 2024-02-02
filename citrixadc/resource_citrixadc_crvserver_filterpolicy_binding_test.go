@@ -58,6 +58,7 @@ const testAccCrvserver_filterpolicy_binding_basic_step2 = `
 `
 
 func TestAccCrvserver_filterpolicy_binding_basic(t *testing.T) {
+	t.Skipf("filterpolicy is not supported in 13.1")
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,

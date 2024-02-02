@@ -27,9 +27,6 @@ import (
 )
 
 func TestAccResponderaction_basic(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -58,9 +55,6 @@ func TestAccResponderaction_basic(t *testing.T) {
 }
 
 func TestAccResponderaction_html(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
 
 	if isCpxRun {
 		t.Skip("Skipping responder action html test because CPX cannot import responder html page")

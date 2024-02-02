@@ -28,10 +28,14 @@ const testAccCmppolicylabel_cmppolicy_binding_basic = `
 
 resource "citrixadc_cmppolicylabel_cmppolicy_binding" "tf_cmppolicylabel_cmppolicy_binding" {
 	policyname = citrixadc_cmppolicy.tf_cmppolicy.name
-	labelname  = "my_cmppolicy_label"
+	labelname  = citrixadc_cmppolicylabel.tf_cmppolicylabel.labelname
 	priority   = 100
   }
-  
+
+  resource "citrixadc_cmppolicylabel" "tf_cmppolicylabel" {
+	labelname = "my_cmppolicy_label"
+	type      = "RES"
+  }
   resource "citrixadc_cmppolicy" "tf_cmppolicy" {
 	name      = "tf_cmppolicy"
 	rule      = "HTTP.RES.HEADER(\"Content-Type\").CONTAINS(\"text\")"
@@ -40,6 +44,11 @@ resource "citrixadc_cmppolicylabel_cmppolicy_binding" "tf_cmppolicylabel_cmppoli
 `
 
 const testAccCmppolicylabel_cmppolicy_binding_basic_step2 = `
+
+resource "citrixadc_cmppolicylabel" "tf_cmppolicylabel" {
+	labelname = "my_cmppolicy_label"
+	type      = "RES"
+  }
 resource "citrixadc_cmppolicy" "tf_cmppolicy" {
 	name      = "tf_cmppolicy"
 	rule      = "HTTP.RES.HEADER(\"Content-Type\").CONTAINS(\"text\")"

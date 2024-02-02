@@ -27,7 +27,7 @@ const testAccIpsecparameter_basic = `
 
 resource "citrixadc_ipsecparameter" "tf_ipsecparameter" {
 	ikeversion            = "V2"
-	encalgo               = ["AES", "3DES"]
+	encalgo               = ["AES", "AES256"]
 	hashalgo              = ["HMAC_SHA1", "HMAC_SHA256"]
 	livenesscheckinterval = 50
   }
@@ -37,7 +37,7 @@ const testAccIpsecparameter_update = `
 
 resource "citrixadc_ipsecparameter" "tf_ipsecparameter" {
 	ikeversion            = "V1"
-	encalgo               = ["AES", "3DES"]
+	encalgo               = ["AES", "AES256"]
 	hashalgo              = ["HMAC_SHA1", "HMAC_SHA256"]
 	livenesscheckinterval = 60
   }

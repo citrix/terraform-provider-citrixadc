@@ -25,37 +25,53 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-/*
-To create AppQoE policies through CLI:
-add appqoe action appqoe-act-primd -priority MEDIUM
-add appqoe policy appqoe-pol-primd -rule HTTP.REQ.HEADER("User-Agent").CONTAINS("Android") -action appqoe-act-primd
-*/
 const testAccLbvserver_appqoepolicy_binding_basic_step1 = `
-resource "citrixadc_lbvserver" "tf_lbvserver" {
-	name        = "tf_lbvserver"
-	servicetype = "HTTP"
-}
-  
-resource "citrixadc_lbvserver_appqoepolicy_binding" "foo" {
-    name = citrixadc_lbvserver.tf_lbvserver.name
-    policyname = "appqoe-pol-primd"
-    bindpoint = "REQUEST"
-    gotopriorityexpression = "END"
-    priority = 56 
-}
+
+	resource "citrixadc_appqoeaction" "tf_appqoeaction" {
+		name        = "tf_appqoeaction"
+		priority    = "LOW"
+		respondwith = "NS"
+		delay       = 40
+	}
+	resource "citrixadc_appqoepolicy" "tf_appqoepolicy" {
+		name   = "appqoe-pol-primd"
+		rule   = "true"
+		action = citrixadc_appqoeaction.tf_appqoeaction.name
+	}
+	resource "citrixadc_lbvserver" "tf_lbvserver" {
+		name        = "tf_lbvserver"
+		servicetype = "HTTP"
+	}
+	
+	resource "citrixadc_lbvserver_appqoepolicy_binding" "foo" {
+		name = citrixadc_lbvserver.tf_lbvserver.name
+		policyname = citrixadc_appqoepolicy.tf_appqoepolicy.name
+		bindpoint = "REQUEST"
+		gotopriorityexpression = "END"
+		priority = 56 
+	}
 `
 
 const testAccLbvserver_appqoepolicy_binding_basic_step2 = `
-resource "citrixadc_lbvserver" "tf_lbvserver" {
-	name        = "tf_lbvserver"
-	servicetype = "HTTP"
-}
+
+	resource "citrixadc_appqoeaction" "tf_appqoeaction" {
+		name        = "tf_appqoeaction"
+		priority    = "LOW"
+		respondwith = "NS"
+		delay       = 40
+	}
+	resource "citrixadc_appqoepolicy" "tf_appqoepolicy" {
+		name   = "appqoe-pol-primd"
+		rule   = "true"
+		action = citrixadc_appqoeaction.tf_appqoeaction.name
+	}
+	resource "citrixadc_lbvserver" "tf_lbvserver" {
+		name        = "tf_lbvserver"
+		servicetype = "HTTP"
+	}
 `
 
 func TestAccLbvserver_appqoepolicy_binding_basic(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,

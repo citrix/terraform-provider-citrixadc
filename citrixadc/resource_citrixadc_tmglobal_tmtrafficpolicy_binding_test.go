@@ -25,14 +25,38 @@ import (
 
 const testAccTmglobal_tmtrafficpolicy_binding_basic = `
 
+	resource "citrixadc_tmtrafficaction" "tf_tmtrafficaction" {
+		name             = "my_trafficaction"
+		apptimeout       = 5
+		sso              = "OFF"
+		persistentcookie = "ON"
+	}	
+	resource "citrixadc_tmtrafficpolicy" "tf_tmtrafficpolicy" {
+		name   = "my_tmtrafficpolicy"
+		rule   = "true"
+		action = citrixadc_tmtrafficaction.tf_tmtrafficaction.name
+	}
+
 	resource "citrixadc_tmglobal_tmtrafficpolicy_binding" "tf_tmglobal_tmtrafficpolicy_binding" {
-		priority = "100"
-		policyname = "my_tmtrafficpolicy"
+		priority 	= "100"
+		policyname = citrixadc_tmtrafficpolicy.tf_tmtrafficpolicy.name
 	}
 `
 
 const testAccTmglobal_tmtrafficpolicy_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
+
+	resource "citrixadc_tmtrafficaction" "tf_tmtrafficaction" {
+		name             = "my_trafficaction"
+		apptimeout       = 5
+		sso              = "OFF"
+		persistentcookie = "ON"
+	}	
+	resource "citrixadc_tmtrafficpolicy" "tf_tmtrafficpolicy" {
+		name   = "my_tmtrafficpolicy"
+		rule   = "true"
+		action = citrixadc_tmtrafficaction.tf_tmtrafficaction.name
+	}
 `
 
 func TestAccTmglobal_tmtrafficpolicy_binding_basic(t *testing.T) {

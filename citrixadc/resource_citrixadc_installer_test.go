@@ -27,9 +27,9 @@ func TestAccInstaller_basic(t *testing.T) {
 	if isCpxRun {
 		t.Skip("Install not available in CPX")
 	}
-	if isCluster {
-		t.Skip("Install not available in Cluster")
-	}
+	// if isCluster {
+	// 	t.Skip("Install not available in Cluster")
+	// }
 	if adcTestbed != "INSTALLER" {
 		t.Skipf("ADC testbed is %s. Expected INSTALLER.", adcTestbed)
 	}

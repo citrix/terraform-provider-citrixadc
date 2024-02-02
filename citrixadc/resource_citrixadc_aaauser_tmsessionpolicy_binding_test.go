@@ -26,20 +26,47 @@ import (
 
 const testAccAaauser_tmsessionpolicy_binding_basic = `
 
-	# Since the tmsessionpolicy resource is not yet available on Terraform,
-	# the tf_tmsesspolicy policy must be created by hand(manually) in order for the script to run correctly.
-	# You can do that by using the following Citrix ADC cli commands:
-	# add tmsessionaction tf_tmsessaction  -sessTimeout 30 -defaultAuthorization ALLOW
-	# add tmsessionpolicy tf_tmsesspolicy true tf_tmsessaction
-	resource "citrixadc_aaauser_tmsessionpolicy_binding" "tf_aaauser_tmsessionpolicy_binding" {
+	resource "citrixadc_aaauser" "tf_aaauser" {
 		username = "user1"
-		policy    = "tf_tmsesspolicy"
+		password = "my_pass"
+	}
+	resource "citrixadc_tmsessionaction" "tf_tmsessionaction" {
+		name                       = "my_tmsession_action"
+		sesstimeout                = 10
+		defaultauthorizationaction = "ALLOW"
+		sso                        = "OFF"
+	}
+	resource "citrixadc_tmsessionpolicy" "tf_tmsessionpolicy" {
+		name   = "my_tmsession_policy"
+		rule   = "true"
+		action = citrixadc_tmsessionaction.tf_tmsessionaction.name
+	}
+
+	resource "citrixadc_aaauser_tmsessionpolicy_binding" "tf_aaauser_tmsessionpolicy_binding" {
+		username = citrixadc_aaauser.tf_aaauser.username
+		policy    = citrixadc_tmsessionpolicy.tf_tmsessionpolicy.name
 		priority  = 100
 	}
 `
 
 const testAccAaauser_tmsessionpolicy_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
+
+	resource "citrixadc_aaauser" "tf_aaauser" {
+		username = "user1"
+		password = "my_pass"
+	}
+	resource "citrixadc_tmsessionaction" "tf_tmsessionaction" {
+		name                       = "my_tmsession_action"
+		sesstimeout                = 10
+		defaultauthorizationaction = "ALLOW"
+		sso                        = "OFF"
+	}
+	resource "citrixadc_tmsessionpolicy" "tf_tmsessionpolicy" {
+		name   = "my_tmsession_policy"
+		rule   = "true"
+		action = citrixadc_tmsessionaction.tf_tmsessionaction.name
+	}
 `
 
 func TestAccAaauser_tmsessionpolicy_binding_basic(t *testing.T) {

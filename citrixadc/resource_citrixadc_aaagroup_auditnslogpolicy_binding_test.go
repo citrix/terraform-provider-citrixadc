@@ -26,21 +26,46 @@ import (
 
 const testAccAaagroup_auditnslogpolicy_binding_basic = `
 
-# Since the auditnslogpolicy resource is not yet available on Terraform,
-# the tf_auditnslogpolicy policy must be created by hand in order for the script to run correctly.
-# You can do that by using the following Citrix ADC cli commands:
-# add audit nslogAction tf_auditnslogaction 1.1.1.1 -loglevel NONE
-# add audit nslogPolicy tf_auditnslogpolicy ns_true tf_auditnslogaction
+	resource "citrixadc_aaagroup" "tf_aaagroup" {
+		groupname = "my_group"
+		weight    = 100
+		loggedin  = false
+	}
+	resource "citrixadc_auditnslogaction" "tf_auditnslogaction" {
+		name     = "my_auditnslogaction"
+		serverip = "1.1.1.1"
+		loglevel = ["ALERT", "CRITICAL"]
+	}
+	resource "citrixadc_auditnslogpolicy" "tf_auditnslogpolicy" {
+		name   = "my_auditnslogpolicy"
+		rule   = "ns_true"
+		action = citrixadc_auditnslogaction.tf_auditnslogaction.name
+	}
 
-resource "citrixadc_aaagroup_auditnslogpolicy_binding" "tf_aaagroup_auditnslogpolicy_binding" {
-	groupname = "my_group"
-	policy    = "tf_auditnslogpolicy"
-	priority  = 150
-  }
+	resource "citrixadc_aaagroup_auditnslogpolicy_binding" "tf_aaagroup_auditnslogpolicy_binding" {
+		groupname = citrixadc_aaagroup.tf_aaagroup.groupname
+		policy    = citrixadc_auditnslogpolicy.tf_auditnslogpolicy.name
+		priority  = 150
+	}
 `
 
 const testAccAaagroup_auditnslogpolicy_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
+	resource "citrixadc_aaagroup" "tf_aaagroup" {
+		groupname = "my_group"
+		weight    = 100
+		loggedin  = false
+	}
+	resource "citrixadc_auditnslogaction" "tf_auditnslogaction" {
+		name     = "my_auditnslogaction"
+		serverip = "1.1.1.1"
+		loglevel = ["ALERT", "CRITICAL"]
+	}
+	resource "citrixadc_auditnslogpolicy" "tf_auditnslogpolicy" {
+		name   = "my_auditnslogpolicy"
+		rule   = "ns_true"
+		action = citrixadc_auditnslogaction.tf_auditnslogaction.name
+	}
 `
 
 func TestAccAaagroup_auditnslogpolicy_binding_basic(t *testing.T) {

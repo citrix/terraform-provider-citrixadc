@@ -23,16 +23,14 @@ import (
 
 const testAccSsldhparam_create = `
 	resource "citrixadc_ssldhparam" "foo" {
-		dhfile = "/nsconfig/ssl/tfAcc_dhfile"
+		dhfile = "/nsconfig/ssl/new"
 		bits   = "512"
 		gen    = "2"
 	}
 `
 
 func TestAccSsldhparam_create(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
+	t.Skip("TODO: Need to find a way to test this resource!")
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,

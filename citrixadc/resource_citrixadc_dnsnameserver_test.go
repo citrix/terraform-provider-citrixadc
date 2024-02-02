@@ -27,23 +27,46 @@ import (
 
 const testAccDnsnameserver_add = `
 
-resource "citrixadc_dnsnameserver" "dnsnameserver" {
-	ip = "192.0.2.0"
-    local = true
-    state = "DISABLED"
-    type = "UDP"
-    dnsprofilename = "tf_pr"
-}
+	resource "citrixadc_dnsprofile" "dnsprofile" {
+		dnsprofilename         = "tf_profile1"
+		dnsquerylogging        = "DISABLED"
+		dnsanswerseclogging    = "DISABLED"
+		dnsextendedlogging     = "DISABLED"
+		dnserrorlogging        = "DISABLED"
+		cacherecords           = "ENABLED"
+		cachenegativeresponses = "ENABLED"
+		dropmultiqueryrequest  = "DISABLED"
+		cacheecsresponses      = "DISABLED"
+	}
+
+	resource "citrixadc_dnsnameserver" "dnsnameserver" {
+		ip 				= "192.0.2.0"
+		local 			= true
+		state 			= "DISABLED"
+		type 			= "UDP"
+		dnsprofilename 	= citrixadc_dnsprofile.dnsprofile.dnsprofilename
+	}
 `
 const testAccDnsnameserver_update = `
 
-resource "citrixadc_dnsnameserver" "dnsnameserver" {
-	ip = "192.0.2.0"
-    local = false
-    state = "DISABLED"
-    type = "UDP"
-    dnsprofilename = "tf_pr"
-}
+	resource "citrixadc_dnsprofile" "dnsprofile" {
+		dnsprofilename         = "tf_profile1"
+		dnsquerylogging        = "DISABLED"
+		dnsanswerseclogging    = "DISABLED"
+		dnsextendedlogging     = "DISABLED"
+		dnserrorlogging        = "DISABLED"
+		cacherecords           = "ENABLED"
+		cachenegativeresponses = "ENABLED"
+		dropmultiqueryrequest  = "DISABLED"
+		cacheecsresponses      = "DISABLED"
+	}
+	resource "citrixadc_dnsnameserver" "dnsnameserver" {
+		ip 				= "192.0.2.0"
+		local 			= false
+		state 			= "DISABLED"
+		type 			= "UDP"
+		dnsprofilename 	= citrixadc_dnsprofile.dnsprofile.dnsprofilename
+	}
 `
 
 func TestAccDnsnameserver_basic(t *testing.T) {
@@ -57,7 +80,7 @@ func TestAccDnsnameserver_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDnsnameserverExist("citrixadc_dnsnameserver.dnsnameserver", nil),
 					resource.TestCheckResourceAttr("citrixadc_dnsnameserver.dnsnameserver", "local", "true"),
-					resource.TestCheckResourceAttr("citrixadc_dnsnameserver.dnsnameserver", "dnsprofilename", "tf_pr"),
+					resource.TestCheckResourceAttr("citrixadc_dnsnameserver.dnsnameserver", "dnsprofilename", "tf_profile1"),
 				),
 			},
 			{
@@ -65,7 +88,7 @@ func TestAccDnsnameserver_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDnsnameserverExist("citrixadc_dnsnameserver.dnsnameserver", nil),
 					resource.TestCheckResourceAttr("citrixadc_dnsnameserver.dnsnameserver", "local", "false"),
-					resource.TestCheckResourceAttr("citrixadc_dnsnameserver.dnsnameserver", "dnsprofilename", "tf_pr"),
+					resource.TestCheckResourceAttr("citrixadc_dnsnameserver.dnsnameserver", "dnsprofilename", "tf_profile1"),
 				),
 			},
 		},

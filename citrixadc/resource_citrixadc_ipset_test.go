@@ -74,9 +74,6 @@ const testAccIpset_name_changed = `
 `
 
 func TestAccIpset_no_bindings(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -99,9 +96,6 @@ func TestAccIpset_no_bindings(t *testing.T) {
 }
 
 func TestAccIpset_with_bindings(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -240,9 +234,6 @@ resource "citrixadc_nsip" "nsip2" {
 `
 
 func TestAccIpset_ipv4_swaps(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
 	if isCpxRun {
 		t.Skip("No support in CPX")
 	}
@@ -330,9 +321,6 @@ resource "citrixadc_nsip6" "tf_nsip2" {
 `
 
 func TestAccIpset_ipv6_swaps(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
 	if isCpxRun {
 		t.Skip("No support in CPX")
 	}

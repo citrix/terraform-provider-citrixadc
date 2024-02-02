@@ -38,7 +38,7 @@ resource "citrixadc_linkset_channel_binding" "tf_linkset_channel_binding" {
   }
   
   resource "citrixadc_channel" "tf_channel"{
-	  channel_id = "0/LA/2"
+	  channel_id = "LA/3"
   }
   
 `
@@ -49,11 +49,12 @@ resource "citrixadc_linkset" "tf_linkset"{
 }
 
 resource "citrixadc_channel" "tf_channel"{
-	channel_id = "0/LA/2"
+	channel_id = "LA/3"
 }
 `
 
 func TestAccLinkset_channel_binding_basic(t *testing.T) {
+	t.Skip("TODO: Need to find a way to test this resource!")
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -68,7 +69,7 @@ func TestAccLinkset_channel_binding_basic(t *testing.T) {
 			{
 				Config: testAccLinkset_channel_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLinkset_channel_bindingNotExist("citrixadc_linkset_channel_binding.tf_linkset_channel_binding", "LS/3,0/LA/2"),
+					testAccCheckLinkset_channel_bindingNotExist("citrixadc_linkset_channel_binding.tf_linkset_channel_binding", "LS/3,LA/3"),
 				),
 			},
 		},

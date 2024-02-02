@@ -26,13 +26,23 @@ import (
 
 const testAccVpnvserver_appflowpolicy_binding_basic = `
 
-# Since the appflowpolicy resource is not yet available on Terraform,
-# the tf_appflowpolicy policy must be created by hand in order for the script to run correctly.
-# You can do that by using the following Citrix ADC cli commands:
-# add appflow collector col1 -IPaddress 10.10.5.5
-# add appflow action test_action -collectors col1
-# add appflow policy tf_appflowpolicy client.TCP.DSTPORT.EQ(22) test_action
-
+	resource "citrixadc_appflowpolicy" "tf_appflowpolicy" {
+		name      = "tf_appflowpolicy"
+		action    = citrixadc_appflowaction.tf_appflowaction.name
+		rule      = "client.TCP.DSTPORT.EQ(22)"
+	}
+	resource "citrixadc_appflowaction" "tf_appflowaction" {
+		name = "test_action"
+		collectors     = [citrixadc_appflowcollector.tf_appflowcollector.name]
+		securityinsight = "ENABLED"
+		botinsight      = "ENABLED"
+		videoanalytics  = "ENABLED"
+	}
+	resource "citrixadc_appflowcollector" "tf_appflowcollector" {
+		name      = "col1"
+		ipaddress = "192.168.2.2"
+		port      = 80
+	}
 	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
 		name        = "tf_vpnvserver"
 		servicetype = "SSL"
@@ -41,7 +51,7 @@ const testAccVpnvserver_appflowpolicy_binding_basic = `
 	}
 	resource "citrixadc_vpnvserver_appflowpolicy_binding" "tf_bind" {
 		name                   = citrixadc_vpnvserver.tf_vpnvserver.name
-		policy                 = "tf_appflowpolicy"
+		policy                 = citrixadc_appflowpolicy.tf_appflowpolicy.name
 		bindpoint              = "ICA_REQUEST"
 		priority               = 200
 		gotopriorityexpression = "END"
@@ -50,6 +60,24 @@ const testAccVpnvserver_appflowpolicy_binding_basic = `
 
 const testAccVpnvserver_appflowpolicy_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
+
+	resource "citrixadc_appflowpolicy" "tf_appflowpolicy" {
+		name      = "tf_appflowpolicy"
+		action    = citrixadc_appflowaction.tf_appflowaction.name
+		rule      = "client.TCP.DSTPORT.EQ(22)"
+	}
+	resource "citrixadc_appflowaction" "tf_appflowaction" {
+		name = "test_action"
+		collectors     = [citrixadc_appflowcollector.tf_appflowcollector.name]
+		securityinsight = "ENABLED"
+		botinsight      = "ENABLED"
+		videoanalytics  = "ENABLED"
+	}
+	resource "citrixadc_appflowcollector" "tf_appflowcollector" {
+		name      = "col1"
+		ipaddress = "192.168.2.2"
+		port      = 80
+	}
 
 	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
 		name        = "tf_vpnvserver"

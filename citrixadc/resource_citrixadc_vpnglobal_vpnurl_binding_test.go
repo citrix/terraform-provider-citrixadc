@@ -26,7 +26,7 @@ import (
 const testAccVpnglobal_vpnurl_binding_basic = `
 	resource "citrixadc_vpnurl" "url" {
 		urlname          = "Firsturl"
-		actualurl        = "www.citrix.com"
+		actualurl        = "http://www.citrix.com"
 		appjson          = "xyz"
 		applicationtype  = "CVPN"
 		clientlessaccess = "OFF"
@@ -44,7 +44,7 @@ const testAccVpnglobal_vpnurl_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
 	resource "citrixadc_vpnurl" "url" {
 		urlname          = "Firsturl"
-		actualurl        = "www.citrix.com"
+		actualurl        = "http://www.citrix.com"
 		appjson          = "xyz"
 		applicationtype  = "CVPN"
 		clientlessaccess = "OFF"

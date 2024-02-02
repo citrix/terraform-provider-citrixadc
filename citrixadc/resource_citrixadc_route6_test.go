@@ -26,10 +26,12 @@ import (
 
 const testAccRoute6_basic = `
 
-
+resource "citrixadc_vlan" "tf_vlan" {
+    vlanid = 2
+}
 resource "citrixadc_route6" "tf_route6" {
 	network  = "2001:db8:85a3::/64"
-	vlan     = 2
+	vlan     = citrixadc_vlan.tf_vlan.vlanid
 	weight   = 5
 	distance = 3
   }
@@ -37,10 +39,12 @@ resource "citrixadc_route6" "tf_route6" {
 `
 const testAccRoute6_update = `
 
-
+resource "citrixadc_vlan" "tf_vlan" {
+    vlanid = 2
+}
 resource "citrixadc_route6" "tf_route6" {
 	network  = "2001:db8:85a3::/64"
-	vlan     = 2
+	vlan     = citrixadc_vlan.tf_vlan.vlanid
 	weight   = 6
 	distance = 4
   }

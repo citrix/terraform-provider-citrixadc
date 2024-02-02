@@ -45,6 +45,9 @@ resource "citrixadc_clusternode" "tf_clusternode" {
 `
 
 func TestAccClusternode_basic(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -93,6 +96,9 @@ const testAccClusternode_update_group_config_yes = `
 `
 
 func TestAccClusternode_group_config_yes(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -141,6 +147,9 @@ const testAccClusternode_update_group_config_no = `
 `
 
 func TestAccClusternode_group_config_no(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,

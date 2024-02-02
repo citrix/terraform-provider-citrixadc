@@ -26,7 +26,7 @@ const testAccFeopolicy_basic = `
 
 	resource "citrixadc_feopolicy" "tf_feopolicy" {
 		name   = "my_feopolicy"
-		action = "my_feoaction"
+		action = "BASIC"
 		rule   = "true"
 	} 
 `
@@ -50,7 +50,7 @@ func TestAccFeopolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFeopolicyExist("citrixadc_feopolicy.tf_feopolicy", nil),
 					resource.TestCheckResourceAttr("citrixadc_feopolicy.tf_feopolicy", "name", "my_feopolicy"),
-					resource.TestCheckResourceAttr("citrixadc_feopolicy.tf_feopolicy", "action", "my_feoaction"),
+					resource.TestCheckResourceAttr("citrixadc_feopolicy.tf_feopolicy", "action", "BASIC"),
 					resource.TestCheckResourceAttr("citrixadc_feopolicy.tf_feopolicy", "rule", "true"),
 				),
 			},

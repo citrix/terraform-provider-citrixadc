@@ -25,33 +25,31 @@ import (
 
 const testAccVpnurl_add = `
 
-	resource "citrixadc_vpnurl" "foo" {
-
-		actualurl = "www.citrix.com"
-		appjson = "xyz"
-		applicationtype = "CVPN"
-		clientlessaccess = "OFF"
-		comment = "Testing"
-		linkname = "Description"		
-		ssotype = "unifiedgateway"
-		urlname = "Firsturl"
-		vservername = "server1"
-		}
+resource "citrixadc_vpnurl" "foo" {
+	actualurl        = "http://www.citrix.com"
+	appjson          = "xyz"
+	applicationtype  = "CVPN"
+	clientlessaccess = "OFF"
+	comment          = "Testing"
+	linkname         = "Description"
+	ssotype          = "unifiedgateway"
+	urlname          = "Firsturl"
+	vservername      = "server1"
+  }
 `
 const testAccVpnurl_update = `
 
-	resource "citrixadc_vpnurl" "foo"{
-
-		actualurl = "www.citrix1.com"
-		appjson = "xyz"
-		applicationtype= "CVPN"
-		clientlessaccess = "OFF"
-		comment = "Testing"
-		linkname = "Description"
-		ssotype = "unifiedgateway"
-		urlname = "Firsturl"
-		vservername = "server1"
-		}
+resource "citrixadc_vpnurl" "foo" {
+	actualurl        = "http://www.citrix1.com"
+	appjson          = "xyz"
+	applicationtype  = "CVPN"
+	clientlessaccess = "OFF"
+	comment          = "Testing"
+	linkname         = "Description"
+	ssotype          = "unifiedgateway"
+	urlname          = "Firsturl"
+	vservername      = "server1"
+  }
 `
 
 func TestAccVpnurl_basic(t *testing.T) {
@@ -65,7 +63,7 @@ func TestAccVpnurl_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnurlExist("citrixadc_vpnurl.foo", nil),
 					resource.TestCheckResourceAttr("citrixadc_vpnurl.foo", "urlname", "Firsturl"),
-					resource.TestCheckResourceAttr("citrixadc_vpnurl.foo", "actualurl", "www.citrix.com"),
+					resource.TestCheckResourceAttr("citrixadc_vpnurl.foo", "actualurl", "http://www.citrix.com"),
 					resource.TestCheckResourceAttr("citrixadc_vpnurl.foo", "linkname", "Description"),
 					resource.TestCheckResourceAttr("citrixadc_vpnurl.foo", "comment", "Testing"),
 				),
@@ -75,7 +73,7 @@ func TestAccVpnurl_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnurlExist("citrixadc_vpnurl.foo", nil),
 					resource.TestCheckResourceAttr("citrixadc_vpnurl.foo", "urlname", "Firsturl"),
-					resource.TestCheckResourceAttr("citrixadc_vpnurl.foo", "actualurl", "www.citrix1.com"),
+					resource.TestCheckResourceAttr("citrixadc_vpnurl.foo", "actualurl", "http://www.citrix1.com"),
 					resource.TestCheckResourceAttr("citrixadc_vpnurl.foo", "ssotype", "unifiedgateway"),
 					resource.TestCheckResourceAttr("citrixadc_vpnurl.foo", "vservername", "server1"),
 				),

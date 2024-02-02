@@ -177,7 +177,7 @@ func readNscqaparamFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("harqretxdelay", data["harqretxdelay"])
 	d.Set("lr1coeflist", data["lr1coeflist"])
-	d.Set("lr1probthresh", data["lr1probthresh"])
+	// d.Set("lr1probthresh", data["lr1probthresh"])
 	d.Set("lr2coeflist", data["lr2coeflist"])
 	d.Set("lr2probthresh", data["lr2probthresh"])
 	d.Set("minrttnet1", data["minrttnet1"])

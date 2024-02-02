@@ -62,7 +62,7 @@ func TestAccOnlinkipv6prefix_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOnlinkipv6prefixExist("citrixadc_onlinkipv6prefix.tf_onlinkipv6prefix", nil),
 					resource.TestCheckResourceAttr("citrixadc_onlinkipv6prefix.tf_onlinkipv6prefix", "onlinkprefix", "NO"),
-					resource.TestCheckResourceAttr("citrixadc_onlinkipv6prefix.tf_onlinkipv6prefix", "autonomusprefixq", "YES"),
+					resource.TestCheckResourceAttr("citrixadc_onlinkipv6prefix.tf_onlinkipv6prefix", "autonomusprefix", "YES"),
 				),
 			},
 		},

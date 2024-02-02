@@ -24,14 +24,36 @@ import (
 )
 
 const testAccAaaglobal_aaapreauthenticationpolicy_binding_basic = `
+
+	resource "citrixadc_aaapreauthenticationaction" "tf_aaapreauthenticationaction" {
+		name                    = "my_action"
+		preauthenticationaction = "ALLOW"
+		deletefiles             = "/var/tmp/new/hello.txt"
+	}
+	resource "citrixadc_aaapreauthenticationpolicy" "tf_aaapreauthenticationpolicy" {
+		name      = "my_policy"
+		rule 	  = "REQ.VLANID == 5"
+		reqaction = citrixadc_aaapreauthenticationaction.tf_aaapreauthenticationaction.name
+	}
 	resource "citrixadc_aaaglobal_aaapreauthenticationpolicy_binding" "tf_aaaglobal_aaapreauthenticationpolicy_binding" {
-		policy    = "my_preauthentication_policy"
+		policy    = citrixadc_aaapreauthenticationpolicy.tf_aaapreauthenticationpolicy.name
 		priority  = 50
 	}
 `
 
 const testAccAaaglobal_aaapreauthenticationpolicy_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
+
+	resource "citrixadc_aaapreauthenticationaction" "tf_aaapreauthenticationaction" {
+		name                    = "my_action"
+		preauthenticationaction = "ALLOW"
+		deletefiles             = "/var/tmp/new/hello.txt"
+	}
+	resource "citrixadc_aaapreauthenticationpolicy" "tf_aaapreauthenticationpolicy" {
+		name      = "my_policy"
+		rule 	  = "REQ.VLANID == 5"
+		reqaction = citrixadc_aaapreauthenticationaction.tf_aaapreauthenticationaction.name
+	}
 `
 
 func TestAccAaaglobal_aaapreauthenticationpolicy_binding_basic(t *testing.T) {

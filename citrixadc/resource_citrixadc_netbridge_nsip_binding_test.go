@@ -25,16 +25,46 @@ import (
 )
 
 const testAccNetbridge_nsip_binding_basic = `
-	resource "citrixadc_netbridge_nsip_binding" "tf_netbridge_nsip_binding" {
-		name      = "my_netbridge"
-		netmask   = "255.255.255.192"
+
+	resource "citrixadc_vxlanvlanmap" "tf_vxlanvlanmp" {
+		name = "tf_vxlanvlanmp"
+	}
+	resource "citrixadc_netbridge" "tf_netbridge" {
+		name         = "my_netbridge"
+		vxlanvlanmap = citrixadc_vxlanvlanmap.tf_vxlanvlanmp.name
+	}
+
+	resource "citrixadc_nsip" "tf_nsip" {
 		ipaddress = "10.222.74.128"
+		type      = "VIP"
+		netmask   = "255.255.255.255"
+		icmp      = "ENABLED"
+	}
+	resource "citrixadc_netbridge_nsip_binding" "tf_netbridge_nsip_binding" {
+		name      = citrixadc_netbridge.tf_netbridge.name
+		netmask   = citrixadc_nsip.tf_nsip.netmask
+		ipaddress = citrixadc_nsip.tf_nsip.ipaddress
 	}
   
 `
 
 const testAccNetbridge_nsip_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
+
+	resource "citrixadc_vxlanvlanmap" "tf_vxlanvlanmp" {
+		name = "tf_vxlanvlanmp"
+	}
+	resource "citrixadc_netbridge" "tf_netbridge" {
+		name         = "my_netbridge"
+		vxlanvlanmap = citrixadc_vxlanvlanmap.tf_vxlanvlanmp.name
+	}
+
+	resource "citrixadc_nsip" "tf_nsip" {
+		ipaddress = "10.222.74.128"
+		type      = "VIP"
+		netmask   = "255.255.255.255"
+		icmp      = "ENABLED"
+	}
 `
 
 func TestAccNetbridge_nsip_binding_basic(t *testing.T) {

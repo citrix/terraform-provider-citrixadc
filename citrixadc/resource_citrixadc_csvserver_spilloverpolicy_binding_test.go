@@ -25,33 +25,51 @@ import (
 )
 
 const testAccCsvserver_spilloverpolicy_binding_basic = `
-	# Since the spilloverpolicy resource is not yet available on Terraform,
-	# the tf_spilloverpolicy policy must be created by hand in order for the script to run correctly.
-	# You can do that by using the following Citrix ADC cli command:
-	# add spillover policy tf_spilloverpolicy -rule TRUE -action SPILLOVER
+
+	resource "citrixadc_spilloveraction" "tf_spilloveraction" {
+		name   = "my_spilloveraction"
+		action = "SPILLOVER"
+	}
+	resource "citrixadc_spilloverpolicy" "tf_spilloverpolicy" {
+		name    = "tf_spilloverpolicy"
+		rule    = "true"
+		action  = citrixadc_spilloveraction.tf_spilloveraction.name
+		comment = "This is example of spilloverpolicy"
+	}
 
 	resource "citrixadc_csvserver_spilloverpolicy_binding" "tf_csvserver_spilloverpolicy_binding" {
-        name = citrixadc_csvserver.tf_csvserver.name
-        policyname = "tf_spilloverpolicy"
-        bindpoint = "REQUEST"
-        gotopriorityexpression = "END"
-        invoke = false
-        priority = 1
+        name 					= citrixadc_csvserver.tf_csvserver.name
+        policyname 				= citrixadc_spilloverpolicy.tf_spilloverpolicy.name
+        bindpoint 				= "REQUEST"
+        gotopriorityexpression 	= "END"
+        invoke 					= false
+        priority 				= 1
 	}
 
 	resource "citrixadc_csvserver" "tf_csvserver" {
-		name = "tf_csvserver"
-		ipv46 = "10.202.11.11"
-		port = 8080
+		name 		= "tf_csvserver"
+		ipv46 		= "10.202.11.11"
+		port 		= 8080
 		servicetype = "HTTP"
 	}
 `
 
 const testAccCsvserver_spilloverpolicy_binding_basic_step2 = `
+
+	resource "citrixadc_spilloveraction" "tf_spilloveraction" {
+		name   = "my_spilloveraction"
+		action = "SPILLOVER"
+	}
+	resource "citrixadc_spilloverpolicy" "tf_spilloverpolicy" {
+		name    = "tf_spilloverpolicy"
+		rule    = "true"
+		action  = citrixadc_spilloveraction.tf_spilloveraction.name
+		comment = "This is example of spilloverpolicy"
+	}
 	resource "citrixadc_csvserver" "tf_csvserver" {
-		name = "tf_csvserver"
-		ipv46 = "10.202.11.11"
-		port = 8080
+		name 		= "tf_csvserver"
+		ipv46 		= "10.202.11.11"
+		port 		= 8080
 		servicetype = "HTTP"
 	}
 `

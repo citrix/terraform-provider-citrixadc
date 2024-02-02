@@ -26,9 +26,19 @@ import (
 
 const testAccContentinspectionpolicylabel_contentinspectionpolicy_binding_basic = `
 
+	resource "citrixadc_contentinspectionpolicylabel" "tf_contentinspectionpolicylabel" {
+		labelname = "my_ci_label"
+		type      = "RES"
+	}
+	resource "citrixadc_contentinspectionpolicy" "tf_contentinspectionpolicy" {
+		name   = "my_ci_policy"
+		rule   = "false"
+		action = "DROP"
+	}
+
 	resource "citrixadc_contentinspectionpolicylabel_contentinspectionpolicy_binding" "tf_ci_binding" {
-		labelname  = "my_ci_label"
-		policyname = "my_ci_policy"
+		labelname  = citrixadc_contentinspectionpolicylabel.tf_contentinspectionpolicylabel.labelname
+		policyname = citrixadc_contentinspectionpolicy.tf_contentinspectionpolicy.name
 		priority   = 100
 	}
   
@@ -36,6 +46,16 @@ const testAccContentinspectionpolicylabel_contentinspectionpolicy_binding_basic 
 
 const testAccContentinspectionpolicylabel_contentinspectionpolicy_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
+
+	resource "citrixadc_contentinspectionpolicylabel" "tf_contentinspectionpolicylabel" {
+		labelname = "my_ci_label"
+		type      = "RES"
+	}
+	resource "citrixadc_contentinspectionpolicy" "tf_contentinspectionpolicy" {
+		name   = "my_ci_policy"
+		rule   = "false"
+		action = "DROP"
+	}
 `
 
 func TestAccContentinspectionpolicylabel_contentinspectionpolicy_binding_basic(t *testing.T) {

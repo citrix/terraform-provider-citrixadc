@@ -27,11 +27,15 @@ import (
 const testAccAaauser_auditsyslogpolicy_binding_basic = `
 
 	resource "citrixadc_aaauser_auditsyslogpolicy_binding" "tf_aaauser_auditsyslogpolicy_binding" {
-		username = "user1"
+		username = citrixadc_aaauser.tf_aaauser.username
 		policy    = citrixadc_auditsyslogpolicy.tf_auditsyslogpolicy.name
 		priority  = 100
 	}
-	
+
+	resource "citrixadc_aaauser" "tf_aaauser" {
+		username = "user1"
+		password = "my_pass"
+	}
 	resource "citrixadc_auditsyslogaction" "tf_syslogaction" {
 		name       = "tf_syslogaction"
 		serverip   = "10.78.60.33"
@@ -49,6 +53,10 @@ const testAccAaauser_auditsyslogpolicy_binding_basic = `
 `
 
 const testAccAaauser_auditsyslogpolicy_binding_basic_step2 = `
+	resource "citrixadc_aaauser" "tf_aaauser" {
+		username = "user1"
+		password = "my_pass"
+	}
 	resource "citrixadc_auditsyslogaction" "tf_syslogaction" {
 		name       = "tf_syslogaction"
 		serverip   = "10.78.60.33"

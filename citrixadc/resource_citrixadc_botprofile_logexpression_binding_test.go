@@ -45,7 +45,7 @@ const testAccBotprofile_logexpression_binding_basic = `
 		name                     = citrixadc_botprofile.tf_botprofile.name
 		logexpression            = "true"
 		bot_log_expression_name  = "tf_logname"
-		bot_log_expression_value = "HTTP.REQ.BODY.CONTAINS(\"ANDROID\")"
+		bot_log_expression_value = "HTTP.REQ.URL.PATH_AND_QUERY.CONTAINS(\"ANDROID\")"
 		bot_bind_comment         = "LogTesting"
 	}
 `

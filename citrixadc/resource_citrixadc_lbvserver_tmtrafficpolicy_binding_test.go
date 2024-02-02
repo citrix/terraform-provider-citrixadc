@@ -25,16 +25,23 @@ import (
 )
 
 const testAccLbvserver_tmtrafficpolicy_binding_basic = `
-	# Since the tmttrafficpolicy resource is not yet available on Terraform,
-	# the tf_tmttrafficpolicy policy must be created by hand in order for the script to run correctly.
-	# You can do that by using the following Citrix ADC cli commands:
-	# add tmtrafficAction tf_tmtrafficaction -SSO ON -userExpression "AAA.USER.PASSWD"
-	# add tmtrafficPolicy tf_tmttrafficpolicy true tf_tmtrafficaction
+
+	resource "citrixadc_tmtrafficaction" "tf_tmtrafficaction" {
+		name             = "my_trafficaction"
+		apptimeout       = 5
+		sso              = "OFF"
+		persistentcookie = "ON"
+	}	
+	resource "citrixadc_tmtrafficpolicy" "tf_tmtrafficpolicy" {
+		name   = "tf_tmttrafficpolicy"
+		rule   = "true"
+		action = citrixadc_tmtrafficaction.tf_tmtrafficaction.name
+	}
 
 	resource "citrixadc_lbvserver_tmtrafficpolicy_binding" "tf_lbvserver_tmtrafficpolicy_binding" {
-		name = citrixadc_lbvserver.tf_lbvserver.name
-		policyname = "tf_tmttrafficpolicy"
-		priority = 1
+		name 		= citrixadc_lbvserver.tf_lbvserver.name
+		policyname 	= citrixadc_tmtrafficpolicy.tf_tmtrafficpolicy.name
+		priority 	= 1
 	}
 
 	resource "citrixadc_lbvserver" "tf_lbvserver" {
@@ -55,9 +62,6 @@ const testAccLbvserver_tmtrafficpolicy_binding_basic_step2 = `
 `
 
 func TestAccLbvserver_tmtrafficpolicy_binding_basic(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,

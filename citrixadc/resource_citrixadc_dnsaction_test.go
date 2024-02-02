@@ -25,13 +25,24 @@ import (
 
 const testAccDnsaction_add = `
 
+	resource "citrixadc_dnsprofile" "dnsprofile" {
+		dnsprofilename         = "tf_profile1"
+		dnsquerylogging        = "DISABLED"
+		dnsanswerseclogging    = "DISABLED"
+		dnsextendedlogging     = "DISABLED"
+		dnserrorlogging        = "DISABLED"
+		cacherecords           = "ENABLED"
+		cachenegativeresponses = "ENABLED"
+		dropmultiqueryrequest  = "DISABLED"
+		cacheecsresponses      = "DISABLED"
+	}
 
-resource "citrixadc_dnsaction" "dnsaction" {
-	actionname       = "tf_action1"
-	actiontype       = "Rewrite_Response"
-	ipaddress        = ["192.0.2.20","192.0.2.56","198.51.130.10"]
-	dnsprofilename   = "tf_profile1"
-  }
+	resource "citrixadc_dnsaction" "dnsaction" {
+		actionname       = "tf_action1"
+		actiontype       = "Rewrite_Response"
+		ipaddress        = ["192.0.2.20","192.0.2.56","198.51.130.10"]
+		dnsprofilename   = citrixadc_dnsprofile.dnsprofile.dnsprofilename
+	}
 `
 
 func TestAccDnsaction_basic(t *testing.T) {

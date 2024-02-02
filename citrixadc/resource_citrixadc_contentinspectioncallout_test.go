@@ -24,11 +24,20 @@ import (
 
 const testAccContentinspectioncallout_basic = `
 
+resource "citrixadc_nsicapprofile" "tf_nsicapprofile" {
+	name             = "new-profile"
+	uri              = "/example"
+	mode             = "REQMOD"
+	reqtimeout       = 4
+	reqtimeoutaction = "RESET"
+	preview          = "ENABLED"
+	previewlength    = 4096
+}
 resource "citrixadc_contentinspectioncallout" "tf_contentinspectioncalloout" {
 	name        = "my_ci_callout"
 	type        = "ICAP"
-	profilename = "reqmod-profile"
-	servername  = "icapsv1"
+	profilename = citrixadc_nsicapprofile.tf_nsicapprofile.name
+	serverip    = "2.2.2.2"
 	returntype  = "TEXT"
 	resultexpr  = "true"
   }
@@ -36,11 +45,20 @@ resource "citrixadc_contentinspectioncallout" "tf_contentinspectioncalloout" {
 
 const testAccContentinspectioncallout_update = `
 
+resource "citrixadc_nsicapprofile" "tf_nsicapprofile" {
+	name             = "new-profile"
+	uri              = "/example"
+	mode             = "REQMOD"
+	reqtimeout       = 4
+	reqtimeoutaction = "RESET"
+	preview          = "ENABLED"
+	previewlength    = 4096
+}
 resource "citrixadc_contentinspectioncallout" "tf_contentinspectioncalloout" {
 	name        = "my_ci_callout"
 	type        = "ICAP"
-	profilename = "reqmod-profile"
-	servername  = "icapsv1"
+	profilename = citrixadc_nsicapprofile.tf_nsicapprofile.name
+	serverip    = "2.2.2.2"
 	returntype  = "TEXT"
 	resultexpr  = "icap.res.header(\"ISTag\")"
   }
@@ -58,8 +76,8 @@ func TestAccContentinspectioncallout_basic(t *testing.T) {
 					testAccCheckContentinspectioncalloutExist("citrixadc_contentinspectioncallout.tf_contentinspectioncalloout", nil),
 					resource.TestCheckResourceAttr("citrixadc_contentinspectioncallout.tf_contentinspectioncalloout", "name", "my_ci_callout"),
 					resource.TestCheckResourceAttr("citrixadc_contentinspectioncallout.tf_contentinspectioncalloout", "type", "ICAP"),
-					resource.TestCheckResourceAttr("citrixadc_contentinspectioncallout.tf_contentinspectioncalloout", "profilename", "reqmod-profile"),
-					resource.TestCheckResourceAttr("citrixadc_contentinspectioncallout.tf_contentinspectioncalloout", "servername", "icapsv1"),
+					resource.TestCheckResourceAttr("citrixadc_contentinspectioncallout.tf_contentinspectioncalloout", "profilename", "new-profile"),
+					resource.TestCheckResourceAttr("citrixadc_contentinspectioncallout.tf_contentinspectioncalloout", "serverip", "2.2.2.2"),
 					resource.TestCheckResourceAttr("citrixadc_contentinspectioncallout.tf_contentinspectioncalloout", "returntype", "TEXT"),
 					resource.TestCheckResourceAttr("citrixadc_contentinspectioncallout.tf_contentinspectioncalloout", "resultexpr", "true"),
 				),
@@ -70,8 +88,8 @@ func TestAccContentinspectioncallout_basic(t *testing.T) {
 					testAccCheckContentinspectioncalloutExist("citrixadc_contentinspectioncallout.tf_contentinspectioncalloout", nil),
 					resource.TestCheckResourceAttr("citrixadc_contentinspectioncallout.tf_contentinspectioncalloout", "name", "my_ci_callout"),
 					resource.TestCheckResourceAttr("citrixadc_contentinspectioncallout.tf_contentinspectioncalloout", "type", "ICAP"),
-					resource.TestCheckResourceAttr("citrixadc_contentinspectioncallout.tf_contentinspectioncalloout", "profilename", "reqmod-profile"),
-					resource.TestCheckResourceAttr("citrixadc_contentinspectioncallout.tf_contentinspectioncalloout", "servername", "icapsv1"),
+					resource.TestCheckResourceAttr("citrixadc_contentinspectioncallout.tf_contentinspectioncalloout", "profilename", "new-profile"),
+					resource.TestCheckResourceAttr("citrixadc_contentinspectioncallout.tf_contentinspectioncalloout", "serverip", "2.2.2.2"),
 					resource.TestCheckResourceAttr("citrixadc_contentinspectioncallout.tf_contentinspectioncalloout", "returntype", "TEXT"),
 					resource.TestCheckResourceAttr("citrixadc_contentinspectioncallout.tf_contentinspectioncalloout", "resultexpr", "icap.res.header(\"ISTag\")"),
 				),

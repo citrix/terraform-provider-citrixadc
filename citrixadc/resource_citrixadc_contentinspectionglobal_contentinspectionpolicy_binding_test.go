@@ -25,14 +25,26 @@ import (
 
 const testAccContentinspectionglobal_contentinspectionpolicy_binding_basic = `
 
-resource "citrixadc_contentinspectionglobal_contentinspectionpolicy_binding" "tf_ci_binding" {
-	policyname = "my_ci_policy"
-	priority   = 100
-  }
+	resource "citrixadc_contentinspectionpolicy" "tf_contentinspectionpolicy" {
+		name   = "my_ci_policy"
+		rule   = "false"
+		action = "DROP"
+	}
+
+	resource "citrixadc_contentinspectionglobal_contentinspectionpolicy_binding" "tf_ci_binding" {
+		policyname = citrixadc_contentinspectionpolicy.tf_contentinspectionpolicy.name
+		priority   = 100
+	}
 `
 
 const testAccContentinspectionglobal_contentinspectionpolicy_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
+
+	resource "citrixadc_contentinspectionpolicy" "tf_contentinspectionpolicy" {
+		name   = "my_ci_policy"
+		rule   = "false"
+		action = "DROP"
+	}
 `
 
 func TestAccContentinspectionglobal_contentinspectionpolicy_binding_basic(t *testing.T) {

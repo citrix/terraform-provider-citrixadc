@@ -27,56 +27,34 @@ const testAccAppflowaction_basic = `
 
 	resource "citrixadc_appflowaction" "tf_appflowaction" {
 		name            = "test_action"
-		collectors      = ["tf_collector", "tf2_collector" ]
+		collectors      = [citrixadc_appflowcollector.tf_appflowcollector.name ]
 		securityinsight = "ENABLED"
 		botinsight      = "ENABLED"
 		videoanalytics  = "ENABLED"
-		}
-		
-# -------------------- ADC CLI ----------------------------
-#add appflow collector tf2_collector -IPAddress 192.168.2.3
-#add appflow collector tf_collector -IPAddress 192.168.2.2
+	}
+	resource "citrixadc_appflowcollector" "tf_appflowcollector" {
+		name      = "tf_collector"
+		ipaddress = "192.168.2.2"
+		port      = 80
+	}
 
-# ----------------- NOT YET IMPLEMENTED -----------------------
-# resource "citrixadc_appflowcollector" "tf_appflowcollector" {
-#   name      = "tf_collector"
-#   ipaddress = "192.168.2.2"
-#   port      = 80
-# }
-# resource "citrixadc_appflowcollector" "tf_appflowcollector2" {
-#   name      = "tf2_collector"
-#   ipaddress = "192.168.2.3"
-#   port      = 80
-# }
-
-	
 `
 
 const testAccAppflowaction_update = `	
 
-resource "citrixadc_appflowaction" "tf_appflowaction" {
-	name            = "test_action"
-	collectors      = ["tf_collector", "tf2_collector" ]
-	securityinsight = "DISABLED"
-	botinsight      = "DISABLED"
-	videoanalytics  = "DISABLED"
-}
+	resource "citrixadc_appflowaction" "tf_appflowaction" {
+		name            = "test_action"
+		collectors      = [citrixadc_appflowcollector.tf_appflowcollector.name]
+		securityinsight = "DISABLED"
+		botinsight      = "DISABLED"
+		videoanalytics  = "DISABLED"
+	}
 
-# -------------------- ADC CLI ----------------------------
-#add appflow collector tf2_collector -IPAddress 192.168.2.3
-#add appflow collector tf_collector -IPAddress 192.168.2.2
-
-# ----------------- NOT YET IMPLEMENTED -----------------------
-# resource "citrixadc_appflowcollector" "tf_appflowcollector" {
-#   name      = "tf_collector"
-#   ipaddress = "192.168.2.2"
-#   port      = 80
-# }
-# resource "citrixadc_appflowcollector" "tf_appflowcollector2" {
-#   name      = "tf2_collector"
-#   ipaddress = "192.168.2.3"
-#   port      = 80
-# }
+	resource "citrixadc_appflowcollector" "tf_appflowcollector" {
+		name      = "tf_collector"
+		ipaddress = "192.168.2.2"
+		port      = 80
+	}
 
 `
 

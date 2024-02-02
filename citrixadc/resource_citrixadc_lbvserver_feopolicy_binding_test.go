@@ -25,17 +25,19 @@ import (
 )
 
 const testAccLbvserver_feopolicy_binding_basic = `
-	# Since the feopolicy resource is not yet available on Terraform,
-	# the tf_feopolicy policy must be created by hand in order for the script to run correctly.
-	# You can do that by using the following Citrix ADC cli command:
-	# add feo policy tf_feopolicy TRUE BASIC
+
+	resource "citrixadc_feopolicy" "tf_feopolicy" {
+		name   = "tf_feopolicy"
+		action = "BASIC"
+		rule   = "true"
+	}
 
 	resource "citrixadc_lbvserver_feopolicy_binding" "tf_lbvserver_feopolicy_binding" {
-		bindpoint = "REQUEST"
-        gotopriorityexpression = "END"
-        name = citrixadc_lbvserver.tf_lbvserver.name
-        policyname = "tf_feopolicy"
-        priority = 1  
+		bindpoint 				= "REQUEST"
+        gotopriorityexpression 	= "END"
+        name 					= citrixadc_lbvserver.tf_lbvserver.name
+        policyname 				= citrixadc_feopolicy.tf_feopolicy.name
+        priority 				= 1  
 	}
 
 	resource "citrixadc_lbvserver" "tf_lbvserver" {
@@ -47,6 +49,12 @@ const testAccLbvserver_feopolicy_binding_basic = `
 `
 
 const testAccLbvserver_feopolicy_binding_basic_step2 = `
+
+	resource "citrixadc_feopolicy" "tf_feopolicy" {
+		name   = "tf_feopolicy"
+		action = "BASIC"
+		rule   = "true"
+	}
 	resource "citrixadc_lbvserver" "tf_lbvserver" {
 		name        = "tf_lbvserver"
 		ipv46       = "10.10.10.33"

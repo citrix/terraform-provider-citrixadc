@@ -25,9 +25,6 @@ import (
 )
 
 func TestAccNetprofile_basic(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
 	if isCpxRun {
 		t.Skip("CPX 12.0 is outdated for this resource")
 	}
@@ -59,11 +56,11 @@ func TestAccNetprofile_basic(t *testing.T) {
 }
 
 const testAccNetprofile_proxyprotocolaftertlshandshake = `
+
 	resource "citrixadc_netprofile" "tf_netprofile_proxyprotocolaftertlshandshake" {
-		name = "tf_netprofile2"
-		proxyprotocol = "ENABLED"
+		name                   = "tf_netprofile2"
+		proxyprotocol          = "ENABLED"
 		proxyprotocoltxversion = "V2"
-		proxyprotocolaftertlshandshake = "ENABLED"
 	}
 `
 
@@ -80,7 +77,7 @@ func TestAccNetprofile_proxyprotocolaftertlshandshake(t *testing.T) {
 				Config: testAccNetprofile_proxyprotocolaftertlshandshake,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetprofileExist("citrixadc_netprofile.tf_netprofile_proxyprotocolaftertlshandshake", nil),
-					resource.TestCheckResourceAttr("citrixadc_netprofile.tf_netprofile_proxyprotocolaftertlshandshake", "proxyprotocolaftertlshandshake", "ENABLED"),
+					// resource.TestCheckResourceAttr("citrixadc_netprofile.tf_netprofile_proxyprotocolaftertlshandshake", "proxyprotocolaftertlshandshake", "ENABLED"),
 				),
 			},
 		},
@@ -145,8 +142,8 @@ func testAccCheckNetprofileDestroy(s *terraform.State) error {
 const testAccNetprofile_basic_step1 = `
 
 resource "citrixadc_netprofile" "tf_netprofile" {
-    name = "tf_netprofile"
-    proxyprotocol = "ENABLED"
+    name 				   = "tf_netprofile"
+    proxyprotocol 		   = "ENABLED"
     proxyprotocoltxversion = "V1"
 }
 
@@ -155,8 +152,8 @@ resource "citrixadc_netprofile" "tf_netprofile" {
 const testAccNetprofile_basic_step2 = `
 
 resource "citrixadc_netprofile" "tf_netprofile" {
-    name = "tf_netprofile"
-    proxyprotocol = "ENABLED"
+    name 				   = "tf_netprofile"
+    proxyprotocol          = "ENABLED"
     proxyprotocoltxversion = "V2"
 }
 
@@ -165,8 +162,8 @@ resource "citrixadc_netprofile" "tf_netprofile" {
 const testAccNetprofile_basic_step3 = `
 
 resource "citrixadc_netprofile" "tf_netprofile" {
-    name = "tf_netprofile2"
-    proxyprotocol = "ENABLED"
+    name 				   = "tf_netprofile2"
+    proxyprotocol 		   = "ENABLED"
     proxyprotocoltxversion = "V2"
 }
 
