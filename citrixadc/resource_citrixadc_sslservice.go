@@ -263,41 +263,51 @@ func readSslserviceFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
-	d.Set("servicename", data["servicename"])
-	// d.Set("cipherredirect", data["cipherredirect"])
-	// d.Set("cipherurl", data["cipherurl"])
-	// d.Set("clientauth", data["clientauth"])
-	// d.Set("clientcert", data["clientcert"])
-	// d.Set("commonname", data["commonname"])
-	// d.Set("dh", data["dh"])
-	// d.Set("dhcount", data["dhcount"])
-	// d.Set("dhfile", data["dhfile"])
-	// d.Set("dhkeyexpsizelimit", data["dhkeyexpsizelimit"])
-	// d.Set("dtls1", data["dtls1"])
-	// d.Set("dtls12", data["dtls12"])
-	// d.Set("dtlsprofilename", data["dtlsprofilename"])
-	// d.Set("ersa", data["ersa"])
-	// d.Set("ersacount", data["ersacount"])
-	// d.Set("ocspstapling", data["ocspstapling"])
-	// d.Set("pushenctrigger", data["pushenctrigger"])
-	// d.Set("redirectportrewrite", data["redirectportrewrite"])
-	// d.Set("sendclosenotify", data["sendclosenotify"])
-	// d.Set("serverauth", data["serverauth"])
-	// d.Set("servicename", data["servicename"])
-	// d.Set("sessreuse", data["sessreuse"])
-	// d.Set("sesstimeout", data["sesstimeout"])
-	// d.Set("snienable", data["snienable"])
-	// d.Set("ssl2", data["ssl2"])
-	// d.Set("ssl3", data["ssl3"])
-	d.Set("sslprofile", data["sslprofile"])
-	// d.Set("sslredirect", data["sslredirect"])
-	// d.Set("sslv2redirect", data["sslv2redirect"])
-	// d.Set("sslv2url", data["sslv2url"])
-	// d.Set("strictsigdigestcheck", data["strictsigdigestcheck"])
-	// d.Set("tls1", data["tls1"])
-	// d.Set("tls11", data["tls11"])
-	// d.Set("tls12", data["tls12"])
-	// d.Set("tls13", data["tls13"])
+
+	sslserviceAttributes := [34]string{
+		"cipherredirect",
+		"cipherurl",
+		"clientauth",
+		"clientcert",
+		"commonname",
+		"dh",
+		"dhcount",
+		"dhfile",
+		"dhkeyexpsizelimit",
+		"dtls1",
+		"dtls12",
+		"dtlsprofilename",
+		"ersa",
+		"ersacount",
+		"ocspstapling",
+		"pushenctrigger",
+		"redirectportrewrite",
+		"sendclosenotify",
+		"serverauth",
+		"sslserviceName",
+		"sessreuse",
+		"sesstimeout",
+		"snienable",
+		"ssl2",
+		"ssl3",
+		"sslprofile",
+		"sslredirect",
+		"sslv2redirect",
+		"sslv2url",
+		"strictsigdigestcheck",
+		"tls1",
+		"tls11",
+		"tls12",
+		"tls13",
+	}
+
+	for _, val := range sslserviceAttributes {
+		if _, exists := data[val]; exists {
+			if data[val] != "" || data[val] != nil {
+				d.Set(val, data[val])
+			}
+		}
+	}
 
 	return nil
 
