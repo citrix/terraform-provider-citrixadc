@@ -26,9 +26,6 @@ import (
 )
 
 func TestAccResponderpolicy_globalbinding(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -174,9 +171,6 @@ func testAccCheckResponderpolicyDestroy(s *terraform.State) error {
 }
 
 func TestAccResponderpolicy_lbvserverbinding(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -209,9 +203,6 @@ func TestAccResponderpolicy_lbvserverbinding(t *testing.T) {
 }
 
 func TestAccResponderpolicy_csvserverbinding(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,

@@ -25,18 +25,28 @@ import (
 
 const testAccAaapreauthenticationpolicy_basic = `
 
+	resource "citrixadc_aaapreauthenticationaction" "tf_aaapreauthenticationaction" {
+		name                    = "my_action"
+		preauthenticationaction = "ALLOW"
+		deletefiles             = "/var/tmp/new/hello.txt"
+	}
 	resource "citrixadc_aaapreauthenticationpolicy" "tf_aaapreauthenticationpolicy" {
-		name = "my_policy"
-		rule = "REQ.VLANID == 5"
-		reqaction = "my_action"
+		name 	  = "my_policy"
+		rule 	  = "REQ.VLANID == 5"
+		reqaction = citrixadc_aaapreauthenticationaction.tf_aaapreauthenticationaction.name
 	}
 `
 const testAccAaapreauthenticationpolicy_update = `
 
+	resource "citrixadc_aaapreauthenticationaction" "tf_aaapreauthenticationaction" {
+		name                    = "my_action"
+		preauthenticationaction = "ALLOW"
+		deletefiles             = "/var/tmp/new/hello.txt"
+	}
 	resource "citrixadc_aaapreauthenticationpolicy" "tf_aaapreauthenticationpolicy" {
-		name = "my_policy"
-		rule = "REQ.VLANID == 10"
-		reqaction = "my_action2"
+		name 	  = "my_policy"
+		rule 	  = "REQ.VLANID == 10"
+		reqaction = citrixadc_aaapreauthenticationaction.tf_aaapreauthenticationaction.name
 	}
 `
 
@@ -61,7 +71,7 @@ func TestAccAaapreauthenticationpolicy_basic(t *testing.T) {
 					testAccCheckAaapreauthenticationpolicyExist("citrixadc_aaapreauthenticationpolicy.tf_aaapreauthenticationpolicy", nil),
 					resource.TestCheckResourceAttr("citrixadc_aaapreauthenticationpolicy.tf_aaapreauthenticationpolicy", "name", "my_policy"),
 					resource.TestCheckResourceAttr("citrixadc_aaapreauthenticationpolicy.tf_aaapreauthenticationpolicy", "rule", "REQ.VLANID == 10"),
-					resource.TestCheckResourceAttr("citrixadc_aaapreauthenticationpolicy.tf_aaapreauthenticationpolicy", "reqaction", "my_action2"),
+					resource.TestCheckResourceAttr("citrixadc_aaapreauthenticationpolicy.tf_aaapreauthenticationpolicy", "reqaction", "my_action"),
 				),
 			},
 		},

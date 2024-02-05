@@ -25,9 +25,6 @@ import (
 )
 
 func TestAccNstcpprofile_basic(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -60,9 +57,6 @@ resource "citrixadc_nstcpprofile" "tf_test_profile_mpcapablecbit" {
 `
 
 func TestAccNstcpprofile_mpcapablecbit(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
 	if isCpxRun {
 		t.Skip("No support in CPX")
 	}

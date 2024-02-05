@@ -30,6 +30,18 @@ const testAccVpnvserver_aaapreauthenticationpolicy_binding_basic = `
 	# You can do that by using the following Citrix ADC cli commands:
 	# add aaa preauthenticationaction tf_aaaaction DENY
 	# add aaa preauthenticationpolicy tf_aaapolicy NS_TRUE tf_aaaaction
+	
+
+	resource "citrixadc_aaapreauthenticationaction" "tf_aaapreauthenticationaction" {
+		name                    = "tf_aaaaction"
+		preauthenticationaction = "DENY"
+		deletefiles             = "/var/tmp/new/hello.txt"
+	}
+	resource "citrixadc_aaapreauthenticationpolicy" "tf_aaapreauthenticationpolicy" {
+		name 	  = "tf_aaapolicy"
+		rule 	  = "NS_TRUE"
+		reqaction = citrixadc_aaapreauthenticationaction.tf_aaapreauthenticationaction.name
+	}
 	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
 		name        = "tf_vpnvserverexample"
 		servicetype = "SSL"
@@ -38,7 +50,7 @@ const testAccVpnvserver_aaapreauthenticationpolicy_binding_basic = `
 	}
 	resource "citrixadc_vpnvserver_aaapreauthenticationpolicy_binding" "tf_binding" {
 		name      = citrixadc_vpnvserver.tf_vpnvserver.name
-		policy    = "tf_aaapolicy"
+		policy    = citrixadc_aaapreauthenticationpolicy.tf_aaapreauthenticationpolicy.name
 		priority  = 40
 		secondary = "false"
 		bindpoint = "OTHERTCP_REQUEST"
@@ -47,6 +59,17 @@ const testAccVpnvserver_aaapreauthenticationpolicy_binding_basic = `
 
 const testAccVpnvserver_aaapreauthenticationpolicy_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
+	
+	resource "citrixadc_aaapreauthenticationaction" "tf_aaapreauthenticationaction" {
+		name                    = "tf_aaaaction"
+		preauthenticationaction = "DENY"
+		deletefiles             = "/var/tmp/new/hello.txt"
+	}
+	resource "citrixadc_aaapreauthenticationpolicy" "tf_aaapreauthenticationpolicy" {
+		name 	  = "tf_aaapolicy"
+		rule 	  = "NS_TRUE"
+		reqaction = citrixadc_aaapreauthenticationaction.tf_aaapreauthenticationaction.name
+	}
 	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
 		name        = "tf_vpnvserverexample"
 		servicetype = "SSL"

@@ -25,18 +25,31 @@ import (
 
 const testAccTmsessionpolicy_basic = `
 
+	resource "citrixadc_tmsessionaction" "tf_tmsessionaction" {
+		name                       = "tf_tmsessaction"
+		sesstimeout                = 10
+		defaultauthorizationaction = "ALLOW"
+		sso                        = "OFF"
+	}
 	resource "citrixadc_tmsessionpolicy" "tf_tmsessionpolicy" {
 		name   = "my_tmsession_policy"
 		rule   = "true"
-		action = "tf_tmsessaction"
+		action = citrixadc_tmsessionaction.tf_tmsessionaction.name
 	}
 `
 const testAccTmsessionpolicy_update = `
 
+
+	resource "citrixadc_tmsessionaction" "tf_tmsessionaction" {
+		name                       = "tf_tmsessaction"
+		sesstimeout                = 10
+		defaultauthorizationaction = "ALLOW"
+		sso                        = "OFF"
+	}
 	resource "citrixadc_tmsessionpolicy" "tf_tmsessionpolicy" {
 		name   = "my_tmsession_policy"
 		rule   = "false"
-		action = "tf_sessionaction2"
+		action = citrixadc_tmsessionaction.tf_tmsessionaction.name
 	}
 `
 
@@ -61,7 +74,7 @@ func TestAccTmsessionpolicy_basic(t *testing.T) {
 					testAccCheckTmsessionpolicyExist("citrixadc_tmsessionpolicy.tf_tmsessionpolicy", nil),
 					resource.TestCheckResourceAttr("citrixadc_tmsessionpolicy.tf_tmsessionpolicy", "name", "my_tmsession_policy"),
 					resource.TestCheckResourceAttr("citrixadc_tmsessionpolicy.tf_tmsessionpolicy", "rule", "false"),
-					resource.TestCheckResourceAttr("citrixadc_tmsessionpolicy.tf_tmsessionpolicy", "action", "tf_sessionaction2"),
+					resource.TestCheckResourceAttr("citrixadc_tmsessionpolicy.tf_tmsessionpolicy", "action", "tf_tmsessaction"),
 				),
 			},
 		},

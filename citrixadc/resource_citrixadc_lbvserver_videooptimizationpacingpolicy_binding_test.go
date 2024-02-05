@@ -57,6 +57,7 @@ const testAccLbvserver_videooptimizationpacingpolicy_binding_basic_step2 = `
 `
 
 func TestAccLbvserver_videooptimizationpacingpolicy_binding_basic(t *testing.T) {
+	t.Skipf("TODO: videooptimizationpacingpolicy is implemeted freshely need to update this later")
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,

@@ -24,21 +24,25 @@ import (
 
 const testAccIcaaction_basic = `
 
-
-resource "citrixadc_icaaction" "tf_icaaction" {
-	name              = "my_ica_action"
-	accessprofilename = "default_ica_accessprofile"
-  }
+	resource "citrixadc_icaaction" "tf_icaaction" {
+		name              = "my_ica_action"
+		accessprofilename = "default_ica_accessprofile"
+	}
   
 `
 
 const testAccIcaaction_update = `
 
+	resource "citrixadc_icaaccessprofile" "tf_icaaccessprofile" {
+		name                   = "my_profile"
+		connectclientlptports  = "DEFAULT"
+		localremotedatasharing = "DEFAULT"
+	}
 
-resource "citrixadc_icaaction" "tf_icaaction" {
-	name              = "my_ica_action"
-	accessprofilename = "my_profile"
-  }
+	resource "citrixadc_icaaction" "tf_icaaction" {
+		name              = "my_ica_action"
+		accessprofilename = citrixadc_icaaccessprofile.tf_icaaccessprofile.name
+	}
   
 `
 

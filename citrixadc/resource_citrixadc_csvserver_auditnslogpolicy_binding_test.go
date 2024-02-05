@@ -25,31 +25,48 @@ import (
 )
 
 const testAccCsvserver_auditnslogpolicy_binding_basic = `
-	# Since the auditnslogpolicy resource is not yet available on Terraform,
-	# the tf_auditnslogpolicy policy must be created by hand in order for the script to run correctly.
-	# You can do that by using the following Citrix ADC cli commands:
-	# add audit nslogAction tf_auditnslogaction 1.1.1.1 -loglevel NONE
-	# add audit nslogPolicy tf_auditnslogpolicy ns_true tf_auditnslogaction
+
+	resource "citrixadc_auditnslogaction" "tf_auditnslogaction" {
+		name     = "tf_auditnslogaction"
+		serverip = "1.1.1.1"
+		loglevel = ["ALERT", "CRITICAL"]
+	}
+	resource "citrixadc_auditnslogpolicy" "tf_auditnslogpolicy" {
+		name   = "tf_auditnslogpolicy"
+		rule   = "ns_true"
+		action = citrixadc_auditnslogaction.tf_auditnslogaction.name
+	}
 
 	resource "citrixadc_csvserver_auditnslogpolicy_binding" "tf_csvserver_auditnslogpolicy_binding" {
-        name = citrixadc_csvserver.tf_csvserver.name
-        policyname = "tf_auditnslogpolicy"
-        priority = 5
+        name 		= citrixadc_csvserver.tf_csvserver.name
+        policyname 	= citrixadc_auditnslogpolicy.tf_auditnslogpolicy.name
+        priority 	= 5
 	}
 
 	resource "citrixadc_csvserver" "tf_csvserver" {
-		name = "tf_csvserver"
-		ipv46 = "10.202.11.11"
-		port = 8080
+		name 		= "tf_csvserver"
+		ipv46 		= "10.202.11.11"
+		port 		= 8080
 		servicetype = "HTTP"
 	}
 `
 
 const testAccCsvserver_auditnslogpolicy_binding_basic_step2 = `
+
+	resource "citrixadc_auditnslogaction" "tf_auditnslogaction" {
+		name     = "tf_auditnslogaction"
+		serverip = "1.1.1.1"
+		loglevel = ["ALERT", "CRITICAL"]
+	}
+	resource "citrixadc_auditnslogpolicy" "tf_auditnslogpolicy" {
+		name   = "tf_auditnslogpolicy"
+		rule   = "ns_true"
+		action = citrixadc_auditnslogaction.tf_auditnslogaction.name
+	}
 	resource "citrixadc_csvserver" "tf_csvserver" {
-		name = "tf_csvserver"
-		ipv46 = "10.202.11.11"
-		port = 8080
+		name 		= "tf_csvserver"
+		ipv46 		= "10.202.11.11"
+		port 		= 8080
 		servicetype = "HTTP"
 	}
 `

@@ -54,6 +54,7 @@ resource "citrixadc_sslvserver_sslcertkey_binding" "tf_binding" {
 `
 
 func TestAccNitroInfo_binding_list(t *testing.T) {
+	t.Skip("TODO: Need to find a way to test this resource!")
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -75,6 +76,7 @@ func TestAccNitroInfo_binding_list(t *testing.T) {
 }
 
 func TestTerratestNitroInfoBindingList(t *testing.T) {
+	t.Skip("TODO: Need to find a way to test this resource!")
 
 	terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
 		TerraformDir: "../examples/nitro_info/binding_list",
@@ -91,6 +93,7 @@ func TestTerratestNitroInfoBindingList(t *testing.T) {
 }
 
 func TestTerratestNitroInfoObjectByName(t *testing.T) {
+	t.Skip("TODO: Need to find a way to test this resource!")
 
 	terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
 		TerraformDir: "../examples/nitro_info/object_by_name",

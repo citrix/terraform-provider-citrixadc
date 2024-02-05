@@ -26,25 +26,40 @@ import (
 
 const testAccCrvserver_icapolicy_binding_basic = `
 
-# Since the icapolicy resource is not yet available on Terraform,
-# the tf_icapolicy policy must be created by hand in order for the script to run correctly.
-# You can do that by using the following Citrix ADC cli commands:
-# add ica action tf_icaaction -accessProfileName default_ica_accessprofile
-# add ica policy tf_icapolicy -rule true -action tf_icaaction
-resource "citrixadc_crvserver" "crvserver" {
-  name        = "my_vserver"
-  servicetype = "HTTP"
-  arp         = "OFF"
-}
-resource "citrixadc_crvserver_icapolicy_binding" "crvserver_icapolicy_binding" {
-  name       = citrixadc_crvserver.crvserver.name
-  policyname = "tf_icapolicy"
-  priority   = 1
-}
+	resource "citrixadc_icaaction" "tf_icaaction" {
+		name              = "tf_icaaction"
+		accessprofilename = "default_ica_accessprofile"
+	}
+	resource "citrixadc_icapolicy" "tf_icapolicy" {
+		name   = "tf_icapolicy"
+		rule   = true
+		action = citrixadc_icaaction.tf_icaaction.name
+	}
+	resource "citrixadc_crvserver" "crvserver" {
+		name        = "my_vserver"
+		servicetype = "HTTP"
+		arp         = "OFF"
+	}
+
+	resource "citrixadc_crvserver_icapolicy_binding" "crvserver_icapolicy_binding" {
+		name       = citrixadc_crvserver.crvserver.name
+		policyname = citrixadc_icapolicy.tf_icapolicy.name
+		priority   = 1
+	}
 `
 
 const testAccCrvserver_icapolicy_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
+
+	resource "citrixadc_icaaction" "tf_icaaction" {
+		name              = "tf_icaaction"
+		accessprofilename = "default_ica_accessprofile"
+	}
+	resource "citrixadc_icapolicy" "tf_icapolicy" {
+		name   = "tf_icapolicy"
+		rule   = true
+		action = citrixadc_icaaction.tf_icaaction.name
+	}
 	resource "citrixadc_crvserver" "crvserver" {
 		name        = "my_vserver"
 		servicetype = "HTTP"

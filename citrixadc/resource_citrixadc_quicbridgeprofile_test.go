@@ -40,9 +40,6 @@ const testAccQuicbridgeprofile_update = `
 `
 
 func TestAccQuicbridgeprofile_basic(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
 	if isCpxRun {
 		t.Skip("No support in CPX")
 	}

@@ -26,15 +26,32 @@ import (
 
 const testAccIpset_nsip6_binding_basic = `
 
-resource "citrixadc_ipset_nsip6_binding" "tf_ipset_nsip6_binding" {
-	name      = "tf_ipset"
-	ipaddress = "2003:db8:100::fb/64"
-  }
+	resource "citrixadc_ipset" "tf_ipset" {
+		name = "tf_ipset"
+	}
+	resource "citrixadc_nsip6" "tf_nsip6" {
+		ipv6address = "2003:db8:100::fb/64"
+		type 		= "VIP"
+	}
+
+	resource "citrixadc_ipset_nsip6_binding" "tf_ipset_nsip6_binding" {
+		name      = citrixadc_ipset.tf_ipset.name
+		ipaddress = citrixadc_nsip6.tf_nsip6.ipv6address
+	}
     
 `
 
 const testAccIpset_nsip6_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
+
+	resource "citrixadc_ipset" "tf_ipset" {
+		name = "tf_ipset"
+	}
+	resource "citrixadc_nsip6" "tf_nsip6" {
+		ipv6address = "2003:db8:100::fb/64"
+		type 		= "VIP"
+	}
+
 `
 
 func TestAccIpset_nsip6_binding_basic(t *testing.T) {

@@ -24,13 +24,18 @@ import (
 )
 
 const testAccAppfwglobal_auditnslogpolicy_binding_basic = `
-	# Since the auditnslogpolicy resource is not yet available on Terraform,
-	# the tf_auditnslogpolicy policy must be created by hand in order for the script to run correctly.
-	# You can do that by using the following Citrix ADC cli commands:
-	# add audit nslogAction tf_auditnslogaction 1.1.1.1 -loglevel NONE
-	# add audit nslogPolicy tf_auditnslogpolicy ns_true tf_auditnslogaction
+	resource "citrixadc_auditnslogaction" "tf_auditnslogaction" {
+		name     = "my_auditnslogaction"
+		serverip = "1.1.1.1"
+		loglevel = ["ALERT", "CRITICAL"]
+	}
+	resource "citrixadc_auditnslogpolicy" "tf_auditnslogpolicy" {
+		name   = "my_auditnslogpolicy"
+		rule   = "ns_true"
+		action = citrixadc_auditnslogaction.tf_auditnslogaction.name
+	}
 	resource "citrixadc_appfwglobal_auditnslogpolicy_binding" "tf_binding" {
-	  policyname = "tf_auditnslogpolicy"
+	  policyname = citrixadc_auditnslogpolicy.tf_auditnslogpolicy.name
 	  priority   = 80
 	  state      = "DISABLED"
 	  type       = "NONE"
@@ -39,6 +44,16 @@ const testAccAppfwglobal_auditnslogpolicy_binding_basic = `
 
 const testAccAppfwglobal_auditnslogpolicy_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
+	resource "citrixadc_auditnslogaction" "tf_auditnslogaction" {
+		name     = "my_auditnslogaction"
+		serverip = "1.1.1.1"
+		loglevel = ["ALERT", "CRITICAL"]
+	}
+	resource "citrixadc_auditnslogpolicy" "tf_auditnslogpolicy" {
+		name   = "my_auditnslogpolicy"
+		rule   = "ns_true"
+		action = citrixadc_auditnslogaction.tf_auditnslogaction.name
+	}
 `
 
 func TestAccAppfwglobal_auditnslogpolicy_binding_basic(t *testing.T) {

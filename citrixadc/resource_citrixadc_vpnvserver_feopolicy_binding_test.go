@@ -25,10 +25,13 @@ import (
 )
 
 const testAccVpnvserver_feopolicy_binding_basic = `
-	# Since the feopolicy resource is not yet available on Terraform,
-	# the tf_feopolicy policy must be created by hand in order for the script to run correctly.
-	# You can do that by using the following Citrix ADC cli command:
-	# add feo policy tf_feopolicy TRUE BASIC
+
+	resource "citrixadc_feopolicy" "tf_feopolicy" {
+		name   = "tf_feopolicy"
+		action = "BASIC"
+		rule   = "true"
+	}
+
 	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
 		name        = "tf_vservercom"
 		servicetype = "SSL"
@@ -37,7 +40,7 @@ const testAccVpnvserver_feopolicy_binding_basic = `
 	}
 	resource "citrixadc_vpnvserver_feopolicy_binding" "tf_bind" {
 		name      = citrixadc_vpnvserver.tf_vpnvserver.name
-		policy    = "tf_feopolicy"
+		policy    = citrixadc_feopolicy.tf_feopolicy.name
 		priority  = 90
 		bindpoint = "REQUEST"
 	}
@@ -45,6 +48,12 @@ const testAccVpnvserver_feopolicy_binding_basic = `
 
 const testAccVpnvserver_feopolicy_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
+
+	resource "citrixadc_feopolicy" "tf_feopolicy" {
+		name   = "tf_feopolicy"
+		action = "BASIC"
+		rule   = "true"
+	}
 	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
 		name        = "tf_vservercom"
 		servicetype = "SSL"

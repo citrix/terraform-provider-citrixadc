@@ -26,17 +26,37 @@ import (
 
 const testAccCachepolicylabel_cachepolicy_binding_basic = `
 
-resource "citrixadc_cachepolicylabel_cachepolicy_binding" "tf_cachepolicylabel_cachepolicy_binding" {
-	labelname  = "my_cachepolicylabel"
-	priority   = 100
-	policyname = "my_cachepolicy"
-  }
+	resource "citrixadc_cachepolicylabel" "tf_policylabel" {
+		labelname = "my_cachepolicylabel"
+		evaluates = "REQ"
+	}
+	resource "citrixadc_cachepolicy" "tf_cachepolicy" {
+		policyname  = "my_cachepolicy"
+		rule        = "true"
+		action      = "CACHE"
+	}
+
+	resource "citrixadc_cachepolicylabel_cachepolicy_binding" "tf_cachepolicylabel_cachepolicy_binding" {
+		labelname  = citrixadc_cachepolicylabel.tf_policylabel.labelname
+		priority   = 100
+		policyname = citrixadc_cachepolicy.tf_cachepolicy.policyname
+	}
   
   
 `
 
 const testAccCachepolicylabel_cachepolicy_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
+
+	resource "citrixadc_cachepolicylabel" "tf_policylabel" {
+		labelname = "my_cachepolicylabel"
+		evaluates = "REQ"
+	}
+	resource "citrixadc_cachepolicy" "tf_cachepolicy" {
+		policyname  = "my_cachepolicy"
+		rule        = "true"
+		action      = "CACHE"
+	}
 `
 
 func TestAccCachepolicylabel_cachepolicy_binding_basic(t *testing.T) {

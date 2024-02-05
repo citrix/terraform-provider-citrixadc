@@ -25,15 +25,37 @@ import (
 
 const testAccAuditnslogglobal_auditnslogpolicy_binding_basic = `
 
+	resource "citrixadc_auditnslogaction" "tf_auditnslogaction" {
+		name     = "my_auditnslogaction"
+		serverip = "1.1.1.1"
+		loglevel = ["ALERT", "CRITICAL"]
+	}
+	resource "citrixadc_auditnslogpolicy" "tf_auditnslogpolicy" {
+		name   = "my_auditnslogpolicy"
+		rule   = "true"
+		action = citrixadc_auditnslogaction.tf_auditnslogaction.name
+	}
+
 	resource "citrixadc_auditnslogglobal_auditnslogpolicy_binding" "tf_auditnslogglobal_auditnslogpolicy_binding" {
-		policyname = "SETASLEARNNSLOG_ADV_POL"
-		priority   = 100
-		globalbindtype = "SYSTEM_GLOBAL"
+		policyname 		= citrixadc_auditnslogpolicy.tf_auditnslogpolicy.name
+		priority   		= 100
+		globalbindtype 	= "SYSTEM_GLOBAL"
 	}
 `
 
 const testAccAuditnslogglobal_auditnslogpolicy_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
+
+	resource "citrixadc_auditnslogaction" "tf_auditnslogaction" {
+		name     = "my_auditnslogaction"
+		serverip = "1.1.1.1"
+		loglevel = ["ALERT", "CRITICAL"]
+	}
+	resource "citrixadc_auditnslogpolicy" "tf_auditnslogpolicy" {
+		name   = "my_auditnslogpolicy"
+		rule   = "true"
+		action = citrixadc_auditnslogaction.tf_auditnslogaction.name
+	}
 `
 
 func TestAccAuditnslogglobal_auditnslogpolicy_binding_basic(t *testing.T) {
@@ -51,7 +73,7 @@ func TestAccAuditnslogglobal_auditnslogpolicy_binding_basic(t *testing.T) {
 			{
 				Config: testAccAuditnslogglobal_auditnslogpolicy_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAuditnslogglobal_auditnslogpolicy_bindingNotExist("citrixadc_auditnslogglobal_auditnslogpolicy_binding.tf_auditnslogglobal_auditnslogpolicy_binding", "SETASLEARNNSLOG_ADV_POL"),
+					testAccCheckAuditnslogglobal_auditnslogpolicy_bindingNotExist("citrixadc_auditnslogglobal_auditnslogpolicy_binding.tf_auditnslogglobal_auditnslogpolicy_binding", "my_auditnslogpolicy"),
 				),
 			},
 		},

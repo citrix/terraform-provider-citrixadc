@@ -66,12 +66,9 @@ resource "citrixadc_nsvpxparam" "tf_vpxparam1" {
 `
 
 func TestAccNsvpxparam_basic(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
-	if isCluster {
-		t.Skip("Use case is applicable for standalone VPX")
-	}
+	// if isCluster {
+	// 	t.Skip("Use case is applicable for standalone VPX")
+	// }
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -97,9 +94,9 @@ func TestAccNsvpxparam_cluster(t *testing.T) {
 	if adcTestbed != "CLUSTER" {
 		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
 	}
-	if !isCluster {
-		t.Skip("Use case is not applicable to non clustered VPX")
-	}
+	// if !isCluster {
+	// 	t.Skip("Use case is not applicable to non clustered VPX")
+	// }
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,

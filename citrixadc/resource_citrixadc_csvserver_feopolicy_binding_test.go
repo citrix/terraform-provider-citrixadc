@@ -30,27 +30,39 @@ const testAccCsvserver_feopolicy_binding_basic = `
 	# You can do that by using the following Citrix ADC cli command:
 	# add feo policy tf_feopolicy TRUE BASIC
 
+	resource "citrixadc_feopolicy" "tf_feopolicy" {
+		name   = "tf_feopolicy"
+		action = "BASIC"
+		rule   = "true"
+	}
+
 	resource "citrixadc_csvserver_feopolicy_binding" "tf_csvserver_feopolicy_binding" {
-        name = citrixadc_csvserver.tf_csvserver.name
-        policyname = "tf_feopolicy"
-        bindpoint = "REQUEST"
-        gotopriorityexpression = "END"
-        priority = 1  
+        name 					= citrixadc_csvserver.tf_csvserver.name
+        policyname 				= citrixadc_feopolicy.tf_feopolicy.name
+        bindpoint 				= "REQUEST"
+        gotopriorityexpression 	= "END"
+        priority 				= 1  
 	}
 
 	resource "citrixadc_csvserver" "tf_csvserver" {
-		name = "tf_csvserver"
-		ipv46 = "10.202.11.11"
-		port = 8080
+		name 		= "tf_csvserver"
+		ipv46 		= "10.202.11.11"
+		port 		= 8080
 		servicetype = "HTTP"
 	}
 `
 
 const testAccCsvserver_feopolicy_binding_basic_step2 = `
+
+	resource "citrixadc_feopolicy" "tf_feopolicy" {
+		name   = "tf_feopolicy"
+		action = "BASIC"
+		rule   = "true"
+	}
 	resource "citrixadc_csvserver" "tf_csvserver" {
-		name = "tf_csvserver"
-		ipv46 = "10.202.11.11"
-		port = 8080
+		name 		= "tf_csvserver"
+		ipv46 		= "10.202.11.11"
+		port 		= 8080
 		servicetype = "HTTP"
 	}
 `

@@ -27,12 +27,16 @@ import (
 const testAccAaauser_vpnurl_binding_basic = `
 
 resource "citrixadc_aaauser_vpnurl_binding" "tf_aaauser_vpnurl_binding" {
-	username = "user1"
+	username = citrixadc_aaauser.tf_aaauser.username
 	urlname   = citrixadc_vpnurl.tf_url.urlname
   }
   
+  resource "citrixadc_aaauser" "tf_aaauser" {
+	username = "user1"
+	password = "my_pass"
+  }
   resource "citrixadc_vpnurl" "tf_url" {
-	actualurl        = "www.citrix.com"
+	actualurl        = "http://www.citrix.com"
 	appjson          = "xyz"
 	applicationtype  = "CVPN"
 	clientlessaccess = "OFF"
@@ -45,17 +49,21 @@ resource "citrixadc_aaauser_vpnurl_binding" "tf_aaauser_vpnurl_binding" {
 `
 
 const testAccAaauser_vpnurl_binding_basic_step2 = `
-resource "citrixadc_vpnurl" "tf_url" {
-	actualurl        = "www.citrix.com"
-	appjson          = "xyz"
-	applicationtype  = "CVPN"
-	clientlessaccess = "OFF"
-	comment          = "Testing"
-	linkname         = "Description"
-	ssotype          = "unifiedgateway"
-	urlname          = "Firsturl"
-	vservername      = "server1"
-  }
+	resource "citrixadc_aaauser" "tf_aaauser" {
+		username = "user1"
+		password = "my_pass"
+	}
+	resource "citrixadc_vpnurl" "tf_url" {
+		actualurl        = "http://www.citrix.com"
+		appjson          = "xyz"
+		applicationtype  = "CVPN"
+		clientlessaccess = "OFF"
+		comment          = "Testing"
+		linkname         = "Description"
+		ssotype          = "unifiedgateway"
+		urlname          = "Firsturl"
+		vservername      = "server1"
+	}
 `
 
 func TestAccAaauser_vpnurl_binding_basic(t *testing.T) {

@@ -17,7 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
-	"os"
+	// "os"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/resource/config/basic"
@@ -27,9 +27,6 @@ import (
 )
 
 func TestAccServicegroup_basic(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -137,13 +134,10 @@ resource "citrixadc_servicegroup" "foo" {
 `
 
 func TestAccServicegroup_AssertNonUpdateableAttributes(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
 
-	if tfAcc := os.Getenv("TF_ACC"); tfAcc == "" {
-		t.Skip("TF_ACC not set. Skipping acceptance test.")
-	}
+	// if tfAcc := os.Getenv("TF_ACC"); tfAcc == "" {
+	// 	t.Skip("TF_ACC not set. Skipping acceptance test.")
+	// }
 
 	c, err := testHelperInstantiateClient("", "", "", false)
 	if err != nil {
@@ -219,9 +213,6 @@ resource "citrixadc_servicegroup" "tf_enable_disable_test_svcgroup" {
 `
 
 func TestAccServicegroup_enable_disable(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,

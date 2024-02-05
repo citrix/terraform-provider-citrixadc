@@ -16,6 +16,7 @@ limitations under the License.
 package citrixadc
 
 import (
+	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -28,6 +29,7 @@ data "citrixadc_hanode" "hanode" {
 `
 
 func TestAccDataSourceHanode_basic(t *testing.T) {
+	nsip := os.Getenv("NSIP")
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -35,7 +37,7 @@ func TestAccDataSourceHanode_basic(t *testing.T) {
 			{
 				Config: testAccDataSourceHanode,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.citrixadc_hanode.hanode", "ipaddress", "10.10.10.10"),
+					resource.TestCheckResourceAttr("data.citrixadc_hanode.hanode", "ipaddress", nsip),
 				),
 			},
 		},

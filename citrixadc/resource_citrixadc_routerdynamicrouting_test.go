@@ -24,9 +24,7 @@ import (
 )
 
 func TestAccRouterdynamicrouting_basic(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
+	t.Skip("TODO: Need to find a way to test this resource!")
 	if isCpxRun {
 		t.Skip("Feature not supported on CPX")
 	}

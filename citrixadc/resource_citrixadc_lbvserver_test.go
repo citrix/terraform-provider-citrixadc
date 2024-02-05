@@ -30,9 +30,6 @@ import (
 )
 
 func TestAccLbvserver_basic(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -80,9 +77,6 @@ const testAccLbvserver_quicbridgeprofile = `
 `
 
 func TestAccLbvserver_quicbridgeprofile(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
 	if isCpxRun {
 		t.Skip("No support in CPX")
 	}
@@ -104,9 +98,6 @@ func TestAccLbvserver_quicbridgeprofile(t *testing.T) {
 }
 
 func TestAccLbvserver_snicerts(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { doPreChecks(t) },
 		Providers:    testAccProviders,
@@ -147,12 +138,9 @@ func TestAccLbvserver_snicerts(t *testing.T) {
 }
 
 func TestAccLbvserver_standalone_ciphersuites_mixed(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
-	if isCluster {
-		t.Skip("cluster ADC deployment")
-	}
+	// if isCluster {
+	// 	t.Skip("cluster ADC deployment")
+	// }
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -224,9 +212,9 @@ func TestAccLbvserver_cluster_ciphersuites(t *testing.T) {
 }
 
 func TestAccLbvserver_cluster_ciphers(t *testing.T) {
-	if !isCluster {
-		t.Skip("standalone ADC deployment")
-	}
+	// if !isCluster {
+	// 	t.Skip("standalone ADC deployment")
+	// }
 	if adcTestbed != "CLUSTER" {
 		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
 	}
@@ -421,9 +409,6 @@ func testSslcertificateBindingsConfig(template string, sslcertkey string, snicer
 }
 
 func TestAccLbvserver_AssertNonUpdateableAttributes(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
 
 	if tfAcc := os.Getenv("TF_ACC"); tfAcc == "" {
 		t.Skip("TF_ACC not set. Skipping acceptance test.")
@@ -506,9 +491,6 @@ resource "citrixadc_lbvserver" "tf_acc_lb_vserver" {
 `
 
 func TestAccLbvserver_enable_disable(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,

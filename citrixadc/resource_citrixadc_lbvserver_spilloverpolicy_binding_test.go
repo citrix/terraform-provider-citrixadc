@@ -25,18 +25,25 @@ import (
 )
 
 const testAccLbvserver_spilloverpolicy_binding_basic = `
-	# Since the spilloverpolicy resource is not yet available on Terraform,
-	# the tf_spilloverpolicy policy must be created by hand in order for the script to run correctly.
-	# You can do that by using the following Citrix ADC cli command:
-	# add spillover policy tf_spilloverpolicy -rule TRUE -action SPILLOVER
+
+	resource "citrixadc_spilloveraction" "tf_spilloveraction" {
+		name   = "my_spilloveraction"
+		action = "SPILLOVER"
+	}
+	resource "citrixadc_spilloverpolicy" "tf_spilloverpolicy" {
+		name    = "tf_spilloverpolicy"
+		rule    = "true"
+		action  = citrixadc_spilloveraction.tf_spilloveraction.name
+		comment = "This is example of spilloverpolicy"
+	}
 
 	resource "citrixadc_lbvserver_spilloverpolicy_binding" "tf_lbvserver_spilloverpolicy_binding" {
-		name = citrixadc_lbvserver.tf_lbvserver.name
-        policyname = "tf_spilloverpolicy"
-        bindpoint = "REQUEST"
-        gotopriorityexpression = "END"
-        invoke = false
-        priority = 1
+		name 					= citrixadc_lbvserver.tf_lbvserver.name
+        policyname				= citrixadc_spilloverpolicy.tf_spilloverpolicy.name
+        bindpoint 				= "REQUEST"
+        gotopriorityexpression 	= "END"
+        invoke 					= false
+        priority 				= 1
 	}
 
 	resource "citrixadc_lbvserver" "tf_lbvserver" {
@@ -48,6 +55,17 @@ const testAccLbvserver_spilloverpolicy_binding_basic = `
 `
 
 const testAccLbvserver_spilloverpolicy_binding_basic_step2 = `
+
+	resource "citrixadc_spilloveraction" "tf_spilloveraction" {
+		name   = "my_spilloveraction"
+		action = "SPILLOVER"
+	}
+	resource "citrixadc_spilloverpolicy" "tf_spilloverpolicy" {
+		name    = "tf_spilloverpolicy"
+		rule    = "true"
+		action  = citrixadc_spilloveraction.tf_spilloveraction.name
+		comment = "This is example of spilloverpolicy"
+	}
 	resource "citrixadc_lbvserver" "tf_lbvserver" {
 		name        = "tf_lbvserver"
 		ipv46       = "10.10.10.33"

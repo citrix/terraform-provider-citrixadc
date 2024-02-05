@@ -25,16 +25,27 @@ import (
 )
 
 const testAccHanode_routemonitor_binding_basic = `
+	resource "citrixadc_hanode" "tf_ha" {
+		hanode_id = 3          
+		ipaddress = "10.222.74.151"
+	}
 
 	resource "citrixadc_hanode_routemonitor_binding" "tf_hanode_routemonitor_binding" {
 		hanode_id = 0
 		routemonitor = "10.222.74.128"
 		netmask = "255.255.255.192"
+		depends_on = [
+			citrixadc_hanode.tf_ha
+		]
 	}
 `
 
 const testAccHanode_routemonitor_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
+	resource "citrixadc_hanode" "tf_ha" {
+		hanode_id = 3          
+		ipaddress = "10.222.74.151"
+	}
 `
 
 func TestAccHanode_routemonitor_binding_basic(t *testing.T) {

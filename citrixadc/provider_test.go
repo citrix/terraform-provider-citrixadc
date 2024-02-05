@@ -14,7 +14,7 @@ var testAccProviders map[string]terraform.ResourceProvider
 var testAccProvider *schema.Provider
 
 var isCpxRun bool
-var isCluster bool
+
 var adcTestbed string
 
 func init() {
@@ -26,8 +26,6 @@ func init() {
 
 	nsUrl := os.Getenv("NS_URL")
 	isCpxRun = strings.Contains(nsUrl, "localhost")
-
-	isCluster = testIsTargetAdcCluster()
 
 	var exists bool
 	adcTestbed, exists = os.LookupEnv("ADC_TESTBED")

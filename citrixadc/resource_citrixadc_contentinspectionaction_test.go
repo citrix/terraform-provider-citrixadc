@@ -23,17 +23,34 @@ import (
 )
 
 const testAccContentinspectionaction_basic = `
-
+	resource "citrixadc_nsicapprofile" "tf_nsicapprofile" {
+		name             = "new-profile"
+		uri              = "/example"
+		mode             = "REQMOD"
+		reqtimeout       = 4
+		reqtimeoutaction = "RESET"
+		preview          = "ENABLED"
+		previewlength    = 4096
+	}
 	resource "citrixadc_contentinspectionaction" "tf_contentinspectionaction" {
 		name            = "my_ci_action"
 		type            = "ICAP"
-		icapprofilename = "reqmod-profile"
-		servername      = "vicap"
+		icapprofilename = citrixadc_nsicapprofile.tf_nsicapprofile.name
+		serverip      = "2.2.2.2"
 		ifserverdown    = "DROP"
 	}
 `
 const testAccContentinspectionaction_update = `
 
+	resource "citrixadc_nsicapprofile" "tf_nsicapprofile" {
+		name             = "new-profile"
+		uri              = "/example"
+		mode             = "REQMOD"
+		reqtimeout       = 4
+		reqtimeoutaction = "RESET"
+		preview          = "ENABLED"
+		previewlength    = 4096
+	}
 	resource "citrixadc_contentinspectionaction" "tf_contentinspectionaction" {
 		name            = "my_ci_action"
 		type            = "NOINSPECTION"
@@ -52,8 +69,8 @@ func TestAccContentinspectionaction_basic(t *testing.T) {
 					testAccCheckContentinspectionactionExist("citrixadc_contentinspectionaction.tf_contentinspectionaction", nil),
 					resource.TestCheckResourceAttr("citrixadc_contentinspectionaction.tf_contentinspectionaction", "name", "my_ci_action"),
 					resource.TestCheckResourceAttr("citrixadc_contentinspectionaction.tf_contentinspectionaction", "type", "ICAP"),
-					resource.TestCheckResourceAttr("citrixadc_contentinspectionaction.tf_contentinspectionaction", "icapprofilename", "reqmod-profile"),
-					resource.TestCheckResourceAttr("citrixadc_contentinspectionaction.tf_contentinspectionaction", "servername", "vicap"),
+					resource.TestCheckResourceAttr("citrixadc_contentinspectionaction.tf_contentinspectionaction", "icapprofilename", "new-profile"),
+					resource.TestCheckResourceAttr("citrixadc_contentinspectionaction.tf_contentinspectionaction", "serverip", "2.2.2.2"),
 					resource.TestCheckResourceAttr("citrixadc_contentinspectionaction.tf_contentinspectionaction", "ifserverdown", "DROP"),
 				),
 			},

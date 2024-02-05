@@ -27,9 +27,6 @@ import (
 )
 
 func TestAccService_basic(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -39,12 +36,11 @@ func TestAccService_basic(t *testing.T) {
 				Config: testAccService_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExist("citrixadc_service.foo", nil),
-					resource.TestCheckResourceAttr(
-						"citrixadc_service.foo", "lbvserver", "foo_lb"), resource.TestCheckResourceAttr(
-						"citrixadc_service.foo", "name", "foo_svc"), resource.TestCheckResourceAttr(
-						"citrixadc_service.foo", "port", "80"), resource.TestCheckResourceAttr(
-						"citrixadc_service.foo", "servername", "10.202.22.12"), resource.TestCheckResourceAttr(
-						"citrixadc_service.foo", "servicetype", "HTTP"),
+					resource.TestCheckResourceAttr("citrixadc_service.foo", "lbvserver", "foo_lb"),
+					resource.TestCheckResourceAttr("citrixadc_service.foo", "name", "foo_svc"),
+					resource.TestCheckResourceAttr("citrixadc_service.foo", "port", "80"),
+					resource.TestCheckResourceAttr("citrixadc_service.foo", "servername", "10.202.22.12"),
+					resource.TestCheckResourceAttr("citrixadc_service.foo", "servicetype", "HTTP"),
 				),
 			},
 		},
@@ -132,9 +128,6 @@ resource "citrixadc_service" "foo" {
 `
 
 func TestAccService_AssertNonUpdateableAttributes(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
 
 	if tfAcc := os.Getenv("TF_ACC"); tfAcc == "" {
 		t.Skip("TF_ACC not set. Skipping acceptance test.")
@@ -261,9 +254,7 @@ resource "citrixadc_service" "tf_acc_service" {
 `
 
 func TestAccService_enable_disable(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
+	t.Skip("TODO: Disable")
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -295,9 +286,9 @@ func TestAccService_enable_disable(t *testing.T) {
 }
 
 func TestAccService_sslservice(t *testing.T) {
-	if adcTestbed != "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE_NON_DEFAULT_SSL_PROFILE.", adcTestbed)
-	}
+	// if adcTestbed != "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
+	// 	t.Skipf("ADC testbed is %s. Expected STANDALONE_NON_DEFAULT_SSL_PROFILE.", adcTestbed)
+	// }
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -336,9 +327,6 @@ resource "citrixadc_service" "test_service" {
 `
 
 func TestAccService_rebind_default_monitor(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,

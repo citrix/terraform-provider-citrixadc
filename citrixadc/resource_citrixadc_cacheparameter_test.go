@@ -26,7 +26,7 @@ import (
 const testAccCacheparameter_basic = `
 
 	resource "citrixadc_cacheparameter" "tf_cacheparameter" {
-		memlimit    = "3500"
+		memlimit    = "650"
 		maxpostlen  = "6000"
 		verifyusing = "HOSTNAME"
 	}
@@ -34,7 +34,7 @@ const testAccCacheparameter_basic = `
 const testAccCacheparameter_update = `
 
 	resource "citrixadc_cacheparameter" "tf_cacheparameter" {
-		memlimit    = "3000"
+		memlimit    = "650"
 		maxpostlen  = "6500"
 		verifyusing = "HOSTNAME_AND_IP"
 	}
@@ -50,7 +50,7 @@ func TestAccCacheparameter_basic(t *testing.T) {
 				Config: testAccCacheparameter_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCacheparameterExist("citrixadc_cacheparameter.tf_cacheparameter", nil),
-					resource.TestCheckResourceAttr("citrixadc_cacheparameter.tf_cacheparameter", "memlimit", "3500"),
+					resource.TestCheckResourceAttr("citrixadc_cacheparameter.tf_cacheparameter", "memlimit", "650"),
 					resource.TestCheckResourceAttr("citrixadc_cacheparameter.tf_cacheparameter", "maxpostlen", "6000"),
 					resource.TestCheckResourceAttr("citrixadc_cacheparameter.tf_cacheparameter", "verifyusing", "HOSTNAME"),
 				),
@@ -59,7 +59,7 @@ func TestAccCacheparameter_basic(t *testing.T) {
 				Config: testAccCacheparameter_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCacheparameterExist("citrixadc_cacheparameter.tf_cacheparameter", nil),
-					resource.TestCheckResourceAttr("citrixadc_cacheparameter.tf_cacheparameter", "memlimit", "3000"),
+					resource.TestCheckResourceAttr("citrixadc_cacheparameter.tf_cacheparameter", "memlimit", "650"),
 					resource.TestCheckResourceAttr("citrixadc_cacheparameter.tf_cacheparameter", "maxpostlen", "6500"),
 					resource.TestCheckResourceAttr("citrixadc_cacheparameter.tf_cacheparameter", "verifyusing", "HOSTNAME_AND_IP"),
 				),

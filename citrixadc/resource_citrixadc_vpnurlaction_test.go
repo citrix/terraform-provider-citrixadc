@@ -24,31 +24,31 @@ import (
 
 const testAccVpnurlaction_add = `
 
-	resource "citrixadc_vpnurlaction" "foo" {
-		
-		name 				= "tf_vpnurlaction"
-		actualurl 			= "www.citrix.com"
-		linkname 			= "new_link"
-		applicationtype 	= "CVPN"
-		clientlessaccess 	= "ON"
-		comment 			= "Testing"
-		ssotype 			= "unifiedgateway"
-		vservername 		= "vserver1"
-	}
+resource "citrixadc_vpnurlaction" "foo" {
+	name             = "tf_vpnurlaction"
+	actualurl        = "https://www.citrix.com"
+	linkname         = "new_link"
+	applicationtype  = "CVPN"
+	clientlessaccess = "ON"
+	comment          = "Testing"
+	ssotype          = "unifiedgateway"
+	vservername      = "vserver1"
+  }
+  
 `
 const testAccVpnurlaction_update = `
 
-	resource "citrixadc_vpnurlaction" "foo" {
-		
-		name 				= "tf_vpnurlaction"
-		actualurl 			= "https://www.citrix.com/products/citrix-adc/"
-		linkname 			= "new_link"
-		applicationtype 	= "CVPN"
-		clientlessaccess 	= "OFF"
-		comment 			= "Testing"
-		ssotype 			= "unifiedgateway"
-		vservername 		= "vserver1"
-	}
+resource "citrixadc_vpnurlaction" "foo" {
+	name             = "tf_vpnurlaction"
+	actualurl        = "https://www.citrix.com/products/citrix-adc/"
+	linkname         = "new_link"
+	applicationtype  = "CVPN"
+	clientlessaccess = "OFF"
+	comment          = "Testing"
+	ssotype          = "unifiedgateway"
+	vservername      = "vserver1"
+  }
+  
 `
 
 func TestAccVpnurlaction_basic(t *testing.T) {
@@ -62,7 +62,7 @@ func TestAccVpnurlaction_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnurlactionExist("citrixadc_vpnurlaction.foo", nil),
 					resource.TestCheckResourceAttr("citrixadc_vpnurlaction.foo", "name", "tf_vpnurlaction"),
-					resource.TestCheckResourceAttr("citrixadc_vpnurlaction.foo", "actualurl", "www.citrix.com"),
+					resource.TestCheckResourceAttr("citrixadc_vpnurlaction.foo", "actualurl", "https://www.citrix.com"),
 					resource.TestCheckResourceAttr("citrixadc_vpnurlaction.foo", "clientlessaccess", "ON"),
 				),
 			},

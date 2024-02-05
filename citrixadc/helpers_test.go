@@ -148,25 +148,3 @@ func testHelperVerifyImmutabilityFunc(c *NetScalerNitroClient, t *testing.T, res
 		t.Fatalf("Error (no error) while assesing immutability of attribute \"%s\"", attribute)
 	}
 }
-
-func testIsTargetAdcCluster() bool {
-	log.Printf("[DEBUG]  citrixadc-provider-test: In isTargetAdcCluster")
-	c, err := testHelperInstantiateClient("", "", "", false)
-	if err != nil {
-		//lintignore:R009
-		panic(err)
-	}
-	nsClient := c.client
-
-	datalist, err := nsClient.FindAllResources(service.Clusterinstance.Type())
-	if err != nil {
-		//lintignore:R009
-		panic(err)
-	}
-
-	if len(datalist) == 0 {
-		return false
-	} else {
-		return true
-	}
-}

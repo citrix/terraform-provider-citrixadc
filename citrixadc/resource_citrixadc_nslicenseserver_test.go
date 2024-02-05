@@ -25,9 +25,7 @@ import (
 )
 
 func TestAccNslicenseserver_basic(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
+	t.Skip("ssh does not work correctly with CPX")
 	if isCpxRun {
 		t.Skip("Feature not supported in CPX")
 	}

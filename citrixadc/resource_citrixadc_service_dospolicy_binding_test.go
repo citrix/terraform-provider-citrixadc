@@ -64,6 +64,7 @@ const testAccService_dospolicy_binding_basic_step2 = `
 `
 
 func TestAccService_dospolicy_binding_basic(t *testing.T) {
+	t.Skipf("citrixadc_service_dospolicy_binding is not supported in 13.1")
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,

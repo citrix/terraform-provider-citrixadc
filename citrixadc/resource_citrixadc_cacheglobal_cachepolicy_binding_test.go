@@ -25,8 +25,14 @@ import (
 
 const testAccCacheglobal_cachepolicy_binding_basic = `
 
+
+	resource "citrixadc_cachepolicy" "tf_cachepolicy" {
+		policyname  = "my_cachepolicy"
+		rule        = "true"
+		action      = "CACHE"
+	}
 	resource "citrixadc_cacheglobal_cachepolicy_binding" "tf_cacheglobal_cachepolicy_binding" {
-		policy   = "my_cachepolicy"
+		policy   = citrixadc_cachepolicy.tf_cachepolicy.policyname
 		priority = 100
 		type     = "REQ_DEFAULT"
 	}
@@ -35,6 +41,13 @@ const testAccCacheglobal_cachepolicy_binding_basic = `
 
 const testAccCacheglobal_cachepolicy_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
+	
+	resource "citrixadc_cachepolicy" "tf_cachepolicy" {
+		policyname  = "my_cachepolicy"
+		rule        = "true"
+		action      = "CACHE"
+	  }
+
 `
 
 func TestAccCacheglobal_cachepolicy_binding_basic(t *testing.T) {

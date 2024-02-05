@@ -32,23 +32,29 @@ import (
 
 const testAccLbmonitor_metric_binding_basic = `
 
+resource "citrixadc_lbmetrictable" "tab1" {
+	metrictable = "tab1"
+ }
+
+resource "citrixadc_lbmetrictable_metric_binding" "tf_bind" {
+	metric      = "metric1"
+	metrictable = citrixadc_lbmetrictable.tab1.metrictable
+	snmpoid     = "1.3.6.1.4.1.5951.4.1.1.8.0"
+ }
 resource "citrixadc_lbmonitor" "tfmonitor1" {
   monitorname = "tf-monitor1"
   type        = "LOAD"
-  metrictable = "tab1"
+  metrictable = citrixadc_lbmetrictable.tab1.metrictable
 }
 
 resource citrixadc_lbmonitor_metric_binding tf_acclbmonitor_metric_binding {
 	monitorname = citrixadc_lbmonitor.tfmonitor1.monitorname
-	metric = "metric1"
+	metric = citrixadc_lbmetrictable_metric_binding.tf_bind.metric
 	metricthreshold = 100
    } 
 `
 
 func TestAccLbmonitor_metric_binding_basic(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,

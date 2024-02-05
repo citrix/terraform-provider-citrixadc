@@ -25,10 +25,12 @@ import (
 )
 
 const testAccAuthenticationvserver_cachepolicy_binding_basic = `
-	# Since the cachepolicy resource is not yet available on Terraform,
-	# the tf_cachepolicy policy must be created by hand in order for the script to run correctly.
-	# You can do that by using the following Citrix ADC cli command:
-	# add cache policy tf_cachepolicy -rule "http.req.url.query.contains(\"IssuePage\")" -action CACHE
+
+	resource "citrixadc_cachepolicy" "tf_cachepolicy" {
+		policyname  = "my_cachepolicy"
+		rule        = "true"
+		action      = "CACHE"
+	  }
 	resource "citrixadc_authenticationvserver" "tf_authenticationvserver" {
 		name           = "tf_authenticationvserver"
 		servicetype    = "SSL"
@@ -38,7 +40,7 @@ const testAccAuthenticationvserver_cachepolicy_binding_basic = `
 	}
 	resource "citrixadc_authenticationvserver_cachepolicy_binding" "tf_binding" {
 		name      = citrixadc_authenticationvserver.tf_authenticationvserver.name
-		policy    = "tf_cachepolicy"
+		policy    = citrixadc_cachepolicy.tf_cachepolicy.policyname
 		bindpoint = "REQUEST"
 		priority  = 9
 	}
@@ -46,6 +48,11 @@ const testAccAuthenticationvserver_cachepolicy_binding_basic = `
 
 const testAccAuthenticationvserver_cachepolicy_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
+	resource "citrixadc_cachepolicy" "tf_cachepolicy" {
+		policyname  = "my_cachepolicy"
+		rule        = "true"
+		action      = "CACHE"
+	  }
 	resource "citrixadc_authenticationvserver" "tf_authenticationvserver" {
 		name           = "tf_authenticationvserver"
 		servicetype    = "SSL"

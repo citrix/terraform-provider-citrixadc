@@ -26,34 +26,63 @@ import (
 
 const testAccCrvserver_appflowpolicy_binding_basic = `
 
-resource "citrixadc_crvserver" "crvserver" {
-    name = "my_vserver"
-    servicetype = "HTTP"
-    arp = "OFF"
-}
-resource "citrixadc_crvserver_appflowpolicy_binding" "crvserver_appflowpolicy_binding" {
-	name = citrixadc_crvserver.crvserver.name
-	policyname = "tf_appflowpolicy"
-	gotopriorityexpression = "END"
-    labelname = citrixadc_crvserver.crvserver.name
-	invoke = true
-	labeltype = "reqvserver"
-	priority = 1
-}
-`
-
-const testAccCrvserver_appflowpolicy_binding_basic_step2 = `
-	# Keep the above bound resources without the actual binding to check proper deletion
-	# Since the appflowpolicy resource is not yet available on Terraform,
-	# the tf_appflowpolicy policy must be created by hand in order for the script to run correctly.
-	# You can do that by using the following Citrix ADC cli commands:	
-	# add appflow collector col1 -IPaddress 10.10.5.5
-	# add appflow action test_action -collectors col1
-	# add appflow policy tf_appflowpolicy client.TCP.DSTPORT.EQ(22) test_action
 	resource "citrixadc_crvserver" "crvserver" {
 		name = "my_vserver"
 		servicetype = "HTTP"
 		arp = "OFF"
+	}
+	resource "citrixadc_appflowpolicy" "tf_appflowpolicy" {
+		name      = "tf_appflowpolicy"
+		action    = citrixadc_appflowaction.tf_appflowaction.name
+		rule      = "client.TCP.DSTPORT.EQ(22)"
+	}
+	resource "citrixadc_appflowaction" "tf_appflowaction" {
+		name = "test_action"
+		collectors     = [citrixadc_appflowcollector.tf_appflowcollector.name]
+		securityinsight = "ENABLED"
+		botinsight      = "ENABLED"
+		videoanalytics  = "ENABLED"
+	}
+	resource "citrixadc_appflowcollector" "tf_appflowcollector" {
+		name      = "tf_collector"
+		ipaddress = "192.168.2.2"
+		port      = 80
+	}
+
+	resource "citrixadc_crvserver_appflowpolicy_binding" "crvserver_appflowpolicy_binding" {
+		name = citrixadc_crvserver.crvserver.name
+		policyname = citrixadc_appflowpolicy.tf_appflowpolicy.name
+		gotopriorityexpression = "END"
+		labelname = citrixadc_crvserver.crvserver.name
+		invoke = true
+		labeltype = "reqvserver"
+		priority = 1
+	}
+`
+
+const testAccCrvserver_appflowpolicy_binding_basic_step2 = `
+
+	resource "citrixadc_crvserver" "crvserver" {
+		name = "my_vserver"
+		servicetype = "HTTP"
+		arp = "OFF"
+	}
+	resource "citrixadc_appflowpolicy" "tf_appflowpolicy" {
+		name      = "tf_appflowpolicy"
+		action    = citrixadc_appflowaction.tf_appflowaction.name
+		rule      = "client.TCP.DSTPORT.EQ(22)"
+	}
+	resource "citrixadc_appflowaction" "tf_appflowaction" {
+		name = "test_action"
+		collectors     = [citrixadc_appflowcollector.tf_appflowcollector.name]
+		securityinsight = "ENABLED"
+		botinsight      = "ENABLED"
+		videoanalytics  = "ENABLED"
+	}
+	resource "citrixadc_appflowcollector" "tf_appflowcollector" {
+		name      = "tf_collector"
+		ipaddress = "192.168.2.2"
+		port      = 80
 	}
 `
 

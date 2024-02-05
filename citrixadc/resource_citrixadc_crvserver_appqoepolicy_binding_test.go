@@ -25,30 +25,49 @@ import (
 )
 
 const testAccCrvserver_appqoepolicy_binding_basic = `
-# Since the appqoepolicy resource is not yet available on Terraform,
-# the tf_appqoepolicy policy must be created by hand in order for the script to run correctly.
-# You can do that by using the following Citrix ADC cli commands:
-# add appqoe action tf_appqoeaction -priority MEDIUM
-# add appqoe policy tf_appqoepolicy -rule true -action tf_appqoeaction
-resource "citrixadc_crvserver" "crvserver" {
-	name        = "my_vserver"
-	servicetype = "HTTP"
-	arp         = "OFF"
-  }
-  resource "citrixadc_crvserver_appqoepolicy_binding" "crvserver_appqoepolicy_binding" {
-	name       = citrixadc_crvserver.crvserver.name
-	policyname = "tf_appqoepolicy"
-	priority   = 10
-  }
-`
 
-const testAccCrvserver_appqoepolicy_binding_basic_step2 = `
-	# Keep the above bound resources without the actual binding to check proper deletion
+	resource "citrixadc_appqoeaction" "tf_appqoeaction" {
+		name        = "tf_appqoeaction"
+		priority    = "LOW"
+		respondwith = "NS"
+		delay       = 40
+	}
+	resource "citrixadc_appqoepolicy" "tf_appqoepolicy" {
+		name   = "tf_appqoepolicy"
+		rule   = "true"
+		action = citrixadc_appqoeaction.tf_appqoeaction.name
+	}
 	resource "citrixadc_crvserver" "crvserver" {
 		name        = "my_vserver"
 		servicetype = "HTTP"
 		arp         = "OFF"
-	  }
+	}
+	resource "citrixadc_crvserver_appqoepolicy_binding" "crvserver_appqoepolicy_binding" {
+		name       = citrixadc_crvserver.crvserver.name
+		policyname = citrixadc_appqoepolicy.tf_appqoepolicy.name
+		priority   = 10
+	}
+`
+
+const testAccCrvserver_appqoepolicy_binding_basic_step2 = `
+	# Keep the above bound resources without the actual binding to check proper deletion
+
+	resource "citrixadc_appqoeaction" "tf_appqoeaction" {
+		name        = "tf_appqoeaction"
+		priority    = "LOW"
+		respondwith = "NS"
+		delay       = 40
+	}
+	resource "citrixadc_appqoepolicy" "tf_appqoepolicy" {
+		name   = "tf_appqoepolicy"
+		rule   = "true"
+		action = citrixadc_appqoeaction.tf_appqoeaction.name
+	}
+	resource "citrixadc_crvserver" "crvserver" {
+		name        = "my_vserver"
+		servicetype = "HTTP"
+		arp         = "OFF"
+	}
 `
 
 func TestAccCrvserver_appqoepolicy_binding_basic(t *testing.T) {

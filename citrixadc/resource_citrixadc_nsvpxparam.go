@@ -110,7 +110,7 @@ func readNsvpxparamFunc(d *schema.ResourceData, meta interface{}) error {
 	data := dataArr[foundIndex]
 
 	d.Set("cpuyield", data["cpuyield"])
-	d.Set("masterclockcpu1", data["masterclockcpu1"])
+	// d.Set("masterclockcpu1", data["masterclockcpu1"])
 	d.Set("ownernode", data["ownernode"])
 
 	return nil

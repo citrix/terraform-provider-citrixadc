@@ -25,8 +25,14 @@ import (
 
 const testAccFeoglobal_feopolicy_binding_basic = `
 
+	resource "citrixadc_feopolicy" "tf_feopolicy" {
+		name   = "tf_feopolicy"
+		action = "BASIC"
+		rule   = "true"
+	}
+
 	resource "citrixadc_feoglobal_feopolicy_binding" "tf_feoglobal_feopolicy_binding" {
-		policyname = "my_feopolicy"
+		policyname = citrixadc_feopolicy.tf_feopolicy.name
 		type       = "REQ_DEFAULT"
 		priority   = 100
 	}
@@ -34,6 +40,12 @@ const testAccFeoglobal_feopolicy_binding_basic = `
 
 const testAccFeoglobal_feopolicy_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
+
+	resource "citrixadc_feopolicy" "tf_feopolicy" {
+		name   = "tf_feopolicy"
+		action = "BASIC"
+		rule   = "true"
+	}
 `
 
 func TestAccFeoglobal_feopolicy_binding_basic(t *testing.T) {

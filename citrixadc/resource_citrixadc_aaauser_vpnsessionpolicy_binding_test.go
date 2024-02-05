@@ -26,37 +26,46 @@ import (
 
 const testAccAaauser_vpnsessionpolicy_binding_basic = `
 
-resource "citrixadc_aaauser_vpnsessionpolicy_binding" "tf_aaauser_vpnsessionpolicy_binding" {
-	username = "user1"
-	policy   = citrixadc_vpnsessionpolicy.tf_vpnsessionpolicy.name
-	priority = 100
-  }
+	resource "citrixadc_aaauser_vpnsessionpolicy_binding" "tf_aaauser_vpnsessionpolicy_binding" {
+		username = citrixadc_aaauser.tf_aaauser.username
+		policy   = citrixadc_vpnsessionpolicy.tf_vpnsessionpolicy.name
+		priority = 100
+	}
   
-  resource "citrixadc_vpnsessionaction" "tf_vpnsessionaction" {
-	name                       = "newsession"
-	sesstimeout                = "10"
-	defaultauthorizationaction = "ALLOW"
-  }
   
-  resource "citrixadc_vpnsessionpolicy" "tf_vpnsessionpolicy" {
-	name   = "tf_vpnsessionpolicy"
-	rule   = "HTTP.REQ.HEADER(\"User-Agent\").CONTAINS(\"CitrixReceiver\").NOT"
-	action = citrixadc_vpnsessionaction.tf_vpnsessionaction.name
-  }
+	resource "citrixadc_aaauser" "tf_aaauser" {
+		username = "user1"
+		password = "my_pass"
+	}
+	resource "citrixadc_vpnsessionaction" "tf_vpnsessionaction" {
+		name                       = "newsession"
+		sesstimeout                = "10"
+		defaultauthorizationaction = "ALLOW"
+	}
+	
+	resource "citrixadc_vpnsessionpolicy" "tf_vpnsessionpolicy" {
+		name   = "tf_vpnsessionpolicy"
+		rule   = "HTTP.REQ.HEADER(\"User-Agent\").CONTAINS(\"CitrixReceiver\").NOT"
+		action = citrixadc_vpnsessionaction.tf_vpnsessionaction.name
+	}
 `
 
-const testAccAaauser_vpnsessionpolicy_binding_basic_step2 = `
-resource "citrixadc_vpnsessionaction" "tf_vpnsessionaction" {
-	name                       = "newsession"
-	sesstimeout                = "10"
-	defaultauthorizationaction = "ALLOW"
-  }
-  
-  resource "citrixadc_vpnsessionpolicy" "tf_vpnsessionpolicy" {
-	name   = "tf_vpnsessionpolicy"
-	rule   = "HTTP.REQ.HEADER(\"User-Agent\").CONTAINS(\"CitrixReceiver\").NOT"
-	action = citrixadc_vpnsessionaction.tf_vpnsessionaction.name
-  }
+const testAccAaauser_vpnsessionpolicy_binding_basic_step2 = `  
+
+	resource "citrixadc_aaauser" "tf_aaauser" {
+		username = "user1"
+		password = "my_pass"
+	}
+	resource "citrixadc_vpnsessionaction" "tf_vpnsessionaction" {
+		name                       = "newsession"
+		sesstimeout                = "10"
+		defaultauthorizationaction = "ALLOW"
+	}
+	resource "citrixadc_vpnsessionpolicy" "tf_vpnsessionpolicy" {
+		name   = "tf_vpnsessionpolicy"
+		rule   = "HTTP.REQ.HEADER(\"User-Agent\").CONTAINS(\"CitrixReceiver\").NOT"
+		action = citrixadc_vpnsessionaction.tf_vpnsessionaction.name
+	}
 `
 
 func TestAccAaauser_vpnsessionpolicy_binding_basic(t *testing.T) {

@@ -36,6 +36,9 @@ const testAccClusternodegroup_csvserver_binding_basic_step2 = `
 `
 
 func TestAccClusternodegroup_csvserver_binding_basic(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,

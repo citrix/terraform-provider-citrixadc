@@ -26,25 +26,33 @@ import (
 
 const testAccAaauser_authorizationpolicy_binding_basic = `
 
-resource "citrixadc_aaauser_authorizationpolicy_binding" "tf_aaauser_authorizationpolicy_binding" {
-	username = "user1"
-	policy   = citrixadc_authorizationpolicy.tf_authorize.name
-	priority = 100
-  }
-  
-  resource "citrixadc_authorizationpolicy" "tf_authorize" {
-	name   = "tp-authorize-1"
-	rule   = "true"
-	action = "ALLOW"
-  }
+	resource "citrixadc_aaauser_authorizationpolicy_binding" "tf_aaauser_authorizationpolicy_binding" {
+		username = citrixadc_aaauser.tf_aaauser.username
+		policy   = citrixadc_authorizationpolicy.tf_authorize.name
+		priority = 100
+	}
+
+	resource "citrixadc_aaauser" "tf_aaauser" {
+		username = "user1"
+		password = "my_pass"
+	}
+	resource "citrixadc_authorizationpolicy" "tf_authorize" {
+		name   = "tp-authorize-1"
+		rule   = "true"
+		action = "ALLOW"
+	}
 `
 
 const testAccAaauser_authorizationpolicy_binding_basic_step2 = `
-resource "citrixadc_authorizationpolicy" "tf_authorize" {
-	name   = "tp-authorize-1"
-	rule   = "true"
-	action = "ALLOW"
-  }
+	resource "citrixadc_aaauser" "tf_aaauser" {
+		username = "user1"
+		password = "my_pass"
+	}
+	resource "citrixadc_authorizationpolicy" "tf_authorize" {
+		name   = "tp-authorize-1"
+		rule   = "true"
+		action = "ALLOW"
+	}
 `
 
 func TestAccAaauser_authorizationpolicy_binding_basic(t *testing.T) {

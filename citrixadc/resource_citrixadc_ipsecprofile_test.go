@@ -29,7 +29,7 @@ const testAccIpsecprofile_basic = `
 	resource "citrixadc_ipsecprofile" "tf_ipsecprofile" {
 		name                  = "my_ipsecprofile"
 		ikeversion            = "V2"
-		encalgo               = ["AES", "3DES"]
+		encalgo               = ["AES", "AES256"]
 		hashalgo              = ["HMAC_SHA1", "HMAC_SHA256"]
 		livenesscheckinterval = 50
 		psk                   = "GCC5VcY0TQ+0TfjGwCrR+cQthm5UnBPB"
@@ -42,7 +42,7 @@ const testAccIpsecprofile_update = `
 	resource "citrixadc_ipsecprofile" "tf_ipsecprofile" {
 		name                  = "my_ipsecprofile"
 		ikeversion            = "V1"
-		encalgo               = ["AES", "3DES"]
+		encalgo               = ["AES", "AES256"]
 		hashalgo              = ["HMAC_SHA1", "HMAC_SHA256"]
 		livenesscheckinterval = 60
 		psk                   = "XzuIoPthvSrBl/pD9OS+eiGyTJ6y5wuf"

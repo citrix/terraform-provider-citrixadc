@@ -26,9 +26,6 @@ import (
 )
 
 func TestAccRewritepolicy_globalbinding(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -63,9 +60,6 @@ func TestAccRewritepolicy_globalbinding(t *testing.T) {
 }
 
 func TestAccRewritepolicy_lbvserverbinding(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -100,9 +94,6 @@ func TestAccRewritepolicy_lbvserverbinding(t *testing.T) {
 }
 
 func TestAccRewritepolicy_csvserverbinding(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,

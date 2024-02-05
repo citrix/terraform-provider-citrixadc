@@ -25,12 +25,24 @@ import (
 )
 
 const testAccLbvserver_appflowpolicy_binding_basic = `
-# Since the appflowpolicy resource is not yet available on Terraform,
-# the tf_appflowpolicy policy must be created by hand in order for the script to run correctly.
-# You can do that by using the following Citrix ADC cli commands:
-# add appflow collector col1 -IPaddress 10.10.5.5
-# add appflow action test_action -collectors col1
-# add appflow policy tf_appflowpolicy client.TCP.DSTPORT.EQ(22) test_action
+
+resource "citrixadc_appflowpolicy" "tf_appflowpolicy" {
+	name      = "tf_appflowpolicy"
+	action    = citrixadc_appflowaction.tf_appflowaction.name
+	rule      = "client.TCP.DSTPORT.EQ(22)"
+}
+resource "citrixadc_appflowaction" "tf_appflowaction" {
+	name = "test_action"
+	collectors     = [citrixadc_appflowcollector.tf_appflowcollector.name]
+	securityinsight = "ENABLED"
+	botinsight      = "ENABLED"
+	videoanalytics  = "ENABLED"
+}
+resource "citrixadc_appflowcollector" "tf_appflowcollector" {
+	name      = "col1"
+	ipaddress = "192.168.2.2"
+	port      = 80
+}
 
 resource "citrixadc_lbvserver_appflowpolicy_binding" "tf_lbvserver_appflowpolicy_binding" {
 	name = citrixadc_lbvserver.tf_lbvserver.name
@@ -51,6 +63,24 @@ resource "citrixadc_lbvserver" "tf_lbvserver" {
 `
 
 const testAccLbvserver_appflowpolicy_binding_basic_step2 = `
+
+	resource "citrixadc_appflowpolicy" "tf_appflowpolicy" {
+		name      = "tf_appflowpolicy"
+		action    = citrixadc_appflowaction.tf_appflowaction.name
+		rule      = "client.TCP.DSTPORT.EQ(22)"
+	}
+	resource "citrixadc_appflowaction" "tf_appflowaction" {
+		name = "test_action"
+		collectors     = [citrixadc_appflowcollector.tf_appflowcollector.name]
+		securityinsight = "ENABLED"
+		botinsight      = "ENABLED"
+		videoanalytics  = "ENABLED"
+	}
+	resource "citrixadc_appflowcollector" "tf_appflowcollector" {
+		name      = "col1"
+		ipaddress = "192.168.2.2"
+		port      = 80
+	}
 	resource "citrixadc_lbvserver" "tf_lbvserver" {
 		name        = "tf_lbvserver"
 		ipv46       = "10.10.10.33"
@@ -60,9 +90,6 @@ const testAccLbvserver_appflowpolicy_binding_basic_step2 = `
 `
 
 func TestAccLbvserver_appflowpolicy_binding_basic(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,

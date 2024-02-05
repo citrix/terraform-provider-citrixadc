@@ -28,9 +28,6 @@ import (
 )
 
 func TestAccServer_basic(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -115,9 +112,6 @@ resource "citrixadc_server" "foo" {
 // Test for immutability of attributes
 // This is to catch any attibute having ForceNew: true while not actually needed
 func TestAccServer_AssertNonUpdateableAttributes(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
 
 	if tfAcc := os.Getenv("TF_ACC"); tfAcc == "" {
 		t.Skip("TF_ACC not set. Skipping acceptance test.")
@@ -190,9 +184,6 @@ resource "citrixadc_server" "tf_enable_disable_test_svr" {
 `
 
 func TestAccServer_enable_disable(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,

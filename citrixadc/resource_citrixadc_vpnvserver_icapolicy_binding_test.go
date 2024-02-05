@@ -25,11 +25,16 @@ import (
 )
 
 const testAccVpnvserver_icapolicy_binding_basic = `
-	# Since the icapolicy resource is not yet available on Terraform,
-	# the tf_icapolicy policy must be created by hand in order for the script to run correctly.
-	# You can do that by using the following Citrix ADC cli commands:
-	# add ica action tf_icaaction -accessProfileName default_ica_accessprofile
-	# add ica policy tf_icapolicy -rule true -action tf_icaaction
+
+	resource "citrixadc_icaaction" "tf_icaaction" {
+		name              = "tf_icaaction"
+		accessprofilename = "default_ica_accessprofile"
+	}
+	resource "citrixadc_icapolicy" "tf_icapolicy" {
+		name   = "tf_icapolicy"
+		rule   = true
+		action = citrixadc_icaaction.tf_icaaction.name
+	}
 	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
 		name        = "tf_vpnvserverexample"
 		servicetype = "SSL"
@@ -38,7 +43,7 @@ const testAccVpnvserver_icapolicy_binding_basic = `
 	}
 	resource "citrixadc_vpnvserver_icapolicy_binding" "tf_binding" {
 		name      = citrixadc_vpnvserver.tf_vpnvserver.name
-		policy    = "tf_icapolicy"
+		policy    = citrixadc_icapolicy.tf_icapolicy.name
 		priority  = 30
 		bindpoint = "AAA_RESPONSE"
 	}
@@ -46,6 +51,16 @@ const testAccVpnvserver_icapolicy_binding_basic = `
 
 const testAccVpnvserver_icapolicy_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
+
+	resource "citrixadc_icaaction" "tf_icaaction" {
+		name              = "tf_icaaction"
+		accessprofilename = "default_ica_accessprofile"
+	}
+	resource "citrixadc_icapolicy" "tf_icapolicy" {
+		name   = "tf_icapolicy"
+		rule   = true
+		action = citrixadc_icaaction.tf_icaaction.name
+	}
 	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
 		name        = "tf_vpnvserverexample"
 		servicetype = "SSL"

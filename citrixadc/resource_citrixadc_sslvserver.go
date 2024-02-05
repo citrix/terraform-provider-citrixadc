@@ -304,47 +304,57 @@ func readSslvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
-	d.Set("vservername", data["vservername"])
-	d.Set("cipherredirect", data["cipherredirect"])
-	d.Set("cipherurl", data["cipherurl"])
-	d.Set("cleartextport", data["cleartextport"])
-	d.Set("clientauth", data["clientauth"])
-	d.Set("clientcert", data["clientcert"])
-	d.Set("dh", data["dh"])
-	d.Set("dhcount", data["dhcount"])
-	d.Set("dhekeyexchangewithpsk", data["dhekeyexchangewithpsk"])
-	d.Set("dhfile", data["dhfile"])
-	d.Set("dhkeyexpsizelimit", data["dhkeyexpsizelimit"])
-	d.Set("dtls1", data["dtls1"])
-	d.Set("dtls12", data["dtls12"])
-	d.Set("dtlsprofilename", data["dtlsprofilename"])
-	d.Set("ersa", data["ersa"])
-	d.Set("ersacount", data["ersacount"])
-	d.Set("hsts", data["hsts"])
-	d.Set("includesubdomains", data["includesubdomains"])
-	setToInt("maxage", d, data["maxage"])
-	d.Set("ocspstapling", data["ocspstapling"])
-	d.Set("preload", data["preload"])
-	d.Set("pushenctrigger", data["pushenctrigger"])
-	d.Set("redirectportrewrite", data["redirectportrewrite"])
-	d.Set("sendclosenotify", data["sendclosenotify"])
-	d.Set("sessreuse", data["sessreuse"])
-	setToInt("sesstimeout", d, data["sesstimeout"])
-	d.Set("snienable", data["snienable"])
-	d.Set("ssl2", data["ssl2"])
-	d.Set("ssl3", data["ssl3"])
-	d.Set("sslprofile", data["sslprofile"])
-	d.Set("sslredirect", data["sslredirect"])
-	d.Set("sslv2redirect", data["sslv2redirect"])
-	d.Set("sslv2url", data["sslv2url"])
-	d.Set("strictsigdigestcheck", data["strictsigdigestcheck"])
-	d.Set("tls1", data["tls1"])
-	d.Set("tls11", data["tls11"])
-	d.Set("tls12", data["tls12"])
-	d.Set("tls13", data["tls13"])
-	setToInt("tls13sessionticketsperauthcontext", d, data["tls13sessionticketsperauthcontext"])
-	d.Set("vservername", data["vservername"])
-	d.Set("zerorttearlydata", data["zerorttearlydata"])
+
+	sslvserverAttributes := [40]string{
+		"cipherredirect",
+		"cipherurl",
+		// "cleartextport",
+		"clientauth",
+		"clientcert",
+		"dh",
+		"dhcount",
+		"dhekeyexchangewithpsk",
+		"dhfile",
+		"dhkeyexpsizelimit",
+		"dtls1",
+		"dtls12",
+		"dtlsprofilename",
+		"ersa",
+		"ersacount",
+		"hsts",
+		"includesubdomains",
+		"maxage",
+		"ocspstapling",
+		"preload",
+		"pushenctrigger",
+		"redirectportrewrite",
+		"sendclosenotify",
+		"sessreuse",
+		"sesstimeout",
+		"snienable",
+		"ssl2",
+		"ssl3",
+		"sslprofile",
+		"sslredirect",
+		"sslv2redirect",
+		"sslv2url",
+		"strictsigdigestcheck",
+		"tls1",
+		"tls11",
+		"tls12",
+		"tls13",
+		"tls13sessionticketsperauthcontext",
+		"vservername",
+		"zerorttearlydata",
+	}
+
+	for _, val := range sslvserverAttributes {
+		if _, exists := data[val]; exists {
+			if data[val] != "" || data[val] != nil {
+				d.Set(val, data[val])
+			}
+		}
+	}
 
 	return nil
 

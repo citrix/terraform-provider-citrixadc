@@ -32,7 +32,7 @@ const testAccVpnvserver_vpnurl_binding_basic = `
 		port        = 443
 	}
 	resource "citrixadc_vpnurl" "url" {
-		actualurl        = "www.citrix.com"
+		actualurl        = "http://www.citrix.com"
 		appjson          = "xyz"
 		applicationtype  = "CVPN"
 		clientlessaccess = "OFF"
@@ -58,7 +58,7 @@ const testAccVpnvserver_vpnurl_binding_basic_step2 = `
 	}
 	resource "citrixadc_vpnurl" "url" {
 		urlname          = "Firsturl"
-		actualurl        = "www.citrix.com"
+		actualurl        = "http://www.citrix.com"
 		appjson          = "xyz"
 		applicationtype  = "CVPN"
 		clientlessaccess = "OFF"

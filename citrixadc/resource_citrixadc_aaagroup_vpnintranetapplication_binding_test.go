@@ -26,27 +26,37 @@ import (
 
 const testAccAaagroup_vpnintranetapplication_binding_basic = `
 
-resource "citrixadc_aaagroup_vpnintranetapplication_binding" "tf_aaagroup_vpnintranetapplication_binding" {
-	groupname           = "my_group"
-	intranetapplication = citrixadc_vpnintranetapplication.tf_vpnintranetapplication.intranetapplication
-  }
-  
-  resource "citrixadc_vpnintranetapplication" "tf_vpnintranetapplication" {
-	intranetapplication = "tf_vpnintranetapplication"
-	protocol            = "UDP"
-	destip              = "2.3.6.5"
-	interception        = "TRANSPARENT"
-  }
+	resource "citrixadc_aaagroup_vpnintranetapplication_binding" "tf_aaagroup_vpnintranetapplication_binding" {
+		groupname           = citrixadc_aaagroup.tf_aaagroup.groupname
+		intranetapplication = citrixadc_vpnintranetapplication.tf_vpnintranetapplication.intranetapplication
+	}
+
+	resource "citrixadc_aaagroup" "tf_aaagroup" {
+		groupname = "my_group"
+		weight    = 100
+		loggedin  = false
+	}
+	resource "citrixadc_vpnintranetapplication" "tf_vpnintranetapplication" {
+		intranetapplication = "tf_vpnintranetapplication"
+		protocol            = "UDP"
+		destip              = "2.3.6.5"
+		interception        = "TRANSPARENT"
+	}
   
 `
 
-const testAccAaagroup_vpnintranetapplication_binding_basic_step2 = `
-resource "citrixadc_vpnintranetapplication" "tf_vpnintranetapplication" {
-	intranetapplication = "tf_vpnintranetapplication"
-	protocol            = "UDP"
-	destip              = "2.3.6.5"
-	interception        = "TRANSPARENT"
-  }
+const testAccAaagroup_vpnintranetapplication_binding_basic_step2 = `	
+	resource "citrixadc_aaagroup" "tf_aaagroup" {
+		groupname = "my_group"
+		weight    = 100
+		loggedin  = false
+	}
+	resource "citrixadc_vpnintranetapplication" "tf_vpnintranetapplication" {
+		intranetapplication = "tf_vpnintranetapplication"
+		protocol            = "UDP"
+		destip              = "2.3.6.5"
+		interception        = "TRANSPARENT"
+	}
 `
 
 func TestAccAaagroup_vpnintranetapplication_binding_basic(t *testing.T) {

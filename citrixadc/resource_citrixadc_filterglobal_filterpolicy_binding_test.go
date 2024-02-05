@@ -64,6 +64,7 @@ resource "citrixadc_filterpolicy" "tf_filterpolicy" {
 `
 
 func TestAccFilterglobal_filterpolicy_binding_basic(t *testing.T) {
+	t.Skipf("filterpolicy is not supported in 13.1")
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,

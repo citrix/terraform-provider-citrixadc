@@ -26,39 +26,49 @@ import (
 
 const testAccAaagroup_vpntrafficpolicy_binding_basic = `
 
-resource "citrixadc_aaagroup_vpntrafficpolicy_binding" "tf_aaagroup_vpntrafficpolicy_binding" {
-	groupname = "my_group"
-	policy    = citrixadc_vpntrafficpolicy.tf_vpntrafficpolicy.name
-	priority  = 100
-  }
-  
-  resource "citrixadc_vpntrafficaction" "foo" {
-	fta        = "ON"
-	hdx        = "ON"
-	name       = "Testingaction"
-	qual       = "tcp"
-	sso        = "ON"
-  }
-  resource "citrixadc_vpntrafficpolicy" "tf_vpntrafficpolicy" {
-	name   = "tf_vpntrafficpolicy"
-	rule   = "HTTP.REQ.HEADER(\"User-Agent\").CONTAINS(\"CitrixReceiver\").NOT"
-	action = citrixadc_vpntrafficaction.foo.name
-  }
+	resource "citrixadc_aaagroup_vpntrafficpolicy_binding" "tf_aaagroup_vpntrafficpolicy_binding" {
+		groupname = citrixadc_aaagroup.tf_aaagroup.groupname
+		policy    = citrixadc_vpntrafficpolicy.tf_vpntrafficpolicy.name
+		priority  = 100
+	}
+	
+	resource "citrixadc_aaagroup" "tf_aaagroup" {
+		groupname = "my_group"
+		weight    = 100
+		loggedin  = false
+	}
+	resource "citrixadc_vpntrafficaction" "foo" {
+		fta        = "ON"
+		hdx        = "ON"
+		name       = "Testingaction"
+		qual       = "tcp"
+		sso        = "ON"
+	}
+	resource "citrixadc_vpntrafficpolicy" "tf_vpntrafficpolicy" {
+		name   = "tf_vpntrafficpolicy"
+		rule   = "HTTP.REQ.HEADER(\"User-Agent\").CONTAINS(\"CitrixReceiver\").NOT"
+		action = citrixadc_vpntrafficaction.foo.name
+	}
 `
 
 const testAccAaagroup_vpntrafficpolicy_binding_basic_step2 = `
-resource "citrixadc_vpntrafficaction" "foo" {
-	fta        = "ON"
-	hdx        = "ON"
-	name       = "Testingaction"
-	qual       = "tcp"
-	sso        = "ON"
-  }
-  resource "citrixadc_vpntrafficpolicy" "tf_vpntrafficpolicy" {
-	name   = "tf_vpntrafficpolicy"
-	rule   = "HTTP.REQ.HEADER(\"User-Agent\").CONTAINS(\"CitrixReceiver\").NOT"
-	action = citrixadc_vpntrafficaction.foo.name
-  }
+	resource "citrixadc_aaagroup" "tf_aaagroup" {
+		groupname = "my_group"
+		weight    = 100
+		loggedin  = false
+	}
+	resource "citrixadc_vpntrafficaction" "foo" {
+		fta        = "ON"
+		hdx        = "ON"
+		name       = "Testingaction"
+		qual       = "tcp"
+		sso        = "ON"
+	}
+	resource "citrixadc_vpntrafficpolicy" "tf_vpntrafficpolicy" {
+		name   = "tf_vpntrafficpolicy"
+		rule   = "HTTP.REQ.HEADER(\"User-Agent\").CONTAINS(\"CitrixReceiver\").NOT"
+		action = citrixadc_vpntrafficaction.foo.name
+	}
 `
 
 func TestAccAaagroup_vpntrafficpolicy_binding_basic(t *testing.T) {

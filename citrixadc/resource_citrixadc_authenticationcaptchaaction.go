@@ -89,9 +89,9 @@ func readAuthenticationcaptchaactionFunc(d *schema.ResourceData, meta interface{
 	}
 	d.Set("defaultauthenticationgroup", data["defaultauthenticationgroup"])
 	d.Set("name", data["name"])
-	d.Set("secretkey", data["secretkey"])
+	// d.Set("secretkey", data["secretkey"])
 	d.Set("serverurl", data["serverurl"])
-	d.Set("sitekey", data["sitekey"])
+	// d.Set("sitekey", data["sitekey"])
 
 	return nil
 

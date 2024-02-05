@@ -26,13 +26,18 @@ import (
 
 const testAccAaagroup_vpnurl_binding_basic = `
 
-resource "citrixadc_aaagroup_vpnurl_binding" "tf_aaagroup_vpnurl_binding" {
+resource "citrixadc_aaagroup" "tf_aaagroup" {
 	groupname = "my_group"
+	weight    = 100
+}
+
+resource "citrixadc_aaagroup_vpnurl_binding" "tf_aaagroup_vpnurl_binding" {
+	groupname = citrixadc_aaagroup.tf_aaagroup.groupname
 	urlname   = citrixadc_vpnurl.tf_url.urlname
   }
 
   resource "citrixadc_vpnurl" "tf_url" {
-	actualurl        = "www.citrix.com"
+	actualurl        = "http://www.citrix.com"
 	appjson          = "xyz"
 	applicationtype  = "CVPN"
 	clientlessaccess = "OFF"
@@ -45,8 +50,13 @@ resource "citrixadc_aaagroup_vpnurl_binding" "tf_aaagroup_vpnurl_binding" {
 `
 
 const testAccAaagroup_vpnurl_binding_basic_step2 = `
+
+	resource "citrixadc_aaagroup" "tf_aaagroup" {
+		groupname = "my_group"
+		weight    = 100
+	}
 	  resource "citrixadc_vpnurl" "tf_url" {
-		actualurl        = "www.citrix.com"
+		actualurl        = "http://www.citrix.com"
 		appjson          = "xyz"
 		applicationtype  = "CVPN"
 		clientlessaccess = "OFF"

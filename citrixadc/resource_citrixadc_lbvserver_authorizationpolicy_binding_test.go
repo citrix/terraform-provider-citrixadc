@@ -25,14 +25,17 @@ import (
 )
 
 const testAccLbvserver_authorizationpolicy_binding_basic = `
-	# Since the authorizationpolicy resource is not yet available on Terraform,
-	# the tf_authorizationpolicy policy must be created by hand in order for the script to run correctly.
-	# You can do that by using the following Citrix ADC cli command:
-	# add authorization policy tf_authorizationpolicy ns_true ALLOW
+
+	resource "citrixadc_authorizationpolicy" "tf_authorize" {
+		name   = "tf_authorizationpolicy"
+		rule   = "true"
+		action = "ALLOW"
+	}
 
 	resource "citrixadc_lbvserver_authorizationpolicy_binding" "tf_lbvserver_authorizationpolicy_binding" {
-		name = citrixadc_lbvserver.tf_lbvserver.name
-		policyname = "tf_authorizationpolicy"
+		name 		= citrixadc_lbvserver.tf_lbvserver.name
+		policyname 	= citrixadc_authorizationpolicy.tf_authorize.name
+		priority 	= 100
 	}
 
 	resource "citrixadc_lbvserver" "tf_lbvserver" {
@@ -44,6 +47,12 @@ const testAccLbvserver_authorizationpolicy_binding_basic = `
 `
 
 const testAccLbvserver_authorizationpolicy_binding_basic_step2 = `
+
+	resource "citrixadc_authorizationpolicy" "tf_authorize" {
+		name   = "tf_authorizationpolicy"
+		rule   = "true"
+		action = "ALLOW"
+	}
 	resource "citrixadc_lbvserver" "tf_lbvserver" {
 		name        = "tf_lbvserver"
 		ipv46       = "10.10.10.33"

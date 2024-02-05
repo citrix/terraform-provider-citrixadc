@@ -26,8 +26,12 @@ import (
 
 const testAccAaagroup_vpnurlpolicy_binding_basic = `
 
-	resource "citrixadc_aaagroup_vpnurlpolicy_binding" "tf_aaagroup_vpnurlpolicy_binding" {
+	resource "citrixadc_aaagroup" "tf_aaagroup" {
 		groupname = "my_group"
+		weight    = 100
+	}
+	resource "citrixadc_aaagroup_vpnurlpolicy_binding" "tf_aaagroup_vpnurlpolicy_binding" {
+		groupname = citrixadc_aaagroup.tf_aaagroup.groupname
 		policy    = citrixadc_vpnurlpolicy.tf_vpnurlpolicy.name
 		priority  = 100
 	}
@@ -35,7 +39,7 @@ const testAccAaagroup_vpnurlpolicy_binding_basic = `
 	resource "citrixadc_vpnurlaction" "tf_vpnurlaction" {
 		name             = "tf_vpnurlaction"
 		linkname         = "new_link"
-		actualurl        = "www.citrix.com"
+		actualurl        = "http://www.citrix.com"
 		applicationtype  = "CVPN"
 		clientlessaccess = "OFF"
 		comment          = "Testing"
@@ -51,10 +55,15 @@ const testAccAaagroup_vpnurlpolicy_binding_basic = `
 `
 
 const testAccAaagroup_vpnurlpolicy_binding_basic_step2 = `
+
+resource "citrixadc_aaagroup" "tf_aaagroup" {
+	groupname = "my_group"
+	weight    = 100
+}
 resource "citrixadc_vpnurlaction" "tf_vpnurlaction" {
 	name             = "tf_vpnurlaction"
 	linkname         = "new_link"
-	actualurl        = "www.citrix.com"
+	actualurl        = "http://www.citrix.com"
 	applicationtype  = "CVPN"
 	clientlessaccess = "OFF"
 	comment          = "Testing"

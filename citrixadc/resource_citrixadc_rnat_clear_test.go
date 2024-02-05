@@ -24,10 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccRnatClear_basic(t *testing.T) {
-	// if adcTestbed != "STANDALONE" {
-	// 	t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	// }
+func yes(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,

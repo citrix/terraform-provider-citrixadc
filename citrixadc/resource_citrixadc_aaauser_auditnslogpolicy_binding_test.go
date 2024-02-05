@@ -27,14 +27,43 @@ import (
 const testAccAaauser_auditnslogpolicy_binding_basic = `
 
 	resource "citrixadc_aaauser_auditnslogpolicy_binding" "tf_aaauser_auditnslogpolicy_binding" {
-		username = "user1"
-		policy   = "tf_auditnslogpolicy"
+		username = citrixadc_aaauser.tf_aaauser.username
+		policy   = citrixadc_auditnslogpolicy.tf_auditnslogpolicy.name
 		priority = 150
 	}
+	resource "citrixadc_aaauser" "tf_aaauser" {
+		username = "user1"
+		password = "my_pass"
+	}
+	resource "citrixadc_auditnslogaction" "tf_auditnslogaction" {
+		name     = "my_auditnslogaction"
+		serverip = "1.1.1.1"
+		loglevel = ["ALERT", "CRITICAL"]
+	}
+	resource "citrixadc_auditnslogpolicy" "tf_auditnslogpolicy" {
+		name   = "my_auditnslogpolicy"
+		rule   = "ns_true"
+		action = citrixadc_auditnslogaction.tf_auditnslogaction.name
+	}
+  
 `
 
 const testAccAaauser_auditnslogpolicy_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
+	resource "citrixadc_aaauser" "tf_aaauser" {
+		username = "user1"
+		password = "my_pass"
+	}
+	resource "citrixadc_auditnslogaction" "tf_auditnslogaction" {
+		name     = "my_auditnslogaction"
+		serverip = "1.1.1.1"
+		loglevel = ["ALERT", "CRITICAL"]
+	}
+	resource "citrixadc_auditnslogpolicy" "tf_auditnslogpolicy" {
+		name   = "my_auditnslogpolicy"
+		rule   = "ns_true"
+		action = citrixadc_auditnslogaction.tf_auditnslogaction.name
+	}
 `
 
 func TestAccAaauser_auditnslogpolicy_binding_basic(t *testing.T) {

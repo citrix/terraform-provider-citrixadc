@@ -45,9 +45,7 @@ resource "citrixadc_filterpolicy" "tf_filterpolicy" {
 `
 
 func TestAccFilterpolicy_basic(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
+	t.Skipf("filterpolicy is not supported in 13.1")
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,

@@ -26,14 +26,36 @@ import (
 
 const testAccRnat6_nsip6_binding_basic = `
 
+	resource "citrixadc_rnat6" "tf_rnat6" {
+		name             = "my_rnat6"
+		network          = "2003::/64"
+		srcippersistency = "ENABLED"
+	}
+	resource "citrixadc_nsip6" "tf_nsip6" {
+		ipv6address = "2001:db8:85a3::8a2e:370:7334/64"
+		type = "VIP"
+	}
+
 	resource "citrixadc_rnat6_nsip6_binding" "tf_rnat6_nsip6_binding" {
-		name  = "my_rnat6"
-		natip6 = "2001:db8:85a3::8a2e:370:7334"
+		name 	= citrixadc_rnat6.tf_rnat6.name
+		natip6 	= "2001:db8:85a3::8a2e:370:7334"
+		depends_on = [
+			citrixadc_nsip6.tf_nsip6
+		]
 	}
 `
 
 const testAccRnat6_nsip6_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
+
+	resource "citrixadc_rnat6" "tf_rnat6" {
+		name             = "my_rnat6"
+		srcippersistency = "ENABLED"
+	}
+	resource "citrixadc_nsip6" "tf_nsip6" {
+		ipv6address = "2001:db8:85a3::8a2e:370:7334/64"
+		type = "VIP"
+	}
 `
 
 func TestAccRnat6_nsip6_binding_basic(t *testing.T) {

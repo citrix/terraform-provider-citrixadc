@@ -26,8 +26,12 @@ import (
 
 const testAccAaauser_intranetip_binding_basic = `
 
+	resource "citrixadc_aaauser" "tf_aaauser" {
+		username = "user1"
+		password = "my_pass"
+	}
 	resource "citrixadc_aaauser_intranetip_binding" "tf_aaauser_intranetip_binding" {
-		username   = "user1"
+		username   = citrixadc_aaauser.tf_aaauser.username
 		intranetip = "10.222.74.158"
 	}
   
@@ -35,6 +39,11 @@ const testAccAaauser_intranetip_binding_basic = `
 
 const testAccAaauser_intranetip_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
+
+	resource "citrixadc_aaauser" "tf_aaauser" {
+		username = "user1"
+		password = "my_pass"
+	}
 `
 
 func TestAccAaauser_intranetip_binding_basic(t *testing.T) {

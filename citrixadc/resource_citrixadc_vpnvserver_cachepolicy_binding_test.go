@@ -25,10 +25,12 @@ import (
 )
 
 const testAccVpnvserver_cachepolicy_binding_basic = `
-	# Since the cachepolicy resource is not yet available on Terraform,
-	# the tf_cachepolicy policy must be created by hand in order for the script to run correctly.
-	# You can do that by using the following Citrix ADC cli command:
-	# add cache policy tf_cachepolicy -rule "http.req.url.query.contains(\"IssuePage\")" -action CACHE
+
+	resource "citrixadc_cachepolicy" "tf_cachepolicy" {
+		policyname  = "tf_cachepolicy"
+		rule        = "true"
+		action      = "CACHE"
+	}
 	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
 		name        = "tf_examplecom"
 		servicetype = "SSL"
@@ -37,7 +39,7 @@ const testAccVpnvserver_cachepolicy_binding_basic = `
 	}
 	resource "citrixadc_vpnvserver_cachepolicy_binding" "tf_bind" {
 		name      = citrixadc_vpnvserver.tf_vpnvserver.name
-		policy    = "tf_cachepolicy"
+		policy    = citrixadc_cachepolicy.tf_cachepolicy.policyname
 		priority  = 5
 		bindpoint = "REQUEST"
 	}
@@ -45,6 +47,12 @@ const testAccVpnvserver_cachepolicy_binding_basic = `
 
 const testAccVpnvserver_cachepolicy_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
+
+	resource "citrixadc_cachepolicy" "tf_cachepolicy" {
+		policyname  = "tf_cachepolicy"
+		rule        = "true"
+		action      = "CACHE"
+	}
 	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
 		name        = "tf_examplecom"
 		servicetype = "SSL"

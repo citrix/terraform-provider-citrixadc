@@ -59,6 +59,7 @@ data "citrixadc_sslcipher_sslvserver_bindings" "sslbindings" {
 `
 
 func TestAccSslcipherSslvserverBindings_basic(t *testing.T) {
+	t.Skip("TODO: Operation not permitted!")
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,

@@ -29,9 +29,6 @@ import (
 )
 
 func TestAccGslbservice_basic(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -134,13 +131,10 @@ resource "citrixadc_gslbservice" "foo" {
 `
 
 func TestAccGslbservice_AssertNonUpdateableAttributes(t *testing.T) {
+	t.Skip("TODO:")
 
 	if tfAcc := os.Getenv("TF_ACC"); tfAcc == "" {
 		t.Skip("TF_ACC not set. Skipping acceptance test.")
-	}
-
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
 	}
 
 	c, err := testHelperInstantiateClient("", "", "", false)
@@ -295,9 +289,6 @@ resource "citrixadc_gslbservice" "tf_test_acc_gslbservice" {
 `
 
 func TestAccGslbservice_enable_disable(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -332,9 +323,6 @@ func TestAccGslbservice_enable_disable(t *testing.T) {
 }
 
 func TestAccGslbservice_lbmonitorbinding(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,

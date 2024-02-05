@@ -26,8 +26,13 @@ import (
 
 const testAccAaagroup_intranetip_binding_basic = `
 
+	resource "citrixadc_aaagroup" "tf_aaagroup" {
+		groupname = "my_group"
+		weight    = 100
+		loggedin  = false
+	}
 	resource "citrixadc_aaagroup_intranetip_binding" "tf_aaagroup_intranetip_binding" {
-		groupname  = "my_group"
+		groupname  = citrixadc_aaagroup.tf_aaagroup.groupname
 		intranetip = "10.222.73.160"
 		netmask    = "255.255.255.192"
 	}
@@ -36,6 +41,11 @@ const testAccAaagroup_intranetip_binding_basic = `
 
 const testAccAaagroup_intranetip_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
+	resource "citrixadc_aaagroup" "tf_aaagroup" {
+		groupname = "my_group"
+		weight    = 100
+		loggedin  = false
+	}
 `
 
 func TestAccAaagroup_intranetip_binding_basic(t *testing.T) {

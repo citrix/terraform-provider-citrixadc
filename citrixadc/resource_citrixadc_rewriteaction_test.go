@@ -25,9 +25,6 @@ import (
 )
 
 func TestAccRewriteaction_basic(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -109,7 +106,6 @@ const testAccRewriteaction_step1 = `
 
 resource "citrixadc_rewriteaction" "tf_rewrite_action" {
     name = "tf_rewrite_action"
-    bypasssafetycheck = "NO"
     target = "HTTP.REQ.HOSTNAME"
     type = "delete"
 }
@@ -119,7 +115,6 @@ const testAccRewriteaction_step2 = `
 
 resource "citrixadc_rewriteaction" "tf_rewrite_action" {
     name = "tf_rewrite_action"
-    bypasssafetycheck = "YES"
     target = "HTTP.REQ.COOKIE"
     type = "delete"
 }

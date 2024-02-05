@@ -32,9 +32,6 @@ const testAccAppfwpolicylabel_basic = `
 `
 
 func TestAccAppfwpolicylabel_basic(t *testing.T) {
-	if adcTestbed != "STANDALONE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE.", adcTestbed)
-	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,

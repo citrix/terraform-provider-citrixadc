@@ -27,15 +27,21 @@ import (
 const testAccAaauser_vpnurlpolicy_binding_basic = `
 
 resource "citrixadc_aaauser_vpnurlpolicy_binding" "tf_aaauser_vpnurlpolicy_binding" {
-	username = "user1"
+	username = citrixadc_aaauser.tf_aaauser.username
 	policy    = citrixadc_vpnurlpolicy.tf_vpnurlpolicy.name
 	priority  = 100
   }
   
+  
+
+  resource "citrixadc_aaauser" "tf_aaauser" {
+	username = "user1"
+	password = "my_pass"
+  }
   resource "citrixadc_vpnurlaction" "tf_vpnurlaction" {
 	name             = "tf_vpnurlaction"
 	linkname         = "new_link"
-	actualurl        = "www.citrix.com"
+	actualurl        = "http://www.citrix.com"
 	applicationtype  = "CVPN"
 	clientlessaccess = "OFF"
 	comment          = "Testing"
@@ -50,10 +56,15 @@ resource "citrixadc_aaauser_vpnurlpolicy_binding" "tf_aaauser_vpnurlpolicy_bindi
 `
 
 const testAccAaauser_vpnurlpolicy_binding_basic_step2 = `
+
+resource "citrixadc_aaauser" "tf_aaauser" {
+  username = "user1"
+  password = "my_pass"
+}
 resource "citrixadc_vpnurlaction" "tf_vpnurlaction" {
 	name             = "tf_vpnurlaction"
 	linkname         = "new_link"
-	actualurl        = "www.citrix.com"
+	actualurl        = "http://www.citrix.com"
 	applicationtype  = "CVPN"
 	clientlessaccess = "OFF"
 	comment          = "Testing"

@@ -24,13 +24,13 @@ import (
 )
 
 const testAccVpnglobal_authenticationlocalpolicy_binding_basic = `
-# Since the authenticationlocalpolicy resource is not yet available on Terraform,
-# the tf_localpolicy policy must be created by hand in order for the script to run correctly.
-# You can do that by using the following Citrix ADC cli commands:
-# add authenticationlocalpolicy tf_localpolicy ns_true
-# TODO authenticationlocalpolicy resource 
+
+	resource "citrixadc_authenticationlocalpolicy" "tf_authenticationlocalpolicy" {
+		name   = "tf_localpolicy"
+		rule   = "ns_true"
+	}
 	resource "citrixadc_vpnglobal_authenticationlocalpolicy_binding" "tf_bind" {
-		policyname = "tf_localpolicy"
+		policyname = citrixadc_authenticationlocalpolicy.tf_authenticationlocalpolicy.name
 		priority   = 20
 	}
   
@@ -38,6 +38,11 @@ const testAccVpnglobal_authenticationlocalpolicy_binding_basic = `
 
 const testAccVpnglobal_authenticationlocalpolicy_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
+
+	resource "citrixadc_authenticationlocalpolicy" "tf_authenticationlocalpolicy" {
+		name   = "tf_localpolicy"
+		rule   = "ns_true"
+	}
 `
 
 func TestAccVpnglobal_authenticationlocalpolicy_binding_basic(t *testing.T) {

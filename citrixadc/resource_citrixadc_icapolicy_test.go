@@ -24,22 +24,29 @@ import (
 
 const testAccIcapolicy_basic = `
 
-
-resource "citrixadc_icapolicy" "tf_icapolicy" {
-	name   = "my_ica_policy"
-	rule   = true
-	action = "my_ica_action"
-  }
+	resource "citrixadc_icaaction" "tf_icaaction" {
+		name              = "my_ica_action"
+		accessprofilename = "default_ica_accessprofile"
+	}
+	resource "citrixadc_icapolicy" "tf_icapolicy" {
+		name   = "my_ica_policy"
+		rule   = true
+		action = citrixadc_icaaction.tf_icaaction.name
+	}
 `
 
 const testAccIcapolicy_update = `
 
+	resource "citrixadc_icaaction" "tf_icaaction" {
+		name              = "my_ica_action"
+		accessprofilename = "default_ica_accessprofile"
+	}
 
-resource "citrixadc_icapolicy" "tf_icapolicy" {
-	name   = "my_ica_policy"
-	rule   = false
-	action = "my_ica_action2"
-  }
+	resource "citrixadc_icapolicy" "tf_icapolicy" {
+		name   = "my_ica_policy"
+		rule   = false
+		action = citrixadc_icaaction.tf_icaaction.name
+	}
 `
 
 func TestAccIcapolicy_basic(t *testing.T) {
@@ -63,7 +70,7 @@ func TestAccIcapolicy_basic(t *testing.T) {
 					testAccCheckIcapolicyExist("citrixadc_icapolicy.tf_icapolicy", nil),
 					resource.TestCheckResourceAttr("citrixadc_icapolicy.tf_icapolicy", "name", "my_ica_policy"),
 					resource.TestCheckResourceAttr("citrixadc_icapolicy.tf_icapolicy", "rule", "false"),
-					resource.TestCheckResourceAttr("citrixadc_icapolicy.tf_icapolicy", "action", "my_ica_action2"),
+					resource.TestCheckResourceAttr("citrixadc_icapolicy.tf_icapolicy", "action", "my_ica_action"),
 				),
 			},
 		},

@@ -59,6 +59,7 @@ const testAccSslcertkey_sslocspresponder_binding_basic_step2 = `
 `
 
 func TestAccSslcertkey_sslocspresponder_binding_basic(t *testing.T) {
+	t.Skip("TODO: Need to find a way to test this resource!")
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,

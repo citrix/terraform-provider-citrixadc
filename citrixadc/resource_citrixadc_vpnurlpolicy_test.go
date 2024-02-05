@@ -28,7 +28,7 @@ const testAccVpnurlpolicy_add = `
 	resource "citrixadc_vpnurlaction" "tf_vpnurlaction" {
 		name             = "tf_vpnurlaction"
 		linkname         = "new_link"
-		actualurl        = "www.citrix.com"
+		actualurl        = "http://www.citrix.com"
 		applicationtype  = "CVPN"
 		clientlessaccess = "OFF"
 		comment          = "Testing"
@@ -46,7 +46,7 @@ const testAccVpnurlpolicy_update = `
 	resource "citrixadc_vpnurlaction" "tf_vpnurlaction" {
 		name             = "tf_vpnurlaction"
 		linkname         = "new_link"
-		actualurl        = "www.citrix.com"
+		actualurl        = "http://www.citrix.com"
 		applicationtype  = "CVPN"
 		clientlessaccess = "OFF"
 		comment          = "Testing"

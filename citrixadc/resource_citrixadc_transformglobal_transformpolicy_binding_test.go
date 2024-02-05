@@ -25,9 +25,13 @@ import (
 
 const testAccTransformglobal_transformpolicy_binding_basic = `
 
+resource "citrixadc_transformprofile" "tf_trans_profile" {
+	name = "tf_trans_profile"
+	comment = "Some comment"
+  }
 resource "citrixadc_transformpolicy" "tf_trans_policy" {
 	name        = "tf_trans_policy"
-	profilename = "tf_trans_profile"
+	profilename = citrixadc_transformprofile.tf_trans_profile.name
 	rule        = "http.REQ.URL.CONTAINS(\"test_url\")"
   }
   resource "citrixadc_transformglobal_transformpolicy_binding" "transformglobal_transformpolicy_binding" {
@@ -39,9 +43,14 @@ resource "citrixadc_transformpolicy" "tf_trans_policy" {
 
 const testAccTransformglobal_transformpolicy_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
+
+	resource "citrixadc_transformprofile" "tf_trans_profile" {
+		name = "tf_trans_profile"
+		comment = "Some comment"
+	  }
 	resource "citrixadc_transformpolicy" "tf_trans_policy" {
 		name        = "tf_trans_policy"
-		profilename = "tf_trans_profile"
+		profilename = citrixadc_transformprofile.tf_trans_profile.name
 		rule        = "http.REQ.URL.CONTAINS(\"test_url\")"
 	  }
 `

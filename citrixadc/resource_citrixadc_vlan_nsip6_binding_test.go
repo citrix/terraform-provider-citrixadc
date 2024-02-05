@@ -26,14 +26,32 @@ import (
 
 const testAccVlan_nsip6_binding_basic = `
 
+	resource "citrixadc_vlan" "tf_vlan" {
+		vlanid = 2
+		aliasname = "VLAN"
+	}
+	resource "citrixadc_nsip6" "tf_nsip6" {
+		ipv6address = "2001::a/96"
+		type = "VIP"
+	}
+
 	resource "citrixadc_vlan_nsip6_binding" "tf_vlan_nsip6_binding" {
-		vlanid    = 2
-		ipaddress = "2001::a/96"
+		vlanid    = citrixadc_vlan.tf_vlan.vlanid
+		ipaddress = citrixadc_nsip6.tf_nsip6.ipv6address
 	}
 `
 
 const testAccVlan_nsip6_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
+
+	resource "citrixadc_vlan" "tf_vlan" {
+		vlanid = 2
+		aliasname = "VLAN"
+	}
+	resource "citrixadc_nsip6" "tf_nsip6" {
+		ipv6address = "2001::a/96"
+		type = "VIP"
+	}
 `
 
 func TestAccVlan_nsip6_binding_basic(t *testing.T) {

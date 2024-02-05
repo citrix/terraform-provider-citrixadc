@@ -25,16 +25,34 @@ import (
 )
 
 const testAccAaagroup_aaauser_binding_basic = `
+	resource "citrixadc_aaagroup" "tf_aaagroup" {
+		groupname = "my_group"
+		weight    = 100
+		loggedin  = false
+	}
+	resource "citrixadc_aaauser" "tf_aaauser" {
+		username = "user1"
+		password = "my_pass"
+	}
 
 	resource "citrixadc_aaagroup_aaauser_binding" "tf_aaagroup_aaauser_binding" {
-		groupname = "my_group"
-		username  = "user1"
+		groupname = citrixadc_aaagroup.tf_aaagroup.groupname
+		username  = citrixadc_aaauser.tf_aaauser.username
 	}
   
 `
 
 const testAccAaagroup_aaauser_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
+	resource "citrixadc_aaagroup" "tf_aaagroup" {
+		groupname = "my_group"
+		weight    = 100
+		loggedin  = false
+	}
+	resource "citrixadc_aaauser" "tf_aaauser" {
+		username = "user1"
+		password = "my_pass"
+	}
 `
 
 func TestAccAaagroup_aaauser_binding_basic(t *testing.T) {

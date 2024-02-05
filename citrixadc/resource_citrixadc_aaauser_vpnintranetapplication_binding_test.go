@@ -26,28 +26,36 @@ import (
 
 const testAccAaauser_vpnintranetapplication_binding_basic = `
 
-resource "citrixadc_aaauser_vpnintranetapplication_binding" "tf_aaauser_vpnintranetapplication_binding" {
-	username            = "user1"
-	intranetapplication = citrixadc_vpnintranetapplication.tf_vpnintranetapplication.intranetapplication
-  }
-  
-  resource "citrixadc_vpnintranetapplication" "tf_vpnintranetapplication" {
-	intranetapplication = "tf_vpnintranetapplication"
-	protocol            = "UDP"
-	destip              = "2.3.6.5"
-	interception        = "TRANSPARENT"
-  }
+	resource "citrixadc_aaauser_vpnintranetapplication_binding" "tf_aaauser_vpnintranetapplication_binding" {
+		username            = citrixadc_aaauser.tf_aaauser.username
+		intranetapplication = citrixadc_vpnintranetapplication.tf_vpnintranetapplication.intranetapplication
+	}
+	
+	resource "citrixadc_aaauser" "tf_aaauser" {
+		username = "user1"
+		password = "my_pass"
+	}
+	resource "citrixadc_vpnintranetapplication" "tf_vpnintranetapplication" {
+		intranetapplication = "tf_vpnintranetapplication"
+		protocol            = "UDP"
+		destip              = "2.3.6.5"
+		interception        = "TRANSPARENT"
+	}
   
 `
 
 const testAccAaauser_vpnintranetapplication_binding_basic_step2 = `
 	 
-resource "citrixadc_vpnintranetapplication" "tf_vpnintranetapplication" {
-	intranetapplication = "tf_vpnintranetapplication"
-	protocol            = "UDP"
-	destip              = "2.3.6.5"
-	interception        = "TRANSPARENT"
-  }
+	resource "citrixadc_aaauser" "tf_aaauser" {
+		username = "user1"
+		password = "my_pass"
+	}
+	resource "citrixadc_vpnintranetapplication" "tf_vpnintranetapplication" {
+		intranetapplication = "tf_vpnintranetapplication"
+		protocol            = "UDP"
+		destip              = "2.3.6.5"
+		interception        = "TRANSPARENT"
+	}
 `
 
 func TestAccAaauser_vpnintranetapplication_binding_basic(t *testing.T) {

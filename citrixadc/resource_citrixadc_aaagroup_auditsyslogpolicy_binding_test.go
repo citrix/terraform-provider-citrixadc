@@ -26,43 +26,53 @@ import (
 
 const testAccAaagroup_auditsyslogpolicy_binding_basic = `
 
-resource "citrixadc_aaagroup_auditsyslogpolicy_binding" "tf_aaagroup_auditsyslogpolicy_binding" {
-	groupname = "my_group"
-	policy    = citrixadc_auditsyslogpolicy.tf_auditsyslogpolicy.name
-	priority  = 100
-  }
+	resource "citrixadc_aaagroup_auditsyslogpolicy_binding" "tf_aaagroup_auditsyslogpolicy_binding" {
+		groupname = citrixadc_aaagroup.tf_aaagroup.groupname
+		policy    = citrixadc_auditsyslogpolicy.tf_auditsyslogpolicy.name
+		priority  = 100
+	}
+	resource "citrixadc_aaagroup" "tf_aaagroup" {
+		groupname = "my_group"
+		weight    = 100
+		loggedin  = false
+	}
   
-  resource "citrixadc_auditsyslogaction" "tf_syslogaction" {
-	name       = "tf_syslogaction"
-	serverip   = "10.78.60.33"
-	serverport = 514
-	loglevel = [
-	  "ERROR",
-	  "NOTICE",
-	]
-  }
-  resource "citrixadc_auditsyslogpolicy" "tf_auditsyslogpolicy" {
-	name   = "tf_auditsyslogpolicy"
-	rule   = "ns_true"
-	action = citrixadc_auditsyslogaction.tf_syslogaction.name
-  }
+	resource "citrixadc_auditsyslogaction" "tf_syslogaction" {
+		name       = "tf_syslogaction"
+		serverip   = "10.78.60.33"
+		serverport = 514
+		loglevel = [
+		"ERROR",
+		"NOTICE",
+		]
+	}
+	resource "citrixadc_auditsyslogpolicy" "tf_auditsyslogpolicy" {
+		name   = "tf_auditsyslogpolicy"
+		rule   = "ns_true"
+		action = citrixadc_auditsyslogaction.tf_syslogaction.name
+	}
 `
 
 const testAccAaagroup_auditsyslogpolicy_binding_basic_step2 = `
-resource "citrixadc_auditsyslogaction" "tf_syslogaction" {
-	name       = "tf_syslogaction"
-	serverip   = "10.78.60.33"
-	serverport = 514
-	loglevel = [
-	  "ERROR",
-	  "NOTICE",
-	]
-  }
-  resource "citrixadc_auditsyslogpolicy" "tf_auditsyslogpolicy" {
-	name   = "tf_auditsyslogpolicy"
-	rule   = "ns_true"
-	action = citrixadc_auditsyslogaction.tf_syslogaction.name
-  }
+	resource "citrixadc_aaagroup" "tf_aaagroup" {
+		groupname = "my_group"
+		weight    = 100
+		loggedin  = false
+	}
+	resource "citrixadc_auditsyslogaction" "tf_syslogaction" {
+		name       = "tf_syslogaction"
+		serverip   = "10.78.60.33"
+		serverport = 514
+		loglevel = [
+		"ERROR",
+		"NOTICE",
+		]
+	}
+	resource "citrixadc_auditsyslogpolicy" "tf_auditsyslogpolicy" {
+		name   = "tf_auditsyslogpolicy"
+		rule   = "ns_true"
+		action = citrixadc_auditsyslogaction.tf_syslogaction.name
+	}
 `
 
 func TestAccAaagroup_auditsyslogpolicy_binding_basic(t *testing.T) {
