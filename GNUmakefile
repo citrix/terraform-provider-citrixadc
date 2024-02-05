@@ -34,7 +34,7 @@ build: fmtcheck
 
 fmt:
 	@echo "==> Fixing source code with gofmt..."
-	go fmt ./...
+	gofmt -s -w $(GOFMT_FILES)
 
 fmtcheck:
 	@sh -c "'$(CURDIR)/scripts/gofmtcheck.sh'"
