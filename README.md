@@ -7,6 +7,12 @@ Learn more about Citrix ADC Automation [here](https://docs.citrix.com/en-us/citr
 > :round_pushpin:For deploying Citrix ADC in Public Cloud - AWS and Azure, check out cloud scripts in github repo [terraform-cloud-scripts](https://github.com/citrix/terraform-cloud-scripts).
 
 > :envelope: For any immediate issues or help , reach out to us at NetScaler-AutomationToolkit@cloud.com !
+>
+
+## Examples and Modules
+
+- Refer [examples](examples/)
+- Also refer [golden_templates](https://github.com/netscaler/automation-toolkit/tree/main/golden_templates/netscaler_gateway)
 
 ## Terrraform Provider Documentation
 
