@@ -25,7 +25,7 @@ body:
 
         Please run `terraform -v` to show the Terraform Core and provider version(s). If you are not running the latest version of either the provider or Terraform Core, please consider upgrading, as your issue may have already been fixed.
 
-        [Terraform documentation on provider versioning](https://www.terraform.io/docs/configuration/providers.html#provider-versions)
+        [Terraform documentation on provider versioning](https://developer.hashicorp.com/terraform/language/providers/requirements#version-constraints)
 
   - type: input
     id: tf_version
@@ -45,6 +45,14 @@ body:
     validations:
       required: true
 
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      description: The Operating system that you are using.
+    validations:
+      required: true
+
   - type: markdown
     attributes:
       value: |
@@ -61,7 +69,7 @@ body:
       description: Please list the affected resource(s) and/or data source(s).
       placeholder: "* citrixadc_xxx"
     validations:
-      required: false
+      required: true
 
   - type: textarea
     id: cli_command
@@ -103,11 +111,9 @@ body:
       value: |
         # Configuration and Logging
 
-        Here, we ask that you provide the Terraform configuration and, when possible, the debug logs. For configurations or logs of more than just a few lines, it's preferred to either share a Gist link or zip the files and upload them.
+        Here, we ask that you provide the Terraform configuration and, when possible, the debug logs. For configurations or logs of more than just a few lines, you can also share a Gist link or zip the files and upload them.
 
         Terraform configurations or debug logs under 25MB may be [attached directly in the field](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/attaching-files). Files larger than this should be uploaded to a file hosting service and a link shared.
-
-        For your security you can also encrypt the files using our [GPG public key](https://keybase.io/hashicorp).
 
         **Note:** These form fields do not automatically render, so you will need to use [code fence(s)](https://help.github.com/articles/basic-writing-and-formatting-syntax/#quoting-code) to achieve proper formatting.
 
@@ -117,8 +123,6 @@ body:
       label: Terraform Configuration Files
       description: |
         Please paste, upload, or link to a file or Gist containing all Terraform configurations required to reproduce the bug. See note above for additional information on file size restrictions and encrypting.
-
-        Bug reports without a functional reproduction may be closed without investigation.
     validations:
       required: true
 
@@ -135,9 +139,9 @@ body:
     attributes:
       label: Debug Output
       description: |
-        If possible, please paste, upload, or link to a file or Gist containing debug logs. See note above for additional information on file size restrictions and encrypting.
+        If possible, please paste, upload, or link to a file or Gist containing debug logs. See note above for additional information on file size restrictions.
 
-        Append TF_LOG=TRACE NS_LOG=TRACE TF_LOG_PATH=./tf.log to your terraform command. Terraform outputs logs to the log file (./tf.log).
+        Append `TF_LOG=TRACE NS_LOG=TRACE TF_LOG_PATH=./tf.log` to your terraform command. For example, `TF_LOG=TRACE NS_LOG=TRACE TF_LOG_PATH=./tf.log terraform apply`. Terraform outputs logs to the log file (./tf.log).
     validations:
       required: false
 
@@ -145,7 +149,7 @@ body:
     id: panic_logs
     attributes:
       label: Panic Output
-      description: If Terraform produced a panic, please paste, upload, or link to a file or Gist containing the output of the `crash.log`.
+      description: If Terraform produced a panic, please paste, upload, or link to a file or Gist containing the output of the `tf.log`.
     validations:
       required: false
 
