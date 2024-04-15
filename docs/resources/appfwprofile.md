@@ -146,6 +146,24 @@ resource citrixadc_appfwprofile demo_appfw {
 * `fileuploadtypesaction` - (Optional) One or more file upload types actions. Available settings function as follows: * Block - Block connections that violate this security check. * Log - Log violations of this security check. * Stats - Generate statistics for this security check. * None - Disable all actions for this security check. CLI users: To enable one or more actions, type "set appfw profile -fileUploadTypeAction" followed by the actions to be enabled. To turn off all actions, type "set appfw profile -fileUploadTypeAction none". Possible values: [ none, block, log, stats ]
 * `verboseloglevel` - (Optional) Detailed Logging Verbose Log Level. Possible values: [ pattern, patternPayload, patternPayloadHeader ]
 * `archivename` - (Optional) Source for tar archive.
+* `htmlerrorstatuscode` - (Optional) Response status code associated with HTML error page. Non-empty HTML error object must be imported to the application firewall profile for the status code.
+    * Default value: 200
+    * Minimum value = 1
+    * Maximum value = 999
+* `htmlerrorstatusmessage` - (Optional) Response status message associated with HTML error page.
+* `bufferoverflowmaxtotalheaderlength` - (Optional) Maximum length, in bytes, for the total HTTP header length in requests sent to your protected web sites. The minimum value of this and maxHeaderLen in httpProfile will be used. Requests with longer length are blocked.
+    * Default value: 65535
+    * Minimum value = 0
+    * Maximum value = 65535
+* `sqlinjectiongrammar` - (Optional) Check for SQL injection using SQL grammar. Default value: OFF  Possible values = ON, OFF
+* `cmdinjectiontype` - (Optional) Available CMD injection types.
+    * Default value: CMDSplCharANDKeyword
+    * Possible values = CMDSplChar, CMDKeyword, CMDSplCharORKeyword, CMDSplCharANDKeyword, None
+    * CMDSplChar : Checks for CMD Special Chars
+    * CMDKeyword : Checks for CMD Keywords
+    * CMDSplCharANDKeyword : Checks for both and blocks if both are found
+    * CMDSplCharORKeyword : Checks for both and blocks if anyone is found,
+    * None : Disables checking using both CMD Special Char and Keyword.
 
 ## Attribute Reference
 
