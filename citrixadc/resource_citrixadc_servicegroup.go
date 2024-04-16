@@ -651,7 +651,7 @@ func readServicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("td", data["td"])
 	d.Set("useproxyport", data["useproxyport"])
 	d.Set("usip", data["usip"])
-	d.Set("weight", data["weight"])
+	setToInt("weight", d, data["weight"])
 
 	_, membersOk := d.GetOk("servicegroupmembers")
 	_, membersByNameOk := d.GetOk("servicegroupmembers_by_servername")

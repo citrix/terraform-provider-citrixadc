@@ -139,7 +139,7 @@ func readService_lbmonitor_bindingFunc(d *schema.ResourceData, meta interface{})
 	// d.Set("monstate", data["monstate"])
 	d.Set("name", data["name"])
 	d.Set("passive", data["passive"])
-	d.Set("weight", data["weight"])
+	setToInt("weight", d, data["weight"])
 
 	return nil
 

@@ -1046,7 +1046,7 @@ func readLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("v6netmasklen", data["v6netmasklen"])
 	d.Set("v6persistmasklen", data["v6persistmasklen"])
 	d.Set("vipheader", data["vipheader"])
-	d.Set("weight", data["weight"])
+	setToInt("weight", d, data["weight"])
 	d.Set("quicbridgeprofilename", data["quicbridgeprofilename"])
 	setToInt("probeport", d, data["probeport"])
 	d.Set("probeprotocol", data["probeprotocol"])

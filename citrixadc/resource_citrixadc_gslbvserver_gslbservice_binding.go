@@ -130,7 +130,7 @@ func readGslbvserver_gslbservice_bindingFunc(d *schema.ResourceData, meta interf
 	d.Set("domainname", data["domainname"])
 	d.Set("name", data["name"])
 	d.Set("servicename", data["servicename"])
-	d.Set("weight", data["weight"])
+	setToInt("weight", d, data["weight"])
 
 	return nil
 

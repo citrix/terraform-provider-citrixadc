@@ -435,7 +435,7 @@ func readGslbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("ttl", data["ttl"])
 	d.Set("v6netmasklen", data["v6netmasklen"])
 	d.Set("v6persistmasklen", data["v6persistmasklen"])
-	d.Set("weight", data["weight"])
+	setToInt("weight", d, data["weight"])
 
 	data2, _ := client.FindResourceArray(service.Gslbvserver_domain_binding.Type(), gslbvserverName)
 	domainBindings := make([]map[string]interface{}, len(data2))
