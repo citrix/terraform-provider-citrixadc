@@ -204,7 +204,7 @@ func readServicegroup_lbmonitor_bindingFunc(d *schema.ResourceData, meta interfa
 	d.Set("serverid", data["serverid"])
 	d.Set("servicegroupname", data["servicegroupname"])
 	d.Set("state", data["state"])
-	d.Set("weight", data["weight"])
+	setToInt("weight", d, data["weight"])
 
 	return nil
 

@@ -243,7 +243,7 @@ func readServicegroup_servicegroupmember_bindingFunc(d *schema.ResourceData, met
 	d.Set("servername", data["servername"])
 	d.Set("servicegroupname", data["servicegroupname"])
 	d.Set("state", data["state"])
-	d.Set("weight", data["weight"])
+	setToInt("weight", d, data["weight"])
 
 	return nil
 

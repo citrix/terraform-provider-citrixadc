@@ -152,7 +152,7 @@ func readDnssrvrecFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("target", data["target"])
 	d.Set("ttl", data["ttl"])
 	d.Set("type", data["type"])
-	d.Set("weight", data["weight"])
+	setToInt("weight", d, data["weight"])
 
 	return nil
 

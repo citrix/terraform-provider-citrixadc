@@ -858,6 +858,8 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_videooptimizationpacingaction":                                 resourceCitrixAdcVideooptimizationpacingaction(),
 		"citrixadc_videooptimizationpacingpolicy":                                 resourceCitrixAdcVideooptimizationpacingpolicy(),
 		"citrixadc_analyticsglobal_analyticsprofile_binding":                      resourceCitrixAdcAnalyticsglobal_analyticsprofile_binding(),
+		"citrixadc_lbaction":                                                      resourceCitrixAdcLbaction(),
+		"citrixadc_lbpolicy":                                                      resourceCitrixAdcLbpolicy(),
 	}
 }
 

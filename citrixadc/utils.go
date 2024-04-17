@@ -42,6 +42,15 @@ func toIntegerList(in []interface{}) []int {
 	return out
 }
 
+func stringListToIntList(in []interface{}) []int {
+	out := make([]int, 0, len(in))
+	for _, val := range in {
+		res, _ := strconv.Atoi(val.(string))
+		out = append(out, res)
+	}
+	return out
+}
+
 // Check if the attribute is int, if not convert to int and set the value
 func setToInt(attributeName string, d *schema.ResourceData, value interface{}) {
 	var v int

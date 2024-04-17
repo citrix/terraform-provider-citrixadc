@@ -523,7 +523,7 @@ func readServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("customserverid", data["customserverid"])
 	d.Set("dnsprofilename", data["dnsprofilename"])
 	d.Set("downstateflush", data["downstateflush"])
-	d.Set("hashid", data["hashid"])
+	setToInt("hashid", d, data["hashid"])
 	d.Set("healthmonitor", data["healthmonitor"])
 	d.Set("httpprofilename", data["httpprofilename"])
 	d.Set("internal", data["internal"])
@@ -532,12 +532,12 @@ func readServiceFunc(d *schema.ResourceData, meta interface{}) error {
 			d.Set("ip", data["ip"])
 		}*/
 	d.Set("ipaddress", data["ipaddress"])
-	d.Set("maxbandwidth", data["maxbandwidth"])
-	d.Set("maxclient", data["maxclient"])
-	d.Set("maxreq", data["maxreq"])
+	setToInt("maxbandwidth", d, data["maxbandwidth"])
+	setToInt("maxclient", d, data["maxclient"])
+	setToInt("maxreq", d, data["maxreq"])
 	d.Set("monconnectionclose", data["monconnectionclose"])
 	d.Set("monitornamesvc", data["monitornamesvc"])
-	d.Set("monthreshold", data["monthreshold"])
+	setToInt("monthreshold", d, data["monthreshold"])
 	d.Set("name", data["name"])
 	d.Set("netprofile", data["netprofile"])
 	d.Set("pathmonitor", data["pathmonitor"])
@@ -550,14 +550,18 @@ func readServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("serverid", data["serverid"])
 	d.Set("servername", data["servername"])
 	d.Set("servicetype", data["servicetype"])
-	d.Set("sp", data["sp"])
+	if data["sp"] == "ON (but effectively OFF)" {
+		d.Set("sp", "ON")
+	} else {
+		d.Set("sp", data["sp"])
+	}
 	d.Set("svrtimeout", data["svrtimeout"])
 	d.Set("tcpb", data["tcpb"])
 	d.Set("tcpprofilename", data["tcpprofilename"])
-	d.Set("td", data["td"])
+	setToInt("td", d, data["td"])
 	d.Set("useproxyport", data["useproxyport"])
 	d.Set("usip", data["usip"])
-	d.Set("weight", data["weight"])
+	setToInt("weight", d, data["weight"])
 
 	// Set state according to svrstate
 	if data["svrstate"] == "OUT OF SERVICE" {

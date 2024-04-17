@@ -74,7 +74,7 @@ func readAaagroupFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("groupname", data["groupname"])
 	d.Set("loggedin", data["loggedin"])
-	d.Set("weight", data["weight"])
+	setToInt("weight", d, data["weight"])
 
 	return nil
 
