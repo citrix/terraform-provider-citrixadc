@@ -61,6 +61,26 @@ type Appfwsignatures struct {
 	* Merges signature file with default signature file.
 	*/
 	Mergedefault bool `json:"mergedefault,omitempty"`
+	/**
+	* Flag used to enable/disable auto enable new signatures.
+	*/
+	Autoenablenewsignatures string `json:"autoenablenewsignatures,omitempty"`
+	/**
+	* Signature rule IDs to be Enabled/Disabled.
+	*/
+	Ruleid []int `json:"ruleid,omitempty"`
+	/**
+	* Signature category to be Enabled/Disabled.
+	*/
+	Category string `json:"category,omitempty"`
+	/**
+	* Flag used to enable/disable enable signature rule IDs/Signature Category.
+	*/
+	Enabled string `json:"enabled,omitempty"`
+	/**
+	* Signature action.
+	*/
+	Action []string `json:"action,omitempty"`
 
 	//------- Read only Parameter ---------;
 

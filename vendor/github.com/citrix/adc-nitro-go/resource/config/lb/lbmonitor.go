@@ -160,7 +160,7 @@ type Lbmonitor struct {
 	/**
 	* Time value added to the learned average response time in dynamic response time monitoring (DRTM). When a deviation is specified, the appliance learns the average response time of bound services and adds the deviation to the average. The final value is then continually adjusted to accommodate response time variations over time. Specified in milliseconds, seconds, or minutes.
 	*/
-	Deviation int `json:"deviation,omitempty"`
+	Deviation int `json:"deviation"`
 	/**
 	* Unit of measurement for the Deviation parameter. Cannot be changed after the monitor is created.
 	*/
