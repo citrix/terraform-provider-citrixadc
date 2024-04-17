@@ -186,7 +186,7 @@ func readGslbservicegroup_lbmonitor_bindingFunc(d *schema.ResourceData, meta int
 	d.Set("servicegroupname", data["servicegroupname"])
 	d.Set("siteprefix", data["siteprefix"])
 	d.Set("state", data["state"])
-	d.Set("weight", data["weight"])
+	setToInt("weight", d, data["weight"])
 
 	return nil
 

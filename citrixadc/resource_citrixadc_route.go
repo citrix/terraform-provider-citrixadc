@@ -213,7 +213,7 @@ func readRouteFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("routetype", data["routetype"])
 	d.Set("td", data["td"])
 	d.Set("vlan", data["vlan"])
-	d.Set("weight", data["weight"])
+	setToInt("weight", d, data["weight"])
 
 	return nil
 

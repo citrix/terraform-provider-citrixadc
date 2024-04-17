@@ -260,7 +260,7 @@ func readGslbservicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("siteprefix", data["siteprefix"])
 	d.Set("state", data["state"])
 	d.Set("svrtimeout", data["svrtimeout"])
-	d.Set("weight", data["weight"])
+	setToInt("weight", d, data["weight"])
 
 	return nil
 

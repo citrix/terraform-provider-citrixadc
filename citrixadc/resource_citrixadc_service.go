@@ -561,7 +561,7 @@ func readServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	setToInt("td", d, data["td"])
 	d.Set("useproxyport", data["useproxyport"])
 	d.Set("usip", data["usip"])
-	d.Set("weight", data["weight"])
+	setToInt("weight", d, data["weight"])
 
 	// Set state according to svrstate
 	if data["svrstate"] == "OUT OF SERVICE" {

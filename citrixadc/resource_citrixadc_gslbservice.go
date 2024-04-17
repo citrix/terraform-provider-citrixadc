@@ -365,7 +365,7 @@ func readGslbserviceFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("svrtimeout", data["svrtimeout"])
 	d.Set("viewip", data["viewip"])
 	d.Set("viewname", data["viewname"])
-	d.Set("weight", data["weight"])
+	setToInt("weight", d, data["weight"])
 
 	if err := readLbmonitorBindinds(d, meta); err != nil {
 		return err

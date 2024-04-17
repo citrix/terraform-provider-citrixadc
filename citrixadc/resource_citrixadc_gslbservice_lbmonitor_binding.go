@@ -138,7 +138,7 @@ func readGslbservice_lbmonitor_bindingFunc(d *schema.ResourceData, meta interfac
 	d.Set("monitor_name", data["monitor_name"])
 	d.Set("monstate", data["monstate"])
 	d.Set("servicename", data["servicename"])
-	d.Set("weight", data["weight"])
+	setToInt("weight", d, data["weight"])
 
 	return nil
 
