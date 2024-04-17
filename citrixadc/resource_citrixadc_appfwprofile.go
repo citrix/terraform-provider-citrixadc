@@ -373,142 +373,195 @@ func resourceCitrixAdcAppfwprofile() *schema.Resource {
 			"bufferoverflowaction": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"contenttypeaction": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"cookieconsistencyaction": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"creditcard": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"creditcardaction": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"crosssitescriptingaction": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"csrftagaction": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"denyurlaction": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"dynamiclearning": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"fieldconsistencyaction": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"fieldformataction": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"fileuploadtypesaction": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"inspectcontenttypes": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"jsondosaction": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"jsonsqlinjectionaction": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"jsonxssaction": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"multipleheaderaction": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"sqlinjectionaction": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"starturlaction": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"type": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"xmlattachmentaction": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"xmldosaction": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"xmlformataction": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"xmlsoapfaultaction": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"xmlsqlinjectionaction": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"xmlvalidationaction": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"xmlwsiaction": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"xmlxssaction": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"bufferoverflowmaxtotalheaderlength": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"cmdinjectiontype": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"htmlerrorstatuscode": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"htmlerrorstatusmessage": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"sqlinjectiongrammar": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
 			},
 		},
 	}
@@ -589,6 +642,11 @@ func createAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 		Xmlsqlinjectiononlycheckfieldswithsqlchars: d.Get("xmlsqlinjectiononlycheckfieldswithsqlchars").(string),
 		Xmlsqlinjectionparsecomments:               d.Get("xmlsqlinjectionparsecomments").(string),
 		Xmlsqlinjectiontype:                        d.Get("xmlsqlinjectiontype").(string),
+		Bufferoverflowmaxtotalheaderlength:         d.Get("bufferoverflowmaxtotalheaderlength").(int),
+		Cmdinjectiontype:                           d.Get("cmdinjectiontype").(string),
+		Htmlerrorstatuscode:                        d.Get("htmlerrorstatuscode").(int),
+		Htmlerrorstatusmessage:                     d.Get("htmlerrorstatusmessage").(string),
+		Sqlinjectiongrammar:                        d.Get("sqlinjectiongrammar").(string),
 	}
 
 	appfwprofile.Bufferoverflowaction = toStringList(d.Get("bufferoverflowaction").(*schema.Set).List())
@@ -648,7 +706,7 @@ func readAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("name", data["name"])
 	d.Set("postbodylimitaction", data["postbodylimitaction"])
-	d.Set("bufferoverflowmaxquerylength", data["bufferoverflowmaxquerylength"])
+	setToInt("bufferoverflowmaxquerylength", d, data["bufferoverflowmaxquerylength"])
 	d.Set("cookiehijackingaction", data["cookiehijackingaction"])
 	d.Set("infercontenttypexmlpayloadaction", data["infercontenttypexmlpayloadaction"])
 	d.Set("cmdinjectionaction", data["cmdinjectionaction"])
@@ -745,6 +803,11 @@ func readAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("xmlvalidationaction", data["xmlvalidationaction"])
 	d.Set("xmlwsiaction", data["xmlwsiaction"])
 	d.Set("xmlxssaction", data["xmlxssaction"])
+	setToInt("bufferoverflowmaxtotalheaderlength", d, data["bufferoverflowmaxtotalheaderlength"])
+	d.Set("cmdinjectiontype", data["cmdinjectiontype"])
+	d.Set("htmlerrorstatusmessage", data["htmlerrorstatusmessage"])
+	setToInt("htmlerrorstatuscode", d, data["htmlerrorstatuscode"])
+	d.Set("sqlinjectiongrammar", data["sqlinjectiongrammar"])
 
 	return nil
 
@@ -1270,6 +1333,31 @@ func updateAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("xmlxssaction") {
 		log.Printf("[DEBUG]  citrixadc-provider: Xmlxssaction has changed for appfwprofile %s, starting update", appfwprofileName)
 		appfwprofile.Xmlxssaction = toStringList(d.Get("xmlxssaction").(*schema.Set).List())
+		hasChange = true
+	}
+	if d.HasChange("bufferoverflowmaxtotalheaderlength") {
+		log.Printf("[DEBUG]  citrixadc-provider: bufferoverflowmaxtotalheaderlength has changed for appfwprofile %s, starting update", appfwprofileName)
+		appfwprofile.Bufferoverflowmaxtotalheaderlength = d.Get("bufferoverflowmaxtotalheaderlength").(int)
+		hasChange = true
+	}
+	if d.HasChange("cmdinjectiontype") {
+		log.Printf("[DEBUG]  citrixadc-provider: cmdinjectiontype has changed for appfwprofile %s, starting update", appfwprofileName)
+		appfwprofile.Cmdinjectiontype = d.Get("cmdinjectiontype").(string)
+		hasChange = true
+	}
+	if d.HasChange("htmlerrorstatuscode") {
+		log.Printf("[DEBUG]  citrixadc-provider: Htmlerrorstatuscode has changed for appfwprofile %s, starting update", appfwprofileName)
+		appfwprofile.Htmlerrorstatuscode = d.Get("htmlerrorstatuscode").(int)
+		hasChange = true
+	}
+	if d.HasChange("htmlerrorstatusmessage") {
+		log.Printf("[DEBUG]  citrixadc-provider: Htmlerrorstatusmessage has changed for appfwprofile %s, starting update", appfwprofileName)
+		appfwprofile.Htmlerrorstatusmessage = d.Get("htmlerrorstatusmessage").(string)
+		hasChange = true
+	}
+	if d.HasChange("sqlinjectiongrammar") {
+		log.Printf("[DEBUG]  citrixadc-provider: sqlinjectiongrammar has changed for appfwprofile %s, starting update", appfwprofileName)
+		appfwprofile.Sqlinjectiongrammar = d.Get("sqlinjectiongrammar").(string)
 		hasChange = true
 	}
 
