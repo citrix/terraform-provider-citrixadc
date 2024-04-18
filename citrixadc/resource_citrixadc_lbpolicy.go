@@ -37,6 +37,7 @@ func resourceCitrixAdcLbpolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
+				ForceNew: true,
 			},
 			"newname": {
 				Type:     schema.TypeString,
