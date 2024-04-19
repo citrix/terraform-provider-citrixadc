@@ -36,6 +36,11 @@ resource "citrixadc_appfwsignatures" "tf_appfwsignatures" {
 * `src` - (Optional) URL (protocol, host, path, and file name) for the location at which to store the imported signatures object. NOTE: The import fails if the object to be imported is on an HTTPS server that requires client certificate authentication for access.
 * `vendortype` - (Optional) Third party vendor type for which WAF signatures has to be generated.
 * `xslt` - (Optional) XSLT file source.
+* `autoenablenewsignatures` - (Optional) Flag used to enable/disable auto enable new signatures.  Default value: OFF  Possible values = ON, OFF
+* `ruleid` - (Optional) (int[]) Signature rule IDs to be Enabled/Disabled. Minimum value = 1  Maximum value = 2000000
+* `category` - (Optional) Signature category to be Enabled/Disabled.
+* `enabled` - (Optional) Flag used to enable/disable enable signature rule IDs/Signature Category.  Default value: ON   Possible values = ON, OFF
+* `action` - (Optional) (String[]) Signature action.  Possible values = none, block, log, stats
 
 
 ## Attribute Reference
