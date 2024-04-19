@@ -861,6 +861,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_lbaction":                                                      resourceCitrixAdcLbaction(),
 		"citrixadc_lbpolicy":                                                      resourceCitrixAdcLbpolicy(),
 		"citrixadc_sslcrl":                                                        resourceCitrixAdcSslcrl(),
+		"citrixadc_gslbservicegroup_gslbservicegroupmember_binding":               resourceCitrixAdcGslbservicegroup_gslbservicegroupmember_binding(),
 	}
 }
 
