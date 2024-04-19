@@ -79,6 +79,38 @@ func resourceCitrixAdcAppfwsignatures() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
+			"autoenablenewsignatures": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"ruleid": {
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeInt},
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"category": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"enabled": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"action": {
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -89,16 +121,21 @@ func createAppfwsignaturesFunc(d *schema.ResourceData, meta interface{}) error {
 	appfwsignaturesName := d.Get("name").(string)
 
 	appfwsignatures := appfw.Appfwsignatures{
-		Comment:            d.Get("comment").(string),
-		Merge:              d.Get("merge").(bool),
-		Mergedefault:       d.Get("mergedefault").(bool),
-		Name:               d.Get("name").(string),
-		Overwrite:          d.Get("overwrite").(bool),
-		Preservedefactions: d.Get("preservedefactions").(bool),
-		Sha1:               d.Get("sha1").(string),
-		Src:                d.Get("src").(string),
-		Vendortype:         d.Get("vendortype").(string),
-		Xslt:               d.Get("xslt").(string),
+		Comment:                 d.Get("comment").(string),
+		Merge:                   d.Get("merge").(bool),
+		Mergedefault:            d.Get("mergedefault").(bool),
+		Name:                    d.Get("name").(string),
+		Overwrite:               d.Get("overwrite").(bool),
+		Preservedefactions:      d.Get("preservedefactions").(bool),
+		Sha1:                    d.Get("sha1").(string),
+		Src:                     d.Get("src").(string),
+		Vendortype:              d.Get("vendortype").(string),
+		Xslt:                    d.Get("xslt").(string),
+		Autoenablenewsignatures: d.Get("autoenablenewsignatures").(string),
+		Ruleid:                  toIntegerList(d.Get("ruleid").([]interface{})),
+		Category:                d.Get("category").(string),
+		Enabled:                 d.Get("enabled").(string),
+		Action:                  toStringList(d.Get("action").([]interface{})),
 	}
 
 	err := client.ActOnResource(service.Appfwsignatures.Type(), &appfwsignatures, "Import")
