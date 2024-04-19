@@ -182,19 +182,11 @@ func readGslbservicegroup_gslbservicegroupmember_bindingFunc(d *schema.ResourceD
 	// Iterate through results to find the one with the right policy name
 	foundIndex := -1
 	for i, v := range dataArr {
-		if port != 0 && v["port"] != nil {
-			portEqual := int(v["port"].(float64)) == port
-			servernameEqual := v["servername"] == servername
-			if servernameEqual && portEqual {
-				foundIndex = i
-				break
-			}
-		} else {
-			log.Printf("[WARN] citrixadc-provider: port is zero")
-			if v["servername"].(string) == servername {
-				foundIndex = i
-				break
-			}
+		portEqual := int(v["port"].(float64)) == port
+		servernameEqual := v["servername"] == servername
+		if servernameEqual && portEqual {
+			foundIndex = i
+			break
 		}
 	}
 	// Resource is missing
