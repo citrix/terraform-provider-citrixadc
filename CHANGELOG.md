@@ -1,3 +1,59 @@
+## 1.38.0 (April 19, 2024)
+
+FEATURES
+
+* **New Resource**: citrixadc_sslcrl [#1109]
+* **New Resource**: citrixadc_lbaction [#1129]
+* **New Resource**: citrixadc_lbpolicy [#1129]
+* **New Resource**: citrixadc_gslbvserver_lbpolicy_binding [#1129]
+* **New Resource**: citrixadc_lbvserver_lbpolicy_binding [#1129]
+* **New Resource**: citrixadc_analyticsglobal_analyticsprofile_binding [#1117] 
+* **New Resource**: citrixadc_gslbservicegroup_gslbservicegroupmember_binding [#1127] 
+
+BUG FIXES
+
+* **citrixadc_vpnsessionaction**: Updated the read function to not to set value for some attributes from vpnsessionaction resource. [#1110]
+* **citrixadc_lbmonitor**: Updated the resource struct to unset omitempty for `deviation` attribute [#1123]
+* **citrixadc_lbvserver**: Updated read func to convert certain attributes from string to int [#1126]
+* **citrixadc_service**: Updated read func to convert certain attributes from string to int [#1126]
+* **citrixadc_servicegroup**: Updated read func to convert certain attributes from string to int [#1126]
+* **citrixadc_aaagroup**: Updated read func to convert certain attributes from string to int [#1134]
+* **citrixadc_dnssrvrec**: Updated read func to convert certain attributes from string to int [#1134]
+* **citrixadc_gslbservice**: Updated read func to convert certain attributes from string to int [#1134]
+* **citrixadc_gslbservice_lbmonitor_binding**: Updated read func to convert certain attributes from string to int [#1134]
+* **citrixadc_gslbservicegroup**: Updated read func to convert certain attributes from string to int [#1134]
+* **citrixadc_gslbservicegroup_lbmonitor_binding**: Updated read func to convert certain attributes from string to int [#1134]
+* **citrixadc_gslbvserver**: Updated read func to convert certain attributes from string to int [#1134]
+* **citrixadc_gslbvserver_gslbservice_binding**: Updated read func to convert certain attributes from string to int [#1134]
+* **citrixadc_lbvserver**: Updated read func to convert certain attributes from string to int [#1134]
+* **citrixadc_route**: Updated read func to convert certain attributes from string to int [#1134]
+* **citrixadc_route6**: Updated read func to convert certain attributes from string to int [#1134]
+* **citrixadc_service**: Updated read func to convert certain attributes from string to int [#1134]
+* **citrixadc_servicegroup**: Updated read func to convert certain attributes from string to int [#1134]
+* **citrixadc_service_lbmonitor_binding**: Updated read func to convert certain attributes from string to int [#1134]
+* **citrixadc_servicegroup_lbmonitor_binding**: Updated read func to convert certain attributes from string to int [#1134]
+* **citrixadc_servicegroup_servicegroupmember_binding**: Updated read func to convert certain attributes from string to int [#1134]
+
+ENHANCEMENTS
+
+* **citrixadc_appfwprofile**: Updated citrixadc_appfwprofile resource with additional supported attributes and addressed [#1085] issue. [#1135] 
+* **citrixadc_appfwsignatures**: Updated citrixadc_appfwsignatures resource with additional supported attributes. [#1113] [#1112]
+
+
+[#1110]: https://github.com/citrix/terraform-provider-citrixadc/issues/1110
+[#1109]: https://github.com/citrix/terraform-provider-citrixadc/issues/1109
+[#1126]: https://github.com/citrix/terraform-provider-citrixadc/issues/1126
+[#1129]: https://github.com/citrix/terraform-provider-citrixadc/issues/1129
+[#1135]: https://github.com/citrix/terraform-provider-citrixadc/issues/1135
+[#1134]: https://github.com/citrix/terraform-provider-citrixadc/issues/1134
+[#1085]: https://github.com/citrix/terraform-provider-citrixadc/issues/1085
+[#1117]: https://github.com/citrix/terraform-provider-citrixadc/issues/1117
+[#1127]: https://github.com/citrix/terraform-provider-citrixadc/issues/1127
+[#1113]: https://github.com/citrix/terraform-provider-citrixadc/issues/1113
+[#1112]: https://github.com/citrix/terraform-provider-citrixadc/issues/1112
+[#1123]: https://github.com/citrix/terraform-provider-citrixadc/issues/1123
+
+
 ## 1.37.0 (Oct 19, 2023)
 
 BUG FIXES
