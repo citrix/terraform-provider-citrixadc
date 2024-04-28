@@ -200,7 +200,7 @@ func (g *GitGetter) clone(ctx context.Context, dst, sshKeyFile string, u *url.UR
 		args = append(args, "--depth", strconv.Itoa(depth))
 		args = append(args, "--branch", ref)
 	}
-	args = append(args, u.String(), dst)
+	args = append(args, "--", u.String(), dst)
 
 	cmd := exec.CommandContext(ctx, "git", args...)
 	setupGitEnv(cmd, sshKeyFile)
@@ -289,7 +289,7 @@ func findDefaultBranch(ctx context.Context, dst string) string {
 // default branch. "master" is returned if no HEAD symref exists.
 func findRemoteDefaultBranch(ctx context.Context, u *url.URL) string {
 	var stdoutbuf bytes.Buffer
-	cmd := exec.CommandContext(ctx, "git", "ls-remote", "--symref", u.String(), "HEAD")
+	cmd := exec.CommandContext(ctx, "git", "ls-remote", "--symref", "--", u.String(), "HEAD")
 	cmd.Stdout = &stdoutbuf
 	err := cmd.Run()
 	matches := lsRemoteSymRefRegexp.FindStringSubmatch(stdoutbuf.String())
@@ -302,6 +302,11 @@ func findRemoteDefaultBranch(ctx context.Context, u *url.URL) string {
 // setupGitEnv sets up the environment for the given command. This is used to
 // pass configuration data to git and ssh and enables advanced cloning methods.
 func setupGitEnv(cmd *exec.Cmd, sshKeyFile string) {
+	// If there's no sshKeyFile argument to deal with, we can skip this
+	// entirely.
+	if sshKeyFile == "" {
+		return
+	}
 	const gitSSHCommand = "GIT_SSH_COMMAND="
 	var sshCmd []string
 
@@ -323,15 +328,13 @@ func setupGitEnv(cmd *exec.Cmd, sshKeyFile string) {
 		sshCmd = []string{gitSSHCommand + "ssh"}
 	}
 
-	if sshKeyFile != "" {
-		// We have an SSH key temp file configured, tell ssh about this.
-		if runtime.GOOS == "windows" {
-			sshKeyFile = strings.Replace(sshKeyFile, `\`, `/`, -1)
-		}
-		sshCmd = append(sshCmd, "-i", sshKeyFile)
+	// We have an SSH key temp file configured, tell ssh about this.
+	if runtime.GOOS == "windows" {
+		sshKeyFile = strings.Replace(sshKeyFile, `\`, `/`, -1)
 	}
-
+	sshCmd = append(sshCmd, "-i", sshKeyFile)
 	env = append(env, strings.Join(sshCmd, " "))
+
 	cmd.Env = env
 }
 
