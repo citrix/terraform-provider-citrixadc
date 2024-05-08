@@ -92,6 +92,10 @@ type Gslbvservergslbservicebinding struct {
 	* Name of the virtual server on which to perform the binding operation.
 	*/
 	Name string `json:"name,omitempty"`
+	/**
+	* Order number to be assigned to the service when it is bound to the lb vserver.
+	*/
+	Order int `json:"order,omitempty"`
 
 
 }

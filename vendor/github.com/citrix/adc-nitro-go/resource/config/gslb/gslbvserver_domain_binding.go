@@ -56,6 +56,10 @@ type Gslbvserverdomainbinding struct {
 	* The cookie domain for the GSLB site. Used when inserting the GSLB site cookie in the HTTP response.
 	*/
 	Cookiedomainflag bool `json:"cookie_domainflag,omitempty"`
+	/**
+	* Order number to be assigned to the service when it is bound to the lb vserver.
+	*/
+	Order int `json:"order,omitempty"`
 
 
 }
