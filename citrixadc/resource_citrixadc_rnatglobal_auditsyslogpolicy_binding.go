@@ -116,7 +116,7 @@ func readRnatglobal_auditsyslogpolicy_bindingFunc(d *schema.ResourceData, meta i
 
 	d.Set("all", data["all"])
 	d.Set("policy", data["policy"])
-	d.Set("priority", data["priority"])
+	setToInt("priority", d, data["priority"])
 
 	return nil
 

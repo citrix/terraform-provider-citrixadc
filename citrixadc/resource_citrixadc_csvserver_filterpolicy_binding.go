@@ -171,7 +171,7 @@ func readCsvserver_filterpolicy_bindingFunc(d *schema.ResourceData, meta interfa
 	d.Set("labeltype", data["labeltype"])
 	d.Set("name", data["name"])
 	d.Set("policyname", data["policyname"])
-	d.Set("priority", data["priority"])
+	setToInt("priority", d, data["priority"])
 	d.Set("targetlbvserver", data["targetlbvserver"])
 
 	return nil

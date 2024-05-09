@@ -144,7 +144,7 @@ func readTransformactionFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("cookiedomainfrom", data["cookiedomainfrom"])
 	d.Set("cookiedomaininto", data["cookiedomaininto"])
 	d.Set("name", data["name"])
-	d.Set("priority", data["priority"])
+	setToInt("priority", d, data["priority"])
 	d.Set("profilename", data["profilename"])
 	d.Set("requrlfrom", data["requrlfrom"])
 	d.Set("requrlinto", data["requrlinto"])
