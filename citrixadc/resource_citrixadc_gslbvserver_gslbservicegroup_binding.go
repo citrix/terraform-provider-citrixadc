@@ -30,6 +30,12 @@ func resourceCitrixAdcGslbvserver_gslbservicegroup_binding() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"order": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -44,6 +50,7 @@ func createGslbvserver_gslbservicegroup_bindingFunc(d *schema.ResourceData, meta
 	gslbvserver_gslbservicegroup_binding := gslb.Gslbvservergslbservicegroupbinding{
 		Name:             d.Get("name").(string),
 		Servicegroupname: d.Get("servicegroupname").(string),
+		Order:            d.Get("order").(int),
 	}
 
 	err := client.UpdateUnnamedResource("gslbvserver_gslbservicegroup_binding", &gslbvserver_gslbservicegroup_binding)
@@ -115,6 +122,7 @@ func readGslbvserver_gslbservicegroup_bindingFunc(d *schema.ResourceData, meta i
 
 	d.Set("name", data["name"])
 	d.Set("servicegroupname", data["servicegroupname"])
+	setToInt("order", d, data["order"])
 
 	return nil
 

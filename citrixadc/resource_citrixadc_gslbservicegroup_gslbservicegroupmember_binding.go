@@ -82,6 +82,12 @@ func resourceCitrixAdcGslbservicegroup_gslbservicegroupmember_binding() *schema.
 				Computed: true,
 				ForceNew: true,
 			},
+			"order": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -121,6 +127,7 @@ func createGslbservicegroup_gslbservicegroupmember_bindingFunc(d *schema.Resourc
 		Siteprefix:       d.Get("siteprefix").(string),
 		State:            d.Get("state").(string),
 		Weight:           d.Get("weight").(int),
+		Order:            d.Get("order").(int),
 	}
 
 	_, err := client.AddResource("gslbservicegroup_gslbservicegroupmember_binding", bindingId, &gslbservicegroup_gslbservicegroupmember_binding)
@@ -209,7 +216,8 @@ func readGslbservicegroup_gslbservicegroupmember_bindingFunc(d *schema.ResourceD
 	d.Set("servicegroupname", data["servicegroupname"])
 	d.Set("siteprefix", data["siteprefix"])
 	d.Set("state", data["state"])
-	d.Set("weight", data["weight"])
+	setToInt("weight", d, data["weight"])
+	setToInt("order", d, data["order"])
 
 	return nil
 

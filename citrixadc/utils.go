@@ -53,6 +53,8 @@ func stringListToIntList(in []interface{}) []int {
 
 // Check if the attribute is int, if not convert to int and set the value
 func setToInt(attributeName string, d *schema.ResourceData, value interface{}) {
+	log.Printf("[DEBUG] netscaler-provider: In setToInt for attribute %s", attributeName)
+
 	var v int
 	var err error
 
@@ -60,9 +62,9 @@ func setToInt(attributeName string, d *schema.ResourceData, value interface{}) {
 	case int:
 		v = valueTyped
 	case string:
-		v, _ = strconv.Atoi(valueTyped)
+		v, err = strconv.Atoi(valueTyped)
 	case nil:
-		v = 0
+		return
 	default:
 		log.Printf("[DEBUG] got unexpected type %T for int", value)
 		return
