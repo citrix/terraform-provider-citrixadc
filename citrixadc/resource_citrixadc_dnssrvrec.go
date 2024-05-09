@@ -1,6 +1,8 @@
 package citrixadc
 
 import (
+	"strings"
+
 	"github.com/citrix/adc-nitro-go/resource/config/dns"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -123,13 +125,18 @@ func readDnssrvrecFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
+	idSlice := strings.SplitN(dnssrvrecName, ",", 2)
+
+	domain := idSlice[0]
+	target := idSlice[1]
+
 	foundIndex := -1
 	for i, dnssrvrec := range dataArray {
 		match := true
-		if dnssrvrec["domain"] != d.Get("domain").(string) {
+		if dnssrvrec["domain"] != domain {
 			match = false
 		}
-		if dnssrvrec["target"] != d.Get("target").(string) {
+		if dnssrvrec["target"] != target {
 			match = false
 		}
 		if match {
@@ -147,8 +154,8 @@ func readDnssrvrecFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("domain", data["domain"])
 	d.Set("ecssubnet", data["ecssubnet"])
 	d.Set("nodeid", data["nodeid"])
-	d.Set("port", data["port"])
-	d.Set("priority", data["priority"])
+	setToInt("port", d, data["port"])
+	setToInt("priority", d, data["priority"])
 	d.Set("target", data["target"])
 	d.Set("ttl", data["ttl"])
 	d.Set("type", data["type"])
@@ -216,12 +223,18 @@ func updateDnssrvrecFunc(d *schema.ResourceData, meta interface{}) error {
 func deleteDnssrvrecFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteDnssrvrecFunc")
 	client := meta.(*NetScalerNitroClient).client
+
+	bindingId := d.Id()
+	idSlice := strings.SplitN(bindingId, ",", 2)
+	domain := idSlice[0]
+	target := idSlice[1]
+
 	argsMap := make(map[string]string)
-	argsMap["target"] = url.QueryEscape(d.Get("target").(string))
+	argsMap["target"] = url.QueryEscape(target)
 	if ecs, ok := d.GetOk("ecssubnet"); ok {
 		argsMap["ecssubnet"] = url.QueryEscape(ecs.(string))
 	}
-	err := client.DeleteResourceWithArgsMap(service.Dnssrvrec.Type(), d.Id(), argsMap)
+	err := client.DeleteResourceWithArgsMap(service.Dnssrvrec.Type(), domain, argsMap)
 	if err != nil {
 		return err
 	}
