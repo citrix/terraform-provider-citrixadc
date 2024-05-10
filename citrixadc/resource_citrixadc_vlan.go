@@ -97,12 +97,11 @@ func readVlanFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
-	d.Set("name", data["name"])
 	d.Set("aliasname", data["aliasname"])
 	d.Set("dynamicrouting", data["dynamicrouting"])
-	d.Set("vlanid", data["id"])
+	setToInt("vlanid", d, data["id"])
 	d.Set("ipv6dynamicrouting", data["ipv6dynamicrouting"])
-	d.Set("mtu", data["mtu"])
+	setToInt("mtu", d, data["mtu"])
 	d.Set("sharing", data["sharing"])
 
 	return nil

@@ -138,8 +138,7 @@ func readVlan_nsip_bindingFunc(d *schema.ResourceData, meta interface{}) error {
 	// Fallthrough
 	data := dataArr[foundIndex]
 
-	d.Set("name", data["name"])
-	d.Set("vlanid", data["id"])
+	setToInt("vlanid", d, data["id"])
 	d.Set("ipaddress", data["ipaddress"])
 	d.Set("netmask", data["netmask"])
 	d.Set("ownergroup", data["ownergroup"])

@@ -128,7 +128,7 @@ func readVlan_channel_bindingFunc(d *schema.ResourceData, meta interface{}) erro
 
 	data := dataArr[foundIndex]
 
-	d.Set("id", data["id"])
+	setToInt("vlanid", d, data["id"])
 	d.Set("ifnum", data["ifnum"])
 	d.Set("ownergroup", data["ownergroup"])
 	d.Set("tagged", data["tagged"])
