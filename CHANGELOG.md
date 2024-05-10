@@ -1,3 +1,28 @@
+## 1.39.0 (May 10, 2024)
+
+BUG FIXES
+
+* **citrixadc_channel**: Updated read func to convert certain attributes from string to int [#1154]
+* **citrixadc_interface**: Updated read func to convert certain attributes from string to int [#1154]
+* **citrixadc_vlan**: Updated read func to convert certain attributes from string to int [#1154]
+* **citrixadc_vlan_channel_binding**: Updated read func to convert certain attributes from string to int [#1154]
+* **citrixadc_vlan_interface_binding**: Updated read func to convert certain attributes from string to int [#1154]
+* **citrixadc_vlan_nsip_binding**: Updated read func to convert certain attributes from string to int [#1154]
+* **citrixadc_dnssrvrec**: Updated Read func to handle importing operation and handled deletion [#1157]
+* Handled `priority` argument which was not being imported for multiple 'binding' resources [#1153]
+
+ENHANCEMENTS
+
+* **citrixadc_gslbservicegroup_gslbservicegroupmember_binding**: Updated resource with additional supported `order` parameter [#1151] 
+* **citrixadc_gslbvserver_gslbservice_binding**: Updated resource with additional supported `order` parameter [#1151] 
+* **citrixadc_gslbvserver_gslbservicegroup_binding**: Updated resource with additional supported `order` parameter [#1151] 
+
+[#1154]: https://github.com/citrix/terraform-provider-citrixadc/issues/1154
+[#1157]: https://github.com/citrix/terraform-provider-citrixadc/issues/1157
+[#1151]: https://github.com/citrix/terraform-provider-citrixadc/issues/1151
+[#1153]: https://github.com/citrix/terraform-provider-citrixadc/issues/1153
+
+
 ## 1.38.0 (April 19, 2024)
 
 FEATURES
