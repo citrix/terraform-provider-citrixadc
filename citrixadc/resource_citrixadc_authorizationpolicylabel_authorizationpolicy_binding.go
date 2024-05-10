@@ -2,12 +2,13 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/citrix/adc-nitro-go/resource/config/authorization"
-	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"log"
 	"strconv"
 	"strings"
+
+	"github.com/citrix/adc-nitro-go/resource/config/authorization"
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceCitrixAdcAuthorizationpolicylabel_authorizationpolicy_binding() *schema.Resource {
@@ -155,7 +156,7 @@ func readAuthorizationpolicylabel_authorizationpolicy_bindingFunc(d *schema.Reso
 	d.Set("labelname", data["labelname"])
 	d.Set("labeltype", data["labeltype"])
 	d.Set("policyname", data["policyname"])
-	d.Set("priority", data["priority"])
+	setToInt("priority", d, data["priority"])
 
 	return nil
 

@@ -163,7 +163,7 @@ func readAppfwglobal_appfwpolicy_bindingFunc(d *schema.ResourceData, meta interf
 	d.Set("labelname", data["labelname"])
 	d.Set("labeltype", data["labeltype"])
 	d.Set("policyname", data["policyname"])
-	d.Set("priority", data["priority"])
+	setToInt("priority", d, data["priority"])
 	// d.Set("state", data["state"])
 	d.Set("type", data["type"])
 

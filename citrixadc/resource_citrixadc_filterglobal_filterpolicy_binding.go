@@ -114,7 +114,7 @@ func readFilterglobal_filterpolicy_bindingFunc(d *schema.ResourceData, meta inte
 	data := dataArr[foundIndex]
 
 	d.Set("policyname", data["policyname"])
-	d.Set("priority", data["priority"])
+	setToInt("priority", d, data["priority"])
 	d.Set("state", data["state"])
 
 	return nil

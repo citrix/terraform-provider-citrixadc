@@ -146,7 +146,7 @@ func readSystemglobal_auditnslogpolicy_bindingFunc(d *schema.ResourceData, meta 
 	d.Set("gotopriorityexpression", data["gotopriorityexpression"])
 	d.Set("nextfactor", data["nextfactor"])
 	d.Set("policyname", data["policyname"])
-	d.Set("priority", data["priority"])
+	setToInt("priority", d, data["priority"])
 
 	return nil
 

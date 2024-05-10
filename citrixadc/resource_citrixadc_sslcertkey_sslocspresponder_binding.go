@@ -121,7 +121,7 @@ func readSslcertkey_sslocspresponder_bindingFunc(d *schema.ResourceData, meta in
 
 	d.Set("certkey", data["certkey"])
 	d.Set("ocspresponder", data["ocspresponder"])
-	d.Set("priority", data["priority"])
+	setToInt("priority", d, data["priority"])
 
 	return nil
 

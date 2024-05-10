@@ -2,10 +2,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ica"
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"log"
 )
 
 func resourceCitrixAdcIcaglobal_icapolicy_binding() *schema.Resource {
@@ -127,7 +128,7 @@ func readIcaglobal_icapolicy_bindingFunc(d *schema.ResourceData, meta interface{
 	d.Set("globalbindtype", data["globalbindtype"])
 	d.Set("gotopriorityexpression", data["gotopriorityexpression"])
 	d.Set("policyname", data["policyname"])
-	d.Set("priority", data["priority"])
+	setToInt("priority", d, data["priority"])
 	d.Set("type", data["type"])
 
 	return nil

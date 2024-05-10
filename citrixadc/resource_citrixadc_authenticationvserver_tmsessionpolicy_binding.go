@@ -163,7 +163,7 @@ func readAuthenticationvserver_tmsessionpolicy_bindingFunc(d *schema.ResourceDat
 	d.Set("name", data["name"])
 	d.Set("nextfactor", data["nextfactor"])
 	d.Set("policy", data["policy"])
-	d.Set("priority", data["priority"])
+	setToInt("priority", d, data["priority"])
 	d.Set("secondary", data["secondary"])
 
 	return nil

@@ -2,12 +2,13 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/citrix/adc-nitro-go/resource/config/vpn"
-	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"log"
 	"net/url"
 	"strings"
+
+	"github.com/citrix/adc-nitro-go/resource/config/vpn"
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceCitrixAdcVpnvserver_vpnsessionpolicy_binding() *schema.Resource {
@@ -154,7 +155,7 @@ func readVpnvserver_vpnsessionpolicy_bindingFunc(d *schema.ResourceData, meta in
 	d.Set("groupextraction", data["groupextraction"])
 	d.Set("name", data["name"])
 	d.Set("policy", data["policy"])
-	d.Set("priority", data["priority"])
+	setToInt("priority", d, data["priority"])
 	d.Set("secondary", data["secondary"])
 
 	return nil

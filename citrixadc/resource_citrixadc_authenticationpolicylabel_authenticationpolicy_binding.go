@@ -140,7 +140,7 @@ func readAuthenticationpolicylabel_authenticationpolicy_bindingFunc(d *schema.Re
 	d.Set("labelname", data["labelname"])
 	d.Set("nextfactor", data["nextfactor"])
 	d.Set("policyname", data["policyname"])
-	d.Set("priority", data["priority"])
+	setToInt("priority", d, data["priority"])
 
 	return nil
 
