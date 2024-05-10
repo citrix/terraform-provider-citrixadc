@@ -132,8 +132,7 @@ func readVlan_interface_bindingFunc(d *schema.ResourceData, meta interface{}) er
 
 	data := dataArr[foundIndex]
 
-	d.Set("name", data["name"])
-	d.Set("vlanid", data["id"])
+	setToInt("vlanid", d, data["id"])
 	d.Set("ifnum", data["ifnum"])
 	d.Set("ownergroup", data["ownergroup"])
 	d.Set("tagged", data["tagged"])

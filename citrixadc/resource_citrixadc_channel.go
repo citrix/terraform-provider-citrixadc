@@ -197,8 +197,8 @@ func readChannelFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("lrminthroughput", data["lrminthroughput"])
 	d.Set("macdistr", data["macdistr"])
 	//d.Set("mode", data["mode"])
-	d.Set("mtu", data["mtu"])
-	//d.Set("speed", data["speed"])
+	setToInt("mtu", d, data["mtu"])
+	d.Set("speed", data["actspeed"]) // speed is not recieved in the GET response, so using actspeed
 	d.Set("state", data["state"])
 	d.Set("tagall", data["tagall"])
 	d.Set("throughput", data["throughput"])

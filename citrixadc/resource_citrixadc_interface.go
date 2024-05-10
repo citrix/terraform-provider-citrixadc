@@ -246,7 +246,7 @@ func readInterfaceFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("linkredundancy", data["linkredundancy"])
 	d.Set("lldpmode", data["lldpmode"])
 	d.Set("lrsetpriority", data["lrsetpriority"])
-	d.Set("mtu", data["mtu"])
+	setToInt("mtu", d, data["mtu"])
 	d.Set("ringsize", data["ringsize"])
 	d.Set("ringtype", data["ringtype"])
 	d.Set("speed", data["actspeed"])
