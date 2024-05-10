@@ -42,6 +42,12 @@ func resourceCitrixAdcGslbvserver_gslbservice_binding() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
+			"order": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -58,6 +64,7 @@ func createGslbvserver_gslbservice_bindingFunc(d *schema.ResourceData, meta inte
 		Name:        d.Get("name").(string),
 		Servicename: d.Get("servicename").(string),
 		Weight:      d.Get("weight").(int),
+		Order:       d.Get("order").(int),
 	}
 
 	err := client.UpdateUnnamedResource(service.Gslbvserver_gslbservice_binding.Type(), &gslbvserver_gslbservice_binding)
@@ -131,6 +138,7 @@ func readGslbvserver_gslbservice_bindingFunc(d *schema.ResourceData, meta interf
 	d.Set("name", data["name"])
 	d.Set("servicename", data["servicename"])
 	setToInt("weight", d, data["weight"])
+	setToInt("order", d, data["order"])
 
 	return nil
 

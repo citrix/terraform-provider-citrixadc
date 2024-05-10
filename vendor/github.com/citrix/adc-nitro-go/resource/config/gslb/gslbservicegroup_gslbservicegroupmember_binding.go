@@ -89,6 +89,10 @@ type Gslbservicegroupgslbservicegroupmemberbinding struct {
 	* Name of the GSLB service group.
 	*/
 	Servicegroupname string `json:"servicegroupname,omitempty"`
+	/**
+	* Order number to be assigned to the gslb servicegroup member.
+	*/
+	Order int `json:"order,omitempty"`
 
 
 }
