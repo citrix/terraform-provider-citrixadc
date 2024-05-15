@@ -190,7 +190,7 @@ To write the Terraform resources for Citrix ADC, refer the following links
 
 ### Set up SSL-Offloading use-case in ADC
 
-Here is the [Terraform Template](https://community.citrix.com/articles/automation/ssl-offloading-using-terraform/)that you follow to configure SSL Offloading.
+Here is the [Terraform Template](https://community.citrix.com/articles/automation/ssl-offloading-using-terraform/) that you follow to configure SSL Offloading.
 
 ### Committing changes to Citrix ADC's persistent store
 
