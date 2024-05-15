@@ -169,7 +169,7 @@ Terraform is useful for maintaining desired state for a set of resources. It is 
 
 ### Hands-on lab with ADC automation with Terraform
 
-Try out our [Hands on Lab](https://forum.developer.cloud.com/s/netscaler-labs?labId=000001068) to experience whats it like using Terraform for ADC.
+Try out our [Hands on Lab](https://community.citrix.com/labs/deliver-apps-with-netscaler-and-terraform/) to experience whats it like using Terraform for ADC.
 
 ### Install Terraform in your own setup
 
@@ -181,7 +181,7 @@ Refer the [Navigating our repository](#navigating-the-repository) section
 
 ### Get your first terraform config into ADC
 
-Follow the article on [Getting started with Terraform on NetScaler](https://forum.developer.cloud.com/s/article/Get-Started-with-NetScaler-Automation-using-Terraform) to get your first configuration
+Follow the article on [Getting started with Terraform on NetScaler](https://community.citrix.com/articles/automation/get-started-with-netscaler-automation-using-terraform/) to get your first configuration
 
 ### How to write terraform resources file for ADC
 
@@ -190,7 +190,7 @@ To write the Terraform resources for Citrix ADC, refer the following links
 
 ### Set up SSL-Offloading use-case in ADC
 
-Here is the [Terraform Template](https://forum.developer.cloud.com/s/article/SSL-Offloading-using-Terraform)that you follow to configure SSL Offloading.
+Here is the [Terraform Template](https://community.citrix.com/articles/automation/ssl-offloading-using-terraform/)that you follow to configure SSL Offloading.
 
 ### Committing changes to Citrix ADC's persistent store
 
@@ -213,7 +213,7 @@ Update your terraform state file to reflect the current/true state of ADC
 - Use **terraform refresh** to update your local terraform state file to match with existing ADC state
 
 ### Importing ADC configs into Terraform resources file
-Learn how to import existing NetScaler configurations into Terraform resources [here](https://forum.developer.cloud.com/s/article/Importing-existing-NetScaler-configuration-into-Terraform)
+Learn how to import existing NetScaler configurations into Terraform resources [here](https://community.citrix.com/articles/automation/importing-existing-netscaler-configuration-into-terraform/)
 
 -----------
 ## Advanced guide on Automating ADC with Terraform
