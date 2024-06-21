@@ -209,6 +209,8 @@ func deleteAppfwprofile_sqlinjection_bindingFunc(d *schema.ResourceData, meta in
 	args["sqlinjection"] = sqlinjection
 	args["formactionurl_sql"] = url.QueryEscape(d.Get("formactionurl_sql").(string))
 	args["as_scan_location_sql"] = d.Get("as_scan_location_sql").(string)
+	args["as_value_type_sql"] = d.Get("as_value_type_sql").(string)
+	args["as_value_expr_sql"] = d.Get("as_value_expr_sql").(string)
 
 	err := client.DeleteResourceWithArgsMap(service.Appfwprofile_sqlinjection_binding.Type(), appFwName, args)
 	if err != nil {
