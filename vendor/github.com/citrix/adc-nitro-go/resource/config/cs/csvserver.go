@@ -333,6 +333,10 @@ type Csvserver struct {
 	* Port number for the virtual server, from which we absorb the traffic for http redirect.
 	*/
 	Redirectfromport int `json:"redirectfromport,omitempty"`
+	/**
+	* URL to which all HTTP traffic received on the port specified in the -redirectFromPort parameter is redirected.
+	*/
+	Httpsredirecturl string `json:"httpsredirecturl,omitempty"`
 	Ttl int `json:"ttl,omitempty"`
 	Backupip string `json:"backupip,omitempty"`
 	Cookiedomain string `json:"cookiedomain,omitempty"`
