@@ -128,6 +128,11 @@ func resourceCitrixAdcCsvserver() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"httpsredirecturl": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"icmpvsrresponse": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -485,6 +490,7 @@ func createCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		Domainname:              d.Get("domainname").(string),
 		Downstateflush:          d.Get("downstateflush").(string),
 		Httpprofilename:         d.Get("httpprofilename").(string),
+		Httpsredirecturl:        d.Get("httpsredirecturl").(string),
 		Icmpvsrresponse:         d.Get("icmpvsrresponse").(string),
 		Insertvserveripport:     d.Get("insertvserveripport").(string),
 		Ipmask:                  d.Get("ipmask").(string),
@@ -658,6 +664,7 @@ func readCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("domainname", data["domainname"])
 	d.Set("downstateflush", data["downstateflush"])
 	d.Set("httpprofilename", data["httpprofilename"])
+	d.Set("httpsredirecturl", data["httpsredirecturl"])
 	d.Set("icmpvsrresponse", data["icmpvsrresponse"])
 	d.Set("insertvserveripport", data["insertvserveripport"])
 	d.Set("ipmask", data["ipmask"])
@@ -854,6 +861,11 @@ func updateCsvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("httpprofilename") {
 		log.Printf("[DEBUG] netscaler-provider:  Httpprofilename has changed for csvserver %s, starting update", csvserverName)
 		csvserver.Httpprofilename = d.Get("httpprofilename").(string)
+		hasChange = true
+	}
+	if d.HasChange("httpsredirecturl") {
+		log.Printf("[DEBUG] netscaler-provider:  Httpsredirecturl has changed for csvserver %s, starting update", csvserverName)
+		csvserver.Httpsredirecturl = d.Get("httpsredirecturl").(string)
 		hasChange = true
 	}
 	if d.HasChange("icmpvsrresponse") {

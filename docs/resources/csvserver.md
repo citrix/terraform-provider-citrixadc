@@ -107,6 +107,7 @@ resource "citrixadc_csvserver" "tf_csvserver1" {
 * `pushlabel` - (Optional) Expression for extracting the label from the response received from server. This string can be either an existing rule name or an inline expression. The service type of the virtual server should be either HTTP or SSL.
 * `pushmulticlients` - (Optional) Allow multiple Web 2.0 connections from the same client to connect to the virtual server and expect updates. Possible values: [ YES, NO ]
 * `httpprofilename` - (Optional) Name of the HTTP profile containing HTTP configuration settings for the virtual server. The service type of the virtual server should be either HTTP or SSL.
+* `httpsredirecturl` - (Optional) URL to which all HTTP traffic received on the port specified in the -redirectFromPort parameter is redirected.
 * `dbprofilename` - (Optional) Name of the DB profile.
 * `oracleserverversion` - (Optional) Oracle server version. Possible values: [ 10G, 11G ]
 * `comment` - (Optional) Information about this virtual server.
