@@ -321,7 +321,7 @@ func createCachecontentgroupFunc(d *schema.ResourceData, meta interface{}) error
 		cachecontentgroup["expireatlastbyte"] = v.(string)
 	}
 	if v, ok := d.GetOk("cachecontrol"); ok {
-		cachecontentgroup["cachecontrol"] = v.(int)
+		cachecontentgroup["cachecontrol"] = v.(string)
 	}
 	if v, ok := d.GetOk("alwaysevalpolicies"); ok {
 		cachecontentgroup["alwaysevalpolicies"] = v.(string)
