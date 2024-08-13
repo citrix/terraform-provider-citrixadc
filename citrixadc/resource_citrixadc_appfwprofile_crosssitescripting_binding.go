@@ -208,6 +208,17 @@ func deleteAppfwprofile_crosssitescripting_bindingFunc(d *schema.ResourceData, m
 	args["crosssitescripting"] = crosssitescripting
 	args["formactionurl_xss"] = url.QueryEscape(d.Get("formactionurl_xss").(string))
 	args["as_scan_location_xss"] = d.Get("as_scan_location_xss").(string)
+
+	if val, ok := d.GetOk("as_value_type_xss"); ok {
+		args["as_value_type_xss"] = url.QueryEscape(val.(string))
+	}
+	if val, ok := d.GetOk("as_value_expr_xss"); ok {
+		args["as_value_expr_xss"] = url.QueryEscape(val.(string))
+	}
+	if val, ok := d.GetOk("ruletype"); ok {
+		args["ruletype"] = url.QueryEscape(val.(string))
+	}
+
 	err := client.DeleteResourceWithArgsMap(service.Appfwprofile_crosssitescripting_binding.Type(), appFwName, args)
 	if err != nil {
 		return err

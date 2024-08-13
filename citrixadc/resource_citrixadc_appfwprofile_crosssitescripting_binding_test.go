@@ -36,6 +36,9 @@ resource citrixadc_appfwprofile_crosssitescripting_binding demo_binding {
 	isregex_xss          = "NOTREGEX"
 	comment              = "democomment"
 	state                = "ENABLED"
+	as_value_type_xss    = "Attribute"
+	as_value_expr_xss    = "value"
+	isvalueregex_xss     = "NOTREGEX"
   }
 
   resource citrixadc_appfwprofile demo_appfw {
