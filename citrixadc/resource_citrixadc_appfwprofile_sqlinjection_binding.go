@@ -210,6 +210,16 @@ func deleteAppfwprofile_sqlinjection_bindingFunc(d *schema.ResourceData, meta in
 	args["formactionurl_sql"] = url.QueryEscape(d.Get("formactionurl_sql").(string))
 	args["as_scan_location_sql"] = d.Get("as_scan_location_sql").(string)
 
+	if val, ok := d.GetOk("as_value_type_sql"); ok {
+		args["as_value_type_sql"] = url.QueryEscape(val.(string))
+	}
+	if val, ok := d.GetOk("as_value_expr_sql"); ok {
+		args["as_value_expr_sql"] = url.QueryEscape(val.(string))
+	}
+	if val, ok := d.GetOk("ruletype"); ok {
+		args["ruletype"] = url.QueryEscape(val.(string))
+	}
+
 	err := client.DeleteResourceWithArgsMap(service.Appfwprofile_sqlinjection_binding.Type(), appFwName, args)
 	if err != nil {
 		return err
