@@ -19,6 +19,7 @@ resource "citrixadc_routerdynamicrouting" "tf_dynamicrouting" {
 }
 ```
 
+~> The `commandlines` attribute can accept up to 711 characters. If your configuration exceeds this limit, please split it into multiple resources to ensure proper functionality.
 
 ## Argument Reference
 
