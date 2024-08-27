@@ -189,7 +189,7 @@ func deleteAppfwprofile_csrftag_bindingFunc(d *schema.ResourceData, meta interfa
 	csrftag := idSlice[1]
 
 	args := make([]string, 0)
-	args = append(args, fmt.Sprintf("csrftag:%s", csrftag))
+	args = append(args, fmt.Sprintf("csrftag:%s", url.QueryEscape(csrftag)))
 	if val, ok := d.GetOk("csrfformactionurl"); ok {
 		args = append(args, fmt.Sprintf("csrfformactionurl:%s", url.QueryEscape(val.(string))))
 	}
