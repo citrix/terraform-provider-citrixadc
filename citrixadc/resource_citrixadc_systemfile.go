@@ -150,7 +150,7 @@ func deleteSystemfileFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	argsMap := make(map[string]string)
 	argsMap["filelocation"] = url.QueryEscape(d.Get("filelocation").(string))
-	filename := url.PathEscape(d.Get("filename").(string))
+	filename := d.Get("filename").(string)
 	err := client.DeleteResourceWithArgsMap("systemfile", filename, argsMap)
 	if err != nil {
 		return err

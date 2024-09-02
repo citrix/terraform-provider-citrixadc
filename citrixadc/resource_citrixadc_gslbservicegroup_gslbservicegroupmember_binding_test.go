@@ -41,10 +41,14 @@ const testAccGslbservicegroup_gslbservicegroupmember_binding_basic = `
 		siteipaddress   = "172.31.96.234"
 		sessionexchange = "DISABLED"
 	}
+	resource "citrixadc_server" "tf_server" {
+		name = "tf_server"
+		ipaddress = "192.168.11.13"
+	}
 	
 	resource "citrixadc_gslbservicegroup_gslbservicegroupmember_binding" "tf_binding" {
 		servicegroupname = citrixadc_gslbservicegroup.tf_gslbservicegroup.servicegroupname
-		servername       = "10.10.10.10"
+		servername       = citrixadc_server.tf_server.name
 		port             = 60
 	}
 	
@@ -64,6 +68,10 @@ const testAccGslbservicegroup_gslbservicegroupmember_binding_basic_step2 = `
 		sitename        = "Site-Local"
 		siteipaddress   = "172.31.96.234"
 		sessionexchange = "DISABLED"
+	}
+	resource "citrixadc_server" "tf_server" {
+		name = "tf_server"
+		ipaddress = "192.168.11.13"
 	}
 `
 

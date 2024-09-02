@@ -8,7 +8,6 @@ import (
 
 	"fmt"
 	"log"
-	"net/url"
 )
 
 func resourceCitrixAdcChannel() *schema.Resource {
@@ -175,7 +174,7 @@ func readChannelFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	channelName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading channel state %s", channelName)
-	data, err := client.FindResource(service.Channel.Type(), url.QueryEscape(url.QueryEscape(channelName)))
+	data, err := client.FindResource(service.Channel.Type(), channelName)
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing channel state %s", channelName)
 		d.SetId("")
@@ -326,7 +325,7 @@ func deleteChannelFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteChannelFunc")
 	client := meta.(*NetScalerNitroClient).client
 	channelName := d.Id()
-	err := client.DeleteResource(service.Channel.Type(), url.QueryEscape(url.QueryEscape(channelName)))
+	err := client.DeleteResource(service.Channel.Type(), channelName)
 	if err != nil {
 		return err
 	}

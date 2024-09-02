@@ -8,7 +8,6 @@ import (
 
 	"fmt"
 	"log"
-	"net/url"
 )
 
 func resourceCitrixAdcAaapreauthenticationaction() *schema.Resource {
@@ -80,10 +79,9 @@ func readAaapreauthenticationactionFunc(d *schema.ResourceData, meta interface{}
 	log.Printf("[DEBUG] citrixadc-provider:  In readAaapreauthenticationactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	aaapreauthenticationactionName := d.Id()
-	aaapreauthenticationactionName_pathescaped := url.PathEscape(aaapreauthenticationactionName)
 
 	log.Printf("[DEBUG] citrixadc-provider: Reading aaapreauthenticationaction state %s", aaapreauthenticationactionName)
-	data, err := client.FindResource(service.Aaapreauthenticationaction.Type(), aaapreauthenticationactionName_pathescaped)
+	data, err := client.FindResource(service.Aaapreauthenticationaction.Type(), aaapreauthenticationactionName)
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing aaapreauthenticationaction state %s", aaapreauthenticationactionName)
 		d.SetId("")
@@ -104,8 +102,6 @@ func updateAaapreauthenticationactionFunc(d *schema.ResourceData, meta interface
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAaapreauthenticationactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	aaapreauthenticationactionName := d.Get("name").(string)
-
-	aaapreauthenticationactionName_pathescaped := url.PathEscape(aaapreauthenticationactionName)
 
 	aaapreauthenticationaction := aaa.Aaapreauthenticationaction{
 		Name: d.Get("name").(string),
@@ -133,7 +129,7 @@ func updateAaapreauthenticationactionFunc(d *schema.ResourceData, meta interface
 	}
 
 	if hasChange {
-		_, err := client.UpdateResource(service.Aaapreauthenticationaction.Type(), aaapreauthenticationactionName_pathescaped, &aaapreauthenticationaction)
+		_, err := client.UpdateResource(service.Aaapreauthenticationaction.Type(), aaapreauthenticationactionName, &aaapreauthenticationaction)
 		if err != nil {
 			return fmt.Errorf("Error updating aaapreauthenticationaction %s", aaapreauthenticationactionName)
 		}
@@ -145,8 +141,7 @@ func deleteAaapreauthenticationactionFunc(d *schema.ResourceData, meta interface
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAaapreauthenticationactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	aaapreauthenticationactionName := d.Id()
-	aaapreauthenticationactionName_pathescaped := url.PathEscape(aaapreauthenticationactionName)
-	err := client.DeleteResource(service.Aaapreauthenticationaction.Type(), aaapreauthenticationactionName_pathescaped)
+	err := client.DeleteResource(service.Aaapreauthenticationaction.Type(), aaapreauthenticationactionName)
 	if err != nil {
 		return err
 	}
