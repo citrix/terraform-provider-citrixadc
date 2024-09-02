@@ -1,3 +1,25 @@
+## 1.40.0 (Sept 2, 2024)
+
+BUG FIXES
+
+* **citrixadc_cachecontentgroup**: Updated read func to accept `cachecontrol` attribute as string insted of int [#1171]
+* **citrixadc_appfwprofile_crosssitescripting_binding**: Updated delete method with supported query-parameters [#1177]
+* **citrixadc_appfwprofile_csrftag_binding**: Updated delete method to escape the special character from query-parameter [#1175]
+* **citrixadc_appfwprofile_sqlinjection_binding**: Updated delete method with supported query-parameters
+
+ENHANCEMENTS
+
+* **citrixadc_csvserver**: Updated the resource with additional supported `httpsredirecturl` attributes. [#1167] 
+* **routerdynamicrouting**: updated `routerdynamcirouting` docs with limitation note for `commandlines` attribute  [#1179]
+* **adc-nitro-go**: Updated the adc-nitro-go client library to encode the resourcename value before appending it to url. [#1180]
+
+[#1171]: https://github.com/citrix/terraform-provider-citrixadc/issues/1171
+[#1167]: https://github.com/citrix/terraform-provider-citrixadc/issues/1167
+[#1177]: https://github.com/citrix/terraform-provider-citrixadc/issues/1177
+[#1175]: https://github.com/citrix/terraform-provider-citrixadc/issues/1175
+[#1179]: https://github.com/citrix/terraform-provider-citrixadc/issues/1179
+[#1180]: https://github.com/citrix/terraform-provider-citrixadc/issues/1180
+
 ## 1.39.0 (May 10, 2024)
 
 BUG FIXES
