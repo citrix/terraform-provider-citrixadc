@@ -186,7 +186,7 @@ func testAccCheckLinkset_channel_bindingDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Linkset_channel_binding.Type(), url.QueryEscape(url.QueryEscape(rs.Primary.ID)))
+		_, err := nsClient.FindResource(service.Linkset_channel_binding.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("linkset_channel_binding %s still exists", rs.Primary.ID)
 		}

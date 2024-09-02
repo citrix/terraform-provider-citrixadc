@@ -8,7 +8,6 @@ import (
 
 	"fmt"
 	"log"
-	"net/url"
 )
 
 func resourceCitrixAdcOnlinkipv6prefix() *schema.Resource {
@@ -96,7 +95,7 @@ func readOnlinkipv6prefixFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	onlinkipv6prefixName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading onlinkipv6prefix state %s", onlinkipv6prefixName)
-	data, err := client.FindResource(service.Onlinkipv6prefix.Type(), url.QueryEscape(url.QueryEscape(onlinkipv6prefixName)))
+	data, err := client.FindResource(service.Onlinkipv6prefix.Type(), onlinkipv6prefixName)
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing onlinkipv6prefix state %s", onlinkipv6prefixName)
 		d.SetId("")
@@ -168,7 +167,7 @@ func deleteOnlinkipv6prefixFunc(d *schema.ResourceData, meta interface{}) error 
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteOnlinkipv6prefixFunc")
 	client := meta.(*NetScalerNitroClient).client
 	onlinkipv6prefixName := d.Id()
-	err := client.DeleteResource(service.Onlinkipv6prefix.Type(), url.QueryEscape(url.QueryEscape(onlinkipv6prefixName)))
+	err := client.DeleteResource(service.Onlinkipv6prefix.Type(), onlinkipv6prefixName)
 	if err != nil {
 		return err
 	}

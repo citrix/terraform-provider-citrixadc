@@ -38,7 +38,7 @@ func resourceCitrixAdcVpnglobal_appcontroller_binding() *schema.Resource {
 func createVpnglobal_appcontroller_bindingFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createVpnglobal_appcontroller_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
-	appcontroller := url.QueryEscape(d.Get("appcontroller").(string))
+	appcontroller := d.Get("appcontroller").(string)
 	vpnglobal_appcontroller_binding := vpn.Vpnglobalappcontrollerbinding{
 		Appcontroller:          d.Get("appcontroller").(string),
 		Gotopriorityexpression: d.Get("gotopriorityexpression").(string),

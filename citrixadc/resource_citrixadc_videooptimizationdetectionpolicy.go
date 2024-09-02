@@ -7,7 +7,6 @@ import (
 
 	"fmt"
 	"log"
-	"net/url"
 )
 
 func resourceCitrixAdcVideooptimizationdetectionpolicy() *schema.Resource {
@@ -90,9 +89,8 @@ func readVideooptimizationdetectionpolicyFunc(d *schema.ResourceData, meta inter
 	log.Printf("[DEBUG] citrixadc-provider:  In readVideooptimizationdetectionpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	videooptimizationdetectionpolicyName := d.Id()
-	videooptimizationdetectionpolicyName_pathescaped := url.PathEscape(videooptimizationdetectionpolicyName)
 	log.Printf("[DEBUG] citrixadc-provider: Reading videooptimizationdetectionpolicy state %s", videooptimizationdetectionpolicyName)
-	data, err := client.FindResource("videooptimizationdetectionpolicy", videooptimizationdetectionpolicyName_pathescaped)
+	data, err := client.FindResource("videooptimizationdetectionpolicy", videooptimizationdetectionpolicyName)
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing videooptimizationdetectionpolicy state %s", videooptimizationdetectionpolicyName)
 		d.SetId("")
@@ -115,7 +113,6 @@ func updateVideooptimizationdetectionpolicyFunc(d *schema.ResourceData, meta int
 	log.Printf("[DEBUG]  citrixadc-provider: In updateVideooptimizationdetectionpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	videooptimizationdetectionpolicyName := d.Get("name").(string)
-	videooptimizationdetectionpolicyName_pathescaped := url.PathEscape(videooptimizationdetectionpolicyName)
 
 	videooptimizationdetectionpolicy := videooptimization.Videooptimizationdetectionpolicy{
 		Name: d.Get("name").(string),
@@ -158,7 +155,7 @@ func updateVideooptimizationdetectionpolicyFunc(d *schema.ResourceData, meta int
 	}
 
 	if hasChange {
-		_, err := client.UpdateResource("videooptimizationdetectionpolicy", videooptimizationdetectionpolicyName_pathescaped, &videooptimizationdetectionpolicy)
+		_, err := client.UpdateResource("videooptimizationdetectionpolicy", videooptimizationdetectionpolicyName, &videooptimizationdetectionpolicy)
 		if err != nil {
 			return fmt.Errorf("Error updating videooptimizationdetectionpolicy %s", videooptimizationdetectionpolicyName)
 		}
@@ -170,8 +167,7 @@ func deleteVideooptimizationdetectionpolicyFunc(d *schema.ResourceData, meta int
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteVideooptimizationdetectionpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	videooptimizationdetectionpolicyName := d.Id()
-	videooptimizationdetectionpolicyName_pathescaped := url.PathEscape(videooptimizationdetectionpolicyName)
-	err := client.DeleteResource("videooptimizationdetectionpolicy", videooptimizationdetectionpolicyName_pathescaped)
+	err := client.DeleteResource("videooptimizationdetectionpolicy", videooptimizationdetectionpolicyName)
 	if err != nil {
 		return err
 	}

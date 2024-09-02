@@ -7,7 +7,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"log"
-	"net/url"
 )
 
 func resourceCitrixAdcAppfwxmlcontenttype() *schema.Resource {
@@ -62,9 +61,8 @@ func readAppfwxmlcontenttypeFunc(d *schema.ResourceData, meta interface{}) error
 	log.Printf("[DEBUG] citrixadc-provider:  In readAppfwxmlcontenttypeFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appfwxmlcontenttypeName := d.Id()
-	appfwxmlcontenttypeNameEscaped := url.PathEscape(url.QueryEscape(appfwxmlcontenttypeName))
 	log.Printf("[DEBUG] citrixadc-provider: Reading appfwxmlcontenttype state %s", appfwxmlcontenttypeName)
-	data, err := client.FindResource(service.Appfwxmlcontenttype.Type(), appfwxmlcontenttypeNameEscaped)
+	data, err := client.FindResource(service.Appfwxmlcontenttype.Type(), appfwxmlcontenttypeName)
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing appfwxmlcontenttype state %s", appfwxmlcontenttypeName)
 		d.SetId("")
@@ -81,8 +79,7 @@ func deleteAppfwxmlcontenttypeFunc(d *schema.ResourceData, meta interface{}) err
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppfwxmlcontenttypeFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appfwxmlcontenttypeName := d.Id()
-	appfwxmlcontenttypeNameEscaped := url.PathEscape(url.QueryEscape(appfwxmlcontenttypeName))
-	err := client.DeleteResource(service.Appfwxmlcontenttype.Type(), appfwxmlcontenttypeNameEscaped)
+	err := client.DeleteResource(service.Appfwxmlcontenttype.Type(), appfwxmlcontenttypeName)
 	if err != nil {
 		return err
 	}

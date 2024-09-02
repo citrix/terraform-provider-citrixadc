@@ -20,7 +20,6 @@ import (
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"net/url"
 	"testing"
 )
 
@@ -89,7 +88,7 @@ func testAccCheckOnlinkipv6prefixExist(n string, id *string) resource.TestCheckF
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Onlinkipv6prefix.Type(), url.QueryEscape(url.QueryEscape(rs.Primary.ID)))
+		data, err := nsClient.FindResource(service.Onlinkipv6prefix.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err

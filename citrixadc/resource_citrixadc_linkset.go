@@ -69,10 +69,7 @@ func readLinksetFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	linksetName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading linkset state %s", linksetName)
-	// double encode value part as it contains `/`
-	//linksetNameEscaped := url.QueryEscape(url.QueryEscape(linksetName))
-	linksetNameEscaped := url.PathEscape(url.QueryEscape(linksetName))
-	data, err := client.FindResource(service.Linkset.Type(), linksetNameEscaped)
+	data, err := client.FindResource(service.Linkset.Type(), linksetName)
 
 	err = readLinksetInterfaceBindings(d, meta)
 	if err != nil {
@@ -89,9 +86,7 @@ func deleteLinksetFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteLinksetFunc")
 	client := meta.(*NetScalerNitroClient).client
 	linksetName := d.Id()
-	// double encode value part as it contains `/`
-	linksetNameEscaped := url.QueryEscape(url.QueryEscape(linksetName))
-	err := client.DeleteResource(service.Linkset.Type(), linksetNameEscaped)
+	err := client.DeleteResource(service.Linkset.Type(), linksetName)
 	if err != nil {
 		return err
 	}
@@ -114,9 +109,8 @@ func deleteSingleLinksetInterfaceBinding(d *schema.ResourceData, meta interface{
 	args = append(args, s)
 
 	log.Printf("args is %v", args)
-	linksetNameEscaped := url.QueryEscape(url.QueryEscape(linksetName))
 
-	if err := client.DeleteResourceWithArgs(service.Linkset_interface_binding.Type(), linksetNameEscaped, args); err != nil {
+	if err := client.DeleteResourceWithArgs(service.Linkset_interface_binding.Type(), linksetName, args); err != nil {
 		log.Printf("[DEBUG]  citrixadc-provider: Error deleting interface binding %v\n", ifnum)
 		return err
 	}
@@ -164,10 +158,8 @@ func readLinksetInterfaceBindings(d *schema.ResourceData, meta interface{}) erro
 	log.Printf("[DEBUG]  citrixadc-provider: In readLinksetInterfaceBindings")
 	client := meta.(*NetScalerNitroClient).client
 	linksetName := d.Get("linkset_id").(string)
-	// double encode value part as it contains `/`
-	linksetNameEscaped := url.QueryEscape(url.QueryEscape(linksetName))
 
-	bindings, _ := client.FindResourceArray(service.Linkset_interface_binding.Type(), linksetNameEscaped)
+	bindings, _ := client.FindResourceArray(service.Linkset_interface_binding.Type(), linksetName)
 	log.Printf("bindings %v\n", bindings)
 
 	processedBindings := make([]interface{}, len(bindings))

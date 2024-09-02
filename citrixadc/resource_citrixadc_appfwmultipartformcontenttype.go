@@ -5,7 +5,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"log"
-	"net/url"
 )
 
 func resourceCitrixAdcAppfwmultipartformcontenttype() *schema.Resource {
@@ -63,10 +62,9 @@ func readAppfwmultipartformcontenttypeFunc(d *schema.ResourceData, meta interfac
 	client := meta.(*NetScalerNitroClient).client
 	appfwmultipartformcontenttypeName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading appfwmultipartformcontenttype state %s", appfwmultipartformcontenttypeName)
-	appfwmultipartformcontenttypeNameEscaped := url.PathEscape(url.QueryEscape(appfwmultipartformcontenttypeName))
-	data, err := client.FindResource("appfwmultipartformcontenttype", appfwmultipartformcontenttypeNameEscaped)
+	data, err := client.FindResource("appfwmultipartformcontenttype", appfwmultipartformcontenttypeName)
 	if err != nil {
-		log.Printf("[WARN] citrixadc-provider: Clearing appfwmultipartformcontenttype state %s", appfwmultipartformcontenttypeNameEscaped)
+		log.Printf("[WARN] citrixadc-provider: Clearing appfwmultipartformcontenttype state %s", appfwmultipartformcontenttypeName)
 		d.SetId("")
 		return nil
 	}
@@ -81,8 +79,7 @@ func deleteAppfwmultipartformcontenttypeFunc(d *schema.ResourceData, meta interf
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppfwmultipartformcontenttypeFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appfwmultipartformcontenttypeName := d.Id()
-	appfwmultipartformcontenttypeNameEscaped := url.PathEscape(url.QueryEscape(appfwmultipartformcontenttypeName))
-	err := client.DeleteResource("appfwmultipartformcontenttype", appfwmultipartformcontenttypeNameEscaped)
+	err := client.DeleteResource("appfwmultipartformcontenttype", appfwmultipartformcontenttypeName)
 	if err != nil {
 		return err
 	}

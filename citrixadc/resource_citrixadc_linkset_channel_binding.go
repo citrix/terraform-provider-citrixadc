@@ -133,7 +133,7 @@ func deleteLinkset_channel_bindingFunc(d *schema.ResourceData, meta interface{})
 	args := make([]string, 0)
 	args = append(args, fmt.Sprintf("ifnum:%v", url.QueryEscape(ifnum)))
 
-	err := client.DeleteResourceWithArgs(service.Linkset_channel_binding.Type(), url.QueryEscape(url.QueryEscape(name)), args)
+	err := client.DeleteResourceWithArgs(service.Linkset_channel_binding.Type(), name, args)
 	if err != nil {
 		return err
 	}

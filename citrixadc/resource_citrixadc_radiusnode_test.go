@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"net/url"
 	"testing"
 )
 
@@ -67,7 +66,7 @@ func testAccCheckRadiusnodeExist(n string, id *string) resource.TestCheckFunc {
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource("radiusnode", url.PathEscape(url.QueryEscape(rs.Primary.ID)))
+		data, err := nsClient.FindResource("radiusnode", rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -93,7 +92,7 @@ func testAccCheckRadiusnodeDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource("radiusnode", url.PathEscape(url.QueryEscape(rs.Primary.ID)))
+		_, err := nsClient.FindResource("radiusnode", rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("radiusnode %s still exists", rs.Primary.ID)
 		}

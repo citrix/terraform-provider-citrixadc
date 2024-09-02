@@ -20,7 +20,6 @@ import (
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"net/url"
 	"testing"
 )
 
@@ -91,7 +90,7 @@ func testAccCheckChannelExist(n string, id *string) resource.TestCheckFunc {
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Channel.Type(), url.QueryEscape(url.QueryEscape(rs.Primary.ID)))
+		data, err := nsClient.FindResource(service.Channel.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -117,7 +116,7 @@ func testAccCheckChannelDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Channel.Type(), url.QueryEscape(url.QueryEscape(rs.Primary.ID)))
+		_, err := nsClient.FindResource(service.Channel.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("channel %s still exists", rs.Primary.ID)
 		}

@@ -7,7 +7,6 @@ import (
 
 	"fmt"
 	"log"
-	"net/url"
 )
 
 func resourceCitrixAdcRadiusnode() *schema.Resource {
@@ -62,8 +61,7 @@ func readRadiusnodeFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	radiusnodeName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading radiusnode state %s", radiusnodeName)
-	radiusnodeescaped := url.PathEscape(url.QueryEscape(radiusnodeName))
-	data, err := client.FindResource("radiusnode", radiusnodeescaped)
+	data, err := client.FindResource("radiusnode", radiusnodeName)
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing radiusnode state %s", radiusnodeName)
 		d.SetId("")
@@ -80,7 +78,6 @@ func updateRadiusnodeFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateRadiusnodeFunc")
 	client := meta.(*NetScalerNitroClient).client
 	radiusnodeName := d.Get("nodeprefix").(string)
-	radiusnodeescaped := url.PathEscape(url.QueryEscape(radiusnodeName))
 
 	radiusnode := basic.Radiusnode{
 		Nodeprefix: d.Get("nodeprefix").(string),
@@ -93,7 +90,7 @@ func updateRadiusnodeFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if hasChange {
-		_, err := client.UpdateResource("radiusnode", radiusnodeescaped, &radiusnode)
+		_, err := client.UpdateResource("radiusnode", radiusnodeName, &radiusnode)
 		if err != nil {
 			return fmt.Errorf("Error updating radiusnode %s", radiusnodeName)
 		}
@@ -105,7 +102,7 @@ func deleteRadiusnodeFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteRadiusnodeFunc")
 	client := meta.(*NetScalerNitroClient).client
 	radiusnodeName := d.Id()
-	err := client.DeleteResource("radiusnode", url.QueryEscape(url.QueryEscape(radiusnodeName)))
+	err := client.DeleteResource("radiusnode", radiusnodeName)
 	if err != nil {
 		return err
 	}

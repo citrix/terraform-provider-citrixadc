@@ -130,9 +130,8 @@ func readAuditsyslogpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAuditsyslogpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	auditsyslogpolicyName := d.Id()
-	auditsyslogpolicyNameEscaped := url.QueryEscape(auditsyslogpolicyName)
 	log.Printf("[DEBUG] citrixadc-provider: Reading auditsyslogpolicy state %s", auditsyslogpolicyName)
-	data, err := client.FindResource(service.Auditsyslogpolicy.Type(), auditsyslogpolicyNameEscaped)
+	data, err := client.FindResource(service.Auditsyslogpolicy.Type(), auditsyslogpolicyName)
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing auditsyslogpolicy state %s", auditsyslogpolicyName)
 		d.SetId("")
@@ -176,10 +175,8 @@ func updateAuditsyslogpolicyFunc(d *schema.ResourceData, meta interface{}) error
 		hasChange = true
 	}
 
-	auditsyslogpolicyNameEscaped := url.QueryEscape(auditsyslogpolicyName)
-
 	if hasChange {
-		_, err := client.UpdateResource(service.Auditsyslogpolicy.Type(), auditsyslogpolicyNameEscaped, &auditsyslogpolicy)
+		_, err := client.UpdateResource(service.Auditsyslogpolicy.Type(), auditsyslogpolicyName, &auditsyslogpolicy)
 		if err != nil {
 			return fmt.Errorf("Error updating auditsyslogpolicy %s: %s", auditsyslogpolicyName, err.Error())
 		}
@@ -197,8 +194,6 @@ func deleteAuditsyslogpolicyFunc(d *schema.ResourceData, meta interface{}) error
 	client := meta.(*NetScalerNitroClient).client
 	auditsyslogpolicyName := d.Id()
 
-	auditsyslogpolicyNameEscaped := url.QueryEscape(auditsyslogpolicyName)
-
 	// Unbind from global if appropriate
 	if v, ok := d.GetOk("globalbinding"); ok {
 		// There is only one element
@@ -209,7 +204,7 @@ func deleteAuditsyslogpolicyFunc(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	err := client.DeleteResource(service.Auditsyslogpolicy.Type(), auditsyslogpolicyNameEscaped)
+	err := client.DeleteResource(service.Auditsyslogpolicy.Type(), auditsyslogpolicyName)
 	if err != nil {
 		return err
 	}
