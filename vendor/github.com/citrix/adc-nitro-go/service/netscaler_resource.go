@@ -21,9 +21,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
-	"net/url"
+	neturl "net/url"
 	"strings"
 
 	"github.com/hashicorp/go-hclog"
@@ -84,24 +84,24 @@ type responseHandlerFunc func(resp *http.Response, logger hclog.Logger) ([]byte,
 func createResponseHandler(resp *http.Response, logger hclog.Logger) ([]byte, error) {
 	switch resp.Status {
 	case "201 Created", "200 OK":
-		body, _ := ioutil.ReadAll(resp.Body)
+		body, _ := io.ReadAll(resp.Body)
 		return body, nil
 	case "409 Conflict":
-		body, _ := ioutil.ReadAll(resp.Body)
+		body, _ := io.ReadAll(resp.Body)
 		return body, errors.New("failed: " + resp.Status + " (" + string(body) + ")")
 
 	case "207 Multi Status":
 		//This happens in case of Bulk operations, which we do not support yet
-		body, _ := ioutil.ReadAll(resp.Body)
+		body, _ := io.ReadAll(resp.Body)
 		return body, nil
 	case "400 Bad Request", "401 Unauthorized", "403 Forbidden",
 		"404 Not Found", "405 Method Not Allowed", "406 Not Acceptable",
 		"503 Service Unavailable", "599 Netscaler specific error":
-		body, _ := ioutil.ReadAll(resp.Body)
+		body, _ := io.ReadAll(resp.Body)
 		logger.Info("error = ", "body", string(body))
 		return body, errors.New("failed: " + resp.Status + " (" + string(body) + ")")
 	default:
-		body, err := ioutil.ReadAll(resp.Body)
+		body, err := io.ReadAll(resp.Body)
 		return body, err
 
 	}
@@ -110,17 +110,17 @@ func createResponseHandler(resp *http.Response, logger hclog.Logger) ([]byte, er
 func deleteResponseHandler(resp *http.Response, logger hclog.Logger) ([]byte, error) {
 	switch resp.Status {
 	case "200 OK", "404 Not Found":
-		body, _ := ioutil.ReadAll(resp.Body)
+		body, _ := io.ReadAll(resp.Body)
 		return body, nil
 
 	case "400 Bad Request", "401 Unauthorized", "403 Forbidden",
 		"405 Method Not Allowed", "406 Not Acceptable",
 		"409 Conflict", "503 Service Unavailable", "599 Netscaler specific error":
-		body, _ := ioutil.ReadAll(resp.Body)
+		body, _ := io.ReadAll(resp.Body)
 		logger.Info("delete: error = ", "body", string(body))
 		return body, errors.New("[INFO] delete failed: " + resp.Status + " (" + string(body) + ")")
 	default:
-		body, err := ioutil.ReadAll(resp.Body)
+		body, err := io.ReadAll(resp.Body)
 		return body, err
 
 	}
@@ -129,20 +129,20 @@ func deleteResponseHandler(resp *http.Response, logger hclog.Logger) ([]byte, er
 func readResponseHandler(resp *http.Response, logger hclog.Logger) ([]byte, error) {
 	switch resp.Status {
 	case "200 OK":
-		body, _ := ioutil.ReadAll(resp.Body)
+		body, _ := io.ReadAll(resp.Body)
 		return body, nil
 	case "404 Not Found":
-		body, _ := ioutil.ReadAll(resp.Body)
+		body, _ := io.ReadAll(resp.Body)
 		logger.Debug("readResponseHandler: 404 not found")
 		return body, errors.New("read: 404 not found: ")
 	case "400 Bad Request", "401 Unauthorized", "403 Forbidden",
 		"405 Method Not Allowed", "406 Not Acceptable",
 		"409 Conflict", "503 Service Unavailable", "599 Netscaler specific error":
-		body, _ := ioutil.ReadAll(resp.Body)
+		body, _ := io.ReadAll(resp.Body)
 		logger.Info("read: error = ", "body", string(body))
 		return body, errors.New("[INFO] failed read: " + resp.Status + " (" + string(body) + ")")
 	default:
-		body, err := ioutil.ReadAll(resp.Body)
+		body, err := io.ReadAll(resp.Body)
 		logger.Info("read error = ", "body", string(body))
 		return body, err
 
@@ -155,7 +155,7 @@ func (c *NitroClient) createHTTPRequest(method string, urlstr string, buff *byte
 		return nil, err
 	}
 	// Get resourceType from url
-	u, err := url.Parse(urlstr)
+	u, err := neturl.Parse(urlstr)
 	if err != nil {
 		return nil, err
 	}
@@ -272,7 +272,8 @@ func (c *NitroClient) actOnResource(resourceType string, resourceJSON []byte, ac
 func (c *NitroClient) changeResource(resourceType string, resourceName string, resourceJSON []byte) ([]byte, error) {
 	c.logger.Trace("changing resource", "resourceType", resourceType)
 
-	url := c.url + resourceType + "/" + resourceName + "?action=update"
+	resourceNameEscaped := neturl.PathEscape(neturl.PathEscape(resourceName))
+	url := c.url + resourceType + "/" + resourceNameEscaped + "?action=update"
 	c.logger.Trace("changeResource", "url", url)
 
 	return c.doHTTPRequest("POST", url, bytes.NewBuffer(resourceJSON), createResponseHandler)
@@ -282,7 +283,8 @@ func (c *NitroClient) changeResource(resourceType string, resourceName string, r
 func (c *NitroClient) updateResource(resourceType string, resourceName string, resourceJSON []byte) ([]byte, error) {
 	c.logger.Trace("Updating resource ", "resourceType", resourceType)
 
-	url := c.url + resourceType + "/" + resourceName
+	resourceNameEscaped := neturl.PathEscape(neturl.PathEscape(resourceName))
+	url := c.url + resourceType + "/" + resourceNameEscaped
 	c.logger.Trace("updateResource ", "url", url)
 
 	return c.doHTTPRequest("PUT", url, bytes.NewBuffer(resourceJSON), createResponseHandler)
@@ -303,7 +305,8 @@ func (c *NitroClient) deleteResource(resourceType string, resourceName string) (
 	c.logger.Trace("Deleting resource", "resourceType", resourceType)
 	var url string
 	if resourceName != "" {
-		url = c.url + fmt.Sprintf("%s/%s", resourceType, resourceName)
+		resourceNameEscaped := neturl.PathEscape(neturl.PathEscape(resourceName))
+		url = c.url + fmt.Sprintf("%s/%s", resourceType, resourceNameEscaped)
 	} else {
 		url = c.url + fmt.Sprintf("%s", resourceType)
 	}
@@ -317,7 +320,8 @@ func (c *NitroClient) deleteResourceWithArgs(resourceType string, resourceName s
 	c.logger.Trace("Deleting resource with args", "resourceType", resourceType, "args ", args)
 	var url string
 	if resourceName != "" {
-		url = c.url + fmt.Sprintf("%s/%s?args=", resourceType, resourceName)
+		resourceNameEscaped := neturl.PathEscape(neturl.PathEscape(resourceName))
+		url = c.url + fmt.Sprintf("%s/%s?args=", resourceType, resourceNameEscaped)
 	} else {
 		url = c.url + fmt.Sprintf("%s?args=", resourceType)
 	}
@@ -342,8 +346,9 @@ func (c *NitroClient) deleteResourceWithArgsMap(resourceType string, resourceNam
 func (c *NitroClient) unbindResource(resourceType string, resourceName string, boundResourceType string, boundResource string, bindingFilterName string) ([]byte, error) {
 	c.logger.Trace("Unbinding resource", "resourceType", resourceType, "resourceName", resourceName)
 	bindingName := resourceType + "_" + boundResourceType + "_binding"
+	resourceNameEscaped := neturl.PathEscape(neturl.PathEscape(resourceName))
 
-	url := c.url + "/" + bindingName + "/" + resourceName + "?args=" + bindingFilterName + ":" + boundResource
+	url := c.url + "/" + bindingName + "/" + resourceNameEscaped + "?args=" + bindingFilterName + ":" + boundResource
 
 	return c.doHTTPRequest("DELETE", url, bytes.NewBuffer([]byte{}), deleteResponseHandler)
 
@@ -352,10 +357,11 @@ func (c *NitroClient) unbindResource(resourceType string, resourceName string, b
 func (c *NitroClient) listBoundResources(resourceName string, resourceType string, boundResourceType string, boundResourceFilterName string, boundResourceFilterValue string) ([]byte, error) {
 	c.logger.Trace("listing bound resources of type ", "resourceType", resourceType, "resourceName", resourceName)
 	var url string
+	resourceNameEscaped := neturl.PathEscape(neturl.PathEscape(resourceName))
 	if boundResourceFilterName == "" {
-		url = c.url + fmt.Sprintf("%s_%s_binding/%s", resourceType, boundResourceType, resourceName)
+		url = c.url + fmt.Sprintf("%s_%s_binding/%s", resourceType, boundResourceType, resourceNameEscaped)
 	} else {
-		url = c.url + fmt.Sprintf("%s_%s_binding/%s?filter=%s:%s", resourceType, boundResourceType, resourceName, boundResourceFilterName, boundResourceFilterValue)
+		url = c.url + fmt.Sprintf("%s_%s_binding/%s?filter=%s:%s", resourceType, boundResourceType, resourceNameEscaped, boundResourceFilterName, boundResourceFilterValue)
 	}
 
 	return c.doHTTPRequest("GET", url, bytes.NewBuffer([]byte{}), readResponseHandler)
@@ -383,7 +389,8 @@ func (c *NitroClient) listResource(resourceType string, resourceName string) ([]
 	url := c.url + resourceType
 
 	if resourceName != "" {
-		url = c.url + fmt.Sprintf("%s/%s", resourceType, resourceName)
+		resourceNameEscaped := neturl.PathEscape(neturl.PathEscape(resourceName))
+		url = c.url + fmt.Sprintf("%s/%s", resourceType, resourceNameEscaped)
 	}
 	c.logger.Trace("listResource", "url", url)
 
@@ -396,7 +403,8 @@ func (c *NitroClient) listResourceWithArgs(resourceType string, resourceName str
 	var url string
 
 	if resourceName != "" {
-		url = c.url + fmt.Sprintf("%s/%s", resourceType, resourceName)
+		resourceNameEscaped := neturl.PathEscape(neturl.PathEscape(resourceName))
+		url = c.url + fmt.Sprintf("%s/%s", resourceType, resourceNameEscaped)
 	} else {
 		url = c.url + fmt.Sprintf("%s", resourceType)
 	}
@@ -488,7 +496,8 @@ func (c *NitroClient) listStat(resourceType, resourceName string) ([]byte, error
 	url := c.statsURL + resourceType
 
 	if resourceName != "" {
-		url = c.statsURL + fmt.Sprintf("%s/%s", resourceType, resourceName)
+		resourceNameEscaped := neturl.PathEscape(neturl.PathEscape(resourceName))
+		url = c.statsURL + fmt.Sprintf("%s/%s", resourceType, resourceNameEscaped)
 	}
 	c.logger.Trace("listStat", "url", url)
 
@@ -501,7 +510,8 @@ func (c *NitroClient) listStatWithArgs(resourceType string, resourceName string,
 	var url string
 
 	if len(resourceName) > 0 {
-		url = c.statsURL + fmt.Sprintf("%s/%s", resourceType, resourceName)
+		resourceNameEscaped := neturl.PathEscape(neturl.PathEscape(resourceName))
+		url = c.statsURL + fmt.Sprintf("%s/%s", resourceType, resourceNameEscaped)
 	} else {
 		url = c.statsURL + fmt.Sprintf("%s", resourceType)
 	}
