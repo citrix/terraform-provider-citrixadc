@@ -6,7 +6,7 @@ BUG FIXES
 
 ENHANCEMENTS
 
-* **External Libraries**: Updated the versions of external libraries used in the project to stable version.
+* **External Libraries**: Updated the versions of external libraries used in the project to stable version. Update the go version from 1.18 to 1.19.
 
 
 [#1162]: https://github.com/citrix/terraform-provider-citrixadc/issues/1162
