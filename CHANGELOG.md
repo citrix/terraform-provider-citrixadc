@@ -1,3 +1,16 @@
+## 1.40.1 (Sept 17, 2024)
+
+BUG FIXES
+
+* **citrixadc_appfwsignatures**: Updated appfwsignatures attribute Schema Behaviors to avoid unnecessary recreating of resource. [#1162]
+
+ENHANCEMENTS
+
+* **External Libraries**: Updated the versions of external libraries used in the project to stable version.
+
+
+[#1162]: https://github.com/citrix/terraform-provider-citrixadc/issues/1162
+
 ## 1.40.0 (Sept 2, 2024)
 
 BUG FIXES
