@@ -89,7 +89,6 @@ func resourceCitrixAdcAppfwsignatures() *schema.Resource {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeInt},
 				Optional: true,
-				// Computed: true,
 				ForceNew: true,
 			},
 			"category": {
