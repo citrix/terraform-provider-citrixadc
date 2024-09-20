@@ -1087,6 +1087,11 @@ func updateSslprofileEcccurveBindings(d *schema.ResourceData, meta interface{}) 
 
 func readSslprofileEcccurvebindings(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In readSslprofileEcccurvebindings")
+
+	// Ignore bindings unless there is an explicit configuration for it
+	if _, ok := d.GetOk("ecccurvebindings"); !ok {
+		return nil
+	}
 	client := meta.(*NetScalerNitroClient).client
 	sslprofileName := d.Get("name").(string)
 	bindings, _ := client.FindResourceArray(service.Sslprofile_ecccurve_binding.Type(), sslprofileName)
