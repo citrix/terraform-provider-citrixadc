@@ -520,10 +520,14 @@ func createSslprofileFunc(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(sslprofileName)
 
-	err = createSslprofileEcccurveBindings(d, meta)
-	if err != nil {
-		return err
+	// Ignore bindings unless there is an explicit configuration for it
+	if _, ok := d.GetOk("ecccurvebindings"); ok {
+		err = createSslprofileEcccurveBindings(d, meta)
+		if err != nil {
+			return err
+		}
 	}
+
 	err = createSslprofileCipherBindings(d, meta)
 	if err != nil {
 		return err

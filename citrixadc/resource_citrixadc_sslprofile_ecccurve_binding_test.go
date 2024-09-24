@@ -31,22 +31,11 @@ const testAccSslprofile_ecccurve_binding_basic = `
 	}
 
 	resource "citrixadc_sslprofile_ecccurve_binding" "tf_sslprofile_ecccurve_binding" {
-		name                                = citrixadc_sslprofile.tf_sslprofile.name
-		ecccurvename                        = "P_256"
+		name                             = citrixadc_sslprofile.tf_sslprofile.name
+		ecccurvename                     = ["X_25519", "P_521", "P_384"]
 		remove_existing_ecccurve_binding = true
 	}
 
-	resource "citrixadc_sslprofile_ecccurve_binding" "tf_sslprofile_ecccurve_binding_1" {
-		name         = citrixadc_sslprofile.tf_sslprofile.name
-		ecccurvename = "P_384"
-		depends_on   = [citrixadc_sslprofile_ecccurve_binding.tf_sslprofile_ecccurve_binding]
-	}
-
-	resource "citrixadc_sslprofile_ecccurve_binding" "tf_sslprofile_ecccurve_binding_2" {
-		name         = citrixadc_sslprofile.tf_sslprofile.name
-		ecccurvename = "P_521"
-		depends_on   = [citrixadc_sslprofile_ecccurve_binding.tf_sslprofile_ecccurve_binding_1]
-	}
 `
 
 const testAccSslprofile_ecccurve_binding_basic_step2 = `
@@ -71,7 +60,7 @@ func TestAccSslprofile_ecccurve_binding_basic(t *testing.T) {
 			{
 				Config: testAccSslprofile_ecccurve_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSslprofile_ecccurve_bindingNotExist("citrixadc_sslprofile_ecccurve_binding.tf_sslprofile_ecccurve_binding", "tf_sslprofile,P_256"),
+					testAccCheckSslprofile_ecccurve_bindingNotExist("citrixadc_sslprofile_ecccurve_binding.tf_sslprofile_ecccurve_binding", "tf_sslprofile,"),
 				),
 			},
 		},
@@ -104,7 +93,8 @@ func testAccCheckSslprofile_ecccurve_bindingExist(n string, id *string) resource
 		idSlice := strings.SplitN(bindingId, ",", 2)
 
 		name := idSlice[0]
-		ecccurvename := idSlice[1]
+		ecccurvename := []string{"X_25519", "P_521", "P_384"}
+		
 
 		findParams := service.FindParams{
 			ResourceType:             "sslprofile_ecccurve_binding",
@@ -118,21 +108,30 @@ func testAccCheckSslprofile_ecccurve_bindingExist(n string, id *string) resource
 			return err
 		}
 
-		// Iterate through results to find the one with the matching secondIdComponent
-		found := false
+		var arr_ecccurve []string
+
 		for _, v := range dataArr {
-			if v["ecccurvename"].(string) == ecccurvename {
-				found = true
-				break
-			}
+			arr_ecccurve = append(arr_ecccurve, v["ecccurvename"].(string))
 		}
 
-		if !found {
-			return fmt.Errorf("sslprofile_ecccurve_binding %s not found", n)
+		if !equalStringSlices(ecccurvename, arr_ecccurve) {
+			return fmt.Errorf("Expected 3 ecccurves, but found %d", len(arr_ecccurve))
 		}
 
 		return nil
 	}
+}
+
+func equalStringSlices(a, b []string) bool {
+    if len(a) != len(b) {
+        return false
+    }
+    for i := range a {
+        if a[i] != b[i] {
+            return false
+        }
+    }
+    return true
 }
 
 func testAccCheckSslprofile_ecccurve_bindingNotExist(n string, id string) resource.TestCheckFunc {
@@ -145,7 +144,7 @@ func testAccCheckSslprofile_ecccurve_bindingNotExist(n string, id string) resour
 		idSlice := strings.SplitN(id, ",", 2)
 
 		name := idSlice[0]
-		ecccurvename := idSlice[1]
+		// ecccurvename := idSlice[1]
 
 		findParams := service.FindParams{
 			ResourceType:             "sslprofile_ecccurve_binding",
@@ -159,16 +158,9 @@ func testAccCheckSslprofile_ecccurve_bindingNotExist(n string, id string) resour
 			return err
 		}
 
-		// Iterate through results to hopefully not find the one with the matching secondIdComponent
-		found := false
-		for _, v := range dataArr {
-			if v["ecccurvename"].(string) == ecccurvename {
-				found = true
-				break
-			}
-		}
 
-		if found {
+
+		if len(dataArr) != 0 {
 			return fmt.Errorf("sslprofile_ecccurve_binding %s was found, but it should have been destroyed", n)
 		}
 

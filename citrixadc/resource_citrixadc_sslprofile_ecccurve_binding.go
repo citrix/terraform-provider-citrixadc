@@ -16,26 +16,21 @@ func resourceCitrixAdcSslprofile_ecccurve_binding() *schema.Resource {
 		Create:        createSslprofile_ecccurve_bindingFunc,
 		Read:          readSslprofile_ecccurve_bindingFunc,
 		Delete:        deleteSslprofile_ecccurve_bindingFunc,
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
-		},
 		Schema: map[string]*schema.Schema{
 			"remove_existing_ecccurve_binding": {
 				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
+				Required: true,
 				ForceNew: true,
 			},
 			"ecccurvename": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Required: true,
 				ForceNew: true,
 			},
 			"name": {
 				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Required: true,
 				ForceNew: true,
 			},
 		},
@@ -49,8 +44,7 @@ func createSslprofile_ecccurve_bindingFunc(d *schema.ResourceData, meta interfac
 	ecccurvename := d.Get("ecccurvename")
 	bindingId := fmt.Sprintf("%s,%s", name, ecccurvename)
 	sslprofile_ecccurve_binding := ssl.Sslprofileecccurvebinding{
-		Ecccurvename: d.Get("ecccurvename").(string),
-		Name:         d.Get("name").(string),
+		Name: d.Get("name").(string),
 	}
 
 	if val, ok := d.GetOk("remove_existing_ecccurve_binding"); ok && val.(bool) {
@@ -65,14 +59,17 @@ func createSslprofile_ecccurve_bindingFunc(d *schema.ResourceData, meta interfac
 		}
 	}
 
-	_, err := client.AddResource(service.Sslprofile_ecccurve_binding.Type(), bindingId, &sslprofile_ecccurve_binding)
-	if err != nil {
-		return err
+	for _, ecccurvename_items := range ecccurvename.([]interface{}) {
+		sslprofile_ecccurve_binding.Ecccurvename = ecccurvename_items.(string)
+		_, err := client.AddResource(service.Sslprofile_ecccurve_binding.Type(), bindingId, &sslprofile_ecccurve_binding)
+		if err != nil {
+			return err
+		}
 	}
 
 	d.SetId(bindingId)
 
-	err = readSslprofile_ecccurve_bindingFunc(d, meta)
+	err := readSslprofile_ecccurve_bindingFunc(d, meta)
 	if err != nil {
 		log.Printf("[ERROR] netscaler-provider: ?? we just created this sslprofile_ecccurve_binding but we can't read it ?? %s", bindingId)
 		return nil
@@ -81,7 +78,7 @@ func createSslprofile_ecccurve_bindingFunc(d *schema.ResourceData, meta interfac
 }
 
 func getDefault_SslprofileEcccurveBindings(d *schema.ResourceData, meta interface{}) ([]string, error) {
-	log.Printf("[DEBUG]  citrixadc-provider: In getDefaultSslprofileEcccurveBindings")
+	log.Printf("[DEBUG]  citrixadc-provider: In getDefault_SslprofileEcccurveBindings")
 	client := meta.(*NetScalerNitroClient).client
 	sslprofileName := d.Get("name").(string)
 	bindings, _ := client.FindResourceArray(service.Sslprofile_ecccurve_binding.Type(), sslprofileName)
@@ -97,7 +94,7 @@ func getDefault_SslprofileEcccurveBindings(d *schema.ResourceData, meta interfac
 }
 
 func deleteSingleSslprofileEcccurveBindings(d *schema.ResourceData, meta interface{}, ecccurvename string) error {
-	log.Printf("[DEBUG]  citrixadc-provider: In deleteSingleSslprofileEcccurveBinding")
+	log.Printf("[DEBUG]  citrixadc-provider: In deleteSingleSslprofileEcccurveBindings")
 	client := meta.(*NetScalerNitroClient).client
 
 	sslprofileName := d.Get("name").(string)
@@ -123,7 +120,6 @@ func readSslprofile_ecccurve_bindingFunc(d *schema.ResourceData, meta interface{
 	idSlice := strings.SplitN(bindingId, ",", 2)
 
 	name := idSlice[0]
-	ecccurvename := idSlice[1]
 
 	log.Printf("[DEBUG] citrixadc-provider: Reading sslprofile_ecccurve_binding state %s", bindingId)
 
@@ -148,28 +144,14 @@ func readSslprofile_ecccurve_bindingFunc(d *schema.ResourceData, meta interface{
 		return nil
 	}
 
-	// Iterate through results to find the one with the right id
-	foundIndex := -1
-	for i, v := range dataArr {
-		if v["ecccurvename"].(string) == ecccurvename {
-			foundIndex = i
-			break
-		}
+	var arr_ecccurve []string
+
+	for _, v := range dataArr {
+		arr_ecccurve = append(arr_ecccurve, v["ecccurvename"].(string))
 	}
 
-	// Resource is missing
-	if foundIndex == -1 {
-		log.Printf("[DEBUG] citrixadc-provider: FindResourceArrayWithParams secondIdComponent not found in array")
-		log.Printf("[WARN] citrixadc-provider: Clearing sslprofile_ecccurve_binding state %s", bindingId)
-		d.SetId("")
-		return nil
-	}
-	// Fallthrough
-
-	data := dataArr[foundIndex]
-
-	d.Set("ecccurvename", data["ecccurvename"])
-	d.Set("name", data["name"])
+	d.Set("ecccurvename", arr_ecccurve)
+	d.Set("name", name)
 
 	return nil
 
@@ -183,16 +165,16 @@ func deleteSslprofile_ecccurve_bindingFunc(d *schema.ResourceData, meta interfac
 	idSlice := strings.SplitN(bindingId, ",", 2)
 
 	name := idSlice[0]
-	ecccurvename := idSlice[1]
 
-	args := make([]string, 0)
-	args = append(args, fmt.Sprintf("ecccurvename:%s", ecccurvename))
+	for _, ecccurvename_items := range d.Get("ecccurvename").([]interface{}) {
+		args := make([]string, 0)
+		args = append(args, fmt.Sprintf("ecccurvename:%s", ecccurvename_items))
 
-	err := client.DeleteResourceWithArgs(service.Sslprofile_ecccurve_binding.Type(), name, args)
-	if err != nil {
-		return err
+		err := client.DeleteResourceWithArgs(service.Sslprofile_ecccurve_binding.Type(), name, args)
+		if err != nil {
+			return err
+		}
 	}
-
 	d.SetId("")
 
 	return nil
