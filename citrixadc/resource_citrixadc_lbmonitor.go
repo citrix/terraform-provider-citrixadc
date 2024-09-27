@@ -1,13 +1,14 @@
 package citrixadc
 
 import (
+	"strconv"
+
 	"github.com/citrix/adc-nitro-go/resource/config/lb"
 	"github.com/citrix/adc-nitro-go/service"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
 )
 
@@ -475,6 +476,7 @@ func resourceCitrixAdcLbmonitor() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"units1": {
 				Type:     schema.TypeString,
@@ -694,7 +696,7 @@ func readLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("hostname", data["hostname"])
 	d.Set("httprequest", data["httprequest"])
 	d.Set("inbandsecurityid", data["inbandsecurityid"])
-	d.Set("interval", data["interval"])
+	// d.Set("interval", data["interval"])
 	d.Set("ipaddress", data["ipaddress"])
 	d.Set("iptunnel", data["iptunnel"])
 	d.Set("kcdaccount", data["kcdaccount"])
@@ -761,13 +763,31 @@ func readLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("type", data["type"])
 	d.Set("units1", data["units1"])
 	d.Set("units2", data["units2"])
-	d.Set("units3", data["units3"])
+	// d.Set("units3", data["units3"])
 	d.Set("units4", data["units4"])
 	d.Set("username", data["username"])
 	d.Set("validatecred", data["validatecred"])
 	d.Set("vendorid", data["vendorid"])
 	d.Set("vendorspecificvendorid", data["vendorspecificvendorid"])
 	// d.Set("respcode", data["respcode"]) // we receive different value from NetScaler
+
+	// FIXME: in lbmonitor, for `interval=60`, the `units3` will wrongly be set to `MIN` by the NetScaler.
+	// Hence, we will set it to `SEC` to make it idempotent
+	// Refer Issue: #324 (https://github.com/netscaler/ansible-collection-netscaleradc/issues/324) in ansible-collection-netscaleradc
+	// Refer Issue: #1165 (https://github.com/citrix/terraform-provider-citrixadc/issues/1165) in terraform-provider-citrixadc
+	if val, ok := d.GetOk("units3"); !ok || val.(string) == "SEC" {
+		if existingUnits3, exists := data["units3"]; exists && existingUnits3.(string) == "MIN" {
+			if interval, intervalExists := data["interval"]; intervalExists {
+				intervalInt := int(interval.(float64))
+				data["interval"] = strconv.Itoa(intervalInt * 60)
+				log.Println("[DEBUG] netscaler-provider:  interval is in MIN, converting it to SEC")
+			}
+			data["units3"] = "SEC"
+		}
+	} else {
+		d.Set("units3", data["units3"])
+		d.Set("interval", data["interval"])
+	}
 
 	return nil
 
@@ -1250,6 +1270,7 @@ func updateLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("units3") {
 		log.Printf("[DEBUG] netscaler-provider:  Units3 has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Units3 = d.Get("units3").(string)
+		lbmonitor.Interval = d.Get("interval").(int)
 		hasChange = true
 	}
 	if d.HasChange("units4") {
@@ -1292,7 +1313,7 @@ func updateLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Lbmonitor.Type(), lbmonitorName, &lbmonitor)
 		if err != nil {
-			return fmt.Errorf("[ERROR] netscaler-provider: Error updating lbmonitor %s", lbmonitorName)
+			return err
 		}
 	}
 	return readLbmonitorFunc(d, meta)
