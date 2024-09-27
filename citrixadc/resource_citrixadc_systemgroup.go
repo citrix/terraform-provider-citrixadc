@@ -93,14 +93,20 @@ func createSystemgroupFunc(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(systemgroupName)
 
-	err = updateSystemgroupCmdpolicyBindings(d, meta)
-	if err != nil {
-		return err
+	// Ignore bindings unless there is an explicit configuration for it
+	if _, ok := d.GetOk("cmdpolicybinding"); ok {
+		err = updateSystemgroupCmdpolicyBindings(d, meta)
+		if err != nil {
+			return err
+		}
 	}
 
-	err = updateSystemgroupSystemuserBindings(d, meta)
-	if err != nil {
-		return err
+	// Ignore bindings unless there is an explicit configuration for it
+	if _, ok := d.GetOk("systemusers"); ok {
+		err = updateSystemgroupSystemuserBindings(d, meta)
+		if err != nil {
+			return err
+		}
 	}
 
 	err = readSystemgroupFunc(d, meta)
@@ -122,15 +128,18 @@ func readSystemgroupFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
-
-	err = readSystemgroupCmdpolicybindings(d, meta)
-	if err != nil {
-		return err
+	if _, ok := d.GetOk("cmdpolicybinding"); ok {
+		err = readSystemgroupCmdpolicybindings(d, meta)
+		if err != nil {
+			return err
+		}
 	}
 
-	err = readSystemgroupSystemuserbindings(d, meta)
-	if err != nil {
-		return err
+	if _, ok := d.GetOk("cmdpolicybinding"); ok {
+		err = readSystemgroupSystemuserbindings(d, meta)
+		if err != nil {
+			return err
+		}
 	}
 
 	d.Set("name", data["name"])
