@@ -520,10 +520,14 @@ func createSslprofileFunc(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(sslprofileName)
 
-	err = createSslprofileEcccurveBindings(d, meta)
-	if err != nil {
-		return err
+	// Ignore bindings unless there is an explicit configuration for it
+	if _, ok := d.GetOk("ecccurvebindings"); ok {
+		err = createSslprofileEcccurveBindings(d, meta)
+		if err != nil {
+			return err
+		}
 	}
+
 	err = createSslprofileCipherBindings(d, meta)
 	if err != nil {
 		return err
@@ -548,9 +552,12 @@ func readSslprofileFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	err = readSslprofileEcccurvebindings(d, meta)
-	if err != nil {
-		return err
+	// Ignore bindings unless there is an explicit
+	if _, ok := d.GetOk("ecccurvebindings"); ok {
+		err = readSslprofileEcccurvebindings(d, meta)
+		if err != nil {
+			return err
+		}
 	}
 	err = readSslprofileCipherbindings(d, meta)
 	if err != nil {
@@ -1087,6 +1094,7 @@ func updateSslprofileEcccurveBindings(d *schema.ResourceData, meta interface{}) 
 
 func readSslprofileEcccurvebindings(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In readSslprofileEcccurvebindings")
+
 	client := meta.(*NetScalerNitroClient).client
 	sslprofileName := d.Get("name").(string)
 	bindings, _ := client.FindResourceArray(service.Sslprofile_ecccurve_binding.Type(), sslprofileName)

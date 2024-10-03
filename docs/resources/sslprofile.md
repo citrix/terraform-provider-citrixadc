@@ -11,19 +11,7 @@ The sslprofile resource is used to create SSL profiles.
 
 ```hcl
 resource "citrixadc_sslprofile" "tf_sslprofile" {
-  name = "tfUnit_sslprofile-hello"
-
-  // `ecccurvebindings` is REQUIRED attribute.
-  // The default ecccurvebindings will be DELETED and only the explicitly given ecccurvebindings will be retained
-  // To unbind all the ecccurvebindings, an empty list `[]` is to be assinged to `ecccurvebindings` attribute
-  ecccurvebindings = ["P_256"]
-
-  // `cipherbindings` attribute block is OPTIONAL
-  // If not given, all the default cipher bindings will be deleted and the ones given explicitly are retained/created.
-  # cipherbindings {
-  #   ciphername     = "HIGH"
-  #   cipherpriority = 10
-  # }
+  name = "tf_sslprofile"
 }
 ```
 
@@ -92,8 +80,17 @@ resource "citrixadc_sslprofile" "tf_sslprofile" {
 * `ciphername` - (Optional) The cipher group/alias/individual cipher configuration.
 * `cipherpriority` - (Optional) cipher priority.
 * `strictsigdigestcheck` - (Optional) Parameter indicating to check whether peer entity certificate during TLS1.2 handshake is signed with one of signature-hash combination supported by Citrix ADC. Possible values: [ ENABLED, DISABLED ]
-* `ecccurvebindings` - (Required) A set of ECC curve names to be bound to this SSL profile.
-* `cipherbindings` - (Optional) A set of ciphersuite bindings to be bound to this SSL profile. Documented below.
+* `ecccurvebindings` - (Required) A set of ECC curve names to be bound to this SSL profile. (deprecates soon)
+
+!>
+[**DEPRECATED**] Please use `sslprofile_ecccurve_binding` to bind `ecccurve` to `sslprofile` insted of this resource. the support for binding `ecccurve` to `sslprofile` in `sslprofile` resource will get deprecated soon.
+
+* `cipherbindings` - (Optional) A set of ciphersuite bindings to be bound to this SSL profile. Documented below. (deprecates soon)
+
+!>
+[**DEPRECATED**] Please use `sslprofile_sslcipher_binding` to bind `sslcipher` to `sslprofile` insted of this resource. the support for binding `sslcipher` to `sslprofile` in `sslprofile` resource will get deprecated soon.
+
+
 
 A cipherbindings block supports the following:
 
