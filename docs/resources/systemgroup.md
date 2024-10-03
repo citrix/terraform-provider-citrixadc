@@ -11,24 +11,9 @@ The systemgroup resource is used to create user groups.
 
 ```hcl
 resource "citrixadc_systemgroup" "tf_systemgroup" {
-    groupname = "tf_systemgroup"
-    timeout = 999
-    promptstring = "bye>"
-
-    cmdpolicybinding { 
-        policyname = "superuser"
-        priority = 100
-    }
-
-    cmdpolicybinding { 
-        policyname = "network"
-        priority = 200
-    }
-
-    systemusers = [
-        "user1",
-		"user2",
-    ]
+  groupname    = "tf_systemgroup"
+  timeout      = 999
+  promptstring = "bye>"
 }
 ```
 
@@ -41,8 +26,16 @@ resource "citrixadc_systemgroup" "tf_systemgroup" {
 * `allowedmanagementinterface` - (Optional) Allowed Management interfaces of the system users in the group. By default allowed from both API and CLI interfaces. If management interface for a group is set to API, then all users under this group will not allowed to access NS through CLI. GUI interface will come under API interface.
 Default value: NS_INTERFACE_ALL
 Possible values = CLI, API
-* `systemusers` - (Optional) A set of user names to bind to this group.
-* `cmdpolicybinding` - (Optional) A set of command policies to bing to this group. Attributes are detailed below
+* `systemusers` - (Optional) A set of user names to bind to this group. (deprecates soon)
+
+!>
+[**DEPRECATED**] Please use [`systemgroup_systemuser_binding`](https://registry.terraform.io/providers/citrix/citrixadc/latest/docs/resources/systemgroup_systemuser_binding) to bind `systemuser` to `systemgroup` insted of this resource. The support for binding `systemuser` to `systemgroup` in this resource will get deprecated soon.
+
+
+* `cmdpolicybinding` - (Optional) A set of command policies to bing to this group. Attributes are detailed below (deprecates soon)
+
+!>
+[**DEPRECATED**] Please use [`systemgroup_systemcmdpolicy_binding`](https://registry.terraform.io/providers/citrix/citrixadc/latest/docs/resources/systemgroup_systemcmdpolicy_binding) to bind `systemcmdpolicy` to `systemgroup` insted of this resource. The support for binding `systemcmdpolicy` to `systemgroup` in this resource will get deprecated soon.
 
 In a command policy block the following attributes are allowed:
 
