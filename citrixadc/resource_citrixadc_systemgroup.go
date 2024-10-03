@@ -135,7 +135,7 @@ func readSystemgroupFunc(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if _, ok := d.GetOk("cmdpolicybinding"); ok {
+	if _, ok := d.GetOk("systemusers"); ok {
 		err = readSystemgroupSystemuserbindings(d, meta)
 		if err != nil {
 			return err
