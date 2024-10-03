@@ -773,16 +773,15 @@ func readLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 
 	// FIXME: in lbmonitor, for `interval=60`, the `units3` will wrongly be set to `MIN` by the NetScaler.
 	// Hence, we will set it to `SEC` to make it idempotent
-	// Refer Issue: #324 (https://github.com/netscaler/ansible-collection-netscaleradc/issues/324) in ansible-collection-netscaleradc
 	// Refer Issue: #1165 (https://github.com/citrix/terraform-provider-citrixadc/issues/1165) in terraform-provider-citrixadc
-	if val, ok := d.GetOk("units3"); !ok || val.(string) == "SEC" {
+	if val, ok := d.GetOk("units3"); ok && val.(string) == "SEC" {
 		if existingUnits3, exists := data["units3"]; exists && existingUnits3.(string) == "MIN" {
 			if interval, intervalExists := data["interval"]; intervalExists {
 				intervalInt := int(interval.(float64))
-				data["interval"] = strconv.Itoa(intervalInt * 60)
+				d.Set("interval", strconv.Itoa(intervalInt*60))
 				log.Println("[DEBUG] netscaler-provider:  interval is in MIN, converting it to SEC")
 			}
-			data["units3"] = "SEC"
+			d.Set("units3", "SEC")
 		}
 	} else {
 		d.Set("units3", data["units3"])
