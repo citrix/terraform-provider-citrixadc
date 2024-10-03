@@ -94,7 +94,6 @@ func testAccCheckSslprofile_ecccurve_bindingExist(n string, id *string) resource
 
 		name := idSlice[0]
 		ecccurvename := []string{"X_25519", "P_521", "P_384"}
-		
 
 		findParams := service.FindParams{
 			ResourceType:             "sslprofile_ecccurve_binding",
@@ -123,15 +122,15 @@ func testAccCheckSslprofile_ecccurve_bindingExist(n string, id *string) resource
 }
 
 func equalStringSlices(a, b []string) bool {
-    if len(a) != len(b) {
-        return false
-    }
-    for i := range a {
-        if a[i] != b[i] {
-            return false
-        }
-    }
-    return true
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
 }
 
 func testAccCheckSslprofile_ecccurve_bindingNotExist(n string, id string) resource.TestCheckFunc {
@@ -157,8 +156,6 @@ func testAccCheckSslprofile_ecccurve_bindingNotExist(n string, id string) resour
 		if err != nil {
 			return err
 		}
-
-
 
 		if len(dataArr) != 0 {
 			return fmt.Errorf("sslprofile_ecccurve_binding %s was found, but it should have been destroyed", n)
