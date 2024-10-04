@@ -14,6 +14,7 @@ resource "citrixadc_systemuser" "tf_user" {
     username = "tf_user"
     password = "tf_password"
     timeout = 200
+    allowedmanagementinterface = [ "CLI", "API" ]
 
 }
 ```
@@ -29,6 +30,8 @@ resource "citrixadc_systemuser" "tf_user" {
 * `logging` - (Optional) Users logging privilege. Possible values: [ ENABLED, DISABLED ]
 * `maxsession` - (Optional) 
 * `hashedpassword` - (Optional)
+* `allowedmanagementinterface` - (Optional) Allowed Management interfaces to the system user. By default user is allowed from both API and CLI interfaces. If management interface for a user is set to API, then user is not allowed to access NS through CLI. GUI interface will come under API interface. Default value: [ NS_INTERFACE_ALL ]. Possible values = [ CLI, API ]
+
 * `cmdpolicybinding` - (Optional) A set of blocks binding systemcommandpolicies to the systemuser. See below for details.
 
 A `cmdpolicybinding` block can contain the following attributes
