@@ -1,7 +1,6 @@
 package opa
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -58,7 +57,7 @@ func DownloadPolicyE(t testing.TestingT, rulePath string) (string, error) {
 	}
 
 	// Not downloaded, so use go-getter to download the remote source to a temp dir.
-	tempDir, err := ioutil.TempDir("", "terratest-opa-policy-*")
+	tempDir, err := os.MkdirTemp("", "terratest-opa-policy-*")
 	if err != nil {
 		return "", err
 	}

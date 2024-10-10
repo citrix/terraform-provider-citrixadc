@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"strings"
 
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
@@ -300,8 +301,25 @@ func OutputStructE(t testing.TestingT, options *Options, key string, v interface
 	if err != nil {
 		return err
 	}
+	out = cleanOutput(out)
 
 	return json.Unmarshal([]byte(out), &v)
+}
+
+// cleanOutput removes lines containing "INFO" and non-printable ASCII characters from the output.
+func cleanOutput(out string) string {
+	var result []rune
+	for _, line := range strings.Split(out, "\n") {
+		if strings.Contains(line, "INFO") {
+			continue
+		}
+		for _, r := range line {
+			if r >= 32 && r < 127 { // Keep printable ASCII characters only
+				result = append(result, r)
+			}
+		}
+	}
+	return string(result)
 }
 
 // OutputForKeysE calls terraform output for the given key list and returns values as a map.
@@ -311,6 +329,7 @@ func OutputForKeysE(t testing.TestingT, options *Options, keys []string) (map[st
 	if err != nil {
 		return nil, err
 	}
+	out = cleanOutput(out)
 
 	outputMap := map[string]map[string]interface{}{}
 	if err := json.Unmarshal([]byte(out), &outputMap); err != nil {
