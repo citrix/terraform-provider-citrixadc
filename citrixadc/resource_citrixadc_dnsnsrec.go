@@ -97,6 +97,7 @@ func readDnsnsrecFunc(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] citrixadc-provider: FindResourceArrayWithParams dnsnsrec not found in array")
 		log.Printf("[WARN] citrixadc-provider: Clearing dnsnsrec state %s", dnsnsrecId)
 		d.SetId("")
+		return nil
 	}
 
 	data := dataArr[foundIndex]
