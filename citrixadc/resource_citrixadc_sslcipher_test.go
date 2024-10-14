@@ -139,11 +139,32 @@ func testAccCheckSslcipherExist(n string, id *string) resource.TestCheckFunc {
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Sslcipher.Type(), rs.Primary.ID)
+		dataArr, err := nsClient.FindAllResources(service.Sslcipher.Type())
 
 		if err != nil {
 			return err
 		}
+		sslcipherGroupName := rs.Primary.ID
+
+		if len(dataArr) == 0 {
+			fmt.Printf("[WARN] citrixadc-provider: Sslcipher does not exist.")
+			return fmt.Errorf("SSLCiphergroup %s not found", n)
+		}
+
+		foundIndex := -1
+		for i, v := range dataArr {
+			if v["ciphergroupname"].(string) == sslcipherGroupName {
+				foundIndex = i
+				break
+			}
+		}
+
+		if foundIndex == -1 {
+			fmt.Printf("[WARN] citrixadc-provider: Sslcipher does not exist in the dataArr.")
+			return fmt.Errorf("SSLCiphergroup %s not found", n)
+		}
+
+		data := dataArr[foundIndex]
 
 		if data == nil {
 			return fmt.Errorf("SSLCiphergroup %s not found", n)
