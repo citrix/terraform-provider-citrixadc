@@ -61,9 +61,9 @@ func createSnmpalarmFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	snmpalarmName := resource.PrefixedUniqueId("tf-snmpalarm-")
 
-	// As time attriute can take zero value, we need to check if it is set or not
-	// if we use the snmpalarm struct directly, it will set the time to 0 (provided we remove omitempty in struct in adc-nitro-go repo(https://github.com/netscaler/adc-nitro-go/blob/main/resource/config/snmp/snmpalarm.go)), even if not set by customers
-	// So, removing the snmpalarm struct and adding the attributes directly
+	// Since the time attribute can take a zero value, it is necessary to check if it is set or not.
+	// Using the snmpalarm struct directly would set the time to 0 (if the omitempty tag is removed in the struct in the adc-nitro-go repo (https://github.com/netscaler/adc-nitro-go/blob/main/resource/config/snmp/snmpalarm.go)), even if it is not set by customers.
+	// Therefore, the snmpalarm struct is removed and the attributes are added directly.
 	snmpalarm := make(map[string]interface{})
 	if v, ok := d.GetOk("logging"); ok {
 		snmpalarm["logging"] = v.(string)
