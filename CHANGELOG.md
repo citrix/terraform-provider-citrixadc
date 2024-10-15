@@ -1,3 +1,35 @@
+## 1.41.0 (Oct 15, 2024)
+
+FEATURES
+
+* **New Resource**: citrixadc_sslprofile_ecccurve_binding
+* **New Resource**: citrixadc_systemuser_systemcmdpolicy_binding
+* **New Resource**: citrixadc_systemgroup_systemcmdpolicy_binding 
+* **New Resource**: citrixadc_systemgroup_systemuser_binding
+* **New Resource**: citrixadc_sslcipher_sslciphersuite_binding
+
+BUG FIXES
+
+* **citrixadc_lbmonitor**: Updated read func to handle the unexpected values for parameter units3 and interval. [#1165]
+* **citrixadc_snmpalarmr**: Updated snmpalarm resource to accept zero value to time attribute and removed the snmpalarm struct and updated with map.
+* **citrixadc_sslcipher**: In the read function, using GetAll insted of Get API call.
+* **citrixadc_ip6tunnelparam**: Udpated read function, to handle the attribute that was not received from NetScaler.
+* **citrixadc_dnsnsrec**: Updated the read function, to handle cases where the resource is not present on NetScaler.
+
+ENHANCEMENTS
+
+* **citrixadc_systemuser**: Updated systemuser resource with additional supported `allowedmanagementinterface` attribute.
+* **External Libraries**: Updated the external libraries terratest and go-git to their stable versions.
+
+UPDATES
+* **DEPRECATED SOON**
+    * **citrixadc_sslprofile**: The attributes `ecccurvebindings` and `cipherbindings` in `citrixadc_sslprofile` resource will be deprecated soon. Please use `citrixadc_sslprofile_ecccurve_binding` to bind `ecccurve` and `citrixadc_sslprofile_sslcipher_binding` to bind `sslcipher` to `sslprofile`.
+    * **citrixadc_systemuser**: The attribute `cmdpolicybinding` in `citrixadc_systemuser` resource will be deprecated soon. Please use `citrixadc_systemuser_systemcmdpolicy_binding` to bind `systemcmdpolicy` to `systemuser`.
+    * **citrixadc_systemgroup**: The attributes `cmdpolicybinding` and `systemusers` in `citrixadc_systemgroup` resource will be deprecated soon. Please use `citrixadc_systemgroup_systemcmdpolicy_binding` to bind `systemcmdpolicy` and `citrixadc_systemgroup_systemuser_binding` to bind `systemuser` to `systemgroup`.
+    * **citrixadc_sslcipher**: The attribute `ciphersuitebinding` in `citrixadc_sslcipher` resource will be deprecated soon. Please use `citrixadc_sslcipher_sslciphersuite_binding` to bind `sslciphersuite` to `sslcipher`.
+
+[#1165]: https://github.com/citrix/terraform-provider-citrixadc/issues/1165
+
 ## 1.40.1 (Sept 17, 2024)
 
 BUG FIXES
