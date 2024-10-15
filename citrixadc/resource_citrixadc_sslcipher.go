@@ -33,7 +33,7 @@ func resourceCitrixAdcSslcipher() *schema.Resource {
 			// sslcipher_sslciphersuite_binidng is MANDATORY attribute
 			"ciphersuitebinding": {
 				Type:     schema.TypeSet,
-				Required: true,
+				Optional: true,
 				Set:      sslcipherCipherSuitebindingMappingHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -69,9 +69,12 @@ func createSslcipherFunc(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(sslcipherGroupName)
 
-	err = updateSslCipherCipherSuiteBindings(d, meta)
-	if err != nil {
-		return err
+	// Ignore bindings unless there is an explicit configuration for it
+	if _, ok := d.GetOk("ciphersuitebinding"); ok {
+		err = updateSslCipherCipherSuiteBindings(d, meta)
+		if err != nil {
+			return err
+		}
 	}
 
 	err = readSslcipherFunc(d, meta)
@@ -105,16 +108,41 @@ func readSslcipherFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	sslcipherGroupName := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading sslcipher state %s", sslcipherGroupName)
-	data, err := client.FindResource(service.Sslcipher.Type(), sslcipherGroupName)
+	dataArr, err := client.FindAllResources(service.Sslcipher.Type())
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing sslcipher state %s", sslcipherGroupName)
 		d.SetId("")
 		return nil
 	}
+	// for some of the NetScaler version Get was not working so using GetAll
+	if len(dataArr) == 0 {
+		log.Printf("[WARN] citrixadc-provider: Sslcipher does not exist. Clearing state.")
+		d.SetId("")
+		return nil
+	}
 
-	err = readSslCipherCipherSuitebindings(d, meta)
-	if err != nil {
-		return err
+	foundIndex := -1
+	for i, v := range dataArr {
+		if v["ciphergroupname"].(string) == sslcipherGroupName {
+			foundIndex = i
+			break
+		}
+	}
+
+	if foundIndex == -1 {
+		log.Printf("[DEBUG] citrixadc-provider: FindResourceAllresources Sslcipher not found in array")
+		log.Printf("[WARN] citrixadc-provider: Clearing Sslcipher state %s", sslcipherGroupName)
+		d.SetId("")
+		return nil
+	}
+	data := dataArr[foundIndex]
+
+	// Ignore bindings unless there is an explicit configuration for it
+	if _, ok := d.GetOk("ciphersuitebinding"); ok {
+		err = readSslCipherCipherSuitebindings(d, meta)
+		if err != nil {
+			return err
+		}
 	}
 
 	d.Set("ciphergroupname", data["ciphergroupname"])
