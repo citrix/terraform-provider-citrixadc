@@ -22,11 +22,11 @@ ENHANCEMENTS
 * **External Libraries**: Updated the external libraries terratest and go-git to their stable versions.
 
 UPDATES
-
-* **citrixadc_sslprofile**: The attributes `ecccurvebindings` and `cipherbindings` in `citrixadc_sslprofile` resource will be deprecated soon. Please use `citrixadc_sslprofile_ecccurve_binding` to bind `ecccurve` and `citrixadc_sslprofile_sslcipher_binding` to bind `sslcipher` to `sslprofile`.
-* **citrixadc_systemuser**: The attribute `cmdpolicybinding` in `citrixadc_systemuser` resource will be deprecated soon. Please use `citrixadc_systemuser_systemcmdpolicy_binding` to bind `systemcmdpolicy` to `systemuser`.
-* **citrixadc_systemgroup**: The attributes `cmdpolicybinding` and `systemusers` in `citrixadc_systemgroup` resource will be deprecated soon. Please use `citrixadc_systemgroup_systemcmdpolicy_binding` to bind `systemcmdpolicy` and `citrixadc_systemgroup_systemuser_binding` to bind `systemuser` to `systemgroup`.
-* **citrixadc_sslcipher**: The attribute `ciphersuitebinding` in `citrixadc_sslcipher` resource will be deprecated soon. Please use `citrixadc_sslcipher_sslciphersuite_binding` to bind `sslciphersuite` to `sslcipher`.
+* **DEPRECATED SOON**
+    * **citrixadc_sslprofile**: The attributes `ecccurvebindings` and `cipherbindings` in `citrixadc_sslprofile` resource will be deprecated soon. Please use `citrixadc_sslprofile_ecccurve_binding` to bind `ecccurve` and `citrixadc_sslprofile_sslcipher_binding` to bind `sslcipher` to `sslprofile`.
+    * **citrixadc_systemuser**: The attribute `cmdpolicybinding` in `citrixadc_systemuser` resource will be deprecated soon. Please use `citrixadc_systemuser_systemcmdpolicy_binding` to bind `systemcmdpolicy` to `systemuser`.
+    * **citrixadc_systemgroup**: The attributes `cmdpolicybinding` and `systemusers` in `citrixadc_systemgroup` resource will be deprecated soon. Please use `citrixadc_systemgroup_systemcmdpolicy_binding` to bind `systemcmdpolicy` and `citrixadc_systemgroup_systemuser_binding` to bind `systemuser` to `systemgroup`.
+    * **citrixadc_sslcipher**: The attribute `ciphersuitebinding` in `citrixadc_sslcipher` resource will be deprecated soon. Please use `citrixadc_sslcipher_sslciphersuite_binding` to bind `sslciphersuite` to `sslcipher`.
 
 [#1165]: https://github.com/citrix/terraform-provider-citrixadc/issues/1165
 
