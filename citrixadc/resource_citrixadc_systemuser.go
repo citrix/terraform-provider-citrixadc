@@ -120,10 +120,12 @@ func createSystemuserFunc(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-
-	err = updateCmdpolicyBindings(d, meta)
-	if err != nil {
-		return err
+	// Ignore bindings unless there is an explicit configuration for it
+	if _, ok := d.GetOk("cmdpolicybinding"); ok {
+		err = updateCmdpolicyBindings(d, meta)
+		if err != nil {
+			return err
+		}
 	}
 
 	d.SetId(username)
@@ -172,9 +174,11 @@ func readSystemuserFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("timeout", data["timeout"])
 	d.Set("allowedmanagementinterface", data["allowedmanagementinterface"])
 
-	err = readCmdpolicybindings(d, meta)
-	if err != nil {
-		return err
+	if _, ok := d.GetOk("cmdpolicybinding"); ok {
+		err = readCmdpolicybindings(d, meta)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
