@@ -12,21 +12,6 @@ The sslcipher resource is used to create ssl ciphers.
 ```hcl
 resource "citrixadc_sslcipher" "tfsslcipher" {
   ciphergroupname = "tfsslcipher"
-
-  # ciphersuitebinding is MANDATORY attribute
-  # Any change in the ciphersuitebinding will result in re-creation of the whole sslcipher resource.
-  ciphersuitebinding {
-    ciphername     = "TLS1.2-ECDHE-RSA-AES128-GCM-SHA256"
-    cipherpriority = 1
-  }
-  ciphersuitebinding {
-    ciphername     = "TLS1.2-ECDHE-RSA-AES256-GCM-SHA384"
-    cipherpriority = 2
-  }
-  ciphersuitebinding {
-    ciphername     = "TLS1.2-ECDHE-RSA-AES-128-SHA256"
-    cipherpriority = 3
-  }
 }
 ```
 
@@ -34,7 +19,11 @@ resource "citrixadc_sslcipher" "tfsslcipher" {
 ## Argument Reference
 
 * `ciphergroupname` - (Required) Name of the cipher group to be created.
-* `ciphersuitebinding` - (Required) A set of ciphersuites bound to this cipher group. Any change to this set will recreate the whole cipher group. Attributes documented below.
+* `ciphersuitebinding` - (Optional) A set of ciphersuites bound to this cipher group. Any change to this set will recreate the whole cipher group. Attributes documented below. (Deprecates soon)
+
+!>
+[**DEPRECATED**] Please use `sslcipher_sslciphersuite_binding` to bind `sslciphersuite` to `sslcipher` insted of this resource. The support for binding `sslciphersuite` to `sslcipher` in `sslcipher` resource will get deprecated soon.
+
 
 A ciphersuitebinding supports the following:
 
