@@ -66,6 +66,12 @@ func resourceCitrixAdcSystemuser() *schema.Resource {
 				Computed: false,
 				ForceNew: true,
 			},
+			"allowedmanagementinterface": {
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Computed: true,
+				Optional: true,
+			},
 			"cmdpolicybinding": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -100,13 +106,14 @@ func createSystemuserFunc(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("It seems you are trying to change the password of the Admin user. If so, please use the resource \"citrixadc_change_password\"")
 	}
 	systemuser := system.Systemuser{
-		Externalauth: d.Get("externalauth").(string),
-		Logging:      d.Get("logging").(string),
-		Maxsession:   d.Get("maxsession").(int),
-		Password:     d.Get("password").(string),
-		Promptstring: d.Get("promptstring").(string),
-		Timeout:      d.Get("timeout").(int),
-		Username:     username,
+		Externalauth:               d.Get("externalauth").(string),
+		Logging:                    d.Get("logging").(string),
+		Maxsession:                 d.Get("maxsession").(int),
+		Password:                   d.Get("password").(string),
+		Promptstring:               d.Get("promptstring").(string),
+		Timeout:                    d.Get("timeout").(int),
+		Username:                   username,
+		Allowedmanagementinterface: toStringList(d.Get("allowedmanagementinterface").([]interface{})),
 	}
 
 	_, err := client.AddResource(service.Systemuser.Type(), username, &systemuser)
@@ -163,6 +170,7 @@ func readSystemuserFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("hashedpassword", data["password"])
 	d.Set("promptstring", data["promptstring"])
 	d.Set("timeout", data["timeout"])
+	d.Set("allowedmanagementinterface", data["allowedmanagementinterface"])
 
 	err = readCmdpolicybindings(d, meta)
 	if err != nil {
@@ -210,6 +218,11 @@ func updateSystemuserFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("timeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Timeout has changed for systemuser %s, starting update", systemuserName)
 		systemuser.Timeout = d.Get("timeout").(int)
+		hasChange = true
+	}
+	if d.HasChange("allowedmanagementinterface") {
+		log.Printf("[DEBUG]  citrixadc-provider: Allowedmanagementinterface has changed for systemuser %s, starting update", systemuserName)
+		systemuser.Allowedmanagementinterface = toStringList(d.Get("allowedmanagementinterface").([]interface{}))
 		hasChange = true
 	}
 
