@@ -1,8 +1,6 @@
 package citrixadc
 
 import (
-	"github.com/citrix/adc-nitro-go/resource/config/snmp"
-
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -63,14 +61,30 @@ func createSnmpalarmFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	snmpalarmName := resource.PrefixedUniqueId("tf-snmpalarm-")
 
-	snmpalarm := snmp.Snmpalarm{
-		Logging:        d.Get("logging").(string),
-		Normalvalue:    d.Get("normalvalue").(int),
-		Severity:       d.Get("severity").(string),
-		State:          d.Get("state").(string),
-		Thresholdvalue: d.Get("thresholdvalue").(int),
-		Time:           d.Get("time").(int),
-		Trapname:       d.Get("trapname").(string),
+	// Since the time attribute can take a zero value, it is necessary to check if it is set or not.
+	// Using the snmpalarm struct directly would set the time to 0 (if the omitempty tag is removed in the struct in the adc-nitro-go repo (https://github.com/netscaler/adc-nitro-go/blob/main/resource/config/snmp/snmpalarm.go)), even if it is not set by customers.
+	// Therefore, the snmpalarm struct is removed and the attributes are added directly.
+	snmpalarm := make(map[string]interface{})
+	if v, ok := d.GetOk("logging"); ok {
+		snmpalarm["logging"] = v.(string)
+	}
+	if v, ok := d.GetOk("normalvalue"); ok {
+		snmpalarm["normalvalue"] = v.(int)
+	}
+	if v, ok := d.GetOk("severity"); ok {
+		snmpalarm["severity"] = v.(string)
+	}
+	if v, ok := d.GetOk("state"); ok {
+		snmpalarm["state"] = v.(string)
+	}
+	if v, ok := d.GetOk("thresholdvalue"); ok {
+		snmpalarm["thresholdvalue"] = v.(int)
+	}
+	if v, ok := d.GetOk("time"); ok {
+		snmpalarm["time"] = v.(int)
+	}
+	if v, ok := d.GetOk("trapname"); ok {
+		snmpalarm["trapname"] = v.(string)
 	}
 
 	err := client.UpdateUnnamedResource(service.Snmpalarm.Type(), &snmpalarm)
@@ -115,39 +129,41 @@ func updateSnmpalarmFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateSnmpalarmFunc")
 	client := meta.(*NetScalerNitroClient).client
 
-	snmpalarm := snmp.Snmpalarm{
-		Trapname: d.Get("trapname").(string),
-	}
+	snmpalarm := make(map[string]interface{})
+
+	snmpalarm["trapname"] = d.Get("trapname").(string)
+
 	hasChange := false
 	stateChange := false
 	if d.HasChange("logging") {
 		log.Printf("[DEBUG]  citrixadc-provider: Logging has changed for snmpalarm, starting update")
-		snmpalarm.Logging = d.Get("logging").(string)
+		snmpalarm["logging"] = d.Get("logging").(string)
 		hasChange = true
 	}
 	if d.HasChange("normalvalue") {
 		log.Printf("[DEBUG]  citrixadc-provider: Normalvalue has changed for snmpalarm, starting update")
-		snmpalarm.Normalvalue = d.Get("normalvalue").(int)
+		snmpalarm["normalvalue"] = d.Get("normalvalue").(int)
+		snmpalarm["thresholdvalue"] = d.Get("thresholdvalue").(int)
 		hasChange = true
 	}
 	if d.HasChange("severity") {
 		log.Printf("[DEBUG]  citrixadc-provider: Severity has changed for snmpalarm, starting update")
-		snmpalarm.Severity = d.Get("severity").(string)
+		snmpalarm["severity"] = d.Get("severity").(string)
 		hasChange = true
 	}
 	if d.HasChange("state") {
 		log.Printf("[DEBUG]  citrixadc-provider: State has changed for snmpalarm, starting update")
-		snmpalarm.State = d.Get("state").(string)
+		snmpalarm["state"] = d.Get("state").(string)
 		stateChange = true
 	}
 	if d.HasChange("thresholdvalue") {
 		log.Printf("[DEBUG]  citrixadc-provider: Thresholdvalue has changed for snmpalarm, starting update")
-		snmpalarm.Thresholdvalue = d.Get("thresholdvalue").(int)
+		snmpalarm["thresholdvalue"] = d.Get("thresholdvalue").(int)
 		hasChange = true
 	}
 	if d.HasChange("time") {
 		log.Printf("[DEBUG]  citrixadc-provider: Time has changed for snmpalarm, starting update")
-		snmpalarm.Time = d.Get("time").(int)
+		snmpalarm["time"] = d.Get("time").(int)
 		hasChange = true
 	}
 	if stateChange {
@@ -180,9 +196,10 @@ func doSnmpalarmStateChange(d *schema.ResourceData, client *service.NitroClient)
 	// We need a new instance of the struct since
 	// ActOnResource will fail if we put in superfluous attributes
 
-	snmpalarm := snmp.Snmpalarm{
-		Trapname: d.Get("trapname").(string),
-	}
+	snmpalarm := make(map[string]interface{})
+
+	snmpalarm["trapname"] = d.Get("trapname").(string)
+
 	newstate := d.Get("state")
 
 	// Enable action

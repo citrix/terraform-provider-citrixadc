@@ -9,7 +9,6 @@ import (
 
 	"fmt"
 	"log"
-	"strconv"
 )
 
 func resourceCitrixAdcIp6tunnelparam() *schema.Resource {
@@ -89,8 +88,9 @@ func readIp6tunnelparamFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	d.Set("dropfrag", data["dropfrag"])
-	val, _ := strconv.Atoi(data["dropfragcputhreshold"].(string))
-	d.Set("dropfragcputhreshold", val)
+	// commenting as this attribute was not recieved from NetScaler
+	// val, _ := strconv.Atoi(data["dropfragcputhreshold"].(string))
+	// d.Set("dropfragcputhreshold", val)
 	d.Set("srcip", data["srcip"])
 	d.Set("srciproundrobin", data["srciproundrobin"])
 	d.Set("useclientsourceipv6", data["useclientsourceipv6"])
