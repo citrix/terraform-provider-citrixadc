@@ -1,6 +1,8 @@
 package citrixadc
 
 import (
+	"strings"
+
 	"github.com/citrix/adc-nitro-go/resource/config/system"
 	"github.com/citrix/adc-nitro-go/service"
 
@@ -8,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"bytes"
+	"crypto/sha512"
+	"encoding/hex"
 	"fmt"
 	"log"
 	"strconv"
@@ -40,10 +44,11 @@ func resourceCitrixAdcSystemuser() *schema.Resource {
 				Computed: true,
 			},
 			"password": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Computed:  false,
-				Sensitive: true,
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         false,
+				Sensitive:        true,
+				DiffSuppressFunc: ignoreHashMatch,
 			},
 			"hashedpassword": {
 				Type:     schema.TypeString,
@@ -96,6 +101,18 @@ func resourceCitrixAdcSystemuser() *schema.Resource {
 	}
 }
 
+func hashPassword(password string) string {
+	hash := sha512.Sum512([]byte(password))
+	return hex.EncodeToString(hash[:])
+}
+
+func ignoreHashMatch(k, old, new string, d *schema.ResourceData) bool {
+	oldStr := strings.ToLower(old)
+	newStr := strings.ToLower(hashPassword(new))
+	log.Printf("[DEBUG] comparing old value: %s with new value %s", oldStr, newStr)
+	return oldStr == newStr
+}
+
 func createSystemuserFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSystemuserFunc")
 	client := meta.(*NetScalerNitroClient).client
@@ -129,7 +146,7 @@ func createSystemuserFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(username)
-
+	d.Set("password", hashPassword(d.Get("password").(string)))
 	err = readSystemuserFunc(d, meta)
 	if err != nil {
 		log.Printf("[ERROR] netscaler-provider: ?? we just created this systemuser but we can't read it ?? %s", username)
@@ -241,6 +258,7 @@ func updateSystemuserFunc(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 	}
+	d.Set("password", hashPassword(d.Get("password").(string)))
 	return readSystemuserFunc(d, meta)
 }
 
