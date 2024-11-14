@@ -316,7 +316,6 @@ func createGslbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		Backupip:               d.Get("backupip").(string),
 		Backuplbmethod:         d.Get("backuplbmethod").(string),
 		Backupsessiontimeout:   d.Get("backupsessiontimeout").(int),
-		Backupvserver:          d.Get("backupvserver").(string),
 		Comment:                d.Get("comment").(string),
 		Considereffectivestate: d.Get("considereffectivestate").(string),
 		Cookiedomain:           d.Get("cookiedomain").(string),
@@ -356,6 +355,18 @@ func createGslbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	_, err := client.AddResource(service.Gslbvserver.Type(), gslbvserverName, &gslbvserver)
 	if err != nil {
 		return err
+	}
+
+	if _, ok := d.GetOk("backupvserver"); ok {
+
+		backupvserverData := make(map[string]string)
+		backupvserverData["backupvserver"] = d.Get("backupvserver").(string)
+		backupvserverData["name"] = gslbvserverName
+
+		_, err := client.UpdateResource(service.Gslbvserver.Type(), gslbvserverName, backupvserverData)
+		if err != nil {
+			return err
+		}
 	}
 
 	d.SetId(gslbvserverName)
