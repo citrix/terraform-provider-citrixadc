@@ -124,6 +124,27 @@ func resourceCitrixAdcAaaparameter() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"httponlycookie": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"enhancedepa": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"wafprotection": {
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Optional: true,
+				Computed: true,
+			},
+			"securityinsights": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -155,6 +176,10 @@ func createAaaparameterFunc(d *schema.ResourceData, meta interface{}) error {
 		Pwdexpirynotificationdays:  d.Get("pwdexpirynotificationdays").(int),
 		Samesite:                   d.Get("samesite").(string),
 		Tokenintrospectioninterval: d.Get("tokenintrospectioninterval").(int),
+		Httponlycookie:             d.Get("httponlycookie").(string),
+		Enhancedepa:                d.Get("enhancedepa").(string),
+		Wafprotection:              toStringList(d.Get("wafprotection").([]interface{})),
+		Securityinsights:           d.Get("securityinsights").(string),
 	}
 
 	err := client.UpdateUnnamedResource(service.Aaaparameter.Type(), &aaaparameter)
@@ -203,6 +228,10 @@ func readAaaparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("pwdexpirynotificationdays", data["pwdexpirynotificationdays"])
 	d.Set("samesite", data["samesite"])
 	d.Set("tokenintrospectioninterval", data["tokenintrospectioninterval"])
+	d.Set("httponlycookie", data["httponlycookie"])
+	d.Set("enhancedepa", data["enhancedepa"])
+	d.Set("wafprotection", data["wafprotection"])
+	d.Set("securityinsights", data["securityinsights"])
 
 	return nil
 
@@ -267,6 +296,7 @@ func updateAaaparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("failedlogintimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Failedlogintimeout has changed for aaaparameter, starting update")
 		aaaparameter.Failedlogintimeout = d.Get("failedlogintimeout").(int)
+		aaaparameter.Maxloginattempts = d.Get("maxloginattempts").(int)
 		hasChange = true
 	}
 	if d.HasChange("ftmode") {
@@ -317,6 +347,26 @@ func updateAaaparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tokenintrospectioninterval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Tokenintrospectioninterval has changed for aaaparameter, starting update")
 		aaaparameter.Tokenintrospectioninterval = d.Get("tokenintrospectioninterval").(int)
+		hasChange = true
+	}
+	if d.HasChange("httponlycookie") {
+		log.Printf("[DEBUG]  citrixadc-provider: Httponlycookie has changed for aaaparameter, starting update")
+		aaaparameter.Httponlycookie = d.Get("httponlycookie").(string)
+		hasChange = true
+	}
+	if d.HasChange("enhancedepa") {
+		log.Printf("[DEBUG]  citrixadc-provider: Enhancedepa has changed for aaaparameter, starting update")
+		aaaparameter.Enhancedepa = d.Get("enhancedepa").(string)
+		hasChange = true
+	}
+	if d.HasChange("wafprotection") {
+		log.Printf("[DEBUG]  citrixadc-provider: wafprotection has changed for aaaparameter, starting update")
+		aaaparameter.Wafprotection = toStringList(d.Get("wafprotection").([]interface{}))
+		hasChange = true
+	}
+	if d.HasChange("securityinsights") {
+		log.Printf("[DEBUG]  citrixadc-provider: Securityinsights has changed for aaaparameter, starting update")
+		aaaparameter.Securityinsights = d.Get("securityinsights").(string)
 		hasChange = true
 	}
 

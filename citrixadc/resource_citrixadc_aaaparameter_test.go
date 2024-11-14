@@ -28,7 +28,7 @@ const testAccAaaparameter_basic = `
 	resource "citrixadc_aaaparameter" "tf_aaaparameter" {
 		enablestaticpagecaching    = "NO"
 		enableenhancedauthfeedback = "YES"
-		defaultauthtype            = "LDAP"
+		defaultauthtype            = "LOCAL"
 		maxaaausers                = 3
 		maxloginattempts           = 5
 		failedlogintimeout         = 15
@@ -60,7 +60,7 @@ func TestAccAaaparameter_basic(t *testing.T) {
 					testAccCheckAaaparameterExist("citrixadc_aaaparameter.tf_aaaparameter", nil),
 					resource.TestCheckResourceAttr("citrixadc_aaaparameter.tf_aaaparameter", "enablestaticpagecaching", "NO"),
 					resource.TestCheckResourceAttr("citrixadc_aaaparameter.tf_aaaparameter", "enableenhancedauthfeedback", "YES"),
-					resource.TestCheckResourceAttr("citrixadc_aaaparameter.tf_aaaparameter", "defaultauthtype", "LDAP"),
+					resource.TestCheckResourceAttr("citrixadc_aaaparameter.tf_aaaparameter", "defaultauthtype", "LOCAL"),
 					resource.TestCheckResourceAttr("citrixadc_aaaparameter.tf_aaaparameter", "maxaaausers", "3"),
 					resource.TestCheckResourceAttr("citrixadc_aaaparameter.tf_aaaparameter", "maxloginattempts", "5"),
 					resource.TestCheckResourceAttr("citrixadc_aaaparameter.tf_aaaparameter", "failedlogintimeout", "15"),
