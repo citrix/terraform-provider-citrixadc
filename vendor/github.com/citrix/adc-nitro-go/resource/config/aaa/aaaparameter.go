@@ -122,6 +122,26 @@ type Aaaparameter struct {
 	* Parameter to enable/disable default CSP header
 	*/
 	Defaultcspheader string `json:"defaultcspheader,omitempty"`
+	/**
+	* Parameter to set/reset HttpOnly Flag for NSC_AAAC/NSC_TMAS cookies in nfactor
+	*/
+	Httponlycookie string `json:"httponlycookie,omitempty"`
+	/**
+	* Parameter to enable/disable EPA v2 functionality
+	*/
+	Enhancedepa string `json:"enhancedepa,omitempty"`
+	/**
+	* Entities for which WAF Protection need to be applied. Available settings function as follows
+		AUTH - Endpoints used for Authentication applicable for both AAATM, IDP, GATEWAY use cases.
+		VPN - Endpoints used for Gateway use cases.
+		DISABLED - No Endpoint WAF protection. Currently supported only in default partition. 
+		Possible values = DISABLED, AUTH, VPN
+	*/
+	Wafprotection []string `json:"wafprotection,omitempty"`
+	/**
+	* On enabling this option, the Citrix ADC will send the security insight records to the configured collectors when request comes to Authentication endpoint
+	*/
+	Securityinsights string `json:"securityinsights,omitempty"`
 
 	//------- Read only Parameter ---------;
 
