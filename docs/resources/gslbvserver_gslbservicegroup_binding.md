@@ -48,6 +48,7 @@ resource "citrixadc_gslbservicegroup" "tf_gslbservicegroup" {
 
 * `name` - (Required) Name of the virtual server on which to perform the binding operation.
 * `servicegroupname` - (Required) The GSLB service group name bound to the selected GSLB virtual server.
+* `order` - (Required) Order number to be assigned to the service when it is bound to the lb vserver. Minimum value = 1 | Maximum value = 8192
 
 
 ## Attribute Reference

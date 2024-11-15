@@ -53,6 +53,7 @@ resource "citrixadc_gslbvserver" "tf_gslbvserver" {
 * `servicename` - (Required) Name of the GSLB service for which to change the weight.
 * `domainname` - (Optional) Domain name for which to change the time to live (TTL) and/or backup service IP address.
 * `weight` - (Optional) Weight to assign to the GSLB service.
+* `order` - (Optional) Order number to be assigned to the service when it is bound to the lb vserver. Minimum value = 1 | Maximum value = 8192
 
 
 ## Attribute Reference

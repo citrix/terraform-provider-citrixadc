@@ -43,6 +43,7 @@ resource "citrixadc_gslbvserver" "tf_gslbvserver" {
 * `cookietimeout` - (Optional) Timeout, in minutes, for the GSLB site cookie.
 * `sitedomainttl` - (Optional) TTL, in seconds, for all internally created site domains (created when a site prefix is configured on a GSLB service) that are associated with this virtual server.
 * `ttl` - (Optional) Time to live (TTL) for the domain.
+* `order` - (Optional) Order number to be assigned to the service when it is bound to the lb vserver. 
 
 
 ## Attribute Reference
