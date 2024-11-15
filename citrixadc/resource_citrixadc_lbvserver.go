@@ -134,7 +134,7 @@ type lbvserver struct {
 	Td                                 int         `json:"td,omitempty"`
 	Thresholdvalue                     int         `json:"thresholdvalue,omitempty"`
 	Tickssincelaststatechange          int         `json:"tickssincelaststatechange,omitempty"`
-	Timeout                            int         `json:"timeout,omitempty"` // Included Omitempty flag, because it doesnot support 0 value
+	Timeout                            int         `json:"timeout"` // Removing omitempty flag as it accepts 0 value
 	Tosid                              int         `json:"tosid,omitempty"`
 	Totalservices                      int         `json:"totalservices,omitempty"`
 	Trofspersistence                   string      `json:"trofspersistence,omitempty"`
