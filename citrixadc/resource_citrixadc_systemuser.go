@@ -102,8 +102,11 @@ func createSystemuserFunc(d *schema.ResourceData, meta interface{}) error {
 	login_username := (*meta.(*NetScalerNitroClient)).Username
 	username := d.Get("username").(string)
 
-	if username == login_username {
-		return fmt.Errorf("It seems you are trying to change the password of the Admin user. If so, please use the resource \"citrixadc_change_password\"")
+	if username == login_username || username == "nsroot" {
+		_, ok := d.GetOk("password")
+		if ok {
+			return fmt.Errorf("It seems you are trying to change the password of the Admin user. If so, please use the resource \"citrixadc_change_password\"")
+		}
 	}
 	systemuser := system.Systemuser{
 		Externalauth:               d.Get("externalauth").(string),
@@ -116,13 +119,22 @@ func createSystemuserFunc(d *schema.ResourceData, meta interface{}) error {
 		Allowedmanagementinterface: toStringList(d.Get("allowedmanagementinterface").([]interface{})),
 	}
 
-	_, err := client.AddResource(service.Systemuser.Type(), username, &systemuser)
-	if err != nil {
-		return err
+	if username == "nsroot" {
+		_, err := client.UpdateResource(service.Systemuser.Type(), username, &systemuser)
+		if err != nil {
+			log.Printf("Error updating systemuser %s", username)
+			return err
+		}
+	} else {
+		_, err := client.AddResource(service.Systemuser.Type(), username, &systemuser)
+		if err != nil {
+			return err
+		}
 	}
+
 	// Ignore bindings unless there is an explicit configuration for it
 	if _, ok := d.GetOk("cmdpolicybinding"); ok {
-		err = updateCmdpolicyBindings(d, meta)
+		err := updateCmdpolicyBindings(d, meta)
 		if err != nil {
 			return err
 		}
@@ -130,7 +142,7 @@ func createSystemuserFunc(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(username)
 
-	err = readSystemuserFunc(d, meta)
+	err := readSystemuserFunc(d, meta)
 	if err != nil {
 		log.Printf("[ERROR] netscaler-provider: ?? we just created this systemuser but we can't read it ?? %s", username)
 		return nil
@@ -248,6 +260,12 @@ func deleteSystemuserFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSystemuserFunc")
 	client := meta.(*NetScalerNitroClient).client
 	systemuserName := d.Id()
+
+	if systemuserName == "nsroot" {
+		d.SetId("")
+		return nil
+	}
+
 	err := client.DeleteResource(service.Systemuser.Type(), systemuserName)
 	if err != nil {
 		return err
