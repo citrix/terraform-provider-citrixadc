@@ -44,6 +44,7 @@ resource "citrixadc_gslbservicegroup_gslbservicegroupmember_binding" "name" {
 * `publicport` - (Optional) The public port associated with the GSLB service's public IP address. The port is mapped to the service's private port number. Applicable to the local GSLB service. Optional. Minimum value =  1
 * `siteprefix` - (Optional) The site's prefix string. When the GSLB service group is bound to a GSLB virtual server, a GSLB site domain is generated internally for each bound serviceitem-domain pair by concatenating the site prefix of the service item and the name of the domain. If the special string NONE is specified, the site-prefix string is unset. When implementing HTTP redirect site persistence, the Citrix ADC redirects GSLB requests to GSLB services by using their site domains.
 * `servicegroupname` - (Optional) Name of the GSLB service group. Minimum length =  1
+* `order` - (Optional) Order number to be assigned to the gslb servicegroup member. Minimum value = 1 | Maximum value = 8192
 
 
 ## Attribute Reference
