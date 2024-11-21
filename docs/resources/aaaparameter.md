@@ -17,6 +17,9 @@ resource "citrixadc_aaaparameter" "tf_aaaparameter" {
   maxaaausers                = 3
   maxloginattempts           = 5
   failedlogintimeout         = 15
+  securityinsights           = "DISABLED"
+  enhancedepa                = "DISABLED"
+  httponlycookie             = "DISABLED"
 }
 ```
 
@@ -44,6 +47,22 @@ resource "citrixadc_aaaparameter" "tf_aaaparameter" {
 * `apitokencache` - (Optional) Option to enable/disable API cache feature. Possible values: [ ENABLED, DISABLED ]
 * `tokenintrospectioninterval` - (Optional) Frequency at which a token must be verified at the Authorization Server (AS) despite being found in cache.
 * `defaultcspheader` - (Optional) Parameter to enable/disable default CSP header. Possible values: [ ENABLED, DISABLED ]
+* `httponlycookie` - (Optional) Parameter to set/reset HttpOnly Flag for NSC_AAAC/NSC_TMAS cookies in nfactor. Default value: DISABLED | Possible values: [ ENABLED, DISABLED ]
+* `enhancedepa` - (Optional) Parameter to enable/disable EPA v2 functionality. Default value: DISABLED | Possible values: [ ENABLED, DISABLED ]
+* `wafprotection` - (Optional) (List of strings) Entities for which WAF Protection need to be applied. Available settings function as follows. 
+  * AUTH - Endpoints used for Authentication applicable for both AAATM, IDP, GATEWAY use cases.
+  * VPN - Endpoints used for Gateway use cases.
+  * DISABLED - No Endpoint WAF protection. Currently supported only in default partition.
+  
+    Possible values: [ DISABLED, AUTH, VPN ]
+
+* `securityinsights` - (Optional) On enabling this option, the Citrix ADC will send the security insight records to the configured collectors when request comes to Authentication endpoint. 
+  * If cs vserver is frontend with Authentication vserver as target for cs action, then record is sent using Authentication vserver name.
+  * If vpn/lb/cs vserver are configured with Authentication ON, then then record is sent using vpn/lb/cs vserver name accordingly.
+  * If authentication vserver is frontend, then record is sent using Authentication vserver name.
+
+    Default value: DISABLED |
+    Possible values: [ ENABLED, DISABLED ]
 
 
 ## Attribute Reference
