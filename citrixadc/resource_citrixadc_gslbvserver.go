@@ -6,7 +6,6 @@ import (
 
 	"github.com/mitchellh/mapstructure"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
@@ -121,8 +120,7 @@ func resourceCitrixAdcGslbvserver() *schema.Resource {
 			},
 			"name": {
 				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Required: true,
 				ForceNew: true,
 			},
 			"netmask": {
@@ -152,8 +150,7 @@ func resourceCitrixAdcGslbvserver() *schema.Resource {
 			},
 			"servicetype": {
 				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Required: true,
 				ForceNew: true,
 			},
 			"sitedomainttl": {
@@ -304,19 +301,13 @@ func resourceCitrixAdcGslbvserver() *schema.Resource {
 func createGslbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  netscaler-provider: In createGslbvserverFunc")
 	client := meta.(*NetScalerNitroClient).client
-	var gslbvserverName string
-	if v, ok := d.GetOk("name"); ok {
-		gslbvserverName = v.(string)
-	} else {
-		gslbvserverName = resource.PrefixedUniqueId("tf-gslbvserver-")
-		d.Set("name", gslbvserverName)
-	}
+	gslbvserverName := d.Get("name").(string)
+
 	gslbvserver := gslb.Gslbvserver{
 		Appflowlog:             d.Get("appflowlog").(string),
 		Backupip:               d.Get("backupip").(string),
 		Backuplbmethod:         d.Get("backuplbmethod").(string),
 		Backupsessiontimeout:   d.Get("backupsessiontimeout").(int),
-		Backupvserver:          d.Get("backupvserver").(string),
 		Comment:                d.Get("comment").(string),
 		Considereffectivestate: d.Get("considereffectivestate").(string),
 		Cookiedomain:           d.Get("cookiedomain").(string),
@@ -356,6 +347,18 @@ func createGslbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	_, err := client.AddResource(service.Gslbvserver.Type(), gslbvserverName, &gslbvserver)
 	if err != nil {
 		return err
+	}
+
+	if _, ok := d.GetOk("backupvserver"); ok {
+
+		backupvserverData := make(map[string]string)
+		backupvserverData["backupvserver"] = d.Get("backupvserver").(string)
+		backupvserverData["name"] = gslbvserverName
+
+		_, err := client.UpdateResource(service.Gslbvserver.Type(), gslbvserverName, backupvserverData)
+		if err != nil {
+			return err
+		}
 	}
 
 	d.SetId(gslbvserverName)

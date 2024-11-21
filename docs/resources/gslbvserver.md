@@ -10,43 +10,21 @@ This resource is used to manage Global Service Load Balancing vserver.
 ## Example usage
 
 ```hcl
-resource "citrixadc_gslbservice" "gslb_svc2" {
-  ip          = "172.16.17.121"
-  port        = "80"
-  servicename = "gslb2vservice"
-  servicetype = "HTTP"
-  sitename    = citrixadc_gslbsite.site_remote.sitename
-}
-
 resource "citrixadc_gslbvserver" "tf_gslbvserver" {
-  dnsrecordtype = "A"
-  name          = "GSLB_East_Coast_Vserver"
-  servicetype   = "HTTP"
-  domain {
-    domainname = "www.fooco.co"
-    ttl        = "60"
-  }
-  domain {
-    domainname = "www.barco.com"
-    ttl        = "65"
-  }
-  service {
-    servicename = "tf_gslbservice1"
-    weight      = "75"
-  }
-  service {
-    servicename =  "tf_gslbservice2"
-    weight      = "100"
-  }
+  name        = "GSLB_East_Coast_Vserver"
+  servicetype = "HTTP"
+  state       = "ENABLED"
+  edr         = "ENABLED"
+  mir         = "DISABLED"
+  lbmethod    = "ROUNDROBIN"
 }
-
 ```
 
 
 ## Argument Reference
 
-* `name` - (Optional) Name for the GSLB virtual server.
-* `servicetype` - (Optional) Protocol used by services bound to the virtual server. Possible values: [ HTTP, FTP, TCP, UDP, SSL, SSL\_BRIDGE, SSL\_TCP, NNTP, ANY, SIP\_UDP, SIP\_TCP, SIP\_SSL, RADIUS, RDP, RTSP, MYSQL, MSSQL, ORACLE ]
+* `name` - (Required) Name for the GSLB virtual server.
+* `servicetype` - (Required) Protocol used by services bound to the virtual server. Possible values: [ HTTP, FTP, TCP, UDP, SSL, SSL\_BRIDGE, SSL\_TCP, NNTP, ANY, SIP\_UDP, SIP\_TCP, SIP\_SSL, RADIUS, RDP, RTSP, MYSQL, MSSQL, ORACLE ]
 * `iptype` - (Optional) The IP type for this GSLB vserver. Possible values: [ IPV4, IPV6 ]
 * `dnsrecordtype` - (Optional) DNS record type to associate with the GSLB virtual server's domain name. Possible values: [ A, AAAA, CNAME, NAPTR ]
 * `lbmethod` - (Optional) Load balancing method for the GSLB virtual server. Possible values: [ ROUNDROBIN, LEASTCONNECTION, LEASTRESPONSETIME, SOURCEIPHASH, LEASTBANDWIDTH, LEASTPACKETS, STATICPROXIMITY, RTT, CUSTOMLOAD, API ]
@@ -89,8 +67,14 @@ resource "citrixadc_gslbvserver" "tf_gslbvserver" {
 * `cookiedomain` - (Optional) The cookie domain for the GSLB site. Used when inserting the GSLB site cookie in the HTTP response.
 * `cookietimeout` - (Optional) Timeout, in minutes, for the GSLB site cookie.
 * `sitedomainttl` - (Optional) TTL, in seconds, for all internally created site domains (created when a site prefix is configured on a GSLB service) that are associated with this virtual server.
-* `domain` - (Optional) A set of domain binding blocks. Documented below.
-* `service` - (Optional) A set of GSLB service biding blocks. Documented below.
+* `domain` - (Optional) A set of domain binding blocks. Documented below. (deprecates soon)
+* `service` - (Optional) A set of GSLB service biding blocks. Documented below. (deprecates soon)
+
+!>
+[**DEPRECATED**] Please use [`gslbvserver_domain_binding`](https://registry.terraform.io/providers/citrix/citrixadc/latest/docs/resources/gslbvserver_domain_binding) to bind `domain` to `gslbvserver` instead of this resource. Support for binding `domain` to `gslbvserver` in this resource will be deprecated soon.
+
+!>
+[**DEPRECATED**] Please use [`gslbvserver_gslbservice_binding`](https://registry.terraform.io/providers/citrix/citrixadc/latest/docs/resources/gslbvserver_gslbservice_binding) to bind `gslbservice` to `gslbvserver` instead of this resource. Support for binding `gslbservice` to `gslbvserver` in this resource will be deprecated soon.
 
 A domain binding supports the following:
 
