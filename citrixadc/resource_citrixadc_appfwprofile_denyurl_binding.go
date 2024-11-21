@@ -23,11 +23,13 @@ func resourceCitrixAdcAppfwprofileDenyurlBinding() *schema.Resource {
 			"alertonly": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
 			},
 			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
 			},
 			"denyurl": {
@@ -38,6 +40,7 @@ func resourceCitrixAdcAppfwprofileDenyurlBinding() *schema.Resource {
 			"isautodeployed": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
 			},
 			"name": {
@@ -48,6 +51,7 @@ func resourceCitrixAdcAppfwprofileDenyurlBinding() *schema.Resource {
 			"state": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
 			},
 		},
