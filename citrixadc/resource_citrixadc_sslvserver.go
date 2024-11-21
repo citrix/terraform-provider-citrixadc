@@ -582,6 +582,23 @@ func updateSslvserverFunc(d *schema.ResourceData, meta interface{}) error {
 func deleteSslvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSslvserverFunc")
 	// sslvserver does not have DELETE operation, but this function is required to set the ID to ""
+
+	// this unsets the sslprofile for the sslvserver, making it no issues to delete the sslprofile
+	if _, ok := d.GetOk("sslprofile"); !ok {
+
+		client := meta.(*NetScalerNitroClient).client
+		sslvserverName := d.Get("vservername").(string)
+
+		sslvserverunset := make(map[string]interface{})
+		sslvserverunset["sslprofile"] = true
+		sslvserverunset["vservername"] = sslvserverName
+
+		err := client.ActOnResource("sslvserver", sslvserverunset, "unset")
+		if err != nil {
+			return err
+		}
+	}
+
 	d.SetId("")
 
 	return nil
