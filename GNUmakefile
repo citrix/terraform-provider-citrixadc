@@ -23,7 +23,7 @@ BINARY=terraform-provider-${NAME}
 VERSION=0.2.0
 OS_ARCH=$(shell go env GOOS)_$(shell go env GOARCH)
 
-default: install
+default: fmt install
 
 tools:
 	GO111MODULE=on go install github.com/client9/misspell/cmd/misspell

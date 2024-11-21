@@ -1,3 +1,19 @@
+## 1.42.0 (Nov 21, 2024)
+
+BUG FIXES
+
+* **citrixadc_lbvserver**: Handled `timeout` attribute to accept zero value. [#1169]
+* **citrixadc_appfwprofile_denyurl_binding**: Updated attributes schema behavior for attributes with `computed` as true.
+* **documentation**: Updated docs with additional `order` attribute for supported resources.
+
+ENHANCEMENTS
+
+* **citrixadc_aaaparameter**: Updated aaaparameter resource with additional supported attributes.
+* **citrixadc_gslbvserver**: Updated gslbvserver resource to handle backupvserver attribute and updated required attribute.
+* **citrixadc_systemuser**: Updated systemuser resource to handle updating of attributes of nsroot user.
+
+[#1169]: https://github.com/citrix/terraform-provider-citrixadc/issues/1169
+
 ## 1.41.0 (Oct 15, 2024)
 
 FEATURES
