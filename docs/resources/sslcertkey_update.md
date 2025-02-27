@@ -28,6 +28,7 @@ resource "citrixadc_sslcertkey_update" "tf_sslcertkey_update" {
 * `inform` - (Optional) Input format of the certificate and the private-key files. The three formats supported by the appliance are: PEM - Privacy Enhanced Mail DER - Distinguished Encoding Rule PFX - Personal Information Exchange. Possible values: [ DER, PEM, PFX ]
 * `passplain` - (Optional) Pass phrase used to encrypt the private-key. Required when adding an encrypted private-key in PEM format.
 * `nodomaincheck` - (Optional) Override the check for matching domain names during a certificate update operation.
+* `linkcertkeyname` - (Optional) Name of the Certificate Authority certificate-key pair to which to link a certificate-key pair.
 
 
 ## Attribute Reference
