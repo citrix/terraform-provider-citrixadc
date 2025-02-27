@@ -1,3 +1,29 @@
+## 1.43.0 (Feb 27, 2025)
+
+FEATURES
+
+* **New Resource**: citrixadc_sslrsakey [#1176]
+* **New Resource**: citrixadc_sslecdsakey [#1176]
+
+BUG FIXES
+
+* **citrixadc_nsrpcnode**: handled clearing of `rpcnode` resource if it is deleted manually. [#1187]
+* **citrixadc_sslprofile**: Updated sslprofile to handle the unbind of ecccurve and ciphers by introducing the attributes. [#1231]
+
+ENHANCEMENTS
+
+* **citrixadc_sslcertkey**: Updated the behavior of cert and key attribute in the schema of sslcertkey resource to handle the updation of cert and key. [#1236]
+* **citrixadc_nitro_info**: Updated the datasource nitro_info with query_args attribute. [#1178]
+* **citrixadc_sslcertkey_update**: Added linkcertkeyname attribute to sslcertkey_update resource. [#1235]
+* **External Libraries**: Updated the external libraries to their stable versions.
+
+[#1187]: https://github.com/citrix/terraform-provider-citrixadc/issues/1187
+[#1235]: https://github.com/citrix/terraform-provider-citrixadc/issues/1235
+[#1178]: https://github.com/citrix/terraform-provider-citrixadc/issues/1178
+[#1176]: https://github.com/citrix/terraform-provider-citrixadc/issues/1176
+[#1236]: https://github.com/citrix/terraform-provider-citrixadc/issues/1236
+[#1231]: https://github.com/citrix/terraform-provider-citrixadc/issues/1231
+
 ## 1.42.0 (Nov 21, 2024)
 
 BUG FIXES
