@@ -23,33 +23,33 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-const testAccSslrsakey_basic = `
+const testAccSslecdsakey_basic = `
 
-	resource "citrixadc_sslrsakey" "tf_sslecdsakey" {
-		keyfile  = "/nsconfig/ssl/demo.pem"
-		bits     = 2048
-		aes256   = true
-		password = "SecretPassword"
-	}
+resource "citrixadc_sslecdsakey" "tf_sslecdsakey" {
+  keyfile  = "/nsconfig/ssl/demoecdsa.pem"
+  curve    = "P_256"
+  aes256   = true
+  password = "SecretPassword"
+}
 `
 
-func TestAccSslrsakey_basic(t *testing.T) {
+func TestAccSslecdsakey_basic(t *testing.T) {
 	// t.Skip("TODO: Need to find a way to test this resource!")
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSslrsakey_basic,
+				Config: testAccSslecdsakey_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSslrsakeyExist("citrixadc_sslrsakey.tf_sslrsakey", nil),
+					testAccCheckSslecdsakeyExist("citrixadc_sslecdsakey.tf_sslecdsakey", nil),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckSslrsakeyExist(n string, id *string) resource.TestCheckFunc {
+func testAccCheckSslecdsakeyExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -57,7 +57,7 @@ func testAccCheckSslrsakeyExist(n string, id *string) resource.TestCheckFunc {
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No sslrsakey name is set")
+			return fmt.Errorf("No sslecdsakey name is set")
 		}
 
 		if id != nil {
