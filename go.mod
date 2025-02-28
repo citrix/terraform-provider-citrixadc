@@ -1,6 +1,8 @@
 module github.com/citrix/terraform-provider-citrixadc
 
-go 1.19
+go 1.23.0
+
+toolchain go1.24.0
 
 require (
 	github.com/citrix/adc-nitro-go v0.0.0-20241114071000-5fec5a6364f2
