@@ -12,6 +12,7 @@ BUG FIXES
 
 ENHANCEMENTS
 
+* **GoLang version**: Updated GoLang version from 1.19.0 to 1.23.0
 * **citrixadc_sslcertkey**: Updated the behavior of cert and key attribute in the schema of sslcertkey resource to handle the updation of cert and key. [#1236]
 * **citrixadc_nitro_info**: Updated the datasource nitro_info with query_args attribute. [#1178]
 * **citrixadc_sslcertkey_update**: Added linkcertkeyname attribute to sslcertkey_update resource. [#1235]
