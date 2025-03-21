@@ -1,0 +1,25 @@
+name: TFsec Security Check
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  tfsec:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install TFsec
+        run: |
+          curl -sSL https://github.com/aquasecurity/tfsec/releases/download/v1.20.0/tfsec-linux-amd64 -o tfsec
+          chmod +x tfsec
+          sudo mv tfsec /usr/local/bin/
+
+      - name: Run TFsec Scan
+        run: tfsec . --force-all-dirs
