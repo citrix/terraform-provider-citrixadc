@@ -21,4 +21,9 @@ jobs:
           sudo mv gosec /usr/local/bin/
 
       - name: Run GoSec Scan
-        run: gosec ./...
+        run: gosec -fmt=sarif -out=gosec.sarif ./...
+  
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: gosec.sarif

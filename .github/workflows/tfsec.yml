@@ -22,4 +22,10 @@ jobs:
           sudo mv tfsec /usr/local/bin/
 
       - name: Run TFsec Scan
-        run: tfsec . --force-all-dirs
+        run: tfsec . --force-all-dirs > tfsec.sarif
+
+      - name: Upload SARIF file
+        uses: actions/upload-artifact@v3
+        with:
+          name: tfsec-sarif
+          path: tfsec.sarif

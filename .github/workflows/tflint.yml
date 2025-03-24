@@ -41,4 +41,9 @@ jobs:
 
       - name: Run tflint recursively
         run: |
-          find . -name "*.tf" | xargs tflint
+          find . -name "*.tf" | xargs tflint > tflint.sarif
+
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: tflint.sarif
