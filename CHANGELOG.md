@@ -1,3 +1,11 @@
+## 1.43.1 (May 12, 2025)
+
+BUG FIXES
+
+* **Go version**: Handled bug due to go version update and updated libraries. Updated go.mod file with  `godebug tlsrsakex=1` setting [#1251]
+
+[#1251]: https://github.com/citrix/terraform-provider-citrixadc/issues/1251
+
 ## 1.43.0 (Feb 27, 2025)
 
 FEATURES
