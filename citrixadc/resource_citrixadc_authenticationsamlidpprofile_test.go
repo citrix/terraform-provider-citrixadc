@@ -136,7 +136,7 @@ func doSslPrecheckforsamlidpprofile(t *testing.T) {
 	for _, filename := range uploads {
 		err := uploadTestdataFile(c, t, filename, "/var/tmp")
 		if err != nil {
-			t.Errorf(err.Error())
+			t.Errorf("%v", err)
 		}
 	}
 }
