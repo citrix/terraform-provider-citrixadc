@@ -322,7 +322,7 @@ func doPreChecks(t *testing.T) {
 	for _, filename := range uploads {
 		err := uploadTestdataFile(c, t, filename, "/var/tmp")
 		if err != nil {
-			t.Errorf(err.Error())
+			t.Errorf("%v", err)
 		}
 	}
 
@@ -404,7 +404,7 @@ func testSslcertificateBindingsConfig(template string, sslcertkey string, snicer
 	log.Printf("sslcertkeyReplacement \"%v\"", sslcertkeyReplacement)
 	log.Printf("snisslcertkeysReplacement \"%v\"", snisslcertkeysReplacement)
 	retval := fmt.Sprintf(template, sslcertkeyReplacement, snisslcertkeysReplacement)
-	log.Printf(fmt.Sprintf("Full config:\n`\n%s\n`", retval))
+	log.Printf("Full config:\n`\n%s\n`", retval)
 	return retval
 }
 
