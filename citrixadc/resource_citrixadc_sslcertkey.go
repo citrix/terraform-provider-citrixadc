@@ -49,7 +49,6 @@ func resourceCitrixAdcSslcertkey() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
-				ForceNew: true,
 			},
 			"hsmkey": {
 				Type:     schema.TypeString,
@@ -61,7 +60,6 @@ func resourceCitrixAdcSslcertkey() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
-				ForceNew: true,
 			},
 			"key": {
 				Type:     schema.TypeString,
@@ -77,7 +75,6 @@ func resourceCitrixAdcSslcertkey() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
-				ForceNew: true,
 			},
 			"notificationperiod": {
 				Type:     schema.TypeInt,
@@ -88,19 +85,16 @@ func resourceCitrixAdcSslcertkey() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
-				ForceNew: true,
 			},
 			"passplain": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
-				ForceNew: true,
 			},
 			"password": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
-				ForceNew: true,
 			},
 		},
 	}
@@ -205,8 +199,12 @@ func updateSslcertkeyFunc(d *schema.ResourceData, meta interface{}) error {
 	sslcertkeyChange := ssl.Sslcertkey{
 		Certkey: d.Get("certkey").(string),
 	}
+	sslcertkeyClear := ssl.Sslcertkey{
+		Certkey: d.Get("certkey").(string),
+	}
 	hasUpdate := false //depending on which field changed, we have to use Update or Change API
 	hasChange := false
+	hasClear := false
 	if d.HasChange("expirymonitor") {
 		log.Printf("[DEBUG] netscaler-provider:  Expirymonitor has changed for sslcertkey %s, starting update", sslcertkeyName)
 		sslcertkeyUpdate.Expirymonitor = d.Get("expirymonitor").(string)
@@ -237,11 +235,6 @@ func updateSslcertkeyFunc(d *schema.ResourceData, meta interface{}) error {
 		sslcertkeyChange.Fipskey = d.Get("fipskey").(string)
 		hasChange = true
 	}
-	if d.HasChange("hsmkey") {
-		log.Printf("[DEBUG]  netscaler-provider: Hsmkey has changed for sslcertkey %s, starting update", sslcertkeyName)
-		sslcertkeyChange.Hsmkey = d.Get("hsmkey").(string)
-		hasChange = true
-	}
 	if d.HasChange("inform") {
 		log.Printf("[DEBUG] netscaler-provider:  inform has changed for sslcertkey %s, starting update", sslcertkeyName)
 		sslcertkeyChange.Inform = d.Get("inform").(string)
@@ -254,8 +247,8 @@ func updateSslcertkeyFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("ocspstaplingcache") {
 		log.Printf("[DEBUG]  netscaler-provider: Ocspstaplingcache has changed for sslcertkey %s, starting update", sslcertkeyName)
-		sslcertkeyChange.Ocspstaplingcache = d.Get("ocspstaplingcache").(bool)
-		hasChange = true
+		sslcertkeyClear.Ocspstaplingcache = d.Get("ocspstaplingcache").(bool)
+		hasClear = true
 	}
 
 	if hasUpdate {
@@ -273,6 +266,14 @@ func updateSslcertkeyFunc(d *schema.ResourceData, meta interface{}) error {
 		_, err := client.ChangeResource(service.Sslcertkey.Type(), sslcertkeyName, &sslcertkeyChange)
 		if err != nil {
 			return fmt.Errorf("Error changing sslcertkey %s", sslcertkeyName)
+		}
+	}
+
+	if hasClear {
+
+		err := client.ActOnResource(service.Sslcertkey.Type(), &sslcertkeyClear, "clear")
+		if err != nil {
+			return fmt.Errorf("Error clearing sslcertkey %s", sslcertkeyName)
 		}
 	}
 
