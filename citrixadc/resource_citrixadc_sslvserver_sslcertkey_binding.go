@@ -70,7 +70,8 @@ func createSslvserver_sslcertkey_bindingFunc(d *schema.ResourceData, meta interf
 	client := meta.(*NetScalerNitroClient).client
 	vservername := d.Get("vservername").(string)
 	certkeyname := d.Get("certkeyname").(string)
-	bindingId := fmt.Sprintf("%s,%s", vservername, certkeyname)
+	snicert := d.Get("snicert").(bool)
+	bindingId := fmt.Sprintf("%s,%s,%t", vservername, certkeyname, snicert)
 
 	sslvserver_sslcertkey_binding := ssl.Sslvservercertkeybinding{
 		Ca:          d.Get("ca").(bool),
@@ -102,10 +103,11 @@ func readSslvserver_sslcertkey_bindingFunc(d *schema.ResourceData, meta interfac
 	client := meta.(*NetScalerNitroClient).client
 
 	bindingId := d.Id()
-	idSlice := strings.SplitN(bindingId, ",", 2)
+	idSlice := strings.SplitN(bindingId, ",", 3)
 
 	vservername := idSlice[0]
 	certkeyname := idSlice[1]
+	snicert := idSlice[2] == "true"
 
 	log.Printf("[DEBUG] citrixadc-provider: Reading sslvserver_sslcertkey_binding state %s", bindingId)
 	findParams := service.FindParams{
@@ -132,7 +134,7 @@ func readSslvserver_sslcertkey_bindingFunc(d *schema.ResourceData, meta interfac
 	// Iterate through results to find the one with the right certkeyname
 	foundIndex := -1
 	for i, v := range dataArr {
-		if v["certkeyname"].(string) == certkeyname {
+		if v["certkeyname"].(string) == certkeyname && v["snicert"].(bool) == snicert {
 			foundIndex = i
 			break
 		}
@@ -170,9 +172,11 @@ func deleteSslvserver_sslcertkey_bindingFunc(d *schema.ResourceData, meta interf
 
 	vservername := idSlice[0]
 	certkeyname := idSlice[1]
+	snicert := idSlice[2] == "true"
 
 	args := make([]string, 0)
 	args = append(args, fmt.Sprintf("certkeyname:%v", certkeyname))
+	args = append(args, fmt.Sprintf("snicert:%v", snicert))
 
 	if v, ok := d.GetOk("ca"); ok {
 		args = append(args, fmt.Sprintf("ca:%v", v))
