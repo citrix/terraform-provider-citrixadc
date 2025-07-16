@@ -55,6 +55,7 @@ func resourceCitrixAdcSslvserver_sslcertkey_binding() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
+				Default:  false,
 			},
 			"vservername": {
 				Type:     schema.TypeString,
