@@ -6,10 +6,11 @@ import (
 	"github.com/citrix/adc-nitro-go/resource/config/appfw"
 
 	"fmt"
-	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"log"
 	"strings"
+
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceCitrixAdcAppfwprofile_crosssitescripting_binding() *schema.Resource {
@@ -96,7 +97,11 @@ func createAppfwprofile_crosssitescripting_bindingFunc(d *schema.ResourceData, m
 	client := meta.(*NetScalerNitroClient).client
 	appFwName := d.Get("name").(string)
 	crosssitescripting := d.Get("crosssitescripting").(string)
-	bindingId := fmt.Sprintf("%s,%s", appFwName, crosssitescripting)
+	formactionurl_xss := d.Get("formactionurl_xss").(string)
+	as_scan_location_xss := d.Get("as_scan_location_xss").(string)
+	as_value_type_xss := d.Get("as_value_type_xss").(string)
+	as_value_expr_xss := d.Get("as_value_expr_xss").(string)
+	bindingId := fmt.Sprintf("%s,%s,%s,%s,%s,%s", appFwName, crosssitescripting, formactionurl_xss, as_scan_location_xss, as_value_type_xss, as_value_expr_xss)
 
 	appfwprofile_crosssitescripting_binding := appfw.Appfwprofilecrosssitescriptingbinding{
 		Alertonly:          d.Get("alertonly").(string),
@@ -133,9 +138,13 @@ func readAppfwprofile_crosssitescripting_bindingFunc(d *schema.ResourceData, met
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: readAppfwprofile_crosssitescripting_bindingFunc: bindingId: %s", bindingId)
-	idSlice := strings.SplitN(bindingId, ",", 2)
+	idSlice := strings.SplitN(bindingId, ",", 6)
 	appFwName := idSlice[0]
 	crosssitescripting := idSlice[1]
+	formactionurl_xss := idSlice[2]
+	as_scan_location_xss := idSlice[3]
+	as_value_type_xss := idSlice[4]
+	as_value_expr_xss := idSlice[5]
 	log.Printf("[DEBUG] citrixadc-provider: Reading appfwprofile_crosssitescripting_binding state %s", bindingId)
 
 	findParams := service.FindParams{
@@ -162,9 +171,16 @@ func readAppfwprofile_crosssitescripting_bindingFunc(d *schema.ResourceData, met
 	// Iterate through results to find the one with the right policy name
 	foundIndex := -1
 	for i, v := range dataArr {
-		if v["crosssitescripting"].(string) == crosssitescripting {
-			foundIndex = i
-			break
+		if v["crosssitescripting"].(string) == crosssitescripting && v["formactionurl_xss"].(string) == formactionurl_xss && v["as_scan_location_xss"].(string) == as_scan_location_xss {
+			if as_value_type_xss != "" && as_value_expr_xss != "" {
+				if v["as_value_type_xss"].(string) == as_value_type_xss && v["as_value_expr_xss"].(string) == as_value_expr_xss {
+					foundIndex = i
+					break
+				}
+			} else {
+				foundIndex = i
+				break
+			}
 		}
 	}
 
