@@ -1,3 +1,16 @@
+## 1.43.2 (July 21, 2025)
+
+FEATURES
+
+* **citrixadc_nsacls**: Add `acls_apply_trigger` attribute that allows users to run apply nsacls every run if value is Yes. Includes validation and automatic reset mechanism for repeatable triggers
+
+BUG FIXES
+
+* **test.go**: Replace non-constant format string in `t.Errorf` with a constant format string for error reporting 
+* **adc-nitro-go**: Fix URL encoding for resource names from PathEscape to QueryEscape
+* **citrixadc_sslcertkey**: Fix for updating sslcertkey's passplain attribute value.
+* **citrixadc_sslvserver_sslcertkey_binding**: Fix for binding a certificate with snicert option.
+
 ## 1.43.1 (May 12, 2025)
 
 BUG FIXES
