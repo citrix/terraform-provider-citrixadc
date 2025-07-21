@@ -10,6 +10,7 @@ BUG FIXES
 * **adc-nitro-go**: Fix URL encoding for resource names from PathEscape to QueryEscape
 * **citrixadc_sslcertkey**: Fix for updating sslcertkey's passplain attribute value.
 * **citrixadc_sslvserver_sslcertkey_binding**: Fix for binding a certificate with snicert option.
+* **golang.org/x/oauth2**: Version upgrade to 0.27.0.
 
 ## 1.43.1 (May 12, 2025)
 
