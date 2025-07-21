@@ -50,7 +50,7 @@ resource "citrixadc_sslvserver_sslcertkey_binding" "tf_binding" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the sslvserver\_sslcertkey\_binding. It is the concatenation of the `vservername` and `certkeyname` attributes separated by a comma.
+* `id` - The id of the sslvserver\_sslcertkey\_binding. It is the concatenation of the `vservername`, `certkeyname` and `snicert` attributes separated by a comma.
 
 
 ## Import
@@ -58,5 +58,5 @@ In addition to the arguments, the following attributes are available:
 A sslvserver\_sslcertkey\_binding can be imported using its id, e.g.
 
 ```shell
-terraform import citrixadc_sslvserver_sslcertkey_binding.tf_binding tf_lbvserver,tf_sslcertkey
+terraform import citrixadc_sslvserver_sslcertkey_binding.tf_binding tf_lbvserver,tf_sslcertkey,true
 ```
