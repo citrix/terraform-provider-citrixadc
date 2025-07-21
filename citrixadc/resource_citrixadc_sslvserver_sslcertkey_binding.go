@@ -53,7 +53,6 @@ func resourceCitrixAdcSslvserver_sslcertkey_binding() *schema.Resource {
 			"snicert": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
 				ForceNew: true,
 				Default:  false,
 			},
