@@ -172,11 +172,9 @@ func deleteSslvserver_sslcertkey_bindingFunc(d *schema.ResourceData, meta interf
 
 	vservername := idSlice[0]
 	certkeyname := idSlice[1]
-	snicert := idSlice[2] == "true"
 
 	args := make([]string, 0)
 	args = append(args, fmt.Sprintf("certkeyname:%v", certkeyname))
-	args = append(args, fmt.Sprintf("snicert:%v", snicert))
 
 	if v, ok := d.GetOk("ca"); ok {
 		args = append(args, fmt.Sprintf("ca:%v", v))
