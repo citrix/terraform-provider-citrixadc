@@ -223,7 +223,7 @@ func deleteAppfwprofile_crosssitescripting_bindingFunc(d *schema.ResourceData, m
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppfwprofile_crosssitescripting_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
-	idSlice := strings.SplitN(bindingId, ",", 2)
+	idSlice := strings.Split(bindingId, ",")
 	appFwName := idSlice[0]
 	crosssitescripting := idSlice[1]
 
