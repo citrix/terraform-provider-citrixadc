@@ -103,11 +103,18 @@ func readSslvserver_sslcertkey_bindingFunc(d *schema.ResourceData, meta interfac
 	client := meta.(*NetScalerNitroClient).client
 
 	bindingId := d.Id()
-	idSlice := strings.SplitN(bindingId, ",", 3)
+	idSlice := strings.Split(bindingId, ",")
 
 	vservername := idSlice[0]
 	certkeyname := idSlice[1]
-	snicert := idSlice[2] == "true"
+	snicert := false
+	if len(idSlice) > 2 {
+		snicert = idSlice[2] == "true"
+	} else {
+		snicert = d.Get("snicert").(bool)
+		bindingId = fmt.Sprintf("%s,%t", bindingId, snicert)
+		d.SetId(bindingId)
+	}
 
 	log.Printf("[DEBUG] citrixadc-provider: Reading sslvserver_sslcertkey_binding state %s", bindingId)
 	findParams := service.FindParams{
