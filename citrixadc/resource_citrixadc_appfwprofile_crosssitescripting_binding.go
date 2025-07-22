@@ -144,14 +144,29 @@ func readAppfwprofile_crosssitescripting_bindingFunc(d *schema.ResourceData, met
 	idSlice := strings.Split(bindingId, ",")
 	appFwName := idSlice[0]
 	crosssitescripting := idSlice[1]
-	formactionurl_xss := idSlice[2]
-	as_scan_location_xss := idSlice[3]
+	formactionurl_xss := ""
+	as_scan_location_xss := ""
 	as_value_type_xss := ""
 	as_value_expr_xss := ""
+	if len(idSlice) > 2 {
+		formactionurl_xss = idSlice[2]
+		as_scan_location_xss = idSlice[3]
+	} else {
+		formactionurl_xss = d.Get("formactionurl_xss").(string)
+		as_scan_location_xss = d.Get("as_scan_location_xss").(string)
+		bindingId = fmt.Sprintf("%s,%s,%s", bindingId, formactionurl_xss, as_scan_location_xss)
+	}
 	if len(idSlice) == 6 {
 		as_value_type_xss = idSlice[4]
 		as_value_expr_xss = idSlice[5]
+	} else {
+		as_value_type_xss = d.Get("as_value_type_xss").(string)
+		as_value_expr_xss = d.Get("as_value_expr_xss").(string)
 	}
+	if as_value_type_xss != "" && as_value_expr_xss != "" {
+		bindingId = fmt.Sprintf("%s,%s,%s", bindingId, as_value_type_xss, as_value_expr_xss)
+	}
+	d.SetId(bindingId)
 	log.Printf("[DEBUG] citrixadc-provider: Reading appfwprofile_crosssitescripting_binding state %s", bindingId)
 
 	findParams := service.FindParams{
@@ -179,7 +194,7 @@ func readAppfwprofile_crosssitescripting_bindingFunc(d *schema.ResourceData, met
 	foundIndex := -1
 	for i, v := range dataArr {
 		if v["crosssitescripting"].(string) == crosssitescripting && v["formactionurl_xss"].(string) == formactionurl_xss && v["as_scan_location_xss"].(string) == as_scan_location_xss {
-			if as_value_type_xss != "" && as_value_expr_xss != "" {
+			if as_value_type_xss != "" && as_value_expr_xss != "" && v["as_value_type_xss"] != nil && v["as_value_expr_xss"] != nil {
 				if v["as_value_type_xss"].(string) == as_value_type_xss && v["as_value_expr_xss"].(string) == as_value_expr_xss {
 					foundIndex = i
 					break
