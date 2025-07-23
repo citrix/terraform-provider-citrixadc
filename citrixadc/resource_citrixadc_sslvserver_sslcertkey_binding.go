@@ -53,7 +53,6 @@ func resourceCitrixAdcSslvserver_sslcertkey_binding() *schema.Resource {
 			"snicert": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
 				ForceNew: true,
 				Default:  false,
 			},
@@ -104,11 +103,18 @@ func readSslvserver_sslcertkey_bindingFunc(d *schema.ResourceData, meta interfac
 	client := meta.(*NetScalerNitroClient).client
 
 	bindingId := d.Id()
-	idSlice := strings.SplitN(bindingId, ",", 3)
+	idSlice := strings.Split(bindingId, ",")
 
 	vservername := idSlice[0]
 	certkeyname := idSlice[1]
-	snicert := idSlice[2] == "true"
+	snicert := false
+	if len(idSlice) > 2 {
+		snicert = idSlice[2] == "true"
+	} else {
+		snicert = d.Get("snicert").(bool)
+		bindingId = fmt.Sprintf("%s,%t", bindingId, snicert)
+		d.SetId(bindingId)
+	}
 
 	log.Printf("[DEBUG] citrixadc-provider: Reading sslvserver_sslcertkey_binding state %s", bindingId)
 	findParams := service.FindParams{
@@ -173,11 +179,9 @@ func deleteSslvserver_sslcertkey_bindingFunc(d *schema.ResourceData, meta interf
 
 	vservername := idSlice[0]
 	certkeyname := idSlice[1]
-	snicert := idSlice[2] == "true"
 
 	args := make([]string, 0)
 	args = append(args, fmt.Sprintf("certkeyname:%v", certkeyname))
-	args = append(args, fmt.Sprintf("snicert:%v", snicert))
 
 	if v, ok := d.GetOk("ca"); ok {
 		args = append(args, fmt.Sprintf("ca:%v", v))
