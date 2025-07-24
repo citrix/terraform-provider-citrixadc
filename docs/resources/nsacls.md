@@ -28,7 +28,7 @@ resource "citrixadc_nsacls" "foo" {
   }
 }
 
-resource "citrixadc_nsacls" "foo" {
+resource "citrixadc_nsacls" "foo_1" {
   acls_apply_trigger = "No"
   acl  {
     aclname = "allowudp"
