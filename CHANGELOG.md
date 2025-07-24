@@ -1,3 +1,14 @@
+## 1.43.3 (July 24, 2025)
+
+BUG FIXES
+
+* **citrixadc_sslvserver_sslcertkey_binding**: Fix for binding a certificate with snicert option.
+* **citrixadc_appfwprofile_crosssitescripting_binding**: Fixing issues while creating HTML Cross Site Scripting Relaxations having optional attributes.
+
+UPDATES
+
+* **nsacls**: Updated documentation to include description for `acls_apply_trigger` attribute
+
 ## 1.43.2 (July 21, 2025)
 
 FEATURES
