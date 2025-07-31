@@ -83,12 +83,6 @@ func providerSchema() map[string]*schema.Schema {
 			Description: "Target NS ip. When defined username, password and endpoint must refer to MAS.",
 			DefaultFunc: schema.EnvDefaultFunc("_MPS_API_PROXY_MANAGED_INSTANCE_IP", ""),
 		},
-		"do_login": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Description: "Perform the login operation and acquire a session token to be used for subsequent requests.",
-			DefaultFunc: schema.EnvDefaultFunc("NS_DO_LOGIN", false),
-		},
 		"partition": {
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -896,10 +890,7 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 	if err != nil {
 		return nil, err
 	}
-	if d.Get("do_login").(bool) {
-		client.Login()
-	}
-
+	client.Login()
 	if partition, ok := d.GetOk("partition"); ok {
 		nspartition := make(map[string]interface{})
 		nspartition["partitionname"] = partition.(string)
