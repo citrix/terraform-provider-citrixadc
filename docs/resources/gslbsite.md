@@ -44,8 +44,10 @@ resource "citrixadc_gslbsite" "tf_site_local" {
 * `clip` - (Optional) Cluster IP address. Specify this parameter to connect to the remote cluster site for GSLB auto-sync. Note: The cluster IP address is defined when creating the cluster.
 * `publicclip` - (Optional) IP address to be used to globally access the remote cluster when it is deployed behind a NAT. It can be same as the normal cluster IP address.
 * `naptrreplacementsuffix` - (Optional) The naptr replacement suffix configured here will be used to construct the naptr replacement field in NAPTR record.
-
-
+* `backupparentlist` - (Optional) The list of backup gslb sites configured in preferred order. Need to be parent gsb sites.
+* `sitepassword` - (Optional) Password to be used for mep communication between gslb site nodes.
+* `newname` - (Optional) New name for the GSLB site.
+  
 ## Attribute Reference
 
 In addition to the arguments, the following attributes are available:
