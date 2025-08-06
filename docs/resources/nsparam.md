@@ -43,6 +43,9 @@ resource "citrixadc_nsparam" "tf_nsparam" {
 * `mgmthttpsport` - (Optional) This allows the configuration of management HTTPS port.
 * `proxyprotocol` - (Optional) Disable/Enable v1 or v2 proxy protocol header for client info insertion. Possible values: [ ENABLED, DISABLED ]
 * `advancedanalyticsstats` - (Optional) Disable/Enable advanace analytics stats. Possible values: [ ENABLED, DISABLED ]
+* `icaports` - (Optional) The ICA ports on the Web server. This allows the system to perform connection off-load for any client request that has a destination port matching one of these configured ports.
+* `secureicaports` - (Optional) The Secure ICA ports on the Web server. This allows the system to perform connection off-load for any client request that has a destination port matching one of these configured ports.
+* `ipttl` - (Optional) Set the IP Time to Live (TTL) and Hop Limit value for all outgoing packets from Citrix ADC.
 
 
 ## Attribute Reference
