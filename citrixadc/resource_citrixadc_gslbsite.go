@@ -181,7 +181,6 @@ func resourceCitrixAdcGslbsite() *schema.Resource {
 			"newname": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 			},
 		},
 	}
@@ -253,13 +252,6 @@ func readGslbsiteFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("siteipaddress", data["siteipaddress"])
 	d.Set("sitetype", data["sitetype"])
 	d.Set("triggermonitor", data["triggermonitor"])
-	if val, ok := data["backupparentlist"]; ok {
-		if list, ok := val.([]interface{}); ok {
-			d.Set("backupparentlist", toStringList(list))
-		}
-	} else {
-		d.Set("backupparentlist", nil)
-	}
 	d.Set("sitepassword", d.Get("sitepassword").(string))
 	d.Set("status", data["status"])
 	d.Set("persistencemepstatus", data["persistencemepstatus"])
@@ -268,6 +260,13 @@ func readGslbsiteFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("sitestate", data["sitestate"])
 	d.Set("oldname", data["oldname"])
 	d.Set("nextgenapiresource", data["_nextgenapiresource"])
+	if val, ok := data["backupparentlist"]; ok {
+		if list, ok := val.([]interface{}); ok {
+			d.Set("backupparentlist", toStringList(list))
+		}
+	} else {
+		d.Set("backupparentlist", nil)
+	}
 
 	return nil
 
@@ -279,7 +278,7 @@ func updateGslbsiteFunc(d *schema.ResourceData, meta interface{}) error {
 	gslbsiteName := d.Get("sitename").(string)
 
 	gslbsite := Gslbsite{
-		Sitename: d.Get("sitename").(string),
+		Sitename: gslbsiteName,
 	}
 	hasRename := false
 	hasChange := false
@@ -320,7 +319,7 @@ func updateGslbsiteFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("sitename") {
 		log.Printf("[DEBUG]  netscaler-provider: Sitename has changed for gslbsite %s, starting update", gslbsiteName)
-		gslbsite.Sitename = d.Get("sitename").(string)
+		gslbsite.Sitename = gslbsiteName
 		hasChange = true
 	}
 	if d.HasChange("triggermonitor") {
