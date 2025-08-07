@@ -21,21 +21,25 @@ resource "citrixadc_nsacls" "foo" {
   }
 
   acl  {
-    aclname = "allowudp"
-    protocol = "UDP"
-    aclaction = "ALLOW"
-    destipval = "192.168.45.55"
-    srcportval = "490-1024"
-       priority = "100"
-  }
-
-  acl  {
     aclname = "restrictvlan"
     aclaction = "DENY"
     vlan = "2000"
     priority = "250"
   }
 }
+
+resource "citrixadc_nsacls" "foo_1" {
+  acls_apply_trigger = "No"
+  acl  {
+    aclname = "allowudp"
+    protocol = "UDP"
+    aclaction = "ALLOW"
+    destipval = "192.168.45.55"
+    srcportval = "490-1024"
+    priority = "100"
+  }
+}
+
 ```
 
 
@@ -43,6 +47,7 @@ resource "citrixadc_nsacls" "foo" {
 
 
 * `aclsname` - (Optional) Name for the acls resource.
+* `acls_apply_trigger` - (Optional) Trigger to force `apply` of ACLs. Set to "Yes" to apply all configured ACLs to the NetScaler. This acts as a toggle mechanism. Valid values are "Yes" and "No". Default: "No". (The value automatically resets to "No" after each read operation, allowing subsequent plans to detect changes when set to "Yes" again.)
 * `acl` - (Optional) A set of block defining acls.
 The acl block supports the following:
 

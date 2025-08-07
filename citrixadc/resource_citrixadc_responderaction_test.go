@@ -152,7 +152,7 @@ func doResponderactionPreChecks(t *testing.T) {
 	for _, filename := range uploads {
 		err := uploadTestdataFile(c, t, filename, "/var/tmp")
 		if err != nil {
-			t.Errorf(err.Error())
+			t.Errorf("%v", err)
 		}
 	}
 
@@ -171,7 +171,7 @@ func doResponderactionPreChecks(t *testing.T) {
 	for _, page := range pages {
 		if err := c.client.ActOnResource(service.Responderhtmlpage.Type(), page, "Import"); err != nil {
 			if !strings.Contains(err.Error(), "Object already exists") {
-				t.Errorf(err.Error())
+				t.Errorf("%v", err)
 			}
 		}
 	}

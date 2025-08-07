@@ -272,7 +272,7 @@ func (c *NitroClient) actOnResource(resourceType string, resourceJSON []byte, ac
 func (c *NitroClient) changeResource(resourceType string, resourceName string, resourceJSON []byte) ([]byte, error) {
 	c.logger.Trace("changing resource", "resourceType", resourceType)
 
-	resourceNameEscaped := neturl.PathEscape(neturl.PathEscape(resourceName))
+	resourceNameEscaped := neturl.QueryEscape(neturl.QueryEscape(resourceName))
 	url := c.url + resourceType + "/" + resourceNameEscaped + "?action=update"
 	c.logger.Trace("changeResource", "url", url)
 
@@ -283,7 +283,7 @@ func (c *NitroClient) changeResource(resourceType string, resourceName string, r
 func (c *NitroClient) updateResource(resourceType string, resourceName string, resourceJSON []byte) ([]byte, error) {
 	c.logger.Trace("Updating resource ", "resourceType", resourceType)
 
-	resourceNameEscaped := neturl.PathEscape(neturl.PathEscape(resourceName))
+	resourceNameEscaped := neturl.QueryEscape(neturl.QueryEscape(resourceName))
 	url := c.url + resourceType + "/" + resourceNameEscaped
 	c.logger.Trace("updateResource ", "url", url)
 
@@ -305,7 +305,7 @@ func (c *NitroClient) deleteResource(resourceType string, resourceName string) (
 	c.logger.Trace("Deleting resource", "resourceType", resourceType)
 	var url string
 	if resourceName != "" {
-		resourceNameEscaped := neturl.PathEscape(neturl.PathEscape(resourceName))
+		resourceNameEscaped := neturl.QueryEscape(neturl.QueryEscape(resourceName))
 		url = c.url + fmt.Sprintf("%s/%s", resourceType, resourceNameEscaped)
 	} else {
 		url = c.url + fmt.Sprintf("%s", resourceType)
@@ -320,7 +320,7 @@ func (c *NitroClient) deleteResourceWithArgs(resourceType string, resourceName s
 	c.logger.Trace("Deleting resource with args", "resourceType", resourceType, "args ", args)
 	var url string
 	if resourceName != "" {
-		resourceNameEscaped := neturl.PathEscape(neturl.PathEscape(resourceName))
+		resourceNameEscaped := neturl.QueryEscape(neturl.QueryEscape(resourceName))
 		url = c.url + fmt.Sprintf("%s/%s?args=", resourceType, resourceNameEscaped)
 	} else {
 		url = c.url + fmt.Sprintf("%s?args=", resourceType)
@@ -346,7 +346,7 @@ func (c *NitroClient) deleteResourceWithArgsMap(resourceType string, resourceNam
 func (c *NitroClient) unbindResource(resourceType string, resourceName string, boundResourceType string, boundResource string, bindingFilterName string) ([]byte, error) {
 	c.logger.Trace("Unbinding resource", "resourceType", resourceType, "resourceName", resourceName)
 	bindingName := resourceType + "_" + boundResourceType + "_binding"
-	resourceNameEscaped := neturl.PathEscape(neturl.PathEscape(resourceName))
+	resourceNameEscaped := neturl.QueryEscape(neturl.QueryEscape(resourceName))
 
 	url := c.url + "/" + bindingName + "/" + resourceNameEscaped + "?args=" + bindingFilterName + ":" + boundResource
 
@@ -357,7 +357,7 @@ func (c *NitroClient) unbindResource(resourceType string, resourceName string, b
 func (c *NitroClient) listBoundResources(resourceName string, resourceType string, boundResourceType string, boundResourceFilterName string, boundResourceFilterValue string) ([]byte, error) {
 	c.logger.Trace("listing bound resources of type ", "resourceType", resourceType, "resourceName", resourceName)
 	var url string
-	resourceNameEscaped := neturl.PathEscape(neturl.PathEscape(resourceName))
+	resourceNameEscaped := neturl.QueryEscape(neturl.QueryEscape(resourceName))
 	if boundResourceFilterName == "" {
 		url = c.url + fmt.Sprintf("%s_%s_binding/%s", resourceType, boundResourceType, resourceNameEscaped)
 	} else {
@@ -389,7 +389,7 @@ func (c *NitroClient) listResource(resourceType string, resourceName string) ([]
 	url := c.url + resourceType
 
 	if resourceName != "" {
-		resourceNameEscaped := neturl.PathEscape(neturl.PathEscape(resourceName))
+		resourceNameEscaped := neturl.QueryEscape(neturl.QueryEscape(resourceName))
 		url = c.url + fmt.Sprintf("%s/%s", resourceType, resourceNameEscaped)
 	}
 	c.logger.Trace("listResource", "url", url)
@@ -403,7 +403,7 @@ func (c *NitroClient) listResourceWithArgs(resourceType string, resourceName str
 	var url string
 
 	if resourceName != "" {
-		resourceNameEscaped := neturl.PathEscape(neturl.PathEscape(resourceName))
+		resourceNameEscaped := neturl.QueryEscape(neturl.QueryEscape(resourceName))
 		url = c.url + fmt.Sprintf("%s/%s", resourceType, resourceNameEscaped)
 	} else {
 		url = c.url + fmt.Sprintf("%s", resourceType)
@@ -496,7 +496,7 @@ func (c *NitroClient) listStat(resourceType, resourceName string) ([]byte, error
 	url := c.statsURL + resourceType
 
 	if resourceName != "" {
-		resourceNameEscaped := neturl.PathEscape(neturl.PathEscape(resourceName))
+		resourceNameEscaped := neturl.QueryEscape(neturl.QueryEscape(resourceName))
 		url = c.statsURL + fmt.Sprintf("%s/%s", resourceType, resourceNameEscaped)
 	}
 	c.logger.Trace("listStat", "url", url)
@@ -510,7 +510,7 @@ func (c *NitroClient) listStatWithArgs(resourceType string, resourceName string,
 	var url string
 
 	if len(resourceName) > 0 {
-		resourceNameEscaped := neturl.PathEscape(neturl.PathEscape(resourceName))
+		resourceNameEscaped := neturl.QueryEscape(neturl.QueryEscape(resourceName))
 		url = c.statsURL + fmt.Sprintf("%s/%s", resourceType, resourceNameEscaped)
 	} else {
 		url = c.statsURL + fmt.Sprintf("%s", resourceType)

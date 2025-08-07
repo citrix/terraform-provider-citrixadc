@@ -1,3 +1,36 @@
+## 1.43.3 (July 24, 2025)
+
+BUG FIXES
+
+* **citrixadc_sslvserver_sslcertkey_binding**: Fix for binding a certificate with snicert option.
+* **citrixadc_appfwprofile_crosssitescripting_binding**: Fixing issues while creating HTML Cross Site Scripting Relaxations having optional attributes.
+
+UPDATES
+
+* **nsacls**: Updated documentation to include description for `acls_apply_trigger` attribute
+
+## 1.43.2 (July 21, 2025)
+
+FEATURES
+
+* **citrixadc_nsacls**: Add `acls_apply_trigger` attribute that allows users to run apply nsacls every run if value is Yes. Includes validation and automatic reset mechanism for repeatable triggers
+
+BUG FIXES
+
+* **test.go**: Replace non-constant format string in `t.Errorf` with a constant format string for error reporting 
+* **adc-nitro-go**: Fix URL encoding for resource names from PathEscape to QueryEscape
+* **citrixadc_sslcertkey**: Fix for updating sslcertkey's passplain attribute value.
+* **citrixadc_sslvserver_sslcertkey_binding**: Fix for binding a certificate with snicert option.
+* **golang.org/x/oauth2**: Version upgrade to 0.27.0.
+
+## 1.43.1 (May 12, 2025)
+
+BUG FIXES
+
+* **Go version**: Handled bug due to go version update and updated libraries. Updated go.mod file with  `godebug tlsrsakex=1` setting [#1251]
+
+[#1251]: https://github.com/citrix/terraform-provider-citrixadc/issues/1251
+
 ## 1.43.0 (Feb 27, 2025)
 
 FEATURES

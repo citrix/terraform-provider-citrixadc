@@ -160,6 +160,30 @@ func resourceCitrixAdcNsparam() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
+			"icaports": {
+				Type: schema.TypeList,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"secureicaports": {
+				Type: schema.TypeList,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"ipttl": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -241,6 +265,16 @@ func createNsparamFunc(d *schema.ResourceData, meta interface{}) error {
 	if data, ok := d.GetOk("useproxyport"); ok {
 		nsparam["useproxyport"] = data.(string)
 	}
+	if listVal, ok := d.Get("secureicaports").([]interface{}); ok {
+		nsparam["secureicaports"] = toStringList(listVal)
+	}
+	if listVal, ok := d.Get("icaports").([]interface{}); ok {
+		nsparam["icaports"] = toStringList(listVal)
+	}
+	if data, ok := d.GetOk("ipttl"); ok {
+		nsparam["ipttl"] = data.(int)
+	}
+
 	err := client.UpdateUnnamedResource(service.Nsparam.Type(), &nsparam)
 	if err != nil {
 		return err
@@ -291,6 +325,21 @@ func readNsparamFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("tcpcip", data["tcpcip"])
 	// d.Set("timezone", data["timezone"]) // This is received as different value from the NetScaler
 	d.Set("useproxyport", data["useproxyport"])
+	if val, ok := data["secureicaports"]; ok {
+		if list, ok := val.([]interface{}); ok {
+			d.Set("secureicaports", toStringList(list))
+		}
+	} else {
+		d.Set("secureicaports", nil)
+	}
+	if val, ok := data["icaports"]; ok {
+		if list, ok := val.([]interface{}); ok {
+			d.Set("icaports", toStringList(list))
+		}
+	} else {
+		d.Set("icaports", nil)
+	}
+	d.Set("ipttl", data["ipttl"])
 
 	return nil
 

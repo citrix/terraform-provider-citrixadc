@@ -9,6 +9,7 @@ import (
 
 	"fmt"
 	"log"
+	"strconv"
 )
 
 func resourceCitrixAdcResponderaction() *schema.Resource {
@@ -116,15 +117,28 @@ func readResponderactionFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
+
 	d.Set("name", data["name"])
 	d.Set("bypasssafetycheck", data["bypasssafetycheck"])
 	d.Set("comment", data["comment"])
 	d.Set("htmlpage", data["htmlpage"])
 	d.Set("name", data["name"])
 	d.Set("reasonphrase", data["reasonphrase"])
-	d.Set("responsestatuscode", data["responsestatuscode"])
 	d.Set("target", data["target"])
 	d.Set("type", data["type"])
+	// Check if the value from the API is a string and convert it to an int
+	// before setting it in the Terraform state.
+	if val, ok := data["responsestatuscode"].(string); ok {
+		if valInt, err := strconv.Atoi(val); err == nil {
+			d.Set("responsestatuscode", valInt)
+		} else {
+			// Log an error if the string cannot be converted to an integer.
+			log.Printf("[ERROR] citrixadc-provider: Failed to convert responsestatuscode string to int: %v", err)
+		}
+	} else {
+		// If the value is not a string, assume it's already an integer and set it directly.
+		d.Set("responsestatuscode", data["responsestatuscode"])
+	}
 
 	return nil
 

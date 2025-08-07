@@ -25,6 +25,12 @@ func resourceCitrixAdcNsacls() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"acls_apply_trigger": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validateAclAction,
+			},
 			"acl": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -195,6 +201,13 @@ func readNsaclsFunc(d *schema.ResourceData, meta interface{}) error {
 		acls[i] = a
 	}
 	d.Set("acl", acls)
+
+	// Reset the trigger to "No" after read operations so that subsequent plans
+	// will detect a change when users set acls_apply_trigger = "Yes".
+	// This creates a toggle mechanism: "No" (default) -> "Yes" (user sets) triggers update,
+	// then reset back to "No" (read function) for the next potential trigger cycle.
+	// So, that the "nsacls" will be applied in every run when the user value is "Yes"
+	d.Set("acls_apply_trigger", "No")
 
 	return nil
 }
@@ -420,4 +433,17 @@ func updateSingleAcl(acl ns.Nsacl, meta interface{}) error {
 	_, err := client.UpdateResource(service.Nsacl.Type(), nsaclName, &acl)
 
 	return err
+}
+
+func validateAclAction(v interface{}, k string) (warnings []string, errors []error) {
+	value := v.(string)
+	validActions := []string{"Yes", "No"}
+	for _, validAction := range validActions {
+		if value == validAction {
+			return nil, nil
+		}
+	}
+	errors = append(errors, fmt.Errorf(
+		"%q must be one of %v (case-sensitive). Received: %q", k, validActions, value))
+	return warnings, errors
 }
