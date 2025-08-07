@@ -341,14 +341,14 @@ func updateGslbsiteFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Gslbsite.Type(), gslbsiteName, &gslbsite)
 		if err != nil {
-			return fmt.Errorf("error updating gslbsite %s", gslbsiteName)
+			return err
 		}
 	}
 
 	if hasRename {
 		err := client.ActOnResource(service.Gslbsite.Type(), &gslbsite, "rename")
 		if err != nil {
-			return fmt.Errorf("error renaming gslbsite %s", gslbsiteName)
+			return err
 		}
 		d.SetId(gslbsite.Newname)
 	}
