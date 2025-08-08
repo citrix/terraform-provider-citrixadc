@@ -50,7 +50,12 @@ resource "citrixadc_auditsyslogaction" "tf_syslogaction" {
 * `sslinterception` - (Optional) Log SSL Interception event information. Possible values: [ ENABLED, DISABLED ]
 * `urlfiltering` - (Optional) Log URL filtering event information. Possible values: [ ENABLED, DISABLED ]
 * `domainresolvenow` - (Optional) Immediately send a DNS query to resolve the server's domain name.
-
+* `managementlog` - (Optional) Management log specifies the categories of log files to be exported. It use destination and transport from PE params. Possible values: [ ALL, SHELL, ACCESS, NSMGMT, NONE ]
+* `mgmtloglevel` - (Optional) Management log level, which specifies the types of events to log. Possible values: [ ALL, EMERGENCY, ALERT, CRITICAL, ERROR, WARNING, NOTICE, INFORMATIONAL, DEBUG, NONE ]
+* `syslogcompliance` - (Optional) Setting this parameter ensures that all the Audit Logs generated for this Syslog Action comply with an RFC.
+* `httpauthtoken` - (Optional) Token for authenticating with the endpoint. If the endpoint requires the Authorization header in a particular format, specify the complete format as the value to this parameter.
+* `httpendpointurl` - (Optional) The URL at which to upload the logs messages on the endpoint.
+* `streamanalytics` - (Optional) Export log stream analytics statistics to syslog server.
 
 ## Attributes
 
