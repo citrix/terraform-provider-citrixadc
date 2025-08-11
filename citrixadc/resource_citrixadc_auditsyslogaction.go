@@ -18,23 +18,23 @@ type Auditsyslogaction struct {
 	Name string `json:"name,omitempty"`
 	/**
 	* IP address of the syslog server.
-	*/
+	 */
 	Serverip string `json:"serverip,omitempty"`
 	/**
 	* SYSLOG server name as a FQDN.  Mutually exclusive with serverIP/lbVserverName
-	*/
+	 */
 	Serverdomainname string `json:"serverdomainname,omitempty"`
 	/**
 	* Time, in seconds, for which the Citrix ADC waits before sending another DNS query to resolve the host name of the syslog server if the last query failed.
-	*/
+	 */
 	Domainresolveretry int `json:"domainresolveretry,omitempty"`
 	/**
 	* Name of the LB vserver. Mutually exclusive with syslog serverIP/serverName
-	*/
+	 */
 	Lbvservername string `json:"lbvservername,omitempty"`
 	/**
 	* Port on which the syslog server accepts connections.
-	*/
+	 */
 	Serverport int `json:"serverport,omitempty"`
 	/**
 	* Audit log level, which specifies the types of events to log.
@@ -79,7 +79,7 @@ type Auditsyslogaction struct {
 	Mgmtloglevel []string `json:"mgmtloglevel,omitempty"`
 	/**
 	* Setting this parameter ensures that all the Audit Logs generated for this Syslog Action comply with an RFC. For example, set it to RFC5424 to ensure RFC 5424 compliance
-	*/
+	 */
 	Syslogcompliance string `json:"syslogcompliance,omitempty"`
 	/**
 	* Format of dates in the logs.
@@ -96,11 +96,11 @@ type Auditsyslogaction struct {
 	Logfacility string `json:"logfacility,omitempty"`
 	/**
 	* Log TCP messages.
-	*/
+	 */
 	Tcp string `json:"tcp,omitempty"`
 	/**
 	* Log access control list (ACL) messages.
-	*/
+	 */
 	Acl string `json:"acl,omitempty"`
 	/**
 	* Time zone used for date and timestamps in the logs.
@@ -121,43 +121,43 @@ type Auditsyslogaction struct {
 	Appflowexport string `json:"appflowexport,omitempty"`
 	/**
 	* Log lsn info
-	*/
+	 */
 	Lsn string `json:"lsn,omitempty"`
 	/**
 	* Log alg info
-	*/
+	 */
 	Alg string `json:"alg,omitempty"`
 	/**
 	* Log subscriber session event information
-	*/
+	 */
 	Subscriberlog string `json:"subscriberlog,omitempty"`
 	/**
 	* Transport type used to send auditlogs to syslog server. Default type is UDP.
-	*/
+	 */
 	Transport string `json:"transport,omitempty"`
 	/**
 	* Token for authenticating with the endpoint. If the endpoint requires the Authorization header in a particular format, specify the complete format as the value to this parameter. For eg., in case of splunk, the Authorization header is required to be of the form - Splunk <auth-token>.
-	*/
+	 */
 	Httpauthtoken string `json:"httpauthtoken,omitempty"`
 	/**
 	* The URL at which to upload the logs messages on the endpoint
-	*/
+	 */
 	Httpendpointurl string `json:"httpendpointurl,omitempty"`
 	/**
 	* Name of the TCP profile whose settings are to be applied to the audit server info to tune the TCP connection parameters.
-	*/
+	 */
 	Tcpprofilename string `json:"tcpprofilename,omitempty"`
 	/**
 	* Max size of log data that can be held in NSB chain of server info.
-	*/
+	 */
 	Maxlogdatasizetohold int `json:"maxlogdatasizetohold,omitempty"`
 	/**
 	* Log DNS related syslog messages
-	*/
+	 */
 	Dns string `json:"dns,omitempty"`
 	/**
 	* Log Content Inspection event information
-	*/
+	 */
 	Contentinspectionlog string `json:"contentinspectionlog,omitempty"`
 	/**
 	* Name of the network profile.
@@ -166,28 +166,27 @@ type Auditsyslogaction struct {
 	Netprofile string `json:"netprofile,omitempty"`
 	/**
 	* Log SSL Interception event information
-	*/
+	 */
 	Sslinterception string `json:"sslinterception,omitempty"`
 	/**
 	* Log URL filtering event information
-	*/
+	 */
 	Urlfiltering string `json:"urlfiltering,omitempty"`
 	/**
 	* Export log stream analytics statistics to syslog server.
-	*/
+	 */
 	Streamanalytics string `json:"streamanalytics,omitempty"`
 	/**
 	* Immediately send a DNS query to resolve the server's domain name.
-	*/
+	 */
 	Domainresolvenow bool `json:"domainresolvenow,omitempty"`
 
 	//------- Read only Parameter ---------;
 
-	Ip string `json:"ip,omitempty"`
-	Builtin string `json:"builtin,omitempty"`
-	Feature string `json:"feature,omitempty"`
+	Ip                 string `json:"ip,omitempty"`
+	Builtin            string `json:"builtin,omitempty"`
+	Feature            string `json:"feature,omitempty"`
 	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
-
 }
 
 func resourceCitrixAdcAuditsyslogaction() *schema.Resource {
@@ -486,7 +485,7 @@ func readAuditsyslogactionFunc(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		d.Set("mgmtloglevel", nil)
 	}
-	
+
 	return nil
 
 }

@@ -161,7 +161,7 @@ func resourceCitrixAdcNsparam() *schema.Resource {
 				ForceNew: true,
 			},
 			"icaports": {
-				Type: schema.TypeList,
+				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
@@ -170,7 +170,7 @@ func resourceCitrixAdcNsparam() *schema.Resource {
 				},
 			},
 			"secureicaports": {
-				Type: schema.TypeList,
+				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
