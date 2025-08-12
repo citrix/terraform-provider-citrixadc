@@ -1,7 +1,6 @@
 package citrixadc
 
 import (
-	"github.com/citrix/adc-nitro-go/resource/config/lb"
 	"github.com/citrix/adc-nitro-go/service"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -10,6 +9,25 @@ import (
 	"log"
 	"strings"
 )
+
+/**
+* Binding class showing the servicegroup that can be bound to lbvserver.
+ */
+type Lbvserverservicegroupbinding struct {
+	/**
+	* The service group name bound to the selected load balancing virtual server.
+	 */
+	Servicegroupname string `json:"servicegroupname,omitempty"`
+	/**
+	* Order number to be assigned to the service when it is bound to the lb vserver.
+	 */
+	Order int `json:"order,omitempty"`
+	/**
+	* Name for the virtual server. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at sign (@), equal sign (=), and hyphen (-) characters. Can be changed after the virtual server is created.
+		CLI Users: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my vserver" or 'my vserver').
+	*/
+	Name string `json:"name,omitempty"`
+}
 
 func resourceCitrixAdcLbvserver_servicegroup_binding() *schema.Resource {
 	return &schema.Resource{
@@ -31,6 +49,11 @@ func resourceCitrixAdcLbvserver_servicegroup_binding() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"order": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -44,9 +67,10 @@ func createLbvserver_servicegroup_bindingFunc(d *schema.ResourceData, meta inter
 
 	bindingId := fmt.Sprintf("%s,%s", name, servicegroupname)
 
-	lbvserver_servicegroup_binding := lb.Lbvserverservicegroupbinding{
+	lbvserver_servicegroup_binding := Lbvserverservicegroupbinding{
 		Name:             d.Get("name").(string),
 		Servicegroupname: d.Get("servicegroupname").(string),
+		Order:            d.Get("order").(int),
 	}
 
 	_, err := client.AddResource(service.Lbvserver_servicegroup_binding.Type(), name, &lbvserver_servicegroup_binding)
@@ -117,6 +141,7 @@ func readLbvserver_servicegroup_bindingFunc(d *schema.ResourceData, meta interfa
 	log.Printf("[DEBUG] citrixadc-provider: Reading lbvserver_servicegroup_binding state %s", bindingId)
 	d.Set("name", data["name"])
 	d.Set("servicegroupname", data["servicegroupname"])
+	d.Set("order", data["order"])
 
 	return nil
 
