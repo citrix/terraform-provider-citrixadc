@@ -35,6 +35,11 @@ resource "citrixadc_dnsprofile" "dnsprofile" {
 * `dnsextendedlogging` - (Optional) DNS extended logging; if enabled, authority and additional section in the response will be logged.
 * `dnsquerylogging` - (Optional) DNS query logging; if enabled, DNS query information such as DNS query id, DNS query flags , DNS domain name and DNS query type will be logged
 * `dropmultiqueryrequest` - (Optional) Drop the DNS requests containing multiple queries. When enabled, DNS requests containing multiple queries will be dropped. In case of proxy configuration by default the DNS request containing multiple queries is forwarded to the backend and in case of ADNS and Resolver configuration NOCODE error response will be sent to the client.
+* `recursiveresolution` - (Optional) DNS recursive resolution; if enabled, will do recursive resolution for DNS query when the profile is associated with ADNS service, CS Vserver and DNS action.
+* `insertecs` - (Optional) Insert ECS Option on DNS query.
+* `replaceecs` - (Optional) Replace ECS Option on DNS query.
+* `maxcacheableecsprefixlength` - (Optional) The maximum ecs prefix length that will be cached.
+* `maxcacheableecsprefixlength6` - (Optional) The maximum ecs prefix length that will be cached for IPv6 subnets.
 
 
 ## Attribute Reference
@@ -51,3 +56,4 @@ A dnsprofile can be imported using its dnsprofilename, e.g.
 ```shell
 terraform import citrixadc_dnsprofile.tf_add tf_profile1
 ```
+
