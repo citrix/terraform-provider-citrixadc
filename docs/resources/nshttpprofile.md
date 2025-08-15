@@ -20,6 +20,7 @@ resource "citrixadc_nshttpprofile" "tf_httpprofile" {
 ## Argument Reference
 
 * `adpttimeout` - (Optional) Adapts the configured request timeout based on flow conditions. The timeout is increased or decreased internally and applied on the flow.
+* `allowonlywordcharactersandhyphen` - (Optional) Allow only word characters [A-Za-z0-9_] and hyphen [-] in the http request/response header names.
 * `altsvc` - (Optional) Choose whether to enable support for Alternative Services.
 * `altsvcvalue` - (Optional) Configure a custom Alternative Services header value that should be inserted in the response to advertise a HTTP/SSL/HTTP_QUIC vserver.
 * `apdexcltresptimethreshold` - (Optional) This option sets the satisfactory threshold (T) for client response time in milliseconds to be used for APDEX calculations. This means a transaction responding in less than this threshold is considered satisfactory. Transaction responding between T and 4\*T is considered tolerable. Any transaction responding in more than 4\*T time is considered frustrating. Citrix ADC maintains stats for such tolerable and frustrating transcations. And client response time related apdex counters are only updated on a vserver which receives clients traffic.
