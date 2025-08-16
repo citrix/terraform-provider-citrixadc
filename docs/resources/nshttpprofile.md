@@ -70,7 +70,16 @@ resource "citrixadc_nshttpprofile" "tf_httpprofile" {
 * `spdy` - (Optional) Enable SPDYv2 or SPDYv3 or both over SSL vserver. SSL will advertise SPDY support either during NPN Handshake or when client will advertises SPDY support during ALPN handshake. Both SPDY versions are enabled when this parameter is set to ENABLED.
 * `weblog` - (Optional) Enable or disable web logging.
 * `websocket` - (Optional) HTTP connection to be upgraded to a web socket connection. Once upgraded, Citrix ADC does not process Layer 7 traffic on this connection.
-
+* `maxheaderfieldlen` - (Optional) Number of bytes allowed for header field for HTTP header. If number of bytes exceeds beyond configured value, then request will be marked invalid.
+* `http2maxrxresetframespermin` - (Optional) Maximum number of incoming RST_STREAM frames allowed in HTTP/2 connection per minute.
+* `http3webtransport` - (Optional) Choose whether to enable support for WebTransport over HTTP/3.
+* `http3minseverconn` - (Optional) Minimum number of HTTP/3 connections established to backend server, on receiving HTTP requests from client before multiplexing the streams into the available HTTP/3 connections.
+* `httppipelinebuffsize` - (Optional) Application pipeline request buffering size, in bytes.
+* `allowonlywordcharactersandhyphen` - (Optional) When enabled allows only the word characters [A-Za-z0-9_] and hyphen [-] in the request/response header names and the connection will be reset for the other characters. When disabled allows any visible (printing) characters (%21-%7E) except delimiters (double quotes and "(),/:;<=>?@[]{}").
+* `hostheadervalidation` - (Optional) Validates the length of the Host header and its syntax. Also includes validation of the port number if specified.
+* `maxduplicateheaderfields` - (Optional) Maximum number of allowed occurrences of header fields that share the same field name. This threshold is enforced only for well-known header field names recognized by NetScaler. If the value is set to 0, then it will be similar to previous behavior, Where we store only 15 duplicate headers and rest are parsed and send to the server.
+* `passprotocolupgrade` - (Optional) Pass protocol upgrade request to the server.
+* `http2extendedconnect` - (Optional) Choose whether to enable HTTP/2 Extended CONNECT mechanism.
 
 ## Attribute Reference
 
