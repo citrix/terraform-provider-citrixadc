@@ -1,3 +1,17 @@
+## 1.43.4 (Aug 19, 2025)
+
+BUG FIXES
+* **citrixadc_responderaction**: Handling responsestatuscode's type from API response. 
+
+UPDATES
+* **citrixadc_nsparam**: Refreshing nsparam with updated attributes.
+* **citrixadc_gslbsite**: Refreshing gslbsite with updated attributes.
+* **citrixadc_auditsyslogaction**: Refreshing auditsyslogaction with updated attributes.
+* **citrixadc_dnsprofile**: Refreshing dnsprofile with updated attributes.
+* **citrixadc_lbvserver_servicegroup_binding**: Refreshing lbvserver_servicegroup_binding with updated attributes.
+* **citrixadc_nshttpprofile.go**: Refreshing nshttpprofile with updated attributes.
+* **provider**: Enhancing basic auth with sessid based authentication.
+
 ## 1.43.3 (July 24, 2025)
 
 BUG FIXES
