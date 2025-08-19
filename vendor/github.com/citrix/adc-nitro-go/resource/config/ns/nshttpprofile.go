@@ -228,12 +228,52 @@ type Nshttpprofile struct {
 	* Maximum number of HTTP/3 streams that can be blocked while HTTP/3 headers are being decoded.
 	*/
 	Http3maxheaderblockedstreams int `json:"http3maxheaderblockedstreams,omitempty"`
-
+	/**
+	* Number of bytes allowed for header field for HTTP header. If number of bytes exceeds beyond configured value, then request will be marked invalid
+	*/
+	Maxheaderfieldlen int `json:"maxheaderfieldlen,omitempty"`
+	/**
+	* Maximum number of incoming RST_STREAM frames allowed in HTTP/2 connection per minute
+	*/
+	Http2maxrxresetframespermin int `json:"http2maxrxresetframespermin,omitempty"`
+	/**
+	* Choose whether to enable support for WebTransport over HTTP/3.
+	*/
+	Http3webtransport string `json:"http3webtransport,omitempty"`
+	/**
+	* Minimum number of HTTP/3 connections established to backend server, on receiving HTTP requests from client before multiplexing the streams into the available HTTP/3 connections.
+	*/
+	Http3minseverconn int `json:"http3minseverconn,omitempty"`
+	/**
+	* Application pipeline request buffering size, in bytes.
+	*/
+	Httppipelinebuffsize int `json:"httppipelinebuffsize,omitempty"`
+	/**
+	* When enabled allows only the word characters [A-Za-z0-9_] and hyphen [-] in the request/response header names and the connection will be reset for the other characters. When disabled allows any visible (printing) characters (%21-%7E) except delimiters (double quotes and "(),/:;<=>?@[]{}").
+	*/
+	Allowonlywordcharactersandhyphen string `json:"allowonlywordcharactersandhyphen,omitempty"`
+	/**
+	* Validates the length of the Host header and its syntax. Also includes validation of the port number if specified
+	*/
+	Hostheadervalidation string `json:"hostheadervalidation,omitempty"`
+	/**
+	* Maximum number of allowed occurrences of header fields that share the same field name. This threshold is enforced only for well-known header field names recognized by NetScaler. If the value is set to 0, then it will be similar to previous behavior, Where we store only 15 duplicate headers and rest are parsed and send to the server.
+	*/
+	Maxduplicateheaderfields int `json:"maxduplicateheaderfields,omitempty"`
+	/**
+	* Pass protocol upgrade request to the server.
+	*/
+	Passprotocolupgrade string `json:"passprotocolupgrade,omitempty"`
+	/**
+	* Choose whether to enable HTTP/2 Extended CONNECT mechanism.
+	*/
+	Http2extendedconnect string `json:"http2extendedconnect,omitempty"`
 	//------- Read only Parameter ---------;
 
 	Refcnt string `json:"refcnt,omitempty"`
 	Builtin string `json:"builtin,omitempty"`
 	Feature string `json:"feature,omitempty"`
 	Apdexsvrresptimethreshold string `json:"apdexsvrresptimethreshold,omitempty"`
+	Dropinvalreqswarning string `json:"dropinvalreqswarning,omitempty"`
 
 }
