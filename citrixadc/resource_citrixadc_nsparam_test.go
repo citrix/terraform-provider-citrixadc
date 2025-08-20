@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -39,6 +40,12 @@ func TestAccNsparam_basic(t *testing.T) {
 				Config: testAccNsparam_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNsparamExist("citrixadc_nsparam.tf_nsparam", nil, map[string]interface{}{"maxconn": "0", "useproxyport": "ENABLED"}),
+				),
+			},
+			{
+				Config: testAccNsparam_basic_step3,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNsparamExist("citrixadc_nsparam.tf_nsparam", nil, map[string]interface{}{"icaports": []int{84, 85}, "secureicaports": []int{8443, 9443}, "ipttl": 150}),
 				),
 			},
 		},
@@ -75,16 +82,62 @@ func testAccCheckNsparamExist(n string, id *string, expectedValues map[string]in
 			return fmt.Errorf("NS parameters %s not found", n)
 		}
 
-		if data["useproxyport"] != expectedValues["useproxyport"] {
-			return fmt.Errorf("Expected value for \"useproxyport\" differs. Expected: \"%v\", Retrieved \"%v\"", expectedValues["proxyprotocol"], data["proxyprotocol"])
-		}
-
-		if data["maxconn"] != expectedValues["maxconn"] {
-			return fmt.Errorf("Expected value for \"maxconn\" differs. Expected: \"%v\", Retrieved \"%v\"", expectedValues["maxconn"], data["maxconn"])
+		// Iterate through all expected values and validate them
+		for key, expectedValue := range expectedValues {
+			if actualValue, exists := data[key]; !exists {
+				return fmt.Errorf("Expected key %q not found in retrieved data", key)
+			} else if !compareValues(expectedValue, actualValue) {
+				return fmt.Errorf("Expected value for %q differs. Expected: %v, Retrieved: %v",
+					key, expectedValue, actualValue)
+			}
 		}
 
 		return nil
 	}
+}
+
+// compareValues compares two values, handling slices and different types properly
+func compareValues(expected, actual interface{}) bool {
+	// Handle nil cases
+	if expected == nil && actual == nil {
+		return true
+	}
+	if expected == nil || actual == nil {
+		return false
+	}
+
+	// Use reflect to get detailed type information
+	expectedVal := reflect.ValueOf(expected)
+	actualVal := reflect.ValueOf(actual)
+
+	// If both are slices, compare them element by element
+	if expectedVal.Kind() == reflect.Slice && actualVal.Kind() == reflect.Slice {
+		if expectedVal.Len() != actualVal.Len() {
+			return false
+		}
+
+		// Compare each element
+		for i := 0; i < expectedVal.Len(); i++ {
+			expectedElem := expectedVal.Index(i).Interface()
+			actualElem := actualVal.Index(i).Interface()
+
+			// Convert both to strings for comparison (since API might return strings)
+			expectedStr := fmt.Sprintf("%v", expectedElem)
+			actualStr := fmt.Sprintf("%v", actualElem)
+
+			if expectedStr != actualStr {
+				return false
+			}
+		}
+		return true
+	}
+
+	// For non-slice types, convert both to strings and compare
+	// This handles the case where API returns strings but we expect ints
+	expectedStr := fmt.Sprintf("%v", expected)
+	actualStr := fmt.Sprintf("%v", actual)
+
+	return expectedStr == actualStr
 }
 
 const testAccNsparam_basic_step1 = `
@@ -100,5 +153,13 @@ const testAccNsparam_basic_step2 = `
 resource "citrixadc_nsparam" "tf_nsparam" {
   maxconn = 0
   useproxyport = "ENABLED"
+}
+`
+const testAccNsparam_basic_step3 = `
+
+resource "citrixadc_nsparam" "tf_nsparam" {
+  icaports = [ 84, 85]
+  secureicaports = [ 8443, 9443]
+  ipttl = 150
 }
 `

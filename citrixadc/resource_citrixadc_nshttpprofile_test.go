@@ -31,6 +31,16 @@ const testAccNshttpprofile_add = `
         markrfc7230noncompliantinval = "ENABLED"
         markhttpheaderextrawserror = "ENABLED"
         dropinvalreqs = "ENABLED"
+		maxheaderfieldlen = 2050
+		http2maxrxresetframespermin = 10
+		http3webtransport = "DISABLED"
+		http3minseverconn = 10
+		httppipelinebuffsize = 131100
+		allowonlywordcharactersandhyphen = "DISABLED"
+		hostheadervalidation = "DISABLED"
+		maxduplicateheaderfields = 10
+		passprotocolupgrade = "DISABLED"
+		http2extendedconnect = "DISABLED"
 	}  
 `
 const testAccNshttpprofile_update = `
@@ -40,6 +50,16 @@ const testAccNshttpprofile_update = `
         markrfc7230noncompliantinval = "DISABLED"
         markhttpheaderextrawserror = "DISABLED"
         dropinvalreqs = "DISABLED"
+		maxheaderfieldlen = 2060
+		http2maxrxresetframespermin = 20
+		http3webtransport = "ENABLED"
+		http3minseverconn = 20
+		httppipelinebuffsize = 131200
+		allowonlywordcharactersandhyphen = "ENABLED"
+		hostheadervalidation = "ENABLED"
+		maxduplicateheaderfields = 12
+		passprotocolupgrade = "ENABLED"
+		http2extendedconnect = "ENABLED"
 	}  
 `
 
@@ -58,6 +78,16 @@ func TestAccNshttpprofile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_nshttpprofile.foo", "markrfc7230noncompliantinval", "ENABLED"),
 					resource.TestCheckResourceAttr("citrixadc_nshttpprofile.foo", "markhttpheaderextrawserror", "ENABLED"),
 					resource.TestCheckResourceAttr("citrixadc_nshttpprofile.foo", "dropinvalreqs", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nshttpprofile.foo", "maxheaderfieldlen", "2050"),
+					resource.TestCheckResourceAttr("citrixadc_nshttpprofile.foo", "http2maxrxresetframespermin", "10"),
+					resource.TestCheckResourceAttr("citrixadc_nshttpprofile.foo", "http3webtransport", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nshttpprofile.foo", "http3minseverconn", "10"),
+					resource.TestCheckResourceAttr("citrixadc_nshttpprofile.foo", "httppipelinebuffsize", "131100"),
+					resource.TestCheckResourceAttr("citrixadc_nshttpprofile.foo", "allowonlywordcharactersandhyphen", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nshttpprofile.foo", "hostheadervalidation", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nshttpprofile.foo", "maxduplicateheaderfields", "10"),
+					resource.TestCheckResourceAttr("citrixadc_nshttpprofile.foo", "passprotocolupgrade", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nshttpprofile.foo", "http2extendedconnect", "DISABLED"),
 				),
 			},
 			{
@@ -69,6 +99,16 @@ func TestAccNshttpprofile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_nshttpprofile.foo", "markrfc7230noncompliantinval", "DISABLED"),
 					resource.TestCheckResourceAttr("citrixadc_nshttpprofile.foo", "markhttpheaderextrawserror", "DISABLED"),
 					resource.TestCheckResourceAttr("citrixadc_nshttpprofile.foo", "dropinvalreqs", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nshttpprofile.foo", "maxheaderfieldlen", "2060"),
+					resource.TestCheckResourceAttr("citrixadc_nshttpprofile.foo", "http2maxrxresetframespermin", "20"),
+					resource.TestCheckResourceAttr("citrixadc_nshttpprofile.foo", "http3webtransport", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nshttpprofile.foo", "http3minseverconn", "20"),
+					resource.TestCheckResourceAttr("citrixadc_nshttpprofile.foo", "httppipelinebuffsize", "131200"),
+					resource.TestCheckResourceAttr("citrixadc_nshttpprofile.foo", "allowonlywordcharactersandhyphen", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nshttpprofile.foo", "hostheadervalidation", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nshttpprofile.foo", "maxduplicateheaderfields", "12"),
+					resource.TestCheckResourceAttr("citrixadc_nshttpprofile.foo", "passprotocolupgrade", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nshttpprofile.foo", "http2extendedconnect", "ENABLED"),
 				),
 			},
 		},
