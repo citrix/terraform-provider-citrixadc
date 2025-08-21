@@ -33,26 +33,32 @@ func TestAccAuditsyslogaction_basic(t *testing.T) {
 			{
 				Config: testAccAuditsyslogaction_basic_step1,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAuditsyslogactionExist("citrixadc_auditsyslogaction.tf_syslogaction", nil),
+					testAccCheckAuditsyslogactionExist("citrixadc_auditsyslogaction.tf_syslogaction", nil, map[string]interface{}{"name": "tf_syslogaction", "serverip": "10.78.60.33", "serverport": 514, "transport": "TCP", "loglevel": []string{"ERROR", "NOTICE"}}),
 				),
 			},
 			{
 				Config: testAccAuditsyslogaction_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAuditsyslogactionExist("citrixadc_auditsyslogaction.tf_syslogaction", nil),
+					testAccCheckAuditsyslogactionExist("citrixadc_auditsyslogaction.tf_syslogaction", nil, map[string]interface{}{"name": "tf_syslogaction", "serverip": "10.78.60.34", "serverport": 514, "transport": "TCP", "loglevel": []string{"ALL"}}),
 				),
 			},
 			{
 				Config: testAccAuditsyslogaction_basic_step3,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAuditsyslogactionExist("citrixadc_auditsyslogaction.tf_syslogaction", nil),
+					testAccCheckAuditsyslogactionExist("citrixadc_auditsyslogaction.tf_syslogaction", nil, map[string]interface{}{"name": "tf_syslogaction", "serverip": "10.78.60.34", "serverport": 514, "transport": "UDP", "loglevel": []string{"NONE"}}),
+				),
+			},
+			{
+				Config: testAccAuditsyslogaction_basic_step4,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuditsyslogactionExist("citrixadc_auditsyslogaction.tf_syslogaction", nil, map[string]interface{}{"name": "tf_syslogaction", "serverip": "10.78.60.34", "serverport": 514, "transport": "UDP", "loglevel": []string{"ALL"}, "managementlog": []string{"ALL"}, "mgmtloglevel": []string{"ALL"}, "syslogcompliance": "RFC5424", "streamanalytics": "ENABLED"}),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckAuditsyslogactionExist(n string, id *string) resource.TestCheckFunc {
+func testAccCheckAuditsyslogactionExist(n string, id *string, expectedValues map[string]interface{}) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -82,9 +88,20 @@ func testAccCheckAuditsyslogactionExist(n string, id *string) resource.TestCheck
 			return fmt.Errorf("%s not found", n)
 		}
 
+		// Iterate through all expected values and validate them
+		for key, expectedValue := range expectedValues {
+			if actualValue, exists := data[key]; !exists {
+				return fmt.Errorf("Expected key %q not found in retrieved data", key)
+			} else if !compareValues(expectedValue, actualValue) {
+				return fmt.Errorf("Expected value for %q differs. Expected: %v, Retrieved: %v",
+					key, expectedValue, actualValue)
+			}
+		}
+
 		return nil
 	}
 }
+
 
 func testAccCheckAuditsyslogactionDestroy(s *terraform.State) error {
 	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
@@ -145,5 +162,20 @@ resource "citrixadc_auditsyslogaction" "tf_syslogaction" {
         "NONE",
     ]
 	transport = "UDP"
+}
+`
+
+const testAccAuditsyslogaction_basic_step4 = `
+
+resource "citrixadc_auditsyslogaction" "tf_syslogaction" {
+    name = "tf_syslogaction"
+    serverip = "10.78.60.34"
+    serverport = 514
+	transport = "UDP"
+	loglevel = [ "ALL" ]
+	managementlog = [ "ALL" ]
+	mgmtloglevel = [ "ALL" ]
+	syslogcompliance = "RFC5424"
+	streamanalytics = "ENABLED"
 }
 `

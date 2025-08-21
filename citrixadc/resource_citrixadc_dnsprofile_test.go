@@ -37,6 +37,11 @@ const testAccDnsprofile_add = `
   		cachenegativeresponses="ENABLED"
   		dropmultiqueryrequest="DISABLED"
   		cacheecsresponses ="DISABLED"
+		recursiveresolution = "ENABLED"
+		insertecs = "ENABLED"
+		replaceecs = "ENABLED"
+		maxcacheableecsprefixlength = 16
+		maxcacheableecsprefixlength6 = 16
 		
 	}
 `
@@ -54,6 +59,11 @@ const testAccDnsprofile_update = `
   		cachenegativeresponses="ENABLED"
   		dropmultiqueryrequest="ENABLED"
   		cacheecsresponses ="DISABLED"
+		recursiveresolution = "DISABLED"
+		insertecs = "DISABLED"
+		replaceecs = "DISABLED"
+		maxcacheableecsprefixlength = 18
+		maxcacheableecsprefixlength6 = 18
 		
 	}
 `
@@ -77,6 +87,11 @@ func TestAccDnsprofile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_dnsprofile.tf_add", "cachenegativeresponses", "ENABLED"),
 					resource.TestCheckResourceAttr("citrixadc_dnsprofile.tf_add", "dropmultiqueryrequest", "DISABLED"),
 					resource.TestCheckResourceAttr("citrixadc_dnsprofile.tf_add", "cacheecsresponses", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_dnsprofile.tf_add", "recursiveresolution", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_dnsprofile.tf_add", "insertecs", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_dnsprofile.tf_add", "replaceecs", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_dnsprofile.tf_add", "maxcacheableecsprefixlength", "16"),
+					resource.TestCheckResourceAttr("citrixadc_dnsprofile.tf_add", "maxcacheableecsprefixlength6", "16"),
 				),
 			},
 			{
@@ -92,6 +107,11 @@ func TestAccDnsprofile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_dnsprofile.tf_add", "cachenegativeresponses", "ENABLED"),
 					resource.TestCheckResourceAttr("citrixadc_dnsprofile.tf_add", "dropmultiqueryrequest", "ENABLED"),
 					resource.TestCheckResourceAttr("citrixadc_dnsprofile.tf_add", "cacheecsresponses", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_dnsprofile.tf_add", "recursiveresolution", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_dnsprofile.tf_add", "insertecs", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_dnsprofile.tf_add", "replaceecs", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_dnsprofile.tf_add", "maxcacheableecsprefixlength", "18"),
+					resource.TestCheckResourceAttr("citrixadc_dnsprofile.tf_add", "maxcacheableecsprefixlength6", "18"),
 				),
 			},
 		},
