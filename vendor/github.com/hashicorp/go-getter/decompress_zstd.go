@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package getter
 
 import (
@@ -32,7 +35,7 @@ func (d *ZstdDecompressor) Decompress(dst, src string, dir bool, umask os.FileMo
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	// zstd compression is second
 	zstdR, err := zstd.NewReader(f)
