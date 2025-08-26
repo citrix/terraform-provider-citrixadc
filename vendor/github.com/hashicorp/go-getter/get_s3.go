@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package getter
 
 import (
@@ -207,24 +210,29 @@ func (g *S3Getter) getObject(ctx context.Context, client *s3.S3, dst, bucket, ke
 		fn := filepath.Base(key)
 		body = g.client.ProgressListener.TrackProgress(fn, 0, *resp.ContentLength, resp.Body)
 	}
-	defer body.Close()
+	defer func() { _ = body.Close() }()
 
 	// There is no limit set for the size of an object from S3
 	return copyReader(dst, body, 0666, g.client.umask(), 0)
 }
 
-func (g *S3Getter) getAWSConfig(region string, url *url.URL, creds *credentials.Credentials) *aws.Config {
+func (g *S3Getter) getAWSConfig(region string, url *url.URL, creds *credentials.Credentials) (*aws.Config, error) {
 	conf := &aws.Config{}
 	metadataURLOverride := os.Getenv("AWS_METADATA_URL")
 	if creds == nil && metadataURLOverride != "" {
+		s, err := session.NewSession(&aws.Config{
+			Endpoint: aws.String(metadataURLOverride),
+		})
+		if err != nil {
+			return nil, err
+		}
+
 		creds = credentials.NewChainCredentials(
 			[]credentials.Provider{
 				&credentials.EnvProvider{},
 				&credentials.SharedCredentialsProvider{Filename: "", Profile: ""},
 				&ec2rolecreds.EC2RoleProvider{
-					Client: ec2metadata.New(session.New(&aws.Config{
-						Endpoint: aws.String(metadataURLOverride),
-					})),
+					Client: ec2metadata.New(s),
 				},
 			})
 	}
@@ -242,14 +250,15 @@ func (g *S3Getter) getAWSConfig(region string, url *url.URL, creds *credentials.
 		conf.Region = aws.String(region)
 	}
 
-	return conf.WithCredentialsChainVerboseErrors(true)
+	conf = conf.WithCredentialsChainVerboseErrors(true)
+	return conf, nil
 }
 
 func (g *S3Getter) parseUrl(u *url.URL) (region, bucket, path, version string, creds *credentials.Credentials, err error) {
 	// This just check whether we are dealing with S3 or
 	// any other S3 compliant service. S3 has a predictable
 	// url as others do not
-	if strings.Contains(u.Host, "amazonaws.com") {
+	if strings.HasSuffix(u.Host, ".amazonaws.com") {
 		// Amazon S3 supports both virtual-hosted–style and path-style URLs to access a bucket, although path-style is deprecated
 		// In both cases few older regions supports dash-style region indication (s3-Region) even if AWS discourages their use.
 		// The same bucket could be reached with:
@@ -301,7 +310,7 @@ func (g *S3Getter) parseUrl(u *url.URL) (region, bucket, path, version string, c
 			path = pathParts[1]
 
 		}
-		if len(hostParts) < 3 && len(hostParts) > 5 {
+		if len(hostParts) < 3 || len(hostParts) > 5 {
 			err = fmt.Errorf("URL is not a valid S3 URL")
 			return
 		}
@@ -351,8 +360,14 @@ func (g *S3Getter) newS3Client(
 			return nil, err
 		}
 	} else {
-		config := g.getAWSConfig(region, url, creds)
-		sess = session.New(config)
+		config, err := g.getAWSConfig(region, url, creds)
+		if err != nil {
+			return nil, err
+		}
+		sess, err = session.NewSession(config)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return s3.New(sess), nil
