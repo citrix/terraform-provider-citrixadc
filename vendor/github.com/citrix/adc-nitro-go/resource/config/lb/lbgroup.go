@@ -64,18 +64,18 @@ type Lbgroup struct {
 	* Expression, or name of a named expression, against which traffic is evaluated.
 		The following requirements apply only to the Citrix ADC CLI:
 		* If the expression includes one or more spaces, enclose the entire expression in double quotation marks.
-		* If the expression itself includes double quotation marks, escape the quotations by using the \ character. 
+		* If the expression itself includes double quotation marks, escape the quotations by using the \ character.
 		* Alternatively, you can use single quotation marks to enclose the rule, in which case you do not have to escape the double quotation marks.
 	*/
 	Rule string `json:"rule,omitempty"`
 	/**
-	* Use this parameter to enable vserver level persistence on group members. This allows member vservers to have their own persistence, but need to be compatible with other members persistence rules. When this setting is enabled persistence sessions created by any of the members can be shared by other member vservers.
-	*/
-	Usevserverpersistency string `json:"usevserverpersistency,omitempty"`
-	/**
 	* When USE_VSERVER_PERSISTENCE is enabled, one can use this setting to designate a member vserver as master which is responsible to create the persistence sessions
 	*/
 	Mastervserver string `json:"mastervserver,omitempty"`
+	/**
+	* Use this parameter to enable vserver level persistence on group members. This allows member vservers to have their own persistence, but need to be compatible with other members persistence rules. When this setting is enabled persistence sessions created by any of the members can be shared by other member vservers.
+	*/
+	Usevserverpersistency string `json:"usevserverpersistency,omitempty"`
 	/**
 	* New name for the load balancing virtual server group.
 	*/
@@ -84,5 +84,6 @@ type Lbgroup struct {
 	//------- Read only Parameter ---------;
 
 	Td string `json:"td,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

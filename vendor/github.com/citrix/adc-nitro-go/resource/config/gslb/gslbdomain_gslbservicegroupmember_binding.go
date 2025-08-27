@@ -49,6 +49,10 @@ type Gslbdomaingslbservicegroupmemberbinding struct {
 	*/
 	Gslbthreshold int `json:"gslbthreshold,omitempty"`
 	/**
+	* Order number assigned to the service when it is bound to the gslb vserver.
+	*/
+	Order int `json:"order,omitempty"`
+	/**
 	* Name of the Domain
 	*/
 	Name string `json:"name,omitempty"`

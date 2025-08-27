@@ -28,5 +28,6 @@ type Linkset struct {
 	//------- Read only Parameter ---------;
 
 	Ifnum string `json:"ifnum,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

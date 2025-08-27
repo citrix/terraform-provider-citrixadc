@@ -37,4 +37,8 @@ type Lsnappsattributes struct {
 	*/
 	Sessiontimeout int `json:"sessiontimeout,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

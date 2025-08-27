@@ -21,7 +21,7 @@ package authentication
 */
 type Authenticationradiusaction struct {
 	/**
-	* Name for the RADIUS action. 
+	* Name for the RADIUS action.
 		Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Cannot be changed after the RADIUS action is added.
 	*/
 	Name string `json:"name,omitempty"`
@@ -42,12 +42,12 @@ type Authenticationradiusaction struct {
 	*/
 	Authtimeout int `json:"authtimeout,omitempty"`
 	/**
-	* Key shared between the RADIUS server and the Citrix ADC. 
+	* Key shared between the RADIUS server and the Citrix ADC.
 		Required to allow the Citrix ADC to communicate with the RADIUS server.
 	*/
 	Radkey string `json:"radkey,omitempty"`
 	/**
-	* If enabled, the Citrix ADC IP address (NSIP) is sent to the RADIUS server as the  Network Access Server IP (NASIP) address. 
+	* If enabled, the Citrix ADC IP address (NSIP) is sent to the RADIUS server as the  Network Access Server IP (NASIP) address.
 		The RADIUS protocol defines the meaning and use of the NASIP address.
 	*/
 	Radnasip string `json:"radnasip,omitempty"`
@@ -64,7 +64,7 @@ type Authenticationradiusaction struct {
 	*/
 	Radattributetype int `json:"radattributetype,omitempty"`
 	/**
-	* RADIUS groups prefix string. 
+	* RADIUS groups prefix string.
 		This groups prefix precedes the group names within a RADIUS attribute for RADIUS group extraction.
 	*/
 	Radgroupsprefix string `json:"radgroupsprefix,omitempty"`
@@ -118,11 +118,24 @@ type Authenticationradiusaction struct {
 	* Send Tunnel Endpoint Client IP address to the RADIUS server.
 	*/
 	Tunnelendpointclientip string `json:"tunnelendpointclientip,omitempty"`
+	/**
+	* Transport mode to RADIUS server.
+	*/
+	Transport string `json:"transport,omitempty"`
+	/**
+	* If transport mode is TLS, specify the name of LB vserver to associate. The LB vserver needs to be of type TCP and service associated needs to be SSL_TCP
+	*/
+	Targetlbvserver string `json:"targetlbvserver,omitempty"`
+	/**
+	* Control whether the Message-Authenticator attribute is included in a RADIUS Access-Request packet.
+	*/
+	Messageauthenticator string `json:"messageauthenticator,omitempty"`
 
 	//------- Read only Parameter ---------;
 
 	Ipaddress string `json:"ipaddress,omitempty"`
 	Success string `json:"success,omitempty"`
 	Failure string `json:"failure,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

@@ -27,4 +27,8 @@ type Nsservicepath struct {
 	*/
 	Servicepathname string `json:"servicepathname,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

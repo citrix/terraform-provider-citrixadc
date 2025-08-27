@@ -30,7 +30,7 @@ type Tmsessionpolicy struct {
 	* Expression, against which traffic is evaluated. Both classic and advance expressions are supported in default partition but only advance expressions in non-default partition.
 		The following requirements apply only to the Citrix ADC CLI:
 		*  If the expression includes one or more spaces, enclose the entire expression in double quotation marks.
-		* If the expression itself includes double quotation marks, escape the quotations by using the \ character. 
+		* If the expression itself includes double quotation marks, escape the quotations by using the \ character.
 		* Alternatively, you can use single quotation marks to enclose the rule, in which case you do not have to escape the double quotation marks.
 	*/
 	Rule string `json:"rule,omitempty"`
@@ -46,5 +46,6 @@ type Tmsessionpolicy struct {
 	Expressiontype string `json:"expressiontype,omitempty"`
 	Hits string `json:"hits,omitempty"`
 	Gotopriorityexpression string `json:"gotopriorityexpression,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

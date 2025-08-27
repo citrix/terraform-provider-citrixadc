@@ -41,4 +41,8 @@ type Autoscaleprofile struct {
 	*/
 	Sharedsecret string `json:"sharedsecret,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

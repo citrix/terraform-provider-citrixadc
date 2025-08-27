@@ -22,13 +22,12 @@ package ha
 type Hafiles struct {
 	/**
 	* Specify one of the following modes of synchronization.
-		* all - Synchronize files related to system configuration, Access Gateway bookmarks, SSL certificates, SSL CRL lists, HTML injection scripts, and Application Firewall XML objects. 
+		* all - Synchronize files related to system configuration, Access Gateway bookmarks, SSL certificates, SSL CRL lists,  and Application Firewall XML objects.
 		* bookmarks - Synchronize all Access Gateway bookmarks.
-		* ssl - Synchronize all certificates, keys, and CRLs for the SSL feature. 
-		* htmlinjection. Synchronize all scripts configured for the HTML injection feature. 
-		* imports. Synchronize all XML objects (for example, WSDLs, schemas, error pages) configured for the application firewall. 
-		* misc - Synchronize all license files and the rc.conf file. 
-		* all_plus_misc - Synchronize files related to system configuration, Access Gateway bookmarks, SSL certificates, SSL CRL lists, HTML injection scripts, application firewall XML objects, licenses, and the rc.conf file.
+		* ssl - Synchronize all certificates, keys, and CRLs for the SSL feature.
+		* imports. Synchronize all XML objects (for example, WSDLs, schemas, error pages) configured for the application firewall.
+		* misc - Synchronize all license files and the rc.conf file.
+		* all_plus_misc - Synchronize files related to system configuration, Access Gateway bookmarks, SSL certificates, SSL CRL lists, application firewall XML objects, licenses, and the rc.conf file.
 	*/
 	Mode []string `json:"mode,omitempty"`
 

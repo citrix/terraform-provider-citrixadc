@@ -29,4 +29,8 @@ type Ipset struct {
 	*/
 	Td int `json:"td,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

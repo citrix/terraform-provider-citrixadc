@@ -51,7 +51,7 @@ type Lbparameter struct {
 	/**
 	* Number of requests, per service, for which to apply the round robin load balancing method before switching to the configured load balancing method, thus allowing services to ramp up gradually to full load. Until the specified number of requests is distributed, the Citrix ADC is said to be implementing the slow start mode (or startup round robin). Implemented for a virtual server when one of the following is true:
 		* The virtual server is newly created.
-		* One or more services are newly bound to the virtual server. 
+		* One or more services are newly bound to the virtual server.
 		* One or more services bound to the virtual server are enabled.
 		* The load balancing method is changed.
 		This parameter applies to all the load balancing virtual servers configured on the Citrix ADC, except for those virtual servers for which the virtual server-level slow start parameters (New Service Startup Request Rate and Increment Interval) are configured. If the global slow start parameter and the slow start parameters for a given virtual server are not set, the appliance implements a default slow start for the virtual server, as follows:
@@ -122,6 +122,17 @@ type Lbparameter struct {
 	* This option is used to specify the number of fingers to be used in PRAC and JARH algorithms for hash based LB methods. Increasing the number of fingers might give better distribution of traffic at the expense of additional memory
 	*/
 	Lbhashfingers int `json:"lbhashfingers,omitempty"`
+	/**
+	* Action to perform when policy evaluation creates an UNDEF condition. Available settings function as follows:
+		* NOLBACTION - Does not consider LB action in making LB decision.
+		* RESET - Reset the request and notify the user, so that the user can resend the request.
+		* DROP - Drop the request without sending a response to the user.
+	*/
+	Undefaction string `json:"undefaction,omitempty"`
+	/**
+	* Use the ADC location instead of client IP for static proximity LB or GSLB decision.
+	*/
+	Proximityfromself string `json:"proximityfromself,omitempty"`
 
 	//------- Read only Parameter ---------;
 
@@ -130,5 +141,7 @@ type Lbparameter struct {
 	Feature string `json:"feature,omitempty"`
 	Adccookieattributewarningmsg string `json:"adccookieattributewarningmsg,omitempty"`
 	Lbhashalgowinsize string `json:"lbhashalgowinsize,omitempty"`
+	Overridepersistencyfororder string `json:"overridepersistencyfororder,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

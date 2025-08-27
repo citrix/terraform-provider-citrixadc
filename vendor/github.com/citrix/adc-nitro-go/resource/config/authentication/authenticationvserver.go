@@ -21,7 +21,7 @@ package authentication
 */
 type Authenticationvserver struct {
 	/**
-	* Name for the new authentication virtual server. 
+	* Name for the new authentication virtual server.
 		Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Can be changed after the authentication virtual server is added by using the rename authentication vserver command.
 		The following requirement applies only to the Citrix ADC CLI:
 		If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my authentication policy" or 'my authentication policy').
@@ -36,7 +36,7 @@ type Authenticationvserver struct {
 	*/
 	Ipv46 string `json:"ipv46,omitempty"`
 	/**
-	* If you are creating a series of virtual servers with a range of IP addresses assigned to them, the length of the range. 
+	* If you are creating a series of virtual servers with a range of IP addresses assigned to them, the length of the range.
 		The new range of authentication virtual servers will have IP addresses consecutively numbered, starting with the primary address specified with the IP Address parameter.
 	*/
 	Range int `json:"range,omitempty"`
@@ -85,7 +85,7 @@ type Authenticationvserver struct {
 	*/
 	Samesite string `json:"samesite,omitempty"`
 	/**
-	* New name of the authentication virtual server. 
+	* New name of the authentication virtual server.
 		Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters.
 		The following requirement applies only to the Citrix ADC CLI:
 		If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, 'my authentication policy' or "my authentication policy").
@@ -126,5 +126,6 @@ type Authenticationvserver struct {
 	Ngname string `json:"ngname,omitempty"`
 	Secondary string `json:"secondary,omitempty"`
 	Groupextraction string `json:"groupextraction,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

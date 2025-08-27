@@ -59,4 +59,8 @@ type Tmformssoaction struct {
 	*/
 	Submitmethod string `json:"submitmethod,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

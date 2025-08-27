@@ -21,11 +21,11 @@ package basic
 */
 type Locationfile struct {
 	/**
-	* Name of the location file, with or without absolute path. If the path is not included, the default path (/var/netscaler/locdb) is assumed. In a high availability setup, the static database must be stored in the same location on both Citrix ADCs.
+	* Name of the location file, with or without absolute path. If the path is not included, the default path (/var/netscaler/locdb) is assumed. In a high availability setup, the static database must be stored in the same location on both NetScalers.
 	*/
 	Locationfile string `json:"Locationfile,omitempty"`
 	/**
-	* Format of the location file. Required for the Citrix ADC to identify how to read the location file.
+	* Format of the location file. Required for the NetScaler to identify how to read the location file.
 	*/
 	Format string `json:"format,omitempty"`
 	/**
@@ -33,5 +33,14 @@ type Locationfile struct {
 		NOTE: The import fails if the object to be imported is on an HTTPS server that requires client certificate authentication for access.
 	*/
 	Src string `json:"src,omitempty"`
+
+	//------- Read only Parameter ---------;
+
+	Curlocfilestatus string `json:"curlocfilestatus,omitempty"`
+	Prevlocationfile string `json:"prevlocationfile,omitempty"`
+	Prevlocfileformat string `json:"prevlocfileformat,omitempty"`
+	Prevlocfilestatus string `json:"prevlocfilestatus,omitempty"`
+	Locfilestatusstr string `json:"locfilestatusstr,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

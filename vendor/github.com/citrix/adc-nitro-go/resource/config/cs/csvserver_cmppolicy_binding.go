@@ -29,10 +29,6 @@ type Csvservercmppolicybinding struct {
 	*/
 	Priority int `json:"priority,omitempty"`
 	/**
-	* The state of SureConnect the specified virtual server.
-	*/
-	Sc string `json:"sc,omitempty"`
-	/**
 	* Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 	*/
 	Gotopriorityexpression string `json:"gotopriorityexpression,omitempty"`

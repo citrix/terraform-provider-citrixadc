@@ -28,5 +28,6 @@ type Vpnsfconfig struct {
 	//------- Read only Parameter ---------;
 
 	Filename string `json:"filename,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

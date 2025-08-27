@@ -101,4 +101,8 @@ type Nscqaparam struct {
 	*/
 	Net3logcoef string `json:"net3logcoef,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

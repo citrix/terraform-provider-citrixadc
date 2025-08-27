@@ -29,4 +29,8 @@ type Videooptimizationparameter struct {
 	*/
 	Quicpacingrate int `json:"quicpacingrate,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

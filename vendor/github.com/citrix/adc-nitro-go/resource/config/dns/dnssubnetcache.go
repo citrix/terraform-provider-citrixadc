@@ -37,5 +37,6 @@ type Dnssubnetcache struct {
 
 	Hostname string `json:"hostname,omitempty"`
 	Nextrecs string `json:"nextrecs,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

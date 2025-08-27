@@ -29,7 +29,7 @@ type Gslbconfig struct {
 	*/
 	Debug bool `json:"debug,omitempty"`
 	/**
-	* Force synchronization of the specified site even if a dependent configuration on the remote site is preventing synchronization or if one or more GSLB entities on the remote site have the same name but are of a different type. You can specify either the name of the remote site that you want to synchronize with the local site, or you can specify All Sites in the configuration utility (the string all-sites in the CLI). If you specify All Sites, all the sites in the GSLB setup are synchronized with the site on the master node. 
+	* Force synchronization of the specified site even if a dependent configuration on the remote site is preventing synchronization or if one or more GSLB entities on the remote site have the same name but are of a different type. You can specify either the name of the remote site that you want to synchronize with the local site, or you can specify All Sites in the configuration utility (the string all-sites in the CLI). If you specify All Sites, all the sites in the GSLB setup are synchronized with the site on the master node.
 		Note: If you select the Force Sync option, the synchronization starts without displaying the commands that are going to be executed.
 	*/
 	Forcesync string `json:"forcesync,omitempty"`

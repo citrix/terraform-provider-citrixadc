@@ -29,7 +29,7 @@ type Dnsnameserver struct {
 	*/
 	Dnsvservername string `json:"dnsvservername,omitempty"`
 	/**
-	* Mark the IP address as one that belongs to a local recursive DNS server on the Citrix ADC. The appliance recursively resolves queries received on an IP address that is marked as being local. For recursive resolution to work, the global DNS parameter, Recursion, must also be set. 
+	* Mark the IP address as one that belongs to a local recursive DNS server on the Citrix ADC. The appliance recursively resolves queries received on an IP address that is marked as being local. For recursive resolution to work, the global DNS parameter, Recursion, must also be set.
 		If no name server is marked as being local, the appliance functions as a stub resolver and load balances the name servers.
 	*/
 	Local bool `json:"local,omitempty"`
@@ -53,5 +53,6 @@ type Dnsnameserver struct {
 	Nameserverstate string `json:"nameserverstate,omitempty"`
 	Clmonowner string `json:"clmonowner,omitempty"`
 	Clmonview string `json:"clmonview,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

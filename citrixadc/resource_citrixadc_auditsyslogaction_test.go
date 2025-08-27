@@ -102,7 +102,6 @@ func testAccCheckAuditsyslogactionExist(n string, id *string, expectedValues map
 	}
 }
 
-
 func testAccCheckAuditsyslogactionDestroy(s *terraform.State) error {
 	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
 

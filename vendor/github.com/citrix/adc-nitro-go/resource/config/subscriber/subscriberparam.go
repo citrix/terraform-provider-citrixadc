@@ -38,7 +38,7 @@ type Subscriberparam struct {
 	* q!Idle Timeout, in seconds, after which Citrix ADC will take an idleAction on a subscriber session (refer to 'idleAction' arguement in 'set subscriber param' for more details on idleAction). Any data-plane or control plane activity updates the idleTimeout on subscriber session. idleAction could be to 'just delete the session' or 'delete and CCR-T' (if PCRF is configured) or 'do not delete but send a CCR-U'. 
 		Zero value disables the idle timeout. !
 	*/
-	Idlettl int `json:"idlettl"`
+	Idlettl int `json:"idlettl,omitempty"`
 	/**
 	* q!Once idleTTL exprires on a subscriber session, Citrix ADC will take an idle action on that session. idleAction could be chosen from one of these ==>
 		1. ccrTerminate: (default) send CCR-T to inform PCRF about session termination and delete the session.  
@@ -55,5 +55,6 @@ type Subscriberparam struct {
 
 	Builtin string `json:"builtin,omitempty"`
 	Feature string `json:"feature,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

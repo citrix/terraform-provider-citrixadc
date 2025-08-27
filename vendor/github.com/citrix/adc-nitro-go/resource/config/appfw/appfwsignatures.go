@@ -58,32 +58,34 @@ type Appfwsignatures struct {
 	*/
 	Vendortype string `json:"vendortype,omitempty"`
 	/**
-	* Merges signature file with default signature file.
-	*/
-	Mergedefault bool `json:"mergedefault,omitempty"`
-	/**
-	* Flag used to enable/disable auto enable new signatures.
+	* Flag used to enable/disable auto enable new signatures
 	*/
 	Autoenablenewsignatures string `json:"autoenablenewsignatures,omitempty"`
 	/**
-	* Signature rule IDs to be Enabled/Disabled.
+	* Signature rule IDs to be Enabled/Disabled
 	*/
 	Ruleid []int `json:"ruleid,omitempty"`
 	/**
-	* Signature category to be Enabled/Disabled.
+	* Signature category to be Enabled/Disabled
 	*/
 	Category string `json:"category,omitempty"`
 	/**
-	* Flag used to enable/disable enable signature rule IDs/Signature Category.
+	* Flag used to enable/disable enable signature rule IDs/Signature Category
 	*/
 	Enabled string `json:"enabled,omitempty"`
 	/**
-	* Signature action.
+	* Signature action
 	*/
 	Action []string `json:"action,omitempty"`
+	/**
+	* Merges signature file with default signature file.
+	*/
+	Mergedefault bool `json:"mergedefault,omitempty"`
 
 	//------- Read only Parameter ---------;
 
 	Response string `json:"response,omitempty"`
+	Encryptedversion string `json:"encryptedversion,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

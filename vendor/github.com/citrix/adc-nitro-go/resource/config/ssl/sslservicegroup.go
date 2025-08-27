@@ -83,6 +83,10 @@ type Sslservicegroup struct {
 	* Parameter indicating to check whether peer's certificate is signed with one of signature-hash combination supported by Citrix ADC
 	*/
 	Strictsigdigestcheck string `json:"strictsigdigestcheck,omitempty"`
+	/**
+	* This parameter is used to enable or disable the logging of additional information, such as the Session ID and SNI names, from SSL handshakes to the audit logs.
+	*/
+	Sslclientlogs string `json:"sslclientlogs,omitempty"`
 
 	//------- Read only Parameter ---------;
 
@@ -108,5 +112,7 @@ type Sslservicegroup struct {
 	Servicename string `json:"servicename,omitempty"`
 	Ca string `json:"ca,omitempty"`
 	Snicert string `json:"snicert,omitempty"`
+	Quicflag string `json:"quicflag,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

@@ -82,5 +82,6 @@ type Ipsecprofile struct {
 	Responderonly string `json:"responderonly,omitempty"`
 	Builtin string `json:"builtin,omitempty"`
 	Feature string `json:"feature,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

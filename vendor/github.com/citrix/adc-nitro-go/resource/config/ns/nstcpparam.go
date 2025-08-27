@@ -152,7 +152,7 @@ type Nstcpparam struct {
 	/**
 	* The timeout value in seconds for idle mptcp subflows. If this timeout is not set, idle subflows are cleared after cltTimeout of vserver
 	*/
-	Mptcpsftimeout int `json:"mptcpsftimeout"` // Zero is a valid value
+	Mptcpsftimeout int `json:""` // Zero is a valid value
 	/**
 	* The minimum idle time value in seconds for idle mptcp subflows after which the sublow is replaced by new incoming subflow if maximum subflow limit is reached. The priority for replacement is given to those subflow without any transaction
 	*/
@@ -198,6 +198,10 @@ type Nstcpparam struct {
 	*/
 	Mptcpfastcloseoption string `json:"mptcpfastcloseoption,omitempty"`
 	/**
+	* If enabled, Citrix ADC retransmits MPTCP ADD-ADDR option if echo response is not received within the timeout interval. The retransmission is attempted only once.
+	*/
+	Mptcpreliableaddaddr string `json:"mptcpreliableaddaddr,omitempty"`
+	/**
 	* Timeout in seconds after which a new TFO Key is computed for generating TFO Cookie. If zero, the same key is used always. If timeout is less than 120seconds, NS defaults to 120seconds timeout.
 	*/
 	Tcpfastopencookietimeout int `json:"tcpfastopencookietimeout"` // Zero is a valid value
@@ -213,10 +217,23 @@ type Nstcpparam struct {
 	* If enabled, non-negotiated TCP options are removed from the received packet while proxying it. By default, non-negotiated TCP options would be replaced by NOPs in the proxied packets. This option is not applicable for Citrix ADC generated packets.
 	*/
 	Compacttcpoptionnoop string `json:"compacttcpoptionnoop,omitempty"`
+	/**
+	* If enabled, Delink client and server connection, when there is outstanding data to be sent to the other side.
+	*/
+	Delinkclientserveronrst string `json:"delinkclientserveronrst,omitempty"`
+	/**
+	* Limits number of Challenge ACK sent per second, as recommended in RFC 5961(Improving TCP's Robustness to Blind In-Window Attacks)
+	*/
+	Rfc5961chlgacklimit int `json:"rfc5961chlgacklimit,omitempty"`
+	/**
+	* If enabled, increase the ISN variation in SYN-ACKs sent by the NetScaler
+	*/
+	Enhancedisngeneration string `json:"enhancedisngeneration,omitempty"`
 
 	//------- Read only Parameter ---------;
 
 	Builtin string `json:"builtin,omitempty"`
 	Feature string `json:"feature,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

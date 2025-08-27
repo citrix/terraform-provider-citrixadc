@@ -26,12 +26,6 @@ func resourceCitrixAdcPolicydataset() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"indextype": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -57,10 +51,9 @@ func createPolicydatasetFunc(d *schema.ResourceData, meta interface{}) error {
 		d.Set("name", policydatasetName)
 	}
 	policydataset := policy.Policydataset{
-		Comment:   d.Get("comment").(string),
-		Indextype: d.Get("indextype").(string),
-		Name:      d.Get("name").(string),
-		Type:      d.Get("type").(string),
+		Comment: d.Get("comment").(string),
+		Name:    d.Get("name").(string),
+		Type:    d.Get("type").(string),
 	}
 
 	_, err := client.AddResource(service.Policydataset.Type(), policydatasetName, &policydataset)
@@ -91,7 +84,6 @@ func readPolicydatasetFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("name", data["name"])
 	d.Set("comment", data["comment"])
-	d.Set("indextype", data["indextype"])
 	d.Set("name", data["name"])
 	d.Set("type", data["type"])
 

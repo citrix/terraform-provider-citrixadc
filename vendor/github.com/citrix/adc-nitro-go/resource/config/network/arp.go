@@ -69,5 +69,6 @@ type Arp struct {
 	Type string `json:"type,omitempty"`
 	Channel string `json:"channel,omitempty"`
 	Controlplane string `json:"controlplane,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

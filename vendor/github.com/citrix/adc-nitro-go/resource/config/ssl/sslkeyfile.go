@@ -26,9 +26,13 @@ type Sslkeyfile struct {
 	Name string `json:"name,omitempty"`
 	/**
 	* URL specifying the protocol, host, and path, including file name, to the key file to be imported. For example, http://www.example.com/key_file.
-		NOTE: The import fails if the object to be imported is on an HTTPS server that requires client certificate authentication for access.
+		NOTE: The import fails if the object to be imported is on an HTTPS server that requires client certificate authentication for access, and the issuer certificate of the HTTPS server is not present in the specific path on NetScaler to authenticate the HTTPS server.
 	*/
 	Src string `json:"src,omitempty"`
 	Password string `json:"password,omitempty"`
+
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

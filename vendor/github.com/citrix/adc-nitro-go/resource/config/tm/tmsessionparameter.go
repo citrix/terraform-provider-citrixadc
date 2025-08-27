@@ -66,5 +66,6 @@ type Tmsessionparameter struct {
 	Name string `json:"name,omitempty"`
 	Tmsessionpolicybindtype string `json:"tmsessionpolicybindtype,omitempty"`
 	Tmsessionpolicycount string `json:"tmsessionpolicycount,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

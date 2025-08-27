@@ -71,4 +71,8 @@ type Authenticationazurekeyvault struct {
 	*/
 	Authentication string `json:"authentication,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

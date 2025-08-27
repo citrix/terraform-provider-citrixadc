@@ -76,5 +76,6 @@ type Inat struct {
 	//------- Read only Parameter ---------;
 
 	Flags string `json:"flags,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

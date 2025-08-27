@@ -29,10 +29,6 @@ type Policyexpression struct {
 	*/
 	Value string `json:"value,omitempty"`
 	/**
-	* Description for the expression.
-	*/
-	Description string `json:"description,omitempty"`
-	/**
 	* Any comments associated with the expression. Displayed upon viewing the policy expression.
 	*/
 	Comment string `json:"comment,omitempty"`
@@ -53,5 +49,6 @@ type Policyexpression struct {
 	Isdefault string `json:"isdefault,omitempty"`
 	Builtin string `json:"builtin,omitempty"`
 	Feature string `json:"feature,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

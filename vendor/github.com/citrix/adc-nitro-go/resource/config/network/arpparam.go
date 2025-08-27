@@ -29,4 +29,8 @@ type Arpparam struct {
 	*/
 	Spoofvalidation string `json:"spoofvalidation,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

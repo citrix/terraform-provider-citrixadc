@@ -27,23 +27,23 @@ type Cachecontentgroup struct {
 	/**
 	* Relative expiry time, in seconds, for expiring positive responses with response codes between 200 and 399. Cannot be used in combination with other Expiry attributes. Similar to -relExpiry but has lower precedence.
 	*/
-	Weakposrelexpiry int `json:"weakposrelexpiry"`
+	Weakposrelexpiry int `json:"weakposrelexpiry"` // Zero is a valid value
 	/**
 	* Heuristic expiry time, in percent of the duration, since the object was last modified.
 	*/
-	Heurexpiryparam int `json:"heurexpiryparam"`
+	Heurexpiryparam int `json:"heurexpiryparam"` // Zero is a valid value
 	/**
 	* Relative expiry time, in seconds, after which to expire an object cached in this content group.
 	*/
-	Relexpiry int `json:"relexpiry"`
+	Relexpiry int `json:"relexpiry"` // Zero is a valid value
 	/**
 	* Relative expiry time, in milliseconds, after which to expire an object cached in this content group.
 	*/
-	Relexpirymillisec int `json:"relexpirymillisec"`
+	Relexpirymillisec int `json:"relexpirymillisec"` // Zero is a valid value
 	/**
-	* Local time, up to 4 times a day, at which all objects in the content group must expire. 
+	* Local time, up to 4 times a day, at which all objects in the content group must expire.
 		CLI Users:
-		For example, to specify that the objects in the content group should expire by 11:00 PM, type the following command: add cache contentgroup <contentgroup name> -absexpiry 23:00 
+		For example, to specify that the objects in the content group should expire by 11:00 PM, type the following command: add cache contentgroup <contentgroup name> -absexpiry 23:00
 		To specify that the objects in the content group should expire at 10:00 AM, 3 PM, 6 PM, and 11:00 PM, type: add cache contentgroup <contentgroup name> -absexpiry 10:00 15:00 18:00 23:00
 	*/
 	Absexpiry []string `json:"absexpiry,omitempty"`
@@ -54,7 +54,7 @@ type Cachecontentgroup struct {
 	/**
 	* Relative expiry time, in seconds, for expiring negative responses. This value is used only if the expiry time cannot be determined from any other source. It is applicable only to the following status codes: 307, 403, 404, and 410.
 	*/
-	Weaknegrelexpiry int `json:"weaknegrelexpiry"`
+	Weaknegrelexpiry int `json:"weaknegrelexpiry"` // Zero is a valid value
 	/**
 	* Parameters to use for parameterized hit evaluation of an object. Up to 128 parameters can be specified. Mutually exclusive with the Hit Selector parameter.
 	*/
@@ -95,15 +95,15 @@ type Cachecontentgroup struct {
 	/**
 	* Time period, in seconds before an object's calculated expiry time, during which to attempt prefetch.
 	*/
-	Prefetchperiod int `json:"prefetchperiod"`
+	Prefetchperiod int `json:"prefetchperiod"` // Zero is a valid value
 	/**
 	* Time period, in milliseconds before an object's calculated expiry time, during which to attempt prefetch.
 	*/
-	Prefetchperiodmillisec int `json:"prefetchperiodmillisec"`
+	Prefetchperiodmillisec int `json:"prefetchperiodmillisec"` // Zero is a valid value
 	/**
 	* Maximum number of outstanding prefetches that can be queued for the content group.
 	*/
-	Prefetchmaxpending int `json:"prefetchmaxpending"`
+	Prefetchmaxpending int `json:"prefetchmaxpending"` // Zero is a valid value
 	/**
 	* Perform flash cache. Mutually exclusive with Poll Every Time (PET) on the same content group.
 	*/
@@ -131,12 +131,12 @@ type Cachecontentgroup struct {
 	/**
 	* If the size of an object that is being downloaded is less than or equal to the quick abort value, and a client aborts during the download, the cache stops downloading the response. If the object is larger than the quick abort size, the cache continues to download the response.
 	*/
-	Quickabortsize int `json:"quickabortsize"`
+	Quickabortsize int `json:"quickabortsize"` // Zero is a valid value
 	/**
 	* Minimum size of a response that can be cached in this content group.
 		Default minimum response size is 0.
 	*/
-	Minressize int `json:"minressize"`
+	Minressize int `json:"minressize"` // Zero is a valid value
 	/**
 	* Maximum size of a response that can be cached in this content group.
 	*/
@@ -152,7 +152,7 @@ type Cachecontentgroup struct {
 	/**
 	* Number of hits that qualifies a response for storage in this content group.
 	*/
-	Minhits int `json:"minhits"`
+	Minhits int `json:"minhits"` // Zero is a valid value
 	/**
 	* Force policy evaluation for each response arriving from the origin server. Cannot be set to YES if the Prefetch parameter is also set to YES.
 	*/
@@ -215,5 +215,6 @@ type Cachecontentgroup struct {
 	Markercells string `json:"markercells,omitempty"`
 	Builtin string `json:"builtin,omitempty"`
 	Feature string `json:"feature,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

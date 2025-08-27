@@ -29,6 +29,10 @@ type Vpnvservercachepolicybinding struct {
 	*/
 	Priority int `json:"priority,omitempty"`
 	/**
+	* Bindpoint to which the policy is bound.
+	*/
+	Bindpoint string `json:"bindpoint,omitempty"`
+	/**
 	* Next priority expression.
 	*/
 	Gotopriorityexpression string `json:"gotopriorityexpression,omitempty"`
@@ -44,10 +48,6 @@ type Vpnvservercachepolicybinding struct {
 	* Binds the authentication policy to a tertiary chain which will be used only for group extraction.  The user will not authenticate against this server, and this will only be called if primary and/or secondary authentication has succeeded.
 	*/
 	Groupextraction bool `json:"groupextraction,omitempty"`
-	/**
-	* Bind point to which to bind the policy. Applies only to rewrite and cache policies. If you do not set this parameter, the policy is bound to REQ_DEFAULT or RES_DEFAULT, depending on whether the policy rule is a response-time or a request-time expression.
-	*/
-	Bindpoint string `json:"bindpoint,omitempty"`
 
 
 }

@@ -36,4 +36,8 @@ type Aaassoprofile struct {
 	*/
 	Password string `json:"password,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

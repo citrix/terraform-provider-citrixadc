@@ -145,4 +145,8 @@ type Appfwlearningsettings struct {
 	*/
 	Contenttypeautodeploygraceperiod int `json:"contenttypeautodeploygraceperiod,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

@@ -41,4 +41,8 @@ type Ssllogprofile struct {
 	*/
 	Sslloghsfailures string `json:"sslloghsfailures,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

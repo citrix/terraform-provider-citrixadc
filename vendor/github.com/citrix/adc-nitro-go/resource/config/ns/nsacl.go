@@ -65,6 +65,10 @@ type Nsacl struct {
 	*/
 	Srcportval string `json:"srcportval,omitempty"`
 	/**
+	* Policy dataset which can have multiple port ranges bound to it.
+	*/
+	Srcportdataset string `json:"srcportdataset,omitempty"`
+	/**
 	* IP address or range of IP addresses to match against the destination IP address of an incoming IPv4 packet.  In the command line interface, separate the range with a hyphen. For example: 10.102.29.30-10.102.29.189.
 	*/
 	Destip bool `json:"destip,omitempty"`
@@ -94,6 +98,10 @@ type Nsacl struct {
 		Note: The destination port can be specified only for TCP and UDP protocols.
 	*/
 	Destportval string `json:"destportval,omitempty"`
+	/**
+	* Policy dataset which can have multiple port ranges bound to it.
+	*/
+	Destportdataset string `json:"destportdataset,omitempty"`
 	/**
 	* Number of seconds, in multiples of four, after which the extended ACL rule expires. If you do not want the extended ACL rule to expire, do not specify a TTL value.
 	*/
@@ -168,6 +176,10 @@ type Nsacl struct {
 	*/
 	Dfdhash string `json:"dfdhash,omitempty"`
 	/**
+	* Specifies the NodeId to steer the packet to the provided FP.
+	*/
+	Nodeid int `json:"nodeid,omitempty"`
+	/**
 	* If stateful option is enabled, transparent sessions are created for the traffic hitting this ACL and not hitting any other features like LB, INAT etc. 
 	*/
 	Stateful string `json:"stateful,omitempty"`
@@ -181,5 +193,7 @@ type Nsacl struct {
 	Hits string `json:"hits,omitempty"`
 	Kernelstate string `json:"kernelstate,omitempty"`
 	Aclassociate string `json:"aclassociate,omitempty"`
+	Aclchildcount string `json:"aclchildcount,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

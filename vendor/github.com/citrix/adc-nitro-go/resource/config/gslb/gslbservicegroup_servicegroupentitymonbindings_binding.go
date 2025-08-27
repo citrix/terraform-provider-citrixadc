@@ -81,6 +81,10 @@ type Gslbservicegroupservicegroupentitymonbindingsbinding struct {
 	* The site's prefix string. When the GSLB service group is bound to a GSLB virtual server, a GSLB site domain is generated internally for each bound serviceitem-domain pair by concatenating the site prefix of the service item and the name of the domain. If the special string NONE is specified, the site-prefix string is unset. When implementing HTTP redirect site persistence, the Citrix ADC redirects GSLB requests to GSLB services by using their site domains.
 	*/
 	Siteprefix string `json:"siteprefix,omitempty"`
+	/**
+	* Order number to be assigned to the gslb servicegroup member
+	*/
+	Order int `json:"order,omitempty"`
 
 
 }

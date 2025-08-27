@@ -87,5 +87,13 @@ type Nsicapprofile struct {
 	* Name of the audit message action which would be evaluated on receiving the ICAP response to emit the logs.
 	*/
 	Logaction string `json:"logaction,omitempty"`
+	/**
+	* Enable or Disable ICAP inspection for HTTP/2 traffic.
+	*/
+	Inspecthttp2 string `json:"inspecthttp2,omitempty"`
+
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

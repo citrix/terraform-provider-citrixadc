@@ -36,5 +36,6 @@ type Dnsnsecrec struct {
 	Nextrecs string `json:"nextrecs,omitempty"`
 	Ttl string `json:"ttl,omitempty"`
 	Ecssubnet string `json:"ecssubnet,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

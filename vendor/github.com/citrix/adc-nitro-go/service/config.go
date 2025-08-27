@@ -170,6 +170,7 @@ func (c *NitroClient) Login() error {
 	if err == nil {
 		c.updateSessionid(data["sessionid"].(string))
 	}
+	c.logger.Trace("Login successful")
 	return err
 }
 
@@ -336,6 +337,7 @@ func (c *NitroClient) DeleteResource(resourceType string, resourceName string) e
 //DeleteResourceWithArgs deletes a resource of supplied type and name. Args are supplied as an array of strings
 //Each array entry is formatted as "key:value"
 func (c *NitroClient) DeleteResourceWithArgs(resourceType string, resourceName string, args []string) error {
+
 	var err error
 	if resourceType == "snmptrap_snmpuser_binding" {
 		//Remove unwanted argument (username) for listing but keep it for delete operation
@@ -347,7 +349,6 @@ func (c *NitroClient) DeleteResourceWithArgs(resourceType string, resourceName s
 		}
 		_, err = c.listResourceWithArgs(resourceType, resourceName, argsWithoutUsername)
 	} else if resourceType == "cacheforwardproxy" {
-		//Cacheforwardproxy supports only GET(all) Request
 		_, err = c.listResource(resourceType, "")
 	} else if resourceType == "analyticsglobal_analyticsprofile_binding" {
 		// analyticsglobal_analyticsprofile_binding has different GET implementation

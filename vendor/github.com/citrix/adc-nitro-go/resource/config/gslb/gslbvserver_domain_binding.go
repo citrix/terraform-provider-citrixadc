@@ -49,6 +49,10 @@ type Gslbvserverdomainbinding struct {
 	*/
 	Name string `json:"name,omitempty"`
 	/**
+	* Order number to be assigned to the service when it is bound to the lb vserver.
+	*/
+	Order int `json:"order,omitempty"`
+	/**
 	* The IP address of the backup service for the specified domain name. Used when all the services bound to the domain are down, or when the backup chain of virtual servers is down.
 	*/
 	Backupipflag bool `json:"backupipflag,omitempty"`
@@ -56,10 +60,6 @@ type Gslbvserverdomainbinding struct {
 	* The cookie domain for the GSLB site. Used when inserting the GSLB site cookie in the HTTP response.
 	*/
 	Cookiedomainflag bool `json:"cookie_domainflag,omitempty"`
-	/**
-	* Order number to be assigned to the service when it is bound to the lb vserver.
-	*/
-	Order int `json:"order,omitempty"`
 
 
 }

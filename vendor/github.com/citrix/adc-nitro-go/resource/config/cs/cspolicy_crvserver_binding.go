@@ -21,13 +21,13 @@ package cs
 */
 type Cspolicycrvserverbinding struct {
 	/**
-	* The domain name. The string value can range to 63 characters.
+	* Location where policy is bound
 	*/
-	Domain string `json:"domain,omitempty"`
+	Boundto string `json:"boundto,omitempty"`
 	/**
-	* URL string that is matched with the URL of a request. Can contain a wildcard character. Specify the string value in the following format: [[prefix] [*]] [.suffix].
+	* Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 	*/
-	Url string `json:"url,omitempty"`
+	Gotopriorityexpression string `json:"gotopriorityexpression,omitempty"`
 	/**
 	* priority of bound policy
 	*/

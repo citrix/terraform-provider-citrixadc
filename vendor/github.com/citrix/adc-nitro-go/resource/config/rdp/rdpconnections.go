@@ -36,5 +36,6 @@ type Rdpconnections struct {
 	Targetip string `json:"targetip,omitempty"`
 	Targetport string `json:"targetport,omitempty"`
 	Peid string `json:"peid,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

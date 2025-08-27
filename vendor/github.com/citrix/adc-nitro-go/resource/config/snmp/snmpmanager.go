@@ -38,5 +38,6 @@ type Snmpmanager struct {
 
 	Ip string `json:"ip,omitempty"`
 	Domain string `json:"domain,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

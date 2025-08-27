@@ -86,13 +86,21 @@ type Gslbservicegroupgslbservicegroupmemberbinding struct {
 	*/
 	Siteprefix string `json:"siteprefix,omitempty"`
 	/**
+	* Order number to be assigned to the gslb servicegroup member
+	*/
+	Order int `json:"order,omitempty"`
+	/**
+	* Order number in string form assigned to the gslb servicegroup member
+	*/
+	Orderstr string `json:"orderstr,omitempty"`
+	/**
+	* Delay before moving to TROFS
+	*/
+	Trofsdelay int `json:"trofsdelay,omitempty"`
+	/**
 	* Name of the GSLB service group.
 	*/
 	Servicegroupname string `json:"servicegroupname,omitempty"`
-	/**
-	* Order number to be assigned to the gslb servicegroup member.
-	*/
-	Order int `json:"order,omitempty"`
 
 
 }

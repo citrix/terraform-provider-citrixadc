@@ -25,7 +25,7 @@ type Gslbvservergslbservicebinding struct {
 	*/
 	Servicename string `json:"servicename,omitempty"`
 	/**
-	* Weight to assign to the GSLB service.
+	* Weight for the service.
 	*/
 	Weight int `json:"weight,omitempty"`
 	/**
@@ -89,13 +89,17 @@ type Gslbvservergslbservicebinding struct {
 	*/
 	Svcsitepersistence string `json:"svcsitepersistence,omitempty"`
 	/**
-	* Name of the virtual server on which to perform the binding operation.
-	*/
-	Name string `json:"name,omitempty"`
-	/**
 	* Order number to be assigned to the service when it is bound to the lb vserver.
 	*/
 	Order int `json:"order,omitempty"`
+	/**
+	* Order number in string form assigned to the service when it is bound to the lb vserver.
+	*/
+	Orderstr string `json:"orderstr,omitempty"`
+	/**
+	* Name of the virtual server on which to perform the binding operation.
+	*/
+	Name string `json:"name,omitempty"`
 
 
 }

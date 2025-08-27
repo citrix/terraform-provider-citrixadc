@@ -39,5 +39,6 @@ type Botpolicylabel struct {
 
 	Numpol string `json:"numpol,omitempty"`
 	Hits string `json:"hits,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

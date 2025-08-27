@@ -25,4 +25,8 @@ type Lsnclient struct {
 	*/
 	Clientname string `json:"clientname,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

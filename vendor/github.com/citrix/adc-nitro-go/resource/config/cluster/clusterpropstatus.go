@@ -27,5 +27,6 @@ type Clusterpropstatus struct {
 
 	Numpropcmdfailed string `json:"numpropcmdfailed,omitempty"`
 	Cmdstrs string `json:"cmdstrs,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

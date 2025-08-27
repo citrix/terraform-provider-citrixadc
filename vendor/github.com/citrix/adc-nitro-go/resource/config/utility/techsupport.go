@@ -49,17 +49,26 @@ type Techsupport struct {
 	*/
 	Description string `json:"description,omitempty"`
 	/**
-	* Specifies My Citrix user name, which is used to login to Citrix upload server
+	* Specifies the Authentication Token, which is used to login to Citrix upload server. Please copy/paste the URL https://cis.citrix.com/auth/api/create_identity_v2/?expiration=3600 in a browser to complete the two factor authentication and generate it. The token is valid for 3600 seconds (1 hour)
 	*/
-	Username string `json:"username,omitempty"`
+	Authtoken string `json:"authtoken,omitempty"`
 	/**
-	* Specifies My Citrix password, which is used to login to Citrix upload server
+	* Specifies the time in common log format, ie. DD/MMM/YYYY:HH:MM:SS, to be used for locating the newnslog file. With this option at most four newnslog log files are collected. First is the newnslog file, spanning the given time. Second is the one, created just prior to the first (if it exists). Third is the one, created just later than the first (if it exists). And the fourth is the latest newnslog directory. In case, the scope is cluster, then second and third type is skipped on all nodes.
 	*/
-	Password string `json:"password,omitempty"`
+	Time string `json:"time,omitempty"`
+	/**
+	* Option for collecting showtechsupport bundle on ADSS cluster/node.
+	*/
+	Adss bool `json:"adss,omitempty"`
+	/**
+	* Use this option to collect showtechsupport bundle only from the nodes given as a list to this option. If -file option is used, it will collect the files from the given nodes back to the cco and will upload the compressed folder containing the files from there.
+	*/
+	Nodes []int `json:"nodes,omitempty"`
 
 	//------- Read only Parameter ---------;
 
 	Response string `json:"response,omitempty"`
 	Servername string `json:"servername,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

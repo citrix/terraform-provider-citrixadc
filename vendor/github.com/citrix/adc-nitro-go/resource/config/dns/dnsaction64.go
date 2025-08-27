@@ -30,7 +30,7 @@ type Dnsaction64 struct {
 	Prefix string `json:"prefix,omitempty"`
 	/**
 	* The expression to select the criteria for ipv4 addresses to be used for synthesis.
-		Only if the mappedrule is evaluated to true the corresponding ipv4 address is used for synthesis using respective prefix, 
+		Only if the mappedrule is evaluated to true the corresponding ipv4 address is used for synthesis using respective prefix,
 		otherwise the A RR is discarded
 	*/
 	Mappedrule string `json:"mappedrule,omitempty"`
@@ -43,5 +43,6 @@ type Dnsaction64 struct {
 
 	Builtin string `json:"builtin,omitempty"`
 	Feature string `json:"feature,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

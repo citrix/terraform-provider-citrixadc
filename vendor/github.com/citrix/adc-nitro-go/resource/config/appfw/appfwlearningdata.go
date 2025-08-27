@@ -164,5 +164,6 @@ type Appfwlearningdata struct {
 	Value string `json:"value,omitempty"`
 	Hits string `json:"hits,omitempty"`
 	Data string `json:"data,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

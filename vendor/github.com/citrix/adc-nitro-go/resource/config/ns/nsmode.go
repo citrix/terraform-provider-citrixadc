@@ -44,6 +44,8 @@ type Nsmode struct {
 	Sradv6 string `json:"sradv6,omitempty"`
 	Dradv6 string `json:"dradv6,omitempty"`
 	Bridgebpdus string `json:"bridgebpdus,omitempty"`
+	Singleip string `json:"single_ip,omitempty"`
 	Ulfd string `json:"ulfd,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

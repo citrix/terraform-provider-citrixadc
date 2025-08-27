@@ -85,5 +85,6 @@ type Sslocspresponder struct {
 	Ocspaiarefcount string `json:"ocspaiarefcount,omitempty"`
 	Ocspipaddrstr string `json:"ocspipaddrstr,omitempty"`
 	Port string `json:"port,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

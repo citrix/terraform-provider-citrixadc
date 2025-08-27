@@ -73,4 +73,8 @@ type Lsnsipalgprofile struct {
 	*/
 	Rport string `json:"rport,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

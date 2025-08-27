@@ -33,4 +33,8 @@ type Systemsshkey struct {
 	*/
 	Src string `json:"src,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

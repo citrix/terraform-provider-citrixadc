@@ -21,7 +21,7 @@ package authentication
 */
 type Authenticationdfaaction struct {
 	/**
-	* Name for the DFA action. 
+	* Name for the DFA action.
 		Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Cannot be changed after the DFA action is added.
 	*/
 	Name string `json:"name,omitempty"`
@@ -34,7 +34,7 @@ type Authenticationdfaaction struct {
 	*/
 	Serverurl string `json:"serverurl,omitempty"`
 	/**
-	* Key shared between the DFA server and the Citrix ADC. 
+	* Key shared between the DFA server and the Citrix ADC.
 		Required to allow the Citrix ADC to communicate with the DFA server.
 	*/
 	Passphrase string `json:"passphrase,omitempty"`
@@ -47,5 +47,6 @@ type Authenticationdfaaction struct {
 
 	Success string `json:"success,omitempty"`
 	Failure string `json:"failure,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

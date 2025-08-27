@@ -44,7 +44,7 @@ type Lsnstatic struct {
 	* ID of the traffic domain to which the subscriber belongs. 
 		If you do not specify an ID, the subscriber is assumed to be a part of the default traffic domain.
 	*/
-	Td int `json:"td"`
+	Td int `json:"td"` // Zero is a valid value
 	/**
 	* IPv4 address, already existing on the Citrix ADC as type LSN, to be used as NAT IP address for this mapping entry.
 	*/
@@ -70,5 +70,6 @@ type Lsnstatic struct {
 	//------- Read only Parameter ---------;
 
 	Status string `json:"status,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

@@ -25,12 +25,6 @@ func resourceCitrixAdcPolicypatset() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"indextype": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -45,9 +39,8 @@ func createPolicypatsetFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	policypatsetName := d.Get("name").(string)
 	policypatset := policy.Policypatset{
-		Comment:   d.Get("comment").(string),
-		Indextype: d.Get("indextype").(string),
-		Name:      d.Get("name").(string),
+		Comment: d.Get("comment").(string),
+		Name:    d.Get("name").(string),
 	}
 
 	_, err := client.AddResource(service.Policypatset.Type(), policypatsetName, &policypatset)
@@ -78,7 +71,6 @@ func readPolicypatsetFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("name", data["name"])
 	d.Set("comment", data["comment"])
-	d.Set("indextype", data["indextype"])
 	d.Set("name", data["name"])
 
 	return nil

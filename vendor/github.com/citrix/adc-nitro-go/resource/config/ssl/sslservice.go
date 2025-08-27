@@ -176,6 +176,10 @@ type Sslservice struct {
 	* Parameter indicating to check whether peer's certificate during TLS1.2 handshake is signed with one of signature-hash combination supported by Citrix ADC
 	*/
 	Strictsigdigestcheck string `json:"strictsigdigestcheck,omitempty"`
+	/**
+	* This parameter is used to enable or disable the logging of additional information, such as the Session ID and SNI name, from SSL handshakes to the audit logs.
+	*/
+	Sslclientlogs string `json:"sslclientlogs,omitempty"`
 
 	//------- Read only Parameter ---------;
 
@@ -183,5 +187,8 @@ type Sslservice struct {
 	Service string `json:"service,omitempty"`
 	Skipcaname string `json:"skipcaname,omitempty"`
 	Dtlsflag string `json:"dtlsflag,omitempty"`
+	Quicflag string `json:"quicflag,omitempty"`
+	Skipcacertbundle string `json:"skipcacertbundle,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

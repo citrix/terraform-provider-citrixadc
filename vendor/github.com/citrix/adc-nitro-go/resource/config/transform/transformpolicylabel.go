@@ -47,5 +47,6 @@ type Transformpolicylabel struct {
 	Labeltype string `json:"labeltype,omitempty"`
 	Invokelabelname string `json:"invoke_labelname,omitempty"`
 	Description string `json:"description,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

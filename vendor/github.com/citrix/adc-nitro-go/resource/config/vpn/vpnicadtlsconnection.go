@@ -38,5 +38,6 @@ type Vpnicadtlsconnection struct {
 	Destport string `json:"destport,omitempty"`
 	Channelnumber string `json:"channelnumber,omitempty"`
 	Peid string `json:"peid,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

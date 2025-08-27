@@ -1,6 +1,7 @@
 package citrixadc
 
 import (
+	"github.com/citrix/adc-nitro-go/resource/config/network"
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -8,20 +9,6 @@ import (
 	"fmt"
 	"log"
 )
-
-// netprofile struct is defined here to add proxyProtocolAfterTLSHandshake  support.
-// Once this attribute available in the main builds, respective go-notro file will be taken care.
-type netprofile struct {
-	Mbf                            string `json:"mbf,omitempty"`
-	Name                           string `json:"name,omitempty"`
-	Overridelsn                    string `json:"overridelsn,omitempty"`
-	Proxyprotocol                  string `json:"proxyprotocol,omitempty"`
-	Proxyprotocoltxversion         string `json:"proxyprotocoltxversion,omitempty"`
-	Srcip                          string `json:"srcip,omitempty"`
-	Srcippersistency               string `json:"srcippersistency,omitempty"`
-	Td                             int    `json:"td,omitempty"`
-	Proxyprotocolaftertlshandshake string `json:"proxyprotocolaftertlshandshake,omitempty"`
-}
 
 func resourceCitrixAdcNetprofile() *schema.Resource {
 	return &schema.Resource{
@@ -94,7 +81,7 @@ func createNetprofileFunc(d *schema.ResourceData, meta interface{}) error {
 		netprofileName = resource.PrefixedUniqueId("tf-netprofile-")
 		d.Set("name", netprofileName)
 	}
-	netprofile := netprofile{
+	netprofile := network.Netprofile{
 		Mbf:                            d.Get("mbf").(string),
 		Name:                           d.Get("name").(string),
 		Overridelsn:                    d.Get("overridelsn").(string),
@@ -152,7 +139,7 @@ func updateNetprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	netprofileName := d.Get("name").(string)
 
-	netprofile := netprofile{
+	netprofile := network.Netprofile{
 		Name: d.Get("name").(string),
 	}
 	hasChange := false

@@ -139,10 +139,26 @@ type Sslparameter struct {
 	*/
 	Insertcertspace string `json:"insertcertspace,omitempty"`
 	/**
-	* Applies when the Citrix ADC appliance acts as a client (back-end connection).
+	* Determines whether or not additional checks are carried out during a TLS handshake when validating an X.509 certificate received from the peer.
 		Settings apply as follows:
-		YES - During certificate verification, ignore the common name if SAN is present in the certificate.
-		NO - Do not ignore common name.
+		YES - (1) During certificate verification, ignore the
+		Common Name field (inside the subject name) if
+		Subject Alternative Name X.509 extension is present
+		in the certificate for backend connection.
+		(2) Verify the Extended Key Usage X.509 extension
+		server/client leaf certificate received over the wire
+		is consistent with the peer's role.
+		(applicable for frontend and backend connections)
+		(3) Verify the Basic Constraint CA field set to TRUE
+		for non-leaf certificates. (applicable for frontend,
+		backend connections and CAs bound to the Citrix ADC.
+		NO  - (1) Verify the Common Name field (inside the subject name)
+		irrespective of Subject Alternative Name X.509
+		extension.
+		(2) Ignore the Extended Key Usage X.509 extension
+		for server/client leaf certificate.
+		(3) Do not verify the Basic Constraint CA true flag
+		for non-leaf certificates.
 	*/
 	Ndcppcompliancecertcheck string `json:"ndcppcompliancecertcheck,omitempty"`
 	/**
@@ -158,5 +174,6 @@ type Sslparameter struct {
 
 	Svctls1112disable string `json:"svctls1112disable,omitempty"`
 	Montls1112disable string `json:"montls1112disable,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

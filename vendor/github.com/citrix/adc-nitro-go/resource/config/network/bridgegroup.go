@@ -42,5 +42,6 @@ type Bridgegroup struct {
 	Tagifaces string `json:"tagifaces,omitempty"`
 	Rnat string `json:"rnat,omitempty"`
 	Partitionname string `json:"partitionname,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

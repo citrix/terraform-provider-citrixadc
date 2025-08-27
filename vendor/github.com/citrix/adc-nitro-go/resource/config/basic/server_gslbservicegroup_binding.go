@@ -69,7 +69,7 @@ type Servergslbservicegroupbinding struct {
 	*/
 	Maxclient int `json:"maxclient,omitempty"`
 	/**
-	* Maximum number of requests that can be sent on a persistent connection to the service group. 
+	* Maximum number of requests that can be sent on a persistent connection to the service group.
 		Note: Connection requests beyond this value are rejected.
 	*/
 	Maxreq int `json:"maxreq,omitempty"`

@@ -1,6 +1,7 @@
 package citrixadc
 
 import (
+	"github.com/citrix/adc-nitro-go/resource/config/lb"
 	"github.com/citrix/adc-nitro-go/resource/config/ssl"
 	"github.com/citrix/adc-nitro-go/service"
 
@@ -10,146 +11,6 @@ import (
 	"fmt"
 	"log"
 )
-
-// TODO: update go-nitro with quicbridgeprofilename attribute
-type lbvserver struct {
-	Activeservices                     int         `json:"activeservices,omitempty"`
-	Adfsproxyprofile                   string      `json:"adfsproxyprofile,omitempty"`
-	Appflowlog                         string      `json:"appflowlog,omitempty"`
-	Authentication                     string      `json:"authentication,omitempty"`
-	Authenticationhost                 string      `json:"authenticationhost,omitempty"`
-	Authn401                           string      `json:"authn401,omitempty"`
-	Authnprofile                       string      `json:"authnprofile,omitempty"`
-	Authnvsname                        string      `json:"authnvsname,omitempty"`
-	Backuplbmethod                     string      `json:"backuplbmethod,omitempty"`
-	Backuppersistencetimeout           int         `json:"backuppersistencetimeout,omitempty"`
-	Backupvserver                      string      `json:"backupvserver,omitempty"`
-	Backupvserverstatus                string      `json:"backupvserverstatus,omitempty"`
-	Bindpoint                          string      `json:"bindpoint,omitempty"`
-	Bypassaaaa                         string      `json:"bypassaaaa,omitempty"`
-	Cacheable                          string      `json:"cacheable,omitempty"`
-	Cachevserver                       string      `json:"cachevserver,omitempty"`
-	Clttimeout                         int         `json:"clttimeout,omitempty"`
-	Comment                            string      `json:"comment,omitempty"`
-	Connfailover                       string      `json:"connfailover,omitempty"`
-	Consolidatedlconn                  string      `json:"consolidatedlconn,omitempty"`
-	Consolidatedlconngbl               string      `json:"consolidatedlconngbl,omitempty"`
-	Cookiedomain                       string      `json:"cookiedomain,omitempty"`
-	Cookiename                         string      `json:"cookiename,omitempty"`
-	Curstate                           string      `json:"curstate,omitempty"`
-	Datalength                         int         `json:"datalength,omitempty"`
-	Dataoffset                         int         `json:"dataoffset,omitempty"`
-	Dbprofilename                      string      `json:"dbprofilename,omitempty"`
-	Dbslb                              string      `json:"dbslb,omitempty"`
-	Disableprimaryondown               string      `json:"disableprimaryondown,omitempty"`
-	Dns64                              string      `json:"dns64,omitempty"`
-	Dnsprofilename                     string      `json:"dnsprofilename,omitempty"`
-	Dnsvservername                     string      `json:"dnsvservername,omitempty"`
-	Domain                             string      `json:"domain,omitempty"`
-	Downstateflush                     string      `json:"downstateflush,omitempty"`
-	Effectivestate                     string      `json:"effectivestate,omitempty"`
-	Groupname                          string      `json:"groupname,omitempty"`
-	Gt2gb                              string      `json:"gt2gb,omitempty"`
-	Hashlength                         int         `json:"hashlength,omitempty"`
-	Health                             int         `json:"health,omitempty"`
-	Healththreshold                    int         `json:"healththreshold,omitempty"`
-	Homepage                           string      `json:"homepage,omitempty"`
-	Httpprofilename                    string      `json:"httpprofilename,omitempty"`
-	Httpsredirecturl                   string      `json:"httpsredirecturl,omitempty"`
-	Icmpvsrresponse                    string      `json:"icmpvsrresponse,omitempty"`
-	Insertvserveripport                string      `json:"insertvserveripport,omitempty"`
-	Ipmapping                          string      `json:"ipmapping,omitempty"`
-	Ipmask                             string      `json:"ipmask,omitempty"`
-	Ippattern                          string      `json:"ippattern,omitempty"`
-	Ipset                              string      `json:"ipset,omitempty"`
-	Ipv46                              string      `json:"ipv46,omitempty"`
-	Isgslb                             bool        `json:"isgslb,omitempty"`
-	L2conn                             string      `json:"l2conn,omitempty"`
-	Lbmethod                           string      `json:"lbmethod,omitempty"`
-	Lbprofilename                      string      `json:"lbprofilename,omitempty"`
-	Lbrrreason                         int         `json:"lbrrreason,omitempty"`
-	Listenpolicy                       string      `json:"listenpolicy,omitempty"`
-	Listenpriority                     int         `json:"listenpriority,omitempty"`
-	M                                  string      `json:"m,omitempty"`
-	Macmoderetainvlan                  string      `json:"macmoderetainvlan,omitempty"`
-	Map                                string      `json:"map,omitempty"`
-	Maxautoscalemembers                int         `json:"maxautoscalemembers,omitempty"`
-	Minautoscalemembers                int         `json:"minautoscalemembers,omitempty"`
-	Mssqlserverversion                 string      `json:"mssqlserverversion,omitempty"`
-	Mysqlcharacterset                  int         `json:"mysqlcharacterset,omitempty"`
-	Mysqlprotocolversion               int         `json:"mysqlprotocolversion,omitempty"`
-	Mysqlservercapabilities            int         `json:"mysqlservercapabilities,omitempty"`
-	Mysqlserverversion                 string      `json:"mysqlserverversion,omitempty"`
-	Name                               string      `json:"name,omitempty"`
-	Netmask                            string      `json:"netmask,omitempty"`
-	Netprofile                         string      `json:"netprofile,omitempty"`
-	Newname                            string      `json:"newname,omitempty"`
-	Newservicerequest                  int         `json:"newservicerequest,omitempty"`
-	Newservicerequestincrementinterval int         `json:"newservicerequestincrementinterval,omitempty"`
-	Newservicerequestunit              string      `json:"newservicerequestunit,omitempty"`
-	Ngname                             string      `json:"ngname,omitempty"`
-	Nodefaultbindings                  string      `json:"nodefaultbindings,omitempty"`
-	Oracleserverversion                string      `json:"oracleserverversion,omitempty"`
-	Persistavpno                       interface{} `json:"persistavpno,omitempty"`
-	Persistencebackup                  string      `json:"persistencebackup,omitempty"`
-	Persistencetype                    string      `json:"persistencetype,omitempty"`
-	Persistmask                        string      `json:"persistmask,omitempty"`
-	Port                               int         `json:"port,omitempty"`
-	Pq                                 string      `json:"pq,omitempty"`
-	Precedence                         string      `json:"precedence,omitempty"`
-	Processlocal                       string      `json:"processlocal,omitempty"`
-	Push                               string      `json:"push,omitempty"`
-	Pushlabel                          string      `json:"pushlabel,omitempty"`
-	Pushmulticlients                   string      `json:"pushmulticlients,omitempty"`
-	Pushvserver                        string      `json:"pushvserver,omitempty"`
-	Range                              int         `json:"range,omitempty"`
-	Recursionavailable                 string      `json:"recursionavailable,omitempty"`
-	Redirect                           string      `json:"redirect,omitempty"`
-	Redirectfromport                   int         `json:"redirectfromport,omitempty"`
-	Redirectportrewrite                string      `json:"redirectportrewrite,omitempty"`
-	Redirurl                           string      `json:"redirurl,omitempty"`
-	Redirurlflags                      bool        `json:"redirurlflags,omitempty"`
-	Resrule                            string      `json:"resrule,omitempty"`
-	Retainconnectionsoncluster         string      `json:"retainconnectionsoncluster,omitempty"`
-	Rhistate                           string      `json:"rhistate,omitempty"`
-	Rtspnat                            string      `json:"rtspnat,omitempty"`
-	Rule                               string      `json:"rule,omitempty"`
-	Ruletype                           int         `json:"ruletype,omitempty"`
-	Sc                                 string      `json:"sc,omitempty"`
-	Servicename                        string      `json:"servicename,omitempty"`
-	Servicetype                        string      `json:"servicetype,omitempty"`
-	Sessionless                        string      `json:"sessionless,omitempty"`
-	Skippersistency                    string      `json:"skippersistency,omitempty"`
-	Sobackupaction                     string      `json:"sobackupaction,omitempty"`
-	Somethod                           string      `json:"somethod,omitempty"`
-	Sopersistence                      string      `json:"sopersistence,omitempty"`
-	Sopersistencetimeout               int         `json:"sopersistencetimeout,omitempty"`
-	Sothreshold                        int         `json:"sothreshold,omitempty"`
-	State                              string      `json:"state,omitempty"`
-	Statechangetimemsec                int         `json:"statechangetimemsec,omitempty"`
-	Statechangetimesec                 string      `json:"statechangetimesec,omitempty"`
-	Statechangetimeseconds             int         `json:"statechangetimeseconds,omitempty"`
-	Status                             int         `json:"status,omitempty"`
-	Tcpprofilename                     string      `json:"tcpprofilename,omitempty"`
-	Td                                 int         `json:"td,omitempty"`
-	Thresholdvalue                     int         `json:"thresholdvalue,omitempty"`
-	Tickssincelaststatechange          int         `json:"tickssincelaststatechange,omitempty"`
-	Timeout                            int         `json:"timeout"` // Removing omitempty flag as it accepts 0 value
-	Tosid                              int         `json:"tosid,omitempty"`
-	Totalservices                      int         `json:"totalservices,omitempty"`
-	Trofspersistence                   string      `json:"trofspersistence,omitempty"`
-	Type                               string      `json:"type,omitempty"`
-	V6netmasklen                       int         `json:"v6netmasklen,omitempty"`
-	V6persistmasklen                   int         `json:"v6persistmasklen,omitempty"`
-	Value                              string      `json:"value,omitempty"`
-	Version                            int         `json:"version,omitempty"`
-	Vipheader                          string      `json:"vipheader,omitempty"`
-	Vsvrdynconnsothreshold             int         `json:"vsvrdynconnsothreshold,omitempty"`
-	Weight                             int         `json:"weight,omitempty"`
-	Quicbridgeprofilename              string      `json:"quicbridgeprofilename,omitempty"`
-	Probeport                          int         `json:"probeport,omitempty"`
-	Probeprotocol                      string      `json:"probeprotocol,omitempty"`
-}
 
 func resourceCitrixAdcLbvserver() *schema.Resource {
 	return &schema.Resource{
@@ -459,11 +320,6 @@ func resourceCitrixAdcLbvserver() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"pq": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
 			"probeport": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -552,11 +408,6 @@ func resourceCitrixAdcLbvserver() *schema.Resource {
 				Computed: true,
 			},
 			"rule": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"sc": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -763,7 +614,7 @@ func createLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	lbvserver := lbvserver{
+	lbvserver := lb.Lbvserver{
 		Name:                               lbvserverName,
 		Appflowlog:                         d.Get("appflowlog").(string),
 		Authentication:                     d.Get("authentication").(string),
@@ -823,7 +674,6 @@ func createLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		Persistencetype:                    d.Get("persistencetype").(string),
 		Persistmask:                        d.Get("persistmask").(string),
 		Port:                               d.Get("port").(int),
-		Pq:                                 d.Get("pq").(string),
 		Processlocal:                       d.Get("processlocal").(string),
 		Push:                               d.Get("push").(string),
 		Pushlabel:                          d.Get("pushlabel").(string),
@@ -840,7 +690,6 @@ func createLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		Rhistate:                           d.Get("rhistate").(string),
 		Rtspnat:                            d.Get("rtspnat").(string),
 		Rule:                               d.Get("rule").(string),
-		Sc:                                 d.Get("sc").(string),
 		Servicename:                        d.Get("servicename").(string),
 		Servicetype:                        d.Get("servicetype").(string),
 		Sessionless:                        d.Get("sessionless").(string),
@@ -1011,7 +860,6 @@ func readLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("persistencetype", data["persistencetype"])
 	d.Set("persistmask", data["persistmask"])
 	d.Set("port", data["port"])
-	d.Set("pq", data["pq"])
 	d.Set("processlocal", data["processlocal"])
 	d.Set("push", data["push"])
 	d.Set("pushlabel", data["pushlabel"])
@@ -1028,7 +876,6 @@ func readLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("rhistate", data["rhistate"])
 	d.Set("rtspnat", data["rtspnat"])
 	d.Set("rule", data["rule"])
-	d.Set("sc", data["sc"])
 	d.Set("servicename", data["servicename"])
 	d.Set("servicetype", data["servicetype"])
 	d.Set("sessionless", data["sessionless"])
@@ -1087,7 +934,7 @@ func updateLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*NetScalerNitroClient).client
 	lbvserverName := d.Get("name").(string)
 
-	lbvserver := lbvserver{
+	lbvserver := lb.Lbvserver{
 		Name: d.Get("name").(string),
 	}
 	stateChange := false
@@ -1392,11 +1239,6 @@ func updateLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		lbvserver.Port = d.Get("port").(int)
 		hasChange = true
 	}
-	if d.HasChange("pq") {
-		log.Printf("[DEBUG] netscaler-provider:  Pq has changed for lbvserver %s, starting update", lbvserverName)
-		lbvserver.Pq = d.Get("pq").(string)
-		hasChange = true
-	}
 	if d.HasChange("probeport") {
 		log.Printf("[DEBUG] netscaler-provider:  probeport has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Probeport = d.Get("probeport").(int)
@@ -1485,11 +1327,6 @@ func updateLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("rule") {
 		log.Printf("[DEBUG] netscaler-provider:  Rule has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Rule = d.Get("rule").(string)
-		hasChange = true
-	}
-	if d.HasChange("sc") {
-		log.Printf("[DEBUG] netscaler-provider:  Sc has changed for lbvserver %s, starting update", lbvserverName)
-		lbvserver.Sc = d.Get("sc").(string)
 		hasChange = true
 	}
 	if d.HasChange("servicename") {
@@ -1735,7 +1572,7 @@ func doLbvserverStateChange(d *schema.ResourceData, client *service.NitroClient)
 
 	// We need a new instance of the struct since
 	// ActOnResource will fail if we put in superfluous attributes
-	lbvserver := lbvserver{
+	lbvserver := lb.Lbvserver{
 		Name: d.Get("name").(string),
 	}
 

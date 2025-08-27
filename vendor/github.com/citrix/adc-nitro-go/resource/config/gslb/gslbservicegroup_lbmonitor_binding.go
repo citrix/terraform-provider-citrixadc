@@ -69,7 +69,7 @@ type Gslbservicegrouplbmonitorbinding struct {
 	*/
 	Siteprefix string `json:"siteprefix,omitempty"`
 	/**
-	* Order number to be assigned to the gslb servicegroup member.
+	* Order number to be assigned to the gslb servicegroup member
 	*/
 	Order int `json:"order,omitempty"`
 

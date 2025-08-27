@@ -261,11 +261,6 @@ func resourceCitrixAdcNshttpprofile() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"spdy": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
 			"weblog": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -384,7 +379,6 @@ func createNshttpprofileFunc(d *schema.ResourceData, meta interface{}) error {
 		Reqtimeoutaction:                 d.Get("reqtimeoutaction").(string),
 		Reusepooltimeout:                 d.Get("reusepooltimeout").(int),
 		Rtsptunnel:                       d.Get("rtsptunnel").(string),
-		Spdy:                             d.Get("spdy").(string),
 		Weblog:                           d.Get("weblog").(string),
 		Websocket:                        d.Get("websocket").(string),
 		Maxheaderfieldlen:                d.Get("maxheaderfieldlen").(int),
@@ -474,7 +468,6 @@ func readNshttpprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("reqtimeoutaction", data["reqtimeoutaction"])
 	d.Set("reusepooltimeout", data["reusepooltimeout"])
 	d.Set("rtsptunnel", data["rtsptunnel"])
-	d.Set("spdy", data["spdy"])
 	d.Set("weblog", data["weblog"])
 	d.Set("websocket", data["websocket"])
 	d.Set("maxheaderfieldlen", data["maxheaderfieldlen"])
@@ -739,11 +732,6 @@ func updateNshttpprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("rtsptunnel") {
 		log.Printf("[DEBUG]  citrixadc-provider: Rtsptunnel has changed for nshttpprofile %s, starting update", nshttpprofileName)
 		nshttpprofile.Rtsptunnel = d.Get("rtsptunnel").(string)
-		hasChange = true
-	}
-	if d.HasChange("spdy") {
-		log.Printf("[DEBUG]  citrixadc-provider: Spdy has changed for nshttpprofile %s, starting update", nshttpprofileName)
-		nshttpprofile.Spdy = d.Get("spdy").(string)
 		hasChange = true
 	}
 	if d.HasChange("weblog") {

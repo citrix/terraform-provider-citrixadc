@@ -69,6 +69,10 @@ type Route6 struct {
 	*/
 	Ownergroup string `json:"ownergroup,omitempty"`
 	/**
+	* Route in management plane.
+	*/
+	Mgmt bool `json:"mgmt,omitempty"`
+	/**
 	* Type of IPv6 routes to remove from the routing table of the Citrix ADC.
 	*/
 	Routetype string `json:"routetype,omitempty"`
@@ -104,5 +108,6 @@ type Route6 struct {
 	Bgp string `json:"bgp,omitempty"`
 	Rip string `json:"rip,omitempty"`
 	Raroute string `json:"raroute,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

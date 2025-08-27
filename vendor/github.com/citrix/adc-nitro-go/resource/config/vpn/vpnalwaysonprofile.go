@@ -37,4 +37,8 @@ type Vpnalwaysonprofile struct {
 	*/
 	Locationbasedvpn string `json:"locationbasedvpn,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

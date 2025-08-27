@@ -109,6 +109,14 @@ type Nspbr struct {
 	*/
 	Vxlanvlanmap string `json:"vxlanvlanmap,omitempty"`
 	/**
+	* Integer value that uniquely identifies the traffic domain to which you want to send packet to.
+	*/
+	Targettd bool `json:"targettd,omitempty"`
+	/**
+	* Integer value that uniquely identifies the traffic domain to send packet to.
+	*/
+	Targettdval int `json:"targettdval,omitempty"`
+	/**
 	* MAC address to match against the source MAC address of an outgoing IPv4 packet.
 	*/
 	Srcmac string `json:"srcmac,omitempty"`
@@ -174,5 +182,6 @@ type Nspbr struct {
 	Monstatparam2 string `json:"monstatparam2,omitempty"`
 	Monstatparam3 string `json:"monstatparam3,omitempty"`
 	Data string `json:"data,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

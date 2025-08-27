@@ -35,7 +35,7 @@ type Rnat struct {
 	/**
 	* Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.
 	*/
-	Td int `json:"td,omitempty"`
+	Td int `json:"td"` // Zero is a valid value
 	/**
 	* The owner node group in a Cluster for this rnat rule.
 	*/
@@ -61,12 +61,16 @@ type Rnat struct {
 	*/
 	Useproxyport string `json:"useproxyport,omitempty"`
 	/**
-	* Synchronize connection information with the secondary appliance in a high availability (HA) pair. That is, synchronize all connection-related information for the RNAT session. In order for this to work, tcpproxy should be DISABLED. To disable tcpproxy use "set rnatparam tcpproxy DISABLED"
+	* Synchronize all connection-related information for the RNAT sessions with the secondary ADC in a high availability (HA) pair.
 	*/
 	Connfailover string `json:"connfailover,omitempty"`
 	/**
 	* New name for the RNAT4 rule. Must begin with an ASCII alphabetic or underscore (_) character, and must contain       only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters.
 	*/
 	Newname string `json:"newname,omitempty"`
+
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

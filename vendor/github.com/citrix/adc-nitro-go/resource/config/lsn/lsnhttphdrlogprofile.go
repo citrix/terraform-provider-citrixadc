@@ -41,4 +41,8 @@ type Lsnhttphdrlogprofile struct {
 	*/
 	Loghost string `json:"loghost,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

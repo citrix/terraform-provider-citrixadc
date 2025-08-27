@@ -127,9 +127,17 @@ type Nsconfig struct {
 	*/
 	Grantquotaspillover int `json:"grantquotaspillover,omitempty"`
 	/**
-	* The percentage of max limit to be given to PEs
+	* The percentage of spillover threshold to be given to PEs
 	*/
 	Exclusivequotaspillover int `json:"exclusivequotaspillover,omitempty"`
+	/**
+	* This enabled secure management traffic handling.
+	*/
+	Securemanagementtraffic string `json:"securemanagementtraffic,omitempty"`
+	/**
+	* This positive integer identifies Management traffic domain. If not specified, defaults to 4094
+	*/
+	Securemanagementtd int `json:"securemanagementtd,omitempty"`
 	/**
 	* Use this option to do saveconfig for all partitions
 	*/
@@ -166,12 +174,25 @@ type Nsconfig struct {
 	* configuration File to be used to find weak passwords, if not specified, running config is taken as input.
 	*/
 	Config string `json:"config,omitempty"`
+	/**
+	* Full path of config file to be converted to nitro
+	*/
+	Configfile string `json:"configfile,omitempty"`
+	/**
+	* Full path of file to store the nitro graph. If not specified, nitro graph is returned as part of the API response.
+	*/
+	Responsefile string `json:"responsefile,omitempty"`
+	/**
+	* Using this option will run the operation in async mode and return the job id. The job ID can be used later to track the conversion progress via show ns job <id> Command. This option is mostly useful for API to avoid timeouts for large input configuration
+	*/
+	Async bool `json:"Async,omitempty"`
 
 	//------- Read only Parameter ---------;
 
 	Message string `json:"message,omitempty"`
 	Mappedip string `json:"mappedip,omitempty"`
 	Range string `json:"range,omitempty"`
+	Svmcmd string `json:"svmcmd,omitempty"`
 	Systemtype string `json:"systemtype,omitempty"`
 	Primaryip string `json:"primaryip,omitempty"`
 	Primaryip6 string `json:"primaryip6,omitempty"`
@@ -181,6 +202,8 @@ type Nsconfig struct {
 	Currentsytemtime string `json:"currentsytemtime,omitempty"`
 	Systemtime string `json:"systemtime,omitempty"`
 	Configchanged string `json:"configchanged,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 	Response string `json:"response,omitempty"`
+	Id string `json:"id,omitempty"`
 
 }

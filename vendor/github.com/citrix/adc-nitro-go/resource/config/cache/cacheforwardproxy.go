@@ -29,4 +29,8 @@ type Cacheforwardproxy struct {
 	*/
 	Port int `json:"port,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

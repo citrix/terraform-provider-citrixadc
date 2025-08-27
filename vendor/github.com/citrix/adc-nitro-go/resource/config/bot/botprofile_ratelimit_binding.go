@@ -29,6 +29,8 @@ type Botprofileratelimitbinding struct {
 		*SOURCE_IP - Rate-limiting based on the client IP.
 		*SESSION - Rate-limiting based on the configured cookie name.
 		*URL - Rate-limiting based on the configured URL.
+		*GEOLOCATION - Rate-limiting based on the configured country name.
+		*JA3_FINGERPRINT - Rate-limiting based on client SSL JA3 fingerprint.
 	*/
 	Botratelimittype string `json:"bot_rate_limit_type,omitempty"`
 	/**
@@ -44,6 +46,10 @@ type Botprofileratelimitbinding struct {
 	*/
 	Cookiename string `json:"cookiename,omitempty"`
 	/**
+	* Country name which is used for geolocation rate-limiting.
+	*/
+	Countrycode string `json:"countrycode,omitempty"`
+	/**
 	* Maximum number of requests that are allowed in this session in the given period time.
 	*/
 	Rate int `json:"rate,omitempty"`
@@ -52,7 +58,15 @@ type Botprofileratelimitbinding struct {
 	*/
 	Timeslice int `json:"timeslice,omitempty"`
 	/**
-	* One or more actions to be taken when the current rate becomes more than the configured rate. Only LOG action can be combined with DROP, REDIRECT or RESET action.
+	* Rate-Limiting traffic Type
+	*/
+	Limittype string `json:"limittype,omitempty"`
+	/**
+	* Expression to be used in a rate-limiting condition. This expression result must be a boolean value.
+	*/
+	Condition string `json:"condition,omitempty"`
+	/**
+	* One or more actions to be taken when the current rate becomes more than the configured rate. Only LOG action can be combined with DROP, REDIRECT, RESPOND_STATUS_TOO_MANY_REQUESTS or RESET action.
 	*/
 	Botratelimitaction []string `json:"bot_rate_limit_action,omitempty"`
 	/**

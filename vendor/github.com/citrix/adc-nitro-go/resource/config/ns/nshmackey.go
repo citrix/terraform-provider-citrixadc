@@ -53,4 +53,8 @@ type Nshmackey struct {
 	*/
 	Comment string `json:"comment,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

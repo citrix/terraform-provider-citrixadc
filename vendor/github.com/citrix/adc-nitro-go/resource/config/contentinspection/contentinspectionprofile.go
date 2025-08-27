@@ -52,4 +52,8 @@ type Contentinspectionprofile struct {
 	*/
 	Egressvlan int `json:"egressvlan,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

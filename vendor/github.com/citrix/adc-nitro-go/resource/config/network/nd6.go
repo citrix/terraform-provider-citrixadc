@@ -60,5 +60,6 @@ type Nd6 struct {
 	Flags string `json:"flags,omitempty"`
 	Controlplane string `json:"controlplane,omitempty"`
 	Channel string `json:"channel,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

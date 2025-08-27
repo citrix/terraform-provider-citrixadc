@@ -48,5 +48,6 @@ type Lbpersistentsessions struct {
 	Referencecount string `json:"referencecount,omitempty"`
 	Persistenceparam string `json:"persistenceparam,omitempty"`
 	Cnamepersparam string `json:"cnamepersparam,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

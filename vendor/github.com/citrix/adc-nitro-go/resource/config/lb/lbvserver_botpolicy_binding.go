@@ -33,6 +33,10 @@ type Lbvserverbotpolicybinding struct {
 	*/
 	Gotopriorityexpression string `json:"gotopriorityexpression,omitempty"`
 	/**
+	* The bindpoint to which the policy is bound
+	*/
+	Bindpoint string `json:"bindpoint,omitempty"`
+	/**
 	* Invoke policies bound to a virtual server or policy label.
 	*/
 	Invoke bool `json:"invoke,omitempty"`
@@ -50,9 +54,9 @@ type Lbvserverbotpolicybinding struct {
 	*/
 	Name string `json:"name,omitempty"`
 	/**
-	* Bind point to which to bind the policy.
+	* Integer specifying the order of the service. A larger number specifies a lower order. Defines the order of the service relative to the other services in the load balancing vserver's bindings. Determines the priority given to the service among all the services bound.
 	*/
-	Bindpoint string `json:"bindpoint,omitempty"`
+	Order int `json:"order,omitempty"`
 
 
 }

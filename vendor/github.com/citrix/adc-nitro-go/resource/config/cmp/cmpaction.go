@@ -21,14 +21,14 @@ package cmp
 */
 type Cmpaction struct {
 	/**
-	* Name of the compression action. Must begin with an ASCII alphabetic or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Can be changed after the action is added. 
+	* Name of the compression action. Must begin with an ASCII alphabetic or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Can be changed after the action is added.
 		The following requirement applies only to the Citrix ADC CLI:
 		If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my cmp action" or 'my cmp action').
 	*/
 	Name string `json:"name,omitempty"`
 	/**
-	* Type of compression performed by this action. 
-		Available settings function as follows: 
+	* Type of compression performed by this action.
+		Available settings function as follows:
 		* COMPRESS - Apply GZIP or DEFLATE compression to the response, depending on the request header. Prefer GZIP.
 		* GZIP - Apply GZIP compression.
 		* DEFLATE - Apply DEFLATE compression.
@@ -49,8 +49,8 @@ type Cmpaction struct {
 	Deltatype string `json:"deltatype,omitempty"`
 	/**
 	* New name for the compression action. Must begin with an ASCII alphabetic or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at
-		(@), equals (=), and hyphen (-) characters. 
-		Choose a name that can be correlated with the function that the action performs. 
+		(@), equals (=), and hyphen (-) characters.
+		Choose a name that can be correlated with the function that the action performs.
 		The following requirement applies only to the Citrix ADC CLI:
 		If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my cmp action" or 'my cmp action').
 	*/
@@ -61,5 +61,6 @@ type Cmpaction struct {
 	Builtin string `json:"builtin,omitempty"`
 	Feature string `json:"feature,omitempty"`
 	Isdefault string `json:"isdefault,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

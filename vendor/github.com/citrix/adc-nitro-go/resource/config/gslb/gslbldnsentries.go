@@ -33,5 +33,6 @@ type Gslbldnsentries struct {
 	Ttl string `json:"ttl,omitempty"`
 	Name string `json:"name,omitempty"`
 	Rtt string `json:"rtt,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

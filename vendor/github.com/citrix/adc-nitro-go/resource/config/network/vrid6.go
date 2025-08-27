@@ -74,5 +74,6 @@ type Vrid6 struct {
 	Ipaddress string `json:"ipaddress,omitempty"`
 	Effectivepriority string `json:"effectivepriority,omitempty"`
 	Operationalownernode string `json:"operationalownernode,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

@@ -188,5 +188,6 @@ type Gslbservice struct {
 	Gslbsvchealth string `json:"gslbsvchealth,omitempty"`
 	Glsbsvchealthdescr string `json:"glsbsvchealthdescr,omitempty"`
 	Nodefaultbindings string `json:"nodefaultbindings,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

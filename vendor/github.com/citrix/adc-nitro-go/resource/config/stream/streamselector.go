@@ -30,4 +30,8 @@ type Streamselector struct {
 	*/
 	Rule []string `json:"rule,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

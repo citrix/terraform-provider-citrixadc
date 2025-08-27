@@ -71,4 +71,8 @@ type Tmtrafficaction struct {
 	*/
 	Passwdexpression string `json:"passwdexpression,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

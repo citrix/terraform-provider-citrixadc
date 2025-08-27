@@ -28,7 +28,7 @@ type Aaauser struct {
 	*/
 	Username string `json:"username,omitempty"`
 	/**
-	* Password with which the user logs on. Required for any user account that does not exist on an external authentication server. 
+	* Password with which the user logs on. Required for any user account that does not exist on an external authentication server.
 		If you are not using an external authentication server, all user accounts must have a password. If you are using an external authentication server, you must provide a password for local user accounts that do not exist on the authentication server.
 	*/
 	Password string `json:"password,omitempty"`
@@ -36,5 +36,9 @@ type Aaauser struct {
 	* Show whether the user is logged in or not.
 	*/
 	Loggedin bool `json:"loggedin,omitempty"`
+
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

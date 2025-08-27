@@ -52,5 +52,6 @@ type Clusternodegroup struct {
 	Boundedentitiescntfrompe string `json:"boundedentitiescntfrompe,omitempty"`
 	Activelist string `json:"activelist,omitempty"`
 	Backuplist string `json:"backuplist,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

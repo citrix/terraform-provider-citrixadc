@@ -17,7 +17,7 @@
 package ns
 
 /**
-* Configuration for limit Indetifier resource.
+* Configuration for limit Identifier resource.
 */
 type Nslimitidentifier struct {
 	/**
@@ -81,5 +81,6 @@ type Nslimitidentifier struct {
 	Trapscomputedintimeslice string `json:"trapscomputedintimeslice,omitempty"`
 	Computedtraptimeslice string `json:"computedtraptimeslice,omitempty"`
 	Referencecount string `json:"referencecount,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

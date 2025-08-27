@@ -36,5 +36,6 @@ type Nsevents struct {
 	Data1 string `json:"data1,omitempty"`
 	Data2 string `json:"data2,omitempty"`
 	Data3 string `json:"data3,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

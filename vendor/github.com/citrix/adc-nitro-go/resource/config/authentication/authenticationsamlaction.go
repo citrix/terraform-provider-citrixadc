@@ -21,7 +21,7 @@ package authentication
 */
 type Authenticationsamlaction struct {
 	/**
-	* Name for the SAML server profile (action). 
+	* Name for the SAML server profile (action).
 		Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Cannot be changed after SAML profile is created.
 		The following requirement applies only to the Citrix ADC CLI:
 		If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my authentication action" or 'my authentication action').
@@ -52,7 +52,7 @@ type Authenticationsamlaction struct {
 	*/
 	Samluserfield string `json:"samluserfield,omitempty"`
 	/**
-	* Reject unsigned SAML assertions. ON option results in rejection of Assertion that is received without signature. STRICT option ensures that both Response and Assertion are signed. OFF allows unsigned Assertions.
+	* Reject unsigned SAML assertions. ON option results in rejection of Assertion that is received without signature. STRICT option ensures that both Response and Assertion are signed.
 	*/
 	Samlrejectunsignedassertion string `json:"samlrejectunsignedassertion,omitempty"`
 	/**
@@ -63,6 +63,10 @@ type Authenticationsamlaction struct {
 	* Option to enable second factor after SAML
 	*/
 	Samltwofactor string `json:"samltwofactor,omitempty"`
+	/**
+	* This element specifies the preferred binding types for sso and logout for metadata configuration. 
+	*/
+	Preferredbindtype []string `json:"preferredbindtype,omitempty"`
 	/**
 	* This is the default group that is chosen when the authentication succeeds in addition to extracted groups.
 	*/
@@ -132,15 +136,15 @@ type Authenticationsamlaction struct {
 	*/
 	Attribute16 string `json:"attribute16,omitempty"`
 	/**
-	* List of attribute names separated by ',' which needs to be extracted. 
-		Note that preceeding and trailing spaces will be removed. 
+	* List of attribute names separated by ',' which needs to be extracted.
+		Note that preceeding and trailing spaces will be removed.
 		Attribute name can be 127 bytes and total length of this string should not cross 2047 bytes.
 		These attributes have multi-value support separated by ',' and stored as key-value pair in AAA session
 	*/
 	Attributes string `json:"attributes,omitempty"`
 	/**
 	* Boolean expression that will be evaluated to validate the SAML Response.
-		Examples: 
+		Examples:
 		set authentication samlaction <actionname> -relaystateRule 'AAA.LOGIN.RELAYSTATE.EQ("https://fqdn.com/")'
 		set authentication samlaction <actionname> -relaystateRule 'AAA.LOGIN.RELAYSTATE.CONTAINS("https://fqdn.com/")'
 		set authentication samlaction <actionname> -relaystateRule 'AAA.LOGIN.RELAYSTATE.CONTAINS_ANY("patset_name")'
@@ -247,9 +251,16 @@ type Authenticationsamlaction struct {
 	* Option to store entire SAML Response through the life of user session.
 	*/
 	Storesamlresponse string `json:"storesamlresponse,omitempty"`
+	/**
+	* Boolean expression that will be evaluated to validate HTTP requests on SAML endpoints.
+		Examples:
+		set authentication samlaction <actionname> -stateChecks 'HTTP.REQ.HOSTNAME.EQ("https://fqdn.com/")'
+	*/
+	Statechecks string `json:"statechecks,omitempty"`
 
 	//------- Read only Parameter ---------;
 
 	Metadataimportstatus string `json:"metadataimportstatus,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

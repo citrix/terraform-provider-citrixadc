@@ -28,5 +28,17 @@ type Reputationsettings struct {
 	* Proxy server port.
 	*/
 	Proxyport int `json:"proxyport,omitempty"`
+	/**
+	* Proxy Username
+	*/
+	Proxyusername string `json:"proxyusername,omitempty"`
+	/**
+	* Password with which user logs on.
+	*/
+	Proxypassword string `json:"proxypassword,omitempty"`
+
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

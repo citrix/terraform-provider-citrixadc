@@ -26,9 +26,9 @@ type Dnszone struct {
 	Zonename string `json:"zonename,omitempty"`
 	/**
 	* Deploy the zone in proxy mode. Enable in the following scenarios:
-		* The load balanced DNS servers are authoritative for the zone and all resource records that are part of the zone. 
+		* The load balanced DNS servers are authoritative for the zone and all resource records that are part of the zone.
 		* The load balanced DNS servers are authoritative for the zone, but the Citrix ADC owns a subset of the resource records that belong to the zone (partial zone ownership configuration). Typically seen in global server load balancing (GSLB) configurations, in which the appliance responds authoritatively to queries for GSLB domain names but forwards queries for other domain names in the zone to the load balanced servers.
-		In either scenario, do not create the zone's Start of Authority (SOA) and name server (NS) resource records on the appliance. 
+		In either scenario, do not create the zone's Start of Authority (SOA) and name server (NS) resource records on the appliance.
 		Disable if the appliance is authoritative for the zone, but make sure that you have created the SOA and NS records on the appliance before you create the zone.
 	*/
 	Proxymode string `json:"proxymode,omitempty"`
@@ -55,5 +55,6 @@ type Dnszone struct {
 	//------- Read only Parameter ---------;
 
 	Flags string `json:"flags,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

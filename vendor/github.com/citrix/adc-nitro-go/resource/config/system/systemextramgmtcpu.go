@@ -27,5 +27,6 @@ type Systemextramgmtcpu struct {
 
 	Configuredstate string `json:"configuredstate,omitempty"`
 	Effectivestate string `json:"effectivestate,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

@@ -35,7 +35,7 @@ type Snmpuser struct {
 	*/
 	Authtype string `json:"authtype,omitempty"`
 	/**
-	* Plain-text pass phrase to be used by the authentication algorithm specified by the authType (Authentication Type) parameter. Can consist of 1 to 31 characters that include uppercase and lowercase letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at sign (@), equals (=), colon (:), and underscore (_) characters.
+	* Plain-text pass phrase to be used by the authentication algorithm specified by the authType (Authentication Type) parameter. Can consist of 8 to 63 characters that include uppercase and lowercase letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at sign (@), equals (=), colon (:), and underscore (_) characters.
 		The following requirement applies only to the Citrix ADC CLI:
 		If the pass phrase includes one or more spaces, enclose it in double or single quotation marks (for example, "my phrase" or 'my phrase').
 	*/
@@ -45,7 +45,7 @@ type Snmpuser struct {
 	*/
 	Privtype string `json:"privtype,omitempty"`
 	/**
-	* Encryption key to be used by the encryption algorithm specified by the privType (Encryption Type) parameter. Can consist of 1 to 31 characters that include uppercase and lowercase letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at sign (@), equals (=), colon (:), and underscore (_) characters.
+	* Encryption key to be used by the encryption algorithm specified by the privType (Encryption Type) parameter. Can consist of 8 to 63 characters that include uppercase and lowercase letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at sign (@), equals (=), colon (:), and underscore (_) characters.
 		The following requirement applies only to the Citrix ADC CLI:
 		If the key includes one or more spaces, enclose it in double or single quotation marks (for example, "my key" or 'my key').
 	*/
@@ -56,5 +56,6 @@ type Snmpuser struct {
 	Engineid string `json:"engineid,omitempty"`
 	Storagetype string `json:"storagetype,omitempty"`
 	Status string `json:"status,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

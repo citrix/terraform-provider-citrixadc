@@ -41,6 +41,22 @@ type Iptunnel struct {
 	*/
 	Protocol string `json:"protocol,omitempty"`
 	/**
+	* Virtual network identifier (VNID) is the value that identifies a specific virtual network in the data plane.
+	*/
+	Vnid int `json:"vnid,omitempty"`
+	/**
+	* Option to select Vlan Tagging.
+	*/
+	Vlantagging string `json:"vlantagging,omitempty"`
+	/**
+	* Specifies UDP destination port for Geneve packets. Default port is 6081.
+	*/
+	Destport int `json:"destport,omitempty"`
+	/**
+	* Default behavior is to copy the ToS field of the internal IP Packet (Payload) to the outer IP packet (Transport packet). But the user can configure a new ToS field using this option.
+	*/
+	Tosinherit string `json:"tosinherit,omitempty"`
+	/**
 	* The payload GRE will carry
 	*/
 	Grepayload string `json:"grepayload,omitempty"`
@@ -66,5 +82,6 @@ type Iptunnel struct {
 	Tunneltype string `json:"tunneltype,omitempty"`
 	Ipsectunnelstatus string `json:"ipsectunnelstatus,omitempty"`
 	Refcnt string `json:"refcnt,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

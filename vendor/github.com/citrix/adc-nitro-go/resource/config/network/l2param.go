@@ -85,4 +85,8 @@ type L2param struct {
 	*/
 	Usenetprofilebsdtraffic string `json:"usenetprofilebsdtraffic,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

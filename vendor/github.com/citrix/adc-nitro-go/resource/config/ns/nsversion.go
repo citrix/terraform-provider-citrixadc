@@ -29,5 +29,6 @@ type Nsversion struct {
 
 	Version string `json:"version,omitempty"`
 	Mode string `json:"mode,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

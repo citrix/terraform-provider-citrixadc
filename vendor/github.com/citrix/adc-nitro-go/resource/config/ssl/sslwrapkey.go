@@ -35,4 +35,8 @@ type Sslwrapkey struct {
 	*/
 	Salt string `json:"salt,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

@@ -27,25 +27,13 @@ type Cspolicy struct {
 	*/
 	Policyname string `json:"policyname,omitempty"`
 	/**
-	* URL string that is matched with the URL of a request. Can contain a wildcard character. Specify the string value in the following format: [[prefix] [*]] [.suffix].
-	*/
-	Url string `json:"url,omitempty"`
-	/**
 	* Expression, or name of a named expression, against which traffic is evaluated.
 		The following requirements apply only to the Citrix ADC CLI:
 		*  If the expression includes one or more spaces, enclose the entire expression in double quotation marks.
-		*  If the expression itself includes double quotation marks, escape the quotations by using the  character. 
+		*  If the expression itself includes double quotation marks, escape the quotations by using the  character.
 		*  Alternatively, you can use single quotation marks to enclose the rule, in which case you do not have to escape the double quotation marks.
 	*/
 	Rule string `json:"rule,omitempty"`
-	/**
-	* The boundto name. The string value can range to 63 characters.
-	*/
-	Boundto string `json:"boundto,omitempty"`
-	/**
-	* The domain name. The string value can range to 63 characters.
-	*/
-	Domain string `json:"domain,omitempty"`
 	/**
 	* Content switching action that names the target load balancing virtual server to which the traffic is switched.
 	*/
@@ -63,11 +51,11 @@ type Cspolicy struct {
 
 	Vstype string `json:"vstype,omitempty"`
 	Hits string `json:"hits,omitempty"`
-	Bindhits string `json:"bindhits,omitempty"`
 	Labelname string `json:"labelname,omitempty"`
 	Labeltype string `json:"labeltype,omitempty"`
 	Priority string `json:"priority,omitempty"`
 	Activepolicy string `json:"activepolicy,omitempty"`
-	Cspolicytype string `json:"cspolicytype,omitempty"`
+	Boundto string `json:"boundto,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

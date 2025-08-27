@@ -32,5 +32,6 @@ type Subscriberradiusinterface struct {
 	//------- Read only Parameter ---------;
 
 	Svrstate string `json:"svrstate,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

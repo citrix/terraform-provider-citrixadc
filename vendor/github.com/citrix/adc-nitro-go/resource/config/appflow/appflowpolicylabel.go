@@ -32,7 +32,7 @@ type Appflowpolicylabel struct {
 	*/
 	Policylabeltype string `json:"policylabeltype,omitempty"`
 	/**
-	* New name for the policy label. Must begin with an ASCII alphabetic or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. 
+	* New name for the policy label. Must begin with an ASCII alphabetic or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters.
 		The following requirement applies only to the Citrix ADC CLI:
 		If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my appflow policylabel" or 'my appflow policylabel')
 	*/
@@ -49,5 +49,6 @@ type Appflowpolicylabel struct {
 	Invokelabelname string `json:"invoke_labelname,omitempty"`
 	Flowtype string `json:"flowtype,omitempty"`
 	Description string `json:"description,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

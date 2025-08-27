@@ -46,7 +46,7 @@ type Dnsparameter struct {
 	Recursion string `json:"recursion,omitempty"`
 	/**
 	* Type of DNS queries (A, AAAA, or both) to generate during the routine functioning of certain Citrix ADC features, such as SSL VPN, cache redirection, and the integrated cache. The queries are sent to the external name servers that are configured for the forwarder function. If you specify both query types, you can also specify the order. Available settings function as follows:
-		* OnlyAQuery. Send queries for IPv4 address records (A records) only. 
+		* OnlyAQuery. Send queries for IPv4 address records (A records) only.
 		* OnlyAAAAQuery. Send queries for IPv6 address records (AAAA records) instead of queries for IPv4 address records (A records).
 		* AThenAAAAQuery. Send a query for an A record, and then send a query for an AAAA record if the query for the A record results in a NODATA response from the name server.
 		* AAAAThenAQuery. Send a query for an AAAA record, and then send a query for an A record if the query for the AAAA record results in a NODATA response from the name server.
@@ -85,6 +85,18 @@ type Dnsparameter struct {
 	*/
 	Maxcachesize int `json:"maxcachesize"` // Zero is a valid value
 	/**
+	* Maximum number of active concurrent DNS resolutions per Packet Engine
+	*/
+	Resolvermaxactiveresolutions int `json:"resolvermaxactiveresolutions,omitempty"`
+	/**
+	* Maximum DNS-TCP connections opened for recursive resolution per Packet Engine
+	*/
+	Resolvermaxtcpconnections int `json:"resolvermaxtcpconnections,omitempty"`
+	/**
+	* Maximum wait time in seconds for the response on DNS-TCP connection for recursive resolution per Packet Engine
+	*/
+	Resolvermaxtcptimeout int `json:"resolvermaxtcptimeout,omitempty"`
+	/**
 	* Maximum memory, in megabytes, that can be used for caching of negative DNS responses per packet engine.
 	*/
 	Maxnegativecachesize int `json:"maxnegativecachesize"` // Zero is a valid value
@@ -105,6 +117,15 @@ type Dnsparameter struct {
 	*/
 	Maxudppacketsize int `json:"maxudppacketsize,omitempty"`
 	/**
+	* Flag to enable/disable DNS zones configuration transfer to remote GSLB site nodes
+	*/
+	Zonetransfer string `json:"zonetransfer,omitempty"`
+	/**
+	* Flag to enable/disable saving of rollover operations executed automatically to avoid config loss.
+		Applicable only when autorollover option is enabled on a key. Note: when you enable this, full configuration will be saved
+	*/
+	Autosavekeyops string `json:"autosavekeyops,omitempty"`
+	/**
 	* Rate limit threshold for Non-Existant domain (NXDOMAIN) responses generated from Citrix ADC. Once the threshold is breached , DNS queries leading to NXDOMAIN response will be dropped. This threshold will not be applied for NXDOMAIN responses got from the backend. The threshold will be applied per packet engine and per second.
 	*/
 	Nxdomainratelimitthreshold int `json:"nxdomainratelimitthreshold"` // Zero is a valid value
@@ -114,5 +135,6 @@ type Dnsparameter struct {
 	Builtin string `json:"builtin,omitempty"`
 	Feature string `json:"feature,omitempty"`
 	Nxdomainthresholdcrossed string `json:"nxdomainthresholdcrossed,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

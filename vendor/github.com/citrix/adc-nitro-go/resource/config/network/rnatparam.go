@@ -29,4 +29,8 @@ type Rnatparam struct {
 	*/
 	Srcippersistency string `json:"srcippersistency,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

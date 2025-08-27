@@ -21,14 +21,14 @@ package authentication
 */
 type Authenticationcertaction struct {
 	/**
-	* Name for the client cert authentication server profile (action). 
+	* Name for the client cert authentication server profile (action).
 		Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Cannot be changed after certifcate action is created.
 		The following requirement applies only to the Citrix ADC CLI:
 		If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my authentication action" or 'my authentication action').
 	*/
 	Name string `json:"name,omitempty"`
 	/**
-	* Enables or disables two-factor authentication. 
+	* Enables or disables two-factor authentication.
 		Two factor authentication is client cert authentication followed by password authentication.
 	*/
 	Twofactor string `json:"twofactor,omitempty"`
@@ -46,5 +46,9 @@ type Authenticationcertaction struct {
 	* This is the default group that is chosen when the authentication succeeds in addition to extracted groups.
 	*/
 	Defaultauthenticationgroup string `json:"defaultauthenticationgroup,omitempty"`
+
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

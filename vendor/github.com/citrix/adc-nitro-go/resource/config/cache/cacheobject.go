@@ -131,5 +131,6 @@ type Cacheobject struct {
 	Httpcalloutresult string `json:"httpcalloutresult,omitempty"`
 	Locatorshow string `json:"locatorshow,omitempty"`
 	Ceflags string `json:"ceflags,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

@@ -33,4 +33,8 @@ type Lldpparam struct {
 	*/
 	Mode string `json:"mode,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

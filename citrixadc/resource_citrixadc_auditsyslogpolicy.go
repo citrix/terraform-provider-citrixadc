@@ -2,6 +2,7 @@ package citrixadc
 
 import (
 	"github.com/citrix/adc-nitro-go/resource/config/audit"
+	"github.com/citrix/adc-nitro-go/resource/config/system"
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
@@ -14,16 +15,6 @@ import (
 	"net/url"
 	"strconv"
 )
-
-type Systemglobalauditsyslogpolicybinding struct {
-	Builtin                interface{} `json:"builtin,omitempty"`
-	Feature                string      `json:"feature,omitempty"`
-	Globalbindtype         string      `json:"globalbindtype,omitempty"`
-	Gotopriorityexpression string      `json:"gotopriorityexpression,omitempty"`
-	Nextfactor             string      `json:"nextfactor,omitempty"`
-	Policyname             string      `json:"policyname,omitempty"`
-	Priority               int         `json:"priority,omitempty"`
-}
 
 func resourceCitrixAdcAuditsyslogpolicy() *schema.Resource {
 	return &schema.Resource{
@@ -297,7 +288,7 @@ func addSystemglobalAuditsyslogpolicyBinding(d *schema.ResourceData, meta interf
 	log.Printf("[DEBUG]  citrixadc-provider: In addSystemglobalAuditsyslogpolicyBinding")
 	client := meta.(*NetScalerNitroClient).client
 
-	bindingStruct := Systemglobalauditsyslogpolicybinding{}
+	bindingStruct := system.Systemglobalauditsyslogpolicybinding{}
 	bindingStruct.Policyname = d.Get("name").(string)
 
 	if d, ok := binding["feature"]; ok {

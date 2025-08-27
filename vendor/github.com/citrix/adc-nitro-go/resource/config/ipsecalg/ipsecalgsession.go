@@ -49,5 +49,6 @@ type Ipsecalgsession struct {
 
 	Spiin string `json:"spiin,omitempty"`
 	Spiout string `json:"spiout,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

@@ -28,8 +28,8 @@ type Dnspolicy struct {
 	* Expression against which DNS traffic is evaluated.
 		Note:
 		* On the command line interface, if the expression includes blank spaces, the entire expression must be enclosed in double quotation marks.
-		* If the expression itself includes double quotation marks, you must escape the quotations by using the  character. 
-		* Alternatively, you can use single quotation marks to enclose the rule, in which case you do not have to escape the double quotation marks. 
+		* If the expression itself includes double quotation marks, you must escape the quotations by using the  character.
+		* Alternatively, you can use single quotation marks to enclose the rule, in which case you do not have to escape the double quotation marks.
 		Example: CLIENT.UDP.DNS.DOMAIN.EQ("domainname")
 	*/
 	Rule string `json:"rule,omitempty"`
@@ -72,5 +72,6 @@ type Dnspolicy struct {
 	Description string `json:"description,omitempty"`
 	Builtin string `json:"builtin,omitempty"`
 	Feature string `json:"feature,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

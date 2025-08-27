@@ -41,4 +41,8 @@ type Ip6tunnelparam struct {
 	*/
 	Useclientsourceipv6 string `json:"useclientsourceipv6,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

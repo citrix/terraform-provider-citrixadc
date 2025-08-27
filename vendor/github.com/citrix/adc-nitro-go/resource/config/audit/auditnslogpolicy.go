@@ -21,7 +21,7 @@ package audit
 */
 type Auditnslogpolicy struct {
 	/**
-	* Name for the policy. 
+	* Name for the policy.
 		Must begin with a letter, number, or the underscore character (_), and must consist only of letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at sign (@), equals (=), colon (:), and underscore characters. Cannot be changed after the nslog policy is added.
 		The following requirement applies only to the Citrix ADC CLI:
 		If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my nslog policy" or 'my nslog policy').
@@ -42,5 +42,6 @@ type Auditnslogpolicy struct {
 	Builtin string `json:"builtin,omitempty"`
 	Feature string `json:"feature,omitempty"`
 	Expressiontype string `json:"expressiontype,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

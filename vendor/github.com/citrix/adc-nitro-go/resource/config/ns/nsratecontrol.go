@@ -12,7 +12,7 @@
 *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 *   See the License for the specific language governing permissions and
 *   limitations under the License.
-*/
+ */
 
 package ns
 
@@ -33,8 +33,11 @@ type Nsratecontrol struct {
 	*/
 	Icmpthreshold int `json:"icmpthreshold"` // Zero is acceptable value
 	/**
-	* The number of TCP RST packets permitted per 10 milli second. zero means rate control is disabled and 0xffffffff means every thing is rate controlled
+	* The number of TCP RST packets permitted per 10 milliseconds. zero means rate control is disabled and 0xffffffff means every thing is rate controlled
 	*/
 	Tcprstthreshold int `json:"tcprstthreshold"` // Zero is acceptable value
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 }

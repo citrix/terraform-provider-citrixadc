@@ -90,5 +90,6 @@ type Nsvariable struct {
 	//------- Read only Parameter ---------;
 
 	Referencecount string `json:"referencecount,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

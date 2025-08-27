@@ -55,7 +55,7 @@ type Tmsessionaction struct {
 	*/
 	Kcdaccount string `json:"kcdaccount,omitempty"`
 	/**
-	* Enable or disable persistent SSO cookies for the traffic management (TM) session. A persistent cookie remains on the user device and is sent with each HTTP request. The cookie becomes stale if the session ends. This setting is overwritten if a traffic action sets persistent cookie to OFF. 
+	* Enable or disable persistent SSO cookies for the traffic management (TM) session. A persistent cookie remains on the user device and is sent with each HTTP request. The cookie becomes stale if the session ends. This setting is overwritten if a traffic action sets persistent cookie to OFF.
 		Note: If persistent cookie is enabled, make sure you set the persistent cookie validity.
 	*/
 	Persistentcookie string `json:"persistentcookie,omitempty"`
@@ -72,5 +72,6 @@ type Tmsessionaction struct {
 
 	Builtin string `json:"builtin,omitempty"`
 	Feature string `json:"feature,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

@@ -156,6 +156,10 @@ type Nsacl6 struct {
 	*/
 	Dfdprefix int `json:"dfdprefix,omitempty"`
 	/**
+	* Specifies the NodeId to steer the packet to the provided FP.
+	*/
+	Nodeid int `json:"nodeid,omitempty"`
+	/**
 	* If stateful option is enabled, transparent sessions are created for the traffic hitting this ACL6 and not hitting any other features like LB, INAT etc. 
 	*/
 	Stateful string `json:"stateful,omitempty"`
@@ -181,5 +185,6 @@ type Nsacl6 struct {
 	Kernelstate string `json:"kernelstate,omitempty"`
 	Hits string `json:"hits,omitempty"`
 	Aclassociate string `json:"aclassociate,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

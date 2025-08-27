@@ -347,4 +347,8 @@ type Vpnsamlssoprofile struct {
 	*/
 	Signatureservice string `json:"signatureservice,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

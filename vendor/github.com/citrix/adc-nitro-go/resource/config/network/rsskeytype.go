@@ -25,4 +25,8 @@ type Rsskeytype struct {
 	*/
 	Rsstype string `json:"rsstype,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

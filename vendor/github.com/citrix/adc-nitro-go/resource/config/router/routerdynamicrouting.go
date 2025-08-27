@@ -32,5 +32,6 @@ type Routerdynamicrouting struct {
 	//------- Read only Parameter ---------;
 
 	Output string `json:"output,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

@@ -21,7 +21,7 @@ package vpn
 */
 type Vpnicaconnection struct {
 	/**
-	* User name for which to display connections.
+	* User name for which ica connections needs to be terminated.
 	*/
 	Username string `json:"username,omitempty"`
 	/**
@@ -45,5 +45,6 @@ type Vpnicaconnection struct {
 	Destip string `json:"destip,omitempty"`
 	Destport string `json:"destport,omitempty"`
 	Peid string `json:"peid,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

@@ -21,7 +21,7 @@ package authentication
 */
 type Authenticationauthnprofile struct {
 	/**
-	* Name for the authentication profile. 
+	* Name for the authentication profile.
 		Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Cannot be changed after the RADIUS action is added.
 	*/
 	Name string `json:"name,omitempty"`
@@ -41,5 +41,9 @@ type Authenticationauthnprofile struct {
 	* Authentication weight or level of the vserver to which this will bound. This is used to order TM vservers based on the protection required. A session that is created by authenticating against TM vserver at given level cannot be used to access TM vserver at a higher level.
 	*/
 	Authenticationlevel int `json:"authenticationlevel,omitempty"`
+
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

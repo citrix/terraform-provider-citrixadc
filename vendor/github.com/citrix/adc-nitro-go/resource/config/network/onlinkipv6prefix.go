@@ -53,5 +53,6 @@ type Onlinkipv6prefix struct {
 
 	Prefixcurrvalidelft string `json:"prefixcurrvalidelft,omitempty"`
 	Prefixcurrpreferredlft string `json:"prefixcurrpreferredlft,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

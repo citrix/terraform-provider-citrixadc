@@ -44,7 +44,7 @@ type Clusternode struct {
 		When the current configuration coordinator goes down, the node with the next lowest priority is made the new configuration coordinator. When the original node comes back up, it will preempt the new configuration coordinator and take over as the configuration coordinator.
 		Note: When priority is not configured for any of the nodes or if multiple nodes have the same priority, the cluster elects one of the nodes as the configuration coordinator.
 	*/
-	Priority int `json:"priority"` // Zero is a valid value
+	Priority int `json:"priority,omitempty"`
 	/**
 	* The default node group in a Cluster system.
 	*/
@@ -61,6 +61,10 @@ type Clusternode struct {
 	* Option to remove nodegroup config
 	*/
 	Clearnodegroupconfig string `json:"clearnodegroupconfig,omitempty"`
+	/**
+	* Node will be removed from cluster without prompting for user confirmation.
+	*/
+	Force bool `json:"force,omitempty"`
 
 	//------- Read only Parameter ---------;
 
@@ -86,5 +90,6 @@ type Clusternode struct {
 	Cfgflags string `json:"cfgflags,omitempty"`
 	Routemonitor string `json:"routemonitor,omitempty"`
 	Netmask string `json:"netmask,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

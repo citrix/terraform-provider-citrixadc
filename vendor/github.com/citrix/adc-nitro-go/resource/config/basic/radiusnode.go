@@ -26,8 +26,12 @@ type Radiusnode struct {
 	Nodeprefix string `json:"nodeprefix,omitempty"`
 	/**
 	* The key shared between the RADIUS server and clients.
-		Required for Citrix ADC to communicate with the RADIUS nodes.
+		Required for NetScaler to communicate with the RADIUS nodes.
 	*/
 	Radkey string `json:"radkey,omitempty"`
+
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

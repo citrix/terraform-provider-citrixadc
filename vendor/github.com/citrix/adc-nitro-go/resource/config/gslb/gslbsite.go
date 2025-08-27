@@ -38,7 +38,7 @@ type Gslbsite struct {
 	*/
 	Publicip string `json:"publicip,omitempty"`
 	/**
-	* Exchange metrics with other sites. Metrics are exchanged by using Metric Exchange Protocol (MEP). The appliances in the GSLB setup exchange health information once every second. 
+	* Exchange metrics with other sites. Metrics are exchanged by using Metric Exchange Protocol (MEP). The appliances in the GSLB setup exchange health information once every second.
 		If you disable metrics exchange, you can use only static load balancing methods (such as round robin, static proximity, or the hash-based methods), and if you disable metrics exchange when a dynamic load balancing method (such as least connection) is in operation, the appliance falls back to round robin. Also, if you disable metrics exchange, you must use a monitor to determine the state of GSLB services. Otherwise, the service is marked as DOWN.
 	*/
 	Metricexchange string `json:"metricexchange,omitempty"`
@@ -54,7 +54,7 @@ type Gslbsite struct {
 	* Specify the conditions under which the GSLB service must be monitored by a monitor, if one is bound. Available settings function as follows:
 		* ALWAYS - Monitor the GSLB service at all times.
 		* MEPDOWN - Monitor the GSLB service only when the exchange of metrics through the Metrics Exchange Protocol (MEP) is disabled.
-		MEPDOWN_SVCDOWN - Monitor the service in either of the following situations: 
+		MEPDOWN_SVCDOWN - Monitor the service in either of the following situations:
 		* The exchange of metrics through MEP is disabled.
 		* The exchange of metrics through MEP is enabled but the status of the service, learned through metrics exchange, is DOWN.
 	*/
@@ -79,6 +79,14 @@ type Gslbsite struct {
 	* The list of backup gslb sites configured in preferred order. Need to be parent gsb sites.
 	*/
 	Backupparentlist []string `json:"backupparentlist,omitempty"`
+	/**
+	* Password to be used for mep communication between gslb site nodes.
+	*/
+	Sitepassword string `json:"sitepassword,omitempty"`
+	/**
+	* New name for the GSLB site.
+	*/
+	Newname string `json:"newname,omitempty"`
 
 	//------- Read only Parameter ---------;
 
@@ -87,5 +95,7 @@ type Gslbsite struct {
 	Version string `json:"version,omitempty"`
 	Curbackupparentip string `json:"curbackupparentip,omitempty"`
 	Sitestate string `json:"sitestate,omitempty"`
+	Oldname string `json:"oldname,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

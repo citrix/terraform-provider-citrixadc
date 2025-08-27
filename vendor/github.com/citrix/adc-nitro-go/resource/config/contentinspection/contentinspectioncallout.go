@@ -68,5 +68,6 @@ type Contentinspectioncallout struct {
 	Hits string `json:"hits,omitempty"`
 	Undefhits string `json:"undefhits,omitempty"`
 	Undefreason string `json:"undefreason,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

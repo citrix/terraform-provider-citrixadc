@@ -23,7 +23,7 @@ type Crpolicycrvserverbinding struct {
 	/**
 	* Domain name.
 	*/
-	Domain string `json:"domain,omitempty"`
+	Boundto string `json:"boundto,omitempty"`
 	/**
 	* priority of bound policy
 	*/
@@ -35,11 +35,7 @@ type Crpolicycrvserverbinding struct {
 	/**
 	* Total number of hits.
 	*/
-	Pihits int `json:"pihits,omitempty"`
-	/**
-	* bind hits for PI CR Policy.
-	*/
-	Pipolicyhits int `json:"pipolicyhits,omitempty"`
+	Bindhits int `json:"bindhits,omitempty"`
 	/**
 	* The invocation type.
 	*/

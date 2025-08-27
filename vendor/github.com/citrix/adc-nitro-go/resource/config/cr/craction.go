@@ -35,5 +35,6 @@ type Craction struct {
 	Referencecount string `json:"referencecount,omitempty"`
 	Undefhits string `json:"undefhits,omitempty"`
 	Comment string `json:"comment,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }
