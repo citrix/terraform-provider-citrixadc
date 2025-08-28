@@ -25,16 +25,12 @@ import (
 )
 
 const testAccSslhsmkey_basic = `
-
-
-	resource "citrixadc_sslhsmkey" "tf_hsmkey1" {
-		
-		hsmkeyname = "hsmkey1"
-		hsmtype = "Fillme"
-		password = "Fillme"
-		serialnum = "Fillme"
-
-	}
+resource "citrixadc_sslhsmkey" "tf_hsmkey1" {
+	hsmkeyname = "hsmkey1"
+	hsmtype = "Fillme"
+	password = "Fillme"
+	serialnum = "Fillme"
+}
 `
 
 func TestAccSslhsmkey_basic(t *testing.T) {
