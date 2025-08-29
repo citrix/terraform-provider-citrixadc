@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccGslbservice_dnsview_binding_basic = `
@@ -36,6 +37,7 @@ resource "citrixadc_gslbservice_dnsview_binding" "tf_gslbservice_dnsview_binding
 	sitename        = "Site-Remote"
 	siteipaddress   = "172.31.48.18"
 	sessionexchange = "ENABLED"
+	sitepassword = "password123"
   }
   
   resource "citrixadc_gslbservice" "gslb_svc1" {
@@ -56,6 +58,7 @@ resource "citrixadc_gslbsite" "site_remote" {
 	sitename        = "Site-Remote"
 	siteipaddress   = "172.31.48.18"
 	sessionexchange = "ENABLED"
+	sitepassword = "password123"
   }
   
   resource "citrixadc_gslbservice" "gslb_svc1" {

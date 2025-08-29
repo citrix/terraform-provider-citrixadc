@@ -36,7 +36,7 @@ func TestAccNsversion_basic(t *testing.T) {
 			{
 				Config: testAccNsversion,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr("data.citrixadc_nsversion.nsversion", "version", regexp.MustCompile("^Netscaler")),
+					resource.TestMatchResourceAttr("data.citrixadc_nsversion.nsversion", "version", regexp.MustCompile("^NetScaler")),
 				),
 			},
 		},

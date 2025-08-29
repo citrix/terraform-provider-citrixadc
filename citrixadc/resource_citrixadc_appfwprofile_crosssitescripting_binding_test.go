@@ -119,9 +119,13 @@ func testAccCheckAppfwprofile_crosssitescripting_bindingExist(n string, id *stri
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
 
 		bindingId := rs.Primary.ID
-		idSlice := strings.SplitN(bindingId, ",", 2)
+		idSlice := strings.Split(bindingId, ",")
 		appFwName := idSlice[0]
 		crosssitescripting := idSlice[1]
+		formactionurl_xss := idSlice[2]
+		as_scan_location_xss := idSlice[3]
+		as_value_type_xss := idSlice[4]
+		as_value_expr_xss := idSlice[5]
 
 		findParams := service.FindParams{
 			ResourceType:             service.Appfwprofile_crosssitescripting_binding.Type(),
@@ -139,8 +143,14 @@ func testAccCheckAppfwprofile_crosssitescripting_bindingExist(n string, id *stri
 		foundIndex := -1
 		for i, v := range dataArr {
 			if v["crosssitescripting"].(string) == crosssitescripting {
-				foundIndex = i
-				break
+				unescapedURL, err := unescapeStringURL(v["formactionurl_xss"].(string))
+				if err != nil {
+					return err
+				}
+				if v["formactionurl_xss"] != nil && v["as_scan_location_xss"] != nil && v["as_value_type_xss"] != nil && v["as_value_expr_xss"] != nil && v["as_value_type_xss"].(string) == as_value_type_xss && v["as_value_expr_xss"].(string) == as_value_expr_xss && v["as_scan_location_xss"].(string) == as_scan_location_xss && unescapedURL == formactionurl_xss {
+					foundIndex = i
+					break
+				}
 			}
 		}
 

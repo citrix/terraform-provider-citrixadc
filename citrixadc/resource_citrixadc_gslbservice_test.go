@@ -116,6 +116,7 @@ resource "citrixadc_gslbsite" "foo" {
 
 	siteipaddress = "172.31.11.20"
 	sitename = "Site-GSLB-East-Coast"
+	sitepassword = "password123"
 
   }
 
@@ -255,6 +256,7 @@ resource "citrixadc_gslbsite" "tf_test_acc_gslbsite" {
   sitename = "tf_test_acc_gslbsite"
   siteipaddress = "192.168.22.33"
   sessionexchange = "DISABLED"
+  sitepassword = "password123"
 }
 
 resource "citrixadc_gslbservice" "tf_test_acc_gslbservice" {
@@ -274,6 +276,7 @@ resource "citrixadc_gslbsite" "tf_test_acc_gslbsite" {
   sitename = "tf_test_acc_gslbsite"
   siteipaddress = "192.168.22.33"
   sessionexchange = "DISABLED"
+  sitepassword = "password123"
 }
 
 resource "citrixadc_gslbservice" "tf_test_acc_gslbservice" {
@@ -399,6 +402,7 @@ resource "citrixadc_gslbsite" "tf_test_site" {
   sitename        = "tf_test_site"
   siteipaddress   = "192.168.22.19"
   sessionexchange = "DISABLED"
+  sitepassword    = "password123"
 }
 
 resource "citrixadc_gslbservice" "tf_test_gslbservice" {
@@ -434,6 +438,7 @@ resource "citrixadc_gslbsite" "tf_test_site" {
   sitename        = "tf_test_site"
   siteipaddress   = "192.168.22.19"
   sessionexchange = "DISABLED"
+  sitepassword    = "password123"
 }
 
 resource "citrixadc_gslbservice" "tf_test_gslbservice" {
@@ -465,6 +470,7 @@ resource "citrixadc_gslbsite" "tf_test_site" {
   sitename        = "tf_test_site"
   siteipaddress   = "192.168.22.19"
   sessionexchange = "DISABLED"
+  sitepassword    = "password123"
 }
 
 resource "citrixadc_gslbservice" "tf_test_gslbservice" {

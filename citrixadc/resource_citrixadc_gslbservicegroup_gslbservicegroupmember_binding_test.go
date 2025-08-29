@@ -40,6 +40,7 @@ const testAccGslbservicegroup_gslbservicegroupmember_binding_basic = `
 		sitename        = "Site-Local"
 		siteipaddress   = "172.31.96.234"
 		sessionexchange = "DISABLED"
+		sitepassword = "password123"
 	}
 	resource "citrixadc_server" "tf_server" {
 		name = "tf_server"
@@ -68,6 +69,7 @@ const testAccGslbservicegroup_gslbservicegroupmember_binding_basic_step2 = `
 		sitename        = "Site-Local"
 		siteipaddress   = "172.31.96.234"
 		sessionexchange = "DISABLED"
+		sitepassword = "password123"
 	}
 	resource "citrixadc_server" "tf_server" {
 		name = "tf_server"
