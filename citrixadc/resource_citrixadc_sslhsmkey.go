@@ -18,7 +18,7 @@ func resourceCitrixAdcSslhsmkey() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"hsmkeyname": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 				ForceNew: true,
 			},
 			"hsmtype": {
@@ -37,9 +37,10 @@ func resourceCitrixAdcSslhsmkey() *schema.Resource {
 				ForceNew: true,
 			},
 			"password": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:      schema.TypeString,
+				Optional:  true,
+				ForceNew:  true,
+				Sensitive: true,
 			},
 			"serialnum": {
 				Type:     schema.TypeString,
