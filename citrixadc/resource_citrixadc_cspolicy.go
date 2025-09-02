@@ -27,11 +27,6 @@ func resourceCitrixAdcCspolicy() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"boundto": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
 			"logaction": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -79,6 +74,18 @@ func createCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	csvserver := d.Get("csvserver").(string)
 	targetlbvserver, lbok := d.GetOk("targetlbvserver")
 	priority, pok := d.GetOk("priority")
+	action, aok := d.GetOk("action")
+	_, rok := d.GetOk("rule")
+
+	if aok {
+		actionExists := client.ResourceExists(service.Csaction.Type(), action.(string))
+		if !actionExists {
+			return fmt.Errorf("[ERROR] netscaler-provider: Specified Action %s does not exist", action.(string))
+		}
+		if !rok {
+			return fmt.Errorf("[ERROR] netscaler-provider: Action  %s specified without rule", action.(string))
+		}
+	}
 
 	var cspolicyName string
 	if v, ok := d.GetOk("policyname"); ok {
@@ -90,7 +97,6 @@ func createCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	cspolicy := cs.Cspolicy{
 		Policyname: d.Get("policyname").(string),
 		Action:     d.Get("action").(string),
-		Boundto:    d.Get("boundto").(string),
 		Logaction:  d.Get("logaction").(string),
 		Rule:       d.Get("rule").(string),
 	}
@@ -146,7 +152,6 @@ func readCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("policyname", data["policyname"])
 	d.Set("action", data["action"])
-	d.Set("boundto", data["boundto"])
 	d.Set("logaction", data["logaction"])
 	d.Set("rule", data["rule"])
 
@@ -196,11 +201,6 @@ func updateCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 		cspolicy.Action = d.Get("action").(string)
 		hasChange = true
 	}
-	if d.HasChange("boundto") {
-		log.Printf("[DEBUG] netscaler-provider: Csvserver has changed for cspolicy %s, starting update", cspolicyName)
-		cspolicy.Boundto = d.Get("boundto").(string)
-		hasChange = true
-	}
 	if d.HasChange("logaction") {
 		log.Printf("[DEBUG] netscaler-provider: Logaction has changed for cspolicy %s, starting update", cspolicyName)
 		cspolicy.Logaction = d.Get("logaction").(string)
@@ -215,7 +215,12 @@ func updateCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] netscaler-provider: Priority has changed for cspolicy %s, starting update", cspolicyName)
 		priorityChanged = true
 	}
-
+	if d.HasChange("newname") {
+		log.Printf("[DEBUG] netscaler-provider: Newname has changed for cspolicy %s, starting update", cspolicyName)
+		cspolicy.Newname = d.Get("newname").(string)
+		d.SetId(cspolicy.Newname)
+		hasChange = true
+	}
 	if d.HasChange("targetlbvserver") {
 		log.Printf("[DEBUG] netscaler-provider: targetlbvserver has changed for cspolicy %s, starting update", cspolicyName)
 		lbvserverChanged = true
@@ -246,6 +251,7 @@ func updateCspolicyFunc(d *schema.ResourceData, meta interface{}) error {
 			//rebind
 			targetlbvserver, lbok := d.GetOk("targetlbvserver")
 			priority, pok := d.GetOk("priority")
+			cspolicyName = d.Id()
 
 			if !pok && lbok {
 				return fmt.Errorf("[ERROR] netscaler-provider: Need to specify priority if lbvserver is specified")
