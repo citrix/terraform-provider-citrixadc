@@ -19,37 +19,31 @@ func resourceCitrixAdcSslhsmkey() *schema.Resource {
 			"hsmkeyname": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 				ForceNew: true,
 			},
 			"hsmtype": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 				ForceNew: true,
 			},
 			"key": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 				ForceNew: true,
 			},
 			"keystore": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 				ForceNew: true,
 			},
 			"password": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 				ForceNew: true,
 			},
 			"serialnum": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 				ForceNew: true,
 			},
 		},
@@ -99,7 +93,7 @@ func readSslhsmkeyFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("hsmtype", data["hsmtype"])
 	d.Set("key", data["key"])
 	d.Set("keystore", data["keystore"])
-	d.Set("password", data["password"])
+	d.Set("password", d.Get("password").(string))
 	d.Set("serialnum", data["serialnum"])
 
 	return nil
@@ -110,7 +104,26 @@ func deleteSslhsmkeyFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSslhsmkeyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	sslhsmkeyName := d.Id()
-	err := client.DeleteResource(service.Sslhsmkey.Type(), sslhsmkeyName)
+
+	args := make(map[string]string)
+
+	if val, ok := d.GetOk("hsmtype"); ok {
+		args["hsmtype"] = val.(string)
+	}
+	if val, ok := d.GetOk("key"); ok {
+		args["key"] = val.(string)
+	}
+	if val, ok := d.GetOk("keystore"); ok {
+		args["keystore"] = val.(string)
+	}
+	if val, ok := d.GetOk("password"); ok {
+		args["password"] = val.(string)
+	}
+	if val, ok := d.GetOk("serialnum"); ok {
+		args["serialnum"] = val.(string)
+	}
+
+	err := client.DeleteResourceWithArgsMap(service.Sslhsmkey.Type(), sslhsmkeyName, args)
 	if err != nil {
 		return err
 	}
