@@ -43,7 +43,7 @@ type Responderpolicylabelpolicybindingbinding struct {
 	*/
 	Labeltype string `json:"labeltype,omitempty"`
 	/**
-	* * If labelType is policylabel, name of the policy label to invoke. 
+	* * If labelType is policylabel, name of the policy label to invoke.
 		* If labelType is reqvserver or resvserver, name of the virtual server.
 	*/
 	Invokelabelname string `json:"invoke_labelname,omitempty"`

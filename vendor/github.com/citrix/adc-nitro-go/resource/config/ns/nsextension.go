@@ -22,7 +22,7 @@ package ns
 type Nsextension struct {
 	/**
 	* Local path to and name of, or URL (protocol, host, path, and file name) for, the file in which to store the imported extension.
-		NOTE: The import fails if the object to be imported is on an HTTPS server that requires client certificate authentication for access.
+		NOTE: The import fails if the object to be imported is on an HTTPS server that requires client certificate authentication for access, and the issuer certificate of the HTTPS server is not present in the specific path on NetScaler to authenticate the HTTPS server.
 	*/
 	Src string `json:"src,omitempty"`
 	/**
@@ -66,5 +66,6 @@ type Nsextension struct {
 	Functionhits string `json:"functionhits,omitempty"`
 	Functionundefhits string `json:"functionundefhits,omitempty"`
 	Functionhaltcount string `json:"functionhaltcount,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

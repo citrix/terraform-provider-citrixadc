@@ -60,9 +60,7 @@ type Cmpparameter struct {
 	*/
 	Cmponpush string `json:"cmponpush,omitempty"`
 	/**
-	* Type of policy. Available settings function as follows:
-		* Classic -  Classic policies evaluate basic characteristics of traffic and other data. Deprecated.
-		* Advanced -  Advanced policies (which have been renamed as default syntax policies) can perform the same type of evaluations as classic policies. They also enable you to analyze more data (for example, the body of an HTTP request) and to configure more operations in the policy rule (for example, transforming data in the body of a request into an HTTP header).
+	* Type of the policy. The only possible value is ADVANCED
 	*/
 	Policytype string `json:"policytype,omitempty"`
 	/**
@@ -77,10 +75,23 @@ type Cmpparameter struct {
 	* Enable insertion of  Cache-Control: private response directive to indicate response message is intended for a single user and must not be cached by a shared or proxy cache.
 	*/
 	Externalcache string `json:"externalcache,omitempty"`
+	/**
+	* Control the addition of a random filename of random length in the GZIP header to apply the Heal-the-BREACH mitigation for the BREACH attack.
+	*/
+	Randomgzipfilename string `json:"randomgzipfilename,omitempty"`
+	/**
+	* Minimum length of the random filename to be added in the GZIP header to apply the Heal-the-BREACH mitigation for the BREACH attack.
+	*/
+	Randomgzipfilenameminlength int `json:"randomgzipfilenameminlength,omitempty"`
+	/**
+	* Maximum length of the random filename to be added in the GZIP header to apply the Heal-the-BREACH mitigation for the BREACH attack.
+	*/
+	Randomgzipfilenamemaxlength int `json:"randomgzipfilenamemaxlength,omitempty"`
 
 	//------- Read only Parameter ---------;
 
 	Builtin string `json:"builtin,omitempty"`
 	Feature string `json:"feature,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

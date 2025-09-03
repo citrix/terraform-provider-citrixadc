@@ -101,10 +101,15 @@ type Rdpclientprofile struct {
 		Note: The Attribute mentioned in the rdpLinkAttribute should be fetched through corresponding authentication method.
 	*/
 	Rdplinkattribute string `json:"rdplinkattribute,omitempty"`
+	/**
+	* This setting determines whether RDC launch is initiated by the valid client IP
+	*/
+	Rdpvalidateclientip string `json:"rdpvalidateclientip,omitempty"`
 
 	//------- Read only Parameter ---------;
 
 	Builtin string `json:"builtin,omitempty"`
 	Feature string `json:"feature,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

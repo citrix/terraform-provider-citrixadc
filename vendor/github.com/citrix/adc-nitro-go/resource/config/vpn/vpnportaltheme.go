@@ -29,5 +29,6 @@ type Vpnportaltheme struct {
 	//------- Read only Parameter ---------;
 
 	Feature string `json:"feature,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

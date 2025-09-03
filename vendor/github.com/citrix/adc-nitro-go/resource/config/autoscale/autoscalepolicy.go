@@ -50,5 +50,6 @@ type Autoscalepolicy struct {
 	Hits string `json:"hits,omitempty"`
 	Undefhits string `json:"undefhits,omitempty"`
 	Priority string `json:"priority,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

@@ -62,5 +62,6 @@ type Aaasession struct {
 	Intranetip string `json:"intranetip,omitempty"`
 	Intranetip6 string `json:"intranetip6,omitempty"`
 	Peid string `json:"peid,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

@@ -25,4 +25,8 @@ type Sslcertchain struct {
 	*/
 	Certkeyname string `json:"certkeyname,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

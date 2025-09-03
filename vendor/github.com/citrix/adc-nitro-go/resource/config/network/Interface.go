@@ -31,10 +31,10 @@ type Interface struct {
 	*/
 	Id string `json:"id,omitempty"`
 	/**
-	* Ethernet speed of the interface, in Mbps. 
+	* Ethernet speed of the interface, in Mbps.
 		Notes:
 		* If you set the speed as AUTO, the Citrix ADC attempts to auto-negotiate or auto-sense the link speed of the interface when it is UP. You must enable auto negotiation on the interface.
-		* If you set a speed other than AUTO, you must specify the same speed for the peer network device. Mismatched speed and duplex settings between the peer devices of a link lead to link errors, packet loss, and other errors. 
+		* If you set a speed other than AUTO, you must specify the same speed for the peer network device. Mismatched speed and duplex settings between the peer devices of a link lead to link errors, packet loss, and other errors.
 		Some interfaces do not support certain speeds. If you specify an unsupported speed, an error message appears.
 	*/
 	Speed string `json:"speed,omitempty"`
@@ -87,7 +87,7 @@ type Interface struct {
 	*/
 	Trunkallowedvlan []string `json:"trunkallowedvlan,omitempty"`
 	/**
-	* Bind the interface to a LA channel created by the Link Aggregation control protocol (LACP).  
+	* Bind the interface to a LA channel created by the Link Aggregation control protocol (LACP).
 		Available settings function as follows:
 		* Active - The LA channel port of the Citrix ADC generates LACPDU messages on a regular basis, regardless of any need expressed by its peer device to receive them.
 		* Passive - The LA channel port of the Citrix ADC does not transmit LACPDU messages unless the peer device port is in the active mode. That is, the port does not speak unless spoken to.
@@ -95,7 +95,7 @@ type Interface struct {
 	*/
 	Lacpmode string `json:"lacpmode,omitempty"`
 	/**
-	* Integer identifying the LACP LA channel to which the interface is to be bound. 
+	* Integer identifying the LACP LA channel to which the interface is to be bound.
 		For an LA channel of the Citrix ADC, this digit specifies the variable x of an LA channel in LA/x notation, where x can range from 1 to 8. For example, if you specify 3 as the LACP key for an LA channel, the interface is bound to the LA channel LA/3.
 		For an LA channel of a cluster configuration, this digit specifies the variable y of a cluster LA channel in CLA/(y-4) notation, where y can range from 5 to 8. For example, if you specify 6 as the LACP key for a cluster LA channel, the interface is bound to the cluster LA channel CLA/2.
 	*/
@@ -231,5 +231,6 @@ type Interface struct {
 	Lacpportrxstat string `json:"lacpportrxstat,omitempty"`
 	Lacpportselectstate string `json:"lacpportselectstate,omitempty"`
 	Lractiveintf string `json:"lractiveintf,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

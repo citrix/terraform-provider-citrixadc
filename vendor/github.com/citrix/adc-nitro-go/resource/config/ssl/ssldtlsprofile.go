@@ -56,10 +56,15 @@ type Ssldtlsprofile struct {
 	* Maximum number of bad MAC errors to ignore for a connection prior disconnect. Disabling parameter terminateSession terminates session immediately when bad MAC is detected in the connection.
 	*/
 	Maxbadmacignorecount int `json:"maxbadmacignorecount,omitempty"`
+	/**
+	* Initial time out value to retransmit the last flight sent from the NetScaler.
+	*/
+	Initialretrytimeout int `json:"initialretrytimeout,omitempty"`
 
 	//------- Read only Parameter ---------;
 
 	Builtin string `json:"builtin,omitempty"`
 	Feature string `json:"feature,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

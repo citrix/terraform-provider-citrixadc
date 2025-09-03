@@ -25,12 +25,6 @@ type Sslciphersslciphersuitebinding struct {
 	*/
 	Ciphername string `json:"ciphername,omitempty"`
 	/**
-	* Name for the user-defined cipher group. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Cannot be changed after the cipher group is created.
-		The following requirement applies only to the Citrix ADC CLI:
-		If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my ciphergroup" or 'my ciphergroup').
-	*/
-	Ciphergroupname string `json:"ciphergroupname,omitempty"`
-	/**
 	* Cipher suite description.
 	*/
 	Description string `json:"description,omitempty"`
@@ -38,6 +32,10 @@ type Sslciphersslciphersuitebinding struct {
 	* This indicates priority assigned to the particular cipher
 	*/
 	Cipherpriority int `json:"cipherpriority,omitempty"`
+	/**
+	* Name of the user-defined cipher group.
+	*/
+	Ciphergroupname string `json:"ciphergroupname,omitempty"`
 	/**
 	* The operation that is performed when adding the cipher-suite.
 		Possible cipher operations are:

@@ -21,7 +21,7 @@ package authentication
 */
 type Authenticationpolicy struct {
 	/**
-	* Name for the advance AUTHENTICATION policy. 
+	* Name for the advance AUTHENTICATION policy.
 		Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Cannot be changed after AUTHENTICATION policy is created.
 		The following requirement applies only to the Citrix ADC CLI:
 		If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my authentication policy" or 'my authentication policy').
@@ -48,7 +48,7 @@ type Authenticationpolicy struct {
 	*/
 	Logaction string `json:"logaction,omitempty"`
 	/**
-	* New name for the authentication policy. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) hash (#), space ( ), at (@), equals (=), colon (:), and underscore characters. 
+	* New name for the authentication policy. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) hash (#), space ( ), at (@), equals (=), colon (:), and underscore characters.
 		The following requirement applies only to the Citrix ADC CLI:
 		If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my authentication policy" or 'my authentication policy').
 	*/
@@ -59,5 +59,6 @@ type Authenticationpolicy struct {
 	Hits string `json:"hits,omitempty"`
 	Description string `json:"description,omitempty"`
 	Policysubtype string `json:"policysubtype,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

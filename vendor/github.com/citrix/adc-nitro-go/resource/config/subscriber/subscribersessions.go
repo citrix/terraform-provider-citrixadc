@@ -43,5 +43,6 @@ type Subscribersessions struct {
 	Idlettl string `json:"idlettl,omitempty"`
 	Avpdisplaybuffer string `json:"avpdisplaybuffer,omitempty"`
 	Servicepath string `json:"servicepath,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

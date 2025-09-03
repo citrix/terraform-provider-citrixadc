@@ -126,5 +126,6 @@ type Sslcrl struct {
 	Lastupdate string `json:"lastupdate,omitempty"`
 	Nextupdate string `json:"nextupdate,omitempty"`
 	Daystoexpiration string `json:"daystoexpiration,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

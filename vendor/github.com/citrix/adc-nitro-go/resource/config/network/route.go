@@ -77,6 +77,10 @@ type Route struct {
 	*/
 	Ownergroup string `json:"ownergroup,omitempty"`
 	/**
+	* Route in management plane.
+	*/
+	Mgmt bool `json:"mgmt,omitempty"`
+	/**
 	* Protocol used by routes that you want to remove from the routing table of the Citrix ADC.
 	*/
 	Routetype string `json:"routetype,omitempty"`
@@ -119,5 +123,6 @@ type Route struct {
 	Monstatparam1 string `json:"monstatparam1,omitempty"`
 	Monstatparam2 string `json:"monstatparam2,omitempty"`
 	Monstatparam3 string `json:"monstatparam3,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

@@ -57,5 +57,6 @@ type Vxlan struct {
 
 	Td string `json:"td,omitempty"`
 	Partitionname string `json:"partitionname,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

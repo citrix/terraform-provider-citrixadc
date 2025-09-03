@@ -29,4 +29,8 @@ type Mapdomain struct {
 	*/
 	Mapdmrname string `json:"mapdmrname,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

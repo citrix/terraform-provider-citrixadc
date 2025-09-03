@@ -33,5 +33,6 @@ type Appqoepolicy struct {
 	//------- Read only Parameter ---------;
 
 	Hits string `json:"hits,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

@@ -53,4 +53,8 @@ type Iptunnelparam struct {
 	*/
 	Useclientsourceip string `json:"useclientsourceip,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

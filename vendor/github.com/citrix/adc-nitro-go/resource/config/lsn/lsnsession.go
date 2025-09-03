@@ -70,5 +70,6 @@ type Lsnsession struct {
 	Dsttd string `json:"dsttd,omitempty"`
 	Srctd string `json:"srctd,omitempty"`
 	Ipv6address string `json:"ipv6address,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

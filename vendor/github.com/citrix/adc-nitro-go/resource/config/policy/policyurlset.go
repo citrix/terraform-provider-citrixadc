@@ -72,5 +72,6 @@ type Policyurlset struct {
 	//------- Read only Parameter ---------;
 
 	Patterncount string `json:"patterncount,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

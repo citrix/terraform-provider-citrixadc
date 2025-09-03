@@ -49,5 +49,6 @@ type Dbdbprofile struct {
 	//------- Read only Parameter ---------;
 
 	Refcnt string `json:"refcnt,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

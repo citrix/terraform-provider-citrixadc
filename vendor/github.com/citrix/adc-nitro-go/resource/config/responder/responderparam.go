@@ -32,4 +32,8 @@ type Responderparam struct {
 	*/
 	Timeout int `json:"timeout,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

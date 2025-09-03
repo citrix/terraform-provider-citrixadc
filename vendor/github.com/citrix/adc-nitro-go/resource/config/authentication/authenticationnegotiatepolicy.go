@@ -21,7 +21,7 @@ package authentication
 */
 type Authenticationnegotiatepolicy struct {
 	/**
-	* Name for the negotiate authentication policy. 
+	* Name for the negotiate authentication policy.
 		Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Cannot be changed after AD KCD (negotiate) policy is created.
 		The following requirement applies only to the Citrix ADC CLI:
 		If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my authentication policy" or 'my authentication policy').
@@ -35,5 +35,9 @@ type Authenticationnegotiatepolicy struct {
 	* Name of the negotiate action to perform if the policy matches.
 	*/
 	Reqaction string `json:"reqaction,omitempty"`
+
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

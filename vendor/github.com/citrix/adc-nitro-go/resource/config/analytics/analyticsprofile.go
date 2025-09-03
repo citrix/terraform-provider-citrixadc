@@ -144,16 +144,53 @@ type Analyticsprofile struct {
 	*/
 	Auditlogs string `json:"auditlogs,omitempty"`
 	/**
-	* This option is for setting the mode of how data is provided.
+	* This option is for setting the mode of how data is provided
 	*/
 	Servemode string `json:"servemode,omitempty"`
 	/**
-	* This option is for configuring json schema file containing a list of counters to be exported by metricscollector.
+	* This option is for configuring json schema file containing a list of counters to be exported by metricscollector
 	*/
 	Schemafile string `json:"schemafile,omitempty"`
+	/**
+	* This option is for configuring the metrics export frequency in seconds, frequency value must be in [30,300] seconds range
+	*/
+	Metricsexportfrequency int `json:"metricsexportfrequency,omitempty"`
+	/**
+	* If the endpoint requires some metadata to be present before the actual json data, specify the same.
+	*/
+	Analyticsendpointmetadata string `json:"analyticsendpointmetadata,omitempty"`
+	/**
+	* This option is for configuring the file containing the data format and metadata required by the analytics endpoint.
+	*/
+	Dataformatfile string `json:"dataformatfile,omitempty"`
+	/**
+	* On enabling this topn support, the topn information of the stream identifier this profile is bound to will be exported to the analytics endpoint.
+	*/
+	Topn string `json:"topn,omitempty"`
+	/**
+	* Specify the list of custom headers to be exported in web transaction records.
+	*/
+	Httpcustomheaders []string `json:"httpcustomheaders,omitempty"`
+	/**
+	* This option indicates the whether managementlog should be sent to the REST collector.
+	*/
+	Managementlog []string `json:"managementlog,omitempty"`
+	/**
+	* Token for authenticating with the endpoint. If the endpoint requires the Authorization header in a particular format, specify the complete format as the value to this parameter. For eg., in case of splunk, the Authorizaiton header is required to be of the form - Splunk <auth-token>.
+	*/
+	Analyticsauthtoken string `json:"analyticsauthtoken,omitempty"`
+	/**
+	* The URL at which to upload the analytics data on the endpoint
+	*/
+	Analyticsendpointurl string `json:"analyticsendpointurl,omitempty"`
+	/**
+	* By default, application/json content-type is used. If this needs to be overridden, specify the value.
+	*/
+	Analyticsendpointcontenttype string `json:"analyticsendpointcontenttype,omitempty"`
 
 	//------- Read only Parameter ---------;
 
 	Refcnt string `json:"refcnt,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

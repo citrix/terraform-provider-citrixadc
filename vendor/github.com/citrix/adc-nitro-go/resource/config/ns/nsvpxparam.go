@@ -21,10 +21,7 @@ package ns
 */
 type Nsvpxparam struct {
 	/**
-	* This setting applicable in virtual appliances, to move master clock source cpu from management cpu cpu0 to cpu1 ie PE0.
-		* There are 2 options for the behavior:
-		1. YES - Allow the Virtual Appliance to move clock source to cpu1.
-		2. NO - Virtual Appliance will use management cpu ie cpu0 for clock source default option is NO.
+	* This argument is deprecated.
 	*/
 	Masterclockcpu1 string `json:"masterclockcpu1,omitempty"`
 	/**
@@ -41,9 +38,19 @@ type Nsvpxparam struct {
 	*/
 	Cpuyield string `json:"cpuyield,omitempty"`
 	/**
-	* ID of the cluster node for which you are setting the cpuyield. It can be configured only through the cluster IP address.
+	* ID of the cluster node for which you are setting the cpuyield and/or KVMVirtioMultiqueue. It can be configured only through the cluster IP address.
 	*/
 	Ownernode int `json:"ownernode"` // Zero is a valid value
+	/**
+	* This setting applicable on KVM VPX with virtio NICs, is to configure multiple queues for all virtio interfaces.
+		* There are 2 options for this behavior:
+		1. YES - Allows VPX to use multiple queues for each virtio interface as configured through the KVM Hypervisor.
+		2. NO - Each virtio interface within VPX will use a single queue for transmit and receive.
+		* Its behavior in different scenarios:
+		1. As this setting is node specific only, it will not be propagated to other nodes, when executed on Cluster(CLIP) and HA(Primary).
+		2. In cluster setup, use '-ownerNode' to specify ID of the cluster node.
+	*/
+	Kvmvirtiomultiqueue string `json:"kvmvirtiomultiqueue,omitempty"`
 
 	//------- Read only Parameter ---------;
 
@@ -52,5 +59,6 @@ type Nsvpxparam struct {
 	Cloudproductcode string `json:"cloudproductcode,omitempty"`
 	Vpxoemcode string `json:"vpxoemcode,omitempty"`
 	Technicalsupportpin string `json:"technicalsupportpin,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

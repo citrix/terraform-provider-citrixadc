@@ -32,4 +32,8 @@ type Nsencryptionparams struct {
 	*/
 	Keyvalue string `json:"keyvalue,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

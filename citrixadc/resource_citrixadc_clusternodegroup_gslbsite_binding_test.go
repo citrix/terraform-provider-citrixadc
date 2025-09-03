@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccClusternodegroup_gslbsite_binding_basic = `
@@ -36,6 +37,7 @@ resource "citrixadc_clusternodegroup_gslbsite_binding" "tf_clusternodegroup_gslb
 	siteipaddress   = "10.222.74.169"
 	sessionexchange = "DISABLED"
 	sitetype        = "LOCAL"
+	sitepassword    = "password123"
   }
 `
 
@@ -45,6 +47,7 @@ resource "citrixadc_gslbsite" "site_remote" {
 	siteipaddress   = "10.222.74.169"
 	sessionexchange = "DISABLED"
 	sitetype        = "LOCAL"
+	sitepassword    = "password123"
   }
 `
 

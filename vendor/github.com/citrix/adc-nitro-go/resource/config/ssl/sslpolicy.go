@@ -56,8 +56,8 @@ type Sslpolicy struct {
 	Hits string `json:"hits,omitempty"`
 	Undefhits string `json:"undefhits,omitempty"`
 	Description string `json:"description,omitempty"`
-	Policytype string `json:"policytype,omitempty"`
 	Builtin string `json:"builtin,omitempty"`
 	Feature string `json:"feature,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

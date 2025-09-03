@@ -56,5 +56,6 @@ type Dnsaction struct {
 	Cachebypass string `json:"cachebypass,omitempty"`
 	Builtin string `json:"builtin,omitempty"`
 	Feature string `json:"feature,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

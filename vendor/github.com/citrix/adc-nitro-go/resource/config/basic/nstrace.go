@@ -117,10 +117,10 @@ type Nstrace struct {
 		<qualifier-method> = [ EQ | NE | GT | GE | LT | LE
 		| BETWEEN ]
 		<qualifier-value>  = A valid core ID.
-		example = CONNECTION.PPEID.EQ(0)    
+		example = CONNECTION.PPEID.EQ(0)
 		<qualifier> = SVCNAME
-		<qualifier-method> = [ EQ | NE | CONTAINS | STARTSWITH 
-		| ENDSWITH ] 
+		<qualifier-method> = [ EQ | NE | CONTAINS | STARTSWITH
+		| ENDSWITH ]
 		<qualifier-value>  = A valid text string.
 		example = CONNECTION.SVCNAME.EQ("name")
 		<qualifier> = LB_VSERVER.NAME
@@ -153,15 +153,15 @@ type Nstrace struct {
 		<qualifier-value>  = A valid traffic domain ID.
 		example = CONNECTION.TRAFFIC_DOMAIN_ID.EQ(0)
 		eg: start nstrace -filter "CONNECTION.SRCIP.EQ(127.0.0.1) || (CONNECTION.SVCNAME.NE("s1") && CONNECTION.SRCPORT.EQ(80))"
-		The filter expression should be given in double quotes. 
+		The filter expression should be given in double quotes.
 		common use cases:
 		Trace capturing full sized traffic from/to ip 10.102.44.111, excluding loopback traffic
 		start nstrace -size 0 -filter "CONNECTION.IP.NE(127.0.0.1) && CONNECTION.IP.EQ(10.102.44.111)"
-		Trace capturing all traffic to (terminating at) port 80 or 443 
+		Trace capturing all traffic to (terminating at) port 80 or 443
 		start nstrace -size 0 -filter "CONNECTION.DSTPORT.EQ(443) || CONNECTION.DSTPORT.EQ(80)"
 		Trace capturing all backend traffic specific to service service1 along with corresponding client side traffic
 		start nstrace -size 0 -filter "CONNECTION.SVCNAME.EQ("service1")" -link ENABLED
-		Trace capturing all traffic through Citrix ADC interface 1/1
+		Trace capturing all traffic through NetScaler interface 1/1
 		start nstrace -filter "CONNECTION.INTF.EQ("1/1")"
 		Trace capturing all traffic specific through vlan 2
 		start nstrace -filter "CONNECTION.VLANID.EQ(2)"
@@ -228,5 +228,6 @@ type Nstrace struct {
 	State string `json:"state,omitempty"`
 	Scope string `json:"scope,omitempty"`
 	Tracelocation string `json:"tracelocation,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

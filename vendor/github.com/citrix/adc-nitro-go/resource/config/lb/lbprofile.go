@@ -78,11 +78,16 @@ type Lbprofile struct {
 	* This option is used to specify the number of fingers to be used in PRAC and JARH algorithms for hash based LB methods. Increasing the number of fingers might give better distribution of traffic at the expense of additional memory.
 	*/
 	Lbhashfingers int `json:"lbhashfingers,omitempty"`
+	/**
+	* Use the ADC location instead of client IP for static proximity LB or GSLB decision.
+	*/
+	Proximityfromself string `json:"proximityfromself,omitempty"`
 
 	//------- Read only Parameter ---------;
 
 	Vsvrcount string `json:"vsvrcount,omitempty"`
 	Adccookieattributewarningmsg string `json:"adccookieattributewarningmsg,omitempty"`
 	Lbhashalgowinsize string `json:"lbhashalgowinsize,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

@@ -81,5 +81,6 @@ type Nd6ravariables struct {
 
 	Lastrtadvtime string `json:"lastrtadvtime,omitempty"`
 	Nextrtadvdelay string `json:"nextrtadvdelay,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

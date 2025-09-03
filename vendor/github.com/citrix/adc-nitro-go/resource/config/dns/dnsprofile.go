@@ -25,6 +25,10 @@ type Dnsprofile struct {
 	*/
 	Dnsprofilename string `json:"dnsprofilename,omitempty"`
 	/**
+	* DNS recursive resolution; if enabled, will do recursive resolution for DNS query when the profile is associated with ADNS service, CS Vserver and DNS action
+	*/
+	Recursiveresolution string `json:"recursiveresolution,omitempty"`
+	/**
 	* DNS query logging; if enabled, DNS query information such as DNS query id, DNS query flags , DNS domain name and DNS query type will be logged
 	*/
 	Dnsquerylogging string `json:"dnsquerylogging,omitempty"`
@@ -56,9 +60,26 @@ type Dnsprofile struct {
 	* Cache DNS responses with EDNS Client Subnet(ECS) option in the DNS cache. When disabled, the appliance stops caching responses with ECS option. This is relevant to proxy configuration. Enabling/disabling support of ECS option when Citrix ADC is authoritative for a GSLB domain is supported using a knob in GSLB vserver. In all other modes, ECS option is ignored.
 	*/
 	Cacheecsresponses string `json:"cacheecsresponses,omitempty"`
+	/**
+	* Insert ECS Option on DNS query
+	*/
+	Insertecs string `json:"insertecs,omitempty"`
+	/**
+	* Replace ECS Option on DNS query
+	*/
+	Replaceecs string `json:"replaceecs,omitempty"`
+	/**
+	* The maximum ecs prefix length that will be cached
+	*/
+	Maxcacheableecsprefixlength int `json:"maxcacheableecsprefixlength,omitempty"`
+	/**
+	* The maximum ecs prefix length that will be cached for IPv6 subnets
+	*/
+	Maxcacheableecsprefixlength6 int `json:"maxcacheableecsprefixlength6,omitempty"`
 
 	//------- Read only Parameter ---------;
 
 	Referencecount string `json:"referencecount,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

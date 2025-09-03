@@ -45,5 +45,6 @@ type Authenticationadfsproxyprofile struct {
 	//------- Read only Parameter ---------;
 
 	Adfstruststatus string `json:"adfstruststatus,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

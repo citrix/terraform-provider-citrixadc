@@ -28,5 +28,6 @@ type Sslciphersuite struct {
 	//------- Read only Parameter ---------;
 
 	Description string `json:"description,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

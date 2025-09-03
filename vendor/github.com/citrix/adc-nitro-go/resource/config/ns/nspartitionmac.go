@@ -25,5 +25,6 @@ type Nspartitionmac struct {
 
 	Partitionmac string `json:"partitionmac,omitempty"`
 	Partitionname string `json:"partitionname,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

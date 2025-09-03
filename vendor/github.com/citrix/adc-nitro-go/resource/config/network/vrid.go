@@ -29,7 +29,7 @@ type Vrid struct {
 	*/
 	Priority int `json:"priority,omitempty"`
 	/**
-	* In an active-active mode configuration, make a backup VIP address the master if its priority becomes higher than that of a master VIP address bound to this VMAC address. 
+	* In an active-active mode configuration, make a backup VIP address the master if its priority becomes higher than that of a master VIP address bound to this VMAC address.
 		If you disable pre-emption while a backup VIP address is the master, the backup VIP address remains master until the original master VIP's priority becomes higher than that of the current master.
 	*/
 	Preemption string `json:"preemption,omitempty"`
@@ -73,5 +73,6 @@ type Vrid struct {
 	Ipaddress string `json:"ipaddress,omitempty"`
 	State string `json:"state,omitempty"`
 	Operationalownernode string `json:"operationalownernode,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

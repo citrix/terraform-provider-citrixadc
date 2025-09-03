@@ -25,5 +25,6 @@ type Sslcertlink struct {
 
 	Certkeyname string `json:"certkeyname,omitempty"`
 	Linkcertkeyname string `json:"linkcertkeyname,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

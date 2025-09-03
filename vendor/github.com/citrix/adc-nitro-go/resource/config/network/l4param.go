@@ -29,4 +29,8 @@ type L4param struct {
 	*/
 	L4switch string `json:"l4switch,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

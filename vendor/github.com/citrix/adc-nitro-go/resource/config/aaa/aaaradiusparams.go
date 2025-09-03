@@ -33,7 +33,7 @@ type Aaaradiusparams struct {
 	*/
 	Authtimeout int `json:"authtimeout,omitempty"`
 	/**
-	* The key shared between the RADIUS server and clients. 
+	* The key shared between the RADIUS server and clients.
 		Required for allowing the Citrix ADC to communicate with the RADIUS server.
 	*/
 	Radkey string `json:"radkey,omitempty"`
@@ -66,7 +66,7 @@ type Aaaradiusparams struct {
 	*/
 	Passencoding string `json:"passencoding,omitempty"`
 	/**
-	* Vendor ID attribute in the RADIUS response. 
+	* Vendor ID attribute in the RADIUS response.
 		If the attribute is not vendor-encoded, it is set to 0.
 	*/
 	Ipvendorid int `json:"ipvendorid,omitempty"`
@@ -106,6 +106,10 @@ type Aaaradiusparams struct {
 	* Send Tunnel Endpoint Client IP address to the RADIUS server.
 	*/
 	Tunnelendpointclientip string `json:"tunnelendpointclientip,omitempty"`
+	/**
+	* Control whether the Message-Authenticator attribute is included in a RADIUS Access-Request packet.
+	*/
+	Messageauthenticator string `json:"messageauthenticator,omitempty"`
 
 	//------- Read only Parameter ---------;
 
@@ -113,5 +117,6 @@ type Aaaradiusparams struct {
 	Ipaddress string `json:"ipaddress,omitempty"`
 	Builtin string `json:"builtin,omitempty"`
 	Feature string `json:"feature,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

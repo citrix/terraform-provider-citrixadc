@@ -344,4 +344,8 @@ type Tmsamlssoprofile struct {
 	*/
 	Signassertion string `json:"signassertion,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

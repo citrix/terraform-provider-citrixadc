@@ -21,7 +21,7 @@ package authentication
 */
 type Authenticationldapaction struct {
 	/**
-	* Name for the new LDAP action. 
+	* Name for the new LDAP action.
 		Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Cannot be changed after the LDAP action is added.
 		The following requirement applies only to the Citrix ADC CLI:
 		If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my authentication action" or 'my authentication action').
@@ -44,12 +44,12 @@ type Authenticationldapaction struct {
 	*/
 	Authtimeout int `json:"authtimeout,omitempty"`
 	/**
-	* Base (node) from which to start LDAP searches. 
+	* Base (node) from which to start LDAP searches.
 		If the LDAP server is running locally, the default value of base is dc=netscaler, dc=com.
 	*/
 	Ldapbase string `json:"ldapbase,omitempty"`
 	/**
-	* Full distinguished name (DN) that is used to bind to the LDAP server. 
+	* Full distinguished name (DN) that is used to bind to the LDAP server.
 		Default: cn=Manager,dc=netscaler,dc=com
 	*/
 	Ldapbinddn string `json:"ldapbinddn,omitempty"`
@@ -58,12 +58,12 @@ type Authenticationldapaction struct {
 	*/
 	Ldapbinddnpassword string `json:"ldapbinddnpassword,omitempty"`
 	/**
-	* LDAP login name attribute. 
+	* LDAP login name attribute.
 		The Citrix ADC uses the LDAP login name to query external LDAP servers or Active Directories.
 	*/
 	Ldaploginname string `json:"ldaploginname,omitempty"`
 	/**
-	* String to be combined with the default LDAP user search string to form the search value. For example, if the search filter "vpnallowed=true" is combined with the LDAP login name "samaccount" and the user-supplied username is "bob", the result is the LDAP search string ""(&(vpnallowed=true)(samaccount=bob)"" (Be sure to enclose the search string in two sets of double quotation marks; both sets are needed.).
+	* String to be combined with the default LDAP user search string to form the search value. For example, if the search filter "vpnallowed=true" is combined with the LDAP login name "samaccount" and the user-supplied username is "bob", the result is the LDAP search string ""&(vpnallowed=true)(samaccount=bob)"" (Be sure to enclose the search string in two sets of double quotation marks; both sets are needed.).
 	*/
 	Searchfilter string `json:"searchfilter,omitempty"`
 	/**
@@ -72,7 +72,7 @@ type Authenticationldapaction struct {
 	*/
 	Groupattrname string `json:"groupattrname,omitempty"`
 	/**
-	* LDAP group sub-attribute name. 
+	* LDAP group sub-attribute name.
 		Used for group extraction from the LDAP server.
 	*/
 	Subattributename string `json:"subattributename,omitempty"`
@@ -85,13 +85,13 @@ type Authenticationldapaction struct {
 	*/
 	Svrtype string `json:"svrtype,omitempty"`
 	/**
-	* LDAP single signon (SSO) attribute. 
+	* LDAP single signon (SSO) attribute.
 		The Citrix ADC uses the SSO name attribute to query external LDAP servers or Active Directories for an alternate username.
 	*/
 	Ssonameattribute string `json:"ssonameattribute,omitempty"`
 	/**
 	* Perform LDAP authentication.
-		If authentication is disabled, any LDAP authentication attempt returns authentication success if the user is found. 
+		If authentication is disabled, any LDAP authentication attempt returns authentication success if the user is found.
 		CAUTION! Authentication should be disabled only for authorization group extraction or where other (non-LDAP) authentication methods are in use and either bound to a primary list or flagged as secondary.
 	*/
 	Authentication string `json:"authentication,omitempty"`
@@ -143,12 +143,12 @@ type Authenticationldapaction struct {
 	*/
 	Groupnameidentifier string `json:"groupnameidentifier,omitempty"`
 	/**
-	* LDAP group search attribute. 
+	* LDAP group search attribute.
 		Used to determine to which groups a group belongs.
 	*/
 	Groupsearchattribute string `json:"groupsearchattribute,omitempty"`
 	/**
-	* LDAP group search subattribute. 
+	* LDAP group search subattribute.
 		Used to determine to which groups a group belongs.
 	*/
 	Groupsearchsubattribute string `json:"groupsearchsubattribute,omitempty"`
@@ -225,8 +225,8 @@ type Authenticationldapaction struct {
 	*/
 	Attribute16 string `json:"attribute16,omitempty"`
 	/**
-	* List of attribute names separated by ',' which needs to be fetched from ldap server. 
-		Note that preceeding and trailing spaces will be removed. 
+	* List of attribute names separated by ',' which needs to be fetched from ldap server.
+		Note that preceeding and trailing spaces will be removed.
 		Attribute name can be 127 bytes and total length of this string should not cross 2047 bytes.
 		These attributes have multi-value support separated by ',' and stored as key-value pair in AAA session
 	*/
@@ -264,5 +264,6 @@ type Authenticationldapaction struct {
 
 	Success string `json:"success,omitempty"`
 	Failure string `json:"failure,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

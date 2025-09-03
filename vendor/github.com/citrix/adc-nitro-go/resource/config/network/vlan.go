@@ -61,5 +61,6 @@ type Vlan struct {
 	Sdxvlan string `json:"sdxvlan,omitempty"`
 	Partitionname string `json:"partitionname,omitempty"`
 	Vxlan string `json:"vxlan,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

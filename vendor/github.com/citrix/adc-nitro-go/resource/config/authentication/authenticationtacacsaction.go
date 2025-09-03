@@ -21,7 +21,7 @@ package authentication
 */
 type Authenticationtacacsaction struct {
 	/**
-	* Name for the TACACS+ profile (action). 
+	* Name for the TACACS+ profile (action).
 		Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Cannot be changed after TACACS profile is created.
 		The following requirement applies only to the Citrix ADC CLI:
 		If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my authentication action" or 'y authentication action').
@@ -40,7 +40,7 @@ type Authenticationtacacsaction struct {
 	*/
 	Authtimeout int `json:"authtimeout,omitempty"`
 	/**
-	* Key shared between the TACACS+ server and the Citrix ADC. 
+	* Key shared between the TACACS+ server and the Citrix ADC.
 		Required for allowing the Citrix ADC to communicate with the TACACS+ server.
 	*/
 	Tacacssecret string `json:"tacacssecret,omitempty"`
@@ -130,8 +130,8 @@ type Authenticationtacacsaction struct {
 	*/
 	Attribute16 string `json:"attribute16,omitempty"`
 	/**
-	* List of attribute names separated by ',' which needs to be fetched from tacacs server. 
-		Note that preceeding and trailing spaces will be removed. 
+	* List of attribute names separated by ',' which needs to be fetched from tacacs server.
+		Note that preceeding and trailing spaces will be removed.
 		Attribute name can be 127 bytes and total length of this string should not cross 2047 bytes.
 		These attributes have multi-value support separated by ',' and stored as key-value pair in AAA session
 	*/
@@ -141,5 +141,6 @@ type Authenticationtacacsaction struct {
 
 	Success string `json:"success,omitempty"`
 	Failure string `json:"failure,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

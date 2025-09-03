@@ -59,4 +59,8 @@ type Authenticationemailaction struct {
 	*/
 	Emailaddress string `json:"emailaddress,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

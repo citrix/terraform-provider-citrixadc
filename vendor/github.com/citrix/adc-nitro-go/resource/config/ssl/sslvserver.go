@@ -196,6 +196,15 @@ type Sslvserver struct {
 		If enabled, the server will require a DHE key exchange when a PSK is accepted regardless of whether the client supports combined PSK-DHE key exchange. This setting only has an effect when resumption is enabled.
 	*/
 	Dhekeyexchangewithpsk string `json:"dhekeyexchangewithpsk,omitempty"`
+	/**
+	* Default domain name supported by the SSL virtual server. The parameter is effective, when zero touch certificate management is active for the SSL virtual server i.e. no manual SNI cert or default server cert is bound to the v-server.
+		For SSL transactions, when SNI is not presented by the client, server-certificate corresponding to the default SNI, if available in the cert-store, is selected else connection is terminated.
+	*/
+	Defaultsni string `json:"defaultsni,omitempty"`
+	/**
+	* This parameter is used to enable or disable the logging of additional information, such as the Session ID and SNI names, from SSL handshakes to the audit logs.
+	*/
+	Sslclientlogs string `json:"sslclientlogs,omitempty"`
 
 	//------- Read only Parameter ---------;
 
@@ -207,5 +216,8 @@ type Sslvserver struct {
 	Snicert string `json:"snicert,omitempty"`
 	Skipcaname string `json:"skipcaname,omitempty"`
 	Dtlsflag string `json:"dtlsflag,omitempty"`
+	Quicflag string `json:"quicflag,omitempty"`
+	Skipcacertbundle string `json:"skipcacertbundle,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

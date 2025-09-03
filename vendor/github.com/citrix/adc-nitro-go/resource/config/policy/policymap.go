@@ -45,5 +45,6 @@ type Policymap struct {
 	//------- Read only Parameter ---------;
 
 	Targetname string `json:"targetname,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

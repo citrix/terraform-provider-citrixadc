@@ -53,5 +53,6 @@ type Authenticationpolicylabel struct {
 	Gotopriorityexpression string `json:"gotopriorityexpression,omitempty"`
 	Flowtype string `json:"flowtype,omitempty"`
 	Description string `json:"description,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

@@ -21,7 +21,7 @@ package basic
 */
 type Server struct {
 	/**
-	* Name for the server. 
+	* Name for the server.
 		Must begin with an ASCII alphabetic or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters.
 		Can be changed after the name is created.
 	*/
@@ -43,7 +43,7 @@ type Server struct {
 	*/
 	Translationmask string `json:"translationmask,omitempty"`
 	/**
-	* Time, in seconds, for which the Citrix ADC must wait, after DNS resolution fails, before sending the next DNS query to resolve the domain name.
+	* Time, in seconds, for which the NetScaler must wait, after DNS resolution fails, before sending the next DNS query to resolve the domain name.
 	*/
 	Domainresolveretry int `json:"domainresolveretry,omitempty"`
 	/**
@@ -97,7 +97,7 @@ type Server struct {
 	Tcpb string `json:"tcpb,omitempty"`
 	Cmp string `json:"cmp,omitempty"`
 	Cacheable string `json:"cacheable,omitempty"`
-	Sc string `json:"sc,omitempty"`
 	Sp string `json:"sp,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

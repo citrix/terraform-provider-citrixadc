@@ -160,6 +160,10 @@ type Nsip6 struct {
 	* If enabled, this IP will be advertised by Citrix ADC to MPTCP enabled clients as part of ADD_ADDR option.
 	*/
 	Mptcpadvertise string `json:"mptcpadvertise,omitempty"`
+	/**
+	* Respond to ICMPv6 requests for a Virtual IP (VIP) address on the basis of the states of the virtual servers associated with that VIP
+	*/
+	Icmpresponse string `json:"icmpresponse,omitempty"`
 
 	//------- Read only Parameter ---------;
 
@@ -170,5 +174,6 @@ type Nsip6 struct {
 	Vipvserdowncount string `json:"vipvserdowncount,omitempty"`
 	Systemtype string `json:"systemtype,omitempty"`
 	Operationalndowner string `json:"operationalndowner,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

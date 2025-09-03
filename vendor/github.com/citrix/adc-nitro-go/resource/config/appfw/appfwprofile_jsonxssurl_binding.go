@@ -34,6 +34,26 @@ type Appfwprofilejsonxssurlbinding struct {
 	*/
 	Comment string `json:"comment,omitempty"`
 	/**
+	* Is the key name a regular expression?
+	*/
+	Iskeyregexjsonxss string `json:"iskeyregex_json_xss,omitempty"`
+	/**
+	* An expression that designates a keyname on the JSON XSS URL for which XSS injection violations are relaxed.
+	*/
+	Keynamejsonxss string `json:"keyname_json_xss,omitempty"`
+	/**
+	* Type of the relaxed JSON XSS key value
+	*/
+	Asvaluetypejsonxss string `json:"as_value_type_json_xss,omitempty"`
+	/**
+	* The JSON XSS key value expression.
+	*/
+	Asvalueexprjsonxss string `json:"as_value_expr_json_xss,omitempty"`
+	/**
+	* Is the JSON XSS key value a regular expression?
+	*/
+	Isvalueregexjsonxss string `json:"isvalueregex_json_xss,omitempty"`
+	/**
 	* Is the rule auto deployed by dynamic profile ?
 	*/
 	Isautodeployed string `json:"isautodeployed,omitempty"`

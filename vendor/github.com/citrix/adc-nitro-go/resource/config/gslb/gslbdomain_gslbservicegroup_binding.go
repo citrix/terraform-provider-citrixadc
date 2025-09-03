@@ -25,6 +25,10 @@ type Gslbdomaingslbservicegroupbinding struct {
 	*/
 	Servicegroupname string `json:"servicegroupname,omitempty"`
 	/**
+	* Order number assigned to the service when it is bound to the gslb vserver.
+	*/
+	Order int `json:"order,omitempty"`
+	/**
 	* Name of the Domain
 	*/
 	Name string `json:"name,omitempty"`

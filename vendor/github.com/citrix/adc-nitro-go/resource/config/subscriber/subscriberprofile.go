@@ -27,7 +27,7 @@ type Subscriberprofile struct {
 	/**
 	* The vlan number on which the subscriber is located.
 	*/
-	Vlan int `json:"vlan"`
+	Vlan int `json:"vlan"` // Zero is a valid value
 	/**
 	* Rules configured for this subscriber. This is similar to rules received from PCRF for dynamic subscriber sessions.
 	*/
@@ -50,5 +50,6 @@ type Subscriberprofile struct {
 	Flags string `json:"flags,omitempty"`
 	Ttl string `json:"ttl,omitempty"`
 	Avpdisplaybuffer string `json:"avpdisplaybuffer,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

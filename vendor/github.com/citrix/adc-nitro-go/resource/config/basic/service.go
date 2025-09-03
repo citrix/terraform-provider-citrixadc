@@ -59,7 +59,7 @@ type Service struct {
 	*/
 	Healthmonitor string `json:"healthmonitor,omitempty"`
 	/**
-	* Maximum number of requests that can be sent on a persistent connection to the service. 
+	* Maximum number of requests that can be sent on a persistent connection to the service.
 		Note: Connection requests beyond this value are rejected.
 	*/
 	Maxreq int `json:"maxreq,omitempty"`
@@ -89,14 +89,10 @@ type Service struct {
 	*/
 	Pathmonitorindv string `json:"pathmonitorindv,omitempty"`
 	/**
-	* Use the proxy port as the source port when initiating connections with the server. With the NO setting, the client-side connection port is used as the source port for the server-side connection. 
+	* Use the proxy port as the source port when initiating connections with the server. With the NO setting, the client-side connection port is used as the source port for the server-side connection.
 		Note: This parameter is available only when the Use Source IP (USIP) parameter is set to YES.
 	*/
 	Useproxyport string `json:"useproxyport,omitempty"`
-	/**
-	* State of SureConnect for the service.
-	*/
-	Sc string `json:"sc,omitempty"`
 	/**
 	* Enable surge protection for the service.
 	*/
@@ -166,6 +162,10 @@ type Service struct {
 	*/
 	Contentinspectionprofilename string `json:"contentinspectionprofilename,omitempty"`
 	/**
+	* Name of QUIC profile which will be attached to the service.
+	*/
+	Quicprofilename string `json:"quicprofilename,omitempty"`
+	/**
 	* A numerical identifier that can be used by hash based load balancing methods. Must be unique for each service.
 	*/
 	Hashid int `json:"hashid,omitempty"`
@@ -190,7 +190,7 @@ type Service struct {
 	*/
 	Processlocal string `json:"processlocal,omitempty"`
 	/**
-	* Name of the DNS profile to be associated with the service. DNS profile properties will applied to the transactions processed by a service. This parameter is valid only for ADNS and ADNS-TCP services.
+	* Name of the DNS profile to be associated with the service. DNS profile properties will applied to the transactions processed by a service. This parameter is valid only for ADNS, ADNS-TCP and ADNS-DOT services.
 	*/
 	Dnsprofilename string `json:"dnsprofilename,omitempty"`
 	/**
@@ -210,7 +210,7 @@ type Service struct {
 	*/
 	Monitornamesvc string `json:"monitor_name_svc,omitempty"`
 	/**
-	* Time, in seconds, allocated to the Citrix ADC for a graceful shutdown of the service. During this period, new requests are sent to the service only for clients who already have persistent sessions on the appliance. Requests from new clients are load balanced among other available services. After the delay time expires, no requests are sent to the service, and the service is marked as unavailable (OUT OF SERVICE).
+	* Time, in seconds, allocated to the NetScaler for a graceful shutdown of the service. During this period, new requests are sent to the service only for clients who already have persistent sessions on the appliance. Requests from new clients are load balanced among other available services. After the delay time expires, no requests are sent to the service, and the service is marked as unavailable (OUT OF SERVICE).
 	*/
 	Delay int `json:"delay,omitempty"`
 	/**
@@ -261,5 +261,6 @@ type Service struct {
 	Monuserstatusmesg string `json:"monuserstatusmesg,omitempty"`
 	Builtin string `json:"builtin,omitempty"`
 	Feature string `json:"feature,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

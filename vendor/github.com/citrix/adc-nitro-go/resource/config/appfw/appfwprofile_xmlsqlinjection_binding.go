@@ -21,7 +21,7 @@ package appfw
 */
 type Appfwprofilexmlsqlinjectionbinding struct {
 	/**
-	* Exempt the specified URL from the XML SQL injection check. 
+	* Exempt the specified URL from the XML SQL injection check.
 		An XML SQL injection exemption (relaxation) consists of the following items:
 		* Name. Name to exempt, as a string or a PCRE-format regular expression.
 		* ISREGEX flag. REGEX if URL is a regular expression, NOTREGEX if URL is a fixed string.

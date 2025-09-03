@@ -60,5 +60,6 @@ type Transformpolicy struct {
 	Isdefault string `json:"isdefault,omitempty"`
 	Builtin string `json:"builtin,omitempty"`
 	Feature string `json:"feature,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

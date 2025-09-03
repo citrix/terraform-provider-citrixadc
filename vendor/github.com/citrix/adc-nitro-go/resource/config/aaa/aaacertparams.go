@@ -36,5 +36,6 @@ type Aaacertparams struct {
 	//------- Read only Parameter ---------;
 
 	Twofactor string `json:"twofactor,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

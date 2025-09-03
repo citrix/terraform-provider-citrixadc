@@ -45,5 +45,6 @@ type Appfwpolicylabel struct {
 	Invokelabelname string `json:"invoke_labelname,omitempty"`
 	Description string `json:"description,omitempty"`
 	Policytype string `json:"policytype,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

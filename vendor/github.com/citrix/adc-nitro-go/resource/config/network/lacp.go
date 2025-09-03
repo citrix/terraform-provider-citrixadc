@@ -37,5 +37,6 @@ type Lacp struct {
 	Lacpkey string `json:"lacpkey,omitempty"`
 	Clustersyspriority string `json:"clustersyspriority,omitempty"`
 	Clustermac string `json:"clustermac,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

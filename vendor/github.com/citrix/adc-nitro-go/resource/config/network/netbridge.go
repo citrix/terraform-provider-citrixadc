@@ -29,4 +29,8 @@ type Netbridge struct {
 	*/
 	Vxlanvlanmap string `json:"vxlanvlanmap,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

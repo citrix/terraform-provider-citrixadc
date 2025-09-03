@@ -55,5 +55,6 @@ type Snmpmib struct {
 	Sysuptime string `json:"sysuptime,omitempty"`
 	Sysservices string `json:"sysservices,omitempty"`
 	Sysoid string `json:"sysoid,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

@@ -32,12 +32,9 @@ type Nsfeature struct {
 	Lb string `json:"lb,omitempty"`
 	Cs string `json:"cs,omitempty"`
 	Cr string `json:"cr,omitempty"`
-	Sc string `json:"sc,omitempty"`
 	Cmp string `json:"cmp,omitempty"`
-	Pq string `json:"pq,omitempty"`
 	Ssl string `json:"ssl,omitempty"`
 	Gslb string `json:"gslb,omitempty"`
-	Hdosp string `json:"hdosp,omitempty"`
 	Cf string `json:"cf,omitempty"`
 	Ic string `json:"ic,omitempty"`
 	Sslvpn string `json:"sslvpn,omitempty"`
@@ -49,7 +46,6 @@ type Nsfeature struct {
 	Ipv6pt string `json:"ipv6pt,omitempty"`
 	Appfw string `json:"appfw,omitempty"`
 	Responder string `json:"responder,omitempty"`
-	Htmlinjection string `json:"htmlinjection,omitempty"`
 	Push string `json:"push,omitempty"`
 	Appflow string `json:"appflow,omitempty"`
 	Cloudbridge string `json:"cloudbridge,omitempty"`
@@ -61,7 +57,6 @@ type Nsfeature struct {
 	Lsn string `json:"lsn,omitempty"`
 	Rdpproxy string `json:"rdpproxy,omitempty"`
 	Rep string `json:"rep,omitempty"`
-	Urlfiltering string `json:"urlfiltering,omitempty"`
 	Videooptimization string `json:"videooptimization,omitempty"`
 	Forwardproxy string `json:"forwardproxy,omitempty"`
 	Sslinterception string `json:"sslinterception,omitempty"`
@@ -70,5 +65,6 @@ type Nsfeature struct {
 	Ci string `json:"ci,omitempty"`
 	Bot string `json:"bot,omitempty"`
 	Apigateway string `json:"apigateway,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

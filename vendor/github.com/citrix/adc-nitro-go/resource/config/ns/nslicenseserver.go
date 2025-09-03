@@ -37,6 +37,22 @@ type Nslicenseserver struct {
 	*/
 	Forceupdateip bool `json:"forceupdateip,omitempty"`
 	/**
+	* This paramter indicates type of license customer interested while configuring add/set licenseserver
+	*/
+	Licensemode string `json:"licensemode,omitempty"`
+	/**
+	* Username to authenticate with ADM Agent for LAS licensing. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters.
+	*/
+	Username string `json:"username,omitempty"`
+	/**
+	* Password to use when authenticating with ADM Agent for LAS licensing.
+	*/
+	Password string `json:"password,omitempty"`
+	/**
+	* Device profile is created on ADM and contains the user name and password of the instance(s). ADM will use this info to add the NS for registration
+	*/
+	Deviceprofilename string `json:"deviceprofilename,omitempty"`
+	/**
 	* Unique number that identifies the cluster node.
 	*/
 	Nodeid int `json:"nodeid,omitempty"`
@@ -46,5 +62,7 @@ type Nslicenseserver struct {
 	Status string `json:"status,omitempty"`
 	Grace string `json:"grace,omitempty"`
 	Gptimeleft string `json:"gptimeleft,omitempty"`
+	Type string `json:"type,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

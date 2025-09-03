@@ -7,6 +7,7 @@ import (
 
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -193,7 +194,11 @@ func readAppfwprofile_crosssitescripting_bindingFunc(d *schema.ResourceData, met
 	// Iterate through results to find the one with the right policy name
 	foundIndex := -1
 	for i, v := range dataArr {
-		if v["crosssitescripting"].(string) == crosssitescripting && v["formactionurl_xss"].(string) == formactionurl_xss && v["as_scan_location_xss"].(string) == as_scan_location_xss {
+		unescapedURL, err := unescapeStringURL(v["formactionurl_xss"].(string))
+		if err != nil {
+			return err
+		}
+		if v["crosssitescripting"].(string) == crosssitescripting && unescapedURL == formactionurl_xss && v["as_scan_location_xss"].(string) == as_scan_location_xss {
 			if as_value_type_xss != "" && as_value_expr_xss != "" {
 				if v["as_value_type_xss"] != nil && v["as_value_expr_xss"] != nil && v["as_value_type_xss"].(string) == as_value_type_xss && v["as_value_expr_xss"].(string) == as_value_expr_xss {
 					foundIndex = i
@@ -208,13 +213,18 @@ func readAppfwprofile_crosssitescripting_bindingFunc(d *schema.ResourceData, met
 
 	// Resource is missing
 	if foundIndex == -1 {
-		log.Printf("[DEBUG] citrixadc-provider: FindResourceArrayWithParams monitor name not found in array")
+		log.Printf("[DEBUG] citrixadc-provider: FindResourceArrayWithParams appfwprofile_crosssitescripting_binding not found in array")
 		log.Printf("[WARN] citrixadc-provider: Clearing appfwprofile_crosssitescripting_binding state %s", bindingId)
 		d.SetId("")
 		return nil
 	}
 	// Fallthrough
 	data := dataArr[foundIndex]
+
+	unescaped_formactionurl_xss, err := unescapeStringURL(data["formactionurl_xss"].(string))
+	if err != nil {
+		return err
+	}
 
 	d.Set("name", data["name"])
 	d.Set("alertonly", data["alertonly"])
@@ -223,7 +233,7 @@ func readAppfwprofile_crosssitescripting_bindingFunc(d *schema.ResourceData, met
 	d.Set("as_value_type_xss", data["as_value_type_xss"])
 	d.Set("comment", data["comment"])
 	d.Set("crosssitescripting", data["crosssitescripting"])
-	d.Set("formactionurl_xss", data["formactionurl_xss"])
+	d.Set("formactionurl_xss", unescaped_formactionurl_xss)
 	d.Set("isautodeployed", data["isautodeployed"])
 	d.Set("isregex_xss", data["isregex_xss"])
 	d.Set("isvalueregex_xss", data["isvalueregex_xss"])
@@ -265,4 +275,13 @@ func deleteAppfwprofile_crosssitescripting_bindingFunc(d *schema.ResourceData, m
 	d.SetId("")
 
 	return nil
+}
+
+func unescapeStringURL(url string) (string, error) {
+	// Unescape the URL
+	unescapedURL, err := strconv.Unquote("\"" + url + "\"")
+	if err != nil {
+		return "", err
+	}
+	return unescapedURL, nil
 }

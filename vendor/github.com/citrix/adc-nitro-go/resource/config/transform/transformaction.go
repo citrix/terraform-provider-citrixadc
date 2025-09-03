@@ -72,5 +72,6 @@ type Transformaction struct {
 	//------- Read only Parameter ---------;
 
 	Continuematching string `json:"continuematching,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

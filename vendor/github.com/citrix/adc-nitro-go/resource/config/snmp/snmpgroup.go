@@ -43,5 +43,6 @@ type Snmpgroup struct {
 
 	Storagetype string `json:"storagetype,omitempty"`
 	Status string `json:"status,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

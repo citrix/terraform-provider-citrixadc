@@ -65,6 +65,26 @@ type Icaaccessprofile struct {
 	* Allow Default access/Disable the redirection of USB devices to and from the client
 	*/
 	Clientusbdriveredirection string `json:"clientusbdriveredirection,omitempty"`
+	/**
+	* Allow default access or disable TWAIN devices, such as digital cameras or scanners, on the client device from published image processing applications
+	*/
+	Clienttwaindeviceredirection string `json:"clienttwaindeviceredirection,omitempty"`
+	/**
+	* Allow default access or disable WIA scanner redirection
+	*/
+	Wiaredirection string `json:"wiaredirection,omitempty"`
+	/**
+	* Allow default access or disable drag and drop between client and remote applications and desktops
+	*/
+	Draganddrop string `json:"draganddrop,omitempty"`
+	/**
+	* Allow default access or disable smart card redirection. Smart card virtual channel is always allowed in CVAD
+	*/
+	Smartcardredirection string `json:"smartcardredirection,omitempty"`
+	/**
+	* Allow default access or disable FIDO2 redirection
+	*/
+	Fido2redirection string `json:"fido2redirection,omitempty"`
 
 	//------- Read only Parameter ---------;
 
@@ -72,5 +92,6 @@ type Icaaccessprofile struct {
 	Builtin string `json:"builtin,omitempty"`
 	Feature string `json:"feature,omitempty"`
 	Isdefault string `json:"isdefault,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

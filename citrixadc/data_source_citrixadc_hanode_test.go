@@ -30,6 +30,32 @@ data "citrixadc_hanode" "hanode" {
 
 func TestAccDataSourceHanode_basic(t *testing.T) {
 	nsip := os.Getenv("NSIP")
+	if nsip == "" {
+		nsurl := os.Getenv("NS_URL")
+		// Try to extract IP from NS_URL (assuming format like http(s)://<ip>[:port])
+		if nsurl != "" {
+			// Remove protocol if present
+			start := 0
+			if idx := len("https://"); len(nsurl) > idx && nsurl[:idx] == "https://" {
+				start = idx
+			} else if idx := len("http://"); len(nsurl) > idx && nsurl[:idx] == "http://" {
+				start = idx
+			}
+			hostport := nsurl[start:]
+			// Split by '/' to remove any path
+			if slashIdx := len(hostport); slashIdx > 0 {
+				if idx := indexOf(hostport, "/"); idx != -1 {
+					hostport = hostport[:idx]
+				}
+			}
+			// Split by ':' to remove port if present
+			if colonIdx := indexOf(hostport, ":"); colonIdx != -1 {
+				nsip = hostport[:colonIdx]
+			} else {
+				nsip = hostport
+			}
+		}
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -42,4 +68,14 @@ func TestAccDataSourceHanode_basic(t *testing.T) {
 			},
 		},
 	})
+}
+
+// Helper function to find index of a character in string
+func indexOf(s string, sep string) int {
+	for i := 0; i < len(s); i++ {
+		if string(s[i]) == sep {
+			return i
+		}
+	}
+	return -1
 }

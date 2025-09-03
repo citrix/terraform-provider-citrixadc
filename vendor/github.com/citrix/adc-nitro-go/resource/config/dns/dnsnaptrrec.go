@@ -77,5 +77,6 @@ type Dnsnaptrrec struct {
 
 	Authtype string `json:"authtype,omitempty"`
 	Vservername string `json:"vservername,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

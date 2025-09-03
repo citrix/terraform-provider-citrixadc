@@ -221,11 +221,6 @@ func resourceCitrixAdcService() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"sc": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
 			"serverid": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -402,7 +397,6 @@ func createServiceFunc(d *schema.ResourceData, meta interface{}) error {
 		Port:                         d.Get("port").(int),
 		Processlocal:                 d.Get("processlocal").(string),
 		Rtspsessionidremap:           d.Get("rtspsessionidremap").(string),
-		Sc:                           d.Get("sc").(string),
 		Serverid:                     d.Get("serverid").(int),
 		Servername:                   d.Get("servername").(string),
 		Servicetype:                  d.Get("servicetype").(string),
@@ -546,7 +540,6 @@ func readServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("processlocal", data["processlocal"])
 	d.Set("riseapbrstatsmsgcode", data["riseapbrstatsmsgcode"])
 	d.Set("rtspsessionidremap", data["rtspsessionidremap"])
-	d.Set("sc", data["sc"])
 	d.Set("serverid", data["serverid"])
 	d.Set("servername", data["servername"])
 	d.Set("servicetype", data["servicetype"])
@@ -793,11 +786,6 @@ func updateServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("rtspsessionidremap") {
 		log.Printf("[DEBUG] netscaler-provider:  Rtspsessionidremap has changed for service %s, starting update", serviceName)
 		svc.Rtspsessionidremap = d.Get("rtspsessionidremap").(string)
-		hasChange = true
-	}
-	if d.HasChange("sc") {
-		log.Printf("[DEBUG] netscaler-provider:  Sc has changed for service %s, starting update", serviceName)
-		svc.Sc = d.Get("sc").(string)
 		hasChange = true
 	}
 	if d.HasChange("serverid") {

@@ -25,10 +25,6 @@ type Policypatset struct {
 	*/
 	Name string `json:"name,omitempty"`
 	/**
-	* Index type.
-	*/
-	Indextype string `json:"indextype,omitempty"`
-	/**
 	* Any comments to preserve information about this patset or a pattern bound to this patset.
 	*/
 	Comment string `json:"comment,omitempty"`
@@ -36,9 +32,17 @@ type Policypatset struct {
 	* File which contains list of patterns that needs to be bound to the patset. A patsetfile cannot be associated with multiple patsets.
 	*/
 	Patsetfile string `json:"patsetfile,omitempty"`
+	/**
+	* This is used to populate internal patset information so that the patset can also be used dynamically in an expression. Here dynamically means the patset name can also be derived using an expression. For example for a given patset name "allow_test" it can be used dynamically as http.req.url.contains_any("allow_" + http.req.url.path.get(1)). This cannot be used with default patsets.
+	*/
+	Dynamic string `json:"dynamic,omitempty"`
+	/**
+	* Shows only dynamic patsets when set true.
+	*/
+	Dynamiconly bool `json:"dynamiconly,omitempty"`
 
 	//------- Read only Parameter ---------;
 
-	Description string `json:"description,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

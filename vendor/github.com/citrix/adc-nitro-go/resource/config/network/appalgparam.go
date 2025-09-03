@@ -25,4 +25,8 @@ type Appalgparam struct {
 	*/
 	Pptpgreidletimeout int `json:"pptpgreidletimeout,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

@@ -59,5 +59,6 @@ type Nsaptlicense struct {
 	Datesa string `json:"datesa,omitempty"`
 	Dateexp string `json:"dateexp,omitempty"`
 	Features string `json:"features,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

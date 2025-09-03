@@ -70,5 +70,6 @@ type Nscentralmanagementserver struct {
 	Customerid string `json:"customerid,omitempty"`
 	Admserviceenvironment string `json:"admserviceenvironment,omitempty"`
 	Admserviceconnectionstatus string `json:"admserviceconnectionstatus,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

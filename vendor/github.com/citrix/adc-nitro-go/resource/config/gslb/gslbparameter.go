@@ -70,13 +70,24 @@ type Gslbparameter struct {
 	*/
 	Gslbsyncmode string `json:"gslbsyncmode,omitempty"`
 	/**
-	* If disabled, Location files will not be synced to the remote sites as part of automatic sync.
+	* If disabled, Location files will not be synced to the remote sites as part of manual sync and automatic sync.
 	*/
 	Gslbsynclocfiles string `json:"gslbsynclocfiles,omitempty"`
 	/**
 	* If enabled, remote gslb site's rsync port will be monitored and site is considered for configuration sync only when the monitor is successful.
 	*/
 	Gslbconfigsyncmonitor string `json:"gslbconfigsyncmonitor,omitempty"`
+	/**
+	* If enabled, 'save ns config' command will be treated as other GSLB commands and synced to GSLB nodes when auto gslb sync option is enabled.
+	*/
+	Gslbsyncsaveconfigcommand string `json:"gslbsyncsaveconfigcommand,omitempty"`
+	/**
+	* Action to perform when policy evaluation creates an UNDEF condition. Available settings function as follows:
+		* NOLBACTION - Does not consider LB action in making LB decision.
+		* RESET - Reset the request and notify the user, so that the user can resend the request.
+		* DROP - Drop the request without sending a response to the user.
+	*/
+	Undefaction string `json:"undefaction,omitempty"`
 
 	//------- Read only Parameter ---------;
 
@@ -84,5 +95,7 @@ type Gslbparameter struct {
 	Builtin string `json:"builtin,omitempty"`
 	Feature string `json:"feature,omitempty"`
 	Incarnation string `json:"incarnation,omitempty"`
+	Overridepersistencyfororder string `json:"overridepersistencyfororder,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

@@ -61,6 +61,18 @@ type Clusterinstance struct {
 	*/
 	Syncstatusstrictmode string `json:"syncstatusstrictmode,omitempty"`
 	/**
+	* flag to add ext l2 header during steering. By default the flag is disabled.
+	*/
+	Dfdretainl2params string `json:"dfdretainl2params,omitempty"`
+	/**
+	* This field controls the proxy arp feature in cluster. By default the flag is enabled.
+	*/
+	Clusterproxyarp string `json:"clusterproxyarp,omitempty"`
+	/**
+	* By turning on this option cluster heartbeats will have security enabled.
+	*/
+	Secureheartbeats string `json:"secureheartbeats,omitempty"`
+	/**
 	* The node group in a Cluster system used for transition from L2 to L3.
 	*/
 	Nodegroup string `json:"nodegroup,omitempty"`
@@ -78,10 +90,14 @@ type Clusterinstance struct {
 	Nodegroupstatewarning string `json:"nodegroupstatewarning,omitempty"`
 	Licensemismatch string `json:"licensemismatch,omitempty"`
 	Jumbonotsupported string `json:"jumbonotsupported,omitempty"`
+	Clustertunnelmodemismatch string `json:"clustertunnelmodemismatch,omitempty"`
 	Clusternoheartbeatonnode string `json:"clusternoheartbeatonnode,omitempty"`
 	Clusternolinksetmbf string `json:"clusternolinksetmbf,omitempty"`
 	Clusternospottedip string `json:"clusternospottedip,omitempty"`
+	Clusterclipfailure string `json:"clusterclipfailure,omitempty"`
+	Clusterhbhmacerrordetected string `json:"clusterhbhmacerrordetected,omitempty"`
 	Nodepenummismatch string `json:"nodepenummismatch,omitempty"`
 	Operationalpropstate string `json:"operationalpropstate,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

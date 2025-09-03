@@ -32,5 +32,6 @@ type Snmpoid struct {
 	//------- Read only Parameter ---------;
 
 	Snmpoid string `json:"Snmpoid,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

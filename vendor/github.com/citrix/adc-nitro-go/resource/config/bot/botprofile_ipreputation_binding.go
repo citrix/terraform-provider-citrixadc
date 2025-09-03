@@ -36,6 +36,16 @@ type Botprofileipreputationbinding struct {
 		*PROXY - This category includes IP addresses providing proxy services.
 		*NETWORK - IPs providing proxy and anonymization services including The Onion Router aka TOR or darknet.
 		*MOBILE_THREATS - This category checks client IP with the list of IPs harmful for mobile devices.
+		*WINDOWS_EXPLOITS - This category includes active IP address offering or distributig malware, shell code, rootkits, worms or viruses.
+		*WEB_ATTACKS - This category includes cross site scripting, iFrame injection, SQL injection, cross domain injection or domain password brute force attack.
+		*TOR_PROXY - This category includes IP address acting as exit nodes for the Tor Network.
+		*CLOUD - This category checks client IP with list of public cloud IPs.
+		*CLOUD_AWS - This category checks client IP with list of public cloud IPs from Amazon Web Services.
+		*CLOUD_GCP - This category checks client IP with list of public cloud IPs from Google Cloud Platform.
+		*CLOUD_AZURE - This category checks client IP with list of public cloud IPs from Azure.
+		*CLOUD_ORACLE - This category checks client IP with list of public cloud IPs from Oracle.
+		*CLOUD_IBM - This category checks client IP with list of public cloud IPs from IBM.
+		*CLOUD_SALESFORCE - This category checks client IP with list of public cloud IPs from Salesforce.
 	*/
 	Category string `json:"category,omitempty"`
 	/**

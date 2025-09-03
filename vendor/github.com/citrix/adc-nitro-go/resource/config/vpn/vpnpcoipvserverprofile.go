@@ -33,4 +33,8 @@ type Vpnpcoipvserverprofile struct {
 	*/
 	Udpport int `json:"udpport,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

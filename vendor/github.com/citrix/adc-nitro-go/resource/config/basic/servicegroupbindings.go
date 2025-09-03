@@ -32,5 +32,6 @@ type Servicegroupbindings struct {
 	State string `json:"state,omitempty"`
 	Svrstate string `json:"svrstate,omitempty"`
 	Vservername string `json:"vservername,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

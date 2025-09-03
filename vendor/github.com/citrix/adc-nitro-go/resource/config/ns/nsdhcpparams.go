@@ -35,5 +35,6 @@ type Nsdhcpparams struct {
 	Netmask string `json:"netmask,omitempty"`
 	Hostrtgw string `json:"hostrtgw,omitempty"`
 	Running string `json:"running,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

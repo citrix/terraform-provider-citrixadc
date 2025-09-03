@@ -42,5 +42,6 @@ type Ip6tunnel struct {
 	Remoteip string `json:"remoteip,omitempty"`
 	Type string `json:"type,omitempty"`
 	Encapip string `json:"encapip,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

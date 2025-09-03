@@ -170,5 +170,6 @@ type Nspbr6 struct {
 	Monstatparam2 string `json:"monstatparam2,omitempty"`
 	Monstatparam3 string `json:"monstatparam3,omitempty"`
 	Data string `json:"data,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

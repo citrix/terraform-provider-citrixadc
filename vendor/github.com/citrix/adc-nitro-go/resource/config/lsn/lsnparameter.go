@@ -41,5 +41,6 @@ type Lsnparameter struct {
 
 	Memlimitactive string `json:"memlimitactive,omitempty"`
 	Maxmemlimit string `json:"maxmemlimit,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

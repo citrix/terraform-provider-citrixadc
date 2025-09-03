@@ -39,5 +39,6 @@ type Pcpmap struct {
 	Pcpnounce string `json:"pcpnounce,omitempty"`
 	Pcprefcnt string `json:"pcprefcnt,omitempty"`
 	Pcplifetime string `json:"pcplifetime,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

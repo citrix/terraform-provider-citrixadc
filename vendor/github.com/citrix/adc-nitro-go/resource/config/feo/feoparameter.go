@@ -23,7 +23,7 @@ type Feoparameter struct {
 	/**
 	* The percentage value of a JPEG image quality to be reduced. Range: 0 - 100
 	*/
-	Jpegqualitypercent int `json:"jpegqualitypercent"`
+	Jpegqualitypercent int `json:"jpegqualitypercent"` // Zero is a valid value
 	/**
 	* Threshold value of the file size (in bytes) for converting external CSS files to inline CSS files.
 	*/
@@ -41,5 +41,6 @@ type Feoparameter struct {
 
 	Builtin string `json:"builtin,omitempty"`
 	Feature string `json:"feature,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

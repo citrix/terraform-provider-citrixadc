@@ -42,5 +42,6 @@ type Appfwtransactionrecords struct {
 	Responsecontentlength string `json:"responsecontentlength,omitempty"`
 	Responseyields string `json:"responseyields,omitempty"`
 	Responsemaxprocessingtime string `json:"responsemaxprocessingtime,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

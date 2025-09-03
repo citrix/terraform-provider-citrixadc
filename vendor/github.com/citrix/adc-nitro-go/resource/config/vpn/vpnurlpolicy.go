@@ -56,5 +56,6 @@ type Vpnurlpolicy struct {
 
 	Builtin string `json:"builtin,omitempty"`
 	Undefhits string `json:"undefhits,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

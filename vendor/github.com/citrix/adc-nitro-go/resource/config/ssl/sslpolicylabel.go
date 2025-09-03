@@ -43,5 +43,6 @@ type Sslpolicylabel struct {
 	Invokelabelname string `json:"invoke_labelname,omitempty"`
 	Flowtype string `json:"flowtype,omitempty"`
 	Description string `json:"description,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

@@ -36,5 +36,17 @@ type Snmpoption struct {
 	* Audit log level of SNMP trap logs. The default value is INFORMATIONAL.
 	*/
 	Snmptraplogginglevel string `json:"snmptraplogginglevel,omitempty"`
+	/**
+	* By default, the severity level info of the trap is not mentioned in the trap message. Enable this option to send severity level of trap as one of the varbind in the trap message.
+	*/
+	Severityinfointrap string `json:"severityinfointrap,omitempty"`
+	/**
+	* By default, Customtrap will be disabled, set to enabled when using the feature.
+	*/
+	Customtrap string `json:"customtrap,omitempty"`
+
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

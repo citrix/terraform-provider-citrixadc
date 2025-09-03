@@ -20,6 +20,10 @@ package ns
 * Configuration for licenseserver resource.
 */
 type Nslicenseserverpool struct {
+	/**
+	* If this flag is used while doing getinventory, it displays all licenses from licenseserver.
+	*/
+	Getalllicenses bool `json:"getalllicenses,omitempty"`
 
 	//------- Read only Parameter ---------;
 
@@ -141,5 +145,7 @@ type Nslicenseserverpool struct {
 	Vpx100000eavailable string `json:"vpx100000eavailable,omitempty"`
 	Vpx100000ptotal string `json:"vpx100000ptotal,omitempty"`
 	Vpx100000pavailable string `json:"vpx100000pavailable,omitempty"`
+	Licensemode string `json:"licensemode,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

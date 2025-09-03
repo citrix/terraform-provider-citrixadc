@@ -21,7 +21,7 @@ package vpn
 */
 type Vpnglobalsslcertkeybinding struct {
 	/**
-	* SSL certkey to use in signing tokens.
+	* SSL certkey to use in signing tokens. Only RSA cert key is allowed
 	*/
 	Certkeyname string `json:"certkeyname,omitempty"`
 	/**

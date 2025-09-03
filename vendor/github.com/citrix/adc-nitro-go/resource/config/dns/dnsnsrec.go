@@ -51,5 +51,6 @@ type Dnsnsrec struct {
 	//------- Read only Parameter ---------;
 
 	Authtype string `json:"authtype,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

@@ -59,4 +59,8 @@ type Forwardingsession struct {
 	*/
 	Processlocal string `json:"processlocal,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

@@ -122,6 +122,12 @@ type Sslprofile struct {
 	*/
 	Snienable string `json:"snienable,omitempty"`
 	/**
+	* Controls how the handshake is handled when the server name extension does not match any of the bound certificates. These checks are performed only if the session is SNI enabled (i.e. when profile bound to vserver has SNIEnable and Client Hello arrived with SNI extension). Available settings function as follows :
+		ENABLED   - handshakes with an unknown SNI are allowed to continue, if a default cert is bound.
+		DISLABED  - handshakes with an unknown SNI are not allowed to continue.
+	*/
+	Allowunknownsni string `json:"allowunknownsni,omitempty"`
+	/**
 	* State of OCSP stapling support on the SSL virtual server. Supported only if the protocol used is higher than SSLv3. Possible values:
 		ENABLED: The appliance sends a request to the OCSP responder to check the status of the server certificate and caches the response for the specified time. If the response is valid at the time of SSL handshake with the client, the OCSP-based server certificate status is sent to the client during the handshake.
 		DISABLED: The appliance does not check the status of the server certificate. 
@@ -164,6 +170,10 @@ type Sslprofile struct {
 		* NONSECURE - Deny nonsecure SSL renegotiation. Allows only clients that support RFC 5746.
 	*/
 	Denysslreneg string `json:"denysslreneg,omitempty"`
+	/**
+	* Maximum number of renegotiation requests allowed, in one second, to each SSL entity to which this profile is bound. When set to 0, an unlimited number of renegotiation requests are allowed. Applicable only when Deny SSL renegotiation is set to a value other than ALL.
+	*/
+	Maxrenegrate int `json:"maxrenegrate,omitempty"`
 	/**
 	* Amount of data to collect before the data is pushed to the crypto hardware for encryption. For large downloads, a larger quantum size better utilizes the crypto resources.
 	*/
@@ -303,9 +313,27 @@ type Sslprofile struct {
 	*/
 	Allowextendedmastersecret string `json:"allowextendedmastersecret,omitempty"`
 	/**
+	* FIPS 140-3 certification requires all handshakes without EMS be blocked. 
+		Such KDFs are allowed by default. This setting is to allow/disallow such legacy KDFs 
+		when needed. This setting applies to both frontend and backend SSL profiles.
+	*/
+	Allowlegacykdf string `json:"allowlegacykdf,omitempty"`
+	/**
 	* Application protocol supported by the server and used in negotiation of the protocol with the client. Possible values are HTTP1.1, HTTP2 and NONE. Default value is NONE which implies application protocol is not enabled hence remain unknown to the TLS layer. This parameter is relevant only if SSL connection is handled by the virtual server of the type SSL_TCP.
 	*/
 	Alpnprotocol string `json:"alpnprotocol,omitempty"`
+	/**
+	* State of TLS 1.3 Encrypted Client Hello Support
+	*/
+	Encryptedclienthello string `json:"encryptedclienthello,omitempty"`
+	/**
+	* Default domain name supported by the SSL virtual server. The parameter is effective, when zero touch certificate management is active for the SSL virtual server i.e. no manual SNI cert or default server cert is bound to the v-server. For SSL transactions, when SNI is not presented by the client, server-certificate corresponding to the default SNI, if available in the cert-store, is selected else connection is terminated.
+	*/
+	Defaultsni string `json:"defaultsni,omitempty"`
+	/**
+	* When enabled, NetScaler will log the session ID and SNI name during SSL handshakes on both the external and internal interfaces.
+	*/
+	Sslclientlogs string `json:"sslclientlogs,omitempty"`
 	/**
 	* The cipher group/alias/individual cipher configuration
 	*/
@@ -333,5 +361,7 @@ type Sslprofile struct {
 	Feature string `json:"feature,omitempty"`
 	Sslpfobjecttype string `json:"sslpfobjecttype,omitempty"`
 	Ssliverifyservercertforreuse string `json:"ssliverifyservercertforreuse,omitempty"`
+	Nodefaultbindings string `json:"nodefaultbindings,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

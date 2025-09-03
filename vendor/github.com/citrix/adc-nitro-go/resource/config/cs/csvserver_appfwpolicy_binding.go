@@ -33,10 +33,6 @@ type Csvserverappfwpolicybinding struct {
 	*/
 	Gotopriorityexpression string `json:"gotopriorityexpression,omitempty"`
 	/**
-	* The state of SureConnect the specified virtual server.
-	*/
-	Sc string `json:"sc,omitempty"`
-	/**
 	* The bindpoint to which the policy is bound
 	*/
 	Bindpoint string `json:"bindpoint,omitempty"`

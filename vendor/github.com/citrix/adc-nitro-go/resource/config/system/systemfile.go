@@ -43,5 +43,6 @@ type Systemfile struct {
 	Filemodifiedtime string `json:"filemodifiedtime,omitempty"`
 	Filemode string `json:"filemode,omitempty"`
 	Filesize string `json:"filesize,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

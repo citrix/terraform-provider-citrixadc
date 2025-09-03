@@ -25,24 +25,37 @@ type Icaparameter struct {
 	*/
 	Enablesronhafailover string `json:"enablesronhafailover,omitempty"`
 	/**
-	* Enable/Disable DF enforcement for EDT PMTUD Control Blocks. Default value: DISABLED
-	*/
-	Edtpmtuddf string `json:"edtpmtuddf,omitempty"`
-	/**
-	*DF enforcement timeout for EDTPMTUDDF. Default value: 100
-	*/
-	Edtpmtuddftimeout int `json:"edtpmtuddftimeout,omitempty"`
-	/**
-	*Specify the time interval/period for which L7 Client Latency value is to be calculated. By default, L7 Client Latency is calculated for every packet. The default value is 0. 
-	*/
-	L7latencyfrequency int `json:l7latencyfrequency"`
-	/**
 	* Enable/Disable HDXInsight for Non NSAP ICA Sessions. The default value is Yes
 	*/
 	Hdxinsightnonnsap string `json:"hdxinsightnonnsap,omitempty"`
+	/**
+	* Enable/Disable DF enforcement for EDT PMTUD Control Blocks
+	*/
+	Edtpmtuddf string `json:"edtpmtuddf,omitempty"`
+	/**
+	* DF enforcement timeout for EDTPMTUDDF
+	*/
+	Edtpmtuddftimeout int `json:"edtpmtuddftimeout,omitempty"`
+	/**
+	* Specify the time interval/period for which L7 Client Latency value is to be calculated. By default, L7 Client Latency is calculated for every packet. The default value is 0
+	*/
+	L7latencyfrequency int `json:"l7latencyfrequency,omitempty"`
+	/**
+	* Enable/Disable EDT Loss Tolerant feature
+	*/
+	Edtlosstolerant string `json:"edtlosstolerant,omitempty"`
+	/**
+	* Enable/Disable EDT PMTUD Rediscovery
+	*/
+	Edtpmtudrediscovery string `json:"edtpmtudrediscovery,omitempty"`
+	/**
+	* Enable/Disable DF Persistence
+	*/
+	Dfpersistence string `json:"dfpersistence,omitempty"`
 
 	//------- Read only Parameter ---------;
 
 	Builtin string `json:"builtin,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

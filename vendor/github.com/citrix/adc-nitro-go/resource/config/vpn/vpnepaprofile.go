@@ -33,4 +33,8 @@ type Vpnepaprofile struct {
 	*/
 	Data string `json:"data,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

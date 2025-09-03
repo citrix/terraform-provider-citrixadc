@@ -277,10 +277,11 @@ func testAccCheckSslvserver_sslcertkey_bindingExist(n string, id *string) resour
 		client := testAccProvider.Meta().(*NetScalerNitroClient).client
 
 		bindingId := rs.Primary.ID
-		idSlice := strings.SplitN(bindingId, ",", 2)
+		idSlice := strings.Split(bindingId, ",")
 
 		vservername := idSlice[0]
 		certkeyname := idSlice[1]
+		snicert := idSlice[2] == "true"
 
 		findParams := service.FindParams{
 			ResourceType:             "sslvserver_sslcertkey_binding",
@@ -296,7 +297,7 @@ func testAccCheckSslvserver_sslcertkey_bindingExist(n string, id *string) resour
 		// Iterate through results to find the one with the right certkeyname
 		foundIndex := -1
 		for i, v := range dataArr {
-			if v["certkeyname"].(string) == certkeyname {
+			if v["certkeyname"].(string) == certkeyname && v["snicert"].(bool) == snicert {
 				foundIndex = i
 				break
 			}

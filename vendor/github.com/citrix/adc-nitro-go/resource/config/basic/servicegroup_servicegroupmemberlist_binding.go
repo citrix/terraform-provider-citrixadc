@@ -35,6 +35,17 @@ type Servicegroupservicegroupmemberlistbinding struct {
 
 
 }
+type Failedmembers struct {
+	/**
+	* IP Address.
+	*/
+	Ip string `json:"ip,omitempty"`
+	/**
+	* The port number of the service to be enabled.
+	*/
+	Port int `json:"port,omitempty"`
+}
+
 type Members struct {
 	/**
 	* IP Address.
@@ -49,15 +60,8 @@ type Members struct {
 	* Initial state of the service group.
 	*/
 	State string `json:"state,omitempty"`
-}
-
-type Failedmembers struct {
 	/**
-	* IP Address.
+	* Order number to be assigned to the servicegroup member
 	*/
-	Ip string `json:"ip,omitempty"`
-	/**
-	* The port number of the service to be enabled.
-	*/
-	Port int `json:"port,omitempty"`
+	Order int `json:"order,omitempty"`
 }

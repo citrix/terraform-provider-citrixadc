@@ -54,5 +54,6 @@ type Authenticationpushservice struct {
 	Pushcloudserverstatus string `json:"pushcloudserverstatus,omitempty"`
 	Signingkeyname string `json:"signingkeyname,omitempty"`
 	Signingkey string `json:"signingkey,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

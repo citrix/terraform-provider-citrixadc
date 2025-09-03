@@ -21,7 +21,7 @@ package authentication
 */
 type Authenticationoauthaction struct {
 	/**
-	* Name for the OAuth Authentication action. 
+	* Name for the OAuth Authentication action.
 		Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Cannot be changed after the profile is created.
 		The following requirement applies only to the Citrix ADC CLI:
 		If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my authentication action" or 'my authentication action').
@@ -55,6 +55,13 @@ type Authenticationoauthaction struct {
 	* This is the default group that is chosen when the authentication succeeds in addition to extracted groups.
 	*/
 	Defaultauthenticationgroup string `json:"defaultauthenticationgroup,omitempty"`
+	/**
+	* Option to set/unset miscellaneous feature flags.
+		Available values function as follows:
+		* Base64Encode_Authorization_With_Padding - On setting this value, for endpoints (token and introspect), basic authorization header will be base64 encoded with padding.
+		* EnableJWTRequest - By enabling this field, Authorisation request to IDP will have jwt signed 'request' parameter
+	*/
+	Oauthmiscflags []string `json:"oauthmiscflags,omitempty"`
 	/**
 	* Name of the attribute to be extracted from OAuth Token and to be stored in the attribute1
 	*/
@@ -198,9 +205,22 @@ type Authenticationoauthaction struct {
 	* Resource URL for Oauth configuration.
 	*/
 	Resourceuri string `json:"resourceuri,omitempty"`
+	/**
+	* Name-Value pairs of attributes to be inserted in request parameter. Configuration format is name=value_expr@@@name2=value2_expr@@@.
+		'@@@' is used as delimiter between Name-Value pairs. name is a literal string whose value is 127 characters and does not contain '=' character.
+		Value is advanced policy expression terminated by @@@ delimiter. Last value need not contain the delimiter.
+	*/
+	Requestattribute string `json:"requestattribute,omitempty"`
+	/**
+	* The expression that will be evaluated to obtain IntuneDeviceId for compliance check against IntuneNAC device compliance endpoint. The expression is applicable when the OAuthType is INTUNE. The maximum length allowed to be used as IntuneDeviceId for the device compliance check from the computed response after the expression evaluation is 41.
+		Examples:
+		add authentication oauthAction <actionName> -intuneDeviceIdExpression 'AAA.LOGIN.INTUNEURI.AFTER_STR("IntuneDeviceId://")'
+	*/
+	Intunedeviceidexpression string `json:"intunedeviceidexpression,omitempty"`
 
 	//------- Read only Parameter ---------;
 
 	Oauthstatus string `json:"oauthstatus,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

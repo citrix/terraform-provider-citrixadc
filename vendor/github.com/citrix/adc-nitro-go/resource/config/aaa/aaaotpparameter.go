@@ -29,4 +29,8 @@ type Aaaotpparameter struct {
 	*/
 	Maxotpdevices int `json:"maxotpdevices,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

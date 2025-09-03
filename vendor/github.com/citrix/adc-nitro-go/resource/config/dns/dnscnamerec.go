@@ -52,5 +52,6 @@ type Dnscnamerec struct {
 
 	Vservername string `json:"vservername,omitempty"`
 	Authtype string `json:"authtype,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

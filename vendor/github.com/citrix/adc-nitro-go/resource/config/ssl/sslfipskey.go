@@ -67,5 +67,6 @@ type Sslfipskey struct {
 	//------- Read only Parameter ---------;
 
 	Size string `json:"size,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

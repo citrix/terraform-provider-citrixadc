@@ -110,19 +110,19 @@ func createAppfwprofile_jsonsqlurl_bindingFunc(d *schema.ResourceData, meta inte
 	jsonsqlurl := d.Get("jsonsqlurl")
 	bindingId := fmt.Sprintf("%s,%s", name, jsonsqlurl)
 	appfwprofile_jsonsqlurl_binding := appfw.Appfwprofilejsonsqlurlbinding{
-		Alertonly:              d.Get("alertonly").(string),
-		Comment:                d.Get("comment").(string),
-		Isautodeployed:         d.Get("isautodeployed").(string),
-		Jsonsqlurl:             d.Get("jsonsqlurl").(string),
-		Name:                   d.Get("name").(string),
-		Resourceid:             d.Get("resourceid").(string),
-		Ruletype:               d.Get("ruletype").(string),
-		State:                  d.Get("state").(string),
-		Keyname_json_sql:       d.Get("keyname_json_sql").(string),
-		As_value_expr_json_sql: d.Get("as_value_expr_json_sql").(string),
-		As_value_type_json_sql: d.Get("as_value_type_json_sql").(string),
-		Iskeyregex_json_sql:    d.Get("iskeyregex_json_sql").(string),
-		Isvalueregex_json_sql:  d.Get("isvalueregex_json_sql").(string),
+		Alertonly:           d.Get("alertonly").(string),
+		Comment:             d.Get("comment").(string),
+		Isautodeployed:      d.Get("isautodeployed").(string),
+		Jsonsqlurl:          d.Get("jsonsqlurl").(string),
+		Name:                d.Get("name").(string),
+		Resourceid:          d.Get("resourceid").(string),
+		Ruletype:            d.Get("ruletype").(string),
+		State:               d.Get("state").(string),
+		Keynamejsonsql:      d.Get("keyname_json_sql").(string),
+		Asvalueexprjsonsql:  d.Get("as_value_expr_json_sql").(string),
+		Asvaluetypejsonsql:  d.Get("as_value_type_json_sql").(string),
+		Iskeyregexjsonsql:   d.Get("iskeyregex_json_sql").(string),
+		Isvalueregexjsonsql: d.Get("isvalueregex_json_sql").(string),
 	}
 
 	err := client.UpdateUnnamedResource("appfwprofile_jsonsqlurl_binding", &appfwprofile_jsonsqlurl_binding)

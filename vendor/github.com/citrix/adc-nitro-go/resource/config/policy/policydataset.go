@@ -29,10 +29,6 @@ type Policydataset struct {
 	*/
 	Type string `json:"type,omitempty"`
 	/**
-	* Index type.
-	*/
-	Indextype string `json:"indextype,omitempty"`
-	/**
 	* Any comments to preserve information about this dataset or a data bound to this dataset.
 	*/
 	Comment string `json:"comment,omitempty"`
@@ -40,9 +36,17 @@ type Policydataset struct {
 	* File which contains list of patterns that needs to be bound to the dataset. A patsetfile cannot be associated with multiple datasets.
 	*/
 	Patsetfile string `json:"patsetfile,omitempty"`
+	/**
+	* This is used to populate internal dataset information so that the dataset can also be used dynamically in an expression. Here dynamically means the dataset name can also be derived using an expression. For example for a given dataset name "allow_test" it can be used dynamically as client.ip.src.equals_any("allow_" + http.req.url.path.get(1)). This cannot be used with default datasets.
+	*/
+	Dynamic string `json:"dynamic,omitempty"`
+	/**
+	* Shows only dynamic datasets when set true.
+	*/
+	Dynamiconly bool `json:"dynamiconly,omitempty"`
 
 	//------- Read only Parameter ---------;
 
-	Description string `json:"description,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

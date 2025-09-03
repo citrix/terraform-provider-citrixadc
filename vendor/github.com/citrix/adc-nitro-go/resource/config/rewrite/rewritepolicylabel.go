@@ -44,6 +44,8 @@ type Rewritepolicylabel struct {
 		* radius_res - RADIUS responses
 		* dns_req - DNS requests
 		* dns_res - DNS responses
+		* mqtt_req - MQTT requests
+		* mqtt_res - MQTT responses
 	*/
 	Transform string `json:"transform,omitempty"`
 	/**
@@ -71,5 +73,6 @@ type Rewritepolicylabel struct {
 	Isdefault string `json:"isdefault,omitempty"`
 	Builtin string `json:"builtin,omitempty"`
 	Feature string `json:"feature,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

@@ -41,5 +41,6 @@ type Appfwxmlschema struct {
 	//------- Read only Parameter ---------;
 
 	Response string `json:"response,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

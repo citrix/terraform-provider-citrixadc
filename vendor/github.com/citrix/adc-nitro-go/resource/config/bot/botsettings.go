@@ -25,7 +25,7 @@ type Botsettings struct {
 	*/
 	Defaultprofile string `json:"defaultprofile,omitempty"`
 	/**
-	* Profile to use when the feature is not enabled but feature is licensed.
+	* Profile to use when the feature is not enabled but feature is licensed. NonIntrusive checks will be disabled and IPRep cronjob(24 Hours) will be removed if this is set to BOT_BYPASS.
 	*/
 	Defaultnonintrusiveprofile string `json:"defaultnonintrusiveprofile,omitempty"`
 	/**
@@ -78,10 +78,19 @@ type Botsettings struct {
 	* Length of the auto-generated trap URL.
 	*/
 	Trapurllength int `json:"trapurllength,omitempty"`
+	/**
+	* Proxy Username
+	*/
+	Proxyusername string `json:"proxyusername,omitempty"`
+	/**
+	* Password with which user logs on.
+	*/
+	Proxypassword string `json:"proxypassword,omitempty"`
 
 	//------- Read only Parameter ---------;
 
 	Builtin string `json:"builtin,omitempty"`
 	Feature string `json:"feature,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

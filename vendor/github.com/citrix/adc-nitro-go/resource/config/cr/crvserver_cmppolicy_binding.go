@@ -33,10 +33,6 @@ type Crvservercmppolicybinding struct {
 	*/
 	Inherited string `json:"inherited,omitempty"`
 	/**
-	* The state of SureConnect the specified virtual server.
-	*/
-	Sc string `json:"sc,omitempty"`
-	/**
 	* Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 	*/
 	Gotopriorityexpression string `json:"gotopriorityexpression,omitempty"`

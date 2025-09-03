@@ -22,7 +22,7 @@ package cr
 type Crvserver struct {
 	/**
 	* Name for the cache redirection virtual server. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at sign (@), equal sign (=), and hyphen (-) characters. Can be changed after the cache redirection virtual server is created.
-		The following requirement applies only to the Citrix ADC CLI:  
+		The following requirement applies only to the Citrix ADC CLI:
 		If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my server" or 'my server').
 	*/
 	Name string `json:"name,omitempty"`
@@ -136,7 +136,7 @@ type Crvserver struct {
 	/**
 	* Reuse TCP connections to the origin server across client connections. Do not set this parameter unless the Service Type parameter is set to HTTP. If you set this parameter to OFF, the possible settings of the Redirect parameter function as follows:
 		* CACHE - TCP connections to the cache servers are not reused.
-		* ORIGIN - TCP connections to the origin servers are not reused. 
+		* ORIGIN - TCP connections to the origin servers are not reused.
 		* POLICY - TCP connections to the origin servers are not reused.
 		If you set the Reuse parameter to ON, connections to origin servers and connections to cache servers are reused.
 	*/
@@ -190,7 +190,7 @@ type Crvserver struct {
 	*/
 	Srcipexpr string `json:"srcipexpr,omitempty"`
 	/**
-	* Use the client's IP address as the source IP address in requests sent to the origin server.  
+	* Use the client's IP address as the source IP address in requests sent to the origin server.
 		Note: You can enable this parameter to implement fully transparent CR deployment.
 	*/
 	Originusip string `json:"originusip,omitempty"`
@@ -238,6 +238,10 @@ type Crvserver struct {
 	*/
 	Probeport int `json:"probeport,omitempty"`
 	/**
+	* This is effective when a FORWARD type cr vserver is added. By default, this parameter is DISABLED. When it is ENABLED, backend services cannot be accessed through a FORWARD type cr vserver.
+	*/
+	Disallowserviceaccess string `json:"disallowserviceaccess,omitempty"`
+	/**
 	* New name for the cache redirection virtual server. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at sign (@), equal sign (=), and hyphen (-) characters. If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my name" or 'my name').
 	*/
 	Newname string `json:"newname,omitempty"`
@@ -250,7 +254,6 @@ type Crvserver struct {
 	Type string `json:"type,omitempty"`
 	Curstate string `json:"curstate,omitempty"`
 	Status string `json:"status,omitempty"`
-	Sc string `json:"sc,omitempty"`
 	Authentication string `json:"authentication,omitempty"`
 	Homepage string `json:"homepage,omitempty"`
 	Rule string `json:"rule,omitempty"`
@@ -269,5 +272,6 @@ type Crvserver struct {
 	Labelname string `json:"labelname,omitempty"`
 	Gotopriorityexpression string `json:"gotopriorityexpression,omitempty"`
 	Nodefaultbindings string `json:"nodefaultbindings,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

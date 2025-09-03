@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccGslbservice_lbmonitor_binding_basic = `
@@ -44,6 +45,7 @@ resource "citrixadc_gslbservice_lbmonitor_binding" "tf_gslbservice_lbmonitor_bin
   resource "citrixadc_gslbsite" "tf_gslbsite" {
 	sitename      = "tf_sitename"
 	siteipaddress = "10.222.70.210"
+	sitepassword  = "password123"
   }
   
   resource "citrixadc_lbmonitor" "tfmonitor1" {
@@ -65,6 +67,7 @@ resource "citrixadc_gslbservice" "tf_gslbservice" {
   resource "citrixadc_gslbsite" "tf_gslbsite" {
 	sitename      = "tf_sitename"
 	siteipaddress = "10.222.70.210"
+	sitepassword = "password123"
   }
   
   resource "citrixadc_lbmonitor" "tfmonitor1" {

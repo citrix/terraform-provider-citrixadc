@@ -35,5 +35,6 @@ type Nshardware struct {
 	Encodedserialno string `json:"encodedserialno,omitempty"`
 	Netscaleruuid string `json:"netscaleruuid,omitempty"`
 	Bmcrevision string `json:"bmcrevision,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

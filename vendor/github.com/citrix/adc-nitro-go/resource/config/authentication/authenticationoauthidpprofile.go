@@ -92,5 +92,6 @@ type Authenticationoauthidpprofile struct {
 	//------- Read only Parameter ---------;
 
 	Oauthstatus string `json:"oauthstatus,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

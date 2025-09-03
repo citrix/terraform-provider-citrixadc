@@ -18,27 +18,16 @@ func resourceCitrixAdcRewriteaction() *schema.Resource {
 		Read:          readRewriteactionFunc,
 		Update:        updateRewriteactionFunc,
 		Delete:        deleteRewriteactionFunc,
-		CustomizeDiff: customizeRewriteactionDiff,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"bypasssafetycheck": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
 			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"pattern": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -84,10 +73,8 @@ func createRewriteactionFunc(d *schema.ResourceData, meta interface{}) error {
 		d.Set("name", rewriteactionName)
 	}
 	rewriteaction := rewrite.Rewriteaction{
-		Bypasssafetycheck: d.Get("bypasssafetycheck").(string),
 		Comment:           d.Get("comment").(string),
 		Name:              d.Get("name").(string),
-		Pattern:           d.Get("pattern").(string),
 		Refinesearch:      d.Get("refinesearch").(string),
 		Search:            d.Get("search").(string),
 		Stringbuilderexpr: d.Get("stringbuilderexpr").(string),
@@ -122,10 +109,8 @@ func readRewriteactionFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	d.Set("name", data["name"])
-	d.Set("bypasssafetycheck", data["bypasssafetycheck"])
 	d.Set("comment", data["comment"])
 	d.Set("name", data["name"])
-	d.Set("pattern", data["pattern"])
 	d.Set("refinesearch", data["refinesearch"])
 	d.Set("search", data["search"])
 	d.Set("stringbuilderexpr", data["stringbuilderexpr"])
@@ -145,11 +130,6 @@ func updateRewriteactionFunc(d *schema.ResourceData, meta interface{}) error {
 		Name: d.Get("name").(string),
 	}
 	hasChange := false
-	if d.HasChange("bypasssafetycheck") {
-		log.Printf("[DEBUG]  citrixadc-provider: Bypasssafetycheck has changed for rewriteaction %s, starting update", rewriteactionName)
-		rewriteaction.Bypasssafetycheck = d.Get("bypasssafetycheck").(string)
-		hasChange = true
-	}
 	if d.HasChange("comment") {
 		log.Printf("[DEBUG]  citrixadc-provider: Comment has changed for rewriteaction %s, starting update", rewriteactionName)
 		rewriteaction.Comment = d.Get("comment").(string)
@@ -158,11 +138,6 @@ func updateRewriteactionFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("name") {
 		log.Printf("[DEBUG]  citrixadc-provider: Name has changed for rewriteaction %s, starting update", rewriteactionName)
 		rewriteaction.Name = d.Get("name").(string)
-		hasChange = true
-	}
-	if d.HasChange("pattern") {
-		log.Printf("[DEBUG]  citrixadc-provider: Pattern has changed for rewriteaction %s, starting update", rewriteactionName)
-		rewriteaction.Pattern = d.Get("pattern").(string)
 		hasChange = true
 	}
 	if d.HasChange("refinesearch") {
@@ -210,33 +185,6 @@ func deleteRewriteactionFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId("")
-
-	return nil
-}
-
-func customizeRewriteactionDiff(diff *schema.ResourceDiff, meta interface{}) error {
-	log.Printf("[DEBUG] citrixadc-provider:  In customizeRewriteactionDiff")
-	o := diff.GetChangedKeysPrefix("")
-
-	// Check if target and bypasssafetycheck is in changed keys
-	targetDefined := false
-	bypasssafetycheckDefined := false
-
-	for _, element := range o {
-
-		if element == "target" {
-			targetDefined = true
-		}
-
-		if element == "bypasssafetycheck" {
-			bypasssafetycheckDefined = true
-		}
-	}
-
-	// Clear bypasssafetycheck when present without target
-	if bypasssafetycheckDefined && !targetDefined {
-		diff.Clear("bypasssafetycheck")
-	}
 
 	return nil
 }

@@ -21,17 +21,17 @@ package cs
 */
 type Cspolicycsvserverbinding struct {
 	/**
-	* The domain name. The string value can range to 63 characters.
+	* Location where policy is bound
 	*/
-	Domain string `json:"domain,omitempty"`
+	Boundto string `json:"boundto,omitempty"`
 	/**
 	* Content switching action that names the target load balancing virtual server to which the traffic is switched.
 	*/
 	Action string `json:"action,omitempty"`
 	/**
-	* URL string that is matched with the URL of a request. Can contain a wildcard character. Specify the string value in the following format: [[prefix] [*]] [.suffix].
+	* Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 	*/
-	Url string `json:"url,omitempty"`
+	Gotopriorityexpression string `json:"gotopriorityexpression,omitempty"`
 	/**
 	* priority of bound policy
 	*/
@@ -41,13 +41,9 @@ type Cspolicycsvserverbinding struct {
 	*/
 	Hits int `json:"hits,omitempty"`
 	/**
-	* Total number of hits.
+	* Total number of bind hits.
 	*/
-	Pihits int `json:"pihits,omitempty"`
-	/**
-	* bind hits for PI CS Policy.
-	*/
-	Pipolicyhits int `json:"pipolicyhits,omitempty"`
+	Bindhits int `json:"bindhits,omitempty"`
 	/**
 	* The invocation type.
 	*/

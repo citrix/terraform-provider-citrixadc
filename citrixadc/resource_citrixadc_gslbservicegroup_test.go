@@ -36,6 +36,7 @@ resource "citrixadc_gslbservicegroup" "tf_gslbservicegroup" {
 	sitename        = "Site-Local"
 	siteipaddress   = "172.31.96.234"
 	sessionexchange = "DISABLED"
+	sitepassword    = "password123"
   }
   
 `
@@ -54,6 +55,7 @@ resource "citrixadc_gslbservicegroup" "tf_gslbservicegroup" {
 	sitename        = "Site-Local"
 	siteipaddress   = "172.31.96.234"
 	sessionexchange = "DISABLED"
+	sitepassword    = "password123"
   }
   
 `

@@ -25,4 +25,8 @@ type Nsconsoleloginprompt struct {
 	*/
 	Promptstring string `json:"promptstring,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

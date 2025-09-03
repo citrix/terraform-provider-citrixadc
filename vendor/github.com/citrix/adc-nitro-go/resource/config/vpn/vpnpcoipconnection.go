@@ -40,5 +40,6 @@ type Vpnpcoipconnection struct {
 	Destip string `json:"destip,omitempty"`
 	Destport string `json:"destport,omitempty"`
 	Peid string `json:"peid,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

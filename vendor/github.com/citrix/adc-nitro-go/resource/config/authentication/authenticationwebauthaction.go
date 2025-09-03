@@ -21,7 +21,7 @@ package authentication
 */
 type Authenticationwebauthaction struct {
 	/**
-	* Name for the Web Authentication action. 
+	* Name for the Web Authentication action.
 		Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Cannot be changed after the profile is created.
 		The following requirement applies only to the Citrix ADC CLI:
 		If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my authentication action" or 'my authentication action').
@@ -116,5 +116,9 @@ type Authenticationwebauthaction struct {
 	* Expression that would be evaluated to extract attribute16 from the webauth response
 	*/
 	Attribute16 string `json:"attribute16,omitempty"`
+
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

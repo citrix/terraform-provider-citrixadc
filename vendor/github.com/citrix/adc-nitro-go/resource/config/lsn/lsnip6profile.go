@@ -37,4 +37,8 @@ type Lsnip6profile struct {
 	*/
 	Network6 string `json:"network6,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

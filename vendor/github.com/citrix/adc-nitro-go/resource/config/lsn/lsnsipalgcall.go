@@ -35,5 +35,6 @@ type Lsnsipalgcall struct {
 	Xlatip string `json:"xlatip,omitempty"`
 	Callrefcount string `json:"callrefcount,omitempty"`
 	Calltimer string `json:"calltimer,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

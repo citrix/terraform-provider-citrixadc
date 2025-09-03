@@ -23,7 +23,7 @@ type Appflowcollector struct {
 	/**
 	* Name for the collector. Must begin with an ASCII alphabetic or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at
 		(@), equals (=), and hyphen (-) characters.
-		Only four collectors can be configured. 
+		Only four collectors can be configured.
 		The following requirement applies only to the Citrix ADC CLI:
 		If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my appflow collector" or 'my appflow collector').
 	*/
@@ -46,7 +46,7 @@ type Appflowcollector struct {
 	Transport string `json:"transport,omitempty"`
 	/**
 	* New name for the collector. Must begin with an ASCII alphabetic or underscore (_) character, and must
-		contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at(@), equals (=), and hyphen (-) characters. 
+		contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at(@), equals (=), and hyphen (-) characters.
 		The following requirement applies only to the Citrix ADC CLI:
 		If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my appflow coll" or 'my appflow coll').
 	*/
@@ -55,5 +55,6 @@ type Appflowcollector struct {
 	//------- Read only Parameter ---------;
 
 	State string `json:"state,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

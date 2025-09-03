@@ -26,12 +26,13 @@ type Sslcertbundle struct {
 	Name string `json:"name,omitempty"`
 	/**
 	* URL specifying the protocol, host, and path, including file name, to the certificate bundle to be imported or exported. For example, http://www.example.com/cert_bundle_file.
-		NOTE: The import fails if the object to be imported is on an HTTPS server that requires client certificate authentication for access.
+		NOTE: The import fails if the object to be imported is on an HTTPS server that requires client certificate authentication for access, and the issuer certificate of the HTTPS server is not present in the specific path on NetScaler to authenticate the HTTPS server.
 	*/
 	Src string `json:"src,omitempty"`
 
 	//------- Read only Parameter ---------;
 
 	Inuse string `json:"inuse,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

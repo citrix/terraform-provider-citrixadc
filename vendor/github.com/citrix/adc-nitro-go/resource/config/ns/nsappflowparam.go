@@ -57,4 +57,8 @@ type Nsappflowparam struct {
 	*/
 	Clienttrafficonly string `json:"clienttrafficonly,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

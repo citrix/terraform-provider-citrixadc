@@ -30,5 +30,6 @@ type Sslcacertgroup struct {
 	Cacertgroupreferences string `json:"cacertgroupreferences,omitempty"`
 	Ocspcheck string `json:"ocspcheck,omitempty"`
 	Crlcheck string `json:"crlcheck,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

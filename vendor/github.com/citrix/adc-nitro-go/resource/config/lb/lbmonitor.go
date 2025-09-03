@@ -30,10 +30,10 @@ type Lbmonitor struct {
 	*/
 	Type string `json:"type,omitempty"`
 	/**
-	* Action to perform when the response to an inline monitor (a monitor of type HTTP-INLINE) indicates that the service is down. A service monitored by an inline monitor is considered DOWN if the response code is not one of the codes that have been specified for the Response Code parameter. 
-		Available settings function as follows: 
+	* Action to perform when the response to an inline monitor (a monitor of type HTTP-INLINE) indicates that the service is down. A service monitored by an inline monitor is considered DOWN if the response code is not one of the codes that have been specified for the Response Code parameter.
+		Available settings function as follows:
 		* NONE - Do not take any action. However, the show service command and the show lb monitor command indicate the total number of responses that were checked and the number of consecutive error responses received after the last successful probe.
-		* LOG - Log the event in NSLOG or SYSLOG. 
+		* LOG - Log the event in NSLOG or SYSLOG.
 		* DOWN - Mark the service as being down, and then do not direct any traffic to the service until the configured down time has expired. Persistent connections to the service are terminated as soon as the service is marked as DOWN. Also, log the event in NSLOG or SYSLOG.
 	*/
 	Action string `json:"action,omitempty"`
@@ -93,6 +93,10 @@ type Lbmonitor struct {
 	* String of arguments for the script. The string is copied verbatim into the request.
 	*/
 	Scriptargs string `json:"scriptargs,omitempty"`
+	/**
+	* List of arguments for the script which should be secure
+	*/
+	Secureargs string `json:"secureargs,omitempty"`
 	/**
 	* IP address of the dispatcher to which to send the probe.
 	*/
@@ -160,7 +164,7 @@ type Lbmonitor struct {
 	/**
 	* Time value added to the learned average response time in dynamic response time monitoring (DRTM). When a deviation is specified, the appliance learns the average response time of bound services and adds the deviation to the average. The final value is then continually adjusted to accommodate response time variations over time. Specified in milliseconds, seconds, or minutes.
 	*/
-	Deviation int `json:"deviation"`
+	Deviation int `json:"deviation"` // Zero is a valid value
 	/**
 	* Unit of measurement for the Deviation parameter. Cannot be changed after the monitor is created.
 	*/
@@ -295,7 +299,7 @@ type Lbmonitor struct {
 	*/
 	Sqlquery string `json:"sqlquery,omitempty"`
 	/**
-	* Expression that evaluates the database server's response to a MYSQL-ECV or MSSQL-ECV monitoring query. Must produce a Boolean result. The result determines the state of the server. If the expression returns TRUE, the probe succeeds. 
+	* Expression that evaluates the database server's response to a MYSQL-ECV or MSSQL-ECV monitoring query. Must produce a Boolean result. The result determines the state of the server. If the expression returns TRUE, the probe succeeds.
 		For example, if you want the appliance to evaluate the error message to determine the state of the server, use the rule MYSQL.RES.ROW(10) .TEXT_ELEM(2).EQ("MySQL").
 	*/
 	Evalrule string `json:"evalrule,omitempty"`
@@ -432,6 +436,18 @@ type Lbmonitor struct {
 	*/
 	Mqttversion int `json:"mqttversion,omitempty"`
 	/**
+	* Option to enable or disable gRPC health check service.
+	*/
+	Grpchealthcheck string `json:"grpchealthcheck,omitempty"`
+	/**
+	* gRPC status codes for which to mark the service as UP. The default value is 12(health check unimplemented). If the gRPC status code 0 is received from the backend this configuration is ignored.
+	*/
+	Grpcstatuscode []int `json:"grpcstatuscode,omitempty"`
+	/**
+	* Option to specify gRPC service name on which gRPC health check need to be performed
+	*/
+	Grpcservicename string `json:"grpcservicename,omitempty"`
+	/**
 	* Metric name in the metric table, whose setting is changed. A value zero disables the metric and it will not be used for load calculation
 	*/
 	Metric string `json:"metric,omitempty"`
@@ -462,5 +478,6 @@ type Lbmonitor struct {
 	Dupstate string `json:"dup_state,omitempty"`
 	Dupweight string `json:"dup_weight,omitempty"`
 	Weight string `json:"weight,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

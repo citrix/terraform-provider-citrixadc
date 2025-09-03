@@ -32,5 +32,6 @@ type Vpnstoreinfo struct {
 	Storeapisupport string `json:"storeapisupport,omitempty"`
 	Storelist string `json:"storelist,omitempty"`
 	Storestatus string `json:"storestatus,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

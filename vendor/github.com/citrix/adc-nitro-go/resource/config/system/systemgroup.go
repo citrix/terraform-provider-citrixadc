@@ -26,7 +26,7 @@ type Systemgroup struct {
 	*/
 	Groupname string `json:"groupname,omitempty"`
 	/**
-	* String to display at the command-line prompt. Can consist of letters, numbers, hyphen (-), period (.), hash (#), space ( ), at (@), equal (=), colon (:), underscore (_), and the following variables: 
+	* String to display at the command-line prompt. Can consist of letters, numbers, hyphen (-), period (.), hash (#), space ( ), at (@), equal (=), colon (:), underscore (_), and the following variables:
 		* %u - Will be replaced by the user name.
 		* %h - Will be replaced by the hostname of the Citrix ADC.
 		* %t - Will be replaced by the current time in 12-hour format.
@@ -44,5 +44,17 @@ type Systemgroup struct {
 	* Allowed Management interfaces of the system users in the group. By default allowed from both API and CLI interfaces. If management interface for a group is set to API, then all users under this group will not allowed to access NS through CLI. GUI interface will come under API interface
 	*/
 	Allowedmanagementinterface []string `json:"allowedmanagementinterface,omitempty"`
+	/**
+	* Password days to expire for system groups. The daystoexpire value ranges from 30 to 255.
+	*/
+	Daystoexpire int `json:"daystoexpire,omitempty"`
+	/**
+	* Number of days before which password expiration warning would be thrown with respect to daystoexpire. The warnpriorndays value ranges from 5 to 40.
+	*/
+	Warnpriorndays int `json:"warnpriorndays,omitempty"`
+
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

@@ -201,5 +201,6 @@ type Nsip struct {
 	Freeports string `json:"freeports,omitempty"`
 	Iptype string `json:"iptype,omitempty"`
 	Operationalarpowner string `json:"operationalarpowner,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

@@ -136,6 +136,10 @@ type Nstcpprofile struct {
 	*/
 	Tcpsegoffload string `json:"tcpsegoffload,omitempty"`
 	/**
+	* Enable or disable RFC 5961 compliance to protect against tcp spoofing(RST/SYN/Data). When enabled, will be compliant with RFC 5961.
+	*/
+	Rfc5961compliance string `json:"rfc5961compliance,omitempty"`
+	/**
 	* Enable or disable RST window attenuation to protect against spoofing. When enabled, will reply with corrective ACK when a sequence number is invalid.
 	*/
 	Rstwindowattenuate string `json:"rstwindowattenuate,omitempty"`
@@ -248,7 +252,7 @@ type Nstcpprofile struct {
 	*/
 	Mpcapablecbit string `json:"mpcapablecbit,omitempty"`
 	/**
-	* Send Client Port number along with Client IP in TCP-Options. ClientIpTcpOption must be ENABLED.
+	* Send Client Port number along with Client IP in TCP-Options. ClientIpTcpOption must be ENABLED
 	*/
 	Sendclientportintcpoption string `json:"sendclientportintcpoption,omitempty"`
 	/**
@@ -261,5 +265,6 @@ type Nstcpprofile struct {
 	Refcnt string `json:"refcnt,omitempty"`
 	Builtin string `json:"builtin,omitempty"`
 	Feature string `json:"feature,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

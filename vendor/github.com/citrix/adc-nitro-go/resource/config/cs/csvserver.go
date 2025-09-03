@@ -21,7 +21,7 @@ package cs
 */
 type Csvserver struct {
 	/**
-	* Name for the content switching virtual server. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at sign (@), equal sign (=), and hyphen (-) characters. 
+	* Name for the content switching virtual server. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at sign (@), equal sign (=), and hyphen (-) characters.
 		Cannot be changed after the CS virtual server is created.
 		The following requirement applies only to the Citrix ADC CLI:
 		If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, my server or my server).
@@ -46,7 +46,7 @@ type Csvserver struct {
 	Dnsrecordtype string `json:"dnsrecordtype,omitempty"`
 	Persistenceid int `json:"persistenceid,omitempty"`
 	/**
-	* IP address pattern, in dotted decimal notation, for identifying packets to be accepted by the virtual server. The IP Mask parameter specifies which part of the destination IP address is matched against the pattern. Mutually exclusive with the IP Address parameter. 
+	* IP address pattern, in dotted decimal notation, for identifying packets to be accepted by the virtual server. The IP Mask parameter specifies which part of the destination IP address is matched against the pattern. Mutually exclusive with the IP Address parameter.
 		For example, if the IP pattern assigned to the virtual server is 198.51.100.0 and the IP mask is 255.255.240.0 (a forward mask), the first 20 bits in the destination IP addresses are matched with the first 20 bits in the pattern. The virtual server accepts requests with IP addresses that range from 198.51.96.1 to 198.51.111.254. You can also use a pattern such as 0.0.2.2 and a mask such as 0.0.255.255 (a reverse mask).
 		If a destination IP address matches more than one IP pattern, the pattern with the longest match is selected, and the associated virtual server processes the request. For example, if the virtual servers, vs1 and vs2, have the same IP pattern, 0.0.100.128, but different IP masks of 0.0.255.255 and 0.0.224.255, a destination IP address of 198.51.100.128 has the longest match with the IP pattern of vs1. If a destination IP address matches two or more virtual servers to the same extent, the request is processed by the virtual server whose port number matches the port number in the request.
 	*/
@@ -326,24 +326,32 @@ type Csvserver struct {
 	*/
 	Quicprofilename string `json:"quicprofilename,omitempty"`
 	/**
-	* Domain name for which to change the time to live (TTL) and/or backup service IP address.
-	*/
-	Domainname string `json:"domainname,omitempty"`
-	/**
-	* Port number for the virtual server, from which we absorb the traffic for http redirect.
+	* Port number for the virtual server, from which we absorb the traffic for http redirect
 	*/
 	Redirectfromport int `json:"redirectfromport,omitempty"`
+	/**
+	* This option is used to enable/disable DNS over HTTPS (DoH) processing.
+	*/
+	Dnsoverhttps string `json:"dnsoverhttps,omitempty"`
 	/**
 	* URL to which all HTTP traffic received on the port specified in the -redirectFromPort parameter is redirected.
 	*/
 	Httpsredirecturl string `json:"httpsredirecturl,omitempty"`
+	/**
+	* The API profile where one or more API specs are bounded to.
+	*/
+	Apiprofile string `json:"apiprofile,omitempty"`
+	/**
+	* Domain name for which to change the time to live (TTL) and/or backup service IP address.
+	*/
+	Domainname string `json:"domainname,omitempty"`
 	Ttl int `json:"ttl,omitempty"`
 	Backupip string `json:"backupip,omitempty"`
 	Cookiedomain string `json:"cookiedomain,omitempty"`
 	Cookietimeout int `json:"cookietimeout,omitempty"`
 	Sitedomainttl int `json:"sitedomainttl,omitempty"`
 	/**
-	* New name for the virtual server. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at sign (@), equal sign (=), and hyphen (-) characters. 
+	* New name for the virtual server. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at sign (@), equal sign (=), and hyphen (-) characters.
 		The following requirement applies only to the Citrix ADC CLI:
 		If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my name" or 'my name').
 	*/
@@ -356,7 +364,6 @@ type Csvserver struct {
 	Ngname string `json:"ngname,omitempty"`
 	Type string `json:"type,omitempty"`
 	Curstate string `json:"curstate,omitempty"`
-	Sc string `json:"sc,omitempty"`
 	Status string `json:"status,omitempty"`
 	Cachetype string `json:"cachetype,omitempty"`
 	Redirect string `json:"redirect,omitempty"`
@@ -378,5 +385,6 @@ type Csvserver struct {
 	Targetlbvserver string `json:"targetlbvserver,omitempty"`
 	Nodefaultbindings string `json:"nodefaultbindings,omitempty"`
 	Version string `json:"version,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }
