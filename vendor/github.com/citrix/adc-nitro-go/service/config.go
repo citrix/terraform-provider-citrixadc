@@ -331,22 +331,11 @@ func (c *NitroClient) ChangeResource(resourceType string, name string, resourceS
 // DeleteResource deletes a resource of supplied type and name
 func (c *NitroClient) DeleteResource(resourceType string, resourceName string) error {
 
-	body, err := c.listResource(resourceType, resourceName)
+	_, err := c.listResource(resourceType, resourceName)
 	if err == nil { // resource exists
 		c.logger.Trace("DeleteResource Found resource ", "resourceType", resourceType, "resourceName", resourceName)
-		body, err = c.deleteResource(resourceType, resourceName)
+		_, err = c.deleteResource(resourceType, resourceName)
 		if err != nil {
-			// Suppress error if body contains errorcode 1665 and message "Internal error while deleting HSM key"
-			if resourceType == "sslhsmkey" && strings.Contains(err.Error(), "599 Netscaler specific error") {
-				var resp map[string]interface{}
-				if json.Unmarshal(body, &resp) == nil {
-					if code, ok := resp["errorcode"].(float64); ok && int(code) == 1665 {
-						if msg, ok := resp["message"].(string); ok && strings.Contains(msg, "Internal error while deleting HSM key") {
-							return nil
-						}
-					}
-				}
-			}
 			c.logger.Warn("Failed to delete resource", "resourceType", resourceType, "resourceName", resourceName, "error", err)
 			return err
 		}
@@ -393,7 +382,9 @@ func (c *NitroClient) DeleteResourceWithArgs(resourceType string, resourceName s
 
 // DeleteResourceWithArgsMap deletes a resource of supplied type and name. Args are supplied as map of key value
 func (c *NitroClient) DeleteResourceWithArgsMap(resourceType string, resourceName string, args map[string]string) error {
+
 	var err error = nil
+	var body []byte
 	if resourceType == "sslhsmkey" {
 		_, err = c.listResource(resourceType, resourceName)
 	} else {
@@ -402,8 +393,19 @@ func (c *NitroClient) DeleteResourceWithArgsMap(resourceType string, resourceNam
 	if err == nil { // resource exists
 		c.logger.Trace("DeleteResource Found resource ", "resourceType", resourceType, "resourceName", resourceName)
 
-		_, err = c.deleteResourceWithArgsMap(resourceType, resourceName, args)
+		body, err = c.deleteResourceWithArgsMap(resourceType, resourceName, args)
 		if err != nil {
+			// Suppress error if body contains errorcode 1665 and message "Internal error while deleting HSM key"
+			if resourceType == "sslhsmkey" && strings.Contains(err.Error(), "599 Netscaler specific error") {
+				var resp map[string]interface{}
+				if json.Unmarshal(body, &resp) == nil {
+					if code, ok := resp["errorcode"].(float64); ok && int(code) == 1665 {
+						if msg, ok := resp["message"].(string); ok && strings.Contains(msg, "Internal error while adding HSM key") {
+							return nil
+						}
+					}
+				}
+			}
 			c.logger.Warn("Failed to delete resource", "resourceType", resourceType, "resourceName", resourceName, "error", err)
 
 			return err
