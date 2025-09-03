@@ -60,12 +60,6 @@ func resourceCitrixAdcCmpglobal_cmppolicy_binding() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"state": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
 			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -88,7 +82,6 @@ func createCmpglobal_cmppolicy_bindingFunc(d *schema.ResourceData, meta interfac
 		Labeltype:              d.Get("labeltype").(string),
 		Policyname:             d.Get("policyname").(string),
 		Priority:               d.Get("priority").(int),
-		State:                  d.Get("state").(string),
 		Type:                   d.Get("type").(string),
 	}
 
@@ -170,7 +163,6 @@ func readCmpglobal_cmppolicy_bindingFunc(d *schema.ResourceData, meta interface{
 	d.Set("labeltype", data["labeltype"])
 	d.Set("policyname", data["policyname"])
 	setToInt("priority", d, data["priority"])
-	d.Set("state", data["state"])
 	d.Set("type", data["type"])
 
 	return nil

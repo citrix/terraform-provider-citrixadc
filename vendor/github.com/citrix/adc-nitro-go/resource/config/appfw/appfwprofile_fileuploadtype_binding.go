@@ -29,6 +29,10 @@ type Appfwprofilefileuploadtypebinding struct {
 	*/
 	Asfileuploadtypesurl string `json:"as_fileuploadtypes_url,omitempty"`
 	/**
+	* Is field name a regular expression?
+	*/
+	Isnameregex string `json:"isnameregex,omitempty"`
+	/**
 	* Enabled.
 	*/
 	State string `json:"state,omitempty"`
@@ -49,6 +53,10 @@ type Appfwprofilefileuploadtypebinding struct {
 	*/
 	Alertonly string `json:"alertonly,omitempty"`
 	/**
+	* A "id" that identifies the rule.
+	*/
+	Resourceid string `json:"resourceid,omitempty"`
+	/**
 	* Name of the profile to which to bind an exemption or rule.
 	*/
 	Name string `json:"name,omitempty"`
@@ -56,10 +64,6 @@ type Appfwprofilefileuploadtypebinding struct {
 	* Is a regular expression?
 	*/
 	Isregexfileuploadtypesurl string `json:"isregex_fileuploadtypes_url,omitempty"`
-	/**
-	* A "id" that identifies the rule.
-	*/
-	Resourceid string `json:"resourceid,omitempty"`
 	/**
 	* Specifies rule type of binding
 	*/

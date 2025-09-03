@@ -30,5 +30,6 @@ type Lbmonbindings struct {
 	Type string `json:"type,omitempty"`
 	State string `json:"state,omitempty"`
 	Boundservicegroupsvrstate string `json:"boundservicegroupsvrstate,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

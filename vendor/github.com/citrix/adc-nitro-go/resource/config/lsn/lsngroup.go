@@ -61,7 +61,7 @@ type Lsngroup struct {
 		In Dynamic NAT, the Citrix ADC allocates a random NAT port block, from the available NAT port pool of an NAT IP address, for each subscriber. For a subscriber, if all the ports are allocated from the subscriber's allocated port block, the ADC allocates a new random port block for the subscriber.
 		The default port block size is 256 for Deterministic NAT, and 0 for Dynamic NAT.
 	*/
-	Portblocksize int `json:"portblocksize"`
+	Portblocksize int `json:"portblocksize"` // Zero is a valid value
 	/**
 	* Log mapping entries and sessions created or deleted for this LSN group. The Citrix ADC logs LSN sessions for this LSN group only when both logging and session logging parameters are enabled.
 		The ADC uses its existing syslog and audit log framework to log LSN information. You must enable global level LSN logging by enabling the LSN parameter in the related NSLOG action and SYLOG action entities. When the Logging parameter is enabled, the Citrix ADC generates log messages related to LSN mappings and LSN sessions of this LSN group. The ADC then sends these log messages to servers associated with the NSLOG action and SYSLOG actions entities. 
@@ -100,7 +100,7 @@ type Lsngroup struct {
 	/**
 	* Maximum number of SNMP Trap messages that can be generated for the LSN group in one minute.
 	*/
-	Snmptraplimit int `json:"snmptraplimit"`
+	Snmptraplimit int `json:"snmptraplimit"` // Zero is a valid value
 	/**
 	* Enable Application Layer Gateway (ALG) for the FTP protocol. For some application-layer protocols, the IP addresses and protocol port numbers are usually communicated in the packet's payload. When acting as an ALG, the Citrix ADC changes the packet's payload to ensure that the protocol continues to work over LSN. 
 		Note:  The Citrix ADC also includes ALG for ICMP and TFTP protocols. ALG for the ICMP protocol is enabled by default, and there is no provision to disable it. ALG for the TFTP protocol is disabled by default. ALG is enabled automatically for an LSN group when you bind a UDP LSN application profile, with endpoint-independent-mapping, endpoint-independent filtering, and destination port as 69 (well-known port for TFTP), to the LSN group.
@@ -131,5 +131,6 @@ type Lsngroup struct {
 	//------- Read only Parameter ---------;
 
 	Groupid string `json:"groupid,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

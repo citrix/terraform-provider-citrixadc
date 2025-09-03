@@ -33,7 +33,7 @@ type Aaaldapparams struct {
 	*/
 	Authtimeout int `json:"authtimeout,omitempty"`
 	/**
-	* Base (the server and location) from which LDAP search commands should start. 
+	* Base (the server and location) from which LDAP search commands should start.
 		If the LDAP server is running locally, the default value of base is dc=netscaler, dc=com.
 	*/
 	Ldapbase string `json:"ldapbase,omitempty"`
@@ -50,7 +50,7 @@ type Aaaldapparams struct {
 	*/
 	Ldaploginname string `json:"ldaploginname,omitempty"`
 	/**
-	* String to be combined with the default LDAP user search string to form the value to use when executing an LDAP search. 
+	* String to be combined with the default LDAP user search string to form the value to use when executing an LDAP search.
 		For example, the following values:
 		vpnallowed=true,
 		ldaploginame=""samaccount""
@@ -75,7 +75,7 @@ type Aaaldapparams struct {
 	*/
 	Svrtype string `json:"svrtype,omitempty"`
 	/**
-	* Attribute used by the Citrix ADC to query an external LDAP server or Active Directory for an alternative username. 
+	* Attribute used by the Citrix ADC to query an external LDAP server or Active Directory for an alternative username.
 		This alternative username is then used for single sign-on (SSO).
 	*/
 	Ssonameattribute string `json:"ssonameattribute,omitempty"`
@@ -117,5 +117,6 @@ type Aaaldapparams struct {
 	Groupauthname string `json:"groupauthname,omitempty"`
 	Builtin string `json:"builtin,omitempty"`
 	Feature string `json:"feature,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

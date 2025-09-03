@@ -34,6 +34,26 @@ type Appfwprofilejsonsqlurlbinding struct {
 	*/
 	Comment string `json:"comment,omitempty"`
 	/**
+	* Is the key name a regular expression?
+	*/
+	Iskeyregexjsonsql string `json:"iskeyregex_json_sql,omitempty"`
+	/**
+	* An expression that designates a keyname on the JSON SQL URL for which SQL injection violations are relaxed.
+	*/
+	Keynamejsonsql string `json:"keyname_json_sql,omitempty"`
+	/**
+	* Type of the relaxed JSON SQL key value
+	*/
+	Asvaluetypejsonsql string `json:"as_value_type_json_sql,omitempty"`
+	/**
+	* The JSON SQL key value expression.
+	*/
+	Asvalueexprjsonsql string `json:"as_value_expr_json_sql,omitempty"`
+	/**
+	* Is the JSON SQL key value a regular expression?
+	*/
+	Isvalueregexjsonsql string `json:"isvalueregex_json_sql,omitempty"`
+	/**
 	* Is the rule auto deployed by dynamic profile ?
 	*/
 	Isautodeployed string `json:"isautodeployed,omitempty"`
@@ -53,25 +73,6 @@ type Appfwprofilejsonsqlurlbinding struct {
 	* Specifies rule type of binding
 	*/
 	Ruletype string `json:"ruletype,omitempty"`
-	/**
-	* Is the JSON SQL key value a regular expression?
-	*/
-	Isvalueregex_json_sql string `json:"isvalueregex_json_sql,omitempty"`
-	/**
-	* Is the key name a regular expression?
-	*/
-	Iskeyregex_json_sql string `json:"iskeyregex_json_sql,omitempty"`
-	/**
-	* Type of the relaxed JSON SQL key value.
-	*/
-	As_value_type_json_sql string `json:"as_value_type_json_sql,omitempty"`
-	/**
-	* The JSON SQL key value expression.
-	*/
-	As_value_expr_json_sql string `json:"as_value_expr_json_sql,omitempty"`
-	/**
-	* An expression that designates a keyname on the JSON SQL URL for which SQL injection violations are relaxed.
-	*/
-	Keyname_json_sql string `json:"keyname_json_sql,omitempty"`
+
 
 }

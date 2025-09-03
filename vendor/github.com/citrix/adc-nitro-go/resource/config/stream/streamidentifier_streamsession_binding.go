@@ -24,6 +24,10 @@ type Streamidentifierstreamsessionbinding struct {
 	* The name of stream identifier.
 	*/
 	Name string `json:"name,omitempty"`
+	/**
+	* Name of the analytics profile.
+	*/
+	Analyticsprofile string `json:"analyticsprofile,omitempty"`
 
 
 }

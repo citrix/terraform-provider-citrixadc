@@ -74,9 +74,24 @@ type Streamidentifier struct {
 	* Breaching transactions threshold calculated over interval.
 	*/
 	Breachthreshold int `json:"breachthreshold,omitempty"`
+	/**
+	* Location where objects collected on the identifier will be logged.
+	*/
+	Log string `json:"log,omitempty"`
+	/**
+	* Time interval in minutes for logging the collected objects.
+		Log interval should be greater than or equal to the inteval 
+		of the stream identifier.
+	*/
+	Loginterval int `json:"loginterval,omitempty"`
+	/**
+	* Maximum number of objects to be logged in the log interval.
+	*/
+	Loglimit int `json:"loglimit,omitempty"`
 
 	//------- Read only Parameter ---------;
 
 	Rule string `json:"rule,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

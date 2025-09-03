@@ -83,10 +83,10 @@ func TestAccLbvserver_servicegroup_binding_basic(t *testing.T) {
 			{
 				Config: testAccLbvserver_servicegroup_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLbvserver_servicegroup_bindingExist("citrixadc_lbvserver_servicegroup_binding.tf_binding", nil,  map[string]interface{}{}),
-					testAccCheckLbvserver_servicegroup_bindingExist("citrixadc_lbvserver_servicegroup_binding.tf_binding2", nil,  map[string]interface{}{"order": 4}),
-					testAccCheckLbvserver_servicegroup_bindingExist("citrixadc_lbvserver_servicegroup_binding.tf_binding3", nil,  map[string]interface{}{}),
-					testAccCheckLbvserver_servicegroup_bindingExist("citrixadc_lbvserver_servicegroup_binding.tf_binding4", nil,  map[string]interface{}{"order": 4}),
+					testAccCheckLbvserver_servicegroup_bindingExist("citrixadc_lbvserver_servicegroup_binding.tf_binding", nil, map[string]interface{}{}),
+					testAccCheckLbvserver_servicegroup_bindingExist("citrixadc_lbvserver_servicegroup_binding.tf_binding2", nil, map[string]interface{}{"order": 4}),
+					testAccCheckLbvserver_servicegroup_bindingExist("citrixadc_lbvserver_servicegroup_binding.tf_binding3", nil, map[string]interface{}{}),
+					testAccCheckLbvserver_servicegroup_bindingExist("citrixadc_lbvserver_servicegroup_binding.tf_binding4", nil, map[string]interface{}{"order": 4}),
 				),
 			},
 		},
@@ -147,7 +147,7 @@ func testAccCheckLbvserver_servicegroup_bindingExist(n string, id *string, expec
 			return fmt.Errorf("lbvserver_servicegroup_binding %s not found", n)
 		}
 
-				// Iterate through all expected values and validate them
+		// Iterate through all expected values and validate them
 		for key, expectedValue := range expectedValues {
 			if actualValue, exists := data[key]; !exists {
 				return fmt.Errorf("Expected key %q not found in retrieved data", key)

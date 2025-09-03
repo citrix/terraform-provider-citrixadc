@@ -68,4 +68,8 @@ type Lsnappsprofile struct {
 	*/
 	L2info string `json:"l2info,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

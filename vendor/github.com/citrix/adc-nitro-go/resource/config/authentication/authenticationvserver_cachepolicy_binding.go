@@ -29,6 +29,10 @@ type Authenticationvservercachepolicybinding struct {
 	*/
 	Priority int `json:"priority,omitempty"`
 	/**
+	* Bindpoint to which the policy is bound.
+	*/
+	Bindpoint string `json:"bindpoint,omitempty"`
+	/**
 	* Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 	*/
 	Gotopriorityexpression string `json:"gotopriorityexpression,omitempty"`
@@ -48,10 +52,6 @@ type Authenticationvservercachepolicybinding struct {
 	* Applicable only while binding advance authentication policy as classic authentication policy does not support nFactor
 	*/
 	Nextfactor string `json:"nextfactor,omitempty"`
-	/**
-	* Bind point to which to bind the policy. Applies only to rewrite and cache policies. If you do not set this parameter, the policy is bound to REQ_DEFAULT or RES_DEFAULT, depending on whether the policy rule is a response-time or a request-time expression.
-	*/
-	Bindpoint string `json:"bindpoint,omitempty"`
 
 
 }

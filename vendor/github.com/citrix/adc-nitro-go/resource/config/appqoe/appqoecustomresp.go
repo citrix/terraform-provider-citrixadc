@@ -26,4 +26,8 @@ type Appqoecustomresp struct {
 	*/
 	Name string `json:"name,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

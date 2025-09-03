@@ -63,16 +63,16 @@ type Gslbvserver struct {
 		This field is applicable only if gslb method or gslb backup method are set to API.
 		The following requirements apply only to the Citrix ADC CLI:
 		* If the expression includes one or more spaces, enclose the entire expression in double quotation marks.
-		* If the expression itself includes double quotation marks, escape the quotations by using the \ character. 
+		* If the expression itself includes double quotation marks, escape the quotations by using the \ character.
 		* Alternatively, you can use single quotation marks to enclose the rule, in which case you do not have to escape the double quotation marks.
 	*/
 	Rule string `json:"rule,omitempty"`
 	/**
-	* Site selection tolerance, in milliseconds, for implementing the RTT load balancing method. If a site's RTT deviates from the lowest RTT by more than the specified tolerance, the site is not considered when the Citrix ADC makes a GSLB decision. The appliance implements the round robin method of global server load balancing between sites whose RTT values are within the specified tolerance. If the tolerance is 0 (zero), the appliance always sends clients the IP address of the site with the lowest RTT.
+	* Tolerance in milliseconds. Tolerance value is used in deciding which sites in a GSLB configuration must be considered for implementing the RTT load balancing method. The sites having the RTT value less than or equal to the sum of the lowest RTT and tolerance value are considered. NetScaler implements the round robin method of global server load balancing among these considered sites. The sites that have RTT value greater than this value are not considered. The logic is applied for each LDNS and based on the LDNS, the sites that are considered might change. For example, a site that is considered for requests coming from LDNS1 might not be considered for requests coming from LDNS2.
 	*/
 	Tolerance int `json:"tolerance,omitempty"`
 	/**
-	* Use source IP address based persistence for the virtual server. 
+	* Use source IP address based persistence for the virtual server.
 		After the load balancing method selects a service for the first packet, the IP address received in response to the DNS query is used for subsequent requests from the same client.
 	*/
 	Persistencetype string `json:"persistencetype,omitempty"`
@@ -121,7 +121,7 @@ type Gslbvserver struct {
 	*/
 	State string `json:"state,omitempty"`
 	/**
-	* If the primary state of all bound GSLB services is DOWN, consider the effective states of all the GSLB services, obtained through the Metrics Exchange Protocol (MEP), when determining the state of the GSLB virtual server. To consider the effective state, set the parameter to STATE_ONLY. To disregard the effective state, set the parameter to NONE. 
+	* If the primary state of all bound GSLB services is DOWN, consider the effective states of all the GSLB services, obtained through the Metrics Exchange Protocol (MEP), when determining the state of the GSLB virtual server. To consider the effective state, set the parameter to STATE_ONLY. To disregard the effective state, set the parameter to NONE.
 		The effective state of a GSLB service is the ability of the corresponding virtual server to serve traffic. The effective state of the load balancing virtual server, which is transferred to the GSLB service, is UP even if only one virtual server in the backup chain of virtual servers is in the UP state.
 	*/
 	Considereffectivestate string `json:"considereffectivestate,omitempty"`
@@ -133,8 +133,8 @@ type Gslbvserver struct {
 	* Type of threshold that, when exceeded, triggers spillover. Available settings function as follows:
 		* CONNECTION - Spillover occurs when the number of client connections exceeds the threshold.
 		* DYNAMICCONNECTION - Spillover occurs when the number of client connections at the GSLB virtual server exceeds the sum of the maximum client (Max Clients) settings for bound GSLB services. Do not specify a spillover threshold for this setting, because the threshold is implied by the Max Clients settings of the bound GSLB services.
-		* BANDWIDTH - Spillover occurs when the bandwidth consumed by the GSLB virtual server's incoming and outgoing traffic exceeds the threshold. 
-		* HEALTH - Spillover occurs when the percentage of weights of the GSLB services that are UP drops below the threshold. For example, if services gslbSvc1, gslbSvc2, and gslbSvc3 are bound to a virtual server, with weights 1, 2, and 3, and the spillover threshold is 50%, spillover occurs if gslbSvc1 and gslbSvc3 or gslbSvc2 and gslbSvc3 transition to DOWN. 
+		* BANDWIDTH - Spillover occurs when the bandwidth consumed by the GSLB virtual server's incoming and outgoing traffic exceeds the threshold.
+		* HEALTH - Spillover occurs when the percentage of weights of the GSLB services that are UP drops below the threshold. For example, if services gslbSvc1, gslbSvc2, and gslbSvc3 are bound to a virtual server, with weights 1, 2, and 3, and the spillover threshold is 50%, spillover occurs if gslbSvc1 and gslbSvc3 or gslbSvc2 and gslbSvc3 transition to DOWN.
 		* NONE - Spillover does not occur.
 	*/
 	Somethod string `json:"somethod,omitempty"`
@@ -159,6 +159,14 @@ type Gslbvserver struct {
 	*/
 	Appflowlog string `json:"appflowlog,omitempty"`
 	/**
+	* Configure this option to toggle order preference
+	*/
+	Toggleorder string `json:"toggleorder,omitempty"`
+	/**
+	* This option is used to to specify the threshold of minimum number of services to be UP in an order, for it to be considered in Lb decision.
+	*/
+	Orderthreshold int `json:"orderthreshold,omitempty"`
+	/**
 	* Name of the backup GSLB virtual server to which the appliance should to forward requests if the status of the primary GSLB virtual server is down or exceeds its spillover threshold.
 	*/
 	Backupvserver string `json:"backupvserver,omitempty"`
@@ -167,9 +175,13 @@ type Gslbvserver struct {
 	*/
 	Servicename string `json:"servicename,omitempty"`
 	/**
-	* Weight to assign to the GSLB service.
+	* Weight for the service.
 	*/
 	Weight int `json:"weight,omitempty"`
+	/**
+	* The GSLB service group name bound to the selected GSLB virtual server.
+	*/
+	Servicegroupname string `json:"servicegroupname,omitempty"`
 	/**
 	* Domain name for which to change the time to live (TTL) and/or backup service IP address.
 	*/
@@ -194,6 +206,10 @@ type Gslbvserver struct {
 	* TTL, in seconds, for all internally created site domains (created when a site prefix is configured on a GSLB service) that are associated with this virtual server.
 	*/
 	Sitedomainttl int `json:"sitedomainttl,omitempty"`
+	/**
+	* Order number to be assigned to the service when it is bound to the lb vserver.
+	*/
+	Order int `json:"order,omitempty"`
 	/**
 	* New name for the GSLB virtual server.
 	*/
@@ -220,5 +236,7 @@ type Gslbvserver struct {
 	Vsvrbindsvcport string `json:"vsvrbindsvcport,omitempty"`
 	Servername string `json:"servername,omitempty"`
 	Nodefaultbindings string `json:"nodefaultbindings,omitempty"`
+	Currentactiveorder string `json:"currentactiveorder,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

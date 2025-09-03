@@ -48,5 +48,15 @@ type Install struct {
 	* Use this flag to change swap size on ONLY 64bit nCore/MCNS/VMPE systems NON-VPX systems.
 	*/
 	Resizeswapvar bool `json:"resizeswapvar,omitempty"`
+	/**
+	* Use this flag to return the install id when the nitro api request is sent.
+		The id can be used later to track the installation progress via show ns job <id> command.
+		For the cli request of install the flag is by default set as false as the installation progress details can be tracked via cli
+	*/
+	Async bool `json:"Async,omitempty"`
+
+	//------- Read only Parameter ---------;
+
+	Id string `json:"id,omitempty"`
 
 }

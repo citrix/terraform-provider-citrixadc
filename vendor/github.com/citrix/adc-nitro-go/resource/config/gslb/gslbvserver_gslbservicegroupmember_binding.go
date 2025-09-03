@@ -41,7 +41,7 @@ type Gslbvservergslbservicegroupmemberbinding struct {
 	*/
 	Curstate string `json:"curstate,omitempty"`
 	/**
-	* Weight to assign to the GSLB service.
+	* Weight for the service.
 	*/
 	Weight int `json:"weight,omitempty"`
 	/**
@@ -72,6 +72,14 @@ type Gslbvservergslbservicegroupmemberbinding struct {
 	* Type of Site Persistence set on the bound service
 	*/
 	Svcsitepersistence string `json:"svcsitepersistence,omitempty"`
+	/**
+	* Order number to be assigned to the service when it is bound to the lb vserver.
+	*/
+	Order int `json:"order,omitempty"`
+	/**
+	* Order number in string form assigned to the service when it is bound to the lb vserver.
+	*/
+	Orderstr string `json:"orderstr,omitempty"`
 	/**
 	* Name of the virtual server on which to perform the binding operation.
 	*/

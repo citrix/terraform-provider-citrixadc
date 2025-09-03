@@ -33,4 +33,8 @@ type Nat64 struct {
 	*/
 	Netprofile string `json:"netprofile,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

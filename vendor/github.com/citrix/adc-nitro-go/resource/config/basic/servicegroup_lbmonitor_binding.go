@@ -72,6 +72,10 @@ type Servicegrouplbmonitorbinding struct {
 	* Specify the TTL for DNS record for domain based service.The default value of ttl is 0 which indicates to use the TTL received in DNS response for monitors
 	*/
 	Dbsttl int `json:"dbsttl,omitempty"`
+	/**
+	* Order number to be assigned to the servicegroup member
+	*/
+	Order int `json:"order,omitempty"`
 
 
 }

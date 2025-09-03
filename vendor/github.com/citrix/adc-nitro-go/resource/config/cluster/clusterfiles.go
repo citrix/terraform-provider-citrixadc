@@ -27,8 +27,6 @@ type Clusterfiles struct {
 		/var/netscaler/ssl/
 		/var/vpn/bookmark/
 		/nsconfig/dns/
-		/nsconfig/htmlinjection/
-		/netscaler/htmlinjection/ens/
 		/nsconfig/monitors/
 		/nsconfig/nstemplates/
 		/nsconfig/ssh/
@@ -54,7 +52,6 @@ type Clusterfiles struct {
 		/var/netscaler/ssl/
 		bookmarks     /var/vpn/bookmark/
 		dns                  /nsconfig/dns/
-		htmlinjection    /nsconfig/htmlinjection/
 		imports          /var/download/
 		misc               /nsconfig/license/
 		/nsconfig/rc.conf

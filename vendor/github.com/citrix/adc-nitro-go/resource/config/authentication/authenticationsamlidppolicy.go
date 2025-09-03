@@ -30,7 +30,7 @@ type Authenticationsamlidppolicy struct {
 	* Expression which is evaluated to choose a profile for authentication.
 		The following requirements apply only to the Citrix ADC CLI:
 		* If the expression includes one or more spaces, enclose the entire expression in double quotation marks.
-		* If the expression itself includes double quotation marks, escape the quotations by using the \ character. 
+		* If the expression itself includes double quotation marks, escape the quotations by using the \ character.
 		* Alternatively, you can use single quotation marks to enclose the rule, in which case you do not have to escape the double quotation marks.
 	*/
 	Rule string `json:"rule,omitempty"`
@@ -51,7 +51,7 @@ type Authenticationsamlidppolicy struct {
 	*/
 	Logaction string `json:"logaction,omitempty"`
 	/**
-	* New name for the SAML IdentityProvider policy. 
+	* New name for the SAML IdentityProvider policy.
 		Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) hash (#), space ( ), at (@), equals (=), colon (:), and underscore characters.
 		The following requirement applies only to the Citrix ADC CLI:
 		If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my samlidppolicy policy" or 'my samlidppolicy policy').
@@ -62,5 +62,6 @@ type Authenticationsamlidppolicy struct {
 
 	Gotopriorityexpression string `json:"gotopriorityexpression,omitempty"`
 	Hits string `json:"hits,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

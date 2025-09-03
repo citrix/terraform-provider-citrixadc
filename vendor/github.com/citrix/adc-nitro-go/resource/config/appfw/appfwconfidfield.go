@@ -43,4 +43,8 @@ type Appfwconfidfield struct {
 	*/
 	State string `json:"state,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

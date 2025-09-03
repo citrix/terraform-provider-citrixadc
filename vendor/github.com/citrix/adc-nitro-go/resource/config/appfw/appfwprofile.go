@@ -61,7 +61,7 @@ type Appfwprofile struct {
 	*/
 	Contenttypeaction []string `json:"contenttypeaction,omitempty"`
 	/**
-	* One or more InspectContentType lists. 
+	* One or more InspectContentType lists.
 		* application/x-www-form-urlencoded
 		* multipart/form-data
 		* text/x-gwt-rpc
@@ -83,8 +83,8 @@ type Appfwprofile struct {
 	*/
 	Denyurlaction []string `json:"denyurlaction,omitempty"`
 	/**
-	* Enable validation of Referer headers. 
-		Referer validation ensures that a web form that a user sends to your web site originally came from your web site, not an outside attacker. 
+	* Enable validation of Referer headers.
+		Referer validation ensures that a web form that a user sends to your web site originally came from your web site, not an outside attacker.
 		Although this parameter is part of the Start URL check, referer validation protects against cross-site request forgery (CSRF) attacks, not Start URL attacks.
 	*/
 	Refererheadercheck string `json:"refererheadercheck,omitempty"`
@@ -109,8 +109,8 @@ type Appfwprofile struct {
 	*/
 	Cookiehijackingaction []string `json:"cookiehijackingaction,omitempty"`
 	/**
-	* Perform the specified type of cookie transformation. 
-		Available settings function as follows: 
+	* Perform the specified type of cookie transformation.
+		Available settings function as follows:
 		* Encryption - Encrypt cookies.
 		* Proxying - Mask contents of server cookies by sending proxy cookie to users.
 		* Cookie flags - Flag cookies as HTTP only to prevent scripts on user's browser from accessing and possibly modifying them.
@@ -170,7 +170,7 @@ type Appfwprofile struct {
 	*/
 	Crosssitescriptingaction []string `json:"crosssitescriptingaction,omitempty"`
 	/**
-	* Transform cross-site scripts. This setting configures the application firewall to disable dangerous HTML instead of blocking the request. 
+	* Transform cross-site scripts. This setting configures the application firewall to disable dangerous HTML instead of blocking the request.
 		CAUTION: Make sure that this parameter is set to ON if you are configuring any cross-site scripting transformations. If it is set to OFF, no cross-site scripting transformations are performed regardless of any other settings.
 	*/
 	Crosssitescriptingtransformunsafehtml string `json:"crosssitescriptingtransformunsafehtml,omitempty"`
@@ -198,17 +198,58 @@ type Appfwprofile struct {
 	*/
 	Cmdinjectionaction []string `json:"cmdinjectionaction,omitempty"`
 	/**
-	* Available CMD injection types. 
+	* Available CMD injection types.
 		-CMDSplChar              : Checks for CMD Special Chars
 		-CMDKeyword              : Checks for CMD Keywords
 		-CMDSplCharANDKeyword    : Checks for both and blocks if both are found
-		-CMDSplCharORKeyword     : Checks for both and blocks if anyone is found
+		-CMDSplCharORKeyword     : Checks for both and blocks if anyone is found,
+		-None                    : Disables checking using both CMD Special Char and Keyword
 	*/
 	Cmdinjectiontype string `json:"cmdinjectiontype,omitempty"`
 	/**
 	* Check for SQL injection using SQL grammar
 	*/
 	Sqlinjectiongrammar string `json:"sqlinjectiongrammar,omitempty"`
+	/**
+	* Check for CMD injection using CMD grammar
+	*/
+	Cmdinjectiongrammar string `json:"cmdinjectiongrammar,omitempty"`
+	/**
+	* Check if formfield limit scan is ON or OFF.
+	*/
+	Fieldscan string `json:"fieldscan,omitempty"`
+	/**
+	*  Field scan limit value for HTML
+	*/
+	Fieldscanlimit int `json:"fieldscanlimit,omitempty"`
+	/**
+	* Check if JSON field limit scan is ON or OFF.
+	*/
+	Jsonfieldscan string `json:"jsonfieldscan,omitempty"`
+	/**
+	*  Field scan limit value for JSON
+	*/
+	Jsonfieldscanlimit int `json:"jsonfieldscanlimit,omitempty"`
+	/**
+	* Check if HTML message limit scan is ON or OFF
+	*/
+	Messagescan string `json:"messagescan,omitempty"`
+	/**
+	* Message scan limit value for HTML
+	*/
+	Messagescanlimit int `json:"messagescanlimit,omitempty"`
+	/**
+	* Check if JSON message limit scan is ON or OFF
+	*/
+	Jsonmessagescan string `json:"jsonmessagescan,omitempty"`
+	/**
+	* Message scan limit value for JSON
+	*/
+	Jsonmessagescanlimit int `json:"jsonmessagescanlimit,omitempty"`
+	/**
+	* Enable Message Scan Limit for following content types.
+	*/
+	Messagescanlimitcontenttypes []string `json:"messagescanlimitcontenttypes,omitempty"`
 	/**
 	* Transform injected SQL code. This setting configures the application firewall to disable SQL special strings instead of blocking the request. Since most SQL servers require a special string to activate an SQL keyword, in most cases a request that contains injected SQL code is safe if special strings are disabled.
 		CAUTION: Make sure that this parameter is set to ON if you are configuring any SQL injection transformations. If it is set to OFF, no SQL injection transformations are performed regardless of any other settings.
@@ -220,7 +261,7 @@ type Appfwprofile struct {
 	*/
 	Sqlinjectiononlycheckfieldswithsqlchars string `json:"sqlinjectiononlycheckfieldswithsqlchars,omitempty"`
 	/**
-	* Available SQL injection types. 
+	* Available SQL injection types.
 		-SQLSplChar              : Checks for SQL Special Chars
 		-SQLKeyword		 : Checks for SQL Keywords
 		-SQLSplCharANDKeyword    : Checks for both and blocks if both are found
@@ -247,7 +288,7 @@ type Appfwprofile struct {
 	*/
 	Defaultfieldformattype string `json:"defaultfieldformattype,omitempty"`
 	/**
-	* Minimum length, in characters, for data entered into a field that is assigned the default field type. 
+	* Minimum length, in characters, for data entered into a field that is assigned the default field type.
 		To disable the minimum and maximum length settings and allow data of any length to be entered into the field, set this parameter to zero (0).
 	*/
 	Defaultfieldformatminlength int `json:"defaultfieldformatminlength,omitempty"`
@@ -255,6 +296,10 @@ type Appfwprofile struct {
 	* Maximum length, in characters, for data entered into a field that is assigned the default field type.
 	*/
 	Defaultfieldformatmaxlength int `json:"defaultfieldformatmaxlength,omitempty"`
+	/**
+	* Maxiumum allowed occurrences of the form field name in a request.
+	*/
+	Defaultfieldformatmaxoccurrences int `json:"defaultfieldformatmaxoccurrences,omitempty"`
 	/**
 	* One or more Buffer Overflow actions. Available settings function as follows:
 		* Block - Block connections that violate this security check.
@@ -264,6 +309,14 @@ type Appfwprofile struct {
 		CLI users: To enable one or more actions, type "set appfw profile -bufferOverflowAction" followed by the actions to be enabled. To turn off all actions, type "set appfw profile -bufferOverflowAction none".
 	*/
 	Bufferoverflowaction []string `json:"bufferoverflowaction,omitempty"`
+	/**
+	* gRPC validation
+	*/
+	Grpcaction []string `json:"grpcaction,omitempty"`
+	/**
+	* rest validation
+	*/
+	Restaction []string `json:"restaction,omitempty"`
 	/**
 	* Maximum length, in characters, for URLs on your protected web sites. Requests with longer URLs are blocked.
 	*/
@@ -318,12 +371,12 @@ type Appfwprofile struct {
 	*/
 	Trace string `json:"trace,omitempty"`
 	/**
-	* Default Content-Type header for requests. 
+	* Default Content-Type header for requests.
 		A Content-Type header can contain 0-255 letters, numbers, and the hyphen (-) and underscore (_) characters.
 	*/
 	Requestcontenttype string `json:"requestcontenttype,omitempty"`
 	/**
-	* Default Content-Type header for responses. 
+	* Default Content-Type header for responses.
 		A Content-Type header can contain 0-255 letters, numbers, and the hyphen (-) and underscore (_) characters.
 	*/
 	Responsecontenttype string `json:"responsecontenttype,omitempty"`
@@ -334,7 +387,15 @@ type Appfwprofile struct {
 	*/
 	Jsonerrorobject string `json:"jsonerrorobject,omitempty"`
 	/**
-	* Response status code associated with JSON error page
+	* Name of the API Specification.
+	*/
+	Apispec string `json:"apispec,omitempty"`
+	/**
+	* Name of the imported proto file.
+	*/
+	Protofileobject string `json:"protofileobject,omitempty"`
+	/**
+	* Response status code associated with JSON error page. Non-empty JSON error object must be imported to the application firewall profile for the status code.
 	*/
 	Jsonerrorstatuscode int `json:"jsonerrorstatuscode,omitempty"`
 	/**
@@ -386,9 +447,14 @@ type Appfwprofile struct {
 		-CMDSplChar              : Checks for CMD Special Chars
 		-CMDKeyword              : Checks for CMD Keywords
 		-CMDSplCharANDKeyword    : Checks for both and blocks if both are found
-		-CMDSplCharORKeyword     : Checks for both and blocks if anyone is found
+		-CMDSplCharORKeyword     : Checks for both and blocks if anyone is found,
+		-None                    : Disables checking using both SQL Special Char and Keyword
 	*/
 	Jsoncmdinjectiontype string `json:"jsoncmdinjectiontype,omitempty"`
+	/**
+	* Check for CMD injection using CMD grammar in JSON
+	*/
+	Jsoncmdinjectiongrammar string `json:"jsoncmdinjectiongrammar,omitempty"`
 	/**
 	* One or more JSON Cross-Site Scripting actions. Available settings function as follows:
 		* Block - Block connections that violate this security check.
@@ -445,7 +511,7 @@ type Appfwprofile struct {
 	/**
 	* Parse comments in XML Data and exempt those sections of the request that are from the XML SQL Injection check. You must configure the type of comments that the application firewall is to detect and exempt from this security check. Available settings function as follows:
 		* Check all - Check all content.
-		* ANSI - Exempt content that is part of an ANSI (Mozilla-style) comment. 
+		* ANSI - Exempt content that is part of an ANSI (Mozilla-style) comment.
 		* Nested - Exempt content that is part of a nested (Microsoft-style) comment.
 		* ANSI Nested - Exempt content that is part of any type of comment.
 	*/
@@ -484,7 +550,7 @@ type Appfwprofile struct {
 		* Block - Block connections that violate this security check.
 		* Log - Log violations of this security check.
 		* Stats - Generate statistics for this security check.
-		* None - Disable all actions for this security check. 
+		* None - Disable all actions for this security check.
 		CLI users: To enable one or more actions, type "set appfw profile -XMLValidationAction" followed by the actions to be enabled. To turn off all actions, type "set appfw profile -XMLValidationAction none".
 	*/
 	Xmlvalidationaction []string `json:"xmlvalidationaction,omitempty"`
@@ -496,7 +562,7 @@ type Appfwprofile struct {
 	*/
 	Xmlerrorobject string `json:"xmlerrorobject,omitempty"`
 	/**
-	* Response status code associated with XML error page
+	* Response status code associated with XML error page. Non-empty XML error object must be imported to the application firewall profile for the status code.
 	*/
 	Xmlerrorstatuscode int `json:"xmlerrorstatuscode,omitempty"`
 	/**
@@ -532,14 +598,14 @@ type Appfwprofile struct {
 	*/
 	Errorurl string `json:"errorurl,omitempty"`
 	/**
-	* Name to assign to the HTML Error Object. 
+	* Name to assign to the HTML Error Object.
 		Must begin with a letter, number, or the underscore character \(_\), and must contain only letters, numbers, and the hyphen \(-\), period \(.\) pound \(\#\), space \( \), at (@), equals \(=\), colon \(:\), and underscore characters. Cannot be changed after the HTML error object is added.
 		The following requirement applies only to the Citrix ADC CLI:
 		If the name includes one or more spaces, enclose the name in double or single quotation marks \(for example, "my HTML error object" or 'my HTML error object'\).
 	*/
 	Htmlerrorobject string `json:"htmlerrorobject,omitempty"`
 	/**
-	* Response status code associated with HTML error page
+	* Response status code associated with HTML error page. Non-empty HTML error object must be imported to the application firewall profile for the status code.
 	*/
 	Htmlerrorstatuscode int `json:"htmlerrorstatuscode,omitempty"`
 	/**
@@ -568,7 +634,7 @@ type Appfwprofile struct {
 	*/
 	Exemptclosureurlsfromsecuritychecks string `json:"exemptclosureurlsfromsecuritychecks,omitempty"`
 	/**
-	* Default character set for protected web pages. Web pages sent by your protected web sites in response to user requests are assigned this character set if the page does not already specify a character set. The character sets supported by the application firewall are: 
+	* Default character set for protected web pages. Web pages sent by your protected web sites in response to user requests are assigned this character set if the page does not already specify a character set. The character sets supported by the application firewall are:
 		* iso-8859-1 (English US)
 		* big5 (Chinese Traditional)
 		* gb2312 (Chinese Simplified)
@@ -579,6 +645,10 @@ type Appfwprofile struct {
 		* euc-kr (Korean)
 	*/
 	Defaultcharset string `json:"defaultcharset,omitempty"`
+	/**
+	* Expression to get the client IP.
+	*/
+	Clientipexpression string `json:"clientipexpression,omitempty"`
 	/**
 	* One or more security checks. Available options are as follows:
 		* SQLInjection - Enable dynamic learning for SQLInjection security check.
@@ -636,14 +706,13 @@ type Appfwprofile struct {
 	/**
 	* Parse HTML comments and exempt them from the HTML SQL Injection check. You must specify the type of comments that the application firewall is to detect and exempt from this security check. Available settings function as follows:
 		* Check all - Check all content.
-		* ANSI - Exempt content that is part of an ANSI (Mozilla-style) comment. 
+		* ANSI - Exempt content that is part of an ANSI (Mozilla-style) comment.
 		* Nested - Exempt content that is part of a nested (Microsoft-style) comment.
 		* ANSI Nested - Exempt content that is part of any type of comment.
 	*/
 	Sqlinjectionparsecomments string `json:"sqlinjectionparsecomments,omitempty"`
 	/**
-	* Configure the method that the application firewall uses to handle percent-encoded names and values. Available settings function as follows: 
-		* apache_mode - Apache format.
+	* Configure the method that the application firewall uses to handle percent-encoded names and values. Available settings function as follows:
 		* asp_mode - Microsoft ASP format.
 		* secure_mode - Secure format.
 	*/
@@ -669,7 +738,7 @@ type Appfwprofile struct {
 	Inspectquerycontenttypes []string `json:"inspectquerycontenttypes,omitempty"`
 	/**
 	* Optimize handle of HTTP partial requests i.e. those with range headers.
-		Available settings are as follows: 
+		Available settings are as follows:
 		* ON  - Partial requests by the client result in partial requests to the backend server in most cases.
 		* OFF - Partial requests by the client are changed to full requests to the backend server
 	*/
@@ -691,6 +760,14 @@ type Appfwprofile struct {
 		* Block - Block connections that have multiple headers.
 		* Log - Log connections that have multiple headers.
 		* KeepLast - Keep only last header when multiple headers are present.
+		Request headers inspected:
+		* Accept-Encoding
+		* Content-Encoding
+		* Content-Range
+		* Content-Type
+		* Host
+		* Range
+		* Referer
 		CLI users: To enable one or more actions, type "set appfw profile -multipleHeaderAction" followed by the actions to be enabled.
 	*/
 	Multipleheaderaction []string `json:"multipleheaderaction,omitempty"`
@@ -723,6 +800,51 @@ type Appfwprofile struct {
 	* Specifies SQL Injection rule type: ALLOW/DENY. If ALLOW rule type is configured then allow list rules are used, if DENY rule type is configured then deny rules are used.
 	*/
 	Sqlinjectionruletype string `json:"sqlinjectionruletype,omitempty"`
+	/**
+	* Fake account detection flag : ON/OFF. If set to ON fake account detection in enabled on ADC, if set to OFF fake account detection is disabled.
+	*/
+	Fakeaccountdetection string `json:"fakeaccountdetection,omitempty"`
+	/**
+	* Enable Geo-Location Logging in CEF format logs for the profile.
+	*/
+	Geolocationlogging string `json:"geolocationlogging,omitempty"`
+	/**
+	* Enable CEF format logs for the profile.
+	*/
+	Ceflogging string `json:"ceflogging,omitempty"`
+	/**
+	* Block Keyword action. Available settings function as follows:
+		* Block - Block connections that violate this security check.
+		* Log - Log violations of this security check.
+		* Stats - Generate statistics for this security check.
+		* None - Disable all actions for this security check.
+		CLI users: To enable one or more actions, type "set appfw profile -blockKeywordAction" followed by the actions to be enabled. To turn off all actions, type "set appfw profile -blockKeywordAction none".
+	*/
+	Blockkeywordaction []string `json:"blockkeywordaction,omitempty"`
+	/**
+	* JSON Block Keyword action. Available settings function as follows:
+		* Block - Block connections that violate this security check.
+		* Log - Log violations of this security check.
+		* Stats - Generate statistics for this security check.
+		* None - Disable all actions for this security check.
+		CLI users: To enable one or more actions, type "set appfw profile -JSONBlockKeywordAction" followed by the actions to be enabled. To turn off all actions, type "set appfw profile -JSONBlockKeywordAction none".
+	*/
+	Jsonblockkeywordaction []string `json:"jsonblockkeywordaction,omitempty"`
+	/**
+	* Enable bypass list for the profile.
+	*/
+	Asprofbypasslistenable string `json:"as_prof_bypass_list_enable,omitempty"`
+	/**
+	* Enable deny list for the profile.
+	*/
+	Asprofdenylistenable string `json:"as_prof_deny_list_enable,omitempty"`
+	/**
+	* Name of the session cookie that the application firewall uses to track user sessions.
+		Must begin with a letter or number, and can consist of from 1 to 31 letters, numbers, and the hyphen (-) and underscore (_) symbols.
+		The following requirement applies only to the Citrix ADC CLI:
+		If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my cookie name" or 'my cookie name').
+	*/
+	Sessioncookiename string `json:"sessioncookiename,omitempty"`
 	/**
 	* Source for tar archive.
 	*/
@@ -758,5 +880,6 @@ type Appfwprofile struct {
 	Learning string `json:"learning,omitempty"`
 	Csrftag string `json:"csrftag,omitempty"`
 	Builtin string `json:"builtin,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

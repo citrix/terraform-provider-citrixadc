@@ -89,6 +89,18 @@ type Servicegroupservicegroupmemberbinding struct {
 	*/
 	Trofsreason string `json:"trofsreason,omitempty"`
 	/**
+	* Order number to be assigned to the servicegroup member
+	*/
+	Order int `json:"order,omitempty"`
+	/**
+	* Order number in string form to be assigned to the servicegroup member
+	*/
+	Orderstr string `json:"orderstr,omitempty"`
+	/**
+	* Delay before moving to TROFS
+	*/
+	Trofsdelay int `json:"trofsdelay,omitempty"`
+	/**
 	* Name of the service group.
 	*/
 	Servicegroupname string `json:"servicegroupname,omitempty"`

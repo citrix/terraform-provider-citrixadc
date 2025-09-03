@@ -49,6 +49,10 @@ type Botprofiletpsbinding struct {
 	*/
 	Botbindcomment string `json:"bot_bind_comment,omitempty"`
 	/**
+	* Enabled or disabled TPS binding.
+	*/
+	Bottpsenabled string `json:"bot_tps_enabled,omitempty"`
+	/**
 	* Name for the profile. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.), pound (#), space ( ), at (@), equals (=), colon (:), and underscore (_) characters. Cannot be changed after the profile is added.
 		The following requirement applies only to the Citrix ADC CLI:
 		If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my profile" or 'my profile').

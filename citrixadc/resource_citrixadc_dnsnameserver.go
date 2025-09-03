@@ -164,7 +164,8 @@ func readDnsnameserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("dnsprofilename", data["dnsprofilename"])
 	d.Set("dnsvservername", data["dnsvservername"])
 	d.Set("ip", data["ip"])
-	d.Set("local", data["local"])
+	// attribute local is not part of GET response.
+	d.Set("local", d.Get("local").(bool))
 	d.Set("state", data["state"])
 	d.Set("type", data["type"])
 

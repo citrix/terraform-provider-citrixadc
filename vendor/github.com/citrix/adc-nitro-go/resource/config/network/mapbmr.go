@@ -35,7 +35,7 @@ type Mapbmr struct {
 	*/
 	Psidoffset int `json:"psidoffset,omitempty"`
 	/**
-	* The Embedded Address (EA) bit field encodes the CE-specific IPv4 address and port information.  The EA bit field, which is unique for a 
+	* The Embedded Address (EA) bit field encodes the CE-specific IPv4 address and port information.  The EA bit field, which is unique for a
 		given Rule IPv6 prefix.
 	*/
 	Eabitlength int `json:"eabitlength,omitempty"`
@@ -43,5 +43,9 @@ type Mapbmr struct {
 	* Length of Port Set IdentifierPort Set Identifier(PSID) in Embedded Address (EA) bits
 	*/
 	Psidlength int `json:"psidlength,omitempty"`
+
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

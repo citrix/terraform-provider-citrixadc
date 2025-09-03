@@ -69,5 +69,7 @@ type Callhome struct {
 	Memthrefirstanomaly string `json:"memthrefirstanomaly,omitempty"`
 	Memthrelatestanomaly string `json:"memthrelatestanomaly,omitempty"`
 	Callhomestatus string `json:"callhomestatus,omitempty"`
+	Anomalydetection string `json:"anomalydetection,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

@@ -33,4 +33,8 @@ type Vridparam struct {
 	*/
 	Deadinterval int `json:"deadinterval,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

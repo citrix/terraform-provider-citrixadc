@@ -116,5 +116,6 @@ type Subscribergxinterface struct {
 	Gxreportingavp5 string `json:"gxreportingavp5,omitempty"`
 	Gxreportingavp5vendorid string `json:"gxreportingavp5vendorid,omitempty"`
 	Gxreportingavp5type string `json:"gxreportingavp5type,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

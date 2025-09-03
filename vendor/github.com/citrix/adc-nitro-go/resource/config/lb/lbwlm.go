@@ -45,5 +45,6 @@ type Lbwlm struct {
 
 	Secure string `json:"secure,omitempty"`
 	State string `json:"state,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

@@ -72,5 +72,6 @@ type Vpnintranetapplication struct {
 	//------- Read only Parameter ---------;
 
 	Ipaddress string `json:"ipaddress,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

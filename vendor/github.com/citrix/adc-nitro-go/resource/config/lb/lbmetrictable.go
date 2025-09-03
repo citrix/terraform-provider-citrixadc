@@ -21,7 +21,7 @@ package lb
 */
 type Lbmetrictable struct {
 	/**
-	* Name for the metric table. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. 
+	* Name for the metric table. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters.
 		CLI Users: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my metrictable" or 'my metrictable').
 	*/
 	Metrictable string `json:"metrictable,omitempty"`
@@ -39,5 +39,6 @@ type Lbmetrictable struct {
 	Metrictype string `json:"metrictype,omitempty"`
 	Builtin string `json:"builtin,omitempty"`
 	Feature string `json:"feature,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

@@ -104,14 +104,10 @@ func testAccCheckGslbsiteDestroy(s *terraform.State) error {
 }
 
 const testAccGslbsite_basic = `
-
-
 resource "citrixadc_gslbsite" "foo" {
-
   siteipaddress = "172.31.11.20"
   sitename = "Site-GSLB-East-Coast"
   sitepassword = "password123"
-
 }
 `
 

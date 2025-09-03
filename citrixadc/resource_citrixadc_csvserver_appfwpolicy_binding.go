@@ -4,25 +4,13 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/citrix/adc-nitro-go/resource/config/cs"
 	"github.com/citrix/adc-nitro-go/service"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"log"
 )
-
-type Csvserverappfwpolicybinding struct {
-	Bindpoint              string `json:"bindpoint,omitempty"`
-	Gotopriorityexpression string `json:"gotopriorityexpression,omitempty"`
-	Invoke                 bool   `json:"invoke,omitempty"`
-	Labelname              string `json:"labelname,omitempty"`
-	Labeltype              string `json:"labeltype,omitempty"`
-	Name                   string `json:"name,omitempty"`
-	Policyname             string `json:"policyname,omitempty"`
-	Priority               int    `json:"priority,omitempty"`
-	Sc                     string `json:"sc,omitempty"`
-	Targetlbvserver        string `json:"targetlbvserver,omitempty"`
-}
 
 func resourceCitrixAdcCsvserver_appfwpolicy_binding() *schema.Resource {
 	return &schema.Resource{
@@ -94,7 +82,7 @@ func createCsvserver_appfwpolicy_bindingFunc(d *schema.ResourceData, meta interf
 	appfwPolicyName := d.Get("policyname").(string)
 	bindingId := fmt.Sprintf("%s,%s", csvserverName, appfwPolicyName)
 
-	csvserver_appfwpolicy_binding := Csvserverappfwpolicybinding{
+	csvserver_appfwpolicy_binding := cs.Csvserverappfwpolicybinding{
 		Bindpoint:              d.Get("bindpoint").(string),
 		Gotopriorityexpression: d.Get("gotopriorityexpression").(string),
 		Invoke:                 d.Get("invoke").(bool),

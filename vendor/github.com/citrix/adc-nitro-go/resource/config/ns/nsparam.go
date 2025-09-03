@@ -26,7 +26,7 @@ type Nsparam struct {
 	Httpport []int `json:"httpport,omitempty"`
 	/**
 	* Maximum number of connections that will be made from the appliance to the web server(s) attached to it. The value entered here is applied globally to all attached servers.
-	 */
+	*/
 	Maxconn int `json:"maxconn"` // Zero is a valid value
 	/**
 	* Maximum number of requests that the system can pass on a particular connection between the appliance and a server attached to it. Setting this value to 0 allows an unlimited number of requests to be passed. This value is overridden by the maximum number of requests configured on the individual service.
@@ -71,19 +71,21 @@ type Nsparam struct {
 	*/
 	Timezone string `json:"timezone,omitempty"`
 	/**
-	* Percentage of shared quota to be granted at a time for maxClient.
+	* Percentage of shared pool value granted to PE once PE exhausts the local exclusive quota. Where shared pool is the remaining maxclient quota after distribution of exclusive quota to PEs.
+		Example: In a 2 PE NetScaler system if configured maxclient is 100 and exclusive quota is 80 percent then each PE will get 40 as local exclusive quota and 20 will be in shared pool. If configured grantQuota is 20 percent, then after exhausting its local exclusive quota PE borrows from shared pool in chunks of 4 i.e. 20 percent of 20.
 	*/
 	Grantquotamaxclient int `json:"grantquotamaxclient"` // Zero is a valid value
 	/**
-	* Percentage of maxClient to be given to PEs.
+	* Percentage of maxClient threshold to be divided equally among PEs.
 	*/
 	Exclusivequotamaxclient int `json:"exclusivequotamaxclient"` // Zero is a valid value
 	/**
-	* Percentage of shared quota to be granted at a time for spillover.
+	* Percentage of shared pool value granted to PE once PE exhausts the local exclusive quota. Where shared pool is the remaining spillover quota after distribution of exclusive quota to PEs.
+		Example: In a 2 PE NetScaler system if configured spillover is 100 and exclusive quota is 80 percent then each PE will get 40 as local exclusive quota and 20 will be in shared pool. If configured grantQuota is 20 percent, then after exhausting its local exclusive quota PE borrows from shared pool in chunks of 4 i.e. 20 percent of 20.
 	*/
 	Grantquotaspillover int `json:"grantquotaspillover,omitempty"`
 	/**
-	* Percentage of maximum limit to be given to PEs.
+	* Percentage of spillover threshold to be divided equally among PEs.
 	*/
 	Exclusivequotaspillover int `json:"exclusivequotaspillover"` // Zero is a valid value
 	/**
@@ -99,8 +101,7 @@ type Nsparam struct {
 	*/
 	Aftpallowrandomsourceport string `json:"aftpallowrandomsourceport,omitempty"`
 	/**
-	* The ICA ports on the Web server. This allows the system to perform connection off-load for any
-		client request that has a destination port matching one of these configured ports.
+	* The ICA ports on the Web server. This allows the system to perform connection off-load for any client request that has a destination port matching one of these configured ports.
 	*/
 	Icaports []int `json:"icaports,omitempty"`
 	/**
@@ -139,6 +140,6 @@ type Nsparam struct {
 
 	//------- Read only Parameter ---------;
 
-	Autoscaleoption string `json:"autoscaleoption,omitempty"`
-
+	Autoscaleoption    string `json:"autoscaleoption,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 }

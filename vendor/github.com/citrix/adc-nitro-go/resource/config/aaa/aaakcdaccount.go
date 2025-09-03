@@ -65,5 +65,6 @@ type Aaakcdaccount struct {
 
 	Principle string `json:"principle,omitempty"`
 	Kcdspn string `json:"kcdspn,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

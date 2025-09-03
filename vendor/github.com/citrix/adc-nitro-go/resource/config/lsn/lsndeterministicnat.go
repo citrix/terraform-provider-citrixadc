@@ -50,5 +50,6 @@ type Lsndeterministicnat struct {
 	Lastport string `json:"lastport,omitempty"`
 	Srctd string `json:"srctd,omitempty"`
 	Nattype string `json:"nattype,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

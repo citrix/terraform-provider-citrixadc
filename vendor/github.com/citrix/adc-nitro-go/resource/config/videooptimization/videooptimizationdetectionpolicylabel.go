@@ -51,5 +51,6 @@ type Videooptimizationdetectionpolicylabel struct {
 	Gotopriorityexpression string `json:"gotopriorityexpression,omitempty"`
 	Labeltype string `json:"labeltype,omitempty"`
 	Invokelabelname string `json:"invoke_labelname,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

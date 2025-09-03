@@ -20,4 +20,8 @@ package ns
 type Nstimezone struct {
 	Value string `json:"value,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

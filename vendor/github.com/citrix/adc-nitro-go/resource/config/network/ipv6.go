@@ -60,5 +60,6 @@ type Ipv6 struct {
 	Reachtime string `json:"reachtime,omitempty"`
 	Ndreachtime string `json:"ndreachtime,omitempty"`
 	Retransmissiontime string `json:"retransmissiontime,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

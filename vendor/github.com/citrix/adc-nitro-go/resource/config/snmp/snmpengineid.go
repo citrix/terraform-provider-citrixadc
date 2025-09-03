@@ -32,5 +32,6 @@ type Snmpengineid struct {
 	//------- Read only Parameter ---------;
 
 	Defaultengineid string `json:"defaultengineid,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

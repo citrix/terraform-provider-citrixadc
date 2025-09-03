@@ -33,4 +33,8 @@ type Nsxmlnamespace struct {
 	*/
 	Description string `json:"description,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

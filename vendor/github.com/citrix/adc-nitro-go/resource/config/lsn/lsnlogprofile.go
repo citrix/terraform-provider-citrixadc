@@ -45,4 +45,8 @@ type Lsnlogprofile struct {
 	*/
 	Logsessdeletion string `json:"logsessdeletion,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

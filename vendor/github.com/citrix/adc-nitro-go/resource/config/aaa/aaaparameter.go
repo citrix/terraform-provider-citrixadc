@@ -21,7 +21,7 @@ package aaa
 */
 type Aaaparameter struct {
 	/**
-	* The default state of VPN Static Page caching. If nothing is specified, the default value is set to YES.
+	* The default state of VPN Static Page caching. Static Page caching is enabled by default.
 	*/
 	Enablestaticpagecaching string `json:"enablestaticpagecaching,omitempty"`
 	/**
@@ -53,8 +53,8 @@ type Aaaparameter struct {
 	*/
 	Enablesessionstickiness string `json:"enablesessionstickiness,omitempty"`
 	/**
-	* Audit log level, which specifies the types of events to log for cli executed commands. 
-		Available values function as follows: 
+	* Audit log level, which specifies the types of events to log for cli executed commands.
+		Available values function as follows:
 		* EMERGENCY - Events that indicate an immediate crisis on the server.
 		* ALERT - Events that might require action.
 		* CRITICAL - Events that indicate an imminent server crisis.
@@ -66,8 +66,8 @@ type Aaaparameter struct {
 	*/
 	Aaasessionloglevel string `json:"aaasessionloglevel,omitempty"`
 	/**
-	* AAAD log level, which specifies the types of AAAD events to log in nsvpn.log. 
-		Available values function as follows: 
+	* AAAD log level, which specifies the types of AAAD events to log in nsvpn.log.
+		Available values function as follows:
 		* EMERGENCY - Events that indicate an immediate crisis on the server.
 		* ALERT - Events that might require action.
 		* CRITICAL - Events that indicate an imminent server crisis.
@@ -131,15 +131,21 @@ type Aaaparameter struct {
 	*/
 	Enhancedepa string `json:"enhancedepa,omitempty"`
 	/**
-	* Entities for which WAF Protection need to be applied. Available settings function as follows
-		AUTH - Endpoints used for Authentication applicable for both AAATM, IDP, GATEWAY use cases.
-		VPN - Endpoints used for Gateway use cases.
-		DISABLED - No Endpoint WAF protection. Currently supported only in default partition. 
-		Possible values = DISABLED, AUTH, VPN
+	* Entities for which WAF Protection need to be applied.
+		Available settings function as follows:
+		* DEFAULT - AUTH, VPN and PORTAL Protections are enabled. This is the default value for wafProtection
+		* AUTH - Endpoints used for Authentication applicable for both AAATM, IDP, GATEWAY use cases.
+		* VPN - Endpoints used for Gateway use cases.
+		* PORTAL - Endpoints related to web portal.
+		* DISABLED - No Endpoint WAF protection.
+		Currently supported only in default partition
 	*/
 	Wafprotection []string `json:"wafprotection,omitempty"`
 	/**
-	* On enabling this option, the Citrix ADC will send the security insight records to the configured collectors when request comes to Authentication endpoint
+	* On enabling this option, the Citrix ADC will send the security insight records to the configured collectors when request comes to Authentication endpoint.
+		* If cs vserver is frontend with Authentication vserver as target for cs action, then record is sent using Authentication vserver name.
+		* If vpn/lb/cs vserver are configured with Authentication ON, then then record is sent using vpn/lb/cs vserver name accordingly.
+		* If authentication vserver is frontend, then record is sent using Authentication vserver name.
 	*/
 	Securityinsights string `json:"securityinsights,omitempty"`
 
@@ -147,5 +153,6 @@ type Aaaparameter struct {
 
 	Builtin string `json:"builtin,omitempty"`
 	Feature string `json:"feature,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

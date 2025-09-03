@@ -21,7 +21,7 @@ package basic
 */
 type Extendedmemoryparam struct {
 	/**
-	* Amount of Citrix ADC memory to reserve for the memory used by LSN and Subscriber Session Store feature, in multiples of 2MB.
+	* Amount of NetScaler memory to reserve for the memory used by LSN and Subscriber Session Store feature, in multiples of 2MB.
 		Note: If you later reduce the value of this parameter, the amount of active memory is not reduced. Changing the configured memory limit can only increase the amount of active memory.
 	*/
 	Memlimit int `json:"memlimit,omitempty"`
@@ -31,5 +31,6 @@ type Extendedmemoryparam struct {
 	Memlimitactive string `json:"memlimitactive,omitempty"`
 	Maxmemlimit string `json:"maxmemlimit,omitempty"`
 	Minrequiredmemory string `json:"minrequiredmemory,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

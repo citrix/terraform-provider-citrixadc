@@ -70,6 +70,10 @@ type Sslcertkey struct {
 	*/
 	Bundle string `json:"bundle,omitempty"`
 	/**
+	* This option is used to automatically delete certificate/key files from physical device when the added certkey is removed. When deleteCertKeyFilesOnRemoval option is used at rm certkey command, it overwrites the deleteCertKeyFilesOnRemoval setting used at add/set certkey command
+	*/
+	Deletecertkeyfilesonremoval string `json:"deletecertkeyfilesonremoval,omitempty"`
+	/**
 	* Delete cert/key file from file system.
 	*/
 	Deletefromdevice bool `json:"deletefromdevice,omitempty"`
@@ -109,5 +113,9 @@ type Sslcertkey struct {
 	Ocspresponsestatus string `json:"ocspresponsestatus,omitempty"`
 	Builtin string `json:"builtin,omitempty"`
 	Feature string `json:"feature,omitempty"`
+	Certkeydigest string `json:"certkeydigest,omitempty"`
+	Certificatesource string `json:"certificatesource,omitempty"`
+	Certkeystatus string `json:"certkeystatus,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

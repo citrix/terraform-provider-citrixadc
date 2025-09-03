@@ -113,10 +113,6 @@ type Nshttpprofile struct {
 	*/
 	Persistentetag string `json:"persistentetag,omitempty"`
 	/**
-	* Enable SPDYv2 or SPDYv3 or both over SSL vserver. SSL will advertise SPDY support either during NPN Handshake or when client will advertises SPDY support during ALPN handshake. Both SPDY versions are enabled when this parameter is set to ENABLED.
-	*/
-	Spdy string `json:"spdy,omitempty"`
-	/**
 	* Choose whether to enable support for HTTP/2.
 	*/
 	Http2 string `json:"http2,omitempty"`
@@ -148,6 +144,10 @@ type Nshttpprofile struct {
 	* Number of bytes to be queued to look for complete header before returning error. If complete header is not obtained after queuing these many bytes, request will be marked as invalid and no L7 processing will be done for that TCP connection.
 	*/
 	Maxheaderlen int `json:"maxheaderlen,omitempty"`
+	/**
+	* Number of bytes allowed for header field for HTTP header. If number of bytes exceeds beyond configured value, then request will be marked invalid
+	*/
+	Maxheaderfieldlen int `json:"maxheaderfieldlen,omitempty"`
 	/**
 	* Minimum limit on the number of connections, from the Citrix ADC to a particular server that are kept in the reuse pool. This setting is helpful for optimal memory utilization and for reducing the idle connections to the server just after the peak time. Zero implies no limit on reuse pool size.
 	*/
@@ -181,21 +181,25 @@ type Nshttpprofile struct {
 	*/
 	Http2minseverconn int `json:"http2minseverconn,omitempty"`
 	/**
-	* Maximum number of ping frames allowed in HTTP2 connection per minute
+	* Maximum number of PING frames allowed in HTTP2 connection per minute
 	*/
 	Http2maxpingframespermin int `json:"http2maxpingframespermin,omitempty"`
 	/**
-	* Maximum number of settings frames allowed in HTTP2 connection per minute
+	* Maximum number of SETTINGS frames allowed in HTTP2 connection per minute
 	*/
 	Http2maxsettingsframespermin int `json:"http2maxsettingsframespermin,omitempty"`
 	/**
-	* Maximum number of reset frames allowed in HTTP/2 connection per minute
+	* Maximum number of outgoing RST_STREAM frames allowed in HTTP/2 connection per minute
 	*/
 	Http2maxresetframespermin int `json:"http2maxresetframespermin,omitempty"`
 	/**
-	* Maximum number of empty  frames allowed in HTTP2 connection per minute
+	* Maximum number of empty frames allowed in HTTP2 connection per minute
 	*/
 	Http2maxemptyframespermin int `json:"http2maxemptyframespermin,omitempty"`
+	/**
+	* Maximum number of incoming RST_STREAM frames allowed in HTTP/2 connection per minute
+	*/
+	Http2maxrxresetframespermin int `json:"http2maxrxresetframespermin,omitempty"`
 	/**
 	* Maximum size in bytes allowed to buffer gRPC packets till trailer is received
 	*/
@@ -229,14 +233,6 @@ type Nshttpprofile struct {
 	*/
 	Http3maxheaderblockedstreams int `json:"http3maxheaderblockedstreams,omitempty"`
 	/**
-	* Number of bytes allowed for header field for HTTP header. If number of bytes exceeds beyond configured value, then request will be marked invalid
-	*/
-	Maxheaderfieldlen int `json:"maxheaderfieldlen,omitempty"`
-	/**
-	* Maximum number of incoming RST_STREAM frames allowed in HTTP/2 connection per minute
-	*/
-	Http2maxrxresetframespermin int `json:"http2maxrxresetframespermin,omitempty"`
-	/**
 	* Choose whether to enable support for WebTransport over HTTP/3.
 	*/
 	Http3webtransport string `json:"http3webtransport,omitempty"`
@@ -268,12 +264,14 @@ type Nshttpprofile struct {
 	* Choose whether to enable HTTP/2 Extended CONNECT mechanism.
 	*/
 	Http2extendedconnect string `json:"http2extendedconnect,omitempty"`
+
 	//------- Read only Parameter ---------;
 
 	Refcnt string `json:"refcnt,omitempty"`
 	Builtin string `json:"builtin,omitempty"`
-	Feature string `json:"feature,omitempty"`
 	Apdexsvrresptimethreshold string `json:"apdexsvrresptimethreshold,omitempty"`
 	Dropinvalreqswarning string `json:"dropinvalreqswarning,omitempty"`
+	Feature string `json:"feature,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

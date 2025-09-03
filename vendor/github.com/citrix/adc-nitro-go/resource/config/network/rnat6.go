@@ -39,7 +39,7 @@ type Rnat6 struct {
 	/**
 	* Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.
 	*/
-	Td int `json:"td"` // Zero is a valid value
+	Td int `json:"td,omitempty"`
 	/**
 	* Enable source ip persistency, which enables the Citrix ADC to use the RNAT ips using source ip.
 	*/
@@ -48,5 +48,9 @@ type Rnat6 struct {
 	* The owner node group in a Cluster for this rnat rule.
 	*/
 	Ownergroup string `json:"ownergroup,omitempty"`
+
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

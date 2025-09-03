@@ -231,5 +231,6 @@ type Appflowparam struct {
 	Feature string `json:"feature,omitempty"`
 	Tcpburstreporting string `json:"tcpburstreporting,omitempty"`
 	Tcpburstreportingthreshold string `json:"tcpburstreportingthreshold,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

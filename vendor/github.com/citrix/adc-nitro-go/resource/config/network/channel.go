@@ -26,7 +26,7 @@ type Channel struct {
 	Id string `json:"id,omitempty"`
 	/**
 	* Interfaces to be bound to the LA channel of a Citrix ADC or to the LA channel of a cluster configuration.
-		For an LA channel of a Citrix ADC, specify an interface in C/U notation (for example, 1/3). 
+		For an LA channel of a Citrix ADC, specify an interface in C/U notation (for example, 1/3).
 		For an LA channel of a cluster configuration, specify an interface in N/C/U notation (for example, 2/1/3).
 		where C can take one of the following values:
 		* 0 - Indicates a management interface.
@@ -54,7 +54,7 @@ type Channel struct {
 	*/
 	Macdistr string `json:"macdistr,omitempty"`
 	/**
-	* Specifies a MAC address for the LA channels configured in Citrix ADC virtual appliances (VPX). This MAC address is persistent after each reboot. 
+	* Specifies a MAC address for the LA channels configured in Citrix ADC virtual appliances (VPX). This MAC address is persistent after each reboot.
 		If you don't specify this parameter, a MAC address is generated randomly for each LA channel. These MAC addresses change after each reboot.
 	*/
 	Lamac string `json:"lamac,omitempty"`
@@ -187,5 +187,6 @@ type Channel struct {
 	Lacpportrxstat string `json:"lacpportrxstat,omitempty"`
 	Lacpportselectstate string `json:"lacpportselectstate,omitempty"`
 	Lldpmode string `json:"lldpmode,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

@@ -41,7 +41,8 @@ type Dnskey struct {
 	*/
 	Units1 string `json:"units1,omitempty"`
 	/**
-	* Time at which to generate notification of key expiration, specified as number of days, hours, or minutes before expiry. Must be less than the expiry period. The notification is an SNMP trap sent to an SNMP manager. To enable the appliance to send the trap, enable the DNSKEY-EXPIRY SNMP alarm.
+	* Time at which to generate notification of key expiration, specified as number of days, hours, or minutes before expiry. Must be less than the expiry period. The notification is an SNMP trap sent to an SNMP manager. To enable the appliance to send the trap, enable the DNSKEY-EXPIRY SNMP alarm. 
+		In case autorollover option is enabled, rollover for successor key will be intiated at this time. No notification trap will be sent.
 	*/
 	Notificationperiod int `json:"notificationperiod,omitempty"`
 	/**
@@ -57,6 +58,23 @@ type Dnskey struct {
 	*/
 	Password string `json:"password,omitempty"`
 	/**
+	* Flag to enable/disable key rollover automatically.
+		Note:
+		* Key name will be appended with _AR1 for successor key. For e.g. current key=k1, successor key=k1_AR1.
+		* Key name can be truncated if current name length is more than 58 bytes to accomodate the suffix.
+	*/
+	Autorollover string `json:"autorollover,omitempty"`
+	/**
+	* Method used for automatic rollover.
+		* Key type: ZSK, Method: PrePublication or DoubleSignature.
+		* Key type: KSK, Method: DoubleRRSet.
+	*/
+	Rollovermethod string `json:"rollovermethod,omitempty"`
+	/**
+	* Revoke the key. Note: This operation is non-reversible.
+	*/
+	Revoke bool `json:"revoke,omitempty"`
+	/**
 	* Name of the zone for which to create a key.
 	*/
 	Zonename string `json:"zonename,omitempty"`
@@ -65,7 +83,7 @@ type Dnskey struct {
 	*/
 	Keytype string `json:"keytype,omitempty"`
 	/**
-	* Algorithm to generate for zone signing.
+	* Algorithm to generate the key.
 	*/
 	Algorithm string `json:"algorithm,omitempty"`
 	/**
@@ -80,5 +98,17 @@ type Dnskey struct {
 	* URL (protocol, host, path, and file name) from where the DNS key file will be imported. NOTE: The import fails if the object to be imported is on an HTTPS server that requires client certificate authentication for access. This is a mandatory argument
 	*/
 	Src string `json:"src,omitempty"`
+
+	//------- Read only Parameter ---------;
+
+	State string `json:"state,omitempty"`
+	Type string `json:"type,omitempty"`
+	Tag string `json:"tag,omitempty"`
+	Createtimestr string `json:"createtimestr,omitempty"`
+	Activationtimestr string `json:"activationtimestr,omitempty"`
+	Expirytimestr string `json:"expirytimestr,omitempty"`
+	Deletiontimestr string `json:"deletiontimestr,omitempty"`
+	Rolloverfailrc string `json:"rolloverfailrc,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

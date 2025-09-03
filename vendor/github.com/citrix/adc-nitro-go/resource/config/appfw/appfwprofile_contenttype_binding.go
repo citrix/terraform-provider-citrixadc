@@ -41,13 +41,13 @@ type Appfwprofilecontenttypebinding struct {
 	*/
 	Alertonly string `json:"alertonly,omitempty"`
 	/**
-	* Name of the profile to which to bind an exemption or rule.
-	*/
-	Name string `json:"name,omitempty"`
-	/**
 	* A "id" that identifies the rule.
 	*/
 	Resourceid string `json:"resourceid,omitempty"`
+	/**
+	* Name of the profile to which to bind an exemption or rule.
+	*/
+	Name string `json:"name,omitempty"`
 	/**
 	* Specifies rule type of binding
 	*/

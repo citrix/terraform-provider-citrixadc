@@ -32,5 +32,6 @@ type Interfacepair struct {
 	//------- Read only Parameter ---------;
 
 	Ifaces string `json:"ifaces,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

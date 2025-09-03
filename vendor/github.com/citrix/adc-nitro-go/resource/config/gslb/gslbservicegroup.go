@@ -83,6 +83,10 @@ type Gslbservicegroup struct {
 	*/
 	Autoscale string `json:"autoscale,omitempty"`
 	/**
+	* Indicates graceful movement of the service to TROFS. System will wait for monitor response time out before moving to TROFS
+	*/
+	Autodelayedtrofs string `json:"autodelayedtrofs,omitempty"`
+	/**
 	* Name of the GSLB site to which the service group belongs.
 	*/
 	Sitename string `json:"sitename,omitempty"`
@@ -118,6 +122,10 @@ type Gslbservicegroup struct {
 	* The site's prefix string. When the GSLB service group is bound to a GSLB virtual server, a GSLB site domain is generated internally for each bound serviceitem-domain pair by concatenating the site prefix of the service item and the name of the domain. If the special string NONE is specified, the site-prefix string is unset. When implementing HTTP redirect site persistence, the Citrix ADC redirects GSLB requests to GSLB services by using their site domains.
 	*/
 	Siteprefix string `json:"siteprefix,omitempty"`
+	/**
+	* Order number to be assigned to the gslb servicegroup member
+	*/
+	Order int `json:"order,omitempty"`
 	/**
 	* Name of the monitor bound to the GSLB service group. Used to assign a weight to the monitor.
 	*/
@@ -164,5 +172,6 @@ type Gslbservicegroup struct {
 	Gslb string `json:"gslb,omitempty"`
 	Svreffgslbstate string `json:"svreffgslbstate,omitempty"`
 	Nodefaultbindings string `json:"nodefaultbindings,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

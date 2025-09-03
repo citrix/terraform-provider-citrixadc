@@ -41,4 +41,8 @@ type Nat64param struct {
 	*/
 	Nat64fragheader string `json:"nat64fragheader,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

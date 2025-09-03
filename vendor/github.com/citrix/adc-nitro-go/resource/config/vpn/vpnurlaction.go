@@ -68,4 +68,8 @@ type Vpnurlaction struct {
 	*/
 	Newname string `json:"newname,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

@@ -21,7 +21,7 @@ package cs
 */
 type Cspolicylabel struct {
 	/**
-	* Name for the policy label. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at sign (@), equal sign (=), and hyphen (-) characters. 
+	* Name for the policy label. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at sign (@), equal sign (=), and hyphen (-) characters.
 		The label name must be unique within the list of policy labels for content switching.
 		The following requirement applies only to the Citrix ADC CLI:
 		If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my policylabel" or 'my policylabel').
@@ -35,7 +35,7 @@ type Cspolicylabel struct {
 		* SSL_TCP - Supports policies that process SSL-encrypted TCP traffic, including SSL.
 		* UDP - Supports policies that process any type of UDP-based traffic, including DNS.
 		* DNS - Supports policies that process DNS traffic.
-		* ANY - Supports all types of policies except HTTP, SSL, and TCP.             
+		* ANY - Supports all types of policies except HTTP, SSL, and TCP.
 		* SIP_UDP - Supports policies that process UDP based Session Initiation Protocol (SIP) traffic. SIP initiates, manages, and terminates multimedia communications sessions, and has emerged as the standard for Internet telephony (VoIP).
 		* RTSP - Supports policies that process Real Time Streaming Protocol (RTSP) traffic. RTSP provides delivery of multimedia and other streaming data, such as audio, video, and other types of streamed media.
 		* RADIUS - Supports policies that process Remote Authentication Dial In User Service (RADIUS) traffic. RADIUS supports combined authentication, authorization, and auditing services for network management.
@@ -58,5 +58,6 @@ type Cspolicylabel struct {
 	Gotopriorityexpression string `json:"gotopriorityexpression,omitempty"`
 	Labeltype string `json:"labeltype,omitempty"`
 	Invokelabelname string `json:"invoke_labelname,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

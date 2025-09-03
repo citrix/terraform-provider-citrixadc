@@ -22,7 +22,7 @@ package appflow
 type Appflowpolicy struct {
 	/**
 	* Name for the policy. Must begin with an ASCII alphabetic or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at
-		(@), equals (=), and hyphen (-) characters. 
+		(@), equals (=), and hyphen (-) characters.
 		The following requirement applies only to the Citrix ADC CLI:
 		If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my appflow policy" or 'my appflow policy').
 	*/
@@ -31,7 +31,7 @@ type Appflowpolicy struct {
 	* Expression or other value against which the traffic is evaluated. Must be a Boolean expression.
 		The following requirements apply only to the Citrix ADC CLI:
 		* If the expression includes one or more spaces, enclose the entire expression in double quotation marks.
-		* If the expression itself includes double quotation marks, escape the quotations by using the \ character. 
+		* If the expression itself includes double quotation marks, escape the quotations by using the \ character.
 		* Alternatively, you can use single quotation marks to enclose the rule, in which case you do not have to escape the double quotation marks.
 	*/
 	Rule string `json:"rule,omitempty"`
@@ -61,5 +61,6 @@ type Appflowpolicy struct {
 	Description string `json:"description,omitempty"`
 	Builtin string `json:"builtin,omitempty"`
 	Feature string `json:"feature,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

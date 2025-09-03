@@ -45,6 +45,7 @@ resource "citrixadc_gslbservicegroup_lbmonitor_binding" "tf_gslbservicegroup_lbm
 	sitename        = "Site-Local"
 	siteipaddress   = "172.31.96.234"
 	sessionexchange = "DISABLED"
+	sitepassword    = "password123"
   }
   
   resource "citrixadc_lbmonitor" "tfmonitor1" {
@@ -67,6 +68,7 @@ const testAccGslbservicegroup_lbmonitor_binding_basic_step2 = `
 	sitename        = "Site-Local"
 	siteipaddress   = "172.31.96.234"
 	sessionexchange = "DISABLED"
+	sitepassword    = "password123"
   }
   
   resource "citrixadc_lbmonitor" "tfmonitor1" {

@@ -27,5 +27,6 @@ type Nssourceroutecachetable struct {
 	Sourcemac string `json:"sourcemac,omitempty"`
 	Vlan string `json:"vlan,omitempty"`
 	Interface string `json:"Interface,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

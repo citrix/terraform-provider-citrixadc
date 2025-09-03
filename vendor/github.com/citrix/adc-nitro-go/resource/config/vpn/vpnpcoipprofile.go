@@ -37,4 +37,8 @@ type Vpnpcoipprofile struct {
 	*/
 	Sessionidletimeout int `json:"sessionidletimeout,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

@@ -43,4 +43,8 @@ type Nsdiameter struct {
 	*/
 	Ownernode int `json:"ownernode,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

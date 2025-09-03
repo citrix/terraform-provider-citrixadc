@@ -318,7 +318,7 @@ func (fs snapshotFS) Chtimes(name string, atime, mtime time.Time) error {
 }
 
 func (fs snapshotFS) Chown(name string, uid, gid int) error {
-    return nil // or appropriate implementation
+	return nil // or appropriate implementation
 }
 
 type snapshotFile struct {

@@ -49,4 +49,8 @@ type Ntpserver struct {
 	*/
 	Preferredntpserver string `json:"preferredntpserver,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

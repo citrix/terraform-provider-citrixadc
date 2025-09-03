@@ -41,5 +41,7 @@ type Systemsession struct {
 	Currentconn string `json:"currentconn,omitempty"`
 	Clienttype string `json:"clienttype,omitempty"`
 	Partitionname string `json:"partitionname,omitempty"`
+	Clientipaddress string `json:"clientipaddress,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

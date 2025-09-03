@@ -47,7 +47,7 @@ type Csvserverfeopolicybinding struct {
 	*/
 	Targetlbvserver string `json:"targetlbvserver,omitempty"`
 	/**
-	* Invoke a policy label if this policy's rule evaluates to TRUE (valid only for default-syntax policies such as application firewall, transform, integrated cache, rewrite, responder, and content switching).
+	* Invoke a policy label if this policy's rule evaluates to TRUE.
 	*/
 	Invoke bool `json:"invoke,omitempty"`
 	/**

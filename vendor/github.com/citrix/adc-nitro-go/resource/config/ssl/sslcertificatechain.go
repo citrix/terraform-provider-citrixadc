@@ -31,5 +31,6 @@ type Sslcertificatechain struct {
 	Chainpossiblelinks string `json:"chainpossiblelinks,omitempty"`
 	Chainissuer string `json:"chainissuer,omitempty"`
 	Chaincomplete string `json:"chaincomplete,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

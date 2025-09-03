@@ -58,4 +58,9 @@ type Netprofile struct {
 	*/
 	Proxyprotocolaftertlshandshake string `json:"proxyprotocolaftertlshandshake,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Proxyprotocoltlvoptions string `json:"proxyprotocoltlvoptions,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

@@ -44,5 +44,6 @@ type Dnspolicylabel struct {
 	Flowtype string `json:"flowtype,omitempty"`
 	Description string `json:"description,omitempty"`
 	Isdefault string `json:"isdefault,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

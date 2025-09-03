@@ -29,4 +29,8 @@ type Nsrollbackcmd struct {
 	*/
 	Outtype string `json:"outtype,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

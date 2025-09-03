@@ -58,5 +58,6 @@ type Authenticationoauthidppolicy struct {
 
 	Gotopriorityexpression string `json:"gotopriorityexpression,omitempty"`
 	Hits string `json:"hits,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

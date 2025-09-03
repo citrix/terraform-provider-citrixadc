@@ -29,4 +29,8 @@ type Nsservicefunction struct {
 	*/
 	Ingressvlan int `json:"ingressvlan,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

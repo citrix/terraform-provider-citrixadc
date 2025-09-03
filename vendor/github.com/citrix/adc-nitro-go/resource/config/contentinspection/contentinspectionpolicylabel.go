@@ -52,5 +52,6 @@ type Contentinspectionpolicylabel struct {
 	Invokelabelname string `json:"invoke_labelname,omitempty"`
 	Flowtype string `json:"flowtype,omitempty"`
 	Isdefault string `json:"isdefault,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

@@ -178,22 +178,22 @@ type Vpnparameter struct {
 	*/
 	Windowsautologon string `json:"windowsautologon,omitempty"`
 	/**
-	* Enable or disable the use of a unique IP address alias, or a mapped IP address, as the client IP address for each client session. Allow Citrix Gateway to use the mapped IP address as an intranet IP address when all other IP addresses are not available. 
+	* Enable or disable the use of a unique IP address alias, or a mapped IP address, as the client IP address for each client session. Allow Citrix Gateway to use the mapped IP address as an intranet IP address when all other IP addresses are not available.
 		When IP pooling is configured and the mapped IP is used as an intranet IP address, the mapped IP address is used when an intranet IP address cannot be assigned.
 	*/
 	Usemip string `json:"usemip,omitempty"`
 	/**
-	* Define IP address pool options. Available settings function as follows: 
-		* SPILLOVER - When an address pool is configured and the mapped IP is used as an intranet IP address, the mapped IP address is used when an intranet IP address cannot be assigned. 
-		* NOSPILLOVER - When intranet IP addresses are enabled and the mapped IP address is not used, the Transfer Login page appears for users who have used all available intranet IP addresses. 
+	* Define IP address pool options. Available settings function as follows:
+		* SPILLOVER - When an address pool is configured and the mapped IP is used as an intranet IP address, the mapped IP address is used when an intranet IP address cannot be assigned.
+		* NOSPILLOVER - When intranet IP addresses are enabled and the mapped IP address is not used, the Transfer Login page appears for users who have used all available intranet IP addresses.
 		* OFF - Address pool is not configured.
 	*/
 	Useiip string `json:"useiip,omitempty"`
 	/**
-	* Set the trace level on Citrix Gateway. Technical support technicians use these debug logs for in-depth debugging and troubleshooting purposes. Available settings function as follows: 
+	* Set the trace level on Citrix Gateway. Technical support technicians use these debug logs for in-depth debugging and troubleshooting purposes. Available settings function as follows:
 		* DEBUG - Detailed debug messages are collected and written into the specified file.
-		* STATS - Application audit level error messages and debug statistic counters are written into the specified file. 
-		* EVENTS - Application audit-level error messages are written into the specified file. 
+		* STATS - Application audit level error messages and debug statistic counters are written into the specified file.
+		* EVENTS - Application audit-level error messages are written into the specified file.
 		* OFF - Only critical events are logged into the Windows Application Log.
 	*/
 	Clientdebug string `json:"clientdebug,omitempty"`
@@ -214,7 +214,7 @@ type Vpnparameter struct {
 	*/
 	Icaproxy string `json:"icaproxy,omitempty"`
 	/**
-	* Web address of the Web Interface server, such as http://<ipAddress>/Citrix/XenApp, or Receiver for Web, which enumerates the virtualized resources, such as XenApp, XenDesktop, and cloud applications. This web address is used as the home page in ICA proxy mode. 
+	* Web address of the Web Interface server, such as http://<ipAddress>/Citrix/XenApp, or Receiver for Web, which enumerates the virtualized resources, such as XenApp, XenDesktop, and cloud applications. This web address is used as the home page in ICA proxy mode.
 		If Client Choices is ON, you must configure this setting. Because the user can choose between FullClient and ICAProxy, the user may see a different home page. An Internet web site may appear if the user gets the FullClient option, or a Web Interface site if the user gets the ICAProxy option. If the setting is not configured, the XenApp option does not appear as a client choice.
 	*/
 	Wihome string `json:"wihome,omitempty"`
@@ -257,23 +257,23 @@ type Vpnparameter struct {
 	*/
 	Ntdomain string `json:"ntdomain,omitempty"`
 	/**
-	* Enable clientless access for web, XenApp or XenDesktop, and FileShare resources without installing the Citrix Gateway Plug-in. Available settings function as follows: 
-		* ON - Allow only clientless access. 
-		* OFF - Allow clientless access after users log on with the Citrix Gateway Plug-in. 
+	* Enable clientless access for web, XenApp or XenDesktop, and FileShare resources without installing the Citrix Gateway Plug-in. Available settings function as follows:
+		* ON - Allow only clientless access.
+		* OFF - Allow clientless access after users log on with the Citrix Gateway Plug-in.
 		* DISABLED - Do not allow clientless access.
 	*/
 	Clientlessvpnmode string `json:"clientlessvpnmode,omitempty"`
 	/**
-	* When clientless access is enabled, you can choose to encode the addresses of internal web applications or to leave the address as clear text. Available settings function as follows: 
-		* OPAQUE - Use standard encoding mechanisms to make the domain and protocol part of the resource unclear to users. 
-		* TRANSPARENT - Do not encode the web address and make it visible to users. 
+	* When clientless access is enabled, you can choose to encode the addresses of internal web applications or to leave the address as clear text. Available settings function as follows:
+		* OPAQUE - Use standard encoding mechanisms to make the domain and protocol part of the resource unclear to users.
+		* TRANSPARENT - Do not encode the web address and make it visible to users.
 		* ENCRYPT - Allow the domain and protocol to be encrypted using a session key. When the web address is encrypted, the URL is different for each user session for the same web resource. If users bookmark the encoded web address, save it in the web browser and then log off, they cannot connect to the web address when they log on and use the bookmark. If users save the encrypted bookmark in the Access Interface during their session, the bookmark works each time the user logs on.
 	*/
 	Clientlessmodeurlencoding string `json:"clientlessmodeurlencoding,omitempty"`
 	/**
-	* State of persistent cookies in clientless access mode. Persistent cookies are required for accessing certain features of SharePoint, such as opening and editing Microsoft Word, Excel, and PowerPoint documents hosted on the SharePoint server. A persistent cookie remains on the user device and is sent with each HTTP request. Citrix Gateway encrypts the persistent cookie before sending it to the plug-in on the user device, and refreshes the cookie periodically as long as the session exists. The cookie becomes stale if the session ends. Available settings function as follows: 
-		* ALLOW - Enable persistent cookies. Users can open and edit Microsoft documents stored in SharePoint. 
-		* DENY - Disable persistent cookies. Users cannot open and edit Microsoft documents stored in SharePoint. 
+	* State of persistent cookies in clientless access mode. Persistent cookies are required for accessing certain features of SharePoint, such as opening and editing Microsoft Word, Excel, and PowerPoint documents hosted on the SharePoint server. A persistent cookie remains on the user device and is sent with each HTTP request. Citrix Gateway encrypts the persistent cookie before sending it to the plug-in on the user device, and refreshes the cookie periodically as long as the session exists. The cookie becomes stale if the session ends. Available settings function as follows:
+		* ALLOW - Enable persistent cookies. Users can open and edit Microsoft documents stored in SharePoint.
+		* DENY - Disable persistent cookies. Users cannot open and edit Microsoft documents stored in SharePoint.
 		* PROMPT - Prompt users to allow or deny persistent cookies during the session. Persistent cookies are not required for clientless access if users do not connect to SharePoint.
 	*/
 	Clientlesspersistentcookie string `json:"clientlesspersistentcookie,omitempty"`
@@ -346,6 +346,10 @@ type Vpnparameter struct {
 	*/
 	Icasessiontimeout string `json:"icasessiontimeout,omitempty"`
 	/**
+	* Enable or disable HTTP tracking for packets proxied via vpn vserver using GSLB connection proxy feature.
+	*/
+	Httptrackconnproxy string `json:"httptrackconnproxy,omitempty"`
+	/**
 	* Name of the AlwaysON profile. The builtin profile named none can be used to explicitly disable AlwaysON.
 	*/
 	Alwaysonprofilename string `json:"alwaysonprofilename,omitempty"`
@@ -370,6 +374,14 @@ type Vpnparameter struct {
 	*/
 	Backendcertvalidation string `json:"backendcertvalidation,omitempty"`
 	/**
+	* Enables or disables the secure private access configuration.
+	*/
+	Secureprivateaccess string `json:"secureprivateaccess,omitempty"`
+	/**
+	* By default, an access restricted page hosted on secure private access CDN is displayed when a restricted app is accessed. The setting can be changed to NS to display the access restricted page hosted on the gateway or OFF to not display any access restricted page.
+	*/
+	Accessrestrictedpageredirect string `json:"accessrestrictedpageredirect,omitempty"`
+	/**
 	* Spoofed IP address range that can be used by client for FQDN based split tunneling
 	*/
 	Fqdnspoofedip string `json:"fqdnspoofedip,omitempty"`
@@ -381,6 +393,18 @@ type Vpnparameter struct {
 	* SameSite attribute value for Cookies generated in VPN context. This attribute value will be appended only for the cookies which are specified in the builtin patset ns_cookies_samesite
 	*/
 	Samesite string `json:"samesite,omitempty"`
+	/**
+	* Maximum number of Intranet IP that can be assigned to a user from AAA group, VPN vserver or VPN global pool. This setting is not applicable for AAA user level Intranet IP configuration
+	*/
+	Maxiipperuser int `json:"maxiipperuser,omitempty"`
+	/**
+	* Enable device posture
+	*/
+	Deviceposture string `json:"deviceposture,omitempty"`
+	/**
+	* Enables DTLS 1.2 for backend server handshakes
+	*/
+	Backenddtls12 string `json:"backenddtls12,omitempty"`
 
 	//------- Read only Parameter ---------;
 
@@ -388,6 +412,6 @@ type Vpnparameter struct {
 	Clientidletimeoutwarning string `json:"clientidletimeoutwarning,omitempty"`
 	Vpnsessionpolicybindtype string `json:"vpnsessionpolicybindtype,omitempty"`
 	Vpnsessionpolicycount string `json:"vpnsessionpolicycount,omitempty"`
-	Maxiipperuser string `json:"maxiipperuser,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

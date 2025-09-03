@@ -81,5 +81,13 @@ type L3param struct {
 	* Enable/Disable IPv4 Class E address clients
 	*/
 	Allowclasseipv4 string `json:"allowclasseipv4,omitempty"`
+	/**
+	* Enable/Disable Policy Based Routing for control packets
+	*/
+	Implicitpbr string `json:"implicitpbr,omitempty"`
+
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

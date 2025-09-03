@@ -47,10 +47,6 @@ type Lbvserverservicebinding struct {
 	/**
 	* Dynamic weight
 	*/
-	Order int `json:"order,omitempty"`
-	/**
-	* Order number to be assigned to the service when it is bound to the lb vserver.
-	*/
 	Dynamicweight int `json:"dynamicweight,omitempty"`
 	/**
 	* Encryped Ip address and port of the service that is inserted into the set-cookie http header
@@ -72,6 +68,14 @@ type Lbvserverservicebinding struct {
 	* Used for displaying the location of bound services.
 	*/
 	Preferredlocation string `json:"preferredlocation,omitempty"`
+	/**
+	* Order number to be assigned to the service when it is bound to the lb vserver.
+	*/
+	Order int `json:"order,omitempty"`
+	/**
+	* Order in string form assigned to the service when it is bound to the lb vserver.
+	*/
+	Orderstr string `json:"orderstr,omitempty"`
 	/**
 	* Name for the virtual server. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at sign (@), equal sign (=), and hyphen (-) characters. Can be changed after the virtual server is created.
 		CLI Users: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my vserver" or 'my vserver'). 

@@ -67,5 +67,6 @@ type Nsassignment struct {
 	Hits string `json:"hits,omitempty"`
 	Undefhits string `json:"undefhits,omitempty"`
 	Referencecount string `json:"referencecount,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

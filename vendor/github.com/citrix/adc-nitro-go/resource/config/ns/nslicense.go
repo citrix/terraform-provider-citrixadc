@@ -28,14 +28,11 @@ type Nslicense struct {
 	Lb string `json:"lb,omitempty"`
 	Cs string `json:"cs,omitempty"`
 	Cr string `json:"cr,omitempty"`
-	Sc string `json:"sc,omitempty"`
 	Cmp string `json:"cmp,omitempty"`
 	Delta string `json:"delta,omitempty"`
-	Pq string `json:"pq,omitempty"`
 	Ssl string `json:"ssl,omitempty"`
 	Gslb string `json:"gslb,omitempty"`
 	Gslbp string `json:"gslbp,omitempty"`
-	Hdosp string `json:"hdosp,omitempty"`
 	Routing string `json:"routing,omitempty"`
 	Cf string `json:"cf,omitempty"`
 	Contentaccelerator string `json:"contentaccelerator,omitempty"`
@@ -53,10 +50,8 @@ type Nslicense struct {
 	Responder string `json:"responder,omitempty"`
 	Agee string `json:"agee,omitempty"`
 	Nsxn string `json:"nsxn,omitempty"`
-	Htmlinjection string `json:"htmlinjection,omitempty"`
 	Modelid string `json:"modelid,omitempty"`
 	Push string `json:"push,omitempty"`
-	Wionns string `json:"wionns,omitempty"`
 	Appflow string `json:"appflow,omitempty"`
 	Cloudbridge string `json:"cloudbridge,omitempty"`
 	Cloudbridgeappliance string `json:"cloudbridgeappliance,omitempty"`
@@ -87,5 +82,6 @@ type Nslicense struct {
 	Cqa string `json:"cqa,omitempty"`
 	Bot string `json:"bot,omitempty"`
 	Apigateway string `json:"apigateway,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

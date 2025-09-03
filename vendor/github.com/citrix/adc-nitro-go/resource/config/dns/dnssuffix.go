@@ -25,4 +25,8 @@ type Dnssuffix struct {
 	*/
 	Dnssuffix string `json:"Dnssuffix,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

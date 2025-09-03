@@ -45,4 +45,8 @@ type Vpnnexthopserver struct {
 	*/
 	Secure string `json:"secure,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

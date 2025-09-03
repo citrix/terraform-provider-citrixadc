@@ -62,5 +62,6 @@ type Uservserver struct {
 	Statechangetimemsec string `json:"statechangetimemsec,omitempty"`
 	Tickssincelaststatechange string `json:"tickssincelaststatechange,omitempty"`
 	Nodefaultbindings string `json:"nodefaultbindings,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

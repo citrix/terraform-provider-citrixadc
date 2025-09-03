@@ -102,5 +102,6 @@ type Policyhttpcallout struct {
 	Effectivestate string `json:"effectivestate,omitempty"`
 	Undefreason string `json:"undefreason,omitempty"`
 	Recursivecallout string `json:"recursivecallout,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

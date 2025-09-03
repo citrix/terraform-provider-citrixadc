@@ -21,7 +21,7 @@ package responder
 */
 type Responderhtmlpage struct {
 	/**
-	* Local path to and name of, or URL \(protocol, host, path, and file name\) for, the file in which to store the imported HTML page.
+	* Local path or URL (protocol, host, path, and file name) for the file from which to retrieve the imported HTML page.
 		NOTE: The import fails if the object to be imported is on an HTTPS server that requires client certificate authentication for access.
 	*/
 	Src string `json:"src,omitempty"`
@@ -45,5 +45,6 @@ type Responderhtmlpage struct {
 	//------- Read only Parameter ---------;
 
 	Response string `json:"response,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

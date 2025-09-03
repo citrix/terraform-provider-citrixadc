@@ -41,7 +41,7 @@ type Servicegroup struct {
 	*/
 	Maxclient int `json:"maxclient,omitempty"`
 	/**
-	* Maximum number of requests that can be sent on a persistent connection to the service group. 
+	* Maximum number of requests that can be sent on a persistent connection to the service group.
 		Note: Connection requests beyond this value are rejected.
 	*/
 	Maxreq int `json:"maxreq,omitempty"`
@@ -71,7 +71,7 @@ type Servicegroup struct {
 	*/
 	Pathmonitorindv string `json:"pathmonitorindv,omitempty"`
 	/**
-	* Use the proxy port as the source port when initiating connections with the server. With the NO setting, the client-side connection port is used as the source port for the server-side connection. 
+	* Use the proxy port as the source port when initiating connections with the server. With the NO setting, the client-side connection port is used as the source port for the server-side connection.
 		Note: This parameter is available only when the Use Source IP (USIP) parameter is set to YES.
 	*/
 	Useproxyport string `json:"useproxyport,omitempty"`
@@ -81,10 +81,6 @@ type Servicegroup struct {
 		NO - Do not send probes to check the health of the service. With the NO option, the appliance shows the service as UP at all times.
 	*/
 	Healthmonitor string `json:"healthmonitor,omitempty"`
-	/**
-	* State of the SureConnect feature for the service group.
-	*/
-	Sc string `json:"sc,omitempty"`
 	/**
 	* Enable surge protection for the service group.
 	*/
@@ -138,6 +134,10 @@ type Servicegroup struct {
 	*/
 	Httpprofilename string `json:"httpprofilename,omitempty"`
 	/**
+	* Name of QUIC profile which will be attached to the service group.
+	*/
+	Quicprofilename string `json:"quicprofilename,omitempty"`
+	/**
 	* Any information about the service group.
 	*/
 	Comment string `json:"comment,omitempty"`
@@ -166,9 +166,21 @@ type Servicegroup struct {
 	*/
 	Autodisabledelay int `json:"autodisabledelay,omitempty"`
 	/**
+	* Indicates graceful movement of IP-Port binding/s to TROFS when IP addresses are removed from DNS response. System will wait for monitor response timeout period before moving to TROFS .
+	*/
+	Autodelayedtrofs string `json:"autodelayedtrofs,omitempty"`
+	/**
 	* Close monitoring connections by sending the service a connection termination message with the specified bit set.
 	*/
 	Monconnectionclose string `json:"monconnectionclose,omitempty"`
+	/**
+	* Flag to check if kafka broker servicegroup is of type bootstrap or not.
+	*/
+	Bootstrap string `json:"bootstrap,omitempty"`
+	/**
+	* Name of the Kafka topic.
+	*/
+	Topicname string `json:"topicname,omitempty"`
 	/**
 	* Name of the server to which to bind the service group.
 	*/
@@ -201,6 +213,10 @@ type Servicegroup struct {
 	* Specify the TTL for DNS record for domain based service.The default value of ttl is 0 which indicates to use the TTL received in DNS response for monitors
 	*/
 	Dbsttl int `json:"dbsttl,omitempty"`
+	/**
+	* Order number to be assigned to the servicegroup member
+	*/
+	Order int `json:"order,omitempty"`
 	/**
 	* Name of the monitor bound to the service group. Used to assign a weight to the monitor.
 	*/
@@ -248,5 +264,6 @@ type Servicegroup struct {
 	Svcitmactsvcs string `json:"svcitmactsvcs,omitempty"`
 	Svcitmboundsvcs string `json:"svcitmboundsvcs,omitempty"`
 	Monuserstatusmesg string `json:"monuserstatusmesg,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

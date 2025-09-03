@@ -45,5 +45,6 @@ type Authorizationpolicy struct {
 	Activepolicy string `json:"activepolicy,omitempty"`
 	Expressiontype string `json:"expressiontype,omitempty"`
 	Hits string `json:"hits,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

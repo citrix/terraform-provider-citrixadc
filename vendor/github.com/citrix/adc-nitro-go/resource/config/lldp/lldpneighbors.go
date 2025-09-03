@@ -61,5 +61,6 @@ type Lldpneighbors struct {
 	Autonegadvertised string `json:"autonegadvertised,omitempty"`
 	Autonegmautype string `json:"autonegmautype,omitempty"`
 	Mtu string `json:"mtu,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

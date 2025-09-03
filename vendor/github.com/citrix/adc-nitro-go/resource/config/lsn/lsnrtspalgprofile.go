@@ -37,4 +37,8 @@ type Lsnrtspalgprofile struct {
 	*/
 	Rtsptransportprotocol string `json:"rtsptransportprotocol,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

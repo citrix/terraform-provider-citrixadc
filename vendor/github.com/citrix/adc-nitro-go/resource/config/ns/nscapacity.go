@@ -41,6 +41,14 @@ type Nscapacity struct {
 	*/
 	Unit string `json:"unit,omitempty"`
 	/**
+	* Username to authenticate with ADM Agent for LAS licensing. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters.
+	*/
+	Username string `json:"username,omitempty"`
+	/**
+	* Password to use when authenticating with ADM Agent for LAS licensing.
+	*/
+	Password string `json:"password,omitempty"`
+	/**
 	* Unique number that identifies the cluster node.
 	*/
 	Nodeid int `json:"nodeid,omitempty"`
@@ -53,5 +61,7 @@ type Nscapacity struct {
 	Maxbandwidth string `json:"maxbandwidth,omitempty"`
 	Minbandwidth string `json:"minbandwidth,omitempty"`
 	Instancecount string `json:"instancecount,omitempty"`
+	Daystoexpiration string `json:"daystoexpiration,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

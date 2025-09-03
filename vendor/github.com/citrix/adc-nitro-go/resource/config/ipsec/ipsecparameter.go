@@ -61,5 +61,6 @@ type Ipsecparameter struct {
 	//------- Read only Parameter ---------;
 
 	Responderonly string `json:"responderonly,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

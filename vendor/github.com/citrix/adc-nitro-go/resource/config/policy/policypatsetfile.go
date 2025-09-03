@@ -57,5 +57,6 @@ type Policypatsetfile struct {
 	Patsetname string `json:"patsetname,omitempty"`
 	Bindstatuscode string `json:"bindstatuscode,omitempty"`
 	Bindstatus string `json:"bindstatus,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

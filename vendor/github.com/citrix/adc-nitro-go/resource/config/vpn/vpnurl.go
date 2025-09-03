@@ -65,4 +65,8 @@ type Vpnurl struct {
 	*/
 	Appjson string `json:"appjson,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

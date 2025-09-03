@@ -49,4 +49,8 @@ type Autoscaleaction struct {
 	*/
 	Vserver string `json:"vserver,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

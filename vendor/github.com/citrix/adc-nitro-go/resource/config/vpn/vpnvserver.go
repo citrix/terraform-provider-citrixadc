@@ -35,7 +35,7 @@ type Vpnvserver struct {
 	*/
 	Ipv46 string `json:"ipv46,omitempty"`
 	/**
-	* Range of Citrix Gateway virtual server IP addresses. The consecutively numbered range of IP addresses begins with the address specified by the IP Address parameter. 
+	* Range of Citrix Gateway virtual server IP addresses. The consecutively numbered range of IP addresses begins with the address specified by the IP Address parameter.
 		In the configuration utility, select Network VServer to enter a range.
 	*/
 	Range int `json:"range,omitempty"`
@@ -140,6 +140,14 @@ type Vpnvserver struct {
 	*/
 	Cginfrahomepageredirect string `json:"cginfrahomepageredirect,omitempty"`
 	/**
+	* Configure secure private access
+	*/
+	Secureprivateaccess string `json:"secureprivateaccess,omitempty"`
+	/**
+	* By default, an access restricted page hosted on secure private access CDN is displayed when a restricted app is accessed. The setting can be changed to NS to display the access restricted page hosted on the gateway or OFF to not display any access restricted page.
+	*/
+	Accessrestrictedpageredirect string `json:"accessrestrictedpageredirect,omitempty"`
+	/**
 	* Maximum number of logon attempts
 	*/
 	Maxloginattempts int `json:"maxloginattempts,omitempty"`
@@ -193,7 +201,15 @@ type Vpnvserver struct {
 	*/
 	Samesite string `json:"samesite,omitempty"`
 	/**
-	* New name for the Citrix Gateway virtual server. Must begin with an ASCII alphabetic or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. 
+	* Name of the QUIC profile to assign to this virtual server.
+	*/
+	Quicprofilename string `json:"quicprofilename,omitempty"`
+	/**
+	* Enable device posture
+	*/
+	Deviceposture string `json:"deviceposture,omitempty"`
+	/**
+	* New name for the Citrix Gateway virtual server. Must begin with an ASCII alphabetic or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters.
 		The following requirement applies only to the Citrix ADC CLI:
 		If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my server" or 'my server').
 	*/
@@ -233,6 +249,7 @@ type Vpnvserver struct {
 	Ngname string `json:"ngname,omitempty"`
 	Csvserver string `json:"csvserver,omitempty"`
 	Nodefaultbindings string `json:"nodefaultbindings,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 	Response string `json:"response,omitempty"`
 
 }

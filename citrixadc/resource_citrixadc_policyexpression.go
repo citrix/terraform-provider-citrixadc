@@ -31,11 +31,6 @@ func resourceCitrixAdcPolicyexpression() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -57,7 +52,6 @@ func createPolicyexpressionFunc(d *schema.ResourceData, meta interface{}) error 
 	policyexpression := policy.Policyexpression{
 		Clientsecuritymessage: d.Get("clientsecuritymessage").(string),
 		Comment:               d.Get("comment").(string),
-		Description:           d.Get("description").(string),
 		Name:                  d.Get("name").(string),
 		Value:                 d.Get("value").(string),
 	}
@@ -91,7 +85,6 @@ func readPolicyexpressionFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", data["name"])
 	d.Set("clientsecuritymessage", data["clientsecuritymessage"])
 	d.Set("comment", data["comment"])
-	d.Set("description", data["description"])
 	d.Set("name", data["name"])
 	d.Set("value", data["value"])
 
@@ -116,11 +109,6 @@ func updatePolicyexpressionFunc(d *schema.ResourceData, meta interface{}) error 
 	if d.HasChange("comment") {
 		log.Printf("[DEBUG]  citrixadc-provider: Comment has changed for policyexpression %s, starting update", policyexpressionName)
 		policyexpression.Comment = d.Get("comment").(string)
-		hasChange = true
-	}
-	if d.HasChange("description") {
-		log.Printf("[DEBUG]  citrixadc-provider: Description has changed for policyexpression %s, starting update", policyexpressionName)
-		policyexpression.Description = d.Get("description").(string)
 		hasChange = true
 	}
 	if d.HasChange("name") {

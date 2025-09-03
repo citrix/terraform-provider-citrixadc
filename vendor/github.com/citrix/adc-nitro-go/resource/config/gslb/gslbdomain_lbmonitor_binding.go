@@ -74,6 +74,18 @@ type Gslbdomainlbmonitorbinding struct {
 	*/
 	Lastresponse string `json:"lastresponse,omitempty"`
 	/**
+	* The gRPC health check service status.
+	*/
+	Grpchealthcheck string `json:"grpchealthcheck,omitempty"`
+	/**
+	* The gRPC status codes.
+	*/
+	Grpcstatuscode int `json:"grpcstatuscode,omitempty"`
+	/**
+	* The gRPC service name.
+	*/
+	Grpcservicename string `json:"grpcservicename,omitempty"`
+	/**
 	* Name of the Domain
 	*/
 	Name string `json:"name,omitempty"`

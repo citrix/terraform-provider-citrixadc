@@ -39,5 +39,6 @@ type Feopolicy struct {
 	Feature string `json:"feature,omitempty"`
 	Hits string `json:"hits,omitempty"`
 	Undefhits string `json:"undefhits,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

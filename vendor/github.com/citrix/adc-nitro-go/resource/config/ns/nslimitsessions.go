@@ -43,5 +43,6 @@ type Nslimitsessions struct {
 	Selectoripv61 string `json:"selectoripv61,omitempty"`
 	Selectoripv62 string `json:"selectoripv62,omitempty"`
 	Flag string `json:"flag,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

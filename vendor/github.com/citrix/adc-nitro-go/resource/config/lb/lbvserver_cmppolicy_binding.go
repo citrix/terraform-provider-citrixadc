@@ -29,10 +29,6 @@ type Lbvservercmppolicybinding struct {
 	*/
 	Priority int `json:"priority,omitempty"`
 	/**
-	* Use SureConnect on the virtual server.
-	*/
-	Sc string `json:"sc,omitempty"`
-	/**
 	* Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 	*/
 	Gotopriorityexpression string `json:"gotopriorityexpression,omitempty"`
@@ -57,6 +53,10 @@ type Lbvservercmppolicybinding struct {
 		CLI Users: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my vserver" or 'my vserver'). 
 	*/
 	Name string `json:"name,omitempty"`
+	/**
+	* Integer specifying the order of the service. A larger number specifies a lower order. Defines the order of the service relative to the other services in the load balancing vserver's bindings. Determines the priority given to the service among all the services bound.
+	*/
+	Order int `json:"order,omitempty"`
 
 
 }

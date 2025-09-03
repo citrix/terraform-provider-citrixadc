@@ -22,7 +22,7 @@ package network
 type Channelinterfacebinding struct {
 	/**
 	* Interfaces to be bound to the LA channel of a Citrix ADC or to the LA channel of a cluster configuration.
-		For an LA channel of a Citrix ADC, specify an interface in C/U notation (for example, 1/3). 
+		For an LA channel of a Citrix ADC, specify an interface in C/U notation (for example, 1/3).
 		For an LA channel of a cluster configuration, specify an interface in N/C/U notation (for example, 2/1/3).
 		where C can take one of the following values:
 		* 0 - Indicates a management interface.
@@ -64,7 +64,7 @@ type Channelinterfacebinding struct {
 	/**
 	* LR set member interface state(active/inactive).
 	*/
-	Lractiveintf bool `json:"lractiveintf,omitempty"`
+	Lractiveintf int `json:"lractiveintf,omitempty"`
 	/**
 	* New attribute added to identify the source of cmd, when SVM fires the nitro cmd, it will set the value of SVMCMD to be 1. 
 	*/

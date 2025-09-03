@@ -24,5 +24,6 @@ type Nssavedconfig struct {
 	//------- Read only Parameter ---------;
 
 	Textblob string `json:"textblob,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

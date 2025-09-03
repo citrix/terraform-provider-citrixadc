@@ -41,4 +41,8 @@ type Ipsecalgprofile struct {
 	*/
 	Connfailover string `json:"connfailover,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

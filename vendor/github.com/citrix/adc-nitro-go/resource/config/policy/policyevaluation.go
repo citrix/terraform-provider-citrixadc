@@ -77,5 +77,6 @@ type Policyevaluation struct {
 	Pitreferrorresult string `json:"pitreferrorresult,omitempty"`
 	Pitoffseterrorresult string `json:"pitoffseterrorresult,omitempty"`
 	Pitactionerrorresult string `json:"pitactionerrorresult,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

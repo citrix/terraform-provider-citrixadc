@@ -28,7 +28,7 @@ type Responderpolicylabel struct {
 	Labelname string `json:"labelname,omitempty"`
 	/**
 	* Type of responses sent by the policies bound to this policy label. Types are:
-		* HTTP - HTTP responses. 
+		* HTTP - HTTP responses.
 		* OTHERTCP - NON-HTTP TCP responses.
 		* SIP_UDP - SIP responses.
 		* RADIUS - RADIUS responses.
@@ -56,5 +56,6 @@ type Responderpolicylabel struct {
 	Gotopriorityexpression string `json:"gotopriorityexpression,omitempty"`
 	Labeltype string `json:"labeltype,omitempty"`
 	Invokelabelname string `json:"invoke_labelname,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

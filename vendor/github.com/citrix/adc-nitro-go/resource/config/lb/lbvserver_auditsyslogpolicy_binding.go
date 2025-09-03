@@ -29,10 +29,6 @@ type Lbvserverauditsyslogpolicybinding struct {
 	*/
 	Priority int `json:"priority,omitempty"`
 	/**
-	* Use SureConnect on the virtual server.
-	*/
-	Sc string `json:"sc,omitempty"`
-	/**
 	* Name for the virtual server. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at sign (@), equal sign (=), and hyphen (-) characters. Can be changed after the virtual server is created.
 		CLI Users: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my vserver" or 'my vserver'). 
 	*/
@@ -72,6 +68,10 @@ type Lbvserverauditsyslogpolicybinding struct {
 	* Name of the virtual server or user-defined policy label to invoke if the policy evaluates to TRUE.
 	*/
 	Labelname string `json:"labelname,omitempty"`
+	/**
+	* Integer specifying the order of the service. A larger number specifies a lower order. Defines the order of the service relative to the other services in the load balancing vserver's bindings. Determines the priority given to the service among all the services bound.
+	*/
+	Order int `json:"order,omitempty"`
 
 
 }

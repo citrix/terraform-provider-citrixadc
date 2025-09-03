@@ -28,12 +28,12 @@ type Cachepolicy struct {
 	* Expression against which the traffic is evaluated.
 		The following requirements apply only to the Citrix ADC CLI:
 		* If the expression includes one or more spaces, enclose the entire expression in double quotation marks.
-		* If the expression itself includes double quotation marks, escape the quotations by using the \ character. 
+		* If the expression itself includes double quotation marks, escape the quotations by using the \ character.
 		* Alternatively, you can use single quotation marks to enclose the rule, in which case you do not have to escape the double quotation marks.
 	*/
 	Rule string `json:"rule,omitempty"`
 	/**
-	* Action to apply to content that matches the policy. 
+	* Action to apply to content that matches the policy.
 		* CACHE or MAY_CACHE action - positive cachability policy
 		* NOCACHE or MAY_NOCACHE action - negative cachability policy
 		* INVAL action - Dynamic Invalidation Policy
@@ -67,5 +67,6 @@ type Cachepolicy struct {
 	Flags string `json:"flags,omitempty"`
 	Builtin string `json:"builtin,omitempty"`
 	Feature string `json:"feature,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

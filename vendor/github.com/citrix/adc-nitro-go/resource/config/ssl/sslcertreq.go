@@ -35,6 +35,7 @@ type Sslcertreq struct {
 		3. URIs
 		4. DNS names (this is usually also provided as the Common Name RDN within the Subject field of the main certificate.)
 		5. Directory names (alternative Distinguished Names to that given in the Subject)
+		Example:-subjectAltName "DNS:*.example.com DNS:www.example.org"
 	*/
 	Subjectaltname string `json:"subjectaltname,omitempty"`
 	/**

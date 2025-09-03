@@ -34,7 +34,7 @@ type Systemuser struct {
 	*/
 	Externalauth string `json:"externalauth,omitempty"`
 	/**
-	* String to display at the command-line prompt. Can consist of letters, numbers, hyphen (-), period (.), hash (#), space ( ), at (@), equal (=), colon (:), underscore (_), and the following variables: 
+	* String to display at the command-line prompt. Can consist of letters, numbers, hyphen (-), period (.), hash (#), space ( ), at (@), equal (=), colon (:), underscore (_), and the following variables:
 		* %u - Will be replaced by the user name.
 		* %h - Will be replaced by the hostname of the Citrix ADC.
 		* %t - Will be replaced by the current time in 12-hour format.
@@ -68,5 +68,8 @@ type Systemuser struct {
 	Promptinheritedfrom string `json:"promptinheritedfrom,omitempty"`
 	Timeoutkind string `json:"timeoutkind,omitempty"`
 	Allowedmanagementinterfacekind string `json:"allowedmanagementinterfacekind,omitempty"`
+	Lastpwdchangetimestamp string `json:"lastpwdchangetimestamp,omitempty"`
+	Daystoexpirekind string `json:"daystoexpirekind,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

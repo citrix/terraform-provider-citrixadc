@@ -394,5 +394,6 @@ type Authenticationsamlidpprofile struct {
 	//------- Read only Parameter ---------;
 
 	Metadataimportstatus string `json:"metadataimportstatus,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

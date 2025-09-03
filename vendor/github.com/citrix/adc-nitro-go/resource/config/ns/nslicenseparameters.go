@@ -28,5 +28,21 @@ type Nslicenseparameters struct {
 	* If ADC remains in grace for the configured hours then major grace alert will be raised
 	*/
 	Alert2gracetimeout int `json:"alert2gracetimeout,omitempty"`
+	/**
+	* If ADC license contract expiry date is nearer then GUI/SNMP license expiry alert will be raised
+	*/
+	Licenseexpiryalerttime int `json:"licenseexpiryalerttime,omitempty"`
+	/**
+	* Heartbeat between ADC and Licenseserver is configurable and applicable in case of pooled licensing
+	*/
+	Heartbeatinterval int `json:"heartbeatinterval,omitempty"`
+	/**
+	* Inventory refresh interval between ADC and Licenseserver is configurable and applicable in case of pooled licensing
+	*/
+	Inventoryrefreshinterval int `json:"inventoryrefreshinterval,omitempty"`
+
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

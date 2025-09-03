@@ -41,4 +41,8 @@ type Nsrpcnode struct {
 	*/
 	Validatecert string `json:"validatecert,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

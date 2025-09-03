@@ -201,7 +201,7 @@ func readDnsparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("minttl", data["minttl"])
 	d.Set("namelookuppriority", data["namelookuppriority"])
 	d.Set("nxdomainratelimitthreshold", data["nxdomainratelimitthreshold"])
-	d.Set("recursion", data["recursion"])
+	d.Set("recursion", d.Get("recursion").(string))
 	d.Set("resolutionorder", data["resolutionorder"])
 	d.Set("retries", data["retries"])
 	d.Set("splitpktqueryprocessing", data["splitpktqueryprocessing"])

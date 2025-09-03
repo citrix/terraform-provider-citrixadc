@@ -34,6 +34,26 @@ type Appfwprofilejsoncmdurlbinding struct {
 	*/
 	Comment string `json:"comment,omitempty"`
 	/**
+	* Is the key name a regular expression?
+	*/
+	Iskeyregexjsoncmd string `json:"iskeyregex_json_cmd,omitempty"`
+	/**
+	* An expression that designates a keyname on the JSON CMD URL for which Command injection violations are relaxed.
+	*/
+	Keynamejsoncmd string `json:"keyname_json_cmd,omitempty"`
+	/**
+	* Type of the relaxed JSON CMD key value
+	*/
+	Asvaluetypejsoncmd string `json:"as_value_type_json_cmd,omitempty"`
+	/**
+	* The JSON CMD key value expression.
+	*/
+	Asvalueexprjsoncmd string `json:"as_value_expr_json_cmd,omitempty"`
+	/**
+	* Is the JSON CMD key value a regular expression?
+	*/
+	Isvalueregexjsoncmd string `json:"isvalueregex_json_cmd,omitempty"`
+	/**
 	* Is the rule auto deployed by dynamic profile ?
 	*/
 	Isautodeployed string `json:"isautodeployed,omitempty"`
@@ -42,13 +62,13 @@ type Appfwprofilejsoncmdurlbinding struct {
 	*/
 	Alertonly string `json:"alertonly,omitempty"`
 	/**
-	* Name of the profile to which to bind an exemption or rule.
-	*/
-	Name string `json:"name,omitempty"`
-	/**
 	* A "id" that identifies the rule.
 	*/
 	Resourceid string `json:"resourceid,omitempty"`
+	/**
+	* Name of the profile to which to bind an exemption or rule.
+	*/
+	Name string `json:"name,omitempty"`
 	/**
 	* Specifies rule type of binding
 	*/

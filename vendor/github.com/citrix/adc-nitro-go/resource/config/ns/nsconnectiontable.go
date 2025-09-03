@@ -297,5 +297,6 @@ type Nsconnectiontable struct {
 	Outoforderblocks string `json:"outoforderblocks,omitempty"`
 	Outoforderflushedcount string `json:"outoforderflushedcount,omitempty"`
 	Outoforderbytes string `json:"outoforderbytes,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

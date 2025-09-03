@@ -23,4 +23,8 @@ type Nslimitselector struct {
 	Selectorname string `json:"selectorname,omitempty"`
 	Rule []string `json:"rule,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

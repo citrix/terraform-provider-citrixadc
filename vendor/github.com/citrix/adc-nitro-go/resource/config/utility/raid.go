@@ -21,4 +21,8 @@ package utility
 */
 type Raid struct {
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

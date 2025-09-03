@@ -21,7 +21,7 @@ package audit
 */
 type Auditmessages struct {
 	/**
-	* Audit log level filter, which specifies the types of events to display. 
+	* Audit log level filter, which specifies the types of events to display.
 		The following loglevels are valid:
 		* ALL - All events.
 		* EMERGENCY - Events that indicate an immediate crisis on the server.
@@ -42,5 +42,6 @@ type Auditmessages struct {
 	//------- Read only Parameter ---------;
 
 	Value string `json:"value,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

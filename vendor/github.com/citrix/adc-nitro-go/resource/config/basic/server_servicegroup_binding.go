@@ -69,7 +69,7 @@ type Serverservicegroupbinding struct {
 	*/
 	Maxclient int `json:"maxclient,omitempty"`
 	/**
-	* Maximum number of requests that can be sent on a persistent connection to the service group. 
+	* Maximum number of requests that can be sent on a persistent connection to the service group.
 		Note: Connection requests beyond this value are rejected.
 	*/
 	Maxreq int `json:"maxreq,omitempty"`
@@ -113,10 +113,6 @@ type Serverservicegroupbinding struct {
 	* Use the transparent cache redirection virtual server to forward the request to the cache server.
 	*/
 	Cacheable string `json:"cacheable,omitempty"`
-	/**
-	* State of the SureConnect feature for the service group.
-	*/
-	Sc string `json:"sc,omitempty"`
 	/**
 	* Enable surge protection for the service group.
 	*/

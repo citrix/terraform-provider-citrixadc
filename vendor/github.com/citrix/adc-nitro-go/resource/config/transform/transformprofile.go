@@ -47,5 +47,6 @@ type Transformprofile struct {
 	Regexforfindingurlinxml string `json:"regexforfindingurlinxml,omitempty"`
 	Additionalreqheaderslist string `json:"additionalreqheaderslist,omitempty"`
 	Additionalrespheaderslist string `json:"additionalrespheaderslist,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

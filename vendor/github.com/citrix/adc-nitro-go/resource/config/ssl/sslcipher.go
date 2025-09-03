@@ -44,4 +44,8 @@ type Sslcipher struct {
 	*/
 	Sslprofile string `json:"sslprofile,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

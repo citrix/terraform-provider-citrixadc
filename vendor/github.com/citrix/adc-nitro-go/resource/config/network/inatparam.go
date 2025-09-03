@@ -45,4 +45,8 @@ type Inatparam struct {
 	*/
 	Nat46fragheader string `json:"nat46fragheader,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

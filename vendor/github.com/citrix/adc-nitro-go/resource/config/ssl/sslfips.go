@@ -66,5 +66,6 @@ type Sslfips struct {
 	Firmwarereleasedate string `json:"firmwarereleasedate,omitempty"`
 	Coresmax string `json:"coresmax,omitempty"`
 	Coresenabled string `json:"coresenabled,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

@@ -37,4 +37,8 @@ type Pcpserver struct {
 	*/
 	Pcpprofile string `json:"pcpprofile,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

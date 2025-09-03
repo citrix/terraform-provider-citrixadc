@@ -27,8 +27,8 @@ type Auditmessageaction struct {
 	*/
 	Name string `json:"name,omitempty"`
 	/**
-	* Audit log level, which specifies the severity level of the log message being generated.. 
-		The following loglevels are valid: 
+	* Audit log level, which specifies the severity level of the log message being generated..
+		The following loglevels are valid:
 		* EMERGENCY - Events that indicate an immediate crisis on the server.
 		* ALERT - Events that might require action.
 		* CRITICAL - Events that indicate an imminent server crisis.
@@ -58,5 +58,6 @@ type Auditmessageaction struct {
 	Hits string `json:"hits,omitempty"`
 	Undefhits string `json:"undefhits,omitempty"`
 	Referencecount string `json:"referencecount,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

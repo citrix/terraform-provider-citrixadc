@@ -97,7 +97,7 @@ type Servicelbmonitorbinding struct {
 	*/
 	Passive bool `json:"passive,omitempty"`
 	/**
-	* Name of the service to which to bind a policy or monitor.
+	* Name of the service to which to bind a monitor.
 	*/
 	Name string `json:"name,omitempty"`
 

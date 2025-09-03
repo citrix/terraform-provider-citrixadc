@@ -33,5 +33,6 @@ type Systemrestorepoint struct {
 	Version string `json:"version,omitempty"`
 	Createdby string `json:"createdby,omitempty"`
 	Ipaddress string `json:"ipaddress,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

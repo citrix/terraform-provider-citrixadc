@@ -49,5 +49,13 @@ type Authenticationepaaction struct {
 		if configured.
 	*/
 	Quarantinegroup string `json:"quarantinegroup,omitempty"`
+	/**
+	* Parameter to enable/disable device posture service scan
+	*/
+	Deviceposture string `json:"deviceposture,omitempty"`
+
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

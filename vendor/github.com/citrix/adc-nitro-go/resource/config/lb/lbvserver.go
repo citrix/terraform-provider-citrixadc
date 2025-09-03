@@ -34,7 +34,7 @@ type Lbvserver struct {
 	*/
 	Ipv46 string `json:"ipv46,omitempty"`
 	/**
-	* IP address pattern, in dotted decimal notation, for identifying packets to be accepted by the virtual server. The IP Mask parameter specifies which part of the destination IP address is matched against the pattern.  Mutually exclusive with the IP Address parameter. 
+	* IP address pattern, in dotted decimal notation, for identifying packets to be accepted by the virtual server. The IP Mask parameter specifies which part of the destination IP address is matched against the pattern.  Mutually exclusive with the IP Address parameter.
 		For example, if the IP pattern assigned to the virtual server is 198.51.100.0 and the IP mask is 255.255.240.0 (a forward mask), the first 20 bits in the destination IP addresses are matched with the first 20 bits in the pattern. The virtual server accepts requests with IP addresses that range from 198.51.96.1 to 198.51.111.254.  You can also use a pattern such as 0.0.2.2 and a mask such as 0.0.255.255 (a reverse mask).
 		If a destination IP address matches more than one IP pattern, the pattern with the longest match is selected, and the associated virtual server processes the request. For example, if virtual servers vs1 and vs2 have the same IP pattern, 0.0.100.128, but different IP masks of 0.0.255.255 and 0.0.224.255, a destination IP address of 198.51.100.128 has the longest match with the IP pattern of vs1. If a destination IP address matches two or more virtual servers to the same extent, the request is processed by the virtual server whose port number matches the port number in the request.
 	*/
@@ -52,8 +52,8 @@ type Lbvserver struct {
 	*/
 	Ipset string `json:"ipset,omitempty"`
 	/**
-	* Number of IP addresses that the appliance must generate and assign to the virtual server. The virtual server then functions as a network virtual server, accepting traffic on any of the generated IP addresses. The IP addresses are generated automatically, as follows: 
-		* For a range of n, the last octet of the address specified by the IP Address parameter increments n-1 times. 
+	* Number of IP addresses that the appliance must generate and assign to the virtual server. The virtual server then functions as a network virtual server, accepting traffic on any of the generated IP addresses. The IP addresses are generated automatically, as follows:
+		* For a range of n, the last octet of the address specified by the IP Address parameter increments n-1 times.
 		* If the last octet exceeds 255, it rolls over to 0 and the third octet increments by 1.
 		Note: The Range parameter assigns multiple IP addresses to one virtual server. To generate an array of virtual servers, each of which owns only one IP address, use brackets in the IP Address and Name parameters to specify the range. For example:
 		add lb vserver my_vserver[1-3] HTTP 192.0.2.[1-3] 80
@@ -62,11 +62,11 @@ type Lbvserver struct {
 	/**
 	* Type of persistence for the virtual server. Available settings function as follows:
 		* SOURCEIP - Connections from the same client IP address belong to the same persistence session.
-		* COOKIEINSERT - Connections that have the same HTTP Cookie, inserted by a Set-Cookie directive from a server, belong to the same persistence session. 
+		* COOKIEINSERT - Connections that have the same HTTP Cookie, inserted by a Set-Cookie directive from a server, belong to the same persistence session.
 		* SSLSESSION - Connections that have the same SSL Session ID belong to the same persistence session.
 		* CUSTOMSERVERID - Connections with the same server ID form part of the same session. For this persistence type, set the Server ID (CustomServerID) parameter for each service and configure the Rule parameter to identify the server ID in a request.
-		* RULE - All connections that match a user defined rule belong to the same persistence session. 
-		* URLPASSIVE - Requests that have the same server ID in the URL query belong to the same persistence session. The server ID is the hexadecimal representation of the IP address and port of the service to which the request must be forwarded. This persistence type requires a rule to identify the server ID in the request. 
+		* RULE - All connections that match a user defined rule belong to the same persistence session.
+		* URLPASSIVE - Requests that have the same server ID in the URL query belong to the same persistence session. The server ID is the hexadecimal representation of the IP address and port of the service to which the request must be forwarded. This persistence type requires a rule to identify the server ID in the request.
 		* DESTIP - Connections to the same destination IP address belong to the same persistence session.
 		* SRCIPDESTIP - Connections that have the same source IP address and destination IP address belong to the same persistence session.
 		* CALLID - Connections that have the same CALL-ID SIP header belong to the same persistence session.
@@ -90,20 +90,20 @@ type Lbvserver struct {
 	/**
 	* Load balancing method.  The available settings function as follows:
 		* ROUNDROBIN - Distribute requests in rotation, regardless of the load. Weights can be assigned to services to enforce weighted round robin distribution.
-		* LEASTCONNECTION (default) - Select the service with the fewest connections. 
-		* LEASTRESPONSETIME - Select the service with the lowest average response time. 
+		* LEASTCONNECTION (default) - Select the service with the fewest connections.
+		* LEASTRESPONSETIME - Select the service with the lowest average response time.
 		* LEASTBANDWIDTH - Select the service currently handling the least traffic.
 		* LEASTPACKETS - Select the service currently serving the lowest number of packets per second.
 		* CUSTOMLOAD - Base service selection on the SNMP metrics obtained by custom load monitors.
 		* LRTM - Select the service with the lowest response time. Response times are learned through monitoring probes. This method also takes the number of active connections into account.
-		Also available are a number of hashing methods, in which the appliance extracts a predetermined portion of the request, creates a hash of the portion, and then checks whether any previous requests had the same hash value. If it finds a match, it forwards the request to the service that served those previous requests. Following are the hashing methods: 
+		Also available are a number of hashing methods, in which the appliance extracts a predetermined portion of the request, creates a hash of the portion, and then checks whether any previous requests had the same hash value. If it finds a match, it forwards the request to the service that served those previous requests. Following are the hashing methods:
 		* URLHASH - Create a hash of the request URL (or part of the URL).
 		* DOMAINHASH - Create a hash of the domain name in the request (or part of the domain name). The domain name is taken from either the URL or the Host header. If the domain name appears in both locations, the URL is preferred. If the request does not contain a domain name, the load balancing method defaults to LEASTCONNECTION.
-		* DESTINATIONIPHASH - Create a hash of the destination IP address in the IP header. 
-		* SOURCEIPHASH - Create a hash of the source IP address in the IP header.  
-		* TOKEN - Extract a token from the request, create a hash of the token, and then select the service to which any previous requests with the same token hash value were sent. 
-		* SRCIPDESTIPHASH - Create a hash of the string obtained by concatenating the source IP address and destination IP address in the IP header.  
-		* SRCIPSRCPORTHASH - Create a hash of the source IP address and source port in the IP header.  
+		* DESTINATIONIPHASH - Create a hash of the destination IP address in the IP header.
+		* SOURCEIPHASH - Create a hash of the source IP address in the IP header.
+		* TOKEN - Extract a token from the request, create a hash of the token, and then select the service to which any previous requests with the same token hash value were sent.
+		* SRCIPDESTIPHASH - Create a hash of the string obtained by concatenating the source IP address and destination IP address in the IP header.
+		* SRCIPSRCPORTHASH - Create a hash of the source IP address and source port in the IP header.
 		* CALLIDHASH - Create a hash of the SIP Call-ID header.
 		* USER_TOKEN - Same as TOKEN LB method but token needs to be provided from an extension.
 	*/
@@ -134,7 +134,7 @@ type Lbvserver struct {
 	* Expression, or name of a named expression, against which traffic is evaluated.
 		The following requirements apply only to the Citrix ADC CLI:
 		* If the expression includes one or more spaces, enclose the entire expression in double quotation marks.
-		* If the expression itself includes double quotation marks, escape the quotations by using the \ character. 
+		* If the expression itself includes double quotation marks, escape the quotations by using the \ character.
 		* Alternatively, you can use single quotation marks to enclose the rule, in which case you do not have to escape the double quotation marks.
 	*/
 	Rule string `json:"rule,omitempty"`
@@ -161,23 +161,15 @@ type Lbvserver struct {
 	*/
 	V6persistmasklen int `json:"v6persistmasklen,omitempty"`
 	/**
-	* Use priority queuing on the virtual server. based persistence types, for IPv6 virtual servers.
-	*/
-	Pq string `json:"pq,omitempty"`
-	/**
-	* Use SureConnect on the virtual server.
-	*/
-	Sc string `json:"sc,omitempty"`
-	/**
 	* Use network address translation (NAT) for RTSP data connections.
 	*/
 	Rtspnat string `json:"rtspnat,omitempty"`
 	/**
 	* Redirection mode for load balancing. Available settings function as follows:
-		* IP - Before forwarding a request to a server, change the destination IP address to the server's IP address. 
-		* MAC - Before forwarding a request to a server, change the destination MAC address to the server's MAC address.  The destination IP address is not changed. MAC-based redirection mode is used mostly in firewall load balancing deployments. 
-		* IPTUNNEL - Perform IP-in-IP encapsulation for client IP packets. In the outer IP headers, set the destination IP address to the IP address of the server and the source IP address to the subnet IP (SNIP). The client IP packets are not modified. Applicable to both IPv4 and IPv6 packets. 
-		* TOS - Encode the virtual server's TOS ID in the TOS field of the IP header. 
+		* IP - Before forwarding a request to a server, change the destination IP address to the server's IP address.
+		* MAC - Before forwarding a request to a server, change the destination MAC address to the server's MAC address.  The destination IP address is not changed. MAC-based redirection mode is used mostly in firewall load balancing deployments.
+		* IPTUNNEL - Perform IP-in-IP encapsulation for client IP packets. In the outer IP headers, set the destination IP address to the IP address of the server and the source IP address to the subnet IP (SNIP). The client IP packets are not modified. Applicable to both IPv4 and IPv6 packets.
+		* TOS - Encode the virtual server's TOS ID in the TOS field of the IP header.
 		You can use either the IPTUNNEL or the TOS option to implement Direct Server Return (DSR).
 	*/
 	M string `json:"m,omitempty"`
@@ -207,13 +199,13 @@ type Lbvserver struct {
 	State string `json:"state,omitempty"`
 	/**
 	* Mode in which the connection failover feature must operate for the virtual server. After a failover, established TCP connections and UDP packet flows are kept active and resumed on the secondary appliance. Clients remain connected to the same servers. Available settings function as follows:
-		* STATEFUL - The primary appliance shares state information with the secondary appliance, in real time, resulting in some runtime processing overhead. 
-		* STATELESS - State information is not shared, and the new primary appliance tries to re-create the packet flow on the basis of the information contained in the packets it receives. 
+		* STATEFUL - The primary appliance shares state information with the secondary appliance, in real time, resulting in some runtime processing overhead.
+		* STATELESS - State information is not shared, and the new primary appliance tries to re-create the packet flow on the basis of the information contained in the packets it receives.
 		* DISABLED - Connection failover does not occur.
 	*/
 	Connfailover string `json:"connfailover,omitempty"`
 	/**
-	* URL to which to redirect traffic if the virtual server becomes unavailable. 
+	* URL to which to redirect traffic if the virtual server becomes unavailable.
 		WARNING! Make sure that the domain in the URL does not match the domain specified for a content switching policy. If it does, requests are continuously redirected to the unavailable virtual server.
 	*/
 	Redirurl string `json:"redirurl,omitempty"`
@@ -229,8 +221,8 @@ type Lbvserver struct {
 	* Type of threshold that, when exceeded, triggers spillover. Available settings function as follows:
 		* CONNECTION - Spillover occurs when the number of client connections exceeds the threshold.
 		* DYNAMICCONNECTION - Spillover occurs when the number of client connections at the virtual server exceeds the sum of the maximum client (Max Clients) settings for bound services. Do not specify a spillover threshold for this setting, because the threshold is implied by the Max Clients settings of bound services.
-		* BANDWIDTH - Spillover occurs when the bandwidth consumed by the virtual server's incoming and outgoing traffic exceeds the threshold. 
-		* HEALTH - Spillover occurs when the percentage of weights of the services that are UP drops below the threshold. For example, if services svc1, svc2, and svc3 are bound to a virtual server, with weights 1, 2, and 3, and the spillover threshold is 50%, spillover occurs if svc1 and svc3 or svc2 and svc3 transition to DOWN. 
+		* BANDWIDTH - Spillover occurs when the bandwidth consumed by the virtual server's incoming and outgoing traffic exceeds the threshold.
+		* HEALTH - Spillover occurs when the percentage of weights of the services that are UP drops below the threshold. For example, if services svc1, svc2, and svc3 are bound to a virtual server, with weights 1, 2, and 3, and the spillover threshold is 50%, spillover occurs if svc1 and svc3 or svc2 and svc3 transition to DOWN.
 		* NONE - Spillover does not occur.
 	*/
 	Somethod string `json:"somethod,omitempty"`
@@ -401,9 +393,9 @@ type Lbvserver struct {
 	*/
 	Maxautoscalemembers int `json:"maxautoscalemembers,omitempty"`
 	/**
-	* Persist AVP number for Diameter Persistency. 
-		In case this AVP is not defined in Base RFC 3588 and it is nested inside a Grouped AVP, 
-		define a sequence of AVP numbers (max 3) in order of parent to child. So say persist AVP number X 
+	* Persist AVP number for Diameter Persistency.
+		In case this AVP is not defined in Base RFC 3588 and it is nested inside a Grouped AVP,
+		define a sequence of AVP numbers (max 3) in order of parent to child. So say persist AVP number X
 		is nested inside AVP Y which is nested in Z, then define the list as  Z Y X
 	*/
 	Persistavpno []int `json:"persistavpno,omitempty"`
@@ -492,13 +484,33 @@ type Lbvserver struct {
 	*/
 	Probeport int `json:"probeport,omitempty"`
 	/**
-	* Weight to assign to the specified service.
+	* Configure this option to toggle order preference
 	*/
-	Weight int `json:"weight,omitempty"`
+	Toggleorder string `json:"toggleorder,omitempty"`
+	/**
+	* This option is used to to specify the threshold of minimum number of services to be UP in an order, for it to be considered in Lb decision.
+	*/
+	Orderthreshold int `json:"orderthreshold,omitempty"`
+	/**
+	* The API profile where one or more API specs are bounded to.
+	*/
+	Apiprofile string `json:"apiprofile,omitempty"`
+	/**
+	* This option is used to enable/disable DNS over HTTPS (DoH) processing.
+	*/
+	Dnsoverhttps string `json:"dnsoverhttps,omitempty"`
 	/**
 	* Service to bind to the virtual server.
 	*/
 	Servicename string `json:"servicename,omitempty"`
+	/**
+	* Weight to assign to the specified service.
+	*/
+	Weight int `json:"weight,omitempty"`
+	/**
+	* Order number to be assigned to the service when it is bound to the lb vserver.
+	*/
+	Order int `json:"order,omitempty"`
 	/**
 	* The redirect URL to be unset.
 	*/
@@ -545,5 +557,7 @@ type Lbvserver struct {
 	Vsvrdynconnsothreshold string `json:"vsvrdynconnsothreshold,omitempty"`
 	Backupvserverstatus string `json:"backupvserverstatus,omitempty"`
 	Nodefaultbindings string `json:"nodefaultbindings,omitempty"`
+	Currentactiveorder string `json:"currentactiveorder,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

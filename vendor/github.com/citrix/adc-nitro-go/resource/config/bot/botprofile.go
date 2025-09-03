@@ -91,6 +91,10 @@ type Botprofile struct {
 	*/
 	Devicefingerprintmobile []string `json:"devicefingerprintmobile,omitempty"`
 	/**
+	* Enable Headless Browser detection.
+	*/
+	Headlessbrowserdetection string `json:"headlessbrowserdetection,omitempty"`
+	/**
 	* Expression to get the client IP.
 	*/
 	Clientipexpression string `json:"clientipexpression,omitempty"`
@@ -109,10 +113,42 @@ type Botprofile struct {
 	* Size of the KM data send by the browser, needs to be processed on ADC
 	*/
 	Kmeventspostbodylimit int `json:"kmeventspostbodylimit,omitempty"`
+	/**
+	* Bot verbose Logging. Based on the log level, ADC will log additional information whenever client is detected as a bot.
+	*/
+	Verboseloglevel string `json:"verboseloglevel,omitempty"`
+	/**
+	* Actions to be taken on a spoofed request (A request spoofing good bot user agent string).
+	*/
+	Spoofedreqaction []string `json:"spoofedreqaction,omitempty"`
+	/**
+	* Number of requests to allow without bot session cookie if device fingerprint is enabled
+	*/
+	Dfprequestlimit int `json:"dfprequestlimit,omitempty"`
+	/**
+	* Name of the SessionCookie that the Bot Management feature uses for tracking.
+		Must begin with a letter or number, and can consist of from 1 to 31 letters, numbers, and the hyphen (-) and underscore (_) symbols.
+		The following requirement applies only to the Citrix ADC CLI:
+		If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my cookie name" or 'my cookie name').
+	*/
+	Sessioncookiename string `json:"sessioncookiename,omitempty"`
+	/**
+	* Timeout, in seconds, after which a user session is terminated.
+	*/
+	Sessiontimeout int `json:"sessiontimeout,omitempty"`
+	/**
+	* Add the specified flags to bot session cookies. Available settings function as follows:
+		* None - Do not add flags to cookies.
+		* HTTP Only - Add the HTTP Only flag to cookies, which prevents scripts from accessing cookies.
+		* Secure - Add Secure flag to cookies.
+		* All - Add both HTTPOnly and Secure flags to cookies.
+	*/
+	Addcookieflags string `json:"addcookieflags,omitempty"`
 
 	//------- Read only Parameter ---------;
 
 	Builtin string `json:"builtin,omitempty"`
 	Feature string `json:"feature,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

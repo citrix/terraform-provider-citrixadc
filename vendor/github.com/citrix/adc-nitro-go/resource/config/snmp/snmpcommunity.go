@@ -31,4 +31,8 @@ type Snmpcommunity struct {
 	*/
 	Permissions string `json:"permissions,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

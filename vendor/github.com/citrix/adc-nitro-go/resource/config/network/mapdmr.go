@@ -30,4 +30,8 @@ type Mapdmr struct {
 	*/
 	Bripv6prefix string `json:"bripv6prefix,omitempty"`
 
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }
