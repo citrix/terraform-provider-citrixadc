@@ -61,6 +61,11 @@ resource "citrixadc_appfwprofile_jsonxssurl_binding" "tf_binding" {
 * `resourceid` - (Optional) A "id" that identifies the rule.
 * `ruletype` - (Optional) Specifies rule type of binding
 * `state` - (Optional) Enabled.
+* `iskeyregex_json_xss` - (Optional) Is the key name a regular expression?
+* `keyname_json_xss` - (Optional) An expression that designates a keyname on the JSON XSS URL for which XSS injection violations are relaxed.
+* `as_value_type_json_xss` - (Optional) Type of the relaxed JSON XSS key value.
+* `as_value_expr_json_xss` - (Optional) The JSON XSS key value expression.
+* `isvalueregex_json_xss` - (Optional) Is the JSON XSS key value a regular expression?
 
 
 ## Attribute Reference

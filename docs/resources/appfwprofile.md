@@ -142,6 +142,72 @@ resource "citrixadc_appfwprofile" "tf_appfwprofile1" {
     * CMDSplCharANDKeyword : Checks for both and blocks if both are found
     * CMDSplCharORKeyword : Checks for both and blocks if anyone is found,
     * None : Disables checking using both CMD Special Char and Keyword.
+* `apispec` - (Optional) Name of the API Specification.
+* `as_prof_bypass_list_enable` - (Optional) Enable bypass list for the profile.
+* `as_prof_deny_list_enable` - (Optional) Enable deny list for the profile.
+* `augment` - (Optional) Augment Relaxation Rules during import.
+* `blockkeywordaction` - (Optional) Block Keyword action. Available settings function as follows:
+    * Block - Block connections that violate this security check.
+    * Log - Log violations of this security check.
+    * Stats - Generate statistics for this security check.
+    * None - Disable all actions for this security check.
+    Possible values: [ none, block, log, stats ]
+* `ceflogging` - (Optional) Enable CEF format logs for the profile.
+* `clientipexpression` - (Optional) Expression to get the client IP.
+* `cmdinjectiongrammar` - (Optional) Check for CMD injection using CMD grammar.
+* `cookiesamesiteattribute` - (Optional) Cookie Samesite attribute added to support adding cookie SameSite attribute for all set-cookies including appfw session cookies. Default value will be "SameSite=Lax".
+* `defaultfieldformatmaxoccurrences` - (Optional) Maximum allowed occurrences of the form field name in a request.
+* `fakeaccountdetection` - (Optional) Fake account detection flag : ON/OFF. If set to ON fake account detection is enabled on ADC, if set to OFF fake account detection is disabled.
+* `fieldscan` - (Optional) Check if formfield limit scan is ON or OFF.
+* `fieldscanlimit` - (Optional) Field scan limit value for HTML.
+* `geolocationlogging` - (Optional) Enable Geo-Location Logging in CEF format logs for the profile.
+* `grpcaction` - (Optional) gRPC validation. Possible values: [ none, block, log, stats ]
+* `importprofilename` - (Optional) Name of the profile which will be created/updated to associate the relaxation rules.
+* `insertcookiesamesiteattribute` - (Optional) Configure whether application firewall should add samesite attribute for set-cookies.
+* `inspectquerycontenttypes` - (Optional) Inspect request query as well as web forms for injected SQL and cross-site scripts for following content types.
+* `jsonblockkeywordaction` - (Optional) JSON Block Keyword action. Available settings function as follows:
+    * Block - Block connections that violate this security check.
+    * Log - Log violations of this security check.
+    * Stats - Generate statistics for this security check.
+    * None - Disable all actions for this security check.
+    Possible values: [ none, block, log, stats ]
+* `jsoncmdinjectionaction` - (Optional) One or more JSON CMD Injection actions. Available settings function as follows:
+    * Block - Block connections that violate this security check.
+    * Log - Log violations of this security check.
+    * Stats - Generate statistics for this security check.
+    * None - Disable all actions for this security check.
+    Possible values: [ none, block, log, stats ]
+* `jsoncmdinjectiongrammar` - (Optional) Check for CMD injection using CMD grammar in JSON.
+* `jsoncmdinjectiontype` - (Optional) Available CMD injection types.
+    * CMDSplChar : Checks for CMD Special Chars
+    * CMDKeyword : Checks for CMD Keywords
+    * CMDSplCharANDKeyword : Checks for both and blocks if both are found
+    * CMDSplCharORKeyword : Checks for both and blocks if anyone is found,
+    * None : Disables checking using both SQL Special Char and Keyword
+    Possible values: [ CMDSplChar, CMDKeyword, CMDSplCharORKeyword, CMDSplCharANDKeyword, None ]
+* `jsonerrorstatuscode` - (Optional) Response status code associated with JSON error page. Non-empty JSON error object must be imported to the application firewall profile for the status code.
+* `jsonerrorstatusmessage` - (Optional) Response status message associated with JSON error page.
+* `jsonfieldscan` - (Optional) Check if JSON field limit scan is ON or OFF.
+* `jsonfieldscanlimit` - (Optional) Field scan limit value for JSON.
+* `jsonmessagescan` - (Optional) Check if JSON message limit scan is ON or OFF.
+* `jsonmessagescanlimit` - (Optional) Message scan limit value for JSON.
+* `jsonsqlinjectiongrammar` - (Optional) Check for SQL injection using SQL grammar in JSON.
+* `matchurlstring` - (Optional) Match this action url in archived Relaxation Rules to replace.
+* `messagescan` - (Optional) Check if HTML message limit scan is ON or OFF.
+* `messagescanlimit` - (Optional) Message scan limit value for HTML.
+* `messagescanlimitcontenttypes` - (Optional) Enable Message Scan Limit for following content types.
+* `overwrite` - (Optional) Purge existing Relaxation Rules and replace during import.
+* `protofileobject` - (Optional) Name of the imported proto file.
+* `relaxationrules` - (Optional) Import all appfw relaxation rules.
+* `replaceurlstring` - (Optional) Replace matched url string with this action url string while restoring Relaxation Rules.
+* `restaction` - (Optional) rest validation. Possible values: [ none, block, log, stats ]
+* `sessioncookiename` - (Optional) Name of the session cookie that the application firewall uses to track user sessions.
+    Must begin with a letter or number, and can consist of from 1 to 31 letters, numbers, and the hyphen (-) and underscore (_) symbols.
+    The following requirement applies only to the Citrix ADC CLI:
+    If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my cookie name" or 'my cookie name').
+* `sqlinjectionruletype` - (Optional) Specifies SQL Injection rule type: ALLOW/DENY. If ALLOW rule type is configured then allow list rules are used, if DENY rule type is configured then deny rules are used.
+* `xmlerrorstatuscode` - (Optional) Response status code associated with XML error page. Non-empty XML error object must be imported to the application firewall profile for the status code.
+* `xmlerrorstatusmessage` - (Optional) Response status message associated with XML error page.
 
 ## Attribute Reference
 

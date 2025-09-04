@@ -61,6 +61,10 @@ resource "citrixadc_appfwsettings" "tf_appfwsettings" {
 * `undefaction` - (Optional) Profile to use when an application firewall policy evaluates to undefined (UNDEF).  An UNDEF event indicates an internal error condition. The APPFW_BLOCK built-in profile is the default setting. You can specify a different built-in or user-created profile as the UNDEF profile.
 * `useconfigurablesecretkey` - (Optional) Use configurable secret key in AppFw operations
 
+* `proxyusername` - (Optional) Proxy Username for signature updates.
+* `proxypassword` - (Optional, Sensitive) Password with which proxy user logs on.
+* `cookieflags` - (Optional) Add the specified flags to AppFW cookies. Available settings: None, HTTP Only, Secure, All.
+
 
 ## Attribute Reference
 

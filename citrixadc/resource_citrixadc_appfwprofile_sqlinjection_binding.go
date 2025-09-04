@@ -88,6 +88,18 @@ func resourceCitrixAdcAppfwprofile_sqlinjection_binding() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
+			"ruletype": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"resourceid": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -112,6 +124,8 @@ func createAppfwprofile_sqlinjection_bindingFunc(d *schema.ResourceData, meta in
 		Name:              appFwName,
 		Sqlinjection:      sqlinjection,
 		State:             d.Get("state").(string),
+		Ruletype:          d.Get("ruletype").(string),
+		Resourceid:        d.Get("resourceid").(string),
 	}
 
 	_, err := client.AddResource(service.Appfwprofile_sqlinjection_binding.Type(), sqlinjection, &appfwprofile_sqlinjection_binding)
@@ -192,6 +206,8 @@ func readAppfwprofile_sqlinjection_bindingFunc(d *schema.ResourceData, meta inte
 	d.Set("name", data["name"])
 	d.Set("sqlinjection", data["sqlinjection"])
 	d.Set("state", data["state"])
+	d.Set("ruletype", data["ruletype"])
+	d.Set("resourceid", data["resourceid"])
 
 	return nil
 

@@ -88,6 +88,12 @@ func resourceCitrixAdcAppfwprofile_fileuploadtype_binding() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
+			"isnameregex": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -107,6 +113,7 @@ func createAppfwprofile_fileuploadtype_bindingFunc(d *schema.ResourceData, meta 
 		Fileuploadtype:            d.Get("fileuploadtype").(string),
 		Isautodeployed:            d.Get("isautodeployed").(string),
 		Isregexfileuploadtypesurl: d.Get("isregexfileuploadtypesurl").(string),
+		Isnameregex:               d.Get("isnameregex").(string),
 		Name:                      d.Get("name").(string),
 		Resourceid:                d.Get("resourceid").(string),
 		Ruletype:                  d.Get("ruletype").(string),
@@ -194,6 +201,7 @@ func readAppfwprofile_fileuploadtype_bindingFunc(d *schema.ResourceData, meta in
 	d.Set("resourceid", data["resourceid"])
 	d.Set("ruletype", data["ruletype"])
 	d.Set("state", data["state"])
+	d.Set("isnameregex", data["isnameregex"])
 	return nil
 
 }
