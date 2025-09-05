@@ -73,6 +73,8 @@ resource citrixadc_appfwprofile demo_appfw {
 * `comment` - (Optional) Any comments about the purpose of profile, or other useful information about the profile.
 * `isautodeployed` - (Optional) Is the rule auto deployed by dynamic profile ?. Possible values: [ AUTODEPLOYED, NOTAUTODEPLOYED ]
 * `alertonly` - (Optional) Send SNMP alert?. Possible values: [ on, off ]
+* `ruletype` - (Optional) Specifies rule type of binding.
+* `resourceid` - (Optional) A "id" that identifies the rule.
 
 
 ## Attribute Reference

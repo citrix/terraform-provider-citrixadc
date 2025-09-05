@@ -63,6 +63,7 @@ resource "citrixadc_appfwprofile_fileuploadtype_binding" "tf_binding" {
 * `resourceid` - (Optional) A "id" that identifies the rule.
 * `ruletype` - (Optional) Specifies rule type of binding
 * `state` - (Optional) Enabled.
+* `isnameregex` - (Optional) Is field name a regular expression?
 
 
 ## Attribute Reference

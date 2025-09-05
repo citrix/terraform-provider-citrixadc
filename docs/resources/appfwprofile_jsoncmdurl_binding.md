@@ -62,6 +62,11 @@ resource "citrixadc_appfwprofile_jsoncmdurl_binding" "tf_binding" {
 * `resourceid` - (Optional) A "id" that identifies the rule.
 * `ruletype` - (Optional) Specifies rule type of binding
 * `state` - (Optional) Enabled.
+* `iskeyregex_json_cmd` - (Optional) Is the key name a regular expression?
+* `keyname_json_cmd` - (Optional) An expression that designates a keyname on the JSON CMD URL for which Command injection violations are relaxed.
+* `as_value_type_json_cmd` - (Optional) Type of the relaxed JSON CMD key value.
+* `as_value_expr_json_cmd` - (Optional) The JSON CMD key value expression.
+* `isvalueregex_json_cmd` - (Optional) Is the JSON CMD key value a regular expression?
 
 
 ## Attribute Reference

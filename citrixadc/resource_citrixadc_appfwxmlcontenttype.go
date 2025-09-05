@@ -26,7 +26,7 @@ func resourceCitrixAdcAppfwxmlcontenttype() *schema.Resource {
 			},
 			"xmlcontenttypevalue": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 				ForceNew: true,
 			},
 		},

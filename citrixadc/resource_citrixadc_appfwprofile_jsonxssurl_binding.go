@@ -69,6 +69,36 @@ func resourceCitrixAdcAppfwprofile_jsonxssurl_binding() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
+			"iskeyregex_json_xss": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"keyname_json_xss": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"as_value_type_json_xss": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"as_value_expr_json_xss": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"isvalueregex_json_xss": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -80,14 +110,19 @@ func createAppfwprofile_jsonxssurl_bindingFunc(d *schema.ResourceData, meta inte
 	jsonxssurl := d.Get("jsonxssurl")
 	bindingId := fmt.Sprintf("%s,%s", name, jsonxssurl)
 	appfwprofile_jsonxssurl_binding := appfw.Appfwprofilejsonxssurlbinding{
-		Alertonly:      d.Get("alertonly").(string),
-		Comment:        d.Get("comment").(string),
-		Isautodeployed: d.Get("isautodeployed").(string),
-		Jsonxssurl:     d.Get("jsonxssurl").(string),
-		Name:           d.Get("name").(string),
-		Resourceid:     d.Get("resourceid").(string),
-		Ruletype:       d.Get("ruletype").(string),
-		State:          d.Get("state").(string),
+		Alertonly:           d.Get("alertonly").(string),
+		Comment:             d.Get("comment").(string),
+		Isautodeployed:      d.Get("isautodeployed").(string),
+		Jsonxssurl:          d.Get("jsonxssurl").(string),
+		Name:                d.Get("name").(string),
+		Resourceid:          d.Get("resourceid").(string),
+		Ruletype:            d.Get("ruletype").(string),
+		State:               d.Get("state").(string),
+		Iskeyregexjsonxss:   d.Get("iskeyregex_json_xss").(string),
+		Keynamejsonxss:      d.Get("keyname_json_xss").(string),
+		Asvaluetypejsonxss:  d.Get("as_value_type_json_xss").(string),
+		Asvalueexprjsonxss:  d.Get("as_value_expr_json_xss").(string),
+		Isvalueregexjsonxss: d.Get("isvalueregex_json_xss").(string),
 	}
 
 	err := client.UpdateUnnamedResource("appfwprofile_jsonxssurl_binding", &appfwprofile_jsonxssurl_binding)
@@ -165,6 +200,11 @@ func readAppfwprofile_jsonxssurl_bindingFunc(d *schema.ResourceData, meta interf
 	d.Set("resourceid", data["resourceid"])
 	d.Set("ruletype", data["ruletype"])
 	d.Set("state", data["state"])
+	d.Set("iskeyregex_json_xss", data["iskeyregex_jsonxss"])
+	d.Set("keyname_json_xss", data["keynamejsonxss"])
+	d.Set("as_value_type_json_xss", data["asvaluetypejsonxss"])
+	d.Set("as_value_expr_json_xss", data["asvalueexprjsonxss"])
+	d.Set("isvalueregex_json_xss", data["isvalueregexjsonxss"])
 
 	return nil
 
