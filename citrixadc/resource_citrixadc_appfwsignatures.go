@@ -153,8 +153,9 @@ func updateAppfwsignaturesFunc(d *schema.ResourceData, meta interface{}) error {
 	appfwsignaturesName := d.Id()
 
 	appfwsignatures := appfw.Appfwsignatures{
-		Name: appfwsignaturesName,
-		Src:  d.Get("src").(string),
+		Name:      appfwsignaturesName,
+		Src:       d.Get("src").(string),
+		Overwrite: d.Get("overwrite").(bool),
 	}
 
 	appfwsignatures_update_obj := appfw.Appfwsignatures{
@@ -177,11 +178,6 @@ func updateAppfwsignaturesFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("mergedefault") {
 		log.Printf("[DEBUG]  citrixadc-provider: Mergedefault has changed for appfwsignatures %s, starting update", appfwsignaturesName)
 		appfwsignatures.Mergedefault = d.Get("mergedefault").(bool)
-		hasChange = true
-	}
-	if d.HasChange("overwrite") {
-		log.Printf("[DEBUG]  citrixadc-provider: Overwrite has changed for appfwsignatures %s, starting update", appfwsignaturesName)
-		appfwsignatures.Overwrite = d.Get("overwrite").(bool)
 		hasChange = true
 	}
 	if d.HasChange("preservedefactions") {
@@ -271,9 +267,12 @@ func deleteAppfwsignaturesFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppfwsignaturesFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appfwsignaturesName := d.Id()
-	err := client.DeleteResource(service.Appfwsignatures.Type(), appfwsignaturesName)
-	if err != nil {
-		return err
+	// Only delete if "ruleid" is not set by user
+	if _, ok := d.GetOk("ruleid"); !ok {
+		err := client.DeleteResource(service.Appfwsignatures.Type(), appfwsignaturesName)
+		if err != nil {
+			return err
+		}
 	}
 
 	d.SetId("")
