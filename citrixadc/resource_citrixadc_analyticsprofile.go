@@ -178,6 +178,53 @@ func resourceCitrixAdcAnalyticsprofile() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			// "httpcustomheaders": {
+			// 	Type:     schema.TypeList,
+			// 	Elem:     &schema.Schema{Type: schema.TypeString},
+			// 	Optional: true,
+			// 	Computed: true,
+			// },
+			"managementlog": {
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Optional: true,
+				Computed: true,
+			},
+			"analyticsauthtoken": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"analyticsendpointurl": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"analyticsendpointcontenttype": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"metricsexportfrequency": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"analyticsendpointmetadata": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"dataformatfile": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"topn": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -219,6 +266,15 @@ func createAnalyticsprofileFunc(d *schema.ResourceData, meta interface{}) error 
 		Urlcategory:                d.Get("urlcategory").(string),
 		Servemode:                  d.Get("servemode").(string),
 		Schemafile:                 d.Get("schemafile").(string),
+		// Httpcustomheaders:            toStringList(d.Get("httpcustomheaders").([]interface{})),
+		Managementlog:                toStringList(d.Get("managementlog").([]interface{})),
+		Analyticsauthtoken:           d.Get("analyticsauthtoken").(string),
+		Analyticsendpointurl:         d.Get("analyticsendpointurl").(string),
+		Analyticsendpointcontenttype: d.Get("analyticsendpointcontenttype").(string),
+		Metricsexportfrequency:       d.Get("metricsexportfrequency").(int),
+		Analyticsendpointmetadata:    d.Get("analyticsendpointmetadata").(string),
+		Dataformatfile:               d.Get("dataformatfile").(string),
+		Topn:                         d.Get("topn").(string),
 	}
 
 	_, err := client.AddResource("analyticsprofile", analyticsprofileName, &analyticsprofile)
@@ -279,6 +335,35 @@ func readAnalyticsprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("urlcategory", data["urlcategory"])
 	d.Set("servemode", data["servemode"])
 	d.Set("schemafile", data["schemafile"])
+
+	// New attributes
+	// if v, ok := data["httpcustomheaders"]; ok {
+	// 	d.Set("httpcustomheaders", v)
+	// }
+	if v, ok := data["managementlog"]; ok {
+		d.Set("managementlog", v)
+	}
+	if v, ok := data["analyticsauthtoken"]; ok {
+		d.Set("analyticsauthtoken", v)
+	}
+	if v, ok := data["analyticsendpointurl"]; ok {
+		d.Set("analyticsendpointurl", v)
+	}
+	if v, ok := data["analyticsendpointcontenttype"]; ok {
+		d.Set("analyticsendpointcontenttype", v)
+	}
+	if v, ok := data["metricsexportfrequency"]; ok {
+		d.Set("metricsexportfrequency", v)
+	}
+	if v, ok := data["analyticsendpointmetadata"]; ok {
+		d.Set("analyticsendpointmetadata", v)
+	}
+	if v, ok := data["dataformatfile"]; ok {
+		d.Set("dataformatfile", v)
+	}
+	if v, ok := data["topn"]; ok {
+		d.Set("topn", v)
+	}
 
 	return nil
 
@@ -446,6 +531,52 @@ func updateAnalyticsprofileFunc(d *schema.ResourceData, meta interface{}) error 
 	if d.HasChange("schemafile") {
 		log.Printf("[DEBUG]  citrixadc-provider: Schemafile has changed for analyticsprofile %s, starting update", analyticsprofileName)
 		analyticsprofile.Schemafile = d.Get("schemafile").(string)
+		hasChange = true
+	}
+	// New attributes
+	// if d.HasChange("httpcustomheaders") {
+	// 	log.Printf("[DEBUG]  citrixadc-provider: Httpcustomheaders has changed for analyticsprofile %s, starting update", analyticsprofileName)
+	// 	analyticsprofile.Httpcustomheaders = toStringList(d.Get("httpcustomheaders").([]interface{}))
+	// 	hasChange = true
+	// }
+	if d.HasChange("managementlog") {
+		log.Printf("[DEBUG]  citrixadc-provider: Managementlog has changed for analyticsprofile %s, starting update", analyticsprofileName)
+		analyticsprofile.Managementlog = toStringList(d.Get("managementlog").([]interface{}))
+		hasChange = true
+	}
+	if d.HasChange("analyticsauthtoken") {
+		log.Printf("[DEBUG]  citrixadc-provider: Analyticsauthtoken has changed for analyticsprofile %s, starting update", analyticsprofileName)
+		analyticsprofile.Analyticsauthtoken = d.Get("analyticsauthtoken").(string)
+		hasChange = true
+	}
+	if d.HasChange("analyticsendpointurl") {
+		log.Printf("[DEBUG]  citrixadc-provider: Analyticsendpointurl has changed for analyticsprofile %s, starting update", analyticsprofileName)
+		analyticsprofile.Analyticsendpointurl = d.Get("analyticsendpointurl").(string)
+		hasChange = true
+	}
+	if d.HasChange("analyticsendpointcontenttype") {
+		log.Printf("[DEBUG]  citrixadc-provider: Analyticsendpointcontenttype has changed for analyticsprofile %s, starting update", analyticsprofileName)
+		analyticsprofile.Analyticsendpointcontenttype = d.Get("analyticsendpointcontenttype").(string)
+		hasChange = true
+	}
+	if d.HasChange("metricsexportfrequency") {
+		log.Printf("[DEBUG]  citrixadc-provider: Metricsexportfrequency has changed for analyticsprofile %s, starting update", analyticsprofileName)
+		analyticsprofile.Metricsexportfrequency = d.Get("metricsexportfrequency").(int)
+		hasChange = true
+	}
+	if d.HasChange("analyticsendpointmetadata") {
+		log.Printf("[DEBUG]  citrixadc-provider: Analyticsendpointmetadata has changed for analyticsprofile %s, starting update", analyticsprofileName)
+		analyticsprofile.Analyticsendpointmetadata = d.Get("analyticsendpointmetadata").(string)
+		hasChange = true
+	}
+	if d.HasChange("dataformatfile") {
+		log.Printf("[DEBUG]  citrixadc-provider: Dataformatfile has changed for analyticsprofile %s, starting update", analyticsprofileName)
+		analyticsprofile.Dataformatfile = d.Get("dataformatfile").(string)
+		hasChange = true
+	}
+	if d.HasChange("topn") {
+		log.Printf("[DEBUG]  citrixadc-provider: Topn has changed for analyticsprofile %s, starting update", analyticsprofileName)
+		analyticsprofile.Topn = d.Get("topn").(string)
 		hasChange = true
 	}
 
