@@ -178,12 +178,12 @@ func resourceCitrixAdcAnalyticsprofile() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			// "httpcustomheaders": {
-			// 	Type:     schema.TypeList,
-			// 	Elem:     &schema.Schema{Type: schema.TypeString},
-			// 	Optional: true,
-			// 	Computed: true,
-			// },
+			"httpcustomheaders": {
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Optional: true,
+				Computed: true,
+			},
 			"managementlog": {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -234,40 +234,38 @@ func createAnalyticsprofileFunc(d *schema.ResourceData, meta interface{}) error 
 	client := meta.(*NetScalerNitroClient).client
 	analyticsprofileName := d.Get("name").(string)
 	analyticsprofile := analytics.Analyticsprofile{
-		Allhttpheaders:             d.Get("allhttpheaders").(string),
-		Auditlogs:                  d.Get("auditlogs").(string),
-		Collectors:                 d.Get("collectors").(string),
-		Cqareporting:               d.Get("cqareporting").(string),
-		Events:                     d.Get("events").(string),
-		Grpcstatus:                 d.Get("grpcstatus").(string),
-		Httpauthentication:         d.Get("httpauthentication").(string),
-		Httpclientsidemeasurements: d.Get("httpclientsidemeasurements").(string),
-		Httpcontenttype:            d.Get("httpcontenttype").(string),
-		Httpcookie:                 d.Get("httpcookie").(string),
-		Httpdomainname:             d.Get("httpdomainname").(string),
-		Httphost:                   d.Get("httphost").(string),
-		Httplocation:               d.Get("httplocation").(string),
-		Httpmethod:                 d.Get("httpmethod").(string),
-		Httppagetracking:           d.Get("httppagetracking").(string),
-		Httpreferer:                d.Get("httpreferer").(string),
-		Httpsetcookie:              d.Get("httpsetcookie").(string),
-		Httpsetcookie2:             d.Get("httpsetcookie2").(string),
-		Httpurl:                    d.Get("httpurl").(string),
-		Httpurlquery:               d.Get("httpurlquery").(string),
-		Httpuseragent:              d.Get("httpuseragent").(string),
-		Httpvia:                    d.Get("httpvia").(string),
-		Httpxforwardedforheader:    d.Get("httpxforwardedforheader").(string),
-		Integratedcache:            d.Get("integratedcache").(string),
-		Metrics:                    d.Get("metrics").(string),
-		Name:                       d.Get("name").(string),
-		Outputmode:                 d.Get("outputmode").(string),
-		Tcpburstreporting:          d.Get("tcpburstreporting").(string),
-		Type:                       d.Get("type").(string),
-		Urlcategory:                d.Get("urlcategory").(string),
-		Servemode:                  d.Get("servemode").(string),
-		Schemafile:                 d.Get("schemafile").(string),
-		// Httpcustomheaders:            toStringList(d.Get("httpcustomheaders").([]interface{})),
-		Managementlog:                toStringList(d.Get("managementlog").([]interface{})),
+		Allhttpheaders:               d.Get("allhttpheaders").(string),
+		Auditlogs:                    d.Get("auditlogs").(string),
+		Collectors:                   d.Get("collectors").(string),
+		Cqareporting:                 d.Get("cqareporting").(string),
+		Events:                       d.Get("events").(string),
+		Grpcstatus:                   d.Get("grpcstatus").(string),
+		Httpauthentication:           d.Get("httpauthentication").(string),
+		Httpclientsidemeasurements:   d.Get("httpclientsidemeasurements").(string),
+		Httpcontenttype:              d.Get("httpcontenttype").(string),
+		Httpcookie:                   d.Get("httpcookie").(string),
+		Httpdomainname:               d.Get("httpdomainname").(string),
+		Httphost:                     d.Get("httphost").(string),
+		Httplocation:                 d.Get("httplocation").(string),
+		Httpmethod:                   d.Get("httpmethod").(string),
+		Httppagetracking:             d.Get("httppagetracking").(string),
+		Httpreferer:                  d.Get("httpreferer").(string),
+		Httpsetcookie:                d.Get("httpsetcookie").(string),
+		Httpsetcookie2:               d.Get("httpsetcookie2").(string),
+		Httpurl:                      d.Get("httpurl").(string),
+		Httpurlquery:                 d.Get("httpurlquery").(string),
+		Httpuseragent:                d.Get("httpuseragent").(string),
+		Httpvia:                      d.Get("httpvia").(string),
+		Httpxforwardedforheader:      d.Get("httpxforwardedforheader").(string),
+		Integratedcache:              d.Get("integratedcache").(string),
+		Metrics:                      d.Get("metrics").(string),
+		Name:                         d.Get("name").(string),
+		Outputmode:                   d.Get("outputmode").(string),
+		Tcpburstreporting:            d.Get("tcpburstreporting").(string),
+		Type:                         d.Get("type").(string),
+		Urlcategory:                  d.Get("urlcategory").(string),
+		Servemode:                    d.Get("servemode").(string),
+		Schemafile:                   d.Get("schemafile").(string),
 		Analyticsauthtoken:           d.Get("analyticsauthtoken").(string),
 		Analyticsendpointurl:         d.Get("analyticsendpointurl").(string),
 		Analyticsendpointcontenttype: d.Get("analyticsendpointcontenttype").(string),
@@ -275,6 +273,12 @@ func createAnalyticsprofileFunc(d *schema.ResourceData, meta interface{}) error 
 		Analyticsendpointmetadata:    d.Get("analyticsendpointmetadata").(string),
 		Dataformatfile:               d.Get("dataformatfile").(string),
 		Topn:                         d.Get("topn").(string),
+	}
+	if listVal, ok := d.Get("httpcustomheaders").([]interface{}); ok {
+		analyticsprofile.Httpcustomheaders = toStringList(listVal)
+	}
+	if listVal, ok := d.Get("managementlog").([]interface{}); ok {
+		analyticsprofile.Managementlog = toStringList(listVal)
 	}
 
 	_, err := client.AddResource("analyticsprofile", analyticsprofileName, &analyticsprofile)
@@ -337,11 +341,19 @@ func readAnalyticsprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("schemafile", data["schemafile"])
 
 	// New attributes
-	// if v, ok := data["httpcustomheaders"]; ok {
-	// 	d.Set("httpcustomheaders", v)
-	// }
-	if v, ok := data["managementlog"]; ok {
-		d.Set("managementlog", v)
+	if val, ok := data["managementlog"]; ok {
+		if list, ok := val.([]interface{}); ok {
+			d.Set("managementlog", toStringList(list))
+		}
+	} else {
+		d.Set("managementlog", nil)
+	}
+	if val, ok := data["httpcustomheaders"]; ok {
+		if list, ok := val.([]interface{}); ok {
+			d.Set("httpcustomheaders", toStringList(list))
+		}
+	} else {
+		d.Set("httpcustomheaders", nil)
 	}
 	if v, ok := data["analyticsauthtoken"]; ok {
 		d.Set("analyticsauthtoken", v)
@@ -534,11 +546,11 @@ func updateAnalyticsprofileFunc(d *schema.ResourceData, meta interface{}) error 
 		hasChange = true
 	}
 	// New attributes
-	// if d.HasChange("httpcustomheaders") {
-	// 	log.Printf("[DEBUG]  citrixadc-provider: Httpcustomheaders has changed for analyticsprofile %s, starting update", analyticsprofileName)
-	// 	analyticsprofile.Httpcustomheaders = toStringList(d.Get("httpcustomheaders").([]interface{}))
-	// 	hasChange = true
-	// }
+	if d.HasChange("httpcustomheaders") {
+		log.Printf("[DEBUG]  citrixadc-provider: Httpcustomheaders has changed for analyticsprofile %s, starting update", analyticsprofileName)
+		analyticsprofile.Httpcustomheaders = toStringList(d.Get("httpcustomheaders").([]interface{}))
+		hasChange = true
+	}
 	if d.HasChange("managementlog") {
 		log.Printf("[DEBUG]  citrixadc-provider: Managementlog has changed for analyticsprofile %s, starting update", analyticsprofileName)
 		analyticsprofile.Managementlog = toStringList(d.Get("managementlog").([]interface{}))

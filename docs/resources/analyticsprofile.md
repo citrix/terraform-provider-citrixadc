@@ -54,6 +54,7 @@ resource "citrixadc_analyticsprofile" "tf_analyticsprofile" {
 * `servemode` - (Optional) This option is for setting the mode of how data is provided. Default value: Push | Possible values: [ Push, Pull ]
 * `auditlogs` - (Optional) This option indicates the whether auditlog should be sent to the REST collector. Possible values: [ ENABLED, DISABLED ]
 * `managementlog` - (Optional) This option indicates the whether managementlog should be sent to the REST collector.
+* `httpcustomheaders` - (Optional) Specify the list of custom headers to be exported in web transaction records.
 * `analyticsauthtoken` - (Optional) Token for authenticating with the endpoint. If the endpoint requires the Authorization header in a particular format, specify the complete format as the value to this parameter.
 * `analyticsendpointurl` - (Optional) The URL at which to upload the analytics data on the endpoint.
 * `analyticsendpointcontenttype` - (Optional) By default, application/json content-type is used. If this needs to be overridden, specify the value.
