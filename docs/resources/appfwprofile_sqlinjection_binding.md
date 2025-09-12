@@ -11,12 +11,16 @@ The `appfwprofile_sqlinjection_binding` resource is used to add bindings between
 ``` hcl
 resource citrixadc_appfwprofile_sqlinjection_binding demo_binding {
   name                 = citrixadc_appfwprofile.demo_appfw.name
-  sqlinjection         = "demo_binding"
-  as_scan_location_sql = "HEADER"
-  formactionurl_sql    = "http://www.example.com"
+  sqlinjection         = "data"
+  isautodeployed       = "NOTAUTODEPLOYED"
+  as_scan_location_sql = "FORMFIELD"
+  formactionurl_sql    = "^https://citrix.csg.com/analytics/saw.dll$"
+  as_value_type_sql    = "Keyword"
+  isvalueregex_sql     = "REGEX"
+  as_value_expr_sql    = ".*"
   state                = "ENABLED"
-  isregex_sql          = "NOTREGEX"
-}
+  depends_on           = [citrixadc_appfwprofile.demo_appfw]
+	}
 
 resource citrixadc_appfwprofile demo_appfw {
   name                     = "demo_appfwprofile1"
@@ -70,4 +74,19 @@ resource citrixadc_appfwprofile demo_appfw {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the `appfwprofile_sqlinjection_binding`. It is the concatenation of the `name` and `sqlinjection` attributes separated by a comma.
+* `id` - The id of the `appfwprofile_sqlinjection_binding`. It is the concatenation of the `name`, `sqlinjection`, `formactionurl_sql`, `as_scan_location_sql`, `as_value_type_sql` and `as_value_expr_sql` attributes separated by a comma.
+
+
+## Import
+
+An `appfwprofile_sqlinjection_binding` can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_appfwprofile_sqlinjection_binding.demo_binding demo_appfw,data,^https://citrix.csg.com/analytics/saw.dll$,FORMFIELD,Keyword,.*
+```
+
+An `appfwprofile_sqlinjection_binding` which does not have values set for `as_value_type_sql` and `as_value_expr_sql` can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_appfwprofile_sqlinjection_binding.demo_binding demo_appfw,data,^https://citrix.csg.com/analytics/saw.dll$,FORMFIELD
+```
