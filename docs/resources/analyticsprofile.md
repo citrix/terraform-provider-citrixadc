@@ -53,6 +53,15 @@ resource "citrixadc_analyticsprofile" "tf_analyticsprofile" {
 * `auditlogs` - (Optional) This option indicates the whether auditlog should be sent to the REST collector. Possible values: [ ENABLED, DISABLED ]
 * `servemode` - (Optional) This option is for setting the mode of how data is provided. Default value: Push | Possible values: [ Push, Pull ]
 * `auditlogs` - (Optional) This option indicates the whether auditlog should be sent to the REST collector. Possible values: [ ENABLED, DISABLED ]
+* `managementlog` - (Optional) This option indicates the whether managementlog should be sent to the REST collector.
+* `httpcustomheaders` - (Optional) Specify the list of custom headers to be exported in web transaction records.
+* `analyticsauthtoken` - (Optional) Token for authenticating with the endpoint. If the endpoint requires the Authorization header in a particular format, specify the complete format as the value to this parameter.
+* `analyticsendpointurl` - (Optional) The URL at which to upload the analytics data on the endpoint.
+* `analyticsendpointcontenttype` - (Optional) By default, application/json content-type is used. If this needs to be overridden, specify the value.
+* `metricsexportfrequency` - (Optional) This option is for configuring the metrics export frequency in seconds, frequency value must be in [30,300] seconds range.
+* `analyticsendpointmetadata` - (Optional) If the endpoint requires some metadata to be present before the actual json data, specify the same.
+* `dataformatfile` - (Optional) This option is for configuring the file containing the data format and metadata required by the analytics endpoint.
+* `topn` - (Optional) On enabling this topn support, the topn information of the stream identifier this profile is bound to will be exported to the analytics endpoint.
 
 
 ## Attribute Reference
