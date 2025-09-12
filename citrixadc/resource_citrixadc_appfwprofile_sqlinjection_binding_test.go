@@ -27,16 +27,30 @@ import (
 )
 
 const testAccAppfwprofile_sqlinjection_binding_basic = `
-	resource "citrixadc_appfwprofile_sqlinjection_binding" "demo_binding" {
+	resource "citrixadc_appfwprofile_sqlinjection_binding" "appfw-szw-bi-test-sqlinject-relax-7" {
 		name                 = citrixadc_appfwprofile.demo_appfw.name
-		sqlinjection         = "demo_binding"
-		as_scan_location_sql = "HEADER"
-		formactionurl_sql    = "www.example.com"
-		state                = "ENABLED"
-		isregex_sql          = "NOTREGEX"
+		sqlinjection         = "data"
+		isautodeployed       = "NOTAUTODEPLOYED"
+		as_scan_location_sql = "FORMFIELD"
+		formactionurl_sql    = "^https://szw-bi.test.denhaag.nl/analytics/saw.dll$"
 		as_value_type_sql    = "Keyword"
-		as_value_expr_sql    = "example1"
-		isvalueregex_sql     = "NOTREGEX"
+		isvalueregex_sql     = "REGEX"
+		as_value_expr_sql    = ".*"
+		state                = "ENABLED"
+		depends_on           = [citrixadc_appfwprofile.demo_appfw]
+	}
+
+	resource "citrixadc_appfwprofile_sqlinjection_binding" "appfw-szw-bi-test-sqlinject-relax-8" {
+		name                 = citrixadc_appfwprofile.demo_appfw.name
+		sqlinjection         = "data"
+		isautodeployed       = "NOTAUTODEPLOYED"
+		as_scan_location_sql = "FORMFIELD"
+		formactionurl_sql    = "^https://szw-bi.test.denhaag.nl/dv/ui/api/v1/maps/suggest$"
+		as_value_type_sql    = "Keyword"
+		isvalueregex_sql     = "REGEX"
+		as_value_expr_sql    = ".*"
+		state                = "ENABLED"
+		depends_on           = [citrixadc_appfwprofile.demo_appfw]
 	}
 
 	resource "citrixadc_appfwprofile" "demo_appfw" {
@@ -81,10 +95,20 @@ func TestAccAppfwprofile_sqlinjection_binding_basic(t *testing.T) {
 			{
 				Config: testAccAppfwprofile_sqlinjection_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppfwprofile_sqlinjection_bindingExist("citrixadc_appfwprofile_sqlinjection_binding.demo_binding", nil),
-					resource.TestCheckResourceAttr("citrixadc_appfwprofile_sqlinjection_binding.demo_binding", "name", "demo_appfwprofile"),
-					resource.TestCheckResourceAttr("citrixadc_appfwprofile_sqlinjection_binding.demo_binding", "as_scan_location_sql", "HEADER"),
-					resource.TestCheckResourceAttr("citrixadc_appfwprofile_sqlinjection_binding.demo_binding", "formactionurl_sql", "www.example.com"),
+					testAccCheckAppfwprofile_sqlinjection_bindingExist("citrixadc_appfwprofile_sqlinjection_binding.appfw-szw-bi-test-sqlinject-relax-7", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_sqlinjection_binding.appfw-szw-bi-test-sqlinject-relax-7", "name", "demo_appfwprofile"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_sqlinjection_binding.appfw-szw-bi-test-sqlinject-relax-7", "sqlinjection", "data"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_sqlinjection_binding.appfw-szw-bi-test-sqlinject-relax-7", "formactionurl_sql", "^https://szw-bi.test.denhaag.nl/analytics/saw.dll$"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_sqlinjection_binding.appfw-szw-bi-test-sqlinject-relax-7", "as_scan_location_sql", "FORMFIELD"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_sqlinjection_binding.appfw-szw-bi-test-sqlinject-relax-7", "isvalueregex_sql", "REGEX"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_sqlinjection_binding.appfw-szw-bi-test-sqlinject-relax-7", "state", "ENABLED"),
+					testAccCheckAppfwprofile_sqlinjection_bindingExist("citrixadc_appfwprofile_sqlinjection_binding.appfw-szw-bi-test-sqlinject-relax-8", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_sqlinjection_binding.appfw-szw-bi-test-sqlinject-relax-8", "name", "demo_appfwprofile"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_sqlinjection_binding.appfw-szw-bi-test-sqlinject-relax-8", "sqlinjection", "data"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_sqlinjection_binding.appfw-szw-bi-test-sqlinject-relax-8", "formactionurl_sql", "^https://szw-bi.test.denhaag.nl/dv/ui/api/v1/maps/suggest$"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_sqlinjection_binding.appfw-szw-bi-test-sqlinject-relax-8", "as_scan_location_sql", "FORMFIELD"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_sqlinjection_binding.appfw-szw-bi-test-sqlinject-relax-8", "isvalueregex_sql", "REGEX"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_sqlinjection_binding.appfw-szw-bi-test-sqlinject-relax-8", "state", "ENABLED"),
 				),
 			},
 		},
@@ -111,10 +135,15 @@ func testAccCheckAppfwprofile_sqlinjection_bindingExist(n string, id *string) re
 		}
 
 		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+
 		bindingId := rs.Primary.ID
-		idSlice := strings.SplitN(bindingId, ",", 2)
+		idSlice := strings.Split(bindingId, ",")
 		appFwName := idSlice[0]
 		sqlinjection := idSlice[1]
+		formactionurl_sql := idSlice[2]
+		as_scan_location_sql := idSlice[3]
+		as_value_type_sql := idSlice[4]
+		as_value_expr_sql := idSlice[5]
 
 		findParams := service.FindParams{
 			ResourceType:             service.Appfwprofile_sqlinjection_binding.Type(),
@@ -132,8 +161,14 @@ func testAccCheckAppfwprofile_sqlinjection_bindingExist(n string, id *string) re
 		foundIndex := -1
 		for i, v := range dataArr {
 			if v["sqlinjection"].(string) == sqlinjection {
-				foundIndex = i
-				break
+				unescapedURL, err := unescapeStringURL(v["formactionurl_sql"].(string))
+				if err != nil {
+					return err
+				}
+				if v["formactionurl_sql"] != nil && v["as_scan_location_sql"] != nil && v["as_value_type_sql"] != nil && v["as_value_expr_sql"] != nil && v["as_value_type_sql"].(string) == as_value_type_sql && v["as_value_expr_sql"].(string) == as_value_expr_sql && v["as_scan_location_sql"].(string) == as_scan_location_sql && unescapedURL == formactionurl_sql {
+					foundIndex = i
+					break
+				}
 			}
 		}
 
