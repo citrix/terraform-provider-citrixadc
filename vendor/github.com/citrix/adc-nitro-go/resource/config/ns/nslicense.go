@@ -71,6 +71,7 @@ type Nslicense struct {
 	Licensingmode string `json:"licensingmode,omitempty"`
 	Cloudsubscriptionimage string `json:"cloudsubscriptionimage,omitempty"`
 	Daystoexpiration string `json:"daystoexpiration,omitempty"`
+	Daystolasenforcement string `json:"daystolasenforcement,omitempty"`
 	Rdpproxy string `json:"rdpproxy,omitempty"`
 	Rep string `json:"rep,omitempty"`
 	Urlfiltering string `json:"urlfiltering,omitempty"`

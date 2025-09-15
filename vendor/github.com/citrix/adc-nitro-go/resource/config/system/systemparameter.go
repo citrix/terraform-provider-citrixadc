@@ -117,9 +117,9 @@ type Systemparameter struct {
 	Maxsessionperuser int `json:"maxsessionperuser,omitempty"`
 	/**
 	* Configure WAF protection for endpoints used by NetScaler management interfaces. The available options are:
-		* DEFAULT - NetScaler decides which endpoints have WAF protection enabled.
+		* DEFAULT - NetScaler determines which endpoints have WAF protection enabled or disabled. In the current release, WAF protection is disabled for all endpoints when this option is used. The behavior of this option may change in future releases.
 		* GUI - Endpoints used by the Management GUI Interface are WAF protected.
-		* DISABLED - WAF protection is disabled.
+		* DISABLED - WAF protection is disabled for all endpoints.
 	*/
 	Wafprotection []string `json:"wafprotection,omitempty"`
 	/**
