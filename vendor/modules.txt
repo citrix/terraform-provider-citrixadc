@@ -95,7 +95,7 @@ github.com/bgentry/go-netrc/netrc
 # github.com/bgentry/speakeasy v0.1.0
 ## explicit
 github.com/bgentry/speakeasy
-# github.com/citrix/adc-nitro-go v0.0.0-20250903170047-3c4fec6b26ed
+# github.com/citrix/adc-nitro-go v0.0.0-20250915211247-deb279797e53
 ## explicit; go 1.14
 github.com/citrix/adc-nitro-go/resource/config/aaa
 github.com/citrix/adc-nitro-go/resource/config/adm
