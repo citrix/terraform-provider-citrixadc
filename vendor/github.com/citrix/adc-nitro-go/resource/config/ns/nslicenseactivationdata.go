@@ -17,30 +17,13 @@
 package ns
 
 /**
-* Configuration for laslicense resource.
+* Configuration for License activation data resource.
 */
-type Nslaslicense struct {
-	/**
-	* Name of the file. It should not include filepath.
-	*/
-	Filename string `json:"filename,omitempty"`
-	/**
-	* location of the file on Citrix ADC.
-	*/
-	Filelocation string `json:"filelocation,omitempty"`
-	/**
-	* apply fixed bandwidth license on ADC
-	*/
-	Fixedbandwidth bool `json:"fixedbandwidth,omitempty"`
+type Nslicenseactivationdata struct {
 
 	//------- Read only Parameter ---------;
 
-	Status string `json:"status,omitempty"`
-	Daystoexpiration string `json:"daystoexpiration,omitempty"`
-	Renewalprev string `json:"renewalprev,omitempty"`
-	Renewalnext string `json:"renewalnext,omitempty"`
-	Renewalprevdate string `json:"renewalprevdate,omitempty"`
-	Renewalnextdate string `json:"renewalnextdate,omitempty"`
+	Filename string `json:"filename,omitempty"`
 	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

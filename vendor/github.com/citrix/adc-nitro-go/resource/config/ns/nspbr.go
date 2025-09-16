@@ -111,11 +111,7 @@ type Nspbr struct {
 	/**
 	* Integer value that uniquely identifies the traffic domain to which you want to send packet to.
 	*/
-	Targettd bool `json:"targettd,omitempty"`
-	/**
-	* Integer value that uniquely identifies the traffic domain to send packet to.
-	*/
-	Targettdval int `json:"targettdval,omitempty"`
+	Targettd int `json:"targettd,omitempty"`
 	/**
 	* MAC address to match against the source MAC address of an outgoing IPv4 packet.
 	*/
