@@ -27,7 +27,7 @@ resource "citrixadc_appfwwsdl" "tf_appfwwsdl" {
 ## Argument Reference
 
 * `name` - (Required) Name of the WSDL file to remove. Minimum length =  1
-* `src` - (Optional) URL (protocol, host, path, and name) of the WSDL file to be imported is stored. NOTE: The import fails if the object to be imported is on an HTTPS server that requires client certificate authentication for access. Minimum length =  1 Maximum length =  2047
+* `src` - (Required) URL (protocol, host, path, and name) of the WSDL file to be imported is stored. NOTE: The import fails if the object to be imported is on an HTTPS server that requires client certificate authentication for access. Minimum length =  1 Maximum length =  2047
 * `comment` - (Optional) Any comments to preserve information about the WSDL. Maximum length =  128
 * `overwrite` - (Optional) Overwrite any existing WSDL of the same name.
 

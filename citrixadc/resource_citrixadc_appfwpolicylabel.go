@@ -14,6 +14,7 @@ func resourceCitrixAdcAppfwpolicylabel() *schema.Resource {
 		SchemaVersion: 1,
 		Create:        createAppfwpolicylabelFunc,
 		Read:          readAppfwpolicylabelFunc,
+		Update:        updateAppfwpolicyLabelFunc,
 		Delete:        deleteAppfwpolicylabelFunc,
 		Schema: map[string]*schema.Schema{
 			"labelname": {
@@ -22,6 +23,11 @@ func resourceCitrixAdcAppfwpolicylabel() *schema.Resource {
 				ForceNew: true,
 			},
 			"policylabeltype": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"newname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -70,6 +76,31 @@ func readAppfwpolicylabelFunc(d *schema.ResourceData, meta interface{}) error {
 
 	return nil
 
+}
+
+func updateAppfwpolicyLabelFunc(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[DEBUG]  citrixadc-provider: In updateAppfwpolicyLabelFunc")
+	client := meta.(*NetScalerNitroClient).client
+	appfwpolicylabelName := d.Get("labelname").(string)
+
+	appfwpolicylabel := appfw.Appfwpolicylabel{
+		Labelname: appfwpolicylabelName,
+	}
+	hasRename := false
+	if d.HasChange("newname") {
+		log.Printf("[DEBUG]  citrixadc-provider: Newname has changed for appfwpolicylabel %s, starting rename", appfwpolicylabelName)
+		appfwpolicylabel.Newname = d.Get("newname").(string)
+		hasRename = true
+	}
+
+	if hasRename {
+		err := client.ActOnResource(service.Appfwpolicylabel.Type(), &appfwpolicylabel, "rename")
+		if err != nil {
+			return err
+		}
+		d.SetId(appfwpolicylabel.Newname)
+	}
+	return readAppfwpolicylabelFunc(d, meta)
 }
 
 func deleteAppfwpolicylabelFunc(d *schema.ResourceData, meta interface{}) error {

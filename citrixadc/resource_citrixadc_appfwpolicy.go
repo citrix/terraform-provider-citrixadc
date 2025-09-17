@@ -43,13 +43,13 @@ func resourceCitrixAdcAppfwpolicy() *schema.Resource {
 			},
 			"profilename": {
 				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Required: true,
+				Computed: false,
 			},
 			"rule": {
 				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Required: true,
+				Computed: false,
 			},
 		},
 	}
@@ -64,7 +64,6 @@ func createAppfwpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 		Comment:     d.Get("comment").(string),
 		Logaction:   d.Get("logaction").(string),
 		Name:        appfwpolicyName,
-		Newname:     d.Get("newname").(string),
 		Profilename: d.Get("profilename").(string),
 		Rule:        d.Get("rule").(string),
 	}
@@ -98,8 +97,6 @@ func readAppfwpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", data["name"])
 	d.Set("comment", data["comment"])
 	d.Set("logaction", data["logaction"])
-	d.Set("name", data["name"])
-	d.Set("newname", data["newname"])
 	d.Set("profilename", data["profilename"])
 	d.Set("rule", data["rule"])
 
@@ -116,6 +113,7 @@ func updateAppfwpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 		Name: d.Get("name").(string),
 	}
 	hasChange := false
+	hasRename := false
 	if d.HasChange("comment") {
 		log.Printf("[DEBUG]  citrixadc-provider: Comment has changed for appfwpolicy %s, starting update", appfwpolicyName)
 		appfwpolicy.Comment = d.Get("comment").(string)
@@ -126,15 +124,10 @@ func updateAppfwpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 		appfwpolicy.Logaction = d.Get("logaction").(string)
 		hasChange = true
 	}
-	if d.HasChange("name") {
-		log.Printf("[DEBUG]  citrixadc-provider: Name has changed for appfwpolicy %s, starting update", appfwpolicyName)
-		appfwpolicy.Name = d.Get("name").(string)
-		hasChange = true
-	}
 	if d.HasChange("newname") {
 		log.Printf("[DEBUG]  citrixadc-provider: Newname has changed for appfwpolicy %s, starting update", appfwpolicyName)
 		appfwpolicy.Newname = d.Get("newname").(string)
-		hasChange = true
+		hasRename = true
 	}
 	if d.HasChange("profilename") {
 		log.Printf("[DEBUG]  citrixadc-provider: Profilename has changed for appfwpolicy %s, starting update", appfwpolicyName)
@@ -152,6 +145,13 @@ func updateAppfwpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return fmt.Errorf("Error updating appfwpolicy %s", appfwpolicyName)
 		}
+	}
+	if hasRename {
+		err := client.ActOnResource(service.Appfwpolicy.Type(), &appfwpolicy, "rename")
+		if err != nil {
+			return err
+		}
+		d.SetId(appfwpolicy.Newname)
 	}
 	return readAppfwpolicyFunc(d, meta)
 }
