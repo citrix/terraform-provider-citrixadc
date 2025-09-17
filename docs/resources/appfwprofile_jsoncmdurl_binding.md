@@ -41,6 +41,17 @@ resource "citrixadc_appfwprofile" "tf_appfwprofile" {
   xmlwsiaction             = ["none"]
   xmlxssaction             = ["none"]
 }
+resource "citrixadc_appfwprofile_jsoncmdurl_binding" "tf_binding2" {
+  name           = citrixadc_appfwprofile.tf_appfwprofile.name
+  jsoncmdurl     = "www.example.com"
+  keyname_json_cmd = "id"
+  as_value_type_json_cmd = "SpecialString"
+  as_value_expr_json_cmd = "$"
+  alertonly      = "ON"
+  isautodeployed = "AUTODEPLOYED"
+  comment        = "Testing"
+  state          = "DISABLED"
+}
 resource "citrixadc_appfwprofile_jsoncmdurl_binding" "tf_binding" {
   name           = citrixadc_appfwprofile.tf_appfwprofile.name
   jsoncmdurl     = "www.example.com"
@@ -73,13 +84,19 @@ resource "citrixadc_appfwprofile_jsoncmdurl_binding" "tf_binding" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the appfwprofile_jsoncmdurl_binding. It is the concatenation of `name` and `jsoncmdurl` attributes separated by comma.
+* `id` - The id of the appfwprofile_jsoncmdurl_binding. It is the concatenation of `name`,`jsoncmdurl`,`keyname_json_cmd`,`as_value_type_json_cmd` and `as_value_expr_json_cmd`attributes separated by comma.
 
 
 ## Import
 
-A appfwprofile_jsoncmdurl_binding can be imported using its id, e.g.
+An appfwprofile_jsoncmdurl_binding can be imported using its id, e.g.
 
 ```shell
-terraform import citrixadc_appfwprofile_jsoncmdurl_binding.tf_binding tf_appfwprofile,www.example.com
+terraform import citrixadc_appfwprofile_jsoncmdurl_binding.tf_binding tf_appfwprofile,www.example.com,id,SpecialString,$
+```
+
+An appfwprofile_jsoncmdurl_binding which does not have values set for keyname_json_cmd, as_value_type_json_cmd and as_value_expr_json_cmd can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_appfwprofile_jsoncmdurl_binding.tf_binding2 tf_appfwprofile,www.example.com
 ```

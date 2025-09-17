@@ -57,20 +57,20 @@ resource "citrixadc_appfwprofile_csrftag_binding" "tf_binding" {
 
 * `name` - (Required) Name of the profile to which to bind an exemption or rule.
 * `csrftag` - (Required) The web form originating URL.
-* `alertonly` - (Optional) Send SNMP alert?
+* `csrfformactionurl` - (Required) The web form action URL.
+* `alertonly` - (Optional) Send SNMP alert?. Possible values: [ ON, OFF ]
 * `comment` - (Optional) Any comments about the purpose of profile, or other useful information about the profile.
-* `csrfformactionurl` - (Optional) The web form action URL.
-* `isautodeployed` - (Optional) Is the rule auto deployed by dynamic profile ?
-* `resourceid` - (Optional) A "id" that identifies the rule.
-* `ruletype` - (Optional) Specifies rule type of binding
-* `state` - (Optional) Enabled.
+* `isautodeployed` - (Optional) Is the rule auto deployed by dynamic profile ?. Possible values: [ AUTODEPLOYED, NOTAUTODEPLOYED ]
+* `resourceid` - (Optional) A unique id that identifies the rule.
+* `ruletype` - (Optional) Specifies rule type of binding.
+* `state` - (Optional) Enabled. Possible values: [ ENABLED, DISABLED ]
 
 
 ## Attribute Reference
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the appfwprofile_csrftag_binding. It is the concatenation of `name` and `csrftag` attributes separated by comma.
+* `id` - The id of the appfwprofile_csrftag_binding. It is the concatenation of the `name`, `csrftag` and `csrfformactionurl` attributes separated by a comma.
 
 
 ## Import
@@ -78,5 +78,5 @@ In addition to the arguments, the following attributes are available:
 A appfwprofile_csrftag_binding can be imported using its id, e.g.
 
 ```shell
-terraform import citrixadc_appfwprofile_csrftag_binding.tf_binding tf_appfwprofile,www.source.com
+terraform import citrixadc_appfwprofile_csrftag_binding.tf_binding tf_appfwprofile,www.source.com,www.action.com
 ```
