@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccAppfwprofile_csrftag_binding_basic = `
@@ -60,6 +61,15 @@ const testAccAppfwprofile_csrftag_binding_basic = `
 		name              = citrixadc_appfwprofile.tf_appfwprofile.name
 		csrftag           = "www.source.com"
 		csrfformactionurl = "www.action.com"
+		isautodeployed    = "NOTAUTODEPLOYED"
+		comment           = "Testing"
+		state             = "ENABLED"
+		alertonly         = "OFF"
+	}
+	resource "citrixadc_appfwprofile_csrftag_binding" "tf_binding2" {
+		name              = citrixadc_appfwprofile.tf_appfwprofile.name
+		csrftag           = "www.source.com"
+		csrfformactionurl = "www.action2.com"
 		isautodeployed    = "NOTAUTODEPLOYED"
 		comment           = "Testing"
 		state             = "ENABLED"
@@ -112,12 +122,26 @@ func TestAccAppfwprofile_csrftag_binding_basic(t *testing.T) {
 				Config: testAccAppfwprofile_csrftag_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppfwprofile_csrftag_bindingExist("citrixadc_appfwprofile_csrftag_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr(
+						"citrixadc_appfwprofile_csrftag_binding.tf_binding", "name", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_appfwprofile_csrftag_binding.tf_binding", "csrftag", "www.source.com"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_appfwprofile_csrftag_binding.tf_binding", "csrfformactionurl", "www.action.com"),
+					testAccCheckAppfwprofile_csrftag_bindingExist("citrixadc_appfwprofile_csrftag_binding.tf_binding2", nil),
+					resource.TestCheckResourceAttr(
+						"citrixadc_appfwprofile_csrftag_binding.tf_binding2", "name", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_appfwprofile_csrftag_binding.tf_binding2", "csrftag", "www.source.com"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_appfwprofile_csrftag_binding.tf_binding2", "csrfformactionurl", "www.action2.com"),
 				),
 			},
 			{
 				Config: testAccAppfwprofile_csrftag_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppfwprofile_csrftag_bindingNotExist("citrixadc_appfwprofile_csrftag_binding.tf_binding", "tf_appfwprofile,www.source.com"),
+					testAccCheckAppfwprofile_csrftag_bindingNotExist("citrixadc_appfwprofile_csrftag_binding.tf_binding", "tf_appfwprofile,www.source.com,www.action.com"),
+					testAccCheckAppfwprofile_csrftag_bindingNotExist("citrixadc_appfwprofile_csrftag_binding.tf_binding2", "tf_appfwprofile,www.source.com,www.action2.com"),
 				),
 			},
 		},
@@ -147,10 +171,11 @@ func testAccCheckAppfwprofile_csrftag_bindingExist(n string, id *string) resourc
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
+		idSlice := strings.SplitN(bindingId, ",", 3)
 
 		name := idSlice[0]
 		csrftag := idSlice[1]
+		csrfformactionurl := idSlice[2]
 
 		findParams := service.FindParams{
 			ResourceType:             "appfwprofile_csrftag_binding",
@@ -167,7 +192,7 @@ func testAccCheckAppfwprofile_csrftag_bindingExist(n string, id *string) resourc
 		// Iterate through results to find the one with the matching secondIdComponent
 		found := false
 		for _, v := range dataArr {
-			if v["csrftag"].(string) == csrftag {
+			if v["csrftag"].(string) == csrftag && v["csrfformactionurl"].(string) == csrfformactionurl {
 				found = true
 				break
 			}
@@ -188,10 +213,11 @@ func testAccCheckAppfwprofile_csrftag_bindingNotExist(n string, id string) resou
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
+		idSlice := strings.SplitN(id, ",", 3)
 
 		name := idSlice[0]
 		csrftag := idSlice[1]
+		csrfformactionurl := idSlice[2]
 
 		findParams := service.FindParams{
 			ResourceType:             "appfwprofile_csrftag_binding",
@@ -208,7 +234,7 @@ func testAccCheckAppfwprofile_csrftag_bindingNotExist(n string, id string) resou
 		// Iterate through results to hopefully not find the one with the matching secondIdComponent
 		found := false
 		for _, v := range dataArr {
-			if v["csrftag"].(string) == csrftag {
+			if v["csrftag"].(string) == csrftag && v["csrfformactionurl"].(string) == csrfformactionurl {
 				found = true
 				break
 			}

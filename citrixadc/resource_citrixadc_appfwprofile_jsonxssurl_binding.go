@@ -106,9 +106,19 @@ func resourceCitrixAdcAppfwprofile_jsonxssurl_binding() *schema.Resource {
 func createAppfwprofile_jsonxssurl_bindingFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppfwprofile_jsonxssurl_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
-	name := d.Get("name")
-	jsonxssurl := d.Get("jsonxssurl")
+	name := d.Get("name").(string)
+	jsonxssurl := d.Get("jsonxssurl").(string)
 	bindingId := fmt.Sprintf("%s,%s", name, jsonxssurl)
+	keyname_json_xss := d.Get("keyname_json_xss").(string)
+	as_value_type_json_xss := d.Get("as_value_type_json_xss").(string)
+	as_value_expr_json_xss := d.Get("as_value_expr_json_xss").(string)
+
+	if keyname_json_xss != "" {
+		bindingId = fmt.Sprintf("%s,%s", bindingId, keyname_json_xss)
+		if as_value_type_json_xss != "" && as_value_expr_json_xss != "" {
+			bindingId = fmt.Sprintf("%s,%s,%s", bindingId, as_value_type_json_xss, url.QueryEscape(as_value_expr_json_xss))
+		}
+	}
 	appfwprofile_jsonxssurl_binding := appfw.Appfwprofilejsonxssurlbinding{
 		Alertonly:           d.Get("alertonly").(string),
 		Comment:             d.Get("comment").(string),
@@ -144,11 +154,32 @@ func readAppfwprofile_jsonxssurl_bindingFunc(d *schema.ResourceData, meta interf
 	log.Printf("[DEBUG] citrixadc-provider:  In readAppfwprofile_jsonxssurl_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
-	idSlice := strings.SplitN(bindingId, ",", 2)
+	idSlice := strings.Split(bindingId, ",")
 
 	name := idSlice[0]
 	jsonxssurl := idSlice[1]
-
+	keyname_json_xss := ""
+	as_value_type_json_xss := ""
+	as_value_expr_json_xss := ""
+	if len(idSlice) > 2 {
+		keyname_json_xss = idSlice[2]
+	} else {
+		keyname_json_xss = d.Get("keyname_json_xss").(string)
+		if keyname_json_xss != "" {
+			bindingId = fmt.Sprintf("%s,%s", bindingId, keyname_json_xss)
+		}
+	}
+	if len(idSlice) > 4 {
+		as_value_type_json_xss = idSlice[3]
+		as_value_expr_json_xss = idSlice[4]
+	} else {
+		as_value_type_json_xss = d.Get("as_value_type_json_xss").(string)
+		as_value_expr_json_xss = d.Get("as_value_expr_json_xss").(string)
+		if as_value_type_json_xss != "" && as_value_expr_json_xss != "" {
+			bindingId = fmt.Sprintf("%s,%s,%s", bindingId, as_value_type_json_xss, url.QueryEscape(as_value_expr_json_xss))
+		}
+	}
+	d.SetId(bindingId)
 	log.Printf("[DEBUG] citrixadc-provider: Reading appfwprofile_jsonxssurl_binding state %s", bindingId)
 
 	findParams := service.FindParams{
@@ -175,9 +206,36 @@ func readAppfwprofile_jsonxssurl_bindingFunc(d *schema.ResourceData, meta interf
 	// Iterate through results to find the one with the right id
 	foundIndex := -1
 	for i, v := range dataArr {
-		if v["jsonxssurl"].(string) == jsonxssurl {
-			foundIndex = i
-			break
+		if v["jsonxssurl"] != nil && v["jsonxssurl"].(string) == jsonxssurl {
+			// Safe nil check for keyname_json_xss
+			vKeyname := ""
+			if v["keyname_json_xss"] != nil {
+				vKeyname = v["keyname_json_xss"].(string)
+			}
+			if keyname_json_xss != "" {
+				if vKeyname == keyname_json_xss {
+					vType := ""
+					vExpr := ""
+					if v["as_value_type_json_xss"] != nil {
+						vType = v["as_value_type_json_xss"].(string)
+					}
+					if v["as_value_expr_json_xss"] != nil {
+						vExpr = v["as_value_expr_json_xss"].(string)
+					}
+					if as_value_type_json_xss != "" && as_value_expr_json_xss != "" {
+						if strings.EqualFold(vType, as_value_type_json_xss) && vExpr == as_value_expr_json_xss {
+							foundIndex = i
+							break
+						}
+					} else if v["as_value_type_json_xss"] == nil && v["as_value_expr_json_xss"] == nil {
+						foundIndex = i
+						break
+					}
+				}
+			} else if v["keyname_json_xss"] == nil {
+				foundIndex = i
+				break
+			}
 		}
 	}
 
@@ -200,11 +258,11 @@ func readAppfwprofile_jsonxssurl_bindingFunc(d *schema.ResourceData, meta interf
 	d.Set("resourceid", data["resourceid"])
 	d.Set("ruletype", data["ruletype"])
 	d.Set("state", data["state"])
-	d.Set("iskeyregex_json_xss", data["iskeyregex_jsonxss"])
-	d.Set("keyname_json_xss", data["keynamejsonxss"])
-	d.Set("as_value_type_json_xss", data["asvaluetypejsonxss"])
-	d.Set("as_value_expr_json_xss", data["asvalueexprjsonxss"])
-	d.Set("isvalueregex_json_xss", data["isvalueregexjsonxss"])
+	d.Set("iskeyregex_json_xss", data["iskeyregex_json_xss"])
+	d.Set("keyname_json_xss", data["keyname_json_xss"])
+	d.Set("as_value_type_json_xss", data["as_value_type_json_xss"])
+	d.Set("as_value_expr_json_xss", data["as_value_expr_json_xss"])
+	d.Set("isvalueregex_json_xss", data["isvalueregex_json_xss"])
 
 	return nil
 
@@ -215,13 +273,22 @@ func deleteAppfwprofile_jsonxssurl_bindingFunc(d *schema.ResourceData, meta inte
 	client := meta.(*NetScalerNitroClient).client
 
 	bindingId := d.Id()
-	idSlice := strings.SplitN(bindingId, ",", 2)
+	idSlice := strings.Split(bindingId, ",")
 
 	name := idSlice[0]
 	jsonxssurl := idSlice[1]
 
 	args := make([]string, 0)
 	args = append(args, fmt.Sprintf("jsonxssurl:%s", url.QueryEscape(jsonxssurl)))
+	if val, ok := d.GetOk("keyname_json_xss"); ok {
+		args = append(args, fmt.Sprintf("keyname_json_xss:%s", url.QueryEscape(val.(string))))
+	}
+	if val, ok := d.GetOk("as_value_type_json_xss"); ok {
+		args = append(args, fmt.Sprintf("as_value_type_json_xss:%s", url.QueryEscape(val.(string))))
+	}
+	if val, ok := d.GetOk("as_value_expr_json_xss"); ok {
+		args = append(args, fmt.Sprintf("as_value_expr_json_xss:%s", url.QueryEscape(val.(string))))
+	}
 	if val, ok := d.GetOk("ruletype"); ok {
 		args = append(args, fmt.Sprintf("ruletype:%s", url.QueryEscape(val.(string))))
 	}

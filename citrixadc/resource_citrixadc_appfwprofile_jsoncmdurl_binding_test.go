@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccAppfwprofile_jsoncmdurl_binding_basic = `
@@ -59,6 +60,17 @@ const testAccAppfwprofile_jsoncmdurl_binding_basic = `
 	resource "citrixadc_appfwprofile_jsoncmdurl_binding" "tf_binding" {
 		name           = citrixadc_appfwprofile.tf_appfwprofile.name
 		jsoncmdurl     = "www.example.com"
+		alertonly      = "ON"
+		isautodeployed = "AUTODEPLOYED"
+		comment        = "Testing"
+		state          = "DISABLED"
+	}
+	resource "citrixadc_appfwprofile_jsoncmdurl_binding" "tf_binding2" {
+		name           = citrixadc_appfwprofile.tf_appfwprofile.name
+		jsoncmdurl     = "www.example.com"
+		keyname_json_cmd = "id"
+		as_value_type_json_cmd = "SpecialString"
+		as_value_expr_json_cmd = "$"
 		alertonly      = "ON"
 		isautodeployed = "AUTODEPLOYED"
 		comment        = "Testing"
@@ -111,12 +123,28 @@ func TestAccAppfwprofile_jsoncmdurl_binding_basic(t *testing.T) {
 				Config: testAccAppfwprofile_jsoncmdurl_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppfwprofile_jsoncmdurl_bindingExist("citrixadc_appfwprofile_jsoncmdurl_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_jsoncmdurl_binding.tf_binding", "name", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_jsoncmdurl_binding.tf_binding", "jsoncmdurl", "www.example.com"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_jsoncmdurl_binding.tf_binding", "alertonly", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_jsoncmdurl_binding.tf_binding", "isautodeployed", "AUTODEPLOYED"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_jsoncmdurl_binding.tf_binding", "comment", "Testing"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_jsoncmdurl_binding.tf_binding", "state", "DISABLED"),
+					testAccCheckAppfwprofile_jsoncmdurl_bindingExist("citrixadc_appfwprofile_jsoncmdurl_binding.tf_binding2", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_jsoncmdurl_binding.tf_binding2", "name", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_jsoncmdurl_binding.tf_binding2", "jsoncmdurl", "www.example.com"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_jsoncmdurl_binding.tf_binding2", "keyname_json_cmd", "id"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_jsoncmdurl_binding.tf_binding2", "as_value_type_json_cmd", "SpecialString"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_jsoncmdurl_binding.tf_binding2", "as_value_expr_json_cmd", "$"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_jsoncmdurl_binding.tf_binding2", "alertonly", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_jsoncmdurl_binding.tf_binding2", "isautodeployed", "AUTODEPLOYED"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_jsoncmdurl_binding.tf_binding2", "comment", "Testing"),
 				),
 			},
 			{
 				Config: testAccAppfwprofile_jsoncmdurl_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppfwprofile_jsoncmdurl_bindingNotExist("citrixadc_appfwprofile_jsoncmdurl_binding.tf_binding", "tf_appfwprofile,www.example.com"),
+					testAccCheckAppfwprofile_jsoncmdurl_bindingNotExist("citrixadc_appfwprofile_jsoncmdurl_binding.tf_binding2", "tf_appfwprofile,www.example.com,id,SpecialString,$"),
 				),
 			},
 		},
@@ -145,11 +173,20 @@ func testAccCheckAppfwprofile_jsoncmdurl_bindingExist(n string, id *string) reso
 		client := testAccProvider.Meta().(*NetScalerNitroClient).client
 
 		bindingId := rs.Primary.ID
-
-		idSlice := strings.SplitN(bindingId, ",", 2)
+		idSlice := strings.Split(bindingId, ",")
 
 		name := idSlice[0]
 		jsoncmdurl := idSlice[1]
+		keyname_json_cmd := ""
+		as_value_type_json_cmd := ""
+		as_value_expr_json_cmd := ""
+		if len(idSlice) > 2 {
+			keyname_json_cmd = idSlice[2]
+		}
+		if len(idSlice) > 4 {
+			as_value_type_json_cmd = idSlice[3]
+			as_value_expr_json_cmd = idSlice[4]
+		}
 
 		findParams := service.FindParams{
 			ResourceType:             "appfwprofile_jsoncmdurl_binding",
@@ -163,12 +200,38 @@ func testAccCheckAppfwprofile_jsoncmdurl_bindingExist(n string, id *string) reso
 			return err
 		}
 
-		// Iterate through results to find the one with the matching secondIdComponent
+		// Iterate through results to find the one with the matching components
 		found := false
 		for _, v := range dataArr {
-			if v["jsoncmdurl"].(string) == jsoncmdurl {
-				found = true
-				break
+			if v["jsoncmdurl"] != nil && v["jsoncmdurl"].(string) == jsoncmdurl {
+				vKeyname := ""
+				if v["keyname_json_cmd"] != nil {
+					vKeyname = v["keyname_json_cmd"].(string)
+				}
+				if keyname_json_cmd != "" {
+					if vKeyname == keyname_json_cmd {
+						vType := ""
+						vExpr := ""
+						if v["as_value_type_json_cmd"] != nil {
+							vType = v["as_value_type_json_cmd"].(string)
+						}
+						if v["as_value_expr_json_cmd"] != nil {
+							vExpr = v["as_value_expr_json_cmd"].(string)
+						}
+						if as_value_type_json_cmd != "" && as_value_expr_json_cmd != "" {
+							if vType == as_value_type_json_cmd && vExpr == as_value_expr_json_cmd {
+								found = true
+								break
+							}
+						} else if v["as_value_type_json_cmd"] == nil && v["as_value_expr_json_cmd"] == nil {
+							found = true
+							break
+						}
+					}
+				} else if v["keyname_json_cmd"] == nil {
+					found = true
+					break
+				}
 			}
 		}
 
@@ -187,10 +250,20 @@ func testAccCheckAppfwprofile_jsoncmdurl_bindingNotExist(n string, id string) re
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
+		idSlice := strings.Split(id, ",")
 
 		name := idSlice[0]
 		jsoncmdurl := idSlice[1]
+		keyname_json_cmd := ""
+		as_value_type_json_cmd := ""
+		as_value_expr_json_cmd := ""
+		if len(idSlice) > 2 {
+			keyname_json_cmd = idSlice[2]
+		}
+		if len(idSlice) > 4 {
+			as_value_type_json_cmd = idSlice[3]
+			as_value_expr_json_cmd = idSlice[4]
+		}
 
 		findParams := service.FindParams{
 			ResourceType:             "appfwprofile_jsoncmdurl_binding",
@@ -204,12 +277,38 @@ func testAccCheckAppfwprofile_jsoncmdurl_bindingNotExist(n string, id string) re
 			return err
 		}
 
-		// Iterate through results to hopefully not find the one with the matching secondIdComponent
+		// Iterate through results to hopefully not find the one with the matching components
 		found := false
 		for _, v := range dataArr {
-			if v["jsoncmdurl"].(string) == jsoncmdurl {
-				found = true
-				break
+			if v["jsoncmdurl"] != nil && v["jsoncmdurl"].(string) == jsoncmdurl {
+				vKeyname := ""
+				if v["keyname_json_cmd"] != nil {
+					vKeyname = v["keyname_json_cmd"].(string)
+				}
+				if keyname_json_cmd != "" {
+					if vKeyname == keyname_json_cmd {
+						vType := ""
+						vExpr := ""
+						if v["as_value_type_json_cmd"] != nil {
+							vType = v["as_value_type_json_cmd"].(string)
+						}
+						if v["as_value_expr_json_cmd"] != nil {
+							vExpr = v["as_value_expr_json_cmd"].(string)
+						}
+						if as_value_type_json_cmd != "" && as_value_expr_json_cmd != "" {
+							if vType == as_value_type_json_cmd && vExpr == as_value_expr_json_cmd {
+								found = true
+								break
+							}
+						} else if v["as_value_type_json_cmd"] == nil && v["as_value_expr_json_cmd"] == nil {
+							found = true
+							break
+						}
+					}
+				} else if v["keyname_json_cmd"] == nil {
+					found = true
+					break
+				}
 			}
 		}
 

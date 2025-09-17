@@ -23,7 +23,6 @@ import (
 	"testing"
 )
 
-
 const testAccAppfwsignatures_basic = `
 	resource "citrixadc_systemfile" "tf_signature" {
 		filename     = "appfw_signatures.xml"
