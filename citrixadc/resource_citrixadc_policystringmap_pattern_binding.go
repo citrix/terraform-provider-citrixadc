@@ -37,6 +37,11 @@ func resourceCitrixAdcPolicystringmap_pattern_binding() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"comment": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -48,9 +53,10 @@ func createPolicystringmap_pattern_bindingFunc(d *schema.ResourceData, meta inte
 	key := d.Get("key").(string)
 	bindingId := fmt.Sprintf("%s,%s", name, key)
 	policystringmap_pattern_binding := policy.Policystringmappatternbinding{
-		Key:   d.Get("key").(string),
-		Name:  d.Get("name").(string),
-		Value: d.Get("value").(string),
+		Key:     d.Get("key").(string),
+		Name:    d.Get("name").(string),
+		Value:   d.Get("value").(string),
+		Comment: d.Get("comment").(string),
 	}
 
 	_, err := client.AddResource(service.Policystringmap_pattern_binding.Type(), name, &policystringmap_pattern_binding)
@@ -121,6 +127,7 @@ func readPolicystringmap_pattern_bindingFunc(d *schema.ResourceData, meta interf
 	d.Set("name", data["name"])
 	d.Set("key", data["key"])
 	d.Set("value", data["value"])
+	d.Set("comment", data["comment"])
 
 	return nil
 
