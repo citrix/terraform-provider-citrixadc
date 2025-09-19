@@ -36,12 +36,14 @@ resource "citrixadc_policystringmap_pattern_binding" "tf_bind1" {
     name = citrixadc_policystringmap.tf_policystringmap.name
     key = "key1"
     value = "value1"
+	comment = "key1-value1"
 }
 
 resource "citrixadc_policystringmap_pattern_binding" "tf_bind2" {
     name = citrixadc_policystringmap.tf_policystringmap.name
     key = "key2"
     value = "value2"
+	comment = "key2-value2"
 }
 `
 
@@ -75,13 +77,20 @@ func TestAccPolicystringmap_pattern_binding_basic(t *testing.T) {
 				Config: testAccPolicystringmap_pattern_binding_basic_step1,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicystringmap_pattern_bindingExist("citrixadc_policystringmap_pattern_binding.tf_bind1", nil),
+					resource.TestCheckResourceAttr("citrixadc_policystringmap_pattern_binding.tf_bind1", "key", "key1"),
+					resource.TestCheckResourceAttr("citrixadc_policystringmap_pattern_binding.tf_bind1", "value", "value1"),
+					resource.TestCheckResourceAttr("citrixadc_policystringmap_pattern_binding.tf_bind1", "comment", "key1-value1"),
 					testAccCheckPolicystringmap_pattern_bindingExist("citrixadc_policystringmap_pattern_binding.tf_bind2", nil),
+					resource.TestCheckResourceAttr("citrixadc_policystringmap_pattern_binding.tf_bind2", "key", "key2"),
+					resource.TestCheckResourceAttr("citrixadc_policystringmap_pattern_binding.tf_bind2", "value", "value2"),
+					resource.TestCheckResourceAttr("citrixadc_policystringmap_pattern_binding.tf_bind2", "comment", "key2-value2"),
 				),
 			},
 			{
 				Config: testAccPolicystringmap_pattern_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicystringmap_pattern_bindingExist("citrixadc_policystringmap_pattern_binding.tf_bind1", nil),
+					resource.TestCheckResourceAttr("citrixadc_policystringmap_pattern_binding.tf_bind1", "value", "value1_new"),
 					testAccCheckPolicystringmap_pattern_bindingExist("citrixadc_policystringmap_pattern_binding.tf_bind2", nil),
 				),
 			},
