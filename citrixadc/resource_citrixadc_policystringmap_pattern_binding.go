@@ -17,6 +17,7 @@ func resourceCitrixAdcPolicystringmap_pattern_binding() *schema.Resource {
 		SchemaVersion: 1,
 		Create:        createPolicystringmap_pattern_bindingFunc,
 		Read:          readPolicystringmap_pattern_bindingFunc,
+		Update:        updatePolicystringmap_pattern_bindingFunc,
 		Delete:        deletePolicystringmap_pattern_bindingFunc,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -40,7 +41,6 @@ func resourceCitrixAdcPolicystringmap_pattern_binding() *schema.Resource {
 			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 			},
 		},
 	}
@@ -131,6 +131,33 @@ func readPolicystringmap_pattern_bindingFunc(d *schema.ResourceData, meta interf
 
 	return nil
 
+}
+
+func updatePolicystringmap_pattern_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[DEBUG]  citrixadc-provider: In updatePolicystringmap_pattern_bindingFunc")
+	client := meta.(*NetScalerNitroClient).client
+	name := d.Get("name").(string)
+	bindingId := d.Id()
+	policystringmap_pattern_binding := policy.Policystringmappatternbinding{
+		Key:   d.Get("key").(string),
+		Name:  name,
+		Value: d.Get("value").(string),
+	}
+	hasUpdate := false
+	if d.HasChange("comment") {
+		log.Printf("[DEBUG] netscaler-provider:  Comment has changed for policystringmap_pattern_binding %s, starting update", bindingId)
+		policystringmap_pattern_binding.Comment = d.Get("comment").(string)
+		hasUpdate = true
+	}
+
+	if hasUpdate {
+		_, err := client.AddResource(service.Policystringmap_pattern_binding.Type(), name, &policystringmap_pattern_binding)
+		if err != nil {
+			return err
+		}
+	}
+
+	return readPolicystringmap_pattern_bindingFunc(d, meta)
 }
 
 func deletePolicystringmap_pattern_bindingFunc(d *schema.ResourceData, meta interface{}) error {
