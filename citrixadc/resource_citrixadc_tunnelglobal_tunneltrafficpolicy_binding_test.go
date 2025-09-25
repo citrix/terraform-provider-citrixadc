@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"testing"
 )
 
 const testAccTunnelglobal_tunneltrafficpolicy_binding_basic = `
@@ -34,7 +35,6 @@ resource "citrixadc_tunneltrafficpolicy" "tf_tunneltrafficpolicy" {
 resource "citrixadc_tunnelglobal_tunneltrafficpolicy_binding" "tf_tunnelglobal_tunneltrafficpolicy_binding" {
 	priority   = 50
 	policyname = citrixadc_tunneltrafficpolicy.tf_tunneltrafficpolicy.name
-	type       = "REQ_DEFAULT"
   }
 `
 
@@ -63,7 +63,7 @@ func TestAccTunnelglobal_tunneltrafficpolicy_binding_basic(t *testing.T) {
 			{
 				Config: testAccTunnelglobal_tunneltrafficpolicy_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTunnelglobal_tunneltrafficpolicy_bindingNotExist("citrixadc_tunnelglobal_tunneltrafficpolicy_binding.tf_tunnelglobal_tunneltrafficpolicy_binding", "my_tunneltrafficpolicy", "REQ_DEFAULT"),
+					testAccCheckTunnelglobal_tunneltrafficpolicy_bindingNotExist("citrixadc_tunnelglobal_tunneltrafficpolicy_binding.tf_tunnelglobal_tunneltrafficpolicy_binding", "my_tunneltrafficpolicy", ""),
 				),
 			},
 		},
@@ -92,11 +92,14 @@ func testAccCheckTunnelglobal_tunneltrafficpolicy_bindingExist(n string, id *str
 		client := testAccProvider.Meta().(*NetScalerNitroClient).client
 
 		policyname := rs.Primary.ID
+		type_val := rs.Primary.Attributes["type"]
 
 		findParams := service.FindParams{
 			ResourceType:             "tunnelglobal_tunneltrafficpolicy_binding",
-			ArgsMap:                  map[string]string{"type": rs.Primary.Attributes["type"]},
 			ResourceMissingErrorCode: 258,
+		}
+		if type_val != "" {
+			findParams.ArgsMap = map[string]string{"type": type_val}
 		}
 		dataArr, err := client.FindResourceArrayWithParams(findParams)
 
@@ -130,8 +133,10 @@ func testAccCheckTunnelglobal_tunneltrafficpolicy_bindingNotExist(n string, id s
 
 		findParams := service.FindParams{
 			ResourceType:             "tunnelglobal_tunneltrafficpolicy_binding",
-			ArgsMap:                  map[string]string{"type": type_val},
 			ResourceMissingErrorCode: 258,
+		}
+		if type_val != "" {
+			findParams.ArgsMap = map[string]string{"type": type_val}
 		}
 		dataArr, err := client.FindResourceArrayWithParams(findParams)
 

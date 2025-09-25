@@ -44,8 +44,7 @@ func createLacpFunc(d *schema.ResourceData, meta interface{}) error {
 		Syspriority: d.Get("syspriority").(int),
 	}
 	if _, ok := d.GetOk("ownernode"); ok {
-		ownernode := d.Get("ownernode").(int)
-		lacp.Ownernode = ownernode
+		lacp.Ownernode = d.Get("ownernode").(int)
 	}
 
 	err := client.UpdateUnnamedResource(service.Lacp.Type(), &lacp)
