@@ -26,7 +26,7 @@ func resourceCitrixAdcTunnelglobal_tunneltrafficpolicy_binding() *schema.Resourc
 			},
 			"type": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
 			},
 			"feature": {

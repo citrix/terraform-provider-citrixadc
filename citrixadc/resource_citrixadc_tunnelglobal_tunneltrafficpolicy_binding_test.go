@@ -36,7 +36,6 @@ resource "citrixadc_tunnelglobal_tunneltrafficpolicy_binding" "tf_tunnelglobal_t
 	policyname = citrixadc_tunneltrafficpolicy.tf_tunneltrafficpolicy.name
 	type       = "REQ_DEFAULT"
   }
-  
 `
 
 const testAccTunnelglobal_tunneltrafficpolicy_binding_basic_step2 = `
