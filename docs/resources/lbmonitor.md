@@ -117,6 +117,17 @@ resource "citrixadc_lbmonitor" "tf_lbmonitor" {
 * `metricweight` - (Optional) The weight for the specified service metric with respect to others.
 * `servicename` - (Optional) The name of the service to which the monitor is bound.
 * `servicegroupname` - (Optional) The name of the service group to which the monitor is to be bound.
+* `secureargs` - (Optional) List of arguments for the script which should be secure.
+* `authapplicationid` - (Optional) List of Auth-Application-Id attribute value pairs (AVPs) for the Capabilities-Exchange-Request (CER) message to use for monitoring Diameter servers. A maximum of eight of these AVPs are supported in a monitoring CER message.
+* `acctapplicationid` - (Optional) List of Acct-Application-Id attribute value pairs (AVPs) for the Capabilities-Exchange-Request (CER) message to use for monitoring Diameter servers. A maximum of eight of these AVPs are supported in a monitoring message.
+* `supportedvendorids` - (Optional) List of Supported-Vendor-Id attribute value pairs (AVPs) for the Capabilities-Exchange-Request (CER) message to use for monitoring Diameter servers. A maximum eight of these AVPs are supported in a monitoring message.
+* `vendorspecificauthapplicationids` - (Optional) List of Vendor-Specific-Auth-Application-Id attribute value pairs (AVPs) for the Capabilities-Exchange-Request (CER) message to use for monitoring Diameter servers. A maximum of eight of these AVPs are supported in a monitoring message. The specified value is combined with the value of vendorSpecificVendorId to obtain the Vendor-Specific-Application-Id AVP in the CER monitoring message.
+* `vendorspecificacctapplicationids` - (Optional) List of Vendor-Specific-Acct-Application-Id attribute value pairs (AVPs) to use for monitoring Diameter servers. A maximum of eight of these AVPs are supported in a monitoring message. The specified value is combined with the value of vendorSpecificVendorId to obtain the Vendor-Specific-Application-Id AVP in the CER monitoring message.
+* `mqttclientidentifier` - (Optional) Client id to be used in Connect command.
+* `mqttversion` - (Optional) Version of MQTT protocol used in connect message, default is version 3.1.1 [4].
+* `grpchealthcheck` - (Optional) Option to enable or disable gRPC health check service.
+* `grpcstatuscode` - (Optional) gRPC status codes for which to mark the service as UP. The default value is 12(health check unimplemented). If the gRPC status code 0 is received from the backend this configuration is ignored.
+* `grpcservicename` - (Optional) Option to specify gRPC service name on which gRPC health check need to be performed.
 
 
 ## Attribute Reference

@@ -524,6 +524,67 @@ func resourceCitrixAdcLbmonitor() *schema.Resource {
 				Optional: true,
 				Computed: false,
 			},
+			"secureargs": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"authapplicationid": {
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeInt},
+				Optional: true,
+				Computed: true,
+			},
+			"acctapplicationid": {
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeInt},
+				Optional: true,
+				Computed: true,
+			},
+			"supportedvendorids": {
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeInt},
+				Optional: true,
+				Computed: true,
+			},
+			"vendorspecificauthapplicationids": {
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeInt},
+				Optional: true,
+				Computed: true,
+			},
+			"vendorspecificacctapplicationids": {
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeInt},
+				Optional: true,
+				Computed: true,
+			},
+			"mqttclientidentifier": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"mqttversion": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"grpchealthcheck": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"grpcstatuscode": {
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeInt},
+				Optional: true,
+				Computed: true,
+			},
+			"grpcservicename": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -543,105 +604,116 @@ func createLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 		d.Set("monitorname", lbmonitorName)
 	}
 	lbmonitor := lb.Lbmonitor{
-		Action:                         d.Get("action").(string),
-		Alertretries:                   d.Get("alertretries").(int),
-		Application:                    d.Get("application").(string),
-		Attribute:                      d.Get("attribute").(string),
-		Basedn:                         d.Get("basedn").(string),
-		Binddn:                         d.Get("binddn").(string),
-		Customheaders:                  d.Get("customheaders").(string),
-		Database:                       d.Get("database").(string),
-		Destip:                         d.Get("destip").(string),
-		Destport:                       d.Get("destport").(int),
-		Deviation:                      d.Get("deviation").(int),
-		Dispatcherip:                   d.Get("dispatcherip").(string),
-		Dispatcherport:                 d.Get("dispatcherport").(int),
-		Domain:                         d.Get("domain").(string),
-		Downtime:                       d.Get("downtime").(int),
-		Evalrule:                       d.Get("evalrule").(string),
-		Failureretries:                 d.Get("failureretries").(int),
-		Filename:                       d.Get("filename").(string),
-		Filter:                         d.Get("filter").(string),
-		Firmwarerevision:               d.Get("firmwarerevision").(int),
-		Group:                          d.Get("group").(string),
-		Hostipaddress:                  d.Get("hostipaddress").(string),
-		Hostname:                       d.Get("hostname").(string),
-		Httprequest:                    d.Get("httprequest").(string),
-		Inbandsecurityid:               d.Get("inbandsecurityid").(string),
-		Interval:                       d.Get("interval").(int),
-		Ipaddress:                      toStringList(d.Get("ipaddress").([]interface{})),
-		Iptunnel:                       d.Get("iptunnel").(string),
-		Kcdaccount:                     d.Get("kcdaccount").(string),
-		Lasversion:                     d.Get("lasversion").(string),
-		Logonpointname:                 d.Get("logonpointname").(string),
-		Lrtm:                           d.Get("lrtm").(string),
-		Maxforwards:                    d.Get("maxforwards").(int),
-		Metric:                         d.Get("metric").(string),
-		Metrictable:                    d.Get("metrictable").(string),
-		Metricthreshold:                d.Get("metricthreshold").(int),
-		Metricweight:                   d.Get("metricweight").(int),
-		Monitorname:                    d.Get("monitorname").(string),
-		Mssqlprotocolversion:           d.Get("mssqlprotocolversion").(string),
-		Netprofile:                     d.Get("netprofile").(string),
-		Oraclesid:                      d.Get("oraclesid").(string),
-		Originhost:                     d.Get("originhost").(string),
-		Originrealm:                    d.Get("originrealm").(string),
-		Password:                       d.Get("password").(string),
-		Productname:                    d.Get("productname").(string),
-		Query:                          d.Get("query").(string),
-		Querytype:                      d.Get("querytype").(string),
-		Radaccountsession:              d.Get("radaccountsession").(string),
-		Radaccounttype:                 d.Get("radaccounttype").(int),
-		Radapn:                         d.Get("radapn").(string),
-		Radframedip:                    d.Get("radframedip").(string),
-		Radkey:                         d.Get("radkey").(string),
-		Radmsisdn:                      d.Get("radmsisdn").(string),
-		Radnasid:                       d.Get("radnasid").(string),
-		Radnasip:                       d.Get("radnasip").(string),
-		Recv:                           d.Get("recv").(string),
-		Resptimeout:                    d.Get("resptimeout").(int),
-		Resptimeoutthresh:              d.Get("resptimeoutthresh").(int),
-		Retries:                        d.Get("retries").(int),
-		Reverse:                        d.Get("reverse").(string),
-		Rtsprequest:                    d.Get("rtsprequest").(string),
-		Scriptargs:                     d.Get("scriptargs").(string),
-		Scriptname:                     d.Get("scriptname").(string),
-		Secondarypassword:              d.Get("secondarypassword").(string),
-		Secure:                         d.Get("secure").(string),
-		Send:                           d.Get("send").(string),
-		Servicegroupname:               d.Get("servicegroupname").(string),
-		Servicename:                    d.Get("servicename").(string),
-		Sipmethod:                      d.Get("sipmethod").(string),
-		Sipreguri:                      d.Get("sipreguri").(string),
-		Sipuri:                         d.Get("sipuri").(string),
-		Sitepath:                       d.Get("sitepath").(string),
-		Snmpcommunity:                  d.Get("snmpcommunity").(string),
-		Snmpoid:                        d.Get("snmpoid").(string),
-		Snmpthreshold:                  d.Get("snmpthreshold").(string),
-		Snmpversion:                    d.Get("snmpversion").(string),
-		Sqlquery:                       d.Get("sqlquery").(string),
-		Sslprofile:                     d.Get("sslprofile").(string),
-		State:                          d.Get("state").(string),
-		Storedb:                        d.Get("storedb").(string),
-		Storefrontacctservice:          d.Get("storefrontacctservice").(string),
-		Storefrontcheckbackendservices: d.Get("storefrontcheckbackendservices").(string),
-		Storename:                      d.Get("storename").(string),
-		Successretries:                 d.Get("successretries").(int),
-		Tos:                            d.Get("tos").(string),
-		Tosid:                          d.Get("tosid").(int),
-		Transparent:                    d.Get("transparent").(string),
-		Trofscode:                      d.Get("trofscode").(int),
-		Trofsstring:                    d.Get("trofsstring").(string),
-		Type:                           d.Get("type").(string),
-		Units1:                         d.Get("units1").(string),
-		Units2:                         d.Get("units2").(string),
-		Units3:                         d.Get("units3").(string),
-		Units4:                         d.Get("units4").(string),
-		Username:                       d.Get("username").(string),
-		Validatecred:                   d.Get("validatecred").(string),
-		Vendorid:                       d.Get("vendorid").(int),
-		Vendorspecificvendorid:         d.Get("vendorspecificvendorid").(int),
-		Respcode:                       toStringList(d.Get("respcode").([]interface{})),
+		Action:                           d.Get("action").(string),
+		Alertretries:                     d.Get("alertretries").(int),
+		Application:                      d.Get("application").(string),
+		Attribute:                        d.Get("attribute").(string),
+		Basedn:                           d.Get("basedn").(string),
+		Binddn:                           d.Get("binddn").(string),
+		Customheaders:                    d.Get("customheaders").(string),
+		Database:                         d.Get("database").(string),
+		Destip:                           d.Get("destip").(string),
+		Destport:                         d.Get("destport").(int),
+		Deviation:                        d.Get("deviation").(int),
+		Dispatcherip:                     d.Get("dispatcherip").(string),
+		Dispatcherport:                   d.Get("dispatcherport").(int),
+		Domain:                           d.Get("domain").(string),
+		Downtime:                         d.Get("downtime").(int),
+		Evalrule:                         d.Get("evalrule").(string),
+		Failureretries:                   d.Get("failureretries").(int),
+		Filename:                         d.Get("filename").(string),
+		Filter:                           d.Get("filter").(string),
+		Firmwarerevision:                 d.Get("firmwarerevision").(int),
+		Group:                            d.Get("group").(string),
+		Hostipaddress:                    d.Get("hostipaddress").(string),
+		Hostname:                         d.Get("hostname").(string),
+		Httprequest:                      d.Get("httprequest").(string),
+		Inbandsecurityid:                 d.Get("inbandsecurityid").(string),
+		Interval:                         d.Get("interval").(int),
+		Ipaddress:                        toStringList(d.Get("ipaddress").([]interface{})),
+		Iptunnel:                         d.Get("iptunnel").(string),
+		Kcdaccount:                       d.Get("kcdaccount").(string),
+		Lasversion:                       d.Get("lasversion").(string),
+		Logonpointname:                   d.Get("logonpointname").(string),
+		Lrtm:                             d.Get("lrtm").(string),
+		Maxforwards:                      d.Get("maxforwards").(int),
+		Metric:                           d.Get("metric").(string),
+		Metrictable:                      d.Get("metrictable").(string),
+		Metricthreshold:                  d.Get("metricthreshold").(int),
+		Metricweight:                     d.Get("metricweight").(int),
+		Monitorname:                      d.Get("monitorname").(string),
+		Mssqlprotocolversion:             d.Get("mssqlprotocolversion").(string),
+		Netprofile:                       d.Get("netprofile").(string),
+		Oraclesid:                        d.Get("oraclesid").(string),
+		Originhost:                       d.Get("originhost").(string),
+		Originrealm:                      d.Get("originrealm").(string),
+		Password:                         d.Get("password").(string),
+		Productname:                      d.Get("productname").(string),
+		Query:                            d.Get("query").(string),
+		Querytype:                        d.Get("querytype").(string),
+		Radaccountsession:                d.Get("radaccountsession").(string),
+		Radaccounttype:                   d.Get("radaccounttype").(int),
+		Radapn:                           d.Get("radapn").(string),
+		Radframedip:                      d.Get("radframedip").(string),
+		Radkey:                           d.Get("radkey").(string),
+		Radmsisdn:                        d.Get("radmsisdn").(string),
+		Radnasid:                         d.Get("radnasid").(string),
+		Radnasip:                         d.Get("radnasip").(string),
+		Recv:                             d.Get("recv").(string),
+		Resptimeout:                      d.Get("resptimeout").(int),
+		Resptimeoutthresh:                d.Get("resptimeoutthresh").(int),
+		Retries:                          d.Get("retries").(int),
+		Reverse:                          d.Get("reverse").(string),
+		Rtsprequest:                      d.Get("rtsprequest").(string),
+		Scriptargs:                       d.Get("scriptargs").(string),
+		Scriptname:                       d.Get("scriptname").(string),
+		Secondarypassword:                d.Get("secondarypassword").(string),
+		Secure:                           d.Get("secure").(string),
+		Send:                             d.Get("send").(string),
+		Servicegroupname:                 d.Get("servicegroupname").(string),
+		Servicename:                      d.Get("servicename").(string),
+		Sipmethod:                        d.Get("sipmethod").(string),
+		Sipreguri:                        d.Get("sipreguri").(string),
+		Sipuri:                           d.Get("sipuri").(string),
+		Sitepath:                         d.Get("sitepath").(string),
+		Snmpcommunity:                    d.Get("snmpcommunity").(string),
+		Snmpoid:                          d.Get("snmpoid").(string),
+		Snmpthreshold:                    d.Get("snmpthreshold").(string),
+		Snmpversion:                      d.Get("snmpversion").(string),
+		Sqlquery:                         d.Get("sqlquery").(string),
+		Sslprofile:                       d.Get("sslprofile").(string),
+		State:                            d.Get("state").(string),
+		Storedb:                          d.Get("storedb").(string),
+		Storefrontacctservice:            d.Get("storefrontacctservice").(string),
+		Storefrontcheckbackendservices:   d.Get("storefrontcheckbackendservices").(string),
+		Storename:                        d.Get("storename").(string),
+		Successretries:                   d.Get("successretries").(int),
+		Tos:                              d.Get("tos").(string),
+		Tosid:                            d.Get("tosid").(int),
+		Transparent:                      d.Get("transparent").(string),
+		Trofscode:                        d.Get("trofscode").(int),
+		Trofsstring:                      d.Get("trofsstring").(string),
+		Type:                             d.Get("type").(string),
+		Units1:                           d.Get("units1").(string),
+		Units2:                           d.Get("units2").(string),
+		Units3:                           d.Get("units3").(string),
+		Units4:                           d.Get("units4").(string),
+		Username:                         d.Get("username").(string),
+		Validatecred:                     d.Get("validatecred").(string),
+		Vendorid:                         d.Get("vendorid").(int),
+		Vendorspecificvendorid:           d.Get("vendorspecificvendorid").(int),
+		Respcode:                         toStringList(d.Get("respcode").([]interface{})),
+		Secureargs:                       d.Get("secureargs").(string),
+		Authapplicationid:                toIntegerList(d.Get("authapplicationid").([]interface{})),
+		Acctapplicationid:                toIntegerList(d.Get("acctapplicationid").([]interface{})),
+		Supportedvendorids:               toIntegerList(d.Get("supportedvendorids").([]interface{})),
+		Vendorspecificauthapplicationids: toIntegerList(d.Get("vendorspecificauthapplicationids").([]interface{})),
+		Vendorspecificacctapplicationids: toIntegerList(d.Get("vendorspecificacctapplicationids").([]interface{})),
+		Mqttclientidentifier:             d.Get("mqttclientidentifier").(string),
+		Mqttversion:                      d.Get("mqttversion").(int),
+		Grpchealthcheck:                  d.Get("grpchealthcheck").(string),
+		Grpcstatuscode:                   toIntegerList(d.Get("grpcstatuscode").([]interface{})),
+		Grpcservicename:                  d.Get("grpcservicename").(string),
 	}
 
 	_, err := client.AddResource(service.Lbmonitor.Type(), lbmonitorName, &lbmonitor)
@@ -770,6 +842,17 @@ func readLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("vendorid", data["vendorid"])
 	d.Set("vendorspecificvendorid", data["vendorspecificvendorid"])
 	// d.Set("respcode", data["respcode"]) // we receive different value from NetScaler
+	d.Set("secureargs", data["secureargs"])
+	d.Set("authapplicationid", data["authapplicationid"])
+	d.Set("acctapplicationid", data["acctapplicationid"])
+	d.Set("supportedvendorids", data["supportedvendorids"])
+	d.Set("vendorspecificauthapplicationids", data["vendorspecificauthapplicationids"])
+	d.Set("vendorspecificacctapplicationids", data["vendorspecificacctapplicationids"])
+	d.Set("mqttclientidentifier", data["mqttclientidentifier"])
+	d.Set("mqttversion", data["mqttversion"])
+	d.Set("grpchealthcheck", data["grpchealthcheck"])
+	d.Set("grpcstatuscode", data["grpcstatuscode"])
+	d.Set("grpcservicename", data["grpcservicename"])
 
 	// FIXME: in lbmonitor, for `interval=60`, the `units3` will wrongly be set to `MIN` by the NetScaler.
 	// Hence, we will set it to `SEC` to make it idempotent
@@ -1295,6 +1378,79 @@ func updateLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("vendorspecificvendorid") {
 		log.Printf("[DEBUG] netscaler-provider:  Vendorspecificvendorid has changed for lbmonitor %s, starting update", lbmonitorName)
 		lbmonitor.Vendorspecificvendorid = d.Get("vendorspecificvendorid").(int)
+		hasChange = true
+	}
+	if d.HasChange("secureargs") {
+		log.Printf("[DEBUG] netscaler-provider:  Secureargs has changed for lbmonitor %s, starting update", lbmonitorName)
+		lbmonitor.Secureargs = d.Get("secureargs").(string)
+		hasChange = true
+	}
+	if d.HasChange("authapplicationid") {
+		log.Printf("[DEBUG] netscaler-provider:  Authapplicationid has changed for lbmonitor %s, starting update", lbmonitorName)
+		_, ok := d.GetOk("authapplicationid")
+		if ok {
+			lbmonitor.Authapplicationid = toIntegerList(d.Get("authapplicationid").([]interface{}))
+			hasChange = true
+		}
+	}
+	if d.HasChange("acctapplicationid") {
+		log.Printf("[DEBUG] netscaler-provider:  Acctapplicationid has changed for lbmonitor %s, starting update", lbmonitorName)
+		_, ok := d.GetOk("acctapplicationid")
+		if ok {
+			lbmonitor.Acctapplicationid = toIntegerList(d.Get("acctapplicationid").([]interface{}))
+			hasChange = true
+		}
+	}
+	if d.HasChange("supportedvendorids") {
+		log.Printf("[DEBUG] netscaler-provider:  Supportedvendorids has changed for lbmonitor %s, starting update", lbmonitorName)
+		_, ok := d.GetOk("supportedvendorids")
+		if ok {
+			lbmonitor.Supportedvendorids = toIntegerList(d.Get("supportedvendorids").([]interface{}))
+			hasChange = true
+		}
+	}
+	if d.HasChange("vendorspecificauthapplicationids") {
+		log.Printf("[DEBUG] netscaler-provider:  Vendorspecificauthapplicationids has changed for lbmonitor %s, starting update", lbmonitorName)
+		_, ok := d.GetOk("vendorspecificauthapplicationids")
+		if ok {
+			lbmonitor.Vendorspecificauthapplicationids = toIntegerList(d.Get("vendorspecificauthapplicationids").([]interface{}))
+			hasChange = true
+		}
+	}
+	if d.HasChange("vendorspecificacctapplicationids") {
+		log.Printf("[DEBUG] netscaler-provider:  Vendorspecificacctapplicationids has changed for lbmonitor %s, starting update", lbmonitorName)
+		_, ok := d.GetOk("vendorspecificacctapplicationids")
+		if ok {
+			lbmonitor.Vendorspecificacctapplicationids = toIntegerList(d.Get("vendorspecificacctapplicationids").([]interface{}))
+			hasChange = true
+		}
+	}
+	if d.HasChange("mqttclientidentifier") {
+		log.Printf("[DEBUG] netscaler-provider:  Mqttclientidentifier has changed for lbmonitor %s, starting update", lbmonitorName)
+		lbmonitor.Mqttclientidentifier = d.Get("mqttclientidentifier").(string)
+		hasChange = true
+	}
+	if d.HasChange("mqttversion") {
+		log.Printf("[DEBUG] netscaler-provider:  Mqttversion has changed for lbmonitor %s, starting update", lbmonitorName)
+		lbmonitor.Mqttversion = d.Get("mqttversion").(int)
+		hasChange = true
+	}
+	if d.HasChange("grpchealthcheck") {
+		log.Printf("[DEBUG] netscaler-provider:  Grpchealthcheck has changed for lbmonitor %s, starting update", lbmonitorName)
+		lbmonitor.Grpchealthcheck = d.Get("grpchealthcheck").(string)
+		hasChange = true
+	}
+	if d.HasChange("grpcstatuscode") {
+		log.Printf("[DEBUG] netscaler-provider:  Grpcstatuscode has changed for lbmonitor %s, starting update", lbmonitorName)
+		_, ok := d.GetOk("grpcstatuscode")
+		if ok {
+			lbmonitor.Grpcstatuscode = toIntegerList(d.Get("grpcstatuscode").([]interface{}))
+			hasChange = true
+		}
+	}
+	if d.HasChange("grpcservicename") {
+		log.Printf("[DEBUG] netscaler-provider:  Grpcservicename has changed for lbmonitor %s, starting update", lbmonitorName)
+		lbmonitor.Grpcservicename = d.Get("grpcservicename").(string)
 		hasChange = true
 	}
 
