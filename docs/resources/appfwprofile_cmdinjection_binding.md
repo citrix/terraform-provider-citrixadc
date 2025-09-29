@@ -62,7 +62,7 @@ resource "citrixadc_appfwprofile_cmdinjection_binding" "tf_binding" {
 * `cmdinjection` - (Required) Name of the relaxed web form field/header/cookie
 * `formactionurl_cmd` - (Required) The web form action URL.
 * `alertonly` - (Optional) Send SNMP alert?
-* `as_scan_location_cmd` - (Required) Location of command injection exception - form field, header or cookie.
+* `as_scan_location_cmd` - (Optional) Location of command injection exception - form field, header or cookie.
 * `as_value_expr_cmd` - (Optional) The web form/header/cookie value expression.
 * `as_value_type_cmd` - (Optional) Type of the relaxed web form value
 * `comment` - (Optional) Any comments about the purpose of profile, or other useful information about the profile.

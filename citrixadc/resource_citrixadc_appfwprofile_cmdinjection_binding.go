@@ -47,8 +47,9 @@ func resourceCitrixAdcAppfwprofile_cmdinjection_binding() *schema.Resource {
 			},
 			"as_scan_location_cmd": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
+				Default:  "FORMFIELD",
 			},
 			"as_value_expr_cmd": {
 				Type:     schema.TypeString,
@@ -161,19 +162,15 @@ func readAppfwprofile_cmdinjection_bindingFunc(d *schema.ResourceData, meta inte
 	idSlice := strings.Split(bindingId, ",")
 	appFwName := idSlice[0]
 	cmdinjection := idSlice[1]
-	formactionurl_cmd := ""
+	formactionurl_cmd := idSlice[2]
 	as_scan_location_cmd := ""
 	as_value_type_cmd := ""
 	as_value_expr_cmd := ""
-	if len(idSlice) > 2 {
-		formactionurl_cmd = idSlice[2]
-		if len(idSlice) > 3 {
-			as_scan_location_cmd = idSlice[3]
-		}
+	if len(idSlice) > 3 {
+		as_scan_location_cmd = idSlice[3]
 	} else {
-		formactionurl_cmd = d.Get("formactionurl_cmd").(string)
 		as_scan_location_cmd = d.Get("as_scan_location_cmd").(string)
-		bindingId = fmt.Sprintf("%s,%s,%s", bindingId, formactionurl_cmd, as_scan_location_cmd)
+		bindingId = fmt.Sprintf("%s,%s", bindingId, as_scan_location_cmd)
 	}
 	if len(idSlice) > 4 {
 		as_value_type_cmd = idSlice[4]

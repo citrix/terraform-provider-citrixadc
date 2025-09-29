@@ -70,7 +70,7 @@ resource "citrixadc_appfwprofile_fileuploadtype_binding" "tf_binding" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the appfwprofile_fileuploadtype_binding. It is the concatenation of `name`, `fileuploadtype`, `as_fileuploadtypes_url`, and `filetype` attributes separated by comma. The `filetype` is a space-separated string of all file types (e.g., `pdf text`).
+* `id` - The id of the appfwprofile_fileuploadtype_binding. It is the concatenation of `name`, `fileuploadtype`, `as_fileuploadtypes_url`, and `filetype` attributes separated by comma. The `filetype` is a space-separated(`%20`) string of all file types (e.g., `pdf text`).
 
 
 ## Import

@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccAppfwprofile_creditcardnumber_binding_basic = `
@@ -112,6 +113,13 @@ func TestAccAppfwprofile_creditcardnumber_binding_basic(t *testing.T) {
 				Config: testAccAppfwprofile_creditcardnumber_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppfwprofile_creditcardnumber_bindingExist("citrixadc_appfwprofile_creditcardnumber_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_creditcardnumber_binding.tf_binding", "name", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_creditcardnumber_binding.tf_binding", "creditcardnumber", "123456789"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_creditcardnumber_binding.tf_binding", "creditcardnumberurl", "www.example.com"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_creditcardnumber_binding.tf_binding", "isautodeployed", "AUTODEPLOYED"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_creditcardnumber_binding.tf_binding", "alertonly", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_creditcardnumber_binding.tf_binding", "state", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_creditcardnumber_binding.tf_binding", "comment", "Testing"),
 				),
 			},
 			{

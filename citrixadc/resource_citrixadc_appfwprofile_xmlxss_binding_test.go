@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccAppfwprofile_xmlxss_binding_basic = `
@@ -59,7 +60,6 @@ const testAccAppfwprofile_xmlxss_binding_basic = `
 	resource "citrixadc_appfwprofile_xmlxss_binding" "tf_binding" {
 		name                    = citrixadc_appfwprofile.tf_appfwprofile.name
 		xmlxss                  = "tf_xmlxss"
-		as_scan_location_xmlxss = "ELEMENT"
 		state                   = "ENABLED"
 		alertonly               = "ON"
 		isregex_xmlxss          = "NOTREGEX"
@@ -112,6 +112,13 @@ func TestAccAppfwprofile_xmlxss_binding_basic(t *testing.T) {
 				Config: testAccAppfwprofile_xmlxss_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppfwprofile_xmlxss_bindingExist("citrixadc_appfwprofile_xmlxss_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlxss_binding.tf_binding", "name", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlxss_binding.tf_binding", "xmlxss", "tf_xmlxss"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlxss_binding.tf_binding", "state", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlxss_binding.tf_binding", "alertonly", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlxss_binding.tf_binding", "isautodeployed", "AUTODEPLOYED"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlxss_binding.tf_binding", "isregex_xmlxss", "NOTREGEX"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlxss_binding.tf_binding", "as_scan_location_xmlxss", "ELEMENT"),
 				),
 			},
 			{

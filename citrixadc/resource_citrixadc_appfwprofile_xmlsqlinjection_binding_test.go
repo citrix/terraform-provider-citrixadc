@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccAppfwprofile_xmlsqlinjection_binding_basic = `
@@ -59,7 +60,6 @@ const testAccAppfwprofile_xmlsqlinjection_binding_basic = `
 	resource "citrixadc_appfwprofile_xmlsqlinjection_binding" "tf_binding" {
 		name                    = citrixadc_appfwprofile.tf_appfwprofile.name
 		xmlsqlinjection         = "hello"
-		as_scan_location_xmlsql = "ELEMENT"
 		alertonly               = "ON"
 		isautodeployed          = "AUTODEPLOYED"
 		state                   = "ENABLED"
@@ -112,6 +112,13 @@ func TestAccAppfwprofile_xmlsqlinjection_binding_basic(t *testing.T) {
 				Config: testAccAppfwprofile_xmlsqlinjection_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppfwprofile_xmlsqlinjection_bindingExist("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding", "name", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding", "xmlsqlinjection", "hello"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding", "alertonly", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding", "isautodeployed", "AUTODEPLOYED"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding", "state", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding", "comment", "Testing"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding", "as_scan_location_xmlsql", "ELEMENT"),
 				),
 			},
 			{
@@ -147,11 +154,11 @@ func testAccCheckAppfwprofile_xmlsqlinjection_bindingExist(n string, id *string)
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
+		idSlice := strings.Split(bindingId, ",")
 
 		name := idSlice[0]
 		xmlsqlinjection := idSlice[1]
-		locationName := rs.Primary.Attributes["as_scan_location_xmlsql"]
+		locationName := idSlice[2]
 		findParams := service.FindParams{
 			ResourceType:             "appfwprofile_xmlsqlinjection_binding",
 			ResourceName:             name,
@@ -190,7 +197,7 @@ func testAccCheckAppfwprofile_xmlsqlinjection_bindingNotExist(n string, id strin
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
+		idSlice := strings.Split(id, ",")
 
 		name := idSlice[0]
 		xmlsqlinjection := idSlice[1]
@@ -238,9 +245,14 @@ func testAccCheckAppfwprofile_xmlsqlinjection_bindingDestroy(s *terraform.State)
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Appfwprofile_xmlsqlinjection_binding.Type(), rs.Primary.ID)
+		bindingId := rs.Primary.ID
+
+		idSlice := strings.Split(bindingId, ",")
+
+		name := idSlice[0]
+		_, err := nsClient.FindResource(service.Appfwprofile_xmlsqlinjection_binding.Type(), name)
 		if err == nil {
-			return fmt.Errorf("appfwprofile_xmlsqlinjection_binding %s still exists", rs.Primary.ID)
+			return fmt.Errorf("appfwprofile_xmlsqlinjection_binding %s still exists", name)
 		}
 
 	}

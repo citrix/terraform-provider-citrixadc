@@ -65,8 +65,8 @@ func resourceCitrixAdcAppfwprofile_fieldformat_binding() *schema.Resource {
 			},
 			"fieldtype": {
 				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Required: true,
+				Computed: false,
 				ForceNew: true,
 			},
 			"isautodeployed": {
