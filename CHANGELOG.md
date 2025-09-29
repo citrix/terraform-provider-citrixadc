@@ -1,3 +1,20 @@
+## 1.43.5 (Sept 29, 2025)
+
+BUG FIXES
+* **citrixadc_appfwprofile_sqlinjection_binding**: Rectifying Id construction logic considering optional attributes that contributes to uniqueness.
+* **citrixadc_snmpmanager**: Reading and updating netmask attribute from read response.
+
+
+UPDATES
+* **github.com/hashicorp/go-getter**: Version upgrade from 1.7.6 to 1.7.9.
+* **citrixadc_analyticsprofile**: Refreshing analyticsprofile with updated attributes.
+* **citrixadc_policystringmap_pattern_binding**: Refreshing policystringmap_pattern_binding with updated attributes.
+* **citrixadc_lbmonitor**: Refreshing lacp, lbmonitor and tunnelglobal_tunneltrafficpolicy_binding.
+
+FEATURES
+
+* **New Resource**: Support for creating and managing sslhsmkey resource.
+
 ## 1.43.4 (Aug 19, 2025)
 
 BUG FIXES
