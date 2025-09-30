@@ -28,7 +28,8 @@ func resourceCitrixAdcLacp() *schema.Resource {
 			},
 			"ownernode": {
 				Type:     schema.TypeInt,
-				Required: true,
+				Optional: true,
+				Default:  255,
 			},
 		},
 	}
@@ -38,9 +39,12 @@ func createLacpFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createLacpFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lacpId := strconv.Itoa(d.Get("ownernode").(int))
+
 	lacp := network.Lacp{
-		Ownernode:   d.Get("ownernode").(int),
 		Syspriority: d.Get("syspriority").(int),
+	}
+	if _, ok := d.GetOk("ownernode"); ok {
+		lacp.Ownernode = d.Get("ownernode").(int)
 	}
 
 	err := client.UpdateUnnamedResource(service.Lacp.Type(), &lacp)

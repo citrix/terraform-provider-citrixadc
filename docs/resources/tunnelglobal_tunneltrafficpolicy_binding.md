@@ -22,7 +22,7 @@ resource "citrixadc_tunnelglobal_tunneltrafficpolicy_binding" "tf_tunnelglobal_t
 
 * `policyname` - (Required) Policy name.
 * `priority` - (Required) Priority.
-* `type` - (Required) Bind point to which the policy is bound. Possible values: [REQ_OVERRIDE, REQ_DEFAULT, RES_OVERRIDE, RES_DEFAULT]
+* `type` - (Optional) Bind point to which the policy is bound. Possible values: [REQ_OVERRIDE, REQ_DEFAULT, RES_OVERRIDE, RES_DEFAULT, NONE]
 * `feature` - (Optional) The feature to be checked while applying this config
 * `gotopriorityexpression` - (Optional) Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 * `state` - (Optional) Current state of the binding. If the binding is enabled, the policy is active.

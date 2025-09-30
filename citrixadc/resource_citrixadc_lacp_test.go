@@ -17,17 +17,17 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"testing"
 )
 
 const testAccLacp_basic = `
 
 resource "citrixadc_lacp" "tf_lacp" {
 	syspriority = 30
-	ownernode   = 0
   }
   
 `
@@ -35,7 +35,6 @@ const testAccLacp_update = `
 
 resource "citrixadc_lacp" "tf_lacp" {
 	syspriority = 50
-	ownernode   = 0
   }
   
 `
@@ -51,7 +50,7 @@ func TestAccLacp_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLacpExist("citrixadc_lacp.tf_lacp", nil),
 					resource.TestCheckResourceAttr("citrixadc_lacp.tf_lacp", "syspriority", "30"),
-					resource.TestCheckResourceAttr("citrixadc_lacp.tf_lacp", "ownernode", "0"),
+					resource.TestCheckResourceAttr("citrixadc_lacp.tf_lacp", "ownernode", "255"),
 				),
 			},
 			{
@@ -59,7 +58,7 @@ func TestAccLacp_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLacpExist("citrixadc_lacp.tf_lacp", nil),
 					resource.TestCheckResourceAttr("citrixadc_lacp.tf_lacp", "syspriority", "50"),
-					resource.TestCheckResourceAttr("citrixadc_lacp.tf_lacp", "ownernode", "0"),
+					resource.TestCheckResourceAttr("citrixadc_lacp.tf_lacp", "ownernode", "255"),
 				),
 			},
 		},

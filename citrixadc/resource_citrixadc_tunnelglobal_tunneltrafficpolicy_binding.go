@@ -26,7 +26,8 @@ func resourceCitrixAdcTunnelglobal_tunneltrafficpolicy_binding() *schema.Resourc
 			},
 			"type": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
+				Computed: true,
 				ForceNew: true,
 			},
 			"feature": {
@@ -94,8 +95,10 @@ func readTunnelglobal_tunneltrafficpolicy_bindingFunc(d *schema.ResourceData, me
 
 	findParams := service.FindParams{
 		ResourceType:             "tunnelglobal_tunneltrafficpolicy_binding",
-		ArgsMap:                  map[string]string{"type": d.Get("type").(string)},
 		ResourceMissingErrorCode: 258,
+	}
+	if _, ok := d.GetOk("type"); ok {
+		findParams.ArgsMap = map[string]string{"type": d.Get("type").(string)}
 	}
 	dataArr, err := client.FindResourceArrayWithParams(findParams)
 
