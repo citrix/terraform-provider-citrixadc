@@ -17,11 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccAppfwprofile_fileuploadtype_binding_basic = `
@@ -61,6 +63,12 @@ const testAccAppfwprofile_fileuploadtype_binding_basic = `
 		fileuploadtype         = "tf_uploadtype"
 		as_fileuploadtypes_url = "www.example.com"
 		filetype               = ["pdf", "text"]
+	}
+		resource "citrixadc_appfwprofile_fileuploadtype_binding" "tf_binding2" {
+		name                   = citrixadc_appfwprofile.tf_appfwprofile.name
+		fileuploadtype         = "tf_uploadtype"
+		as_fileuploadtypes_url = "www.example.com"
+		filetype               = ["pdf"]
 	}
 `
 
@@ -109,12 +117,19 @@ func TestAccAppfwprofile_fileuploadtype_binding_basic(t *testing.T) {
 				Config: testAccAppfwprofile_fileuploadtype_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppfwprofile_fileuploadtype_bindingExist("citrixadc_appfwprofile_fileuploadtype_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_fileuploadtype_binding.tf_binding", "name", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_fileuploadtype_binding.tf_binding", "fileuploadtype", "tf_uploadtype"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_fileuploadtype_binding.tf_binding", "as_fileuploadtypes_url", "www.example.com"),
+					testAccCheckAppfwprofile_fileuploadtype_bindingExist("citrixadc_appfwprofile_fileuploadtype_binding.tf_binding2", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_fileuploadtype_binding.tf_binding2", "name", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_fileuploadtype_binding.tf_binding2", "fileuploadtype", "tf_uploadtype"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_fileuploadtype_binding.tf_binding2", "as_fileuploadtypes_url", "www.example.com"),
 				),
 			},
 			{
 				Config: testAccAppfwprofile_fileuploadtype_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppfwprofile_fileuploadtype_bindingNotExist("citrixadc_appfwprofile_fileuploadtype_binding.tf_binding", "tf_appfwprofile,tf_uploadtype,www.example.com"),
+					testAccCheckAppfwprofile_fileuploadtype_bindingNotExist("citrixadc_appfwprofile_fileuploadtype_binding.tf_binding", "tf_appfwprofile,tf_uploadtype,www.example.com,pdf%20text"),
 				),
 			},
 		},
@@ -144,11 +159,12 @@ func testAccCheckAppfwprofile_fileuploadtype_bindingExist(n string, id *string) 
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 3)
+		idSlice := strings.SplitN(bindingId, ",", 4)
 
 		name := idSlice[0]
 		fileuploadtype := idSlice[1]
 		as_fileuploadtypes_url := idSlice[2]
+		filetype := idSlice[3]
 
 		findParams := service.FindParams{
 			ResourceType:             "appfwprofile_fileuploadtype_binding",
@@ -167,10 +183,18 @@ func testAccCheckAppfwprofile_fileuploadtype_bindingExist(n string, id *string) 
 		for _, v := range dataArr {
 			if v["fileuploadtype"].(string) == fileuploadtype {
 				if v["as_fileuploadtypes_url"].(string) == as_fileuploadtypes_url {
-					found = true
-					break
+					// Check if filetype matches (convert slice to space-separated string for comparison)
+					dataFiletype := ""
+					if v["filetype"] != nil {
+						if filetypeSlice, ok := v["filetype"].([]interface{}); ok {
+							dataFiletype = url.QueryEscape(strings.Join(toStringList(filetypeSlice), " "))
+						}
+					}
+					if dataFiletype == filetype {
+						found = true
+						break
+					}
 				}
-
 			}
 		}
 
@@ -189,11 +213,12 @@ func testAccCheckAppfwprofile_fileuploadtype_bindingNotExist(n string, id string
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
-		idSlice := strings.SplitN(id, ",", 3)
+		idSlice := strings.SplitN(id, ",", 4)
 
 		name := idSlice[0]
 		fileuploadtype := idSlice[1]
 		as_fileuploadtypes_url := idSlice[2]
+		filetype := idSlice[3]
 
 		findParams := service.FindParams{
 			ResourceType:             "appfwprofile_fileuploadtype_binding",
@@ -212,10 +237,18 @@ func testAccCheckAppfwprofile_fileuploadtype_bindingNotExist(n string, id string
 		for _, v := range dataArr {
 			if v["fileuploadtype"].(string) == fileuploadtype {
 				if v["as_fileuploadtypes_url"].(string) == as_fileuploadtypes_url {
-					found = true
-					break
+					// Check if filetype matches (convert slice to space-separated string for comparison)
+					dataFiletype := ""
+					if v["filetype"] != nil {
+						if filetypeSlice, ok := v["filetype"].([]interface{}); ok {
+							dataFiletype = url.QueryEscape(strings.Join(toStringList(filetypeSlice), " "))
+						}
+					}
+					if dataFiletype == filetype {
+						found = true
+						break
+					}
 				}
-
 			}
 		}
 

@@ -60,11 +60,11 @@ resource "citrixadc_appfwprofile_fieldformat_binding" "tf_binding" {
 * `name` - (Required) Name of the profile to which to bind an exemption or rule.
 * `fieldformat` - (Required) Name of the form field to which a field format will be assigned.
 * `formactionurl_ff` - (Required) Action URL of the form field to which a field format will be assigned.
+* `fieldtype` - (Required) The field type you are assigning to this form field.
 * `alertonly` - (Optional) Send SNMP alert?
 * `comment` - (Optional) Any comments about the purpose of profile, or other useful information about the profile.
 * `fieldformatmaxlength` - (Optional) The maximum allowed length for data in this form field.
 * `fieldformatminlength` - (Optional) The minimum allowed length for data in this form field.
-* `fieldtype` - (Optional) The field type you are assigning to this form field.
 * `isautodeployed` - (Optional) Is the rule auto deployed by dynamic profile ?
 * `isregex_ff` - (Optional) Is the form field name a regular expression?
 * `resourceid` - (Optional) A "id" that identifies the rule.

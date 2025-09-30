@@ -56,7 +56,9 @@ func resourceCitrixAdcAppfwconfidfield() *schema.Resource {
 func createAppfwconfidfieldFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppfwconfidfieldFunc")
 	client := meta.(*NetScalerNitroClient).client
-	appfwconfidfieldName := d.Get("fieldname").(string) + "," + d.Get("url").(string)
+	appfwconfidfieldName := d.Get("fieldname").(string)
+	appfwconfidfieldUrl := d.Get("url").(string)
+	bindingId := fmt.Sprintf("%s,%s", appfwconfidfieldName, appfwconfidfieldUrl)
 	appfwconfidfield := appfw.Appfwconfidfield{
 		Comment:   d.Get("comment").(string),
 		Fieldname: d.Get("fieldname").(string),
@@ -70,7 +72,7 @@ func createAppfwconfidfieldFunc(d *schema.ResourceData, meta interface{}) error 
 		return err
 	}
 
-	d.SetId(appfwconfidfieldName)
+	d.SetId(bindingId)
 
 	err = readAppfwconfidfieldFunc(d, meta)
 	if err != nil {

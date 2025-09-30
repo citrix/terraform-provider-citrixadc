@@ -48,8 +48,8 @@ func resourceCitrixAdcAppfwprofile_cmdinjection_binding() *schema.Resource {
 			"as_scan_location_cmd": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 				ForceNew: true,
+				Default:  "FORMFIELD",
 			},
 			"as_value_expr_cmd": {
 				Type:     schema.TypeString,
@@ -112,10 +112,16 @@ func resourceCitrixAdcAppfwprofile_cmdinjection_binding() *schema.Resource {
 func createAppfwprofile_cmdinjection_bindingFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppfwprofile_cmdinjection_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
-	name := d.Get("name")
-	cmdinjection := d.Get("cmdinjection")
-	formactionurl_cmd := d.Get("formactionurl_cmd")
-	bindingId := fmt.Sprintf("%s,%s,%s", name, cmdinjection, formactionurl_cmd)
+	appFwName := d.Get("name").(string)
+	cmdinjection := d.Get("cmdinjection").(string)
+	formactionurl_cmd := d.Get("formactionurl_cmd").(string)
+	as_scan_location_cmd := d.Get("as_scan_location_cmd").(string)
+	as_value_type_cmd := d.Get("as_value_type_cmd").(string)
+	as_value_expr_cmd := d.Get("as_value_expr_cmd").(string)
+	bindingId := fmt.Sprintf("%s,%s,%s,%s", appFwName, cmdinjection, formactionurl_cmd, as_scan_location_cmd)
+	if as_value_type_cmd != "" && as_value_expr_cmd != "" {
+		bindingId = fmt.Sprintf("%s,%s,%s", bindingId, as_value_type_cmd, as_value_expr_cmd)
+	}
 	appfwprofile_cmdinjection_binding := appfw.Appfwprofilecmdinjectionbinding{
 		Alertonly:         d.Get("alertonly").(string),
 		Asscanlocationcmd: d.Get("as_scan_location_cmd").(string),
@@ -127,7 +133,7 @@ func createAppfwprofile_cmdinjection_bindingFunc(d *schema.ResourceData, meta in
 		Isautodeployed:    d.Get("isautodeployed").(string),
 		Isregexcmd:        d.Get("isregex_cmd").(string),
 		Isvalueregexcmd:   d.Get("isvalueregex_cmd").(string),
-		Name:              d.Get("name").(string),
+		Name:              appFwName,
 		Resourceid:        d.Get("resourceid").(string),
 		Ruletype:          d.Get("ruletype").(string),
 		State:             d.Get("state").(string),
@@ -152,17 +158,36 @@ func readAppfwprofile_cmdinjection_bindingFunc(d *schema.ResourceData, meta inte
 	log.Printf("[DEBUG] citrixadc-provider:  In readAppfwprofile_cmdinjection_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
-	idSlice := strings.SplitN(bindingId, ",", 3)
-
-	name := idSlice[0]
+	log.Printf("[DEBUG] citrixadc-provider: readAppfwprofile_cmdinjection_bindingFunc: bindingId: %s", bindingId)
+	idSlice := strings.Split(bindingId, ",")
+	appFwName := idSlice[0]
 	cmdinjection := idSlice[1]
 	formactionurl_cmd := idSlice[2]
-
+	as_scan_location_cmd := ""
+	as_value_type_cmd := ""
+	as_value_expr_cmd := ""
+	if len(idSlice) > 3 {
+		as_scan_location_cmd = idSlice[3]
+	} else {
+		as_scan_location_cmd = d.Get("as_scan_location_cmd").(string)
+		bindingId = fmt.Sprintf("%s,%s", bindingId, as_scan_location_cmd)
+	}
+	if len(idSlice) > 4 {
+		as_value_type_cmd = idSlice[4]
+		as_value_expr_cmd = idSlice[5]
+	} else {
+		as_value_type_cmd = d.Get("as_value_type_cmd").(string)
+		as_value_expr_cmd = d.Get("as_value_expr_cmd").(string)
+		if as_value_type_cmd != "" && as_value_expr_cmd != "" {
+			bindingId = fmt.Sprintf("%s,%s,%s", bindingId, as_value_type_cmd, as_value_expr_cmd)
+		}
+	}
+	d.SetId(bindingId)
 	log.Printf("[DEBUG] citrixadc-provider: Reading appfwprofile_cmdinjection_binding state %s", bindingId)
 
 	findParams := service.FindParams{
 		ResourceType:             "appfwprofile_cmdinjection_binding",
-		ResourceName:             name,
+		ResourceName:             appFwName,
 		ResourceMissingErrorCode: 258,
 	}
 	dataArr, err := client.FindResourceArrayWithParams(findParams)
@@ -181,25 +206,25 @@ func readAppfwprofile_cmdinjection_bindingFunc(d *schema.ResourceData, meta inte
 		return nil
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the right policy name
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-		if v["cmdinjection"].(string) != cmdinjection {
-			match = false
-		}
-		if v["formactionurl_cmd"].(string) != formactionurl_cmd {
-			match = false
-		}
-		if match {
-			foundIndex = i
-			break
+		if v["cmdinjection"].(string) == cmdinjection && v["formactionurl_cmd"].(string) == formactionurl_cmd && v["as_scan_location_cmd"].(string) == as_scan_location_cmd {
+			if as_value_type_cmd != "" && as_value_expr_cmd != "" {
+				if v["as_value_type_cmd"] != nil && v["as_value_expr_cmd"] != nil && v["as_value_type_cmd"].(string) == as_value_type_cmd && v["as_value_expr_cmd"].(string) == as_value_expr_cmd {
+					foundIndex = i
+					break
+				}
+			} else if v["as_value_type_cmd"] == nil && v["as_value_expr_cmd"] == nil {
+				foundIndex = i
+				break
+			}
 		}
 	}
 
 	// Resource is missing
 	if foundIndex == -1 {
-		log.Printf("[DEBUG] citrixadc-provider: FindResourceArrayWithParams secondIdComponent not found in array")
+		log.Printf("[DEBUG] citrixadc-provider: FindResourceArrayWithParams appfwprofile_cmdinjection_binding not found in array")
 		log.Printf("[WARN] citrixadc-provider: Clearing appfwprofile_cmdinjection_binding state %s", bindingId)
 		d.SetId("")
 		return nil
@@ -230,32 +255,27 @@ func readAppfwprofile_cmdinjection_bindingFunc(d *schema.ResourceData, meta inte
 func deleteAppfwprofile_cmdinjection_bindingFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppfwprofile_cmdinjection_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
-
 	bindingId := d.Id()
-	idSlice := strings.SplitN(bindingId, ",", 3)
-
-	name := idSlice[0]
+	idSlice := strings.Split(bindingId, ",")
+	appFwName := idSlice[0]
 	cmdinjection := idSlice[1]
-	formactionurl_cmd := idSlice[2]
 
-	args := make([]string, 0)
-	args = append(args, fmt.Sprintf("cmdinjection:%s", cmdinjection))
-	args = append(args, fmt.Sprintf("formactionurl_cmd:%s", url.QueryEscape(formactionurl_cmd)))
+	args := make(map[string]string)
+	args["cmdinjection"] = cmdinjection
+	args["formactionurl_cmd"] = url.QueryEscape(d.Get("formactionurl_cmd").(string))
+	args["as_scan_location_cmd"] = d.Get("as_scan_location_cmd").(string)
 
-	if val, ok := d.GetOk("as_scan_location_cmd"); ok {
-		args = append(args, fmt.Sprintf("as_scan_location_cmd:%s", url.QueryEscape(val.(string))))
-	}
 	if val, ok := d.GetOk("as_value_type_cmd"); ok {
-		args = append(args, fmt.Sprintf("as_value_type_cmd:%s", url.QueryEscape(val.(string))))
+		args["as_value_type_cmd"] = url.QueryEscape(val.(string))
 	}
 	if val, ok := d.GetOk("as_value_expr_cmd"); ok {
-		args = append(args, fmt.Sprintf("as_value_expr_cmd:%s", url.QueryEscape(val.(string))))
+		args["as_value_expr_cmd"] = url.QueryEscape(val.(string))
 	}
 	if val, ok := d.GetOk("ruletype"); ok {
-		args = append(args, fmt.Sprintf("ruletype:%s", url.QueryEscape(val.(string))))
+		args["ruletype"] = url.QueryEscape(val.(string))
 	}
 
-	err := client.DeleteResourceWithArgs("appfwprofile_cmdinjection_binding", name, args)
+	err := client.DeleteResourceWithArgsMap("appfwprofile_cmdinjection_binding", appFwName, args)
 	if err != nil {
 		return err
 	}

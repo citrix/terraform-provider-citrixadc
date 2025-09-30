@@ -42,8 +42,8 @@ func resourceCitrixAdcAppfwprofile_xmlxss_binding() *schema.Resource {
 			"as_scan_location_xmlxss": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 				ForceNew: true,
+				Default:  "ELEMENT",
 			},
 			"comment": {
 				Type:     schema.TypeString,

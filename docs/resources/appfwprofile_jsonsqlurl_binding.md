@@ -43,6 +43,17 @@ The appfwprofile_jsonsqlurl_binding resource is used to bind jsonsqlurl to appfw
 resource "citrixadc_appfwprofile_jsonsqlurl_binding" "tf_binding" {
   name           = citrixadc_appfwprofile.tf_appfwprofile.name
   jsonsqlurl     = "[abc][a-z]a*"
+  keyname_json_sql = "id"
+  as_value_type_json_sql = "SpecialString"
+  as_value_expr_json_sql = "p"
+  isautodeployed = "AUTODEPLOYED"
+  state          = "ENABLED"
+  alertonly      = "ON"
+  comment        = "Testing"
+}
+resource "citrixadc_appfwprofile_jsonsqlurl_binding" "tf_binding2" {
+  name           = citrixadc_appfwprofile.tf_appfwprofile.name
+  jsonsqlurl     = "[abc][a-z]a*"
   isautodeployed = "AUTODEPLOYED"
   state          = "ENABLED"
   alertonly      = "ON"
@@ -71,13 +82,19 @@ resource "citrixadc_appfwprofile_jsonsqlurl_binding" "tf_binding" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the appfwprofile_jsonsqlurl_binding. It is concatenation of `name` and `jsonsqlurl` attributes separated by comma.
+* `id` - The id of the appfwprofile_jsonsqlurl_binding. It is concatenation of `name`,`jsonsqlurl`,`keyname_json_sql`,`as_value_type_json_sql` and `as_value_expr_json_sql`attributes separated by comma.
 
 
 ## Import
 
-A appfwprofile_jsonsqlurl_binding can be imported using its id, e.g.
+An appfwprofile_jsonsqlurl_binding can be imported using its id, e.g.
 
 ```shell
-terraform import citrixadc_appfwprofile_jsonsqlurl_binding.tf_binding tf_appfwprofile,[abc][a-z]a*
+terraform import citrixadc_appfwprofile_jsonsqlurl_binding.tf_binding tf_appfwprofile,[abc][a-z]a*,id,SpecialString,p
+```
+
+An appfwprofile_jsonsqlurl_binding which does not have values set for keyname_json_sql, as_value_type_json_sql and as_value_expr_json_sql can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_appfwprofile_jsonsqlurl_binding.tf_binding2 tf_appfwprofile,[abc][a-z]a*
 ```

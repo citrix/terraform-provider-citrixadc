@@ -89,6 +89,18 @@ func resourceCitrixAdcAppfwprofile_crosssitescripting_binding() *schema.Resource
 				Computed: true,
 				ForceNew: true,
 			},
+			"resourceid": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"ruletype": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -120,6 +132,8 @@ func createAppfwprofile_crosssitescripting_bindingFunc(d *schema.ResourceData, m
 		Isvalueregexxss:    d.Get("isvalueregex_xss").(string),
 		Name:               appFwName,
 		State:              d.Get("state").(string),
+		Resourceid:         d.Get("resourceid").(string),
+		Ruletype:           d.Get("ruletype").(string),
 	}
 
 	_, err := client.AddResource(service.Appfwprofile_crosssitescripting_binding.Type(), appFwName, &appfwprofile_crosssitescripting_binding)
@@ -239,6 +253,8 @@ func readAppfwprofile_crosssitescripting_bindingFunc(d *schema.ResourceData, met
 	d.Set("isvalueregex_xss", data["isvalueregex_xss"])
 	d.Set("name", data["name"])
 	d.Set("state", data["state"])
+	d.Set("resourceid", data["resourceid"])
+	d.Set("ruletype", data["ruletype"])
 
 	return nil
 

@@ -71,7 +71,7 @@ resource "citrixadc_appfwprofile_xmlsqlinjection_binding" "tf_binding" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the appfwprofile_xmlsqlinjection_binding. It is the concatenation of `name` and `xmlsqlinjection` attributes separated by comma.
+* `id` - The id of the appfwprofile_xmlsqlinjection_binding. It is the concatenation of `name`, `xmlsqlinjection` and `as_scan_location_xmlsql` attributes separated by comma.
 
 
 ## Import
@@ -79,5 +79,5 @@ In addition to the arguments, the following attributes are available:
 A appfwprofile_xmlsqlinjection_binding can be imported using its id, e.g.
 
 ```shell
-terraform import citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding tf_appfwprofile,hello
+terraform import citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding tf_appfwprofile,hello,ELEMENT
 ```

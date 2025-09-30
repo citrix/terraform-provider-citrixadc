@@ -36,8 +36,8 @@ func resourceCitrixAdcAppfwprofile_xmlsqlinjection_binding() *schema.Resource {
 			"as_scan_location_xmlsql": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 				ForceNew: true,
+				Default:  "ELEMENT",
 			},
 			"alertonly": {
 				Type:     schema.TypeString,
@@ -90,7 +90,8 @@ func createAppfwprofile_xmlsqlinjection_bindingFunc(d *schema.ResourceData, meta
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name")
 	xmlsqlinjection := d.Get("xmlsqlinjection")
-	bindingId := fmt.Sprintf("%s,%s", name, xmlsqlinjection)
+	as_scan_location_xmlsql := d.Get("as_scan_location_xmlsql")
+	bindingId := fmt.Sprintf("%s,%s,%s", name, xmlsqlinjection, as_scan_location_xmlsql)
 	appfwprofile_xmlsqlinjection_binding := appfw.Appfwprofilexmlsqlinjectionbinding{
 		Alertonly:            d.Get("alertonly").(string),
 		Asscanlocationxmlsql: d.Get("as_scan_location_xmlsql").(string),
@@ -123,11 +124,16 @@ func readAppfwprofile_xmlsqlinjection_bindingFunc(d *schema.ResourceData, meta i
 	log.Printf("[DEBUG] citrixadc-provider:  In readAppfwprofile_xmlsqlinjection_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
-	idSlice := strings.SplitN(bindingId, ",", 2)
+	idSlice := strings.Split(bindingId, ",")
 
 	name := idSlice[0]
 	xmlsqlinjection := idSlice[1]
+	if len(idSlice) == 2 {
+		as_scan_location_xmlsql := d.Get("as_scan_location_xmlsql").(string)
+		bindingId = fmt.Sprintf("%s,%s,%s", name, xmlsqlinjection, as_scan_location_xmlsql)
+	}
 
+	d.SetId(bindingId)
 	log.Printf("[DEBUG] citrixadc-provider: Reading appfwprofile_xmlsqlinjection_binding state %s", bindingId)
 
 	findParams := service.FindParams{
@@ -193,7 +199,7 @@ func deleteAppfwprofile_xmlsqlinjection_bindingFunc(d *schema.ResourceData, meta
 	client := meta.(*NetScalerNitroClient).client
 
 	bindingId := d.Id()
-	idSlice := strings.SplitN(bindingId, ",", 2)
+	idSlice := strings.Split(bindingId, ",")
 
 	name := idSlice[0]
 	xmlsqlinjection := idSlice[1]

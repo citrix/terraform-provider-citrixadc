@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccAppfwprofile_fieldformat_binding_basic = `
@@ -114,6 +115,15 @@ func TestAccAppfwprofile_fieldformat_binding_basic(t *testing.T) {
 				Config: testAccAppfwprofile_fieldformat_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppfwprofile_fieldformat_bindingExist("citrixadc_appfwprofile_fieldformat_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_fieldformat_binding.tf_binding", "name", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_fieldformat_binding.tf_binding", "fieldformat", "tf_field"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_fieldformat_binding.tf_binding", "formactionurl_ff", "http://www.example.com"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_fieldformat_binding.tf_binding", "comment", "Testing"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_fieldformat_binding.tf_binding", "state", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_fieldformat_binding.tf_binding", "fieldformatmaxlength", "20"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_fieldformat_binding.tf_binding", "isregexff", "NOTREGEX"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_fieldformat_binding.tf_binding", "fieldtype", "alpha"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_fieldformat_binding.tf_binding", "alertonly", "OFF"),
 				),
 			},
 			{
