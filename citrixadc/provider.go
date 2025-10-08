@@ -89,6 +89,12 @@ func providerSchema() map[string]*schema.Schema {
 			Description: "Partition to target",
 			DefaultFunc: schema.EnvDefaultFunc("NS_PARTITION", nil),
 		},
+		"do_login": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Description: "Perform the login operation and acquire a session token to be used for subsequent requests.",
+			DefaultFunc: schema.EnvDefaultFunc("NS_DO_LOGIN", false),
+		},
 	}
 }
 
@@ -891,7 +897,9 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 	if err != nil {
 		return nil, err
 	}
-	client.Login()
+	if d.Get("do_login").(bool) {
+		client.Login()
+	}
 	if partition, ok := d.GetOk("partition"); ok {
 		nspartition := make(map[string]interface{})
 		nspartition["partitionname"] = partition.(string)
