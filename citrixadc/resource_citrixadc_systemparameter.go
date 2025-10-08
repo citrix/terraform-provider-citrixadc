@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/system"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcSystemparameter() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSystemparameterFunc,
-		Read:          readSystemparameterFunc,
-		Update:        updateSystemparameterFunc,
-		Delete:        deleteSystemparameterFunc,
+		CreateContext: createSystemparameterFunc,
+		ReadContext:   readSystemparameterFunc,
+		UpdateContext: updateSystemparameterFunc,
+		DeleteContext: deleteSystemparameterFunc,
 		Schema: map[string]*schema.Schema{
 			"basicauth": {
 				Type:     schema.TypeString,
@@ -118,7 +121,7 @@ func resourceCitrixAdcSystemparameter() *schema.Resource {
 	}
 }
 
-func createSystemparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func createSystemparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSystemparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	systemparameterName := resource.PrefixedUniqueId("tf-systemparameter-")
@@ -147,20 +150,15 @@ func createSystemparameterFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.UpdateUnnamedResource(service.Systemparameter.Type(), &systemparameter)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(systemparameterName)
 
-	err = readSystemparameterFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this systemparameter but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readSystemparameterFunc(ctx, d, meta)
 }
 
-func readSystemparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func readSystemparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSystemparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading systemparameter state")
@@ -177,9 +175,9 @@ func readSystemparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("forcepasswordchange", data["forcepasswordchange"])
 	d.Set("googleanalytics", data["googleanalytics"])
 	d.Set("localauth", data["localauth"])
-	d.Set("minpasswordlen", data["minpasswordlen"])
+	setToInt("minpasswordlen", d, data["minpasswordlen"])
 	d.Set("maxclient", data["maxclient"])
-	d.Set("natpcbforceflushlimit", data["natpcbforceflushlimit"])
+	setToInt("natpcbforceflushlimit", d, data["natpcbforceflushlimit"])
 	d.Set("natpcbrstontimeout", data["natpcbrstontimeout"])
 	d.Set("promptstring", data["promptstring"])
 	d.Set("rbaonresponse", data["rbaonresponse"])
@@ -187,14 +185,14 @@ func readSystemparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("removesensitivefiles", data["removesensitivefiles"])
 	d.Set("restrictedtimeout", data["restrictedtimeout"])
 	d.Set("strongpassword", data["strongpassword"])
-	d.Set("timeout", data["timeout"])
-	d.Set("totalauthtimeout", data["totalauthtimeout"])
+	setToInt("timeout", d, data["timeout"])
+	setToInt("totalauthtimeout", d, data["totalauthtimeout"])
 
 	return nil
 
 }
 
-func updateSystemparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func updateSystemparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateSystemparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -299,13 +297,13 @@ func updateSystemparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Systemparameter.Type(), &systemparameter)
 		if err != nil {
-			return fmt.Errorf("Error updating systemparameters")
+			return diag.Errorf("Error updating systemparameters")
 		}
 	}
-	return readSystemparameterFunc(d, meta)
+	return readSystemparameterFunc(ctx, d, meta)
 }
 
-func deleteSystemparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSystemparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSystemparameterFunc")
 	// systemparameter does not have DELETE operation, but this function is required to set the ID to ""
 	d.SetId("")

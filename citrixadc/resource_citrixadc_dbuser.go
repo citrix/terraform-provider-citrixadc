@@ -1,24 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/db"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcDbuser() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createDbuserFunc,
-		Read:          readDbuserFunc,
-		Update:        updateDbuserFunc,
-		Delete:        deleteDbuserFunc,
+		CreateContext: createDbuserFunc,
+		ReadContext:   readDbuserFunc,
+		UpdateContext: updateDbuserFunc,
+		DeleteContext: deleteDbuserFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"username": {
@@ -40,7 +43,7 @@ func resourceCitrixAdcDbuser() *schema.Resource {
 	}
 }
 
-func createDbuserFunc(d *schema.ResourceData, meta interface{}) error {
+func createDbuserFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createDbuserFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dbuserName := d.Get("username").(string)
@@ -51,20 +54,15 @@ func createDbuserFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Dbuser.Type(), dbuserName, &dbuser)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(dbuserName)
 
-	err = readDbuserFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this dbuser but we can't read it ?? %s", dbuserName)
-		return nil
-	}
-	return nil
+	return readDbuserFunc(ctx, d, meta)
 }
 
-func readDbuserFunc(d *schema.ResourceData, meta interface{}) error {
+func readDbuserFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readDbuserFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dbuserName := d.Id()
@@ -83,7 +81,7 @@ func readDbuserFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateDbuserFunc(d *schema.ResourceData, meta interface{}) error {
+func updateDbuserFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateDbuserFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dbuserName := d.Get("username").(string)
@@ -101,19 +99,19 @@ func updateDbuserFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Dbuser.Type(), &dbuser)
 		if err != nil {
-			return fmt.Errorf("Error updating dbuser %s", dbuserName)
+			return diag.Errorf("Error updating dbuser %s", dbuserName)
 		}
 	}
-	return readDbuserFunc(d, meta)
+	return readDbuserFunc(ctx, d, meta)
 }
 
-func deleteDbuserFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteDbuserFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteDbuserFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dbuserName := d.Id()
 	err := client.DeleteResource(service.Dbuser.Type(), dbuserName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

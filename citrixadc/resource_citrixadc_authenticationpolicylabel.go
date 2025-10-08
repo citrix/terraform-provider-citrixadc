@@ -1,21 +1,23 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/authentication"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcAuthenticationpolicylabel() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAuthenticationpolicylabelFunc,
-		Read:          readAuthenticationpolicylabelFunc,
-		Delete:        deleteAuthenticationpolicylabelFunc,
+		CreateContext: createAuthenticationpolicylabelFunc,
+		ReadContext:   readAuthenticationpolicylabelFunc,
+		DeleteContext: deleteAuthenticationpolicylabelFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"labelname": {
@@ -52,7 +54,7 @@ func resourceCitrixAdcAuthenticationpolicylabel() *schema.Resource {
 	}
 }
 
-func createAuthenticationpolicylabelFunc(d *schema.ResourceData, meta interface{}) error {
+func createAuthenticationpolicylabelFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAuthenticationpolicylabelFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationpolicylabelName := d.Get("labelname").(string)
@@ -66,20 +68,15 @@ func createAuthenticationpolicylabelFunc(d *schema.ResourceData, meta interface{
 
 	_, err := client.AddResource(service.Authenticationpolicylabel.Type(), authenticationpolicylabelName, &authenticationpolicylabel)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(authenticationpolicylabelName)
 
-	err = readAuthenticationpolicylabelFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this authenticationpolicylabel but we can't read it ?? %s", authenticationpolicylabelName)
-		return nil
-	}
-	return nil
+	return readAuthenticationpolicylabelFunc(ctx, d, meta)
 }
 
-func readAuthenticationpolicylabelFunc(d *schema.ResourceData, meta interface{}) error {
+func readAuthenticationpolicylabelFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAuthenticationpolicylabelFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationpolicylabelName := d.Id()
@@ -101,13 +98,13 @@ func readAuthenticationpolicylabelFunc(d *schema.ResourceData, meta interface{})
 
 }
 
-func deleteAuthenticationpolicylabelFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAuthenticationpolicylabelFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAuthenticationpolicylabelFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationpolicylabelName := d.Id()
 	err := client.DeleteResource(service.Authenticationpolicylabel.Type(), authenticationpolicylabelName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

@@ -21,8 +21,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccGslbservice_dnsview_binding_basic = `
@@ -31,14 +31,14 @@ resource "citrixadc_gslbservice_dnsview_binding" "tf_gslbservice_dnsview_binding
 	servicename = citrixadc_gslbservice.gslb_svc1.servicename
 	viewname    = citrixadc_dnsview.tf_dnsview.viewname
 	viewip      = "192.168.2.1"
-  }
+	}
   
   resource "citrixadc_gslbsite" "site_remote" {
 	sitename        = "Site-Remote"
 	siteipaddress   = "172.31.48.18"
 	sessionexchange = "ENABLED"
 	sitepassword = "password123"
-  }
+	}
   
   resource "citrixadc_gslbservice" "gslb_svc1" {
 	ip          = "172.16.1.121"
@@ -46,11 +46,11 @@ resource "citrixadc_gslbservice_dnsview_binding" "tf_gslbservice_dnsview_binding
 	servicename = "gslb1vservice"
 	servicetype = "HTTP"
 	sitename    = citrixadc_gslbsite.site_remote.sitename
-  }
+	}
   
   resource "citrixadc_dnsview" "tf_dnsview" {
 	viewname = "view4"
-  } 
+	}
 `
 
 const testAccGslbservice_dnsview_binding_basic_step2 = `
@@ -59,7 +59,7 @@ resource "citrixadc_gslbsite" "site_remote" {
 	siteipaddress   = "172.31.48.18"
 	sessionexchange = "ENABLED"
 	sitepassword = "password123"
-  }
+	}
   
   resource "citrixadc_gslbservice" "gslb_svc1" {
 	ip          = "172.16.1.121"
@@ -67,17 +67,17 @@ resource "citrixadc_gslbsite" "site_remote" {
 	servicename = "gslb1vservice"
 	servicetype = "HTTP"
 	sitename    = citrixadc_gslbsite.site_remote.sitename
-  }
+	}
   resource "citrixadc_dnsview" "tf_dnsview" {
 	viewname = "view4"
-  } 
+	}
 `
 
 func TestAccGslbservice_dnsview_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckGslbservice_dnsview_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckGslbservice_dnsview_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGslbservice_dnsview_binding_basic,
@@ -114,7 +114,11 @@ func testAccCheckGslbservice_dnsview_bindingExist(n string, id *string) resource
 			*id = rs.Primary.ID
 		}
 
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		bindingId := rs.Primary.ID
 
@@ -154,7 +158,11 @@ func testAccCheckGslbservice_dnsview_bindingExist(n string, id *string) resource
 
 func testAccCheckGslbservice_dnsview_bindingNotExist(n string, id string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
@@ -194,7 +202,11 @@ func testAccCheckGslbservice_dnsview_bindingNotExist(n string, id string) resour
 }
 
 func testAccCheckGslbservice_dnsview_bindingDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_gslbservice_dnsview_binding" {
@@ -205,7 +217,7 @@ func testAccCheckGslbservice_dnsview_bindingDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Gslbservice_dnsview_binding.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Gslbservice_dnsview_binding.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("gslbservice_dnsview_binding %s still exists", rs.Primary.ID)
 		}

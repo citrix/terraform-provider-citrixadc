@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcRsskeytype() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createRsskeytypeFunc,
-		Read:          readRsskeytypeFunc,
-		Update:        updateRsskeytypeFunc,
-		Delete:        deleteRsskeytypeFunc,
+		CreateContext: createRsskeytypeFunc,
+		ReadContext:   readRsskeytypeFunc,
+		UpdateContext: updateRsskeytypeFunc,
+		DeleteContext: deleteRsskeytypeFunc,
 		Schema: map[string]*schema.Schema{
 			"rsstype": {
 				Type:     schema.TypeString,
@@ -28,7 +31,7 @@ func resourceCitrixAdcRsskeytype() *schema.Resource {
 	}
 }
 
-func createRsskeytypeFunc(d *schema.ResourceData, meta interface{}) error {
+func createRsskeytypeFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createRsskeytypeFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var rsskeytypeName string
@@ -41,20 +44,15 @@ func createRsskeytypeFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.UpdateUnnamedResource(service.Rsskeytype.Type(), &rsskeytype)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(rsskeytypeName)
 
-	err = readRsskeytypeFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this rsskeytype but we can't read it ?? %s", rsskeytypeName)
-		return nil
-	}
-	return nil
+	return readRsskeytypeFunc(ctx, d, meta)
 }
 
-func readRsskeytypeFunc(d *schema.ResourceData, meta interface{}) error {
+func readRsskeytypeFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readRsskeytypeFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading rsskeytype state")
@@ -70,7 +68,7 @@ func readRsskeytypeFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateRsskeytypeFunc(d *schema.ResourceData, meta interface{}) error {
+func updateRsskeytypeFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateRsskeytypeFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -85,13 +83,13 @@ func updateRsskeytypeFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Rsskeytype.Type(), &rsskeytype)
 		if err != nil {
-			return fmt.Errorf("Error updating rsskeytype")
+			return diag.Errorf("Error updating rsskeytype")
 		}
 	}
-	return readRsskeytypeFunc(d, meta)
+	return readRsskeytypeFunc(ctx, d, meta)
 }
 
-func deleteRsskeytypeFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteRsskeytypeFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteRsskeytypeFunc")
 
 	d.SetId("")

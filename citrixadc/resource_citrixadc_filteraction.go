@@ -1,24 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/filter"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcFilteraction() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createFilteractionFunc,
-		Read:          readFilteractionFunc,
-		Update:        updateFilteractionFunc,
-		Delete:        deleteFilteractionFunc,
+		CreateContext: createFilteractionFunc,
+		ReadContext:   readFilteractionFunc,
+		UpdateContext: updateFilteractionFunc,
+		DeleteContext: deleteFilteractionFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -56,7 +59,7 @@ func resourceCitrixAdcFilteraction() *schema.Resource {
 	}
 }
 
-func createFilteractionFunc(d *schema.ResourceData, meta interface{}) error {
+func createFilteractionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createFilteractionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	filteractionName := d.Get("name").(string)
@@ -71,20 +74,15 @@ func createFilteractionFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Filteraction.Type(), filteractionName, &filteraction)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(filteractionName)
 
-	err = readFilteractionFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this filteraction but we can't read it ?? %s", filteractionName)
-		return nil
-	}
-	return nil
+	return readFilteractionFunc(ctx, d, meta)
 }
 
-func readFilteractionFunc(d *schema.ResourceData, meta interface{}) error {
+func readFilteractionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readFilteractionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	filteractionName := d.Id()
@@ -98,7 +96,7 @@ func readFilteractionFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", data["name"])
 	d.Set("page", data["page"])
 	d.Set("qual", data["qual"])
-	d.Set("respcode", data["respcode"])
+	setToInt("respcode", d, data["respcode"])
 	d.Set("servicename", data["servicename"])
 	d.Set("value", data["value"])
 
@@ -106,7 +104,7 @@ func readFilteractionFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateFilteractionFunc(d *schema.ResourceData, meta interface{}) error {
+func updateFilteractionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateFilteractionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	filteractionName := d.Get("name").(string)
@@ -144,19 +142,19 @@ func updateFilteractionFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Filteraction.Type(), filteractionName, &filteraction)
 		if err != nil {
-			return fmt.Errorf("Error updating filteraction %s", filteractionName)
+			return diag.Errorf("Error updating filteraction %s", filteractionName)
 		}
 	}
-	return readFilteractionFunc(d, meta)
+	return readFilteractionFunc(ctx, d, meta)
 }
 
-func deleteFilteractionFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteFilteractionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteFilteractionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	filteractionName := d.Id()
 	err := client.DeleteResource(service.Filteraction.Type(), filteractionName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

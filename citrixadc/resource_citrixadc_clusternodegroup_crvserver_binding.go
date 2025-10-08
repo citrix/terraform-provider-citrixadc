@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/cluster"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strings"
 )
@@ -13,11 +15,11 @@ import (
 func resourceCitrixAdcClusternodegroup_crvserver_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createClusternodegroup_crvserver_bindingFunc,
-		Read:          readClusternodegroup_crvserver_bindingFunc,
-		Delete:        deleteClusternodegroup_crvserver_bindingFunc,
+		CreateContext: createClusternodegroup_crvserver_bindingFunc,
+		ReadContext:   readClusternodegroup_crvserver_bindingFunc,
+		DeleteContext: deleteClusternodegroup_crvserver_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -34,7 +36,7 @@ func resourceCitrixAdcClusternodegroup_crvserver_binding() *schema.Resource {
 	}
 }
 
-func createClusternodegroup_crvserver_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createClusternodegroup_crvserver_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createClusternodegroup_crvserver_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name").(string)
@@ -47,20 +49,15 @@ func createClusternodegroup_crvserver_bindingFunc(d *schema.ResourceData, meta i
 
 	err := client.UpdateUnnamedResource(service.Clusternodegroup_crvserver_binding.Type(), &clusternodegroup_crvserver_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readClusternodegroup_crvserver_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this clusternodegroup_crvserver_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readClusternodegroup_crvserver_bindingFunc(ctx, d, meta)
 }
 
-func readClusternodegroup_crvserver_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readClusternodegroup_crvserver_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readClusternodegroup_crvserver_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -81,7 +78,7 @@ func readClusternodegroup_crvserver_bindingFunc(d *schema.ResourceData, meta int
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -119,7 +116,7 @@ func readClusternodegroup_crvserver_bindingFunc(d *schema.ResourceData, meta int
 
 }
 
-func deleteClusternodegroup_crvserver_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteClusternodegroup_crvserver_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteClusternodegroup_crvserver_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -134,7 +131,7 @@ func deleteClusternodegroup_crvserver_bindingFunc(d *schema.ResourceData, meta i
 
 	err := client.DeleteResourceWithArgs(service.Clusternodegroup_crvserver_binding.Type(), name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

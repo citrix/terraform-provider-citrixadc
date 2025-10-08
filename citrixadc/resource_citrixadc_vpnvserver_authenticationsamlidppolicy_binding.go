@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/vpn"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 	"strings"
@@ -14,11 +16,11 @@ import (
 func resourceCitrixAdcVpnvserver_authenticationsamlidppolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createVpnvserver_authenticationsamlidppolicy_bindingFunc,
-		Read:          readVpnvserver_authenticationsamlidppolicy_bindingFunc,
-		Delete:        deleteVpnvserver_authenticationsamlidppolicy_bindingFunc,
+		CreateContext: createVpnvserver_authenticationsamlidppolicy_bindingFunc,
+		ReadContext:   readVpnvserver_authenticationsamlidppolicy_bindingFunc,
+		DeleteContext: deleteVpnvserver_authenticationsamlidppolicy_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -67,7 +69,7 @@ func resourceCitrixAdcVpnvserver_authenticationsamlidppolicy_binding() *schema.R
 	}
 }
 
-func createVpnvserver_authenticationsamlidppolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createVpnvserver_authenticationsamlidppolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createVpnvserver_authenticationsamlidppolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name")
@@ -85,20 +87,15 @@ func createVpnvserver_authenticationsamlidppolicy_bindingFunc(d *schema.Resource
 
 	err := client.UpdateUnnamedResource(service.Vpnvserver_authenticationsamlidppolicy_binding.Type(), &vpnvserver_authenticationsamlidppolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readVpnvserver_authenticationsamlidppolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this vpnvserver_authenticationsamlidppolicy_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readVpnvserver_authenticationsamlidppolicy_bindingFunc(ctx, d, meta)
 }
 
-func readVpnvserver_authenticationsamlidppolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readVpnvserver_authenticationsamlidppolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readVpnvserver_authenticationsamlidppolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -119,7 +116,7 @@ func readVpnvserver_authenticationsamlidppolicy_bindingFunc(d *schema.ResourceDa
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -162,7 +159,7 @@ func readVpnvserver_authenticationsamlidppolicy_bindingFunc(d *schema.ResourceDa
 
 }
 
-func deleteVpnvserver_authenticationsamlidppolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteVpnvserver_authenticationsamlidppolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteVpnvserver_authenticationsamlidppolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -184,7 +181,7 @@ func deleteVpnvserver_authenticationsamlidppolicy_bindingFunc(d *schema.Resource
 	}
 	err := client.DeleteResourceWithArgs(service.Vpnvserver_authenticationsamlidppolicy_binding.Type(), name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	d.SetId("")
 

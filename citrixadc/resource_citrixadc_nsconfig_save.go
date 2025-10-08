@@ -1,23 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
 	"log"
 	"strings"
 	"time"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcNsconfigSave() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNsconfigSaveFunc,
+		CreateContext: createNsconfigSaveFunc,
 		Read:          schema.Noop,
-		Delete:        deleteNsconfigSaveFunc,
+		DeleteContext: deleteNsconfigSaveFunc,
 		Schema: map[string]*schema.Schema{
 			"all": {
 				Type:     schema.TypeBool,
@@ -63,7 +67,7 @@ func resourceCitrixAdcNsconfigSave() *schema.Resource {
 	}
 }
 
-func createNsconfigSaveFunc(d *schema.ResourceData, meta interface{}) error {
+func createNsconfigSaveFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNsconfigSaveFunc")
 
 	timestamp := d.Get("timestamp").(string)
@@ -73,13 +77,13 @@ func createNsconfigSaveFunc(d *schema.ResourceData, meta interface{}) error {
 
 	if err != nil {
 		if !strings.Contains(err.Error(), "\"errorcode\": 293") {
-			return err
+			return diag.FromErr(err)
 		}
 		// Fallthrough
 
 		// Check concurrent save flag
 		if !d.Get("concurrent_save_ok").(bool) {
-			return err
+			return diag.FromErr(err)
 		}
 		// Fallthrough
 
@@ -91,12 +95,12 @@ func createNsconfigSaveFunc(d *schema.ResourceData, meta interface{}) error {
 			// Do retries
 			var concurrent_save_interval time.Duration
 			if concurrent_save_interval, err = time.ParseDuration(d.Get("concurrent_save_interval").(string)); err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 
 			var concurrent_save_timeout time.Duration
 			if concurrent_save_timeout, err = time.ParseDuration(d.Get("concurrent_save_timeout").(string)); err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 			stateConf := &resource.StateChangeConf{
 				Pending:        []string{"saving"},
@@ -110,7 +114,7 @@ func createNsconfigSaveFunc(d *schema.ResourceData, meta interface{}) error {
 
 			_, err = stateConf.WaitForState()
 			if err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		}
 	}
@@ -148,7 +152,7 @@ func saveConfigPoll(d *schema.ResourceData, meta interface{}) resource.StateRefr
 	}
 }
 
-func deleteNsconfigSaveFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNsconfigSaveFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNsconfigSaveFunc")
 
 	if !d.Get("save_on_destroy").(bool) {
@@ -162,13 +166,13 @@ func deleteNsconfigSaveFunc(d *schema.ResourceData, meta interface{}) error {
 
 	if err != nil {
 		if !strings.Contains(err.Error(), "\"errorcode\": 293") {
-			return err
+			return diag.FromErr(err)
 		}
 		// Fallthrough
 
 		// Check concurrent save flag
 		if !d.Get("concurrent_save_ok").(bool) {
-			return err
+			return diag.FromErr(err)
 		}
 		// Fallthrough
 
@@ -180,12 +184,12 @@ func deleteNsconfigSaveFunc(d *schema.ResourceData, meta interface{}) error {
 			// Do retries
 			var concurrent_save_interval time.Duration
 			if concurrent_save_interval, err = time.ParseDuration(d.Get("concurrent_save_interval").(string)); err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 
 			var concurrent_save_timeout time.Duration
 			if concurrent_save_timeout, err = time.ParseDuration(d.Get("concurrent_save_timeout").(string)); err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 			stateConf := &resource.StateChangeConf{
 				Pending:        []string{"saving"},
@@ -199,7 +203,7 @@ func deleteNsconfigSaveFunc(d *schema.ResourceData, meta interface{}) error {
 
 			_, err = stateConf.WaitForState()
 			if err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		}
 	}

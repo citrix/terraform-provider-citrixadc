@@ -1,20 +1,22 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/appfw"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcAppfwjsonerrorpage() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAppfwjsonerrorpageFunc,
-		Read:          readAppfwjsonerrorpageFunc,
-		Delete:        deleteAppfwjsonerrorpageFunc,
+		CreateContext: createAppfwjsonerrorpageFunc,
+		ReadContext:   readAppfwjsonerrorpageFunc,
+		DeleteContext: deleteAppfwjsonerrorpageFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -45,7 +47,7 @@ func resourceCitrixAdcAppfwjsonerrorpage() *schema.Resource {
 	}
 }
 
-func createAppfwjsonerrorpageFunc(d *schema.ResourceData, meta interface{}) error {
+func createAppfwjsonerrorpageFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppfwjsonerrorpageFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appfwjsonerrorpageName := d.Get("name").(string)
@@ -59,20 +61,15 @@ func createAppfwjsonerrorpageFunc(d *schema.ResourceData, meta interface{}) erro
 
 	err := client.ActOnResource("appfwjsonerrorpage", &appfwjsonerrorpage, "Import")
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(appfwjsonerrorpageName)
 
-	err = readAppfwjsonerrorpageFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this appfwjsonerrorpage but we can't read it ?? %s", appfwjsonerrorpageName)
-		return nil
-	}
-	return nil
+	return readAppfwjsonerrorpageFunc(ctx, d, meta)
 }
 
-func readAppfwjsonerrorpageFunc(d *schema.ResourceData, meta interface{}) error {
+func readAppfwjsonerrorpageFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAppfwjsonerrorpageFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appfwjsonerrorpageName := d.Id()
@@ -89,13 +86,13 @@ func readAppfwjsonerrorpageFunc(d *schema.ResourceData, meta interface{}) error 
 
 }
 
-func deleteAppfwjsonerrorpageFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAppfwjsonerrorpageFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppfwjsonerrorpageFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appfwjsonerrorpageName := d.Id()
 	err := client.DeleteResource("appfwjsonerrorpage", appfwjsonerrorpageName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

@@ -1,12 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/policy"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 	"strings"
@@ -15,11 +16,11 @@ import (
 func resourceCitrixAdcPolicydataset_value_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createPolicydataset_value_bindingFunc,
-		Read:          readPolicydataset_value_bindingFunc,
-		Delete:        deletePolicydataset_value_bindingFunc,
+		CreateContext: createPolicydataset_value_bindingFunc,
+		ReadContext:   readPolicydataset_value_bindingFunc,
+		DeleteContext: deletePolicydataset_value_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"comment": {
@@ -53,7 +54,7 @@ func resourceCitrixAdcPolicydataset_value_binding() *schema.Resource {
 	}
 }
 
-func createPolicydataset_value_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createPolicydataset_value_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createPolicydataset_value_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -72,20 +73,15 @@ func createPolicydataset_value_bindingFunc(d *schema.ResourceData, meta interfac
 
 	err := client.UpdateUnnamedResource(service.Policydataset_value_binding.Type(), &policydataset_value_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(valueBindingId)
 
-	err = readPolicydataset_value_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this policydataset_value_binding but we can't read it ?? %s", valueBindingId)
-		return nil
-	}
-	return nil
+	return readPolicydataset_value_bindingFunc(ctx, d, meta)
 }
 
-func readPolicydataset_value_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readPolicydataset_value_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readPolicydataset_value_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -94,11 +90,11 @@ func readPolicydataset_value_bindingFunc(d *schema.ResourceData, meta interface{
 	idSlice := strings.Split(valueBindingId, ",")
 
 	if len(idSlice) < 2 {
-		return fmt.Errorf("Cannot deduce value from id string")
+		return diag.Errorf("Cannot deduce value from id string")
 	}
 
 	if len(idSlice) > 2 {
-		return fmt.Errorf("Too many separators \",\" in id string")
+		return diag.Errorf("Too many separators \",\" in id string")
 	}
 
 	name := idSlice[0]
@@ -115,7 +111,7 @@ func readPolicydataset_value_bindingFunc(d *schema.ResourceData, meta interface{
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -148,7 +144,7 @@ func readPolicydataset_value_bindingFunc(d *schema.ResourceData, meta interface{
 
 	d.Set("name", data["name"])
 	d.Set("comment", data["comment"])
-	d.Set("index", data["index"])
+	setToInt("index", d, data["index"])
 	d.Set("name", data["name"])
 	d.Set("value", data["value"])
 	d.Set("endrange", data["endrange"])
@@ -157,7 +153,7 @@ func readPolicydataset_value_bindingFunc(d *schema.ResourceData, meta interface{
 
 }
 
-func deletePolicydataset_value_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deletePolicydataset_value_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deletePolicydataset_value_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	args := make(map[string]string)
@@ -167,7 +163,7 @@ func deletePolicydataset_value_bindingFunc(d *schema.ResourceData, meta interfac
 	}
 	err := client.DeleteResourceWithArgsMap(service.Policydataset_value_binding.Type(), d.Get("name").(string), args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

@@ -1,21 +1,24 @@
 package citrixadc
 
 import (
-	"github.com/citrix/adc-nitro-go/resource/config/aaa"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"context"
 
-	"fmt"
+	"github.com/citrix/adc-nitro-go/resource/config/aaa"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAaaotpparameter() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAaaotpparameterFunc,
-		Read:          readAaaotpparameterFunc,
-		Update:        updateAaaotpparameterFunc,
-		Delete:        deleteAaaotpparameterFunc,
+		CreateContext: createAaaotpparameterFunc,
+		ReadContext:   readAaaotpparameterFunc,
+		UpdateContext: updateAaaotpparameterFunc,
+		DeleteContext: deleteAaaotpparameterFunc,
 		Schema: map[string]*schema.Schema{
 			"encryption": {
 				Type:     schema.TypeString,
@@ -31,7 +34,7 @@ func resourceCitrixAdcAaaotpparameter() *schema.Resource {
 	}
 }
 
-func createAaaotpparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func createAaaotpparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAaaotpparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	aaaotpparameterName := resource.PrefixedUniqueId("tf-aaaotpparameter-")
@@ -43,20 +46,15 @@ func createAaaotpparameterFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.UpdateUnnamedResource("aaaotpparameter", &aaaotpparameter)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(aaaotpparameterName)
 
-	err = readAaaotpparameterFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this aaaotpparameter but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readAaaotpparameterFunc(ctx, d, meta)
 }
 
-func readAaaotpparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func readAaaotpparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAaaotpparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading aaaotpparameter state")
@@ -67,13 +65,13 @@ func readAaaotpparameterFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	d.Set("encryption", data["encryption"])
-	d.Set("maxotpdevices", data["maxotpdevices"])
+	setToInt("maxotpdevices", d, data["maxotpdevices"])
 
 	return nil
 
 }
 
-func updateAaaotpparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAaaotpparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAaaotpparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -93,13 +91,13 @@ func updateAaaotpparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource("aaaotpparameter", &aaaotpparameter)
 		if err != nil {
-			return fmt.Errorf("Error updating aaaotpparameter")
+			return diag.Errorf("Error updating aaaotpparameter")
 		}
 	}
-	return readAaaotpparameterFunc(d, meta)
+	return readAaaotpparameterFunc(ctx, d, meta)
 }
 
-func deleteAaaotpparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAaaotpparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAaaotpparameterFunc")
 	// aaaotpparameter does not support DELETE operation
 	d.SetId("")

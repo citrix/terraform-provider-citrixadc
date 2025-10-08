@@ -20,8 +20,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccNetprofile_basic(t *testing.T) {
@@ -29,9 +29,9 @@ func TestAccNetprofile_basic(t *testing.T) {
 		t.Skip("CPX 12.0 is outdated for this resource")
 	}
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckNetprofileDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckNetprofileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetprofile_basic_step1,
@@ -69,9 +69,9 @@ func TestAccNetprofile_proxyprotocolaftertlshandshake(t *testing.T) {
 		t.Skip("CPX 12.0 is outdated for this resource")
 	}
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckNetprofileDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckNetprofileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetprofile_proxyprotocolaftertlshandshake,
@@ -102,8 +102,12 @@ func testAccCheckNetprofileExist(n string, id *string) resource.TestCheckFunc {
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Netprofile.Type(), rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Netprofile.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -118,7 +122,11 @@ func testAccCheckNetprofileExist(n string, id *string) resource.TestCheckFunc {
 }
 
 func testAccCheckNetprofileDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_netprofile" {
@@ -129,7 +137,7 @@ func testAccCheckNetprofileDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Netprofile.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Netprofile.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("LB vserver %s still exists", rs.Primary.ID)
 		}

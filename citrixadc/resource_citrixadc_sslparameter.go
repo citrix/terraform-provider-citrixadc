@@ -1,25 +1,28 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ssl"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcSslparameter() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSslparameterFunc,
-		Read:          readSslparameterFunc,
-		Update:        updateSslparameterFunc,
-		Delete:        deleteSslparameterFunc, // Thought sslparameter resource donot have DELETE operation, it is required to set ID to "" d.SetID("") to maintain terraform state
+		CreateContext: createSslparameterFunc,
+		ReadContext:   readSslparameterFunc,
+		UpdateContext: updateSslparameterFunc,
+		DeleteContext: deleteSslparameterFunc, // Thought sslparameter resource donot have DELETE operation, it is required to set ID to "" d.SetID("") to maintain terraform state
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"crlmemorysizemb": {
@@ -146,7 +149,7 @@ func resourceCitrixAdcSslparameter() *schema.Resource {
 	}
 }
 
-func createSslparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func createSslparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSslparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var sslparameterName string
@@ -183,20 +186,15 @@ func createSslparameterFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.UpdateUnnamedResource(service.Sslparameter.Type(), &sslparameter)
 	if err != nil {
-		return fmt.Errorf("Error updating sslparameter")
+		return diag.Errorf("Error updating sslparameter")
 	}
 
 	d.SetId(sslparameterName)
 
-	err = readSslparameterFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just updated the sslparameter but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readSslparameterFunc(ctx, d, meta)
 }
 
-func readSslparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func readSslparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSslparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading sslparameter state")
@@ -206,27 +204,27 @@ func readSslparameterFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
-	d.Set("crlmemorysizemb", data["crlmemorysizemb"])
-	d.Set("cryptodevdisablelimit", data["cryptodevdisablelimit"])
+	setToInt("crlmemorysizemb", d, data["crlmemorysizemb"])
+	setToInt("cryptodevdisablelimit", d, data["cryptodevdisablelimit"])
 	d.Set("defaultprofile", data["defaultprofile"])
 	d.Set("denysslreneg", data["denysslreneg"])
 	d.Set("dropreqwithnohostheader", data["dropreqwithnohostheader"])
-	d.Set("encrypttriggerpktcount", data["encrypttriggerpktcount"])
+	setToInt("encrypttriggerpktcount", d, data["encrypttriggerpktcount"])
 	d.Set("heterogeneoussslhw", data["heterogeneoussslhw"])
 	d.Set("hybridfipsmode", data["hybridfipsmode"])
 	d.Set("insertcertspace", data["insertcertspace"])
 	d.Set("insertionencoding", data["insertionencoding"])
 	d.Set("ndcppcompliancecertcheck", data["ndcppcompliancecertcheck"])
-	d.Set("ocspcachesize", data["ocspcachesize"])
-	d.Set("pushenctriggertimeout", data["pushenctriggertimeout"])
-	d.Set("pushflag", data["pushflag"])
+	setToInt("ocspcachesize", d, data["ocspcachesize"])
+	setToInt("pushenctriggertimeout", d, data["pushenctriggertimeout"])
+	setToInt("pushflag", d, data["pushflag"])
 	d.Set("quantumsize", data["quantumsize"])
 	d.Set("sendclosenotify", data["sendclosenotify"])
 	d.Set("snihttphostmatch", data["snihttphostmatch"])
-	d.Set("softwarecryptothreshold", data["softwarecryptothreshold"])
+	setToInt("softwarecryptothreshold", d, data["softwarecryptothreshold"])
 	d.Set("sslierrorcache", data["sslierrorcache"])
-	d.Set("sslimaxerrorcachemem", data["sslimaxerrorcachemem"])
-	d.Set("ssltriggertimeout", data["ssltriggertimeout"])
+	setToInt("sslimaxerrorcachemem", d, data["sslimaxerrorcachemem"])
+	setToInt("ssltriggertimeout", d, data["ssltriggertimeout"])
 	d.Set("strictcachecks", data["strictcachecks"])
 	d.Set("undefactioncontrol", data["undefactioncontrol"])
 	d.Set("undefactiondata", data["undefactiondata"])
@@ -234,7 +232,7 @@ func readSslparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func updateSslparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func updateSslparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateSslparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -365,13 +363,13 @@ func updateSslparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Sslparameter.Type(), &sslparameter)
 		if err != nil {
-			return fmt.Errorf("Error updating sslparameter: %s", err.Error())
+			return diag.Errorf("Error updating sslparameter: %s", err.Error())
 		}
 	}
-	return readSslparameterFunc(d, meta)
+	return readSslparameterFunc(ctx, d, meta)
 }
 
-func deleteSslparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSslparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSslparameterFunc")
 	// sslparameter do not have DELETE operation, but this function is required to set the ID to ""
 	d.SetId("")

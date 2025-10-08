@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/authentication"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAuthenticationcertpolicy() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAuthenticationcertpolicyFunc,
-		Read:          readAuthenticationcertpolicyFunc,
-		Update:        updateAuthenticationcertpolicyFunc,
-		Delete:        deleteAuthenticationcertpolicyFunc,
+		CreateContext: createAuthenticationcertpolicyFunc,
+		ReadContext:   readAuthenticationcertpolicyFunc,
+		UpdateContext: updateAuthenticationcertpolicyFunc,
+		DeleteContext: deleteAuthenticationcertpolicyFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -40,7 +43,7 @@ func resourceCitrixAdcAuthenticationcertpolicy() *schema.Resource {
 	}
 }
 
-func createAuthenticationcertpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func createAuthenticationcertpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAuthenticationcertpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationcertpolicyName := d.Get("name").(string)
@@ -52,20 +55,15 @@ func createAuthenticationcertpolicyFunc(d *schema.ResourceData, meta interface{}
 
 	_, err := client.AddResource(service.Authenticationcertpolicy.Type(), authenticationcertpolicyName, &authenticationcertpolicy)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(authenticationcertpolicyName)
 
-	err = readAuthenticationcertpolicyFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this authenticationcertpolicy but we can't read it ?? %s", authenticationcertpolicyName)
-		return nil
-	}
-	return nil
+	return readAuthenticationcertpolicyFunc(ctx, d, meta)
 }
 
-func readAuthenticationcertpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func readAuthenticationcertpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAuthenticationcertpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationcertpolicyName := d.Id()
@@ -84,7 +82,7 @@ func readAuthenticationcertpolicyFunc(d *schema.ResourceData, meta interface{}) 
 
 }
 
-func updateAuthenticationcertpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAuthenticationcertpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAuthenticationcertpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationcertpolicyName := d.Get("name").(string)
@@ -107,19 +105,19 @@ func updateAuthenticationcertpolicyFunc(d *schema.ResourceData, meta interface{}
 	if hasChange {
 		_, err := client.UpdateResource(service.Authenticationcertpolicy.Type(), authenticationcertpolicyName, &authenticationcertpolicy)
 		if err != nil {
-			return fmt.Errorf("Error updating authenticationcertpolicy %s", authenticationcertpolicyName)
+			return diag.Errorf("Error updating authenticationcertpolicy %s", authenticationcertpolicyName)
 		}
 	}
-	return readAuthenticationcertpolicyFunc(d, meta)
+	return readAuthenticationcertpolicyFunc(ctx, d, meta)
 }
 
-func deleteAuthenticationcertpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAuthenticationcertpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAuthenticationcertpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationcertpolicyName := d.Id()
 	err := client.DeleteResource(service.Authenticationcertpolicy.Type(), authenticationcertpolicyName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

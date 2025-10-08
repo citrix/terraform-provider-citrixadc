@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"strings"
 	"testing"
 )
@@ -32,24 +32,24 @@ const testAccAuthenticationvserver_authenticationpolicy_binding_basic = `
 			comment        = "new"
 			authentication = "ON"
 			state          = "DISABLED"
-		}
+	}
 		resource "citrixadc_authenticationldapaction" "tf_authenticationldapaction" {
 			name          = "ldapaction"
 			serverip      = "1.2.3.4"
 			serverport    = 8080
 			authtimeout   = 1
 			ldaploginname = "username"
-		}
+	}
 		resource "citrixadc_authenticationpolicy" "tf_authenticationpolicy" {
 			name   = "tf_authenticationpolicy"
 			rule   = "true"
 			action = citrixadc_authenticationldapaction.tf_authenticationldapaction.name
-		}
+	}
 		resource "citrixadc_authenticationvserver_authenticationpolicy_binding" "tf_bind" {
 			name     = citrixadc_authenticationvserver.tf_authenticationvserver.name
 			policy   = citrixadc_authenticationpolicy.tf_authenticationpolicy.name
 			priority = 30
-		}
+	}
 `
 
 const testAccAuthenticationvserver_authenticationpolicy_binding_basic_step2 = `
@@ -77,9 +77,9 @@ const testAccAuthenticationvserver_authenticationpolicy_binding_basic_step2 = `
 
 func TestAccAuthenticationvserver_authenticationpolicy_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAuthenticationvserver_authenticationpolicy_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAuthenticationvserver_authenticationpolicy_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAuthenticationvserver_authenticationpolicy_binding_basic,
@@ -116,7 +116,11 @@ func testAccCheckAuthenticationvserver_authenticationpolicy_bindingExist(n strin
 			*id = rs.Primary.ID
 		}
 
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		bindingId := rs.Primary.ID
 
@@ -156,7 +160,11 @@ func testAccCheckAuthenticationvserver_authenticationpolicy_bindingExist(n strin
 
 func testAccCheckAuthenticationvserver_authenticationpolicy_bindingNotExist(n string, id string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
@@ -196,7 +204,11 @@ func testAccCheckAuthenticationvserver_authenticationpolicy_bindingNotExist(n st
 }
 
 func testAccCheckAuthenticationvserver_authenticationpolicy_bindingDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_authenticationvserver_authenticationpolicy_binding" {
@@ -207,7 +219,7 @@ func testAccCheckAuthenticationvserver_authenticationpolicy_bindingDestroy(s *te
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Authenticationvserver_authenticationpolicy_binding.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Authenticationvserver_authenticationpolicy_binding.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("authenticationvserver_authenticationpolicy_binding %s still exists", rs.Primary.ID)
 		}

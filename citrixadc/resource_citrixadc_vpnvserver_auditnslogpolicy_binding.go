@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/vpn"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 	"strings"
@@ -14,11 +16,11 @@ import (
 func resourceCitrixAdcVpnvserver_auditnslogpolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createVpnvserver_auditnslogpolicy_bindingFunc,
-		Read:          readVpnvserver_auditnslogpolicy_bindingFunc,
-		Delete:        deleteVpnvserver_auditnslogpolicy_bindingFunc,
+		CreateContext: createVpnvserver_auditnslogpolicy_bindingFunc,
+		ReadContext:   readVpnvserver_auditnslogpolicy_bindingFunc,
+		DeleteContext: deleteVpnvserver_auditnslogpolicy_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -67,7 +69,7 @@ func resourceCitrixAdcVpnvserver_auditnslogpolicy_binding() *schema.Resource {
 	}
 }
 
-func createVpnvserver_auditnslogpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createVpnvserver_auditnslogpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createVpnvserver_auditnslogpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name")
@@ -85,20 +87,15 @@ func createVpnvserver_auditnslogpolicy_bindingFunc(d *schema.ResourceData, meta 
 
 	err := client.UpdateUnnamedResource(service.Vpnvserver_auditnslogpolicy_binding.Type(), &vpnvserver_auditnslogpolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readVpnvserver_auditnslogpolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this vpnvserver_auditnslogpolicy_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readVpnvserver_auditnslogpolicy_bindingFunc(ctx, d, meta)
 }
 
-func readVpnvserver_auditnslogpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readVpnvserver_auditnslogpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readVpnvserver_auditnslogpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -119,7 +116,7 @@ func readVpnvserver_auditnslogpolicy_bindingFunc(d *schema.ResourceData, meta in
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -162,7 +159,7 @@ func readVpnvserver_auditnslogpolicy_bindingFunc(d *schema.ResourceData, meta in
 
 }
 
-func deleteVpnvserver_auditnslogpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteVpnvserver_auditnslogpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteVpnvserver_auditnslogpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -186,7 +183,7 @@ func deleteVpnvserver_auditnslogpolicy_bindingFunc(d *schema.ResourceData, meta 
 
 	err := client.DeleteResourceWithArgs(service.Vpnvserver_auditnslogpolicy_binding.Type(), name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

@@ -1,21 +1,21 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/videooptimization"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
-	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcVideooptimizationpacingaction() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createVideooptimizationpacingactionFunc,
-		Read:          readVideooptimizationpacingactionFunc,
-		Update:        updateVideooptimizationpacingactionFunc,
-		Delete:        deleteVideooptimizationpacingactionFunc,
+		CreateContext: createVideooptimizationpacingactionFunc,
+		ReadContext:   readVideooptimizationpacingactionFunc,
+		UpdateContext: updateVideooptimizationpacingactionFunc,
+		DeleteContext: deleteVideooptimizationpacingactionFunc,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -41,7 +41,7 @@ func resourceCitrixAdcVideooptimizationpacingaction() *schema.Resource {
 	}
 }
 
-func createVideooptimizationpacingactionFunc(d *schema.ResourceData, meta interface{}) error {
+func createVideooptimizationpacingactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createVideooptimizationpacingactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	videooptimizationpacingactionName := d.Get("name").(string)
@@ -55,20 +55,15 @@ func createVideooptimizationpacingactionFunc(d *schema.ResourceData, meta interf
 
 	_, err := client.AddResource("videooptimizationpacingaction", videooptimizationpacingactionName, &videooptimizationpacingaction)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(videooptimizationpacingactionName)
 
-	err = readVideooptimizationpacingactionFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this videooptimizationpacingaction but we can't read it ?? %s", videooptimizationpacingactionName)
-		return nil
-	}
-	return nil
+	return readVideooptimizationpacingactionFunc(ctx, d, meta)
 }
 
-func readVideooptimizationpacingactionFunc(d *schema.ResourceData, meta interface{}) error {
+func readVideooptimizationpacingactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readVideooptimizationpacingactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	videooptimizationpacingactionName := d.Id()
@@ -82,13 +77,13 @@ func readVideooptimizationpacingactionFunc(d *schema.ResourceData, meta interfac
 	d.Set("name", data["name"])
 	d.Set("comment", data["comment"])
 	d.Set("newname", data["newname"])
-	d.Set("rate", data["rate"])
+	setToInt("rate", d, data["rate"])
 
 	return nil
 
 }
 
-func updateVideooptimizationpacingactionFunc(d *schema.ResourceData, meta interface{}) error {
+func updateVideooptimizationpacingactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateVideooptimizationpacingactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	videooptimizationpacingactionName := d.Get("name").(string)
@@ -116,19 +111,19 @@ func updateVideooptimizationpacingactionFunc(d *schema.ResourceData, meta interf
 	if hasChange {
 		_, err := client.UpdateResource("videooptimizationpacingaction", videooptimizationpacingactionName, &videooptimizationpacingaction)
 		if err != nil {
-			return fmt.Errorf("Error updating videooptimizationpacingaction %s", videooptimizationpacingactionName)
+			return diag.Errorf("Error updating videooptimizationpacingaction %s", videooptimizationpacingactionName)
 		}
 	}
-	return readVideooptimizationpacingactionFunc(d, meta)
+	return readVideooptimizationpacingactionFunc(ctx, d, meta)
 }
 
-func deleteVideooptimizationpacingactionFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteVideooptimizationpacingactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteVideooptimizationpacingactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	videooptimizationpacingactionName := d.Id()
 	err := client.DeleteResource("videooptimizationpacingaction", videooptimizationpacingactionName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

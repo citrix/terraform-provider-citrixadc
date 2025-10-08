@@ -1,24 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/authentication"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAuthenticationlocalpolicy() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAuthenticationlocalpolicyFunc,
-		Read:          readAuthenticationlocalpolicyFunc,
-		Update:        updateAuthenticationlocalpolicyFunc,
-		Delete:        deleteAuthenticationlocalpolicyFunc,
+		CreateContext: createAuthenticationlocalpolicyFunc,
+		ReadContext:   readAuthenticationlocalpolicyFunc,
+		UpdateContext: updateAuthenticationlocalpolicyFunc,
+		DeleteContext: deleteAuthenticationlocalpolicyFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -36,7 +39,7 @@ func resourceCitrixAdcAuthenticationlocalpolicy() *schema.Resource {
 	}
 }
 
-func createAuthenticationlocalpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func createAuthenticationlocalpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAuthenticationlocalpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationlocalpolicyName := d.Get("name").(string)
@@ -47,20 +50,15 @@ func createAuthenticationlocalpolicyFunc(d *schema.ResourceData, meta interface{
 
 	_, err := client.AddResource(service.Authenticationlocalpolicy.Type(), authenticationlocalpolicyName, &authenticationlocalpolicy)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(authenticationlocalpolicyName)
 
-	err = readAuthenticationlocalpolicyFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this authenticationlocalpolicy but we can't read it ?? %s", authenticationlocalpolicyName)
-		return nil
-	}
-	return nil
+	return readAuthenticationlocalpolicyFunc(ctx, d, meta)
 }
 
-func readAuthenticationlocalpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func readAuthenticationlocalpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAuthenticationlocalpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationlocalpolicyName := d.Id()
@@ -78,7 +76,7 @@ func readAuthenticationlocalpolicyFunc(d *schema.ResourceData, meta interface{})
 
 }
 
-func updateAuthenticationlocalpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAuthenticationlocalpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAuthenticationlocalpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationlocalpolicyName := d.Get("name").(string)
@@ -96,19 +94,19 @@ func updateAuthenticationlocalpolicyFunc(d *schema.ResourceData, meta interface{
 	if hasChange {
 		_, err := client.UpdateResource(service.Authenticationlocalpolicy.Type(), authenticationlocalpolicyName, &authenticationlocalpolicy)
 		if err != nil {
-			return fmt.Errorf("Error updating authenticationlocalpolicy %s", authenticationlocalpolicyName)
+			return diag.Errorf("Error updating authenticationlocalpolicy %s", authenticationlocalpolicyName)
 		}
 	}
-	return readAuthenticationlocalpolicyFunc(d, meta)
+	return readAuthenticationlocalpolicyFunc(ctx, d, meta)
 }
 
-func deleteAuthenticationlocalpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAuthenticationlocalpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAuthenticationlocalpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationlocalpolicyName := d.Id()
 	err := client.DeleteResource(service.Authenticationlocalpolicy.Type(), authenticationlocalpolicyName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

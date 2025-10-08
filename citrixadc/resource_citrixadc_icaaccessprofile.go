@@ -1,22 +1,25 @@
 package citrixadc
 
 import (
-	"github.com/citrix/adc-nitro-go/resource/config/ica"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"context"
 
-	"fmt"
+	"github.com/citrix/adc-nitro-go/resource/config/ica"
+
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcIcaaccessprofile() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createIcaaccessprofileFunc,
-		Read:          readIcaaccessprofileFunc,
-		Update:        updateIcaaccessprofileFunc,
-		Delete:        deleteIcaaccessprofileFunc,
+		CreateContext: createIcaaccessprofileFunc,
+		ReadContext:   readIcaaccessprofileFunc,
+		UpdateContext: updateIcaaccessprofileFunc,
+		DeleteContext: deleteIcaaccessprofileFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -73,7 +76,7 @@ func resourceCitrixAdcIcaaccessprofile() *schema.Resource {
 	}
 }
 
-func createIcaaccessprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func createIcaaccessprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createIcaaccessprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	icaaccessprofileName := d.Get("name").(string)
@@ -92,20 +95,15 @@ func createIcaaccessprofileFunc(d *schema.ResourceData, meta interface{}) error 
 
 	_, err := client.AddResource("icaaccessprofile", icaaccessprofileName, &icaaccessprofile)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(icaaccessprofileName)
 
-	err = readIcaaccessprofileFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this icaaccessprofile but we can't read it ?? %s", icaaccessprofileName)
-		return nil
-	}
-	return nil
+	return readIcaaccessprofileFunc(ctx, d, meta)
 }
 
-func readIcaaccessprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func readIcaaccessprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readIcaaccessprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	icaaccessprofileName := d.Id()
@@ -131,7 +129,7 @@ func readIcaaccessprofileFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateIcaaccessprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func updateIcaaccessprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateIcaaccessprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	icaaccessprofileName := d.Get("name").(string)
@@ -189,19 +187,19 @@ func updateIcaaccessprofileFunc(d *schema.ResourceData, meta interface{}) error 
 	if hasChange {
 		err := client.UpdateUnnamedResource("icaaccessprofile", &icaaccessprofile)
 		if err != nil {
-			return fmt.Errorf("Error updating icaaccessprofile %s", icaaccessprofileName)
+			return diag.Errorf("Error updating icaaccessprofile %s", icaaccessprofileName)
 		}
 	}
-	return readIcaaccessprofileFunc(d, meta)
+	return readIcaaccessprofileFunc(ctx, d, meta)
 }
 
-func deleteIcaaccessprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteIcaaccessprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteIcaaccessprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	icaaccessprofileName := d.Id()
 	err := client.DeleteResource("icaaccessprofile", icaaccessprofileName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

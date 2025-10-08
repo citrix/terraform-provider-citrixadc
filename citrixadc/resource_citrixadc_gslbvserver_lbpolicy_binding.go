@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/gslb"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strings"
 )
@@ -13,11 +15,11 @@ import (
 func resourceCitrixAdcGslbvserver_lbpolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createGslbvserver_lbpolicy_bindingFunc,
-		Read:          readGslbvserver_lbpolicy_bindingFunc,
-		Delete:        deleteGslbvserver_lbpolicy_bindingFunc,
+		CreateContext: createGslbvserver_lbpolicy_bindingFunc,
+		ReadContext:   readGslbvserver_lbpolicy_bindingFunc,
+		DeleteContext: deleteGslbvserver_lbpolicy_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"gotopriorityexpression": {
@@ -60,7 +62,7 @@ func resourceCitrixAdcGslbvserver_lbpolicy_binding() *schema.Resource {
 	}
 }
 
-func createGslbvserver_lbpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createGslbvserver_lbpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createGslbvserver_lbpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name")
@@ -77,20 +79,15 @@ func createGslbvserver_lbpolicy_bindingFunc(d *schema.ResourceData, meta interfa
 
 	_, err := client.AddResource("gslbvserver_lbpolicy_binding", bindingId, &gslbvserver_lbpolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readGslbvserver_lbpolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this gslbvserver_lbpolicy_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readGslbvserver_lbpolicy_bindingFunc(ctx, d, meta)
 }
 
-func readGslbvserver_lbpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readGslbvserver_lbpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readGslbvserver_lbpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -111,7 +108,7 @@ func readGslbvserver_lbpolicy_bindingFunc(d *schema.ResourceData, meta interface
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -153,7 +150,7 @@ func readGslbvserver_lbpolicy_bindingFunc(d *schema.ResourceData, meta interface
 
 }
 
-func deleteGslbvserver_lbpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteGslbvserver_lbpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteGslbvserver_lbpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -168,7 +165,7 @@ func deleteGslbvserver_lbpolicy_bindingFunc(d *schema.ResourceData, meta interfa
 
 	err := client.DeleteResourceWithArgs("gslbvserver_lbpolicy_binding", name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

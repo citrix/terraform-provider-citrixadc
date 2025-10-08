@@ -1,25 +1,28 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/dns"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
 	"net/url"
 	"strings"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcDnsaddrec() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createDnsaddrecFunc,
-		Read:          readDnsaddrecFunc,
-		Delete:        deleteDnsaddrecFunc,
+		CreateContext: createDnsaddrecFunc,
+		ReadContext:   readDnsaddrecFunc,
+		DeleteContext: deleteDnsaddrecFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"ecssubnet": {
@@ -56,7 +59,7 @@ func resourceCitrixAdcDnsaddrec() *schema.Resource {
 	}
 }
 
-func createDnsaddrecFunc(d *schema.ResourceData, meta interface{}) error {
+func createDnsaddrecFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createDnsaddrecFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnsaddrecId := d.Get("hostname").(string) + "," + d.Get("ipaddress").(string)
@@ -72,20 +75,15 @@ func createDnsaddrecFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Dnsaddrec.Type(), dnsaddrecId, &dnsaddrec)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(dnsaddrecId)
 
-	err = readDnsaddrecFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this dnsaddrec but we can't read it ?? %s", dnsaddrecId)
-		return nil
-	}
-	return nil
+	return readDnsaddrecFunc(ctx, d, meta)
 }
 
-func readDnsaddrecFunc(d *schema.ResourceData, meta interface{}) error {
+func readDnsaddrecFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readDnsaddrecFunc")
 	client := meta.(*NetScalerNitroClient).client
 	PrimaryId := d.Id()
@@ -104,7 +102,7 @@ func readDnsaddrecFunc(d *schema.ResourceData, meta interface{}) error {
 	idSlice := strings.SplitN(PrimaryId, ",", 2)
 	if len(idSlice) != 2 {
 		log.Printf("[DEBUG] citrixadc-provider:  In readDnsaddrecFunc: PrimaryId is not in the correct format")
-		return fmt.Errorf("citrixadc-provider:  In readDnsaddrecFunc: PrimaryId is not in the correct format for dnsaddrec %v", PrimaryId)
+		return diag.Errorf("citrixadc-provider:  In readDnsaddrecFunc: PrimaryId is not in the correct format for dnsaddrec %v", PrimaryId)
 	}
 
 	hostname := idSlice[0]
@@ -142,15 +140,15 @@ func readDnsaddrecFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("ecssubnet", data["ecssubnet"])
 	d.Set("hostname", data["hostname"])
 	d.Set("ipaddress", data["ipaddress"])
-	d.Set("nodeid", data["nodeid"])
-	d.Set("ttl", data["ttl"])
+	setToInt("nodeid", d, data["nodeid"])
+	setToInt("ttl", d, data["ttl"])
 	d.Set("type", data["type"])
 
 	return nil
 
 }
 
-func deleteDnsaddrecFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteDnsaddrecFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteDnsaddrecFunc")
 	client := meta.(*NetScalerNitroClient).client
 	argsMap := make(map[string]string)
@@ -161,7 +159,7 @@ func deleteDnsaddrecFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.DeleteResourceWithArgsMap(service.Dnsaddrec.Type(), d.Get("hostname").(string), argsMap)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	d.SetId("")
 

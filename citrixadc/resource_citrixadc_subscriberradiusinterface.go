@@ -1,22 +1,25 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/subscriber"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcSubscriberradiusinterface() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSubscriberradiusinterfaceFunc,
-		Read:          readSubscriberradiusinterfaceFunc,
-		Update:        updateSubscriberradiusinterfaceFunc,
-		Delete:        deleteSubscriberradiusinterfaceFunc,
+		CreateContext: createSubscriberradiusinterfaceFunc,
+		ReadContext:   readSubscriberradiusinterfaceFunc,
+		UpdateContext: updateSubscriberradiusinterfaceFunc,
+		DeleteContext: deleteSubscriberradiusinterfaceFunc,
 		Schema: map[string]*schema.Schema{
 			"listeningservice": {
 				Type:     schema.TypeString,
@@ -32,7 +35,7 @@ func resourceCitrixAdcSubscriberradiusinterface() *schema.Resource {
 	}
 }
 
-func createSubscriberradiusinterfaceFunc(d *schema.ResourceData, meta interface{}) error {
+func createSubscriberradiusinterfaceFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSubscriberradiusinterfaceFunc")
 	client := meta.(*NetScalerNitroClient).client
 	subscriberradiusinterfaceName := resource.PrefixedUniqueId("tf-subscriberradiusinterface-")
@@ -44,20 +47,15 @@ func createSubscriberradiusinterfaceFunc(d *schema.ResourceData, meta interface{
 
 	err := client.UpdateUnnamedResource("subscriberradiusinterface", &subscriberradiusinterface)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(subscriberradiusinterfaceName)
 
-	err = readSubscriberradiusinterfaceFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this subscriberradiusinterface but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readSubscriberradiusinterfaceFunc(ctx, d, meta)
 }
 
-func readSubscriberradiusinterfaceFunc(d *schema.ResourceData, meta interface{}) error {
+func readSubscriberradiusinterfaceFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSubscriberradiusinterfaceFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading subscriberradiusinterface state")
@@ -74,7 +72,7 @@ func readSubscriberradiusinterfaceFunc(d *schema.ResourceData, meta interface{})
 
 }
 
-func updateSubscriberradiusinterfaceFunc(d *schema.ResourceData, meta interface{}) error {
+func updateSubscriberradiusinterfaceFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateSubscriberradiusinterfaceFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -94,13 +92,13 @@ func updateSubscriberradiusinterfaceFunc(d *schema.ResourceData, meta interface{
 	if hasChange {
 		err := client.UpdateUnnamedResource("subscriberradiusinterface", &subscriberradiusinterface)
 		if err != nil {
-			return fmt.Errorf("Error updating subscriberradiusinterface")
+			return diag.Errorf("Error updating subscriberradiusinterface")
 		}
 	}
-	return readSubscriberradiusinterfaceFunc(d, meta)
+	return readSubscriberradiusinterfaceFunc(ctx, d, meta)
 }
 
-func deleteSubscriberradiusinterfaceFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSubscriberradiusinterfaceFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSubscriberradiusinterfaceFunc")
 	//subscriberradiusinterface does not support DELETE operation
 	d.SetId("")

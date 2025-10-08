@@ -1,24 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcNstcpprofile() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNstcpprofileFunc,
-		Read:          readNstcpprofileFunc,
-		Update:        updateNstcpprofileFunc,
-		Delete:        deleteNstcpprofileFunc,
+		CreateContext: createNstcpprofileFunc,
+		ReadContext:   readNstcpprofileFunc,
+		UpdateContext: updateNstcpprofileFunc,
+		DeleteContext: deleteNstcpprofileFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"ackaggregation": {
@@ -315,7 +318,7 @@ func resourceCitrixAdcNstcpprofile() *schema.Resource {
 	}
 }
 
-func createNstcpprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func createNstcpprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNstcpprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var nstcpprofileName string
@@ -388,20 +391,15 @@ func createNstcpprofileFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Nstcpprofile.Type(), nstcpprofileName, &nstcpprofile)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(nstcpprofileName)
 
-	err = readNstcpprofileFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this nstcpprofile but we can't read it ?? %s", nstcpprofileName)
-		return nil
-	}
-	return nil
+	return readNstcpprofileFunc(ctx, d, meta)
 }
 
-func readNstcpprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func readNstcpprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNstcpprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nstcpprofileName := d.Id()
@@ -476,7 +474,7 @@ func readNstcpprofileFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateNstcpprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func updateNstcpprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateNstcpprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nstcpprofileName := d.Get("name").(string)
@@ -779,19 +777,19 @@ func updateNstcpprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Nstcpprofile.Type(), nstcpprofileName, &nstcpprofile)
 		if err != nil {
-			return fmt.Errorf("Error updating nstcpprofile %s", nstcpprofileName)
+			return diag.Errorf("Error updating nstcpprofile %s", nstcpprofileName)
 		}
 	}
-	return readNstcpprofileFunc(d, meta)
+	return readNstcpprofileFunc(ctx, d, meta)
 }
 
-func deleteNstcpprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNstcpprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNstcpprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nstcpprofileName := d.Id()
 	err := client.DeleteResource(service.Nstcpprofile.Type(), nstcpprofileName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

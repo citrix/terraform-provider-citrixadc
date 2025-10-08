@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -32,9 +32,9 @@ const testAccSslcertfile_basic = `
 
 func TestAccSslcertfile_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckSslcertfileDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckSslcertfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSslcertfile_basic,
@@ -65,8 +65,12 @@ func testAccCheckSslcertfileExist(n string, id *string) resource.TestCheckFunc {
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		dataArr, err := nsClient.FindAllResources(service.Sslcertfile.Type())
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		dataArr, err := client.FindAllResources(service.Sslcertfile.Type())
 
 		if err != nil {
 			return err
@@ -88,7 +92,11 @@ func testAccCheckSslcertfileExist(n string, id *string) resource.TestCheckFunc {
 }
 
 func testAccCheckSslcertfileDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_sslcertfile" {
@@ -99,7 +107,7 @@ func testAccCheckSslcertfileDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		dataArr, err := nsClient.FindAllResources(service.Sslcertfile.Type())
+		dataArr, err := client.FindAllResources(service.Sslcertfile.Type())
 
 		if err != nil {
 			return err

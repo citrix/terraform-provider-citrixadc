@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"log"
 	"testing"
 )
@@ -41,9 +41,9 @@ const testAccSnmpgroup_update = `
 
 func TestAccSnmpgroup_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckSnmpgroupDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckSnmpgroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSnmpgroup_basic,
@@ -85,8 +85,12 @@ func testAccCheckSnmpgroupExist(n string, id *string) resource.TestCheckFunc {
 		}
 		snmpgroupName := rs.Primary.ID
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		dataArr, err := nsClient.FindAllResources(service.Snmpgroup.Type())
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		dataArr, err := client.FindAllResources(service.Snmpgroup.Type())
 
 		if err != nil {
 			return err
@@ -114,7 +118,11 @@ func testAccCheckSnmpgroupExist(n string, id *string) resource.TestCheckFunc {
 }
 
 func testAccCheckSnmpgroupDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_snmpgroup" {
@@ -127,7 +135,7 @@ func testAccCheckSnmpgroupDestroy(s *terraform.State) error {
 
 		snmpgroupName := rs.Primary.ID
 
-		dataArr, err := nsClient.FindAllResources(service.Snmpgroup.Type())
+		dataArr, err := client.FindAllResources(service.Snmpgroup.Type())
 
 		if err != nil {
 			return err

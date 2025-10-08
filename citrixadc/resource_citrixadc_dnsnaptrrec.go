@@ -1,23 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/dns"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcDnsnaptrrec() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createDnsnaptrrecFunc,
-		Read:          readDnsnaptrrecFunc,
-		Delete:        deleteDnsnaptrrecFunc,
+		CreateContext: createDnsnaptrrecFunc,
+		ReadContext:   readDnsnaptrrecFunc,
+		DeleteContext: deleteDnsnaptrrecFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"domain": {
@@ -54,6 +58,7 @@ func resourceCitrixAdcDnsnaptrrec() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				ForceNew: true,
+				Computed: true,
 			},
 			"regexp": {
 				Type:     schema.TypeString,
@@ -84,7 +89,7 @@ func resourceCitrixAdcDnsnaptrrec() *schema.Resource {
 	}
 }
 
-func createDnsnaptrrecFunc(d *schema.ResourceData, meta interface{}) error {
+func createDnsnaptrrecFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createDnsnaptrrecFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnsnaptrrecName := d.Get("domain").(string)
@@ -105,20 +110,15 @@ func createDnsnaptrrecFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Dnsnaptrrec.Type(), dnsnaptrrecName, &dnsnaptrrec)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(dnsnaptrrecName)
 
-	err = readDnsnaptrrecFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this dnsnaptrrec but we can't read it ?? %s", dnsnaptrrecName)
-		return nil
-	}
-	return nil
+	return readDnsnaptrrecFunc(ctx, d, meta)
 }
 
-func readDnsnaptrrecFunc(d *schema.ResourceData, meta interface{}) error {
+func readDnsnaptrrecFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readDnsnaptrrecFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnsnaptrrecName := d.Id()
@@ -132,21 +132,21 @@ func readDnsnaptrrecFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("domain", data["domain"])
 	d.Set("ecssubnet", data["ecssubnet"])
 	d.Set("flags", data["flags"])
-	d.Set("nodeid", data["nodeid"])
-	d.Set("order", data["order"])
-	d.Set("preference", data["preference"])
-	d.Set("recordid", data["recordid"])
+	setToInt("nodeid", d, data["nodeid"])
+	setToInt("order", d, data["order"])
+	setToInt("preference", d, data["preference"])
+	setToInt("recordid", d, data["recordid"])
 	d.Set("regexp", data["regexp"])
 	d.Set("replacement", data["replacement"])
 	d.Set("services", data["services"])
-	d.Set("ttl", data["ttl"])
+	setToInt("ttl", d, data["ttl"])
 	d.Set("type", data["type"])
 
 	return nil
 
 }
 
-func deleteDnsnaptrrecFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteDnsnaptrrecFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteDnsnaptrrecFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnsnaptrrecName := d.Id()
@@ -164,7 +164,7 @@ func deleteDnsnaptrrecFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err = client.DeleteResourceWithArgsMap(service.Dnsnaptrrec.Type(), dnsnaptrrecName, argsMap)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	d.SetId("")
 

@@ -1,19 +1,23 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/basic"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcLocationImportfile() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createLocationfileImportFunc,
+		CreateContext: createLocationfileImportFunc,
 		Read:          schema.Noop,
 		Delete:        schema.Noop,
 		Schema: map[string]*schema.Schema{
@@ -36,7 +40,7 @@ func resourceCitrixAdcLocationImportfile() *schema.Resource {
 	}
 }
 
-func createLocationfileImportFunc(d *schema.ResourceData, meta interface{}) error {
+func createLocationfileImportFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createLocationfileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	locationfileName := resource.PrefixedUniqueId("tf-locationfile-")
@@ -47,7 +51,7 @@ func createLocationfileImportFunc(d *schema.ResourceData, meta interface{}) erro
 
 	err := client.ActOnResource(service.Locationfile.Type(), locationfile, "import")
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(locationfileName)

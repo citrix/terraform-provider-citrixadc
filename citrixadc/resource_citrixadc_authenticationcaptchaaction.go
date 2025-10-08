@@ -1,22 +1,25 @@
 package citrixadc
 
 import (
-	"github.com/citrix/adc-nitro-go/resource/config/authentication"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"context"
 
-	"fmt"
+	"github.com/citrix/adc-nitro-go/resource/config/authentication"
+
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAuthenticationcaptchaaction() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAuthenticationcaptchaactionFunc,
-		Read:          readAuthenticationcaptchaactionFunc,
-		Update:        updateAuthenticationcaptchaactionFunc,
-		Delete:        deleteAuthenticationcaptchaactionFunc,
+		CreateContext: createAuthenticationcaptchaactionFunc,
+		ReadContext:   readAuthenticationcaptchaactionFunc,
+		UpdateContext: updateAuthenticationcaptchaactionFunc,
+		DeleteContext: deleteAuthenticationcaptchaactionFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -49,7 +52,7 @@ func resourceCitrixAdcAuthenticationcaptchaaction() *schema.Resource {
 	}
 }
 
-func createAuthenticationcaptchaactionFunc(d *schema.ResourceData, meta interface{}) error {
+func createAuthenticationcaptchaactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAuthenticationcaptchaactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationcaptchaactionName := d.Get("name").(string)
@@ -63,20 +66,15 @@ func createAuthenticationcaptchaactionFunc(d *schema.ResourceData, meta interfac
 
 	_, err := client.AddResource("authenticationcaptchaaction", authenticationcaptchaactionName, &authenticationcaptchaaction)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(authenticationcaptchaactionName)
 
-	err = readAuthenticationcaptchaactionFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this authenticationcaptchaaction but we can't read it ?? %s", authenticationcaptchaactionName)
-		return nil
-	}
-	return nil
+	return readAuthenticationcaptchaactionFunc(ctx, d, meta)
 }
 
-func readAuthenticationcaptchaactionFunc(d *schema.ResourceData, meta interface{}) error {
+func readAuthenticationcaptchaactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAuthenticationcaptchaactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationcaptchaactionName := d.Id()
@@ -97,7 +95,7 @@ func readAuthenticationcaptchaactionFunc(d *schema.ResourceData, meta interface{
 
 }
 
-func updateAuthenticationcaptchaactionFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAuthenticationcaptchaactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAuthenticationcaptchaactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationcaptchaactionName := d.Get("name").(string)
@@ -130,19 +128,19 @@ func updateAuthenticationcaptchaactionFunc(d *schema.ResourceData, meta interfac
 	if hasChange {
 		_, err := client.UpdateResource("authenticationcaptchaaction", authenticationcaptchaactionName, &authenticationcaptchaaction)
 		if err != nil {
-			return fmt.Errorf("Error updating authenticationcaptchaaction %s", authenticationcaptchaactionName)
+			return diag.Errorf("Error updating authenticationcaptchaaction %s", authenticationcaptchaactionName)
 		}
 	}
-	return readAuthenticationcaptchaactionFunc(d, meta)
+	return readAuthenticationcaptchaactionFunc(ctx, d, meta)
 }
 
-func deleteAuthenticationcaptchaactionFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAuthenticationcaptchaactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAuthenticationcaptchaactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationcaptchaactionName := d.Id()
 	err := client.DeleteResource("authenticationcaptchaaction", authenticationcaptchaactionName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

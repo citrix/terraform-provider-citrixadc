@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/transform"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 )
@@ -13,11 +15,11 @@ import (
 func resourceCitrixAdcTransformglobal_transformpolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createTransformglobal_transformpolicy_bindingFunc,
-		Read:          readTransformglobal_transformpolicy_bindingFunc,
-		Delete:        deleteTransformglobal_transformpolicy_bindingFunc,
+		CreateContext: createTransformglobal_transformpolicy_bindingFunc,
+		ReadContext:   readTransformglobal_transformpolicy_bindingFunc,
+		DeleteContext: deleteTransformglobal_transformpolicy_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"policyname": {
@@ -72,7 +74,7 @@ func resourceCitrixAdcTransformglobal_transformpolicy_binding() *schema.Resource
 	}
 }
 
-func createTransformglobal_transformpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createTransformglobal_transformpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createTransformglobal_transformpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policyname := d.Get("policyname").(string)
@@ -89,20 +91,15 @@ func createTransformglobal_transformpolicy_bindingFunc(d *schema.ResourceData, m
 
 	err := client.UpdateUnnamedResource(service.Transformglobal_transformpolicy_binding.Type(), &transformglobal_transformpolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(policyname)
 
-	err = readTransformglobal_transformpolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this transformglobal_transformpolicy_binding but we can't read it ?? %s", policyname)
-		return nil
-	}
-	return nil
+	return readTransformglobal_transformpolicy_bindingFunc(ctx, d, meta)
 }
 
-func readTransformglobal_transformpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readTransformglobal_transformpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readTransformglobal_transformpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policyname := d.Id()
@@ -117,7 +114,7 @@ func readTransformglobal_transformpolicy_bindingFunc(d *schema.ResourceData, met
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -161,7 +158,7 @@ func readTransformglobal_transformpolicy_bindingFunc(d *schema.ResourceData, met
 
 }
 
-func deleteTransformglobal_transformpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteTransformglobal_transformpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteTransformglobal_transformpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -177,7 +174,7 @@ func deleteTransformglobal_transformpolicy_bindingFunc(d *schema.ResourceData, m
 	}
 	err := client.DeleteResourceWithArgs(service.Transformglobal_transformpolicy_binding.Type(), "", args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

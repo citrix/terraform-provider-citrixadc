@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcNshostname() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNshostnameFunc,
-		Read:          readNshostnameFunc,
-		Update:        updateNshostnameFunc,
-		Delete:        deleteNshostnameFunc,
+		CreateContext: createNshostnameFunc,
+		ReadContext:   readNshostnameFunc,
+		UpdateContext: updateNshostnameFunc,
+		DeleteContext: deleteNshostnameFunc,
 		Schema: map[string]*schema.Schema{
 			"hostname": {
 				Type:     schema.TypeString,
@@ -32,7 +35,7 @@ func resourceCitrixAdcNshostname() *schema.Resource {
 	}
 }
 
-func createNshostnameFunc(d *schema.ResourceData, meta interface{}) error {
+func createNshostnameFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNshostnameFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nshostnameName := resource.PrefixedUniqueId("tf-nshostname-")
@@ -43,20 +46,15 @@ func createNshostnameFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.UpdateUnnamedResource(service.Nshostname.Type(), &nshostname)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(nshostnameName)
 
-	err = readNshostnameFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this nshostname but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readNshostnameFunc(ctx, d, meta)
 }
 
-func readNshostnameFunc(d *schema.ResourceData, meta interface{}) error {
+func readNshostnameFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNshostnameFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading nshostname state")
@@ -67,13 +65,13 @@ func readNshostnameFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	d.Set("hostname", data["hostname"])
-	d.Set("ownernode", data["ownernode"])
+	setToInt("ownernode", d, data["ownernode"])
 
 	return nil
 
 }
 
-func updateNshostnameFunc(d *schema.ResourceData, meta interface{}) error {
+func updateNshostnameFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateNshostnameFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -96,13 +94,13 @@ func updateNshostnameFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Nshostname.Type(), &nshostname)
 		if err != nil {
-			return fmt.Errorf("Error updating nshostname")
+			return diag.Errorf("Error updating nshostname")
 		}
 	}
-	return readNshostnameFunc(d, meta)
+	return readNshostnameFunc(ctx, d, meta)
 }
 
-func deleteNshostnameFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNshostnameFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNshostnameFunc")
 	//nshostname does not support delete operation
 	d.SetId("")

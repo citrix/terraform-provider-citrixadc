@@ -1,26 +1,30 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/lb"
 	"github.com/citrix/adc-nitro-go/resource/config/ssl"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
 	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcLbvserver() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createLbvserverFunc,
-		Read:          readLbvserverFunc,
-		Update:        updateLbvserverFunc,
-		Delete:        deleteLbvserverFunc,
+		CreateContext: createLbvserverFunc,
+		ReadContext:   readLbvserverFunc,
+		UpdateContext: updateLbvserverFunc,
+		DeleteContext: deleteLbvserverFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"appflowlog": {
@@ -587,7 +591,7 @@ func resourceCitrixAdcLbvserver() *schema.Resource {
 	}
 }
 
-func createLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
+func createLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] netscaler-provider:  In createLbvserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var lbvserverName string
@@ -601,7 +605,7 @@ func createLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	if sok {
 		exists := client.ResourceExists(service.Sslcertkey.Type(), sslcertkey.(string))
 		if !exists {
-			return fmt.Errorf("[ERROR] netscaler-provider: Specified ssl cert key does not exist on netscaler!")
+			return diag.Errorf("[ERROR] netscaler-provider: Specified ssl cert key does not exist on netscaler!")
 		}
 	}
 
@@ -610,7 +614,7 @@ func createLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	if sniok {
 		exists_err := snisslcertkeysExist(snisslcertkeys, meta)
 		if exists_err != nil {
-			return exists_err
+			return diag.FromErr(exists_err)
 		}
 	}
 
@@ -717,7 +721,7 @@ func createLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	_, err := client.AddResource(service.Lbvserver.Type(), lbvserverName, &lbvserver)
 	if err != nil {
 		log.Printf("[ERROR] netscaler-provider: could not add resource %s of type %s", service.Lbvserver.Type(), lbvserverName)
-		return err
+		return diag.FromErr(err)
 	}
 	if sok { //ssl cert is specified
 		binding := ssl.Sslvservercertkeybinding{
@@ -731,28 +735,28 @@ func createLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 			err2 := client.DeleteResource(service.Lbvserver.Type(), lbvserverName)
 			if err2 != nil {
 				log.Printf("[ERROR] netscaler-provider:  Failed to delete lbvserver %s after bind to ssl cert failed", lbvserverName)
-				return fmt.Errorf("[ERROR] netscaler-provider:  Failed to delete lbvserver %s after bind to ssl cert failed", lbvserverName)
+				return diag.Errorf("[ERROR] netscaler-provider:  Failed to delete lbvserver %s after bind to ssl cert failed", lbvserverName)
 			}
-			return fmt.Errorf("[ERROR] netscaler-provider:  Failed to bind ssl cert %s to lbvserver %s", sslcertkey, lbvserverName)
+			return diag.Errorf("[ERROR] netscaler-provider:  Failed to bind ssl cert %s to lbvserver %s", sslcertkey, lbvserverName)
 		}
 	}
 
 	if sniok {
 		err := syncSnisslcert(d, meta, lbvserverName)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	// Ignore for standalone
 	if isTargetAdcCluster(client) {
 		if err := syncCiphers(d, meta, lbvserverName); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	if err := syncCiphersuites(d, meta, lbvserverName); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	sslprofile, spok := d.GetOk("sslprofile")
@@ -768,28 +772,23 @@ func createLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 			err2 := client.DeleteResource(service.Lbvserver.Type(), lbvserverName)
 			if err2 != nil {
 				log.Printf("[ERROR] netscaler-provider:  Failed to delete lbvserver %s after bind to ssl profile failed", lbvserverName)
-				return fmt.Errorf("[ERROR] netscaler-provider:  Failed to delete lbvserver %s after bind to ssl profile failed", lbvserverName)
+				return diag.Errorf("[ERROR] netscaler-provider:  Failed to delete lbvserver %s after bind to ssl profile failed", lbvserverName)
 			}
-			return fmt.Errorf("[ERROR] netscaler-provider:  Failed to bind ssl profile %s to lbvserver %s", sslprofile, lbvserverName)
+			return diag.Errorf("[ERROR] netscaler-provider:  Failed to bind ssl profile %s to lbvserver %s", sslprofile, lbvserverName)
 		}
 	}
 
 	// update sslpolicy bindings
 	if err := updateSslpolicyBindings(d, meta, lbvserverName); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(lbvserverName)
 
-	err = readLbvserverFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this lbvserver but we can't read it ?? %s", lbvserverName)
-		return nil
-	}
-	return nil
+	return readLbvserverFunc(ctx, d, meta)
 }
 
-func readLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
+func readLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] netscaler-provider:  In readLbvserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lbvserverName := d.Id()
@@ -808,7 +807,7 @@ func readLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("authnprofile", data["authnprofile"])
 	d.Set("authnvsname", data["authnvsname"])
 	d.Set("backuplbmethod", data["backuplbmethod"])
-	d.Set("backuppersistencetimeout", data["backuppersistencetimeout"])
+	setToInt("backuppersistencetimeout", d, data["backuppersistencetimeout"])
 	d.Set("backupvserver", data["backupvserver"])
 	d.Set("bypassaaaa", data["bypassaaaa"])
 	d.Set("cacheable", data["cacheable"])
@@ -824,7 +823,7 @@ func readLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("dns64", data["dns64"])
 	d.Set("dnsprofilename", data["dnsprofilename"])
 	d.Set("downstateflush", data["downstateflush"])
-	d.Set("hashlength", data["hashlength"])
+	setToInt("hashlength", d, data["hashlength"])
 	setToInt("healththreshold", d, data["healththreshold"])
 	d.Set("httpprofilename", data["httpprofilename"])
 	d.Set("httpsredirecturl", data["httpsredirecturl"])
@@ -838,28 +837,28 @@ func readLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("lbmethod", data["lbmethod"])
 	d.Set("lbprofilename", data["lbprofilename"])
 	d.Set("listenpolicy", data["listenpolicy"])
-	d.Set("listenpriority", data["listenpriority"])
+	setToInt("listenpriority", d, data["listenpriority"])
 	d.Set("m", data["m"])
 	d.Set("macmoderetainvlan", data["macmoderetainvlan"])
 	setToInt("maxautoscalemembers", d, data["maxautoscalemembers"])
 	setToInt("minautoscalemembers", d, data["minautoscalemembers"])
 	d.Set("mssqlserverversion", data["mssqlserverversion"])
-	d.Set("mysqlcharacterset", data["mysqlcharacterset"])
-	d.Set("mysqlprotocolversion", data["mysqlprotocolversion"])
-	d.Set("mysqlservercapabilities", data["mysqlservercapabilities"])
+	setToInt("mysqlcharacterset", d, data["mysqlcharacterset"])
+	setToInt("mysqlprotocolversion", d, data["mysqlprotocolversion"])
+	setToInt("mysqlservercapabilities", d, data["mysqlservercapabilities"])
 	d.Set("mysqlserverversion", data["mysqlserverversion"])
 	d.Set("name", data["name"])
 	d.Set("netmask", data["netmask"])
 	d.Set("netprofile", data["netprofile"])
 	d.Set("newname", data["newname"])
-	d.Set("newservicerequest", data["newservicerequest"])
-	d.Set("newservicerequestincrementinterval", data["newservicerequestincrementinterval"])
+	setToInt("newservicerequest", d, data["newservicerequest"])
+	setToInt("newservicerequestincrementinterval", d, data["newservicerequestincrementinterval"])
 	d.Set("newservicerequestunit", data["newservicerequestunit"])
 	d.Set("oracleserverversion", data["oracleserverversion"])
 	d.Set("persistencebackup", data["persistencebackup"])
 	d.Set("persistencetype", data["persistencetype"])
 	d.Set("persistmask", data["persistmask"])
-	d.Set("port", data["port"])
+	setToInt("port", d, data["port"])
 	d.Set("processlocal", data["processlocal"])
 	d.Set("push", data["push"])
 	d.Set("pushlabel", data["pushlabel"])
@@ -867,7 +866,7 @@ func readLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("pushvserver", data["pushvserver"])
 	setToInt("range", d, data["range"])
 	d.Set("recursionavailable", data["recursionavailable"])
-	d.Set("redirectfromport", data["redirectfromport"])
+	setToInt("redirectfromport", d, data["redirectfromport"])
 	d.Set("redirectportrewrite", data["redirectportrewrite"])
 	d.Set("redirurl", data["redirurl"])
 	d.Set("redirurlflags", data["redirurlflags"])
@@ -884,13 +883,13 @@ func readLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("somethod", data["somethod"])
 	d.Set("sopersistence", data["sopersistence"])
 	setToInt("sopersistencetimeout", d, data["sopersistencetimeout"])
-	d.Set("sothreshold", data["sothreshold"])
+	setToInt("sothreshold", d, data["sothreshold"])
 	d.Set("tcpprofilename", data["tcpprofilename"])
-	d.Set("td", data["td"])
-	d.Set("timeout", data["timeout"])
-	d.Set("tosid", data["tosid"])
+	setToInt("td", d, data["td"])
+	setToInt("timeout", d, data["timeout"])
+	setToInt("tosid", d, data["tosid"])
 	d.Set("trofspersistence", data["trofspersistence"])
-	d.Set("v6netmasklen", data["v6netmasklen"])
+	setToInt("v6netmasklen", d, data["v6netmasklen"])
 	setToInt("v6persistmasklen", d, data["v6persistmasklen"])
 	d.Set("vipheader", data["vipheader"])
 	setToInt("weight", d, data["weight"])
@@ -902,7 +901,7 @@ func readLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	_, sniok := d.GetOk("snisslcertkeys")
 	if sslok || sniok {
 		if err := readSslcerts(d, meta, lbvserverName); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 	// Set state according to curstate
@@ -913,7 +912,7 @@ func readLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := readSslpolicyBindings(d, meta, lbvserverName); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	dataSsl, _ := client.FindResource(service.Sslvserver.Type(), lbvserverName)
@@ -929,7 +928,7 @@ func readLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
+func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] netscaler-provider:  In updateLbvserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lbvserverName := d.Get("name").(string)
@@ -1460,7 +1459,7 @@ func updateLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		if oldSslcertkeyName != "" {
 			err := client.UnbindResource(service.Sslvserver.Type(), lbvserverName, service.Sslcertkey.Type(), oldSslcertkeyName, "certkeyname")
 			if err != nil {
-				return fmt.Errorf("[ERROR] netscaler-provider: Error unbinding sslcertkey from lbvserver %s", oldSslcertkeyName)
+				return diag.Errorf("[ERROR] netscaler-provider: Error unbinding sslcertkey from lbvserver %s", oldSslcertkeyName)
 			}
 			log.Printf("[DEBUG] netscaler-provider: sslcertkey has been unbound from lbvserver for sslcertkey %s ", oldSslcertkeyName)
 		}
@@ -1469,7 +1468,7 @@ func updateLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Lbvserver.Type(), lbvserverName, &lbvserver)
 		if err != nil {
-			return fmt.Errorf("[ERROR] netscaler-provider: Error updating lbvserver %s", lbvserverName)
+			return diag.Errorf("[ERROR] netscaler-provider: Error updating lbvserver %s", lbvserverName)
 		}
 		log.Printf("[DEBUG] netscaler-provider: lbvserver has been updated  lbvserver %s ", lbvserverName)
 	}
@@ -1485,7 +1484,7 @@ func updateLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		err := client.BindResource(service.Sslvserver.Type(), lbvserverName, service.Sslcertkey.Type(), sslcertkeyName, &binding)
 		if err != nil {
 			log.Printf("[ERROR] netscaler-provider:  Failed to bind ssl cert %s to lbvserver %s", sslcertkeyName, lbvserverName)
-			return fmt.Errorf("[ERROR] netscaler-provider:  Failed to bind ssl cert %s to lbvserver %s", sslcertkeyName, lbvserverName)
+			return diag.Errorf("[ERROR] netscaler-provider:  Failed to bind ssl cert %s to lbvserver %s", sslcertkeyName, lbvserverName)
 		}
 		log.Printf("[DEBUG] netscaler-provider: new ssl cert has been bound to lbvserver  sslcertkey %s lbvserver %s", sslcertkeyName, lbvserverName)
 	}
@@ -1493,20 +1492,20 @@ func updateLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	if snisslcertkeysChanged {
 		err := syncSnisslcert(d, meta, lbvserverName)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	// Ignore for standalone
 	if ciphersChanged && isTargetAdcCluster(client) {
 		if err := syncCiphers(d, meta, lbvserverName); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	if ciphersuitesChanged {
 		if err := syncCiphersuites(d, meta, lbvserverName); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
@@ -1521,7 +1520,7 @@ func updateLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 			}
 			err := client.ActOnResource(service.Sslvserver.Type(), &sslvserver, "unset")
 			if err != nil {
-				return fmt.Errorf("[ERROR] netscaler-provider: Error unbinding ssl profile from lbvserver %s", lbvserverName)
+				return diag.Errorf("[ERROR] netscaler-provider: Error unbinding ssl profile from lbvserver %s", lbvserverName)
 			}
 		} else {
 			sslvserver := ssl.Sslvserver{
@@ -1532,7 +1531,7 @@ func updateLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 			_, err := client.UpdateResource(service.Sslvserver.Type(), lbvserverName, &sslvserver)
 			if err != nil {
 				log.Printf("[ERROR] netscaler-provider:  Failed to bind ssl profile %s to lbvserver %s", sslprofileName, lbvserverName)
-				return fmt.Errorf("[ERROR] netscaler-provider:  Failed to bind ssl profile %s to lbvserver %s", sslprofileName, lbvserverName)
+				return diag.Errorf("[ERROR] netscaler-provider:  Failed to bind ssl profile %s to lbvserver %s", sslprofileName, lbvserverName)
 			}
 			log.Printf("[DEBUG] netscaler-provider: new ssl profile has been bound to lbvserver  sslprofile %s lbvserver %s", sslprofileName, lbvserverName)
 		}
@@ -1540,26 +1539,26 @@ func updateLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("sslpolicybinding") {
 		if err := updateSslpolicyBindings(d, meta, lbvserverName); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	if stateChange {
 		err := doLbvserverStateChange(d, client)
 		if err != nil {
-			return fmt.Errorf("Error enabling/disabling lbvserver %s", lbvserverName)
+			return diag.Errorf("Error enabling/disabling lbvserver %s", lbvserverName)
 		}
 	}
-	return readLbvserverFunc(d, meta)
+	return readLbvserverFunc(ctx, d, meta)
 }
 
-func deleteLbvserverFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] netscaler-provider:  In deleteLbvserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lbvserverName := d.Id()
 	err := client.DeleteResource(service.Lbvserver.Type(), lbvserverName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

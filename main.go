@@ -1,28 +1,70 @@
-/*
-Copyright 2016 Citrix Systems, Inc
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-	http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// main.go
 package main
 
 import (
+	"context"
+	"flag"
+	"log"
+
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc"
-	"github.com/hashicorp/terraform-plugin-sdk/plugin"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework"
+	"github.com/hashicorp/terraform-plugin-framework/providerserver"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov6/tf6server"
+	"github.com/hashicorp/terraform-plugin-mux/tf5to6server"
+	"github.com/hashicorp/terraform-plugin-mux/tf6muxserver"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// Provider version. This is set via the -ldflags flag during build.
+var version string = "dev"
+
 func main() {
-	opts := plugin.ServeOpts{
-		ProviderFunc: citrixadc.Provider,
+	var debugMode bool
+
+	flag.BoolVar(&debugMode, "debug", false, "set to true to run the provider with support for debuggers like delve")
+	flag.Parse()
+
+	ctx := context.Background()
+
+	// Create the SDK v2 provider and upgrade it to tf6
+	sdkV2Provider := schema.NewGRPCProviderServer(citrixadc.Provider())
+	upgradedSDKProvider, err := tf5to6server.UpgradeServer(ctx, func() tfprotov5.ProviderServer {
+		return sdkV2Provider
+	})
+	if err != nil {
+		log.Fatalf("Failed to upgrade SDK v2 provider: %v", err)
 	}
-	plugin.Serve(&opts)
+
+	// Create the Framework provider (already tf6)
+	frameworkProviderFunc := providerserver.NewProtocol6(citrixadc_framework.New(version)())
+
+	// Create the mux server
+	providers := []func() tfprotov6.ProviderServer{
+		func() tfprotov6.ProviderServer {
+			return upgradedSDKProvider
+		},
+		frameworkProviderFunc,
+	}
+
+	muxServer, err := tf6muxserver.NewMuxServer(ctx, providers...)
+	if err != nil {
+		log.Fatalf("Failed to create mux server: %v", err)
+	}
+
+	var serveOpts []tf6server.ServeOpt
+	if debugMode {
+		serveOpts = append(serveOpts, tf6server.WithManagedDebug())
+	}
+
+	err = tf6server.Serve(
+		"registry.terraform.io/citrix/citrixadc",
+		muxServer.ProviderServer,
+		serveOpts...,
+	)
+
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 }

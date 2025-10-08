@@ -1,22 +1,24 @@
 package citrixadc
 
 import (
+	"context"
 	"net/url"
 
 	"github.com/citrix/adc-nitro-go/resource/config/lb"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcLbroute6() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createLbroute6Func,
-		Read:          readLbroute6Func,
-		Delete:        deleteLbroute6Func,
+		CreateContext: createLbroute6Func,
+		ReadContext:   readLbroute6Func,
+		DeleteContext: deleteLbroute6Func,
 		Schema: map[string]*schema.Schema{
 			"gatewayname": {
 				Type:     schema.TypeString,
@@ -38,7 +40,7 @@ func resourceCitrixAdcLbroute6() *schema.Resource {
 	}
 }
 
-func createLbroute6Func(d *schema.ResourceData, meta interface{}) error {
+func createLbroute6Func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createLbroute6Func")
 	client := meta.(*NetScalerNitroClient).client
 	var network = d.Get("network").(string)
@@ -50,20 +52,15 @@ func createLbroute6Func(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Lbroute6.Type(), "", &lbroute6)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(network)
 
-	err = readLbroute6Func(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this lbroute6 but we can't read it ?? %s", network)
-		return nil
-	}
-	return nil
+	return readLbroute6Func(ctx, d, meta)
 }
 
-func readLbroute6Func(d *schema.ResourceData, meta interface{}) error {
+func readLbroute6Func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readLbroute6Func")
 	client := meta.(*NetScalerNitroClient).client
 	network := d.Id()
@@ -105,13 +102,13 @@ func readLbroute6Func(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("gatewayname", data["gatewayname"])
 	d.Set("network", data["network"])
-	d.Set("td", data["td"])
+	setToInt("td", d, data["td"])
 
 	return nil
 
 }
 
-func deleteLbroute6Func(d *schema.ResourceData, meta interface{}) error {
+func deleteLbroute6Func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteLbroute6Func")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -121,7 +118,7 @@ func deleteLbroute6Func(d *schema.ResourceData, meta interface{}) error {
 	err := client.DeleteResourceWithArgsMap(service.Lbroute6.Type(), "", argsMap)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

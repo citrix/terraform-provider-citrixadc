@@ -1,25 +1,28 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
 	"strconv"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcNd6ravariables() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNd6ravariablesFunc,
-		Read:          readNd6ravariablesFunc,
-		Update:        updateNd6ravariablesFunc,
-		Delete:        deleteNd6ravariablesFunc,
+		CreateContext: createNd6ravariablesFunc,
+		ReadContext:   readNd6ravariablesFunc,
+		UpdateContext: updateNd6ravariablesFunc,
+		DeleteContext: deleteNd6ravariablesFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"vlan": {
@@ -95,7 +98,7 @@ func resourceCitrixAdcNd6ravariables() *schema.Resource {
 	}
 }
 
-func createNd6ravariablesFunc(d *schema.ResourceData, meta interface{}) error {
+func createNd6ravariablesFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNd6ravariablesFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nd6ravariablesName := strconv.Itoa(d.Get("vlan").(int))
@@ -118,20 +121,15 @@ func createNd6ravariablesFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.UpdateUnnamedResource(service.Nd6ravariables.Type(), &nd6ravariables)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(nd6ravariablesName)
 
-	err = readNd6ravariablesFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this nd6ravariables but we can't read it ?? %s", nd6ravariablesName)
-		return nil
-	}
-	return nil
+	return readNd6ravariablesFunc(ctx, d, meta)
 }
 
-func readNd6ravariablesFunc(d *schema.ResourceData, meta interface{}) error {
+func readNd6ravariablesFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNd6ravariablesFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nd6ravariablesName := d.Id()
@@ -145,25 +143,25 @@ func readNd6ravariablesFunc(d *schema.ResourceData, meta interface{}) error {
 	vlan_int, _ := strconv.Atoi(data["vlan"].(string))
 	d.Set("vlan", vlan_int)
 	d.Set("ceaserouteradv", data["ceaserouteradv"])
-	d.Set("currhoplimit", data["currhoplimit"])
-	d.Set("defaultlifetime", data["defaultlifetime"])
-	d.Set("linkmtu", data["linkmtu"])
+	setToInt("currhoplimit", d, data["currhoplimit"])
+	setToInt("defaultlifetime", d, data["defaultlifetime"])
+	setToInt("linkmtu", d, data["linkmtu"])
 	d.Set("managedaddrconfig", data["managedaddrconfig"])
-	d.Set("maxrtadvinterval", data["maxrtadvinterval"])
-	d.Set("minrtadvinterval", data["minrtadvinterval"])
+	setToInt("maxrtadvinterval", d, data["maxrtadvinterval"])
+	setToInt("minrtadvinterval", d, data["minrtadvinterval"])
 	d.Set("onlyunicastrtadvresponse", data["onlyunicastrtadvresponse"])
 	d.Set("otheraddrconfig", data["otheraddrconfig"])
-	d.Set("reachabletime", data["reachabletime"])
-	d.Set("retranstime", data["retranstime"])
+	setToInt("reachabletime", d, data["reachabletime"])
+	setToInt("retranstime", d, data["retranstime"])
 	d.Set("sendrouteradv", data["sendrouteradv"])
 	d.Set("srclinklayeraddroption", data["srclinklayeraddroption"])
-	d.Set("vlan", data["vlan"])
+	setToInt("vlan", d, data["vlan"])
 
 	return nil
 
 }
 
-func updateNd6ravariablesFunc(d *schema.ResourceData, meta interface{}) error {
+func updateNd6ravariablesFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateNd6ravariablesFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nd6ravariablesName := strconv.Itoa(d.Get("vlan").(int))
@@ -246,13 +244,13 @@ func updateNd6ravariablesFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Nd6ravariables.Type(), &nd6ravariables)
 		if err != nil {
-			return fmt.Errorf("Error updating nd6ravariables %s", nd6ravariablesName)
+			return diag.Errorf("Error updating nd6ravariables %s", nd6ravariablesName)
 		}
 	}
-	return readNd6ravariablesFunc(d, meta)
+	return readNd6ravariablesFunc(ctx, d, meta)
 }
 
-func deleteNd6ravariablesFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNd6ravariablesFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNd6ravariablesFunc")
 	// nd6ravariables does not support DELETE operation
 	d.SetId("")

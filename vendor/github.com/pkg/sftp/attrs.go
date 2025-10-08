@@ -1,7 +1,7 @@
 package sftp
 
 // ssh_FXP_ATTRS support
-// see http://tools.ietf.org/html/draft-ietf-secsh-filexfer-02#section-5
+// see https://filezilla-project.org/specs/draft-ietf-secsh-filexfer-02.txt#section-5
 
 import (
 	"os"
@@ -32,10 +32,10 @@ func (fi *fileInfo) Name() string { return fi.name }
 func (fi *fileInfo) Size() int64 { return int64(fi.stat.Size) }
 
 // Mode returns file mode bits.
-func (fi *fileInfo) Mode() os.FileMode { return toFileMode(fi.stat.Mode) }
+func (fi *fileInfo) Mode() os.FileMode { return fi.stat.FileMode() }
 
 // ModTime returns the last modification time of the file.
-func (fi *fileInfo) ModTime() time.Time { return time.Unix(int64(fi.stat.Mtime), 0) }
+func (fi *fileInfo) ModTime() time.Time { return fi.stat.ModTime() }
 
 // IsDir returns true if the file is a directory.
 func (fi *fileInfo) IsDir() bool { return fi.Mode().IsDir() }
@@ -56,6 +56,21 @@ type FileStat struct {
 	Extended []StatExtended
 }
 
+// ModTime returns the Mtime SFTP file attribute converted to a time.Time
+func (fs *FileStat) ModTime() time.Time {
+	return time.Unix(int64(fs.Mtime), 0)
+}
+
+// AccessTime returns the Atime SFTP file attribute converted to a time.Time
+func (fs *FileStat) AccessTime() time.Time {
+	return time.Unix(int64(fs.Atime), 0)
+}
+
+// FileMode returns the Mode SFTP file attribute converted to an os.FileMode
+func (fs *FileStat) FileMode() os.FileMode {
+	return toFileMode(fs.Mode)
+}
+
 // StatExtended contains additional, extended information for a FileStat.
 type StatExtended struct {
 	ExtType string
@@ -67,6 +82,20 @@ func fileInfoFromStat(stat *FileStat, name string) os.FileInfo {
 		name: name,
 		stat: stat,
 	}
+}
+
+// FileInfoUidGid extends os.FileInfo and adds callbacks for Uid and Gid retrieval,
+// as an alternative to *syscall.Stat_t objects on unix systems.
+type FileInfoUidGid interface {
+	os.FileInfo
+	Uid() uint32
+	Gid() uint32
+}
+
+// FileInfoUidGid extends os.FileInfo and adds a callbacks for extended data retrieval.
+type FileInfoExtendedData interface {
+	os.FileInfo
+	Extended() []StatExtended
 }
 
 func fileStatFromInfo(fi os.FileInfo) (uint32, *FileStat) {
@@ -85,6 +114,23 @@ func fileStatFromInfo(fi os.FileInfo) (uint32, *FileStat) {
 
 	// os specific file stat decoding
 	fileStatFromInfoOs(fi, &flags, fileStat)
+
+	// The call above will include the sshFileXferAttrUIDGID in case
+	// the os.FileInfo can be casted to *syscall.Stat_t on unix.
+	// If fi implements FileInfoUidGid, retrieve Uid, Gid from it instead.
+	if fiExt, ok := fi.(FileInfoUidGid); ok {
+		flags |= sshFileXferAttrUIDGID
+		fileStat.UID = fiExt.Uid()
+		fileStat.GID = fiExt.Gid()
+	}
+
+	// if fi implements FileInfoExtendedData, retrieve extended data from it
+	if fiExt, ok := fi.(FileInfoExtendedData); ok {
+		fileStat.Extended = fiExt.Extended()
+		if len(fileStat.Extended) > 0 {
+			flags |= sshFileXferAttrExtended
+		}
+	}
 
 	return flags, fileStat
 }

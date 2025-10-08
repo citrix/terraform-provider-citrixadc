@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -28,26 +28,26 @@ const testAccSystemglobal_authenticationlocalpolicy_binding_basic = `
 resource "citrixadc_systemglobal_authenticationlocalpolicy_binding" "tf_systemglobal_authenticationlocalpolicy_binding" {
 	policyname = citrixadc_authenticationlocalpolicy.tf_authenticationlocalpolicy.name
 	priority   = 50
-  }
+	}
   
   resource "citrixadc_authenticationlocalpolicy" "tf_authenticationlocalpolicy" {
 	name   = "tf_authenticationlocalpolicy"
 	rule   = "ns_true"
-  }
+	}
 `
 
 const testAccSystemglobal_authenticationlocalpolicy_binding_basic_step2 = `
 resource "citrixadc_authenticationlocalpolicy" "tf_authenticationlocalpolicy" {
 	name   = "tf_authenticationlocalpolicy"
 	rule   = "ns_true"
-  }
+	}
 `
 
 func TestAccSystemglobal_authenticationlocalpolicy_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckSystemglobal_authenticationlocalpolicy_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckSystemglobal_authenticationlocalpolicy_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSystemglobal_authenticationlocalpolicy_binding_basic,
@@ -84,7 +84,11 @@ func testAccCheckSystemglobal_authenticationlocalpolicy_bindingExist(n string, i
 			*id = rs.Primary.ID
 		}
 
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		policyname := rs.Primary.ID
 
@@ -118,7 +122,11 @@ func testAccCheckSystemglobal_authenticationlocalpolicy_bindingExist(n string, i
 
 func testAccCheckSystemglobal_authenticationlocalpolicy_bindingNotExist(n string, id string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		policyname := id
 
@@ -151,7 +159,11 @@ func testAccCheckSystemglobal_authenticationlocalpolicy_bindingNotExist(n string
 }
 
 func testAccCheckSystemglobal_authenticationlocalpolicy_bindingDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_systemglobal_authenticationlocalpolicy_binding" {
@@ -162,7 +174,7 @@ func testAccCheckSystemglobal_authenticationlocalpolicy_bindingDestroy(s *terraf
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Systemglobal_authenticationlocalpolicy_binding.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Systemglobal_authenticationlocalpolicy_binding.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("systemglobal_authenticationlocalpolicy_binding %s still exists", rs.Primary.ID)
 		}

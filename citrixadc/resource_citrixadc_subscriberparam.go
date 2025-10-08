@@ -1,22 +1,25 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/subscriber"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcSubscriberparam() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSubscriberparamFunc,
-		Read:          readSubscriberparamFunc,
-		Update:        updateSubscriberparamFunc,
-		Delete:        deleteSubscriberparamFunc,
+		CreateContext: createSubscriberparamFunc,
+		ReadContext:   readSubscriberparamFunc,
+		UpdateContext: updateSubscriberparamFunc,
+		DeleteContext: deleteSubscriberparamFunc,
 		Schema: map[string]*schema.Schema{
 			"idleaction": {
 				Type:     schema.TypeString,
@@ -48,7 +51,7 @@ func resourceCitrixAdcSubscriberparam() *schema.Resource {
 	}
 }
 
-func createSubscriberparamFunc(d *schema.ResourceData, meta interface{}) error {
+func createSubscriberparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSubscriberparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 	subscriberparamName := resource.PrefixedUniqueId("tf-subscriberparam-")
@@ -63,20 +66,15 @@ func createSubscriberparamFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.UpdateUnnamedResource("subscriberparam", &subscriberparam)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(subscriberparamName)
 
-	err = readSubscriberparamFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this subscriberparam but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readSubscriberparamFunc(ctx, d, meta)
 }
 
-func readSubscriberparamFunc(d *schema.ResourceData, meta interface{}) error {
+func readSubscriberparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSubscriberparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading subscriberparam state")
@@ -87,7 +85,7 @@ func readSubscriberparamFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	d.Set("idleaction", data["idleaction"])
-	d.Set("idlettl", data["idlettl"])
+	setToInt("idlettl", d, data["idlettl"])
 	d.Set("interfacetype", data["interfacetype"])
 	//d.Set("ipv6prefixlookuplist", data["ipv6prefixlookuplist"])
 	d.Set("keytype", data["keytype"])
@@ -96,7 +94,7 @@ func readSubscriberparamFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateSubscriberparamFunc(d *schema.ResourceData, meta interface{}) error {
+func updateSubscriberparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateSubscriberparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -131,13 +129,13 @@ func updateSubscriberparamFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource("subscriberparam", &subscriberparam)
 		if err != nil {
-			return fmt.Errorf("Error updating subscriberparam")
+			return diag.Errorf("Error updating subscriberparam")
 		}
 	}
-	return readSubscriberparamFunc(d, meta)
+	return readSubscriberparamFunc(ctx, d, meta)
 }
 
-func deleteSubscriberparamFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSubscriberparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSubscriberparamFunc")
 	//subscriberparam does not support DELETE operation
 	d.SetId("")

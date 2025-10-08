@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/lsn"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strings"
 )
@@ -13,11 +15,11 @@ import (
 func resourceCitrixAdcLsngroup_lsnhttphdrlogprofile_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createLsngroup_lsnhttphdrlogprofile_bindingFunc,
-		Read:          readLsngroup_lsnhttphdrlogprofile_bindingFunc,
-		Delete:        deleteLsngroup_lsnhttphdrlogprofile_bindingFunc,
+		CreateContext: createLsngroup_lsnhttphdrlogprofile_bindingFunc,
+		ReadContext:   readLsngroup_lsnhttphdrlogprofile_bindingFunc,
+		DeleteContext: deleteLsngroup_lsnhttphdrlogprofile_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"groupname": {
@@ -34,7 +36,7 @@ func resourceCitrixAdcLsngroup_lsnhttphdrlogprofile_binding() *schema.Resource {
 	}
 }
 
-func createLsngroup_lsnhttphdrlogprofile_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createLsngroup_lsnhttphdrlogprofile_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createLsngroup_lsnhttphdrlogprofile_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	groupname := d.Get("groupname")
@@ -47,20 +49,15 @@ func createLsngroup_lsnhttphdrlogprofile_bindingFunc(d *schema.ResourceData, met
 
 	err := client.UpdateUnnamedResource("lsngroup_lsnhttphdrlogprofile_binding", &lsngroup_lsnhttphdrlogprofile_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readLsngroup_lsnhttphdrlogprofile_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this lsngroup_lsnhttphdrlogprofile_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readLsngroup_lsnhttphdrlogprofile_bindingFunc(ctx, d, meta)
 }
 
-func readLsngroup_lsnhttphdrlogprofile_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readLsngroup_lsnhttphdrlogprofile_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readLsngroup_lsnhttphdrlogprofile_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -81,7 +78,7 @@ func readLsngroup_lsnhttphdrlogprofile_bindingFunc(d *schema.ResourceData, meta 
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -119,7 +116,7 @@ func readLsngroup_lsnhttphdrlogprofile_bindingFunc(d *schema.ResourceData, meta 
 
 }
 
-func deleteLsngroup_lsnhttphdrlogprofile_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteLsngroup_lsnhttphdrlogprofile_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteLsngroup_lsnhttphdrlogprofile_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -134,7 +131,7 @@ func deleteLsngroup_lsnhttphdrlogprofile_bindingFunc(d *schema.ResourceData, met
 
 	err := client.DeleteResourceWithArgs("lsngroup_lsnhttphdrlogprofile_binding", name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

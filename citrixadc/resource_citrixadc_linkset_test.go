@@ -20,8 +20,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccLinkset_add_with_no_binding = `
@@ -48,9 +48,9 @@ func TestAccLinkset_basic(t *testing.T) {
 		t.Skip("clustering not supported in CPX")
 	}
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckLinksetDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckLinksetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLinkset_add_with_no_binding,
@@ -87,8 +87,12 @@ func testAccCheckLinksetExist(n string, id *string) resource.TestCheckFunc {
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Linkset.Type(), rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Linkset.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -103,7 +107,11 @@ func testAccCheckLinksetExist(n string, id *string) resource.TestCheckFunc {
 }
 
 func testAccCheckLinksetDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_linkset" {
@@ -114,7 +122,7 @@ func testAccCheckLinksetDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Linkset.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Linkset.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("Linset ID %s still exists", rs.Primary.ID)
 		}

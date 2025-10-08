@@ -1,21 +1,24 @@
 package citrixadc
 
 import (
-	"github.com/citrix/adc-nitro-go/resource/config/lldp"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"context"
 
-	"fmt"
+	"github.com/citrix/adc-nitro-go/resource/config/lldp"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcLldpparam() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createLldpparamFunc,
-		Read:          readLldpparamFunc,
-		Update:        updateLldpparamFunc,
-		Delete:        deleteLldpparamFunc,
+		CreateContext: createLldpparamFunc,
+		ReadContext:   readLldpparamFunc,
+		UpdateContext: updateLldpparamFunc,
+		DeleteContext: deleteLldpparamFunc,
 		Schema: map[string]*schema.Schema{
 			"holdtimetxmult": {
 				Type:     schema.TypeInt,
@@ -36,7 +39,7 @@ func resourceCitrixAdcLldpparam() *schema.Resource {
 	}
 }
 
-func createLldpparamFunc(d *schema.ResourceData, meta interface{}) error {
+func createLldpparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createLldpparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lldpparamName := resource.PrefixedUniqueId("tf-lldpparam-")
@@ -49,20 +52,15 @@ func createLldpparamFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.UpdateUnnamedResource("lldpparam", &lldpparam)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(lldpparamName)
 
-	err = readLldpparamFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this lldpparam but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readLldpparamFunc(ctx, d, meta)
 }
 
-func readLldpparamFunc(d *schema.ResourceData, meta interface{}) error {
+func readLldpparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readLldpparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading lldpparam state")
@@ -72,15 +70,15 @@ func readLldpparamFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
-	d.Set("holdtimetxmult", data["holdtimetxmult"])
+	setToInt("holdtimetxmult", d, data["holdtimetxmult"])
 	d.Set("mode", data["mode"])
-	d.Set("timer", data["timer"])
+	setToInt("timer", d, data["timer"])
 
 	return nil
 
 }
 
-func updateLldpparamFunc(d *schema.ResourceData, meta interface{}) error {
+func updateLldpparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateLldpparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -105,13 +103,13 @@ func updateLldpparamFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource("lldpparam", &lldpparam)
 		if err != nil {
-			return fmt.Errorf("Error updating lldpparam")
+			return diag.Errorf("Error updating lldpparam")
 		}
 	}
-	return readLldpparamFunc(d, meta)
+	return readLldpparamFunc(ctx, d, meta)
 }
 
-func deleteLldpparamFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteLldpparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteLldpparamFunc")
 	// lldpparam does not support DELETE operation
 	d.SetId("")

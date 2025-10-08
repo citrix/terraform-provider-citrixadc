@@ -17,8 +17,8 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -28,7 +28,7 @@ const testAccSmppuser_basic = `
 resource "citrixadc_smppuser" "tf_smppuser" {
 	username = "user1"
 	password = "abc"
-  }
+	}
 `
 const testAccSmppuser_update = `
 
@@ -36,14 +36,14 @@ const testAccSmppuser_update = `
 resource "citrixadc_smppuser" "tf_smppuser" {
 	username = "user1"
 	password = "abcd"
-  }
+	}
 `
 
 func TestAccSmppuser_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckSmppuserDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckSmppuserDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSmppuser_basic,
@@ -84,8 +84,12 @@ func testAccCheckSmppuserExist(n string, id *string) resource.TestCheckFunc {
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource("smppuser", rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource("smppuser", rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -100,7 +104,11 @@ func testAccCheckSmppuserExist(n string, id *string) resource.TestCheckFunc {
 }
 
 func testAccCheckSmppuserDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_smppuser" {
@@ -111,7 +119,7 @@ func testAccCheckSmppuserDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource("smppuser", rs.Primary.ID)
+		_, err := client.FindResource("smppuser", rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("smppuser %s still exists", rs.Primary.ID)
 		}

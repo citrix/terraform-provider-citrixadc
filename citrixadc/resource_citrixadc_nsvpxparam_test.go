@@ -19,8 +19,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccNsvpxparam_basic_step1 = `
@@ -70,9 +70,9 @@ func TestAccNsvpxparam_basic(t *testing.T) {
 	// 	t.Skip("Use case is applicable for standalone VPX")
 	// }
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckNsvpxparamDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckNsvpxparamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNsvpxparam_basic_step1,
@@ -98,9 +98,9 @@ func TestAccNsvpxparam_cluster(t *testing.T) {
 	// 	t.Skip("Use case is not applicable to non clustered VPX")
 	// }
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckNsvpxparamDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckNsvpxparamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNsvpxparam_cluster_step1,
@@ -144,7 +144,11 @@ func testAccCheckNsvpxparamExist(n string, id *string) resource.TestCheckFunc {
 }
 
 func testAccCheckNsvpxparamDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_nsvpxparam" {
@@ -155,7 +159,7 @@ func testAccCheckNsvpxparamDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource("nsvpxparam", rs.Primary.ID)
+		_, err := client.FindResource("nsvpxparam", rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("nsvpxparam %s still exists", rs.Primary.ID)
 		}

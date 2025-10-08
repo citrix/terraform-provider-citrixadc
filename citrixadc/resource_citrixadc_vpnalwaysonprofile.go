@@ -1,24 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/vpn"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcVpnalwaysonprofile() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createVpnalwaysonprofileFunc,
-		Read:          readVpnalwaysonprofileFunc,
-		Update:        updateVpnalwaysonprofileFunc,
-		Delete:        deleteVpnalwaysonprofileFunc,
+		CreateContext: createVpnalwaysonprofileFunc,
+		ReadContext:   readVpnalwaysonprofileFunc,
+		UpdateContext: updateVpnalwaysonprofileFunc,
+		DeleteContext: deleteVpnalwaysonprofileFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"clientcontrol": {
@@ -45,7 +48,7 @@ func resourceCitrixAdcVpnalwaysonprofile() *schema.Resource {
 	}
 }
 
-func createVpnalwaysonprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func createVpnalwaysonprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createVpnalwaysonprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var vpnalwaysonprofileName string
@@ -64,20 +67,15 @@ func createVpnalwaysonprofileFunc(d *schema.ResourceData, meta interface{}) erro
 
 	_, err := client.AddResource("vpnalwaysonprofile", vpnalwaysonprofileName, &vpnalwaysonprofile)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(vpnalwaysonprofileName)
 
-	err = readVpnalwaysonprofileFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this vpnalwaysonprofile but we can't read it ?? %s", vpnalwaysonprofileName)
-		return nil
-	}
-	return nil
+	return readVpnalwaysonprofileFunc(ctx, d, meta)
 }
 
-func readVpnalwaysonprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func readVpnalwaysonprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readVpnalwaysonprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vpnalwaysonprofileName := d.Id()
@@ -97,7 +95,7 @@ func readVpnalwaysonprofileFunc(d *schema.ResourceData, meta interface{}) error 
 
 }
 
-func updateVpnalwaysonprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func updateVpnalwaysonprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateVpnalwaysonprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vpnalwaysonprofileName := d.Get("name").(string)
@@ -130,19 +128,19 @@ func updateVpnalwaysonprofileFunc(d *schema.ResourceData, meta interface{}) erro
 	if hasChange {
 		_, err := client.UpdateResource("vpnalwaysonprofile", vpnalwaysonprofileName, &vpnalwaysonprofile)
 		if err != nil {
-			return fmt.Errorf("Error updating vpnalwaysonprofile %s", vpnalwaysonprofileName)
+			return diag.Errorf("Error updating vpnalwaysonprofile %s", vpnalwaysonprofileName)
 		}
 	}
-	return readVpnalwaysonprofileFunc(d, meta)
+	return readVpnalwaysonprofileFunc(ctx, d, meta)
 }
 
-func deleteVpnalwaysonprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteVpnalwaysonprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteVpnalwaysonprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vpnalwaysonprofileName := d.Id()
 	err := client.DeleteResource("vpnalwaysonprofile", vpnalwaysonprofileName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

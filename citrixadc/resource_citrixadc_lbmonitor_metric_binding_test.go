@@ -22,8 +22,8 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 // Need the following cli commands since no resource yet exists
@@ -34,13 +34,13 @@ const testAccLbmonitor_metric_binding_basic = `
 
 resource "citrixadc_lbmetrictable" "tab1" {
 	metrictable = "tab1"
- }
+	}
 
 resource "citrixadc_lbmetrictable_metric_binding" "tf_bind" {
 	metric      = "metric1"
 	metrictable = citrixadc_lbmetrictable.tab1.metrictable
 	snmpoid     = "1.3.6.1.4.1.5951.4.1.1.8.0"
- }
+	}
 resource "citrixadc_lbmonitor" "tfmonitor1" {
   monitorname = "tf-monitor1"
   type        = "LOAD"
@@ -51,14 +51,14 @@ resource citrixadc_lbmonitor_metric_binding tf_acclbmonitor_metric_binding {
 	monitorname = citrixadc_lbmonitor.tfmonitor1.monitorname
 	metric = citrixadc_lbmetrictable_metric_binding.tf_bind.metric
 	metricthreshold = 100
-   } 
+	}
 `
 
 func TestAccLbmonitor_metric_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckLbmonitor_metric_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckLbmonitor_metric_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLbmonitor_metric_binding_basic,
@@ -92,7 +92,11 @@ func testAccCheckLbmonitor_metric_bindingExist(n string, id *string) resource.Te
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		bindingId := rs.Primary.ID
 		idSlice := strings.SplitN(bindingId, ",", 2)
@@ -104,7 +108,7 @@ func testAccCheckLbmonitor_metric_bindingExist(n string, id *string) resource.Te
 			ResourceName:             lbmonitorName,
 			ResourceMissingErrorCode: 258,
 		}
-		dataArr, err := nsClient.FindResourceArrayWithParams(findParams)
+		dataArr, err := client.FindResourceArrayWithParams(findParams)
 
 		// Unexpected error
 		if err != nil {
@@ -129,7 +133,11 @@ func testAccCheckLbmonitor_metric_bindingExist(n string, id *string) resource.Te
 }
 
 func testAccCheckLbmonitor_metric_bindingDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_lbmonitor_metric_binding" {
@@ -140,7 +148,7 @@ func testAccCheckLbmonitor_metric_bindingDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource("lbmonitor_metric_binding", rs.Primary.ID)
+		_, err := client.FindResource("lbmonitor_metric_binding", rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("LB monitor metric binding %s still exists", rs.Primary.ID)
 		}

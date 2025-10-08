@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/authentication"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAuthenticationloginschemapolicy() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAuthenticationloginschemapolicyFunc,
-		Read:          readAuthenticationloginschemapolicyFunc,
-		Update:        updateAuthenticationloginschemapolicyFunc,
-		Delete:        deleteAuthenticationloginschemapolicyFunc,
+		CreateContext: createAuthenticationloginschemapolicyFunc,
+		ReadContext:   readAuthenticationloginschemapolicyFunc,
+		UpdateContext: updateAuthenticationloginschemapolicyFunc,
+		DeleteContext: deleteAuthenticationloginschemapolicyFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -60,7 +63,7 @@ func resourceCitrixAdcAuthenticationloginschemapolicy() *schema.Resource {
 	}
 }
 
-func createAuthenticationloginschemapolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func createAuthenticationloginschemapolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAuthenticationloginschemapolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationloginschemapolicyName := d.Get("name").(string)
@@ -76,20 +79,15 @@ func createAuthenticationloginschemapolicyFunc(d *schema.ResourceData, meta inte
 
 	_, err := client.AddResource(service.Authenticationloginschemapolicy.Type(), authenticationloginschemapolicyName, &authenticationloginschemapolicy)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(authenticationloginschemapolicyName)
 
-	err = readAuthenticationloginschemapolicyFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this authenticationloginschemapolicy but we can't read it ?? %s", authenticationloginschemapolicyName)
-		return nil
-	}
-	return nil
+	return readAuthenticationloginschemapolicyFunc(ctx, d, meta)
 }
 
-func readAuthenticationloginschemapolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func readAuthenticationloginschemapolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAuthenticationloginschemapolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationloginschemapolicyName := d.Id()
@@ -112,7 +110,7 @@ func readAuthenticationloginschemapolicyFunc(d *schema.ResourceData, meta interf
 
 }
 
-func updateAuthenticationloginschemapolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAuthenticationloginschemapolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAuthenticationloginschemapolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationloginschemapolicyName := d.Get("name").(string)
@@ -155,19 +153,19 @@ func updateAuthenticationloginschemapolicyFunc(d *schema.ResourceData, meta inte
 	if hasChange {
 		_, err := client.UpdateResource(service.Authenticationloginschemapolicy.Type(), authenticationloginschemapolicyName, &authenticationloginschemapolicy)
 		if err != nil {
-			return fmt.Errorf("Error updating authenticationloginschemapolicy %s", authenticationloginschemapolicyName)
+			return diag.Errorf("Error updating authenticationloginschemapolicy %s", authenticationloginschemapolicyName)
 		}
 	}
-	return readAuthenticationloginschemapolicyFunc(d, meta)
+	return readAuthenticationloginschemapolicyFunc(ctx, d, meta)
 }
 
-func deleteAuthenticationloginschemapolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAuthenticationloginschemapolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAuthenticationloginschemapolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationloginschemapolicyName := d.Id()
 	err := client.DeleteResource(service.Authenticationloginschemapolicy.Type(), authenticationloginschemapolicyName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

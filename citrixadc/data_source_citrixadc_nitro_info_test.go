@@ -19,7 +19,7 @@ import (
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/terraform"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -31,13 +31,13 @@ data "citrixadc_nitro_info" "sample" {
 		bound_resource_missing_errorcode = 1540
 	}
     primary_id = "tf_sslcertkey"
-}
+	}
 
 resource "citrixadc_sslcertkey" "tf_sslcertkey" {
   certkey = "tf_sslcertkey"
   cert = "/var/tmp/certificate1.crt"
   key = "/var/tmp/key1.pem"
-}
+	}
 
 resource "citrixadc_lbvserver" "tf_lbvserver" {
   ipv46       = "10.10.10.44"
@@ -45,19 +45,19 @@ resource "citrixadc_lbvserver" "tf_lbvserver" {
   port        = 443
   servicetype = "SSL"
   sslprofile  = "ns_default_ssl_profile_frontend"
-}
+	}
 
 resource "citrixadc_sslvserver_sslcertkey_binding" "tf_binding" {
     vservername = citrixadc_lbvserver.tf_lbvserver.name
     certkeyname = citrixadc_sslcertkey.tf_sslcertkey.certkey
-}
+	}
 `
 
 func TestAccNitroInfo_binding_list(t *testing.T) {
 	t.Skip("TODO: Need to find a way to test this resource!")
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNitroInfoBindingList_step1,

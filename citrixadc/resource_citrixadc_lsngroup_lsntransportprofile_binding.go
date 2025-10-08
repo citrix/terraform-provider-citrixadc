@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/lsn"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strings"
 )
@@ -13,11 +15,11 @@ import (
 func resourceCitrixAdcLsngroup_lsntransportprofile_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createLsngroup_lsntransportprofile_bindingFunc,
-		Read:          readLsngroup_lsntransportprofile_bindingFunc,
-		Delete:        deleteLsngroup_lsntransportprofile_bindingFunc,
+		CreateContext: createLsngroup_lsntransportprofile_bindingFunc,
+		ReadContext:   readLsngroup_lsntransportprofile_bindingFunc,
+		DeleteContext: deleteLsngroup_lsntransportprofile_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"groupname": {
@@ -34,7 +36,7 @@ func resourceCitrixAdcLsngroup_lsntransportprofile_binding() *schema.Resource {
 	}
 }
 
-func createLsngroup_lsntransportprofile_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createLsngroup_lsntransportprofile_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createLsngroup_lsntransportprofile_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	groupname := d.Get("groupname")
@@ -47,20 +49,15 @@ func createLsngroup_lsntransportprofile_bindingFunc(d *schema.ResourceData, meta
 
 	err := client.UpdateUnnamedResource("lsngroup_lsntransportprofile_binding", &lsngroup_lsntransportprofile_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readLsngroup_lsntransportprofile_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this lsngroup_lsntransportprofile_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readLsngroup_lsntransportprofile_bindingFunc(ctx, d, meta)
 }
 
-func readLsngroup_lsntransportprofile_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readLsngroup_lsntransportprofile_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readLsngroup_lsntransportprofile_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -81,7 +78,7 @@ func readLsngroup_lsntransportprofile_bindingFunc(d *schema.ResourceData, meta i
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -119,7 +116,7 @@ func readLsngroup_lsntransportprofile_bindingFunc(d *schema.ResourceData, meta i
 
 }
 
-func deleteLsngroup_lsntransportprofile_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteLsngroup_lsntransportprofile_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteLsngroup_lsntransportprofile_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -134,7 +131,7 @@ func deleteLsngroup_lsntransportprofile_bindingFunc(d *schema.ResourceData, meta
 
 	err := client.DeleteResourceWithArgs("lsngroup_lsntransportprofile_binding", name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

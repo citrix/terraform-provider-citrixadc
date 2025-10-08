@@ -1,23 +1,25 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/bot"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcBotpolicy() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createBotpolicyFunc,
-		Read:          readBotpolicyFunc,
-		Update:        updateBotpolicyFunc,
-		Delete:        deleteBotpolicyFunc,
+		CreateContext: createBotpolicyFunc,
+		ReadContext:   readBotpolicyFunc,
+		UpdateContext: updateBotpolicyFunc,
+		DeleteContext: deleteBotpolicyFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -54,7 +56,7 @@ func resourceCitrixAdcBotpolicy() *schema.Resource {
 	}
 }
 
-func createBotpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func createBotpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createBotpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	botpolicyName := d.Get("name").(string)
@@ -70,20 +72,15 @@ func createBotpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource("botpolicy", botpolicyName, &botpolicy)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(botpolicyName)
 
-	err = readBotpolicyFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this botpolicy but we can't read it ?? %s", botpolicyName)
-		return nil
-	}
-	return nil
+	return readBotpolicyFunc(ctx, d, meta)
 }
 
-func readBotpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func readBotpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readBotpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	botpolicyName := d.Id()
@@ -105,7 +102,7 @@ func readBotpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateBotpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func updateBotpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateBotpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	botpolicyName := d.Get("name").(string)
@@ -147,19 +144,19 @@ func updateBotpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource("botpolicy", botpolicyName, &botpolicy)
 		if err != nil {
-			return fmt.Errorf("Error updating botpolicy %s", botpolicyName)
+			return diag.Errorf("Error updating botpolicy %s", botpolicyName)
 		}
 	}
-	return readBotpolicyFunc(d, meta)
+	return readBotpolicyFunc(ctx, d, meta)
 }
 
-func deleteBotpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteBotpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteBotpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	botpolicyName := d.Id()
 	err := client.DeleteResource("botpolicy", botpolicyName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

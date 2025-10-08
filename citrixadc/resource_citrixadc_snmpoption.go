@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/snmp"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcSnmpoption() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSnmpoptionFunc,
-		Read:          readSnmpoptionFunc,
-		Update:        updateSnmpoptionFunc,
-		Delete:        deleteSnmpoptionFunc, // Thought snmpoption resource donot have DELETE operation, it is required to set ID to "" d.SetID("") to maintain terraform state
+		CreateContext: createSnmpoptionFunc,
+		ReadContext:   readSnmpoptionFunc,
+		UpdateContext: updateSnmpoptionFunc,
+		DeleteContext: deleteSnmpoptionFunc, // Thought snmpoption resource donot have DELETE operation, it is required to set ID to "" d.SetID("") to maintain terraform state
 		Schema: map[string]*schema.Schema{
 			"partitionnameintrap": {
 				Type:     schema.TypeString,
@@ -43,7 +46,7 @@ func resourceCitrixAdcSnmpoption() *schema.Resource {
 	}
 }
 
-func createSnmpoptionFunc(d *schema.ResourceData, meta interface{}) error {
+func createSnmpoptionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSnmpoptionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	snmpoptionName := resource.PrefixedUniqueId("tf-snmpoption-")
@@ -57,20 +60,15 @@ func createSnmpoptionFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.UpdateUnnamedResource(service.Snmpoption.Type(), &snmpoption)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(snmpoptionName)
 
-	err = readSnmpoptionFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this snmpoption but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readSnmpoptionFunc(ctx, d, meta)
 }
 
-func readSnmpoptionFunc(d *schema.ResourceData, meta interface{}) error {
+func readSnmpoptionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSnmpoptionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading snmpoption state ")
@@ -89,7 +87,7 @@ func readSnmpoptionFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateSnmpoptionFunc(d *schema.ResourceData, meta interface{}) error {
+func updateSnmpoptionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateSnmpoptionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	snmpoption := snmp.Snmpoption{}
@@ -119,13 +117,13 @@ func updateSnmpoptionFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Snmpoption.Type(), &snmpoption)
 		if err != nil {
-			return fmt.Errorf("Error updating snmpoption")
+			return diag.Errorf("Error updating snmpoption")
 		}
 	}
-	return readSnmpoptionFunc(d, meta)
+	return readSnmpoptionFunc(ctx, d, meta)
 }
 
-func deleteSnmpoptionFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSnmpoptionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSnmpoptionFunc")
 	// snmpoption do not have DELETE operation, but this function is required to set the ID to ""
 	d.SetId("")

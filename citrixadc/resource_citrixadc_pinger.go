@@ -1,18 +1,22 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/utility"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcPinger() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createPingerFunc,
+		CreateContext: createPingerFunc,
 		Read:          schema.Noop,
 		Delete:        schema.Noop,
 		Schema: map[string]*schema.Schema{
@@ -75,7 +79,7 @@ func resourceCitrixAdcPinger() *schema.Resource {
 	}
 }
 
-func createPingerFunc(d *schema.ResourceData, meta interface{}) error {
+func createPingerFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createPingerFunc")
 	client := meta.(*NetScalerNitroClient).client
 	pingerId := resource.PrefixedUniqueId("tf-pinger-")
@@ -91,7 +95,7 @@ func createPingerFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := client.ActOnResource("ping", &ping, ""); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(pingerId)

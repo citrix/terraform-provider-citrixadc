@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -58,9 +58,9 @@ const testAccAaaglobal_aaapreauthenticationpolicy_binding_basic_step2 = `
 
 func TestAccAaaglobal_aaapreauthenticationpolicy_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAaaglobal_aaapreauthenticationpolicy_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAaaglobal_aaapreauthenticationpolicy_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAaaglobal_aaapreauthenticationpolicy_binding_basic,
@@ -97,7 +97,11 @@ func testAccCheckAaaglobal_aaapreauthenticationpolicy_bindingExist(n string, id 
 			*id = rs.Primary.ID
 		}
 
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		policy := rs.Primary.ID
 
@@ -131,7 +135,11 @@ func testAccCheckAaaglobal_aaapreauthenticationpolicy_bindingExist(n string, id 
 
 func testAccCheckAaaglobal_aaapreauthenticationpolicy_bindingNotExist(n string, id string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		policy := id
 
@@ -164,7 +172,11 @@ func testAccCheckAaaglobal_aaapreauthenticationpolicy_bindingNotExist(n string, 
 }
 
 func testAccCheckAaaglobal_aaapreauthenticationpolicy_bindingDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_aaaglobal_aaapreauthenticationpolicy_binding" {
@@ -175,7 +187,7 @@ func testAccCheckAaaglobal_aaapreauthenticationpolicy_bindingDestroy(s *terrafor
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Aaaglobal_aaapreauthenticationpolicy_binding.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Aaaglobal_aaapreauthenticationpolicy_binding.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("aaaglobal_aaapreauthenticationpolicy_binding %s still exists", rs.Primary.ID)
 		}

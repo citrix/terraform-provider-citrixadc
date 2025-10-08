@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/snmp"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 	"strconv"
@@ -15,11 +17,11 @@ import (
 func resourceCitrixAdcSnmptrap_snmpuser_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSnmptrap_snmpuser_bindingFunc,
-		Read:          readSnmptrap_snmpuser_bindingFunc,
-		Delete:        deleteSnmptrap_snmpuser_bindingFunc,
+		CreateContext: createSnmptrap_snmpuser_bindingFunc,
+		ReadContext:   readSnmptrap_snmpuser_bindingFunc,
+		DeleteContext: deleteSnmptrap_snmpuser_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"trapclass": {
@@ -64,7 +66,7 @@ func resourceCitrixAdcSnmptrap_snmpuser_binding() *schema.Resource {
 	}
 }
 
-func createSnmptrap_snmpuser_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createSnmptrap_snmpuser_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSnmptrap_snmpuser_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	snmptrapId := d.Get("trapclass").(string) + "," + d.Get("trapdestination").(string)
@@ -82,20 +84,15 @@ func createSnmptrap_snmpuser_bindingFunc(d *schema.ResourceData, meta interface{
 	log.Printf("%v", username)
 	_, err := client.AddResource(service.Snmptrap_snmpuser_binding.Type(), bindingId, &snmptrap_snmpuser_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readSnmptrap_snmpuser_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this snmptrap_snmpuser_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readSnmptrap_snmpuser_bindingFunc(ctx, d, meta)
 }
 
-func readSnmptrap_snmpuser_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readSnmptrap_snmpuser_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSnmptrap_snmpuser_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -136,7 +133,7 @@ func readSnmptrap_snmpuser_bindingFunc(d *schema.ResourceData, meta interface{})
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -168,7 +165,7 @@ func readSnmptrap_snmpuser_bindingFunc(d *schema.ResourceData, meta interface{})
 	data := dataArr[foundIndex]
 
 	d.Set("securitylevel", data["securitylevel"])
-	d.Set("td", data["td"])
+	setToInt("td", d, data["td"])
 	d.Set("trapclass", data["trapclass"])
 	d.Set("trapdestination", data["trapdestination"])
 	d.Set("username", data["username"])
@@ -178,7 +175,7 @@ func readSnmptrap_snmpuser_bindingFunc(d *schema.ResourceData, meta interface{})
 
 }
 
-func deleteSnmptrap_snmpuser_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSnmptrap_snmpuser_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSnmptrap_snmpuser_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -201,7 +198,7 @@ func deleteSnmptrap_snmpuser_bindingFunc(d *schema.ResourceData, meta interface{
 
 	err := client.DeleteResourceWithArgs(service.Snmptrap_snmpuser_binding.Type(), name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

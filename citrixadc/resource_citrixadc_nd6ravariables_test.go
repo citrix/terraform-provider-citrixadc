@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -31,7 +31,7 @@ const testAccNd6ravariables_basic = `
 		ceaserouteradv           = "NO"
 		onlyunicastrtadvresponse = "NO"
 		srclinklayeraddroption   = "NO"
-	} 
+	}
 `
 const testAccNd6ravariables_update = `
 
@@ -46,9 +46,9 @@ const testAccNd6ravariables_update = `
 
 func TestAccNd6ravariables_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: nil,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNd6ravariables_basic,
@@ -91,8 +91,12 @@ func testAccCheckNd6ravariablesExist(n string, id *string) resource.TestCheckFun
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Nd6ravariables.Type(), rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Nd6ravariables.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err

@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcNsconsoleloginprompt() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNsconsoleloginpromptFunc,
-		Read:          readNsconsoleloginpromptFunc,
-		Update:        updateNsconsoleloginpromptFunc,
-		Delete:        deleteNsconsoleloginpromptFunc,
+		CreateContext: createNsconsoleloginpromptFunc,
+		ReadContext:   readNsconsoleloginpromptFunc,
+		UpdateContext: updateNsconsoleloginpromptFunc,
+		DeleteContext: deleteNsconsoleloginpromptFunc,
 		Schema: map[string]*schema.Schema{
 			"promptstring": {
 				Type:     schema.TypeString,
@@ -28,7 +31,7 @@ func resourceCitrixAdcNsconsoleloginprompt() *schema.Resource {
 	}
 }
 
-func createNsconsoleloginpromptFunc(d *schema.ResourceData, meta interface{}) error {
+func createNsconsoleloginpromptFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNsconsoleloginpromptFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var nsconsoleloginpromptName string
@@ -40,20 +43,15 @@ func createNsconsoleloginpromptFunc(d *schema.ResourceData, meta interface{}) er
 
 	err := client.UpdateUnnamedResource(service.Nsconsoleloginprompt.Type(), &nsconsoleloginprompt)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(nsconsoleloginpromptName)
 
-	err = readNsconsoleloginpromptFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this nsconsoleloginprompt but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readNsconsoleloginpromptFunc(ctx, d, meta)
 }
 
-func readNsconsoleloginpromptFunc(d *schema.ResourceData, meta interface{}) error {
+func readNsconsoleloginpromptFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNsconsoleloginpromptFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading nsconsoleloginprompt state")
@@ -69,7 +67,7 @@ func readNsconsoleloginpromptFunc(d *schema.ResourceData, meta interface{}) erro
 
 }
 
-func updateNsconsoleloginpromptFunc(d *schema.ResourceData, meta interface{}) error {
+func updateNsconsoleloginpromptFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateNsconsoleloginpromptFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -84,13 +82,13 @@ func updateNsconsoleloginpromptFunc(d *schema.ResourceData, meta interface{}) er
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Nsconsoleloginprompt.Type(), &nsconsoleloginprompt)
 		if err != nil {
-			return fmt.Errorf("Error updating nsconsoleloginprompt")
+			return diag.Errorf("Error updating nsconsoleloginprompt")
 		}
 	}
-	return readNsconsoleloginpromptFunc(d, meta)
+	return readNsconsoleloginpromptFunc(ctx, d, meta)
 }
 
-func deleteNsconsoleloginpromptFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNsconsoleloginpromptFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNsconsoleloginpromptFunc")
 
 	// nsconsoleloginprompt do not have DELETE operation, but this function is required to set the ID to ""

@@ -1,24 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/cache"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcCacheselector() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createCacheselectorFunc,
-		Read:          readCacheselectorFunc,
-		Update:        updateCacheselectorFunc,
-		Delete:        deleteCacheselectorFunc,
+		CreateContext: createCacheselectorFunc,
+		ReadContext:   readCacheselectorFunc,
+		UpdateContext: updateCacheselectorFunc,
+		DeleteContext: deleteCacheselectorFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"selectorname": {
@@ -35,7 +38,7 @@ func resourceCitrixAdcCacheselector() *schema.Resource {
 	}
 }
 
-func createCacheselectorFunc(d *schema.ResourceData, meta interface{}) error {
+func createCacheselectorFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createCacheselectorFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var cacheselectorName string
@@ -47,20 +50,15 @@ func createCacheselectorFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Cacheselector.Type(), cacheselectorName, &cacheselector)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(cacheselectorName)
 
-	err = readCacheselectorFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this cacheselector but we can't read it ?? %s", cacheselectorName)
-		return nil
-	}
-	return nil
+	return readCacheselectorFunc(ctx, d, meta)
 }
 
-func readCacheselectorFunc(d *schema.ResourceData, meta interface{}) error {
+func readCacheselectorFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readCacheselectorFunc")
 	client := meta.(*NetScalerNitroClient).client
 	cacheselectorName := d.Id()
@@ -78,7 +76,7 @@ func readCacheselectorFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateCacheselectorFunc(d *schema.ResourceData, meta interface{}) error {
+func updateCacheselectorFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateCacheselectorFunc")
 	client := meta.(*NetScalerNitroClient).client
 	cacheselectorName := d.Get("selectorname").(string)
@@ -96,19 +94,19 @@ func updateCacheselectorFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Cacheselector.Type(), &cacheselector)
 		if err != nil {
-			return fmt.Errorf("Error updating cacheselector %s", cacheselectorName)
+			return diag.Errorf("Error updating cacheselector %s", cacheselectorName)
 		}
 	}
-	return readCacheselectorFunc(d, meta)
+	return readCacheselectorFunc(ctx, d, meta)
 }
 
-func deleteCacheselectorFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteCacheselectorFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteCacheselectorFunc")
 	client := meta.(*NetScalerNitroClient).client
 	cacheselectorName := d.Id()
 	err := client.DeleteResource(service.Cacheselector.Type(), cacheselectorName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

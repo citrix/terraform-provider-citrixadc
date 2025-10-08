@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/authentication"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAuthenticationradiusaction() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAuthenticationradiusactionFunc,
-		Read:          readAuthenticationradiusactionFunc,
-		Update:        updateAuthenticationradiusactionFunc,
-		Delete:        deleteAuthenticationradiusactionFunc,
+		CreateContext: createAuthenticationradiusactionFunc,
+		ReadContext:   readAuthenticationradiusactionFunc,
+		UpdateContext: updateAuthenticationradiusactionFunc,
+		DeleteContext: deleteAuthenticationradiusactionFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -140,7 +143,7 @@ func resourceCitrixAdcAuthenticationradiusaction() *schema.Resource {
 	}
 }
 
-func createAuthenticationradiusactionFunc(d *schema.ResourceData, meta interface{}) error {
+func createAuthenticationradiusactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAuthenticationradiusactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationradiusactionName := d.Get("name").(string)
@@ -172,20 +175,15 @@ func createAuthenticationradiusactionFunc(d *schema.ResourceData, meta interface
 
 	_, err := client.AddResource(service.Authenticationradiusaction.Type(), authenticationradiusactionName, &authenticationradiusaction)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(authenticationradiusactionName)
 
-	err = readAuthenticationradiusactionFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this authenticationradiusaction but we can't read it ?? %s", authenticationradiusactionName)
-		return nil
-	}
-	return nil
+	return readAuthenticationradiusactionFunc(ctx, d, meta)
 }
 
-func readAuthenticationradiusactionFunc(d *schema.ResourceData, meta interface{}) error {
+func readAuthenticationradiusactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAuthenticationradiusactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationradiusactionName := d.Id()
@@ -198,33 +196,33 @@ func readAuthenticationradiusactionFunc(d *schema.ResourceData, meta interface{}
 	}
 	d.Set("accounting", data["accounting"])
 	d.Set("authentication", data["authentication"])
-	d.Set("authservretry", data["authservretry"])
-	d.Set("authtimeout", data["authtimeout"])
+	setToInt("authservretry", d, data["authservretry"])
+	setToInt("authtimeout", d, data["authtimeout"])
 	d.Set("callingstationid", data["callingstationid"])
 	d.Set("defaultauthenticationgroup", data["defaultauthenticationgroup"])
-	d.Set("ipattributetype", data["ipattributetype"])
-	d.Set("ipvendorid", data["ipvendorid"])
+	setToInt("ipattributetype", d, data["ipattributetype"])
+	setToInt("ipvendorid", d, data["ipvendorid"])
 	d.Set("name", data["name"])
 	d.Set("passencoding", data["passencoding"])
-	d.Set("pwdattributetype", data["pwdattributetype"])
-	d.Set("pwdvendorid", data["pwdvendorid"])
-	d.Set("radattributetype", data["radattributetype"])
+	setToInt("pwdattributetype", d, data["pwdattributetype"])
+	setToInt("pwdvendorid", d, data["pwdvendorid"])
+	setToInt("radattributetype", d, data["radattributetype"])
 	d.Set("radgroupseparator", data["radgroupseparator"])
 	d.Set("radgroupsprefix", data["radgroupsprefix"])
 	// d.Set("radkey", data["radkey"]) Everytime it gives different encrypted key
 	d.Set("radnasid", data["radnasid"])
 	d.Set("radnasip", data["radnasip"])
-	d.Set("radvendorid", data["radvendorid"])
+	setToInt("radvendorid", d, data["radvendorid"])
 	d.Set("serverip", data["serverip"])
 	d.Set("servername", data["servername"])
-	d.Set("serverport", data["serverport"])
+	setToInt("serverport", d, data["serverport"])
 	d.Set("tunnelendpointclientip", data["tunnelendpointclientip"])
 
 	return nil
 
 }
 
-func updateAuthenticationradiusactionFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAuthenticationradiusactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAuthenticationradiusactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationradiusactionName := d.Get("name").(string)
@@ -347,19 +345,19 @@ func updateAuthenticationradiusactionFunc(d *schema.ResourceData, meta interface
 	if hasChange {
 		_, err := client.UpdateResource(service.Authenticationradiusaction.Type(), authenticationradiusactionName, &authenticationradiusaction)
 		if err != nil {
-			return fmt.Errorf("Error updating authenticationradiusaction %s", authenticationradiusactionName)
+			return diag.Errorf("Error updating authenticationradiusaction %s", authenticationradiusactionName)
 		}
 	}
-	return readAuthenticationradiusactionFunc(d, meta)
+	return readAuthenticationradiusactionFunc(ctx, d, meta)
 }
 
-func deleteAuthenticationradiusactionFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAuthenticationradiusactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAuthenticationradiusactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationradiusactionName := d.Id()
 	err := client.DeleteResource(service.Authenticationradiusaction.Type(), authenticationradiusactionName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

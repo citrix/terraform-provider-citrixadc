@@ -17,8 +17,8 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -43,9 +43,9 @@ const testAccAuthenticationoauthidpprofile_update = `
 
 func TestAccAuthenticationoauthidpprofile_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAuthenticationoauthidpprofileDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAuthenticationoauthidpprofileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAuthenticationoauthidpprofile_add,
@@ -86,8 +86,12 @@ func testAccCheckAuthenticationoauthidpprofileExist(n string, id *string) resour
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource("authenticationoauthidpprofile", rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource("authenticationoauthidpprofile", rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -102,7 +106,11 @@ func testAccCheckAuthenticationoauthidpprofileExist(n string, id *string) resour
 }
 
 func testAccCheckAuthenticationoauthidpprofileDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_authenticationoauthidpprofile" {
@@ -113,7 +121,7 @@ func testAccCheckAuthenticationoauthidpprofileDestroy(s *terraform.State) error 
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource("authenticationoauthidpprofile", rs.Primary.ID)
+		_, err := client.FindResource("authenticationoauthidpprofile", rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("authenticationoauthidpprofile %s still exists", rs.Primary.ID)
 		}

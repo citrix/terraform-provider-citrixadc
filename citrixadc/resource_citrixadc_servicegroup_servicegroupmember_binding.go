@@ -1,12 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/basic"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strconv"
 	"strings"
@@ -15,11 +16,11 @@ import (
 func resourceCitrixAdcServicegroup_servicegroupmember_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createServicegroup_servicegroupmember_bindingFunc,
-		Read:          readServicegroup_servicegroupmember_bindingFunc,
-		Delete:        deleteServicegroup_servicegroupmember_bindingFunc,
+		CreateContext: createServicegroup_servicegroupmember_bindingFunc,
+		ReadContext:   readServicegroup_servicegroupmember_bindingFunc,
+		DeleteContext: deleteServicegroup_servicegroupmember_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"customserverid": {
@@ -99,7 +100,7 @@ func resourceCitrixAdcServicegroup_servicegroupmember_binding() *schema.Resource
 	}
 }
 
-func createServicegroup_servicegroupmember_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createServicegroup_servicegroupmember_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createServicegroup_servicegroupmember_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingIdSlice := make([]string, 0, 3)
@@ -139,20 +140,15 @@ func createServicegroup_servicegroupmember_bindingFunc(d *schema.ResourceData, m
 
 	err := client.UpdateUnnamedResource(service.Servicegroup_servicegroupmember_binding.Type(), &servicegroup_servicegroupmember_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readServicegroup_servicegroupmember_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this servicegroup_servicegroupmember_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readServicegroup_servicegroupmember_bindingFunc(ctx, d, meta)
 }
 
-func readServicegroup_servicegroupmember_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readServicegroup_servicegroupmember_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readServicegroup_servicegroupmember_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -175,7 +171,7 @@ func readServicegroup_servicegroupmember_bindingFunc(d *schema.ResourceData, met
 	var err error
 	if len(idSlice) == 3 {
 		if port, err = strconv.Atoi(idSlice[2]); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
@@ -191,7 +187,7 @@ func readServicegroup_servicegroupmember_bindingFunc(d *schema.ResourceData, met
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -234,12 +230,12 @@ func readServicegroup_servicegroupmember_bindingFunc(d *schema.ResourceData, met
 	data := dataArr[foundIndex]
 
 	d.Set("customserverid", data["customserverid"])
-	d.Set("dbsttl", data["dbsttl"])
-	d.Set("hashid", data["hashid"])
+	setToInt("dbsttl", d, data["dbsttl"])
+	setToInt("hashid", d, data["hashid"])
 	d.Set("ip", data["ip"])
 	d.Set("nameserver", data["nameserver"])
-	d.Set("port", data["port"])
-	d.Set("serverid", data["serverid"])
+	setToInt("port", d, data["port"])
+	setToInt("serverid", d, data["serverid"])
 	d.Set("servername", data["servername"])
 	d.Set("servicegroupname", data["servicegroupname"])
 	d.Set("state", data["state"])
@@ -249,7 +245,7 @@ func readServicegroup_servicegroupmember_bindingFunc(d *schema.ResourceData, met
 
 }
 
-func deleteServicegroup_servicegroupmember_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteServicegroup_servicegroupmember_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteServicegroup_servicegroupmember_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -261,7 +257,7 @@ func deleteServicegroup_servicegroupmember_bindingFunc(d *schema.ResourceData, m
 	var err error
 	if len(idSlice) == 3 {
 		if port, err = strconv.Atoi(idSlice[2]); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 	args := make([]string, 0, 3)
@@ -278,7 +274,7 @@ func deleteServicegroup_servicegroupmember_bindingFunc(d *schema.ResourceData, m
 	err = client.DeleteResourceWithArgs("servicegroup_servicegroupmember_binding", servicegroupname, args)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

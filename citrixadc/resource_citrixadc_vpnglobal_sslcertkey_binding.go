@@ -1,20 +1,22 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/vpn"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcVpnglobal_sslcertkey_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createVpnglobal_sslcertkey_bindingFunc,
-		Read:          readVpnglobal_sslcertkey_bindingFunc,
-		Delete:        deleteVpnglobal_sslcertkey_bindingFunc,
+		CreateContext: createVpnglobal_sslcertkey_bindingFunc,
+		ReadContext:   readVpnglobal_sslcertkey_bindingFunc,
+		DeleteContext: deleteVpnglobal_sslcertkey_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"certkeyname": {
@@ -57,7 +59,7 @@ func resourceCitrixAdcVpnglobal_sslcertkey_binding() *schema.Resource {
 	}
 }
 
-func createVpnglobal_sslcertkey_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createVpnglobal_sslcertkey_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createVpnglobal_sslcertkey_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	certkeyname := d.Get("certkeyname").(string)
@@ -72,20 +74,15 @@ func createVpnglobal_sslcertkey_bindingFunc(d *schema.ResourceData, meta interfa
 
 	err := client.UpdateUnnamedResource("vpnglobal_sslcertkey_binding", &vpnglobal_sslcertkey_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(certkeyname)
 
-	err = readVpnglobal_sslcertkey_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this vpnglobal_sslcertkey_binding but we can't read it ?? %s", certkeyname)
-		return nil
-	}
-	return nil
+	return readVpnglobal_sslcertkey_bindingFunc(ctx, d, meta)
 }
 
-func readVpnglobal_sslcertkey_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readVpnglobal_sslcertkey_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readVpnglobal_sslcertkey_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	certkeyname := d.Id()
@@ -101,7 +98,7 @@ func readVpnglobal_sslcertkey_bindingFunc(d *schema.ResourceData, meta interface
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -143,7 +140,7 @@ func readVpnglobal_sslcertkey_bindingFunc(d *schema.ResourceData, meta interface
 
 }
 
-func deleteVpnglobal_sslcertkey_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteVpnglobal_sslcertkey_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteVpnglobal_sslcertkey_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -159,7 +156,7 @@ func deleteVpnglobal_sslcertkey_bindingFunc(d *schema.ResourceData, meta interfa
 
 	err := client.DeleteResourceWithArgsMap("vpnglobal_sslcertkey_binding", "", argsMap)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

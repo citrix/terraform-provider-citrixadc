@@ -1,25 +1,28 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/appflow"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAppflowparam() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAppflowparamFunc,
-		Read:          readAppflowparamFunc,
-		Update:        updateAppflowparamFunc,
-		Delete:        deleteAppflowparamFunc,
+		CreateContext: createAppflowparamFunc,
+		ReadContext:   readAppflowparamFunc,
+		UpdateContext: updateAppflowparamFunc,
+		DeleteContext: deleteAppflowparamFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"aaausername": {
@@ -281,7 +284,7 @@ func resourceCitrixAdcAppflowparam() *schema.Resource {
 	}
 }
 
-func createAppflowparamFunc(d *schema.ResourceData, meta interface{}) error {
+func createAppflowparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppflowparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -343,20 +346,15 @@ func createAppflowparamFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.UpdateUnnamedResource(service.Appflowparam.Type(), &appflowparam)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(appflowparamName)
 
-	err = readAppflowparamFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this appflowparam but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readAppflowparamFunc(ctx, d, meta)
 }
 
-func readAppflowparamFunc(d *schema.ResourceData, meta interface{}) error {
+func readAppflowparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAppflowparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading appflowparam state")
@@ -366,20 +364,19 @@ func readAppflowparamFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
-	d.Set("name", data["name"])
 	d.Set("aaausername", data["aaausername"])
 	d.Set("analyticsauthtoken", data["analyticsauthtoken"])
-	d.Set("appnamerefresh", data["appnamerefresh"])
+	setToInt("appnamerefresh", d, data["appnamerefresh"])
 	d.Set("auditlogs", data["auditlogs"])
 	d.Set("cacheinsight", data["cacheinsight"])
 	d.Set("clienttrafficonly", data["clienttrafficonly"])
 	d.Set("connectionchaining", data["connectionchaining"])
 	d.Set("cqareporting", data["cqareporting"])
 	d.Set("distributedtracing", data["distributedtracing"])
-	d.Set("disttracingsamplingrate", data["disttracingsamplingrate"])
+	setToInt("disttracingsamplingrate", d, data["disttracingsamplingrate"])
 	d.Set("emailaddress", data["emailaddress"])
 	d.Set("events", data["events"])
-	d.Set("flowrecordinterval", data["flowrecordinterval"])
+	setToInt("flowrecordinterval", d, data["flowrecordinterval"])
 	d.Set("gxsessionreporting", data["gxsessionreporting"])
 	d.Set("httpauthorization", data["httpauthorization"])
 	d.Set("httpcontenttype", data["httpcontenttype"])
@@ -401,21 +398,21 @@ func readAppflowparamFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("logstreamovernsip", data["logstreamovernsip"])
 	d.Set("lsnlogging", data["lsnlogging"])
 	d.Set("metrics", data["metrics"])
-	d.Set("observationdomainid", data["observationdomainid"])
+	setToInt("observationdomainid", d, data["observationdomainid"])
 	d.Set("observationdomainname", data["observationdomainname"])
-	d.Set("observationpointid", data["observationpointid"])
-	d.Set("securityinsightrecordinterval", data["securityinsightrecordinterval"])
+	setToInt("observationpointid", d, data["observationpointid"])
+	setToInt("securityinsightrecordinterval", d, data["securityinsightrecordinterval"])
 	d.Set("securityinsighttraffic", data["securityinsighttraffic"])
 	d.Set("skipcacheredirectionhttptransaction", data["skipcacheredirectionhttptransaction"])
 	d.Set("subscriberawareness", data["subscriberawareness"])
 	d.Set("subscriberidobfuscation", data["subscriberidobfuscation"])
 	d.Set("subscriberidobfuscationalgo", data["subscriberidobfuscationalgo"])
-	d.Set("tcpattackcounterinterval", data["tcpattackcounterinterval"])
-	d.Set("templaterefresh", data["templaterefresh"])
+	setToInt("tcpattackcounterinterval", d, data["tcpattackcounterinterval"])
+	setToInt("templaterefresh", d, data["templaterefresh"])
 	d.Set("timeseriesovernsip", data["timeseriesovernsip"])
-	d.Set("udppmtu", data["udppmtu"])
+	setToInt("udppmtu", d, data["udppmtu"])
 	d.Set("urlcategory", data["urlcategory"])
-	d.Set("usagerecordinterval", data["usagerecordinterval"])
+	setToInt("usagerecordinterval", d, data["usagerecordinterval"])
 	d.Set("videoinsight", data["videoinsight"])
 	d.Set("websaasappusagereporting", data["websaasappusagereporting"])
 
@@ -423,7 +420,7 @@ func readAppflowparamFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateAppflowparamFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAppflowparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAppflowparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appflowparam := appflow.Appflowparam{}
@@ -688,13 +685,13 @@ func updateAppflowparamFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Appflowparam.Type(), &appflowparam)
 		if err != nil {
-			return fmt.Errorf("Error updating appflowparam")
+			return diag.Errorf("Error updating appflowparam")
 		}
 	}
-	return readAppflowparamFunc(d, meta)
+	return readAppflowparamFunc(ctx, d, meta)
 }
 
-func deleteAppflowparamFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAppflowparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppflowparamFunc")
 	// appflow parameter does not have DELETE operation, but this function is required to set the ID to ""
 	d.SetId("")

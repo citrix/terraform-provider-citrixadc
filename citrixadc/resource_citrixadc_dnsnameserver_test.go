@@ -21,8 +21,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccDnsnameserver_add = `
@@ -71,9 +71,9 @@ const testAccDnsnameserver_update = `
 
 func TestAccDnsnameserver_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckDnsnameserverDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckDnsnameserverDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDnsnameserver_add,
@@ -119,8 +119,12 @@ func testAccCheckDnsnameserverExist(n string, id *string) resource.TestCheckFunc
 		name := idSlice[0]
 		dns_type := idSlice[1]
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		dataArr, err := nsClient.FindAllResources(service.Dnsnameserver.Type())
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		dataArr, err := client.FindAllResources(service.Dnsnameserver.Type())
 
 		if err != nil {
 			return err
@@ -148,7 +152,11 @@ func testAccCheckDnsnameserverExist(n string, id *string) resource.TestCheckFunc
 }
 
 func testAccCheckDnsnameserverDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_dnsnameserver" {
@@ -164,7 +172,7 @@ func testAccCheckDnsnameserverDestroy(s *terraform.State) error {
 		name := idSlice[0]
 		dns_type := idSlice[1]
 
-		dataArr, err := nsClient.FindAllResources(service.Dnsnameserver.Type())
+		dataArr, err := client.FindAllResources(service.Dnsnameserver.Type())
 
 		if err != nil {
 			return err

@@ -1,24 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/tm"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcTmsamlssoprofile() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createTmsamlssoprofileFunc,
-		Read:          readTmsamlssoprofileFunc,
-		Update:        updateTmsamlssoprofileFunc,
-		Delete:        deleteTmsamlssoprofileFunc,
+		CreateContext: createTmsamlssoprofileFunc,
+		ReadContext:   readTmsamlssoprofileFunc,
+		UpdateContext: updateTmsamlssoprofileFunc,
+		DeleteContext: deleteTmsamlssoprofileFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -424,7 +427,7 @@ func resourceCitrixAdcTmsamlssoprofile() *schema.Resource {
 	}
 }
 
-func createTmsamlssoprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func createTmsamlssoprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createTmsamlssoprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	tmsamlssoprofileName := d.Get("name").(string)
@@ -513,20 +516,15 @@ func createTmsamlssoprofileFunc(d *schema.ResourceData, meta interface{}) error 
 
 	_, err := client.AddResource(service.Tmsamlssoprofile.Type(), tmsamlssoprofileName, &tmsamlssoprofile)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(tmsamlssoprofileName)
 
-	err = readTmsamlssoprofileFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this tmsamlssoprofile but we can't read it ?? %s", tmsamlssoprofileName)
-		return nil
-	}
-	return nil
+	return readTmsamlssoprofileFunc(ctx, d, meta)
 }
 
-func readTmsamlssoprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func readTmsamlssoprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readTmsamlssoprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	tmsamlssoprofileName := d.Id()
@@ -616,13 +614,13 @@ func readTmsamlssoprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	//d.Set("sendpassword", data["sendpassword"])
 	d.Set("signassertion", data["signassertion"])
 	d.Set("signaturealg", data["signaturealg"])
-	d.Set("skewtime", data["skewtime"])
+	setToInt("skewtime", d, data["skewtime"])
 
 	return nil
 
 }
 
-func updateTmsamlssoprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func updateTmsamlssoprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateTmsamlssoprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	tmsamlssoprofileName := d.Get("name").(string)
@@ -1030,19 +1028,19 @@ func updateTmsamlssoprofileFunc(d *schema.ResourceData, meta interface{}) error 
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Tmsamlssoprofile.Type(), &tmsamlssoprofile)
 		if err != nil {
-			return fmt.Errorf("Error updating tmsamlssoprofile %s", tmsamlssoprofileName)
+			return diag.Errorf("Error updating tmsamlssoprofile %s", tmsamlssoprofileName)
 		}
 	}
-	return readTmsamlssoprofileFunc(d, meta)
+	return readTmsamlssoprofileFunc(ctx, d, meta)
 }
 
-func deleteTmsamlssoprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteTmsamlssoprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteTmsamlssoprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	tmsamlssoprofileName := d.Id()
 	err := client.DeleteResource(service.Tmsamlssoprofile.Type(), tmsamlssoprofileName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

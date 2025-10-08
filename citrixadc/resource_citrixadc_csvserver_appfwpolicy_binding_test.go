@@ -22,8 +22,8 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccCsvserver_appfwpolicy_binding_basic = `
@@ -81,9 +81,9 @@ const testAccCsvserver_appfwpolicy_binding_basic = `
 
 func TestAccCsvserver_appfwpolicy_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckCsvserver_appfwpolicy_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckCsvserver_appfwpolicy_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCsvserver_appfwpolicy_binding_basic,
@@ -118,7 +118,11 @@ func testAccCheckCsvserver_appfwpolicy_bindingExist(n string, id *string) resour
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 		bindingId := rs.Primary.ID
 		idSlice := strings.SplitN(bindingId, ",", 2)
 		csvserverName := idSlice[0]
@@ -129,7 +133,7 @@ func testAccCheckCsvserver_appfwpolicy_bindingExist(n string, id *string) resour
 			ResourceName:             csvserverName,
 			ResourceMissingErrorCode: 258,
 		}
-		dataArr, err := nsClient.FindResourceArrayWithParams(findParams)
+		dataArr, err := client.FindResourceArrayWithParams(findParams)
 
 		// Unexpected error
 		if err != nil {
@@ -155,7 +159,11 @@ func testAccCheckCsvserver_appfwpolicy_bindingExist(n string, id *string) resour
 }
 
 func testAccCheckCsvserver_appfwpolicy_bindingDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_csvserver_appfwpolicy_binding" {
@@ -166,7 +174,7 @@ func testAccCheckCsvserver_appfwpolicy_bindingDestroy(s *terraform.State) error 
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Csvserver_appfwpolicy_binding.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Csvserver_appfwpolicy_binding.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("csvserver_appfwpolicy_binding %s still exists", rs.Primary.ID)
 		}

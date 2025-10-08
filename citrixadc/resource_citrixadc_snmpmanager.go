@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/snmp"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 )
@@ -13,12 +15,12 @@ import (
 func resourceCitrixAdcSnmpmanager() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSnmpmanagerFunc,
-		Read:          readSnmpmanagerFunc,
-		Update:        updateSnmpmanagerFunc,
-		Delete:        deleteSnmpmanagerFunc,
+		CreateContext: createSnmpmanagerFunc,
+		ReadContext:   readSnmpmanagerFunc,
+		UpdateContext: updateSnmpmanagerFunc,
+		DeleteContext: deleteSnmpmanagerFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"ipaddress": {
@@ -41,7 +43,7 @@ func resourceCitrixAdcSnmpmanager() *schema.Resource {
 	}
 }
 
-func createSnmpmanagerFunc(d *schema.ResourceData, meta interface{}) error {
+func createSnmpmanagerFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSnmpmanagerFunc")
 	client := meta.(*NetScalerNitroClient).client
 	snmpmanagerName := d.Get("ipaddress").(string)
@@ -54,20 +56,15 @@ func createSnmpmanagerFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Snmpmanager.Type(), snmpmanagerName, &snmpmanager)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(snmpmanagerName)
 
-	err = readSnmpmanagerFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this snmpmanager but we can't read it ?? %s", snmpmanagerName)
-		return nil
-	}
-	return nil
+	return readSnmpmanagerFunc(ctx, d, meta)
 }
 
-func readSnmpmanagerFunc(d *schema.ResourceData, meta interface{}) error {
+func readSnmpmanagerFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSnmpmanagerFunc")
 	client := meta.(*NetScalerNitroClient).client
 	snmpmanagerName := d.Id()
@@ -102,7 +99,7 @@ func readSnmpmanagerFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	data := dataArr[foundIndex]
-	d.Set("domainresolveretry", data["domainresolveretry"])
+	setToInt("domainresolveretry", d, data["domainresolveretry"])
 	d.Set("ipaddress", data["ipaddress"])
 	d.Set("netmask", data["netmask"])
 
@@ -110,7 +107,7 @@ func readSnmpmanagerFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateSnmpmanagerFunc(d *schema.ResourceData, meta interface{}) error {
+func updateSnmpmanagerFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateSnmpmanagerFunc")
 	client := meta.(*NetScalerNitroClient).client
 	snmpmanagerName := d.Id()
@@ -133,13 +130,13 @@ func updateSnmpmanagerFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Snmpmanager.Type(), &snmpmanager)
 		if err != nil {
-			return fmt.Errorf("Error updating snmpmanager %s", snmpmanagerName)
+			return diag.Errorf("Error updating snmpmanager %s", snmpmanagerName)
 		}
 	}
-	return readSnmpmanagerFunc(d, meta)
+	return readSnmpmanagerFunc(ctx, d, meta)
 }
 
-func deleteSnmpmanagerFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSnmpmanagerFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSnmpmanagerFunc")
 	client := meta.(*NetScalerNitroClient).client
 	snmpmanagerName := d.Id()
@@ -150,7 +147,7 @@ func deleteSnmpmanagerFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.DeleteResourceWithArgs(service.Snmpmanager.Type(), snmpmanagerName, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

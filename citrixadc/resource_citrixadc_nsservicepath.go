@@ -1,22 +1,24 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcNsservicepath() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNsservicepathFunc,
-		Read:          readNsservicepathFunc,
-		Delete:        deleteNsservicepathFunc,
+		CreateContext: createNsservicepathFunc,
+		ReadContext:   readNsservicepathFunc,
+		DeleteContext: deleteNsservicepathFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"servicepathname": {
@@ -29,7 +31,7 @@ func resourceCitrixAdcNsservicepath() *schema.Resource {
 	}
 }
 
-func createNsservicepathFunc(d *schema.ResourceData, meta interface{}) error {
+func createNsservicepathFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNsservicepathFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nsservicepathName := d.Get("servicepathname").(string)
@@ -39,20 +41,15 @@ func createNsservicepathFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Nsservicepath.Type(), nsservicepathName, &nsservicepath)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(nsservicepathName)
 
-	err = readNsservicepathFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this nsservicepath but we can't read it ?? %s", nsservicepathName)
-		return nil
-	}
-	return nil
+	return readNsservicepathFunc(ctx, d, meta)
 }
 
-func readNsservicepathFunc(d *schema.ResourceData, meta interface{}) error {
+func readNsservicepathFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNsservicepathFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nsservicepathName := d.Id()
@@ -69,13 +66,13 @@ func readNsservicepathFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func deleteNsservicepathFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNsservicepathFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNsservicepathFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nsservicepathName := d.Id()
 	err := client.DeleteResource(service.Nsservicepath.Type(), nsservicepathName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

@@ -1,25 +1,28 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
 	"strings"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcNslicenseproxyserver() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNslicenseproxyserverFunc,
-		Read:          readNslicenseproxyserverFunc,
-		Update:        updateNslicenseproxyserverFunc,
-		Delete:        deleteNslicenseproxyserverFunc,
+		CreateContext: createNslicenseproxyserverFunc,
+		ReadContext:   readNslicenseproxyserverFunc,
+		UpdateContext: updateNslicenseproxyserverFunc,
+		DeleteContext: deleteNslicenseproxyserverFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"port": {
@@ -40,7 +43,7 @@ func resourceCitrixAdcNslicenseproxyserver() *schema.Resource {
 	}
 }
 
-func createNslicenseproxyserverFunc(d *schema.ResourceData, meta interface{}) error {
+func createNslicenseproxyserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNslicenseproxyserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var nslicenseproxyserverName string
@@ -57,20 +60,15 @@ func createNslicenseproxyserverFunc(d *schema.ResourceData, meta interface{}) er
 
 	_, err := client.AddResource(service.Nslicenseproxyserver.Type(), nslicenseproxyserverName, &nslicenseproxyserver)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(nslicenseproxyserverName)
 
-	err = readNslicenseproxyserverFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this nslicenseproxyserver but we can't read it ?? %s", nslicenseproxyserverName)
-		return nil
-	}
-	return nil
+	return readNslicenseproxyserverFunc(ctx, d, meta)
 }
 
-func readNslicenseproxyserverFunc(d *schema.ResourceData, meta interface{}) error {
+func readNslicenseproxyserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNslicenseproxyserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nslicenseproxyserverName := d.Id()
@@ -81,7 +79,7 @@ func readNslicenseproxyserverFunc(d *schema.ResourceData, meta interface{}) erro
 		d.SetId("")
 		return nil
 	}
-	d.Set("port", data["port"])
+	setToInt("port", d, data["port"])
 	d.Set("serverip", data["serverip"])
 	d.Set("servername", data["servername"])
 
@@ -89,7 +87,7 @@ func readNslicenseproxyserverFunc(d *schema.ResourceData, meta interface{}) erro
 
 }
 
-func updateNslicenseproxyserverFunc(d *schema.ResourceData, meta interface{}) error {
+func updateNslicenseproxyserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateNslicenseproxyserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nslicenseproxyserverName := d.Id()
@@ -110,13 +108,13 @@ func updateNslicenseproxyserverFunc(d *schema.ResourceData, meta interface{}) er
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Nslicenseproxyserver.Type(), &nslicenseproxyserver)
 		if err != nil {
-			return fmt.Errorf("Error updating nslicenseproxyserver %s", nslicenseproxyserverName)
+			return diag.Errorf("Error updating nslicenseproxyserver %s", nslicenseproxyserverName)
 		}
 	}
-	return readNslicenseproxyserverFunc(d, meta)
+	return readNslicenseproxyserverFunc(ctx, d, meta)
 }
 
-func deleteNslicenseproxyserverFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNslicenseproxyserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNslicenseproxyserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nslicenseproxyserverId := d.Id()
@@ -125,7 +123,7 @@ func deleteNslicenseproxyserverFunc(d *schema.ResourceData, meta interface{}) er
 
 	err := client.DeleteResource(service.Nslicenseproxyserver.Type(), nslicenseproxyserverName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

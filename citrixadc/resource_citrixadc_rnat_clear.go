@@ -1,23 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/mitchellh/mapstructure"
 
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcRnatClear() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createRnatClearFunc,
-		Read:          readRnatClearFunc,
-		Update:        updateRnatClearFunc,
-		Delete:        deleteRnatClearFunc,
+		CreateContext: createRnatClearFunc,
+		ReadContext:   readRnatClearFunc,
+		UpdateContext: updateRnatClearFunc,
+		DeleteContext: deleteRnatClearFunc,
 		Schema: map[string]*schema.Schema{
 			"rnatsname": {
 				Type:     schema.TypeString,
@@ -73,7 +77,7 @@ func resourceCitrixAdcRnatClear() *schema.Resource {
 	}
 }
 
-func createRnatClearFunc(d *schema.ResourceData, meta interface{}) error {
+func createRnatClearFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  netscaler-provider: In createRnatClearFunc")
 
 	var rnatName string
@@ -94,7 +98,7 @@ func createRnatClearFunc(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func readRnatClearFunc(d *schema.ResourceData, meta interface{}) error {
+func readRnatClearFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] netscaler-provider:  In readRnatClearFunc")
 	client := meta.(*NetScalerNitroClient).client
 	rnatName := d.Id()
@@ -109,7 +113,7 @@ func readRnatClearFunc(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func updateRnatClearFunc(d *schema.ResourceData, meta interface{}) error {
+func updateRnatClearFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  netscaler-provider: In updateRnatClearFunc")
 
 	if d.HasChange("rnat") {
@@ -147,10 +151,10 @@ func updateRnatClearFunc(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	return readRnatClearFunc(d, meta)
+	return readRnatClearFunc(ctx, d, meta)
 }
 
-func deleteRnatClearFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteRnatClearFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  netscaler-provider: In deleteRnatClearFunc")
 	rnats := d.Get("rnat").(*schema.Set).List()
 

@@ -1,24 +1,28 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/cr"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcCrvserver() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createCrvserverFunc,
-		Read:          readCrvserverFunc,
-		Update:        updateCrvserverFunc,
-		Delete:        deleteCrvserverFunc,
+		CreateContext: createCrvserverFunc,
+		ReadContext:   readCrvserverFunc,
+		UpdateContext: updateCrvserverFunc,
+		DeleteContext: deleteCrvserverFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -265,7 +269,7 @@ func resourceCitrixAdcCrvserver() *schema.Resource {
 	}
 }
 
-func createCrvserverFunc(d *schema.ResourceData, meta interface{}) error {
+func createCrvserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createCrvserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	crvserverName := d.Get("name").(string)
@@ -322,20 +326,15 @@ func createCrvserverFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Crvserver.Type(), crvserverName, &crvserver)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(crvserverName)
 
-	err = readCrvserverFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this crvserver but we can't read it ?? %s", crvserverName)
-		return nil
-	}
-	return nil
+	return readCrvserverFunc(ctx, d, meta)
 }
 
-func readCrvserverFunc(d *schema.ResourceData, meta interface{}) error {
+func readCrvserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readCrvserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	crvserverName := d.Id()
@@ -352,7 +351,7 @@ func readCrvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("backupvserver", data["backupvserver"])
 	d.Set("cachetype", data["cachetype"])
 	d.Set("cachevserver", data["cachevserver"])
-	d.Set("clttimeout", data["clttimeout"])
+	setToInt("clttimeout", d, data["clttimeout"])
 	d.Set("comment", data["comment"])
 	d.Set("destinationvserver", data["destinationvserver"])
 	d.Set("disableprimaryondown", data["disableprimaryondown"])
@@ -367,30 +366,30 @@ func readCrvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("ipv46", data["ipv46"])
 	d.Set("l2conn", data["l2conn"])
 	d.Set("listenpolicy", data["listenpolicy"])
-	d.Set("listenpriority", data["listenpriority"])
+	setToInt("listenpriority", d, data["listenpriority"])
 	d.Set("map", data["map"])
 	d.Set("name", data["name"])
 	d.Set("netprofile", data["netprofile"])
 	d.Set("onpolicymatch", data["onpolicymatch"])
 	d.Set("originusip", data["originusip"])
-	d.Set("port", data["port"])
+	setToInt("port", d, data["port"])
 	d.Set("precedence", data["precedence"])
-	d.Set("probeport", data["probeport"])
+	setToInt("probeport", d, data["probeport"])
 	d.Set("probeprotocol", data["probeprotocol"])
 	d.Set("probesuccessresponsecode", data["probesuccessresponsecode"])
-	d.Set("range", data["range"])
+	setToInt("range", d, data["range"])
 	d.Set("redirect", data["redirect"])
 	d.Set("redirecturl", data["redirecturl"])
 	d.Set("reuse", data["reuse"])
 	d.Set("rhistate", data["rhistate"])
 	d.Set("servicetype", data["servicetype"])
-	d.Set("sopersistencetimeout", data["sopersistencetimeout"])
-	d.Set("sothreshold", data["sothreshold"])
+	setToInt("sopersistencetimeout", d, data["sopersistencetimeout"])
+	setToInt("sothreshold", d, data["sothreshold"])
 	d.Set("srcipexpr", data["srcipexpr"])
 	d.Set("state", data["state"])
-	d.Set("tcpprobeport", data["tcpprobeport"])
+	setToInt("tcpprobeport", d, data["tcpprobeport"])
 	d.Set("tcpprofilename", data["tcpprofilename"])
-	d.Set("td", data["td"])
+	setToInt("td", d, data["td"])
 	d.Set("useoriginipportforcache", data["useoriginipportforcache"])
 	d.Set("useportrange", data["useportrange"])
 	d.Set("via", data["via"])
@@ -399,7 +398,7 @@ func readCrvserverFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateCrvserverFunc(d *schema.ResourceData, meta interface{}) error {
+func updateCrvserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateCrvserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	crvserverName := d.Get("name").(string)
@@ -647,25 +646,25 @@ func updateCrvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	if stateChange {
 		err := doCrvserverStateChange(d, client)
 		if err != nil {
-			return fmt.Errorf("Error enabling/disabling cs vserver %s", crvserverName)
+			return diag.Errorf("Error enabling/disabling cs vserver %s", crvserverName)
 		}
 	}
 	if hasChange {
 		_, err := client.UpdateResource(service.Crvserver.Type(), crvserverName, &crvserver)
 		if err != nil {
-			return fmt.Errorf("Error updating crvserver %s", crvserverName)
+			return diag.Errorf("Error updating crvserver %s", crvserverName)
 		}
 	}
-	return readCrvserverFunc(d, meta)
+	return readCrvserverFunc(ctx, d, meta)
 }
 
-func deleteCrvserverFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteCrvserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteCrvserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	crvserverName := d.Id()
 	err := client.DeleteResource(service.Crvserver.Type(), crvserverName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

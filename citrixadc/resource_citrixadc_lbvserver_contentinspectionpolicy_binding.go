@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/lb"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 	"strings"
@@ -14,11 +16,11 @@ import (
 func resourceCitrixAdcLbvserver_contentinspectionpolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createLbvserver_contentinspectionpolicy_bindingFunc,
-		Read:          readLbvserver_contentinspectionpolicy_bindingFunc,
-		Delete:        deleteLbvserver_contentinspectionpolicy_bindingFunc,
+		CreateContext: createLbvserver_contentinspectionpolicy_bindingFunc,
+		ReadContext:   readLbvserver_contentinspectionpolicy_bindingFunc,
+		DeleteContext: deleteLbvserver_contentinspectionpolicy_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"bindpoint": {
@@ -71,7 +73,7 @@ func resourceCitrixAdcLbvserver_contentinspectionpolicy_binding() *schema.Resour
 	}
 }
 
-func createLbvserver_contentinspectionpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createLbvserver_contentinspectionpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createLbvserver_contentinspectionpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lbvserverName := d.Get("name").(string)
@@ -90,20 +92,15 @@ func createLbvserver_contentinspectionpolicy_bindingFunc(d *schema.ResourceData,
 
 	_, err := client.AddResource("lbvserver_contentinspectionpolicy_binding", lbvserverName, &lbvserver_contentinspectionpolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readLbvserver_contentinspectionpolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this lbvserver_contentinspectionpolicy_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readLbvserver_contentinspectionpolicy_bindingFunc(ctx, d, meta)
 }
 
-func readLbvserver_contentinspectionpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readLbvserver_contentinspectionpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readLbvserver_contentinspectionpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -124,7 +121,7 @@ func readLbvserver_contentinspectionpolicy_bindingFunc(d *schema.ResourceData, m
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -168,7 +165,7 @@ func readLbvserver_contentinspectionpolicy_bindingFunc(d *schema.ResourceData, m
 
 }
 
-func deleteLbvserver_contentinspectionpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteLbvserver_contentinspectionpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteLbvserver_contentinspectionpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -190,7 +187,7 @@ func deleteLbvserver_contentinspectionpolicy_bindingFunc(d *schema.ResourceData,
 	}
 	err := client.DeleteResourceWithArgsMap("lbvserver_contentinspectionpolicy_binding", lbvserverName, argsMap)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

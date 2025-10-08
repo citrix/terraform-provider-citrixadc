@@ -1,22 +1,25 @@
 package citrixadc
 
 import (
-	"github.com/citrix/adc-nitro-go/resource/config/authentication"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"context"
 
-	"fmt"
+	"github.com/citrix/adc-nitro-go/resource/config/authentication"
+
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAuthenticationemailaction() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAuthenticationemailactionFunc,
-		Read:          readAuthenticationemailactionFunc,
-		Update:        updateAuthenticationemailactionFunc,
-		Delete:        deleteAuthenticationemailactionFunc,
+		CreateContext: createAuthenticationemailactionFunc,
+		ReadContext:   readAuthenticationemailactionFunc,
+		UpdateContext: updateAuthenticationemailactionFunc,
+		DeleteContext: deleteAuthenticationemailactionFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -69,7 +72,7 @@ func resourceCitrixAdcAuthenticationemailaction() *schema.Resource {
 	}
 }
 
-func createAuthenticationemailactionFunc(d *schema.ResourceData, meta interface{}) error {
+func createAuthenticationemailactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAuthenticationemailactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationemailactionName := d.Get("name").(string)
@@ -87,20 +90,15 @@ func createAuthenticationemailactionFunc(d *schema.ResourceData, meta interface{
 
 	_, err := client.AddResource("authenticationemailaction", authenticationemailactionName, &authenticationemailaction)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(authenticationemailactionName)
 
-	err = readAuthenticationemailactionFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this authenticationemailaction but we can't read it ?? %s", authenticationemailactionName)
-		return nil
-	}
-	return nil
+	return readAuthenticationemailactionFunc(ctx, d, meta)
 }
 
-func readAuthenticationemailactionFunc(d *schema.ResourceData, meta interface{}) error {
+func readAuthenticationemailactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAuthenticationemailactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationemailactionName := d.Id()
@@ -118,7 +116,7 @@ func readAuthenticationemailactionFunc(d *schema.ResourceData, meta interface{})
 	d.Set("name", data["name"])
 	//d.Set("password", data["password"]) encrypted value recieved from ADC
 	d.Set("serverurl", data["serverurl"])
-	//d.Set("timeout", data["timeout"]) not recieved from ADC
+	//setToInt("timeout", d, data["timeout"]) not recieved from ADC
 	d.Set("type", data["type"])
 	d.Set("username", data["username"])
 
@@ -126,7 +124,7 @@ func readAuthenticationemailactionFunc(d *schema.ResourceData, meta interface{})
 
 }
 
-func updateAuthenticationemailactionFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAuthenticationemailactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAuthenticationemailactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationemailactionName := d.Get("name").(string)
@@ -179,19 +177,19 @@ func updateAuthenticationemailactionFunc(d *schema.ResourceData, meta interface{
 	if hasChange {
 		_, err := client.UpdateResource("authenticationemailaction", authenticationemailactionName, &authenticationemailaction)
 		if err != nil {
-			return fmt.Errorf("Error updating authenticationemailaction %s", authenticationemailactionName)
+			return diag.Errorf("Error updating authenticationemailaction %s", authenticationemailactionName)
 		}
 	}
-	return readAuthenticationemailactionFunc(d, meta)
+	return readAuthenticationemailactionFunc(ctx, d, meta)
 }
 
-func deleteAuthenticationemailactionFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAuthenticationemailactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAuthenticationemailactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationemailactionName := d.Id()
 	err := client.DeleteResource("authenticationemailaction", authenticationemailactionName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

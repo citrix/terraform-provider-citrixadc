@@ -1,22 +1,24 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcNssimpleacl() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNssimpleaclFunc,
-		Read:          readNssimpleaclFunc,
-		Delete:        deleteNssimpleaclFunc,
+		CreateContext: createNssimpleaclFunc,
+		ReadContext:   readNssimpleaclFunc,
+		DeleteContext: deleteNssimpleaclFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"aclname": {
@@ -71,7 +73,7 @@ func resourceCitrixAdcNssimpleacl() *schema.Resource {
 	}
 }
 
-func createNssimpleaclFunc(d *schema.ResourceData, meta interface{}) error {
+func createNssimpleaclFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNssimpleaclFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nssimpleaclName := d.Get("aclname").(string)
@@ -88,20 +90,15 @@ func createNssimpleaclFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Nssimpleacl.Type(), nssimpleaclName, &nssimpleacl)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(nssimpleaclName)
 
-	err = readNssimpleaclFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this nssimpleacl but we can't read it ?? %s", nssimpleaclName)
-		return nil
-	}
-	return nil
+	return readNssimpleaclFunc(ctx, d, meta)
 }
 
-func readNssimpleaclFunc(d *schema.ResourceData, meta interface{}) error {
+func readNssimpleaclFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNssimpleaclFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nssimpleaclName := d.Id()
@@ -115,24 +112,24 @@ func readNssimpleaclFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("aclname", data["aclname"])
 	d.Set("aclaction", data["aclaction"])
 	d.Set("aclname", data["aclname"])
-	d.Set("destport", data["destport"])
+	setToInt("destport", d, data["destport"])
 	d.Set("estsessions", data["estsessions"])
 	d.Set("protocol", data["protocol"])
 	d.Set("srcip", data["srcip"])
-	d.Set("td", data["td"])
-	d.Set("ttl", data["ttl"])
+	setToInt("td", d, data["td"])
+	setToInt("ttl", d, data["ttl"])
 
 	return nil
 
 }
 
-func deleteNssimpleaclFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNssimpleaclFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNssimpleaclFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nssimpleaclName := d.Id()
 	err := client.DeleteResource(service.Nssimpleacl.Type(), nssimpleaclName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/authentication"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 	"strings"
@@ -14,11 +16,11 @@ import (
 func resourceCitrixAdcAuthenticationvserver_responderpolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAuthenticationvserver_responderpolicy_bindingFunc,
-		Read:          readAuthenticationvserver_responderpolicy_bindingFunc,
-		Delete:        deleteAuthenticationvserver_responderpolicy_bindingFunc,
+		CreateContext: createAuthenticationvserver_responderpolicy_bindingFunc,
+		ReadContext:   readAuthenticationvserver_responderpolicy_bindingFunc,
+		DeleteContext: deleteAuthenticationvserver_responderpolicy_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -73,7 +75,7 @@ func resourceCitrixAdcAuthenticationvserver_responderpolicy_binding() *schema.Re
 	}
 }
 
-func createAuthenticationvserver_responderpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createAuthenticationvserver_responderpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAuthenticationvserver_responderpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name")
@@ -92,20 +94,15 @@ func createAuthenticationvserver_responderpolicy_bindingFunc(d *schema.ResourceD
 
 	err := client.UpdateUnnamedResource("authenticationvserver_responderpolicy_binding", &authenticationvserver_responderpolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readAuthenticationvserver_responderpolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this authenticationvserver_responderpolicy_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readAuthenticationvserver_responderpolicy_bindingFunc(ctx, d, meta)
 }
 
-func readAuthenticationvserver_responderpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readAuthenticationvserver_responderpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAuthenticationvserver_responderpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -126,7 +123,7 @@ func readAuthenticationvserver_responderpolicy_bindingFunc(d *schema.ResourceDat
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -170,7 +167,7 @@ func readAuthenticationvserver_responderpolicy_bindingFunc(d *schema.ResourceDat
 
 }
 
-func deleteAuthenticationvserver_responderpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAuthenticationvserver_responderpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAuthenticationvserver_responderpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -194,7 +191,7 @@ func deleteAuthenticationvserver_responderpolicy_bindingFunc(d *schema.ResourceD
 
 	err := client.DeleteResourceWithArgs("authenticationvserver_responderpolicy_binding", name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

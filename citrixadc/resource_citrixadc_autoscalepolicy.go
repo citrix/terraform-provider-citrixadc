@@ -1,24 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/autoscale"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAutoscalepolicy() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAutoscalepolicyFunc,
-		Read:          readAutoscalepolicyFunc,
-		Update:        updateAutoscalepolicyFunc,
-		Delete:        deleteAutoscalepolicyFunc,
+		CreateContext: createAutoscalepolicyFunc,
+		ReadContext:   readAutoscalepolicyFunc,
+		UpdateContext: updateAutoscalepolicyFunc,
+		DeleteContext: deleteAutoscalepolicyFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -50,7 +53,7 @@ func resourceCitrixAdcAutoscalepolicy() *schema.Resource {
 	}
 }
 
-func createAutoscalepolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func createAutoscalepolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAutoscalepolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	autoscalepolicyName := d.Get("name").(string)
@@ -64,20 +67,15 @@ func createAutoscalepolicyFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Autoscalepolicy.Type(), autoscalepolicyName, &autoscalepolicy)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(autoscalepolicyName)
 
-	err = readAutoscalepolicyFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this autoscalepolicy but we can't read it ?? %s", autoscalepolicyName)
-		return nil
-	}
-	return nil
+	return readAutoscalepolicyFunc(ctx, d, meta)
 }
 
-func readAutoscalepolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func readAutoscalepolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAutoscalepolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	autoscalepolicyName := d.Id()
@@ -98,7 +96,7 @@ func readAutoscalepolicyFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateAutoscalepolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAutoscalepolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAutoscalepolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	autoscalepolicyName := d.Get("name").(string)
@@ -131,19 +129,19 @@ func updateAutoscalepolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Autoscalepolicy.Type(), &autoscalepolicy)
 		if err != nil {
-			return fmt.Errorf("Error updating autoscalepolicy %s", autoscalepolicyName)
+			return diag.Errorf("Error updating autoscalepolicy %s", autoscalepolicyName)
 		}
 	}
-	return readAutoscalepolicyFunc(d, meta)
+	return readAutoscalepolicyFunc(ctx, d, meta)
 }
 
-func deleteAutoscalepolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAutoscalepolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAutoscalepolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	autoscalepolicyName := d.Id()
 	err := client.DeleteResource(service.Autoscalepolicy.Type(), autoscalepolicyName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

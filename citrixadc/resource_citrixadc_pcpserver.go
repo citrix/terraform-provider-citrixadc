@@ -1,23 +1,25 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/pcp"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcPcpserver() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createPcpserverFunc,
-		Read:          readPcpserverFunc,
-		Update:        updatePcpserverFunc,
-		Delete:        deletePcpserverFunc,
+		CreateContext: createPcpserverFunc,
+		ReadContext:   readPcpserverFunc,
+		UpdateContext: updatePcpserverFunc,
+		DeleteContext: deletePcpserverFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"ipaddress": {
@@ -44,7 +46,7 @@ func resourceCitrixAdcPcpserver() *schema.Resource {
 	}
 }
 
-func createPcpserverFunc(d *schema.ResourceData, meta interface{}) error {
+func createPcpserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createPcpserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	pcpserverName := d.Get("name").(string)
@@ -57,20 +59,15 @@ func createPcpserverFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource("pcpserver", pcpserverName, &pcpserver)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(pcpserverName)
 
-	err = readPcpserverFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this pcpserver but we can't read it ?? %s", pcpserverName)
-		return nil
-	}
-	return nil
+	return readPcpserverFunc(ctx, d, meta)
 }
 
-func readPcpserverFunc(d *schema.ResourceData, meta interface{}) error {
+func readPcpserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readPcpserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	pcpserverName := d.Id()
@@ -84,13 +81,13 @@ func readPcpserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("ipaddress", data["ipaddress"])
 	d.Set("name", data["name"])
 	d.Set("pcpprofile", data["pcpprofile"])
-	d.Set("port", data["port"])
+	setToInt("port", d, data["port"])
 
 	return nil
 
 }
 
-func updatePcpserverFunc(d *schema.ResourceData, meta interface{}) error {
+func updatePcpserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updatePcpserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	pcpserverName := d.Get("name").(string)
@@ -113,19 +110,19 @@ func updatePcpserverFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource("pcpserver", &pcpserver)
 		if err != nil {
-			return fmt.Errorf("Error updating pcpserver %s", pcpserverName)
+			return diag.Errorf("Error updating pcpserver %s", pcpserverName)
 		}
 	}
-	return readPcpserverFunc(d, meta)
+	return readPcpserverFunc(ctx, d, meta)
 }
 
-func deletePcpserverFunc(d *schema.ResourceData, meta interface{}) error {
+func deletePcpserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deletePcpserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	pcpserverName := d.Id()
 	err := client.DeleteResource("pcpserver", pcpserverName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

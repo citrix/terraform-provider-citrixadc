@@ -1,24 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ssl"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcSslservice() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSslserviceFunc,
-		Read:          readSslserviceFunc,
-		Update:        updateSslserviceFunc,
-		Delete:        deleteSslserviceFunc,
+		CreateContext: createSslserviceFunc,
+		ReadContext:   readSslserviceFunc,
+		UpdateContext: updateSslserviceFunc,
+		DeleteContext: deleteSslserviceFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"cipherredirect": {
@@ -195,7 +198,7 @@ func resourceCitrixAdcSslservice() *schema.Resource {
 	}
 }
 
-func createSslserviceFunc(d *schema.ResourceData, meta interface{}) error {
+func createSslserviceFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSslserviceFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var sslserviceName = d.Get("servicename").(string)
@@ -239,20 +242,15 @@ func createSslserviceFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.UpdateUnnamedResource(service.Sslservice.Type(), &sslservice)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(sslserviceName)
 
-	err = readSslserviceFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this sslservice but we can't read it ?? %s", sslserviceName)
-		return nil
-	}
-	return nil
+	return readSslserviceFunc(ctx, d, meta)
 }
 
-func readSslserviceFunc(d *schema.ResourceData, meta interface{}) error {
+func readSslserviceFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSslserviceFunc")
 	client := meta.(*NetScalerNitroClient).client
 	sslserviceName := d.Id()
@@ -313,7 +311,7 @@ func readSslserviceFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateSslserviceFunc(d *schema.ResourceData, meta interface{}) error {
+func updateSslserviceFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateSslserviceFunc")
 	client := meta.(*NetScalerNitroClient).client
 	sslserviceName := d.Get("servicename").(string)
@@ -498,13 +496,13 @@ func updateSslserviceFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Sslservice.Type(), sslserviceName, &sslservice)
 		if err != nil {
-			return fmt.Errorf("Error updating sslservice %s", sslserviceName)
+			return diag.Errorf("Error updating sslservice %s", sslserviceName)
 		}
 	}
-	return readSslserviceFunc(d, meta)
+	return readSslserviceFunc(ctx, d, meta)
 }
 
-func deleteSslserviceFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSslserviceFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSslserviceFunc")
 
 	d.SetId("")

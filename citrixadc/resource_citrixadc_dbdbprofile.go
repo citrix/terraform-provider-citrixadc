@@ -1,22 +1,25 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/db"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcDbdbprofile() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createDbdbprofileFunc,
-		Read:          readDbdbprofileFunc,
-		Update:        updateDbdbprofileFunc,
-		Delete:        deleteDbdbprofileFunc,
+		CreateContext: createDbdbprofileFunc,
+		ReadContext:   readDbdbprofileFunc,
+		UpdateContext: updateDbdbprofileFunc,
+		DeleteContext: deleteDbdbprofileFunc,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -52,7 +55,7 @@ func resourceCitrixAdcDbdbprofile() *schema.Resource {
 	}
 }
 
-func createDbdbprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func createDbdbprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createDbdbprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dbdbprofileName := d.Get("name").(string)
@@ -67,20 +70,15 @@ func createDbdbprofileFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Dbdbprofile.Type(), dbdbprofileName, &dbdbprofile)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(dbdbprofileName)
 
-	err = readDbdbprofileFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this dbdbprofile but we can't read it ?? %s", dbdbprofileName)
-		return nil
-	}
-	return nil
+	return readDbdbprofileFunc(ctx, d, meta)
 }
 
-func readDbdbprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func readDbdbprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readDbdbprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dbdbprofileName := d.Id()
@@ -102,7 +100,7 @@ func readDbdbprofileFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateDbdbprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func updateDbdbprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateDbdbprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dbdbprofileName := d.Get("name").(string)
@@ -140,19 +138,19 @@ func updateDbdbprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Dbdbprofile.Type(), &dbdbprofile)
 		if err != nil {
-			return fmt.Errorf("Error updating dbdbprofile %s", dbdbprofileName)
+			return diag.Errorf("Error updating dbdbprofile %s", dbdbprofileName)
 		}
 	}
-	return readDbdbprofileFunc(d, meta)
+	return readDbdbprofileFunc(ctx, d, meta)
 }
 
-func deleteDbdbprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteDbdbprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteDbdbprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dbdbprofileName := d.Id()
 	err := client.DeleteResource(service.Dbdbprofile.Type(), dbdbprofileName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

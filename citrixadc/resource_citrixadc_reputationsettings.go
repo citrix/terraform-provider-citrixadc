@@ -1,21 +1,24 @@
 package citrixadc
 
 import (
-	"github.com/citrix/adc-nitro-go/resource/config/reputation"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"context"
 
-	"fmt"
+	"github.com/citrix/adc-nitro-go/resource/config/reputation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcReputationsettings() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createReputationsettingsFunc,
-		Read:          readReputationsettingsFunc,
-		Update:        updateReputationsettingsFunc,
-		Delete:        deleteReputationsettingsFunc,
+		CreateContext: createReputationsettingsFunc,
+		ReadContext:   readReputationsettingsFunc,
+		UpdateContext: updateReputationsettingsFunc,
+		DeleteContext: deleteReputationsettingsFunc,
 		Schema: map[string]*schema.Schema{
 			"proxyport": {
 				Type:     schema.TypeInt,
@@ -31,7 +34,7 @@ func resourceCitrixAdcReputationsettings() *schema.Resource {
 	}
 }
 
-func createReputationsettingsFunc(d *schema.ResourceData, meta interface{}) error {
+func createReputationsettingsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createReputationsettingsFunc")
 	client := meta.(*NetScalerNitroClient).client
 	reputationsettingsName := resource.PrefixedUniqueId("tf-reputationsettings-")
@@ -43,20 +46,15 @@ func createReputationsettingsFunc(d *schema.ResourceData, meta interface{}) erro
 
 	err := client.UpdateUnnamedResource("reputationsettings", &reputationsettings)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(reputationsettingsName)
 
-	err = readReputationsettingsFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this reputationsettings but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readReputationsettingsFunc(ctx, d, meta)
 }
 
-func readReputationsettingsFunc(d *schema.ResourceData, meta interface{}) error {
+func readReputationsettingsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readReputationsettingsFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading reputationsettings state")
@@ -66,14 +64,14 @@ func readReputationsettingsFunc(d *schema.ResourceData, meta interface{}) error 
 		d.SetId("")
 		return nil
 	}
-	d.Set("proxyport", data["proxyport"])
+	setToInt("proxyport", d, data["proxyport"])
 	d.Set("proxyserver", data["proxyserver"])
 
 	return nil
 
 }
 
-func updateReputationsettingsFunc(d *schema.ResourceData, meta interface{}) error {
+func updateReputationsettingsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateReputationsettingsFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -93,13 +91,13 @@ func updateReputationsettingsFunc(d *schema.ResourceData, meta interface{}) erro
 	if hasChange {
 		err := client.UpdateUnnamedResource("reputationsettings", &reputationsettings)
 		if err != nil {
-			return fmt.Errorf("Error updating reputationsettings")
+			return diag.Errorf("Error updating reputationsettings")
 		}
 	}
-	return readReputationsettingsFunc(d, meta)
+	return readReputationsettingsFunc(ctx, d, meta)
 }
 
-func deleteReputationsettingsFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteReputationsettingsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteReputationsettingsFunc")
 	//reputationsettings does not support DELETE operation
 	d.SetId("")

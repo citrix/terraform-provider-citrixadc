@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/bot"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strings"
 )
@@ -13,11 +15,11 @@ import (
 func resourceCitrixAdcBotprofile_logexpression_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createBotprofile_logexpression_bindingFunc,
-		Read:          readBotprofile_logexpression_bindingFunc,
-		Delete:        deleteBotprofile_logexpression_bindingFunc,
+		CreateContext: createBotprofile_logexpression_bindingFunc,
+		ReadContext:   readBotprofile_logexpression_bindingFunc,
+		DeleteContext: deleteBotprofile_logexpression_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -66,7 +68,7 @@ func resourceCitrixAdcBotprofile_logexpression_binding() *schema.Resource {
 	}
 }
 
-func createBotprofile_logexpression_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createBotprofile_logexpression_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createBotprofile_logexpression_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name")
@@ -84,20 +86,15 @@ func createBotprofile_logexpression_bindingFunc(d *schema.ResourceData, meta int
 
 	err := client.UpdateUnnamedResource("botprofile_logexpression_binding", &botprofile_logexpression_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readBotprofile_logexpression_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this botprofile_logexpression_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readBotprofile_logexpression_bindingFunc(ctx, d, meta)
 }
 
-func readBotprofile_logexpression_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readBotprofile_logexpression_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readBotprofile_logexpression_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -118,7 +115,7 @@ func readBotprofile_logexpression_bindingFunc(d *schema.ResourceData, meta inter
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -161,7 +158,7 @@ func readBotprofile_logexpression_bindingFunc(d *schema.ResourceData, meta inter
 
 }
 
-func deleteBotprofile_logexpression_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteBotprofile_logexpression_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteBotprofile_logexpression_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -179,7 +176,7 @@ func deleteBotprofile_logexpression_bindingFunc(d *schema.ResourceData, meta int
 
 	err := client.DeleteResourceWithArgs("botprofile_logexpression_binding", name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

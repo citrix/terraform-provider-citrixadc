@@ -1,24 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/dns"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcDnszone() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createDnszoneFunc,
-		Read:          readDnszoneFunc,
-		Update:        updateDnszoneFunc,
-		Delete:        deleteDnszoneFunc,
+		CreateContext: createDnszoneFunc,
+		ReadContext:   readDnszoneFunc,
+		UpdateContext: updateDnszoneFunc,
+		DeleteContext: deleteDnszoneFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"zonename": {
@@ -56,7 +59,7 @@ func resourceCitrixAdcDnszone() *schema.Resource {
 	}
 }
 
-func createDnszoneFunc(d *schema.ResourceData, meta interface{}) error {
+func createDnszoneFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createDnszoneFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnszoneName := d.Get("zonename").(string)
@@ -71,20 +74,15 @@ func createDnszoneFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Dnszone.Type(), dnszoneName, &dnszone)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(dnszoneName)
 
-	err = readDnszoneFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this dnszone but we can't read it ?? %s", dnszoneName)
-		return nil
-	}
-	return nil
+	return readDnszoneFunc(ctx, d, meta)
 }
 
-func readDnszoneFunc(d *schema.ResourceData, meta interface{}) error {
+func readDnszoneFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readDnszoneFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnszoneName := d.Id()
@@ -105,7 +103,7 @@ func readDnszoneFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateDnszoneFunc(d *schema.ResourceData, meta interface{}) error {
+func updateDnszoneFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateDnszoneFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnszoneName := d.Get("zonename").(string)
@@ -143,19 +141,19 @@ func updateDnszoneFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Dnszone.Type(), dnszoneName, &dnszone)
 		if err != nil {
-			return fmt.Errorf("Error updating dnszone %s", dnszoneName)
+			return diag.Errorf("Error updating dnszone %s", dnszoneName)
 		}
 	}
-	return readDnszoneFunc(d, meta)
+	return readDnszoneFunc(ctx, d, meta)
 }
 
-func deleteDnszoneFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteDnszoneFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteDnszoneFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnszoneName := d.Id()
 	err := client.DeleteResource(service.Dnszone.Type(), dnszoneName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/ssl"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strings"
 )
@@ -13,11 +15,11 @@ import (
 func resourceCitrixAdcSslprofile_sslcertkey_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSslprofile_sslcertkey_bindingFunc,
-		Read:          readSslprofile_sslcertkey_bindingFunc,
-		Delete:        deleteSslprofile_sslcertkey_bindingFunc,
+		CreateContext: createSslprofile_sslcertkey_bindingFunc,
+		ReadContext:   readSslprofile_sslcertkey_bindingFunc,
+		DeleteContext: deleteSslprofile_sslcertkey_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"cipherpriority": {
@@ -40,7 +42,7 @@ func resourceCitrixAdcSslprofile_sslcertkey_binding() *schema.Resource {
 	}
 }
 
-func createSslprofile_sslcertkey_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createSslprofile_sslcertkey_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSslprofile_sslcertkey_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name")
@@ -54,20 +56,15 @@ func createSslprofile_sslcertkey_bindingFunc(d *schema.ResourceData, meta interf
 
 	err := client.UpdateUnnamedResource("sslprofile_sslcertkey_binding", &sslprofile_sslcertkey_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readSslprofile_sslcertkey_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this sslprofile_sslcertkey_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readSslprofile_sslcertkey_bindingFunc(ctx, d, meta)
 }
 
-func readSslprofile_sslcertkey_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readSslprofile_sslcertkey_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSslprofile_sslcertkey_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -88,7 +85,7 @@ func readSslprofile_sslcertkey_bindingFunc(d *schema.ResourceData, meta interfac
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -119,7 +116,7 @@ func readSslprofile_sslcertkey_bindingFunc(d *schema.ResourceData, meta interfac
 
 	data := dataArr[foundIndex]
 
-	d.Set("cipherpriority", data["cipherpriority"])
+	setToInt("cipherpriority", d, data["cipherpriority"])
 	d.Set("name", data["name"])
 	d.Set("sslicacertkey", data["sslicacertkey"])
 
@@ -127,7 +124,7 @@ func readSslprofile_sslcertkey_bindingFunc(d *schema.ResourceData, meta interfac
 
 }
 
-func deleteSslprofile_sslcertkey_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSslprofile_sslcertkey_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSslprofile_sslcertkey_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -142,7 +139,7 @@ func deleteSslprofile_sslcertkey_bindingFunc(d *schema.ResourceData, meta interf
 
 	err := client.DeleteResourceWithArgs("sslprofile_sslcertkey_binding", name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

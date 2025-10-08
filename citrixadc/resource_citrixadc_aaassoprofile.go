@@ -1,23 +1,23 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/aaa"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
-	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcAaassoprofile() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAaassoprofileFunc,
-		Read:          readAaassoprofileFunc,
-		Update:        updateAaassoprofileFunc,
-		Delete:        deleteAaassoprofileFunc,
+		CreateContext: createAaassoprofileFunc,
+		ReadContext:   readAaassoprofileFunc,
+		UpdateContext: updateAaassoprofileFunc,
+		DeleteContext: deleteAaassoprofileFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -37,7 +37,7 @@ func resourceCitrixAdcAaassoprofile() *schema.Resource {
 	}
 }
 
-func createAaassoprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func createAaassoprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAaassoprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	aaassoprofileName := d.Get("name").(string)
@@ -49,20 +49,15 @@ func createAaassoprofileFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource("aaassoprofile", aaassoprofileName, &aaassoprofile)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(aaassoprofileName)
 
-	err = readAaassoprofileFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this aaassoprofile but we can't read it ?? %s", aaassoprofileName)
-		return nil
-	}
-	return nil
+	return readAaassoprofileFunc(ctx, d, meta)
 }
 
-func readAaassoprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func readAaassoprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAaassoprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	aaassoprofileName := d.Id()
@@ -81,7 +76,7 @@ func readAaassoprofileFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateAaassoprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAaassoprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAaassoprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	aaassoprofileName := d.Get("name").(string)
@@ -105,19 +100,19 @@ func updateAaassoprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource("aaassoprofile", &aaassoprofile)
 		if err != nil {
-			return fmt.Errorf("Error updating aaassoprofile %s", aaassoprofileName)
+			return diag.Errorf("Error updating aaassoprofile %s", aaassoprofileName)
 		}
 	}
-	return readAaassoprofileFunc(d, meta)
+	return readAaassoprofileFunc(ctx, d, meta)
 }
 
-func deleteAaassoprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAaassoprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAaassoprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	aaassoprofileName := d.Id()
 	err := client.DeleteResource("aaassoprofile", aaassoprofileName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

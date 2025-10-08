@@ -1,24 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcNetbridge() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNetbridgeFunc,
-		Read:          readNetbridgeFunc,
-		Update:        updateNetbridgeFunc,
-		Delete:        deleteNetbridgeFunc,
+		CreateContext: createNetbridgeFunc,
+		ReadContext:   readNetbridgeFunc,
+		UpdateContext: updateNetbridgeFunc,
+		DeleteContext: deleteNetbridgeFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -36,7 +39,7 @@ func resourceCitrixAdcNetbridge() *schema.Resource {
 	}
 }
 
-func createNetbridgeFunc(d *schema.ResourceData, meta interface{}) error {
+func createNetbridgeFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNetbridgeFunc")
 	client := meta.(*NetScalerNitroClient).client
 	netbridgeName := d.Get("name").(string)
@@ -47,20 +50,15 @@ func createNetbridgeFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Netbridge.Type(), netbridgeName, &netbridge)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(netbridgeName)
 
-	err = readNetbridgeFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this netbridge but we can't read it ?? %s", netbridgeName)
-		return nil
-	}
-	return nil
+	return readNetbridgeFunc(ctx, d, meta)
 }
 
-func readNetbridgeFunc(d *schema.ResourceData, meta interface{}) error {
+func readNetbridgeFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNetbridgeFunc")
 	client := meta.(*NetScalerNitroClient).client
 	netbridgeName := d.Id()
@@ -78,7 +76,7 @@ func readNetbridgeFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateNetbridgeFunc(d *schema.ResourceData, meta interface{}) error {
+func updateNetbridgeFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateNetbridgeFunc")
 	client := meta.(*NetScalerNitroClient).client
 	netbridgeName := d.Get("name").(string)
@@ -96,19 +94,19 @@ func updateNetbridgeFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Netbridge.Type(), netbridgeName, &netbridge)
 		if err != nil {
-			return fmt.Errorf("Error updating netbridge %s", netbridgeName)
+			return diag.Errorf("Error updating netbridge %s", netbridgeName)
 		}
 	}
-	return readNetbridgeFunc(d, meta)
+	return readNetbridgeFunc(ctx, d, meta)
 }
 
-func deleteNetbridgeFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNetbridgeFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNetbridgeFunc")
 	client := meta.(*NetScalerNitroClient).client
 	netbridgeName := d.Id()
 	err := client.DeleteResource(service.Netbridge.Type(), netbridgeName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

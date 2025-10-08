@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
-	"github.com/citrix/adc-nitro-go/resource/config/feo"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"context"
 
-	"fmt"
+	"github.com/citrix/adc-nitro-go/resource/config/feo"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcFeoparameter() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createFeoparameterFunc,
-		Read:          readFeoparameterFunc,
-		Update:        updateFeoparameterFunc,
-		Delete:        deleteFeoparameterFunc,
+		CreateContext: createFeoparameterFunc,
+		ReadContext:   readFeoparameterFunc,
+		UpdateContext: updateFeoparameterFunc,
+		DeleteContext: deleteFeoparameterFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"cssinlinethressize": {
@@ -44,7 +47,7 @@ func resourceCitrixAdcFeoparameter() *schema.Resource {
 	}
 }
 
-func createFeoparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func createFeoparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createFeoparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	feoparameterName := resource.PrefixedUniqueId("tf-feoparameter-")
@@ -65,20 +68,15 @@ func createFeoparameterFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.UpdateUnnamedResource("feoparameter", &feoparameter)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(feoparameterName)
 
-	err = readFeoparameterFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this feoparameter but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readFeoparameterFunc(ctx, d, meta)
 }
 
-func readFeoparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func readFeoparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readFeoparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading feoparameter state")
@@ -88,16 +86,16 @@ func readFeoparameterFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
-	d.Set("cssinlinethressize", data["cssinlinethressize"])
-	d.Set("imginlinethressize", data["imginlinethressize"])
-	d.Set("jpegqualitypercent", data["jpegqualitypercent"])
-	d.Set("jsinlinethressize", data["jsinlinethressize"])
+	setToInt("cssinlinethressize", d, data["cssinlinethressize"])
+	setToInt("imginlinethressize", d, data["imginlinethressize"])
+	setToInt("jpegqualitypercent", d, data["jpegqualitypercent"])
+	setToInt("jsinlinethressize", d, data["jsinlinethressize"])
 
 	return nil
 
 }
 
-func updateFeoparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func updateFeoparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateFeoparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	feoparameter := feo.Feoparameter{}
@@ -126,13 +124,13 @@ func updateFeoparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource("feoparameter", &feoparameter)
 		if err != nil {
-			return fmt.Errorf("Error updating feoparameter")
+			return diag.Errorf("Error updating feoparameter")
 		}
 	}
-	return readFeoparameterFunc(d, meta)
+	return readFeoparameterFunc(ctx, d, meta)
 }
 
-func deleteFeoparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteFeoparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteFeoparameterFunc")
 	// feoparameter does not support DELETE operation
 	d.SetId("")

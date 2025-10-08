@@ -1,18 +1,19 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcNsconfigClear() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNsconfigClearFunc,
+		CreateContext: createNsconfigClearFunc,
 		Read:          schema.Noop,
 		Delete:        schema.Noop,
 		Schema: map[string]*schema.Schema{
@@ -40,7 +41,7 @@ func resourceCitrixAdcNsconfigClear() *schema.Resource {
 	}
 }
 
-func createNsconfigClearFunc(d *schema.ResourceData, meta interface{}) error {
+func createNsconfigClearFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNsconfigClearFunc")
 	client := meta.(*NetScalerNitroClient).client
 	timestamp := d.Get("timestamp").(string)
@@ -54,7 +55,7 @@ func createNsconfigClearFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.ActOnResource(service.Nsconfig.Type(), &nsconfig, "clear")
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(timestamp)

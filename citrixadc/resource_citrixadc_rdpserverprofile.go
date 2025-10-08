@@ -1,23 +1,25 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/rdp"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcRdpserverprofile() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createRdpserverprofileFunc,
-		Read:          readRdpserverprofileFunc,
-		Update:        updateRdpserverprofileFunc,
-		Delete:        deleteRdpserverprofileFunc,
+		CreateContext: createRdpserverprofileFunc,
+		ReadContext:   readRdpserverprofileFunc,
+		UpdateContext: updateRdpserverprofileFunc,
+		DeleteContext: deleteRdpserverprofileFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -49,7 +51,7 @@ func resourceCitrixAdcRdpserverprofile() *schema.Resource {
 	}
 }
 
-func createRdpserverprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func createRdpserverprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createRdpserverprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	rdpserverprofileName := d.Get("name").(string)
@@ -63,20 +65,15 @@ func createRdpserverprofileFunc(d *schema.ResourceData, meta interface{}) error 
 
 	_, err := client.AddResource("rdpserverprofile", rdpserverprofileName, &rdpserverprofile)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(rdpserverprofileName)
 
-	err = readRdpserverprofileFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this rdpserverprofile but we can't read it ?? %s", rdpserverprofileName)
-		return nil
-	}
-	return nil
+	return readRdpserverprofileFunc(ctx, d, meta)
 }
 
-func readRdpserverprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func readRdpserverprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readRdpserverprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	rdpserverprofileName := d.Id()
@@ -89,14 +86,14 @@ func readRdpserverprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("name", data["name"])
 	d.Set("rdpip", data["rdpip"])
-	d.Set("rdpport", data["rdpport"])
+	setToInt("rdpport", d, data["rdpport"])
 	d.Set("rdpredirection", data["rdpredirection"])
 
 	return nil
 
 }
 
-func updateRdpserverprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func updateRdpserverprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateRdpserverprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	rdpserverprofileName := d.Get("name").(string)
@@ -129,19 +126,19 @@ func updateRdpserverprofileFunc(d *schema.ResourceData, meta interface{}) error 
 	if hasChange {
 		err := client.UpdateUnnamedResource("rdpserverprofile", &rdpserverprofile)
 		if err != nil {
-			return fmt.Errorf("Error updating rdpserverprofile %s", rdpserverprofileName)
+			return diag.Errorf("Error updating rdpserverprofile %s", rdpserverprofileName)
 		}
 	}
-	return readRdpserverprofileFunc(d, meta)
+	return readRdpserverprofileFunc(ctx, d, meta)
 }
 
-func deleteRdpserverprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteRdpserverprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteRdpserverprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	rdpserverprofileName := d.Id()
 	err := client.DeleteResource("rdpserverprofile", rdpserverprofileName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

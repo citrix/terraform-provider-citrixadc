@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"strings"
 	"testing"
 )
@@ -56,9 +56,9 @@ const testAccBotpolicylabel_botpolicy_binding_basic_step2 = `
 
 func TestAccBotpolicylabel_botpolicy_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckBotpolicylabel_botpolicy_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckBotpolicylabel_botpolicy_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBotpolicylabel_botpolicy_binding_basic,
@@ -95,7 +95,11 @@ func testAccCheckBotpolicylabel_botpolicy_bindingExist(n string, id *string) res
 			*id = rs.Primary.ID
 		}
 
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		bindingId := rs.Primary.ID
 
@@ -135,7 +139,11 @@ func testAccCheckBotpolicylabel_botpolicy_bindingExist(n string, id *string) res
 
 func testAccCheckBotpolicylabel_botpolicy_bindingNotExist(n string, id string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
@@ -175,7 +183,11 @@ func testAccCheckBotpolicylabel_botpolicy_bindingNotExist(n string, id string) r
 }
 
 func testAccCheckBotpolicylabel_botpolicy_bindingDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_botpolicylabel_botpolicy_binding" {
@@ -186,7 +198,7 @@ func testAccCheckBotpolicylabel_botpolicy_bindingDestroy(s *terraform.State) err
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource("botpolicylabel_botpolicy_binding", rs.Primary.ID)
+		_, err := client.FindResource("botpolicylabel_botpolicy_binding", rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("botpolicylabel_botpolicy_binding %s still exists", rs.Primary.ID)
 		}

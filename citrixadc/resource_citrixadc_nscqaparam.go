@@ -1,22 +1,25 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcNscqaparam() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNscqaparamFunc,
-		Read:          readNscqaparamFunc,
-		Update:        updateNscqaparamFunc,
-		Delete:        deleteNscqaparamFunc,
+		CreateContext: createNscqaparamFunc,
+		ReadContext:   readNscqaparamFunc,
+		UpdateContext: updateNscqaparamFunc,
+		DeleteContext: deleteNscqaparamFunc,
 		Schema: map[string]*schema.Schema{
 			"net1label": {
 				Type:     schema.TypeString,
@@ -122,7 +125,7 @@ func resourceCitrixAdcNscqaparam() *schema.Resource {
 	}
 }
 
-func createNscqaparamFunc(d *schema.ResourceData, meta interface{}) error {
+func createNscqaparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNscqaparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nscqaparamName := resource.PrefixedUniqueId("tf-nscqaparam-")
@@ -152,20 +155,15 @@ func createNscqaparamFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.UpdateUnnamedResource("nscqaparam", &nscqaparam)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(nscqaparamName)
 
-	err = readNscqaparamFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this nscqaparam but we can't read it ?? ")
-		return nil
-	}
-	return nil
+	return readNscqaparamFunc(ctx, d, meta)
 }
 
-func readNscqaparamFunc(d *schema.ResourceData, meta interface{}) error {
+func readNscqaparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNscqaparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading nscqaparam state")
@@ -175,14 +173,14 @@ func readNscqaparamFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
-	d.Set("harqretxdelay", data["harqretxdelay"])
+	setToInt("harqretxdelay", d, data["harqretxdelay"])
 	d.Set("lr1coeflist", data["lr1coeflist"])
 	// d.Set("lr1probthresh", data["lr1probthresh"])
 	d.Set("lr2coeflist", data["lr2coeflist"])
 	d.Set("lr2probthresh", data["lr2probthresh"])
-	d.Set("minrttnet1", data["minrttnet1"])
-	d.Set("minrttnet2", data["minrttnet2"])
-	d.Set("minrttnet3", data["minrttnet3"])
+	setToInt("minrttnet1", d, data["minrttnet1"])
+	setToInt("minrttnet2", d, data["minrttnet2"])
+	setToInt("minrttnet3", d, data["minrttnet3"])
 	d.Set("net1cclscale", data["net1cclscale"])
 	d.Set("net1csqscale", data["net1csqscale"])
 	d.Set("net1label", data["net1label"])
@@ -200,7 +198,7 @@ func readNscqaparamFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateNscqaparamFunc(d *schema.ResourceData, meta interface{}) error {
+func updateNscqaparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateNscqaparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -310,13 +308,13 @@ func updateNscqaparamFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource("nscqaparam", &nscqaparam)
 		if err != nil {
-			return fmt.Errorf("Error updating nscqaparam")
+			return diag.Errorf("Error updating nscqaparam")
 		}
 	}
-	return readNscqaparamFunc(d, meta)
+	return readNscqaparamFunc(ctx, d, meta)
 }
 
-func deleteNscqaparamFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNscqaparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNscqaparamFunc")
 	// nscqparam does not have DELETE operation, but this function is required to set the ID to ""
 	d.SetId("")

@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/lsn"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strings"
 )
@@ -13,11 +15,11 @@ import (
 func resourceCitrixAdcLsnclient_nsacl6_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createLsnclient_nsacl6_bindingFunc,
-		Read:          readLsnclient_nsacl6_bindingFunc,
-		Delete:        deleteLsnclient_nsacl6_bindingFunc,
+		CreateContext: createLsnclient_nsacl6_bindingFunc,
+		ReadContext:   readLsnclient_nsacl6_bindingFunc,
+		DeleteContext: deleteLsnclient_nsacl6_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"acl6name": {
@@ -40,7 +42,7 @@ func resourceCitrixAdcLsnclient_nsacl6_binding() *schema.Resource {
 	}
 }
 
-func createLsnclient_nsacl6_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createLsnclient_nsacl6_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createLsnclient_nsacl6_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	clientname := d.Get("clientname")
@@ -54,20 +56,15 @@ func createLsnclient_nsacl6_bindingFunc(d *schema.ResourceData, meta interface{}
 
 	err := client.UpdateUnnamedResource("lsnclient_nsacl6_binding", &lsnclient_nsacl6_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readLsnclient_nsacl6_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this lsnclient_nsacl6_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readLsnclient_nsacl6_bindingFunc(ctx, d, meta)
 }
 
-func readLsnclient_nsacl6_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readLsnclient_nsacl6_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readLsnclient_nsacl6_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -88,7 +85,7 @@ func readLsnclient_nsacl6_bindingFunc(d *schema.ResourceData, meta interface{}) 
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -121,13 +118,13 @@ func readLsnclient_nsacl6_bindingFunc(d *schema.ResourceData, meta interface{}) 
 
 	d.Set("acl6name", data["acl6name"])
 	d.Set("clientname", data["clientname"])
-	d.Set("td", data["td"])
+	setToInt("td", d, data["td"])
 
 	return nil
 
 }
 
-func deleteLsnclient_nsacl6_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteLsnclient_nsacl6_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteLsnclient_nsacl6_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -146,7 +143,7 @@ func deleteLsnclient_nsacl6_bindingFunc(d *schema.ResourceData, meta interface{}
 
 	err := client.DeleteResourceWithArgs("lsnclient_nsacl6_binding", name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

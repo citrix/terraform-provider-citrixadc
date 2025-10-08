@@ -1,22 +1,25 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ntp"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcNtpserver() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNtpserverFunc,
-		Read:          readNtpserverFunc,
-		Update:        updateNtpserverFunc,
-		Delete:        deleteNtpserverFunc,
+		CreateContext: createNtpserverFunc,
+		ReadContext:   readNtpserverFunc,
+		UpdateContext: updateNtpserverFunc,
+		DeleteContext: deleteNtpserverFunc,
 		Schema: map[string]*schema.Schema{
 			"serverip": {
 				Type:     schema.TypeString,
@@ -57,7 +60,7 @@ func resourceCitrixAdcNtpserver() *schema.Resource {
 	}
 }
 
-func createNtpserverFunc(d *schema.ResourceData, meta interface{}) error {
+func createNtpserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNtpserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var ntpserverName string
@@ -78,20 +81,15 @@ func createNtpserverFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Ntpserver.Type(), ntpserverName, &ntpserver)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(ntpserverName)
 
-	err = readNtpserverFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this ntpserver but we can't read it ?? %s", ntpserverName)
-		return nil
-	}
-	return nil
+	return readNtpserverFunc(ctx, d, meta)
 }
 
-func readNtpserverFunc(d *schema.ResourceData, meta interface{}) error {
+func readNtpserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNtpserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	ntpserverName := d.Id()
@@ -120,9 +118,9 @@ func readNtpserverFunc(d *schema.ResourceData, meta interface{}) error {
 
 	data := dataArr[foundIndex]
 	d.Set("autokey", data["autokey"])
-	d.Set("key", data["key"])
-	d.Set("maxpoll", data["maxpoll"])
-	d.Set("minpoll", data["minpoll"])
+	setToInt("key", d, data["key"])
+	setToInt("maxpoll", d, data["maxpoll"])
+	setToInt("minpoll", d, data["minpoll"])
 	d.Set("preferredntpserver", data["preferredntpserver"])
 	//d.Set("serverip", data["serverip"])
 	//d.Set("servername", data["servername"])
@@ -131,7 +129,7 @@ func readNtpserverFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateNtpserverFunc(d *schema.ResourceData, meta interface{}) error {
+func updateNtpserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateNtpserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	ntpserverName := d.Id()
@@ -173,19 +171,19 @@ func updateNtpserverFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Ntpserver.Type(), &ntpserver)
 		if err != nil {
-			return fmt.Errorf("Error updating ntpserver %s", ntpserverName)
+			return diag.Errorf("Error updating ntpserver %s", ntpserverName)
 		}
 	}
-	return readNtpserverFunc(d, meta)
+	return readNtpserverFunc(ctx, d, meta)
 }
 
-func deleteNtpserverFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNtpserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNtpserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	ntpserverName := d.Id()
 	err := client.DeleteResource(service.Ntpserver.Type(), ntpserverName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

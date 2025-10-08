@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/lsn"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strings"
 )
@@ -13,11 +15,11 @@ import (
 func resourceCitrixAdcLsnappsprofile_port_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createLsnappsprofile_port_bindingFunc,
-		Read:          readLsnappsprofile_port_bindingFunc,
-		Delete:        deleteLsnappsprofile_port_bindingFunc,
+		CreateContext: createLsnappsprofile_port_bindingFunc,
+		ReadContext:   readLsnappsprofile_port_bindingFunc,
+		DeleteContext: deleteLsnappsprofile_port_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"appsprofilename": {
@@ -34,7 +36,7 @@ func resourceCitrixAdcLsnappsprofile_port_binding() *schema.Resource {
 	}
 }
 
-func createLsnappsprofile_port_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createLsnappsprofile_port_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createLsnappsprofile_port_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appsprofilename := d.Get("appsprofilename")
@@ -47,20 +49,15 @@ func createLsnappsprofile_port_bindingFunc(d *schema.ResourceData, meta interfac
 
 	err := client.UpdateUnnamedResource("lsnappsprofile_port_binding", &lsnappsprofile_port_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readLsnappsprofile_port_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this lsnappsprofile_port_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readLsnappsprofile_port_bindingFunc(ctx, d, meta)
 }
 
-func readLsnappsprofile_port_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readLsnappsprofile_port_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readLsnappsprofile_port_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -81,7 +78,7 @@ func readLsnappsprofile_port_bindingFunc(d *schema.ResourceData, meta interface{
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -119,7 +116,7 @@ func readLsnappsprofile_port_bindingFunc(d *schema.ResourceData, meta interface{
 
 }
 
-func deleteLsnappsprofile_port_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteLsnappsprofile_port_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteLsnappsprofile_port_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -134,7 +131,7 @@ func deleteLsnappsprofile_port_bindingFunc(d *schema.ResourceData, meta interfac
 
 	err := client.DeleteResourceWithArgs("lsnappsprofile_port_binding", name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

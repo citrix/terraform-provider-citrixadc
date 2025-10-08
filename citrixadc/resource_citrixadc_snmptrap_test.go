@@ -17,8 +17,8 @@ package citrixadc
 
 import (
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
 	"fmt"
 	"log"
@@ -43,9 +43,9 @@ const testAccSnmptrap_update = `
 
 func TestAccSnmptrap_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckSnmptrapDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckSnmptrapDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSnmptrap_basic,
@@ -95,9 +95,13 @@ func testAccCheckSnmptrapExist(n string, id *string) resource.TestCheckFunc {
 		trapdestination := idSlice[1]
 		version := idSlice[2]
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
-		dataArr, err := nsClient.FindAllResources(service.Snmptrap.Type())
+		dataArr, err := client.FindAllResources(service.Snmptrap.Type())
 
 		if err != nil {
 			return err
@@ -129,7 +133,11 @@ func testAccCheckSnmptrapExist(n string, id *string) resource.TestCheckFunc {
 }
 
 func testAccCheckSnmptrapDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_snmptrap" {
@@ -146,7 +154,7 @@ func testAccCheckSnmptrapDestroy(s *terraform.State) error {
 		trapdestination := idSlice[1]
 		version := idSlice[2]
 
-		dataArr, err := nsClient.FindAllResources(service.Snmptrap.Type())
+		dataArr, err := client.FindAllResources(service.Snmptrap.Type())
 
 		if err != nil {
 			return err

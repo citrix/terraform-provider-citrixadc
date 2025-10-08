@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/basic"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcLocationparameter() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createLocationparameterFunc,
-		Read:          readLocationparameterFunc,
-		Update:        updateLocationparameterFunc,
-		Delete:        deleteLocationparameterFunc,
+		CreateContext: createLocationparameterFunc,
+		ReadContext:   readLocationparameterFunc,
+		UpdateContext: updateLocationparameterFunc,
+		DeleteContext: deleteLocationparameterFunc,
 		Schema: map[string]*schema.Schema{
 			"context": {
 				Type:     schema.TypeString,
@@ -63,7 +66,7 @@ func resourceCitrixAdcLocationparameter() *schema.Resource {
 	}
 }
 
-func createLocationparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func createLocationparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createLocationparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var locationparameterName string
@@ -83,20 +86,15 @@ func createLocationparameterFunc(d *schema.ResourceData, meta interface{}) error
 
 	err := client.UpdateUnnamedResource(service.Locationparameter.Type(), &locationparameter)
 	if err != nil {
-		return fmt.Errorf("Error updating locationparameter")
+		return diag.Errorf("Error updating locationparameter")
 	}
 
 	d.SetId(locationparameterName)
 
-	err = readLocationparameterFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this locationparameter but we can't read it ?? %s", locationparameterName)
-		return nil
-	}
-	return nil
+	return readLocationparameterFunc(ctx, d, meta)
 }
 
-func readLocationparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func readLocationparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readLocationparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading locationparameter state")
@@ -119,7 +117,7 @@ func readLocationparameterFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateLocationparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func updateLocationparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateLocationparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -170,13 +168,13 @@ func updateLocationparameterFunc(d *schema.ResourceData, meta interface{}) error
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Locationparameter.Type(), &locationparameter)
 		if err != nil {
-			return fmt.Errorf("Error updating locationparameter: %s", err.Error())
+			return diag.Errorf("Error updating locationparameter: %s", err.Error())
 		}
 	}
-	return readLocationparameterFunc(d, meta)
+	return readLocationparameterFunc(ctx, d, meta)
 }
 
-func deleteLocationparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteLocationparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteLocationparameterFunc")
 	// locationparameter do not have DELETE operation, but this function is required to set the ID to ""
 

@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -28,7 +28,7 @@ const testAccSystembackup_basic = `
 
 resource "citrixadc_systembackup" "tf_systembackup" {
 	filename         = "new.tgz"
-  }
+	}
   
   
 `
@@ -36,9 +36,9 @@ resource "citrixadc_systembackup" "tf_systembackup" {
 func TestAccSystembackup_basic(t *testing.T) {
 	t.Skip("TODO: Need to find a way to test this resource!")
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckSystembackupDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckSystembackupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSystembackup_basic,
@@ -69,8 +69,12 @@ func testAccCheckSystembackupExist(n string, id *string) resource.TestCheckFunc 
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Systembackup.Type(), rs.Primary.Attributes["filename"])
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Systembackup.Type(), rs.Primary.Attributes["filename"])
 
 		if err != nil {
 			return err
@@ -85,7 +89,11 @@ func testAccCheckSystembackupExist(n string, id *string) resource.TestCheckFunc 
 }
 
 func testAccCheckSystembackupDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_systembackup" {
@@ -96,7 +104,7 @@ func testAccCheckSystembackupDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Systembackup.Type(), rs.Primary.Attributes["filename"])
+		_, err := client.FindResource(service.Systembackup.Type(), rs.Primary.Attributes["filename"])
 		if err == nil {
 			return fmt.Errorf("systembackup %s still exists", rs.Primary.ID)
 		}

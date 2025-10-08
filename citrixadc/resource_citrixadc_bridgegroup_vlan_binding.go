@@ -1,24 +1,28 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
 	"log"
 	"strconv"
 	"strings"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcBridgegroup_vlan_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createBridgegroup_vlan_bindingFunc,
-		Read:          readBridgegroup_vlan_bindingFunc,
-		Delete:        deleteBridgegroup_vlan_bindingFunc,
+		CreateContext: createBridgegroup_vlan_bindingFunc,
+		ReadContext:   readBridgegroup_vlan_bindingFunc,
+		DeleteContext: deleteBridgegroup_vlan_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"bridgegroup_id": {
@@ -37,7 +41,7 @@ func resourceCitrixAdcBridgegroup_vlan_binding() *schema.Resource {
 	}
 }
 
-func createBridgegroup_vlan_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createBridgegroup_vlan_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createBridgegroup_vlan_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bridgegroup_id := strconv.Itoa(d.Get("bridgegroup_id").(int))
@@ -50,20 +54,15 @@ func createBridgegroup_vlan_bindingFunc(d *schema.ResourceData, meta interface{}
 
 	err := client.UpdateUnnamedResource(service.Bridgegroup_vlan_binding.Type(), &bridgegroup_vlan_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readBridgegroup_vlan_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this bridgegroup_vlan_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readBridgegroup_vlan_bindingFunc(ctx, d, meta)
 }
 
-func readBridgegroup_vlan_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readBridgegroup_vlan_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readBridgegroup_vlan_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -84,7 +83,7 @@ func readBridgegroup_vlan_bindingFunc(d *schema.ResourceData, meta interface{}) 
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -115,14 +114,14 @@ func readBridgegroup_vlan_bindingFunc(d *schema.ResourceData, meta interface{}) 
 
 	data := dataArr[foundIndex]
 
-	d.Set("bridgegroup_id", data["id"])
-	d.Set("vlan", data["vlan"])
+	setToInt("bridgegroup_id", d, data["id"])
+	setToInt("vlan", d, data["vlan"])
 
 	return nil
 
 }
 
-func deleteBridgegroup_vlan_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteBridgegroup_vlan_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteBridgegroup_vlan_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -137,7 +136,7 @@ func deleteBridgegroup_vlan_bindingFunc(d *schema.ResourceData, meta interface{}
 
 	err := client.DeleteResourceWithArgs(service.Bridgegroup_vlan_binding.Type(), bridgegroup_id, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

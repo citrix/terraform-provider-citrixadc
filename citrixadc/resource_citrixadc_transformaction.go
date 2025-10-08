@@ -1,24 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/transform"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcTransformaction() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createTransformactionFunc,
-		Read:          readTransformactionFunc,
-		Update:        updateTransformactionFunc,
-		Delete:        deleteTransformactionFunc,
+		CreateContext: createTransformactionFunc,
+		ReadContext:   readTransformactionFunc,
+		UpdateContext: updateTransformactionFunc,
+		DeleteContext: deleteTransformactionFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"comment": {
@@ -81,7 +83,7 @@ func resourceCitrixAdcTransformaction() *schema.Resource {
 	}
 }
 
-func createTransformactionFunc(d *schema.ResourceData, meta interface{}) error {
+func createTransformactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createTransformactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	transformactionName := d.Get("name").(string)
@@ -96,7 +98,7 @@ func createTransformactionFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Transformaction.Type(), transformactionName, &transformactionNew)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Need to update with full set of attributes
@@ -115,20 +117,15 @@ func createTransformactionFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err = client.UpdateResource(service.Transformaction.Type(), transformactionName, &transformaction)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(transformactionName)
 
-	err = readTransformactionFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this transformaction but we can't read it ?? %s", transformactionName)
-		return nil
-	}
-	return nil
+	return readTransformactionFunc(ctx, d, meta)
 }
 
-func readTransformactionFunc(d *schema.ResourceData, meta interface{}) error {
+func readTransformactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readTransformactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	transformactionName := d.Id()
@@ -156,7 +153,7 @@ func readTransformactionFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateTransformactionFunc(d *schema.ResourceData, meta interface{}) error {
+func updateTransformactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateTransformactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	transformactionName := d.Get("name").(string)
@@ -224,19 +221,19 @@ func updateTransformactionFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Transformaction.Type(), transformactionName, &transformaction)
 		if err != nil {
-			return fmt.Errorf("Error updating transformaction %s", transformactionName)
+			return diag.Errorf("Error updating transformaction %s", transformactionName)
 		}
 	}
-	return readTransformactionFunc(d, meta)
+	return readTransformactionFunc(ctx, d, meta)
 }
 
-func deleteTransformactionFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteTransformactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteTransformactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	transformactionName := d.Id()
 	err := client.DeleteResource(service.Transformaction.Type(), transformactionName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

@@ -1,24 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
 	"strconv"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAppalgparam() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAppalgparamFunc,
-		Read:          readAppalgparamFunc,
-		Update:        updateAppalgparamFunc,
-		Delete:        deleteAppalgparamFunc,
+		CreateContext: createAppalgparamFunc,
+		ReadContext:   readAppalgparamFunc,
+		UpdateContext: updateAppalgparamFunc,
+		DeleteContext: deleteAppalgparamFunc,
 		Schema: map[string]*schema.Schema{
 			"pptpgreidletimeout": {
 				Type:     schema.TypeInt,
@@ -29,7 +32,7 @@ func resourceCitrixAdcAppalgparam() *schema.Resource {
 	}
 }
 
-func createAppalgparamFunc(d *schema.ResourceData, meta interface{}) error {
+func createAppalgparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppalgparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var appalgparamName string
@@ -41,20 +44,15 @@ func createAppalgparamFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.UpdateUnnamedResource(service.Appalgparam.Type(), &appalgparam)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(appalgparamName)
 
-	err = readAppalgparamFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this appalgparam but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readAppalgparamFunc(ctx, d, meta)
 }
 
-func readAppalgparamFunc(d *schema.ResourceData, meta interface{}) error {
+func readAppalgparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAppalgparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading appalgparam state")
@@ -71,7 +69,7 @@ func readAppalgparamFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateAppalgparamFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAppalgparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAppalgparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -86,13 +84,13 @@ func updateAppalgparamFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Appalgparam.Type(), &appalgparam)
 		if err != nil {
-			return fmt.Errorf("Error updating appalgparam")
+			return diag.Errorf("Error updating appalgparam")
 		}
 	}
-	return readAppalgparamFunc(d, meta)
+	return readAppalgparamFunc(ctx, d, meta)
 }
 
-func deleteAppalgparamFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAppalgparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppalgparamFunc")
 
 	d.SetId("")

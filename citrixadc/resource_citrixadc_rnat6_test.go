@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -30,7 +30,7 @@ resource "citrixadc_rnat6" "tf_rnat6" {
 	name             = "my_rnat6"
 	network          = "2003::/64"
 	srcippersistency = "DISABLED"
-  }
+	}
   
 `
 const testAccRnat6_update = `
@@ -40,15 +40,15 @@ resource "citrixadc_rnat6" "tf_rnat6" {
 	name             = "my_rnat6"
 	network          = "2003::/64"
 	srcippersistency = "ENABLED"
-  }
+	}
   
 `
 
 func TestAccRnat6_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: nil,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRnat6_basic,
@@ -89,8 +89,12 @@ func testAccCheckRnat6Exist(n string, id *string) resource.TestCheckFunc {
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Rnat6.Type(), rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Rnat6.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err

@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"strings"
 	"testing"
 )
@@ -30,18 +30,18 @@ resource "citrixadc_crvserver" "crvserver" {
 	name        = "my_vserver"
 	servicetype = "HTTP"
 	arp         = "OFF"
-  }
+	}
   resource "citrixadc_rewritepolicy" "tf_rewrite_policy" {
 	name   = "tf_rewrite_policy"
 	action = "DROP"
 	rule   = "HTTP.REQ.URL.PATH_AND_QUERY.CONTAINS(\"helloandby\")"
-  }
+	}
   resource "citrixadc_crvserver_rewritepolicy_binding" "crvserver_rewritepolicy_binding" {
 	name       = citrixadc_crvserver.crvserver.name
 	policyname = citrixadc_rewritepolicy.tf_rewrite_policy.name
 	priority   = 10
 	bindpoint  = "RESPONSE"
-  }  
+	}
 `
 
 const testAccCrvserver_rewritepolicy_binding_basic_step2 = `
@@ -50,19 +50,19 @@ const testAccCrvserver_rewritepolicy_binding_basic_step2 = `
 		name        = "my_vserver"
 		servicetype = "HTTP"
 		arp         = "OFF"
-	  }
+	}
 	  resource "citrixadc_rewritepolicy" "tf_rewrite_policy" {
 		name   = "tf_rewrite_policy"
 		action = "DROP"
 		rule   = "HTTP.REQ.URL.PATH_AND_QUERY.CONTAINS(\"helloandby\")"
-	  }
+	}
 `
 
 func TestAccCrvserver_rewritepolicy_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckCrvserver_rewritepolicy_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckCrvserver_rewritepolicy_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrvserver_rewritepolicy_binding_basic,
@@ -99,7 +99,11 @@ func testAccCheckCrvserver_rewritepolicy_bindingExist(n string, id *string) reso
 			*id = rs.Primary.ID
 		}
 
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		bindingId := rs.Primary.ID
 
@@ -139,7 +143,11 @@ func testAccCheckCrvserver_rewritepolicy_bindingExist(n string, id *string) reso
 
 func testAccCheckCrvserver_rewritepolicy_bindingNotExist(n string, id string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
@@ -179,7 +187,11 @@ func testAccCheckCrvserver_rewritepolicy_bindingNotExist(n string, id string) re
 }
 
 func testAccCheckCrvserver_rewritepolicy_bindingDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_crvserver_rewritepolicy_binding" {
@@ -190,7 +202,7 @@ func testAccCheckCrvserver_rewritepolicy_bindingDestroy(s *terraform.State) erro
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Crvserver_rewritepolicy_binding.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Crvserver_rewritepolicy_binding.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("crvserver_rewritepolicy_binding %s still exists", rs.Primary.ID)
 		}

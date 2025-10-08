@@ -1,24 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/spillover"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcSpilloverpolicy() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSpilloverpolicyFunc,
-		Read:          readSpilloverpolicyFunc,
-		Update:        updateSpilloverpolicyFunc,
-		Delete:        deleteSpilloverpolicyFunc,
+		CreateContext: createSpilloverpolicyFunc,
+		ReadContext:   readSpilloverpolicyFunc,
+		UpdateContext: updateSpilloverpolicyFunc,
+		DeleteContext: deleteSpilloverpolicyFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -50,7 +53,7 @@ func resourceCitrixAdcSpilloverpolicy() *schema.Resource {
 	}
 }
 
-func createSpilloverpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func createSpilloverpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSpilloverpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	spilloverpolicyName := d.Get("name").(string)
@@ -64,20 +67,15 @@ func createSpilloverpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Spilloverpolicy.Type(), spilloverpolicyName, &spilloverpolicy)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(spilloverpolicyName)
 
-	err = readSpilloverpolicyFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this spilloverpolicy but we can't read it ?? %s", spilloverpolicyName)
-		return nil
-	}
-	return nil
+	return readSpilloverpolicyFunc(ctx, d, meta)
 }
 
-func readSpilloverpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func readSpilloverpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSpilloverpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	spilloverpolicyName := d.Id()
@@ -98,7 +96,7 @@ func readSpilloverpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateSpilloverpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func updateSpilloverpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateSpilloverpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	spilloverpolicyName := d.Get("name").(string)
@@ -131,19 +129,19 @@ func updateSpilloverpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Spilloverpolicy.Type(), spilloverpolicyName, &spilloverpolicy)
 		if err != nil {
-			return fmt.Errorf("Error updating spilloverpolicy %s", spilloverpolicyName)
+			return diag.Errorf("Error updating spilloverpolicy %s", spilloverpolicyName)
 		}
 	}
-	return readSpilloverpolicyFunc(d, meta)
+	return readSpilloverpolicyFunc(ctx, d, meta)
 }
 
-func deleteSpilloverpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSpilloverpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSpilloverpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	spilloverpolicyName := d.Id()
 	err := client.DeleteResource(service.Spilloverpolicy.Type(), spilloverpolicyName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

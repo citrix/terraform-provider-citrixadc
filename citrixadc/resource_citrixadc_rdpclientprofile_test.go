@@ -17,8 +17,8 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -30,7 +30,7 @@ resource "citrixadc_rdpclientprofile" "tf_rdpclientprofile" {
 	rdpurloverride    = "ENABLE"
 	redirectclipboard = "ENABLE"
 	redirectdrives    = "ENABLE"
-  }
+	}
   
 `
 const testAccRdpclientprofile_update = `
@@ -41,15 +41,15 @@ resource "citrixadc_rdpclientprofile" "tf_rdpclientprofile" {
 	rdpurloverride    = "DISABLE"
 	redirectclipboard = "DISABLE"
 	redirectdrives    = "DISABLE"
-  }
+	}
   
 `
 
 func TestAccRdpclientprofile_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRdpclientprofileDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckRdpclientprofileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRdpclientprofile_basic,
@@ -94,8 +94,12 @@ func testAccCheckRdpclientprofileExist(n string, id *string) resource.TestCheckF
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource("rdpclientprofile", rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource("rdpclientprofile", rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -110,7 +114,11 @@ func testAccCheckRdpclientprofileExist(n string, id *string) resource.TestCheckF
 }
 
 func testAccCheckRdpclientprofileDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_rdpclientprofile" {
@@ -121,7 +129,7 @@ func testAccCheckRdpclientprofileDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource("rdpclientprofile", rs.Primary.ID)
+		_, err := client.FindResource("rdpclientprofile", rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("rdpclientprofile %s still exists", rs.Primary.ID)
 		}

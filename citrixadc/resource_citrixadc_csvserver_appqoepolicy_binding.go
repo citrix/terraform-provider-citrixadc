@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/cs"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 	"strings"
@@ -14,11 +16,11 @@ import (
 func resourceCitrixAdcCsvserver_appqoepolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createCsvserver_appqoepolicy_bindingFunc,
-		Read:          readCsvserver_appqoepolicy_bindingFunc,
-		Delete:        deleteCsvserver_appqoepolicy_bindingFunc,
+		CreateContext: createCsvserver_appqoepolicy_bindingFunc,
+		ReadContext:   readCsvserver_appqoepolicy_bindingFunc,
+		DeleteContext: deleteCsvserver_appqoepolicy_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"bindpoint": {
@@ -76,7 +78,7 @@ func resourceCitrixAdcCsvserver_appqoepolicy_binding() *schema.Resource {
 	}
 }
 
-func createCsvserver_appqoepolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createCsvserver_appqoepolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createCsvserver_appqoepolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name").(string)
@@ -96,20 +98,15 @@ func createCsvserver_appqoepolicy_bindingFunc(d *schema.ResourceData, meta inter
 
 	_, err := client.AddResource("csvserver_appqoepolicy_binding", name, &csvserver_appqoepolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readCsvserver_appqoepolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this csvserver_appqoepolicy_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readCsvserver_appqoepolicy_bindingFunc(ctx, d, meta)
 }
 
-func readCsvserver_appqoepolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readCsvserver_appqoepolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readCsvserver_appqoepolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -130,7 +127,7 @@ func readCsvserver_appqoepolicy_bindingFunc(d *schema.ResourceData, meta interfa
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -175,7 +172,7 @@ func readCsvserver_appqoepolicy_bindingFunc(d *schema.ResourceData, meta interfa
 
 }
 
-func deleteCsvserver_appqoepolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteCsvserver_appqoepolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteCsvserver_appqoepolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -197,7 +194,7 @@ func deleteCsvserver_appqoepolicy_bindingFunc(d *schema.ResourceData, meta inter
 	}
 	err := client.DeleteResourceWithArgsMap("csvserver_appqoepolicy_binding", name, argsMap)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

@@ -1,12 +1,15 @@
 package citrixadc
 
 import (
-	"github.com/citrix/adc-nitro-go/service"
+	"context"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/citrix/adc-nitro-go/service"
 
 	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // nsip struct is defined here to add MPTCPadvertise support.
@@ -66,12 +69,12 @@ type nsip struct {
 func resourceCitrixAdcNsip() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNsipFunc,
-		Read:          readNsipFunc,
-		Update:        updateNsipFunc,
-		Delete:        deleteNsipFunc,
+		CreateContext: createNsipFunc,
+		ReadContext:   readNsipFunc,
+		UpdateContext: updateNsipFunc,
+		DeleteContext: deleteNsipFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"ipaddress": {
@@ -262,7 +265,7 @@ func resourceCitrixAdcNsip() *schema.Resource {
 	}
 }
 
-func createNsipFunc(d *schema.ResourceData, meta interface{}) error {
+func createNsipFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNsipFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var ipaddress string
@@ -309,20 +312,15 @@ func createNsipFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Nsip.Type(), ipaddress, &nsip)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(ipaddress)
 
-	err = readNsipFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this nsip but we can't read it ?? %s", ipaddress)
-		return nil
-	}
-	return nil
+	return readNsipFunc(ctx, d, meta)
 }
 
-func readNsipFunc(d *schema.ResourceData, meta interface{}) error {
+func readNsipFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNsipFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nsipName := d.Id()
@@ -346,12 +344,12 @@ func readNsipFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("icmp", data["icmp"])
 	d.Set("icmpresponse", data["icmpresponse"])
 	d.Set("ipaddress", data["ipaddress"])
-	d.Set("metric", data["metric"])
+	setToInt("metric", d, data["metric"])
 	d.Set("mgmtaccess", data["mgmtaccess"])
 	d.Set("netmask", data["netmask"])
 	d.Set("networkroute", data["networkroute"])
 	d.Set("ospf", data["ospf"])
-	d.Set("ospfarea", data["ospfarea"])
+	setToInt("ospfarea", d, data["ospfarea"])
 	d.Set("ospflsatype", data["ospflsatype"])
 	d.Set("ownerdownresponse", data["ownerdownresponse"])
 	d.Set("ownernode", data["ownernode"])
@@ -360,11 +358,11 @@ func readNsipFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("snmp", data["snmp"])
 	d.Set("ssh", data["ssh"])
 	d.Set("state", data["state"])
-	d.Set("tag", data["tag"])
-	d.Set("td", data["td"])
+	setToInt("tag", d, data["tag"])
+	setToInt("td", d, data["td"])
 	d.Set("telnet", data["telnet"])
 	d.Set("type", data["type"])
-	d.Set("vrid", data["vrid"])
+	setToInt("vrid", d, data["vrid"])
 	d.Set("vserver", data["vserver"])
 	d.Set("vserverrhilevel", data["vserverrhilevel"])
 	d.Set("vserverrhimode", data["vserverrhimode"])
@@ -374,7 +372,7 @@ func readNsipFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateNsipFunc(d *schema.ResourceData, meta interface{}) error {
+func updateNsipFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateNsipFunc")
 	client := meta.(*NetScalerNitroClient).client
 	ipaddress := d.Get("ipaddress").(string)
@@ -558,26 +556,26 @@ func updateNsipFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Nsip.Type(), ipaddress, &nsip)
 		if err != nil {
-			return fmt.Errorf("Error updating nsip %s: %s", ipaddress, err.Error())
+			return diag.Errorf("Error updating nsip %s: %s", ipaddress, err.Error())
 		}
 	}
 
 	if stateChange {
 		err := doNsipStateChange(d, client)
 		if err != nil {
-			return fmt.Errorf("Error enabling/disabling nsip %s", ipaddress)
+			return diag.Errorf("Error enabling/disabling nsip %s", ipaddress)
 		}
 	}
-	return readNsipFunc(d, meta)
+	return readNsipFunc(ctx, d, meta)
 }
 
-func deleteNsipFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNsipFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNsipFunc")
 	client := meta.(*NetScalerNitroClient).client
 	ipaddress := d.Id()
 	err := client.DeleteResource(service.Nsip.Type(), ipaddress)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

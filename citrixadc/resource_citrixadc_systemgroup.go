@@ -1,27 +1,29 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/system"
 	"github.com/citrix/adc-nitro-go/service"
-
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"bytes"
 	"fmt"
 	"log"
 	"strconv"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcSystemgroup() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSystemgroupFunc,
-		Read:          readSystemgroupFunc,
-		Update:        updateSystemgroupFunc,
-		Delete:        deleteSystemgroupFunc,
+		CreateContext: createSystemgroupFunc,
+		ReadContext:   readSystemgroupFunc,
+		UpdateContext: updateSystemgroupFunc,
+		DeleteContext: deleteSystemgroupFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"groupname": {
@@ -74,7 +76,7 @@ func resourceCitrixAdcSystemgroup() *schema.Resource {
 	}
 }
 
-func createSystemgroupFunc(d *schema.ResourceData, meta interface{}) error {
+func createSystemgroupFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSystemgroupFunc")
 	client := meta.(*NetScalerNitroClient).client
 	systemgroupName := d.Get("groupname").(string)
@@ -88,7 +90,7 @@ func createSystemgroupFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Systemgroup.Type(), systemgroupName, &systemgroup)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(systemgroupName)
@@ -97,7 +99,7 @@ func createSystemgroupFunc(d *schema.ResourceData, meta interface{}) error {
 	if _, ok := d.GetOk("cmdpolicybinding"); ok {
 		err = updateSystemgroupCmdpolicyBindings(d, meta)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
@@ -105,19 +107,14 @@ func createSystemgroupFunc(d *schema.ResourceData, meta interface{}) error {
 	if _, ok := d.GetOk("systemusers"); ok {
 		err = updateSystemgroupSystemuserBindings(d, meta)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
-	err = readSystemgroupFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this systemgroup but we can't read it ?? %s", systemgroupName)
-		return nil
-	}
-	return nil
+	return readSystemgroupFunc(ctx, d, meta)
 }
 
-func readSystemgroupFunc(d *schema.ResourceData, meta interface{}) error {
+func readSystemgroupFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSystemgroupFunc")
 	client := meta.(*NetScalerNitroClient).client
 	systemgroupName := d.Id()
@@ -131,28 +128,27 @@ func readSystemgroupFunc(d *schema.ResourceData, meta interface{}) error {
 	if _, ok := d.GetOk("cmdpolicybinding"); ok {
 		err = readSystemgroupCmdpolicybindings(d, meta)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	if _, ok := d.GetOk("systemusers"); ok {
 		err = readSystemgroupSystemuserbindings(d, meta)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
-	d.Set("name", data["name"])
 	d.Set("groupname", data["groupname"])
 	d.Set("promptstring", data["promptstring"])
-	d.Set("timeout", data["timeout"])
+	setToInt("timeout", d, data["timeout"])
 	d.Set("allowedmanagementinterface", data["allowedmanagementinterface"])
 
 	return nil
 
 }
 
-func updateSystemgroupFunc(d *schema.ResourceData, meta interface{}) error {
+func updateSystemgroupFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateSystemgroupFunc")
 	client := meta.(*NetScalerNitroClient).client
 	systemgroupName := d.Get("groupname").(string)
@@ -180,32 +176,32 @@ func updateSystemgroupFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Systemgroup.Type(), systemgroupName, &systemgroup)
 		if err != nil {
-			return fmt.Errorf("Error updating systemgroup %s", systemgroupName)
+			return diag.Errorf("Error updating systemgroup %s", systemgroupName)
 		}
 	}
 	if d.HasChange("cmdpolicybinding") {
 		err := updateSystemgroupCmdpolicyBindings(d, meta)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	if d.HasChange("systemusers") {
 		err := updateSystemgroupSystemuserBindings(d, meta)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
-	return readSystemgroupFunc(d, meta)
+	return readSystemgroupFunc(ctx, d, meta)
 }
 
-func deleteSystemgroupFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSystemgroupFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSystemgroupFunc")
 	client := meta.(*NetScalerNitroClient).client
 	systemgroupName := d.Id()
 	err := client.DeleteResource(service.Systemgroup.Type(), systemgroupName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")
@@ -291,7 +287,7 @@ func systemgroupCmdpolicybindingMappingHash(v interface{}) int {
 	if d, ok := m["priority"]; ok {
 		buf.WriteString(fmt.Sprintf("%d-", d.(int)))
 	}
-	return hashcode.String(buf.String())
+	return hashString(buf.String())
 }
 
 func readSystemgroupCmdpolicybindings(d *schema.ResourceData, meta interface{}) error {

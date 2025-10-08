@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/dns"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcDnsparameter() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createDnsparameterFunc,
-		Read:          readDnsparameterFunc,
-		Update:        updateDnsparameterFunc,
-		Delete:        deleteDnsparameterFunc,
+		CreateContext: createDnsparameterFunc,
+		ReadContext:   readDnsparameterFunc,
+		UpdateContext: updateDnsparameterFunc,
+		DeleteContext: deleteDnsparameterFunc,
 		Schema: map[string]*schema.Schema{
 			"cacheecszeroprefix": {
 				Type:     schema.TypeString,
@@ -128,7 +131,7 @@ func resourceCitrixAdcDnsparameter() *schema.Resource {
 	}
 }
 
-func createDnsparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func createDnsparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createDnsparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -160,20 +163,15 @@ func createDnsparameterFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.UpdateUnnamedResource(service.Dnsparameter.Type(), &dnsparameter)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(dnsparameterName)
 
-	err = readDnsparameterFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this dnsparameter but we can't read it ?? %s", dnsparameterName)
-		return nil
-	}
-	return nil
+	return readDnsparameterFunc(ctx, d, meta)
 }
 
-func readDnsparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func readDnsparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readDnsparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnsparameterName := d.Id()
@@ -188,29 +186,29 @@ func readDnsparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("cachehitbypass", data["cachehitbypass"])
 	d.Set("cachenoexpire", data["cachenoexpire"])
 	d.Set("cacherecords", data["cacherecords"])
-	d.Set("dns64timeout", data["dns64timeout"])
+	setToInt("dns64timeout", d, data["dns64timeout"])
 	d.Set("dnsrootreferral", data["dnsrootreferral"])
 	d.Set("dnssec", data["dnssec"])
-	d.Set("ecsmaxsubnets", data["ecsmaxsubnets"])
-	d.Set("maxcachesize", data["maxcachesize"])
-	d.Set("maxnegativecachesize", data["maxnegativecachesize"])
-	d.Set("maxnegcachettl", data["maxnegcachettl"])
-	d.Set("maxpipeline", data["maxpipeline"])
-	d.Set("maxttl", data["maxttl"])
-	d.Set("maxudppacketsize", data["maxudppacketsize"])
-	d.Set("minttl", data["minttl"])
+	setToInt("ecsmaxsubnets", d, data["ecsmaxsubnets"])
+	setToInt("maxcachesize", d, data["maxcachesize"])
+	setToInt("maxnegativecachesize", d, data["maxnegativecachesize"])
+	setToInt("maxnegcachettl", d, data["maxnegcachettl"])
+	setToInt("maxpipeline", d, data["maxpipeline"])
+	setToInt("maxttl", d, data["maxttl"])
+	setToInt("maxudppacketsize", d, data["maxudppacketsize"])
+	setToInt("minttl", d, data["minttl"])
 	d.Set("namelookuppriority", data["namelookuppriority"])
-	d.Set("nxdomainratelimitthreshold", data["nxdomainratelimitthreshold"])
+	setToInt("nxdomainratelimitthreshold", d, data["nxdomainratelimitthreshold"])
 	d.Set("recursion", d.Get("recursion").(string))
 	d.Set("resolutionorder", data["resolutionorder"])
-	d.Set("retries", data["retries"])
+	setToInt("retries", d, data["retries"])
 	d.Set("splitpktqueryprocessing", data["splitpktqueryprocessing"])
 
 	return nil
 
 }
 
-func updateDnsparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func updateDnsparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateDnsparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -325,13 +323,13 @@ func updateDnsparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Dnsparameter.Type(), &dnsparameter)
 		if err != nil {
-			return fmt.Errorf("Error updating dnsparameter %s", err.Error())
+			return diag.Errorf("Error updating dnsparameter %s", err.Error())
 		}
 	}
-	return readDnsparameterFunc(d, meta)
+	return readDnsparameterFunc(ctx, d, meta)
 }
 
-func deleteDnsparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteDnsparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteDnsparameterFunc")
 
 	d.SetId("")

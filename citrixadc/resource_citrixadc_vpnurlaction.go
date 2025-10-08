@@ -1,23 +1,23 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/vpn"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
-	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcVpnurlaction() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createVpnurlactionFunc,
-		Read:          readVpnurlactionFunc,
-		Update:        updateVpnurlactionFunc,
-		Delete:        deleteVpnurlactionFunc,
+		CreateContext: createVpnurlactionFunc,
+		ReadContext:   readVpnurlactionFunc,
+		UpdateContext: updateVpnurlactionFunc,
+		DeleteContext: deleteVpnurlactionFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -79,7 +79,7 @@ func resourceCitrixAdcVpnurlaction() *schema.Resource {
 	}
 }
 
-func createVpnurlactionFunc(d *schema.ResourceData, meta interface{}) error {
+func createVpnurlactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createVpnurlactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vpnurlactionName := d.Get("name").(string)
@@ -99,20 +99,15 @@ func createVpnurlactionFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource("vpnurlaction", vpnurlactionName, &vpnurlaction)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(vpnurlactionName)
 
-	err = readVpnurlactionFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this vpnurlaction but we can't read it ?? %s", vpnurlactionName)
-		return nil
-	}
-	return nil
+	return readVpnurlactionFunc(ctx, d, meta)
 }
 
-func readVpnurlactionFunc(d *schema.ResourceData, meta interface{}) error {
+func readVpnurlactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readVpnurlactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vpnurlactionName := d.Id()
@@ -140,7 +135,7 @@ func readVpnurlactionFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateVpnurlactionFunc(d *schema.ResourceData, meta interface{}) error {
+func updateVpnurlactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateVpnurlactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vpnurlactionName := d.Get("name").(string)
@@ -203,19 +198,19 @@ func updateVpnurlactionFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource("vpnurlaction", vpnurlactionName, &vpnurlaction)
 		if err != nil {
-			return fmt.Errorf("Error updating vpnurlaction %s", vpnurlactionName)
+			return diag.Errorf("Error updating vpnurlaction %s", vpnurlactionName)
 		}
 	}
-	return readVpnurlactionFunc(d, meta)
+	return readVpnurlactionFunc(ctx, d, meta)
 }
 
-func deleteVpnurlactionFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteVpnurlactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteVpnurlactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vpnurlactionName := d.Id()
 	err := client.DeleteResource("vpnurlaction", vpnurlactionName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

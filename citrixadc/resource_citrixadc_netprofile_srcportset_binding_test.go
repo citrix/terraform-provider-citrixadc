@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"strings"
 	"testing"
 )
@@ -47,9 +47,9 @@ const testAccNetprofile_srcportset_binding_basic_step2 = `
 
 func TestAccNetprofile_srcportset_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckNetprofile_srcportset_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckNetprofile_srcportset_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetprofile_srcportset_binding_basic,
@@ -86,7 +86,11 @@ func testAccCheckNetprofile_srcportset_bindingExist(n string, id *string) resour
 			*id = rs.Primary.ID
 		}
 
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		bindingId := rs.Primary.ID
 
@@ -126,7 +130,11 @@ func testAccCheckNetprofile_srcportset_bindingExist(n string, id *string) resour
 
 func testAccCheckNetprofile_srcportset_bindingNotExist(n string, id string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
@@ -166,7 +174,11 @@ func testAccCheckNetprofile_srcportset_bindingNotExist(n string, id string) reso
 }
 
 func testAccCheckNetprofile_srcportset_bindingDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_netprofile_srcportset_binding" {
@@ -177,7 +189,7 @@ func testAccCheckNetprofile_srcportset_bindingDestroy(s *terraform.State) error 
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Netprofile_srcportset_binding.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Netprofile_srcportset_binding.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("netprofile_srcportset_binding %s still exists", rs.Primary.ID)
 		}

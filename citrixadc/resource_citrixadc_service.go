@@ -1,6 +1,7 @@
 package citrixadc
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -10,19 +11,20 @@ import (
 	"github.com/citrix/adc-nitro-go/resource/config/ssl"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcService() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createServiceFunc,
-		Read:          readServiceFunc,
-		Update:        updateServiceFunc,
-		Delete:        deleteServiceFunc,
+		CreateContext: createServiceFunc,
+		ReadContext:   readServiceFunc,
+		UpdateContext: updateServiceFunc,
+		DeleteContext: deleteServiceFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"accessdown": {
@@ -332,7 +334,7 @@ func resourceCitrixAdcService() *schema.Resource {
 	}
 }
 
-func createServiceFunc(d *schema.ResourceData, meta interface{}) error {
+func createServiceFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] netscaler-provider:  In createServiceFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -350,7 +352,7 @@ func createServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	if mok {
 		exists := client.ResourceExists(service.Lbmonitor.Type(), lbmonitor.(string))
 		if !exists {
-			return fmt.Errorf("[ERROR] netscaler-provider: Specified lb monitor does not exist on netscaler!")
+			return diag.Errorf("[ERROR] netscaler-provider: Specified lb monitor does not exist on netscaler!")
 		}
 	}
 
@@ -358,7 +360,7 @@ func createServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	if lok {
 		exists := client.ResourceExists(service.Lbvserver.Type(), lbvserver.(string))
 		if !exists {
-			return fmt.Errorf("[ERROR] netscaler-provider: Specified lb vserver does not exist on netscaler!")
+			return diag.Errorf("[ERROR] netscaler-provider: Specified lb vserver does not exist on netscaler!")
 		}
 	}
 	svc := basic.Service{
@@ -414,7 +416,7 @@ func createServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	_, err := client.AddResource(service.Service.Type(), serviceName, &svc)
 	if err != nil {
 		log.Printf("[ERROR] netscaler-provider: could not add resource %s of type %s", service.Service.Type(), serviceName)
-		return err
+		return diag.FromErr(err)
 	}
 	if lok { //lbvserver is specified
 		lbvserverName := d.Get("lbvserver").(string)
@@ -429,9 +431,9 @@ func createServiceFunc(d *schema.ResourceData, meta interface{}) error {
 			err2 := client.DeleteResource(service.Service.Type(), serviceName)
 			if err2 != nil {
 				log.Printf("[ERROR] netscaler-provider:  Failed to delete service %s after bind to lb vserver failed", serviceName)
-				return fmt.Errorf("[ERROR] netscaler-provider:  Failed to delete service %s after bind to lbvserver failed", serviceName)
+				return diag.Errorf("[ERROR] netscaler-provider:  Failed to delete service %s after bind to lbvserver failed", serviceName)
 			}
-			return fmt.Errorf("[ERROR] netscaler-provider:  Failed to bind  service %s to lbvserver %s", serviceName, lbvserverName)
+			return diag.Errorf("[ERROR] netscaler-provider:  Failed to bind  service %s to lbvserver %s", serviceName, lbvserverName)
 		}
 	}
 	if mok { //lbmonitor is specified
@@ -447,29 +449,24 @@ func createServiceFunc(d *schema.ResourceData, meta interface{}) error {
 			err2 := client.DeleteResource(service.Service.Type(), serviceName)
 			if err2 != nil {
 				log.Printf("[ERROR] netscaler-provider:  Failed to delete service %s after bind to lbmonitor failed", serviceName)
-				return fmt.Errorf("[ERROR] netscaler-provider:  Failed to delete service %s after bind to lbmonitor failed", serviceName)
+				return diag.Errorf("[ERROR] netscaler-provider:  Failed to delete service %s after bind to lbmonitor failed", serviceName)
 			}
-			return fmt.Errorf("[ERROR] netscaler-provider:  Failed to bind  service %s to lbmonitor %s", serviceName, lbmonitorName)
+			return diag.Errorf("[ERROR] netscaler-provider:  Failed to bind  service %s to lbmonitor %s", serviceName, lbmonitorName)
 		}
 	}
 
 	if hasSslserviceProperties(d) {
 		err := syncSslservice(d, client)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	d.SetId(serviceName)
-	err = readServiceFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this service but we can't read it ?? %s", serviceName)
-		return nil
-	}
-	return nil
+	return readServiceFunc(ctx, d, meta)
 }
 
-func readServiceFunc(d *schema.ResourceData, meta interface{}) error {
+func readServiceFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] netscaler-provider:  In readServiceFunc")
 
 	client := meta.(*NetScalerNitroClient).client
@@ -509,8 +506,8 @@ func readServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("cip", data["cip"])
 	d.Set("cipheader", data["cipheader"])
 	d.Set("cka", data["cka"])
-	d.Set("cleartextport", data["cleartextport"])
-	d.Set("clttimeout", data["clttimeout"])
+	setToInt("cleartextport", d, data["cleartextport"])
+	setToInt("clttimeout", d, data["clttimeout"])
 	d.Set("cmp", data["cmp"])
 	d.Set("comment", data["comment"])
 	d.Set("contentinspectionprofilename", data["contentinspectionprofilename"])
@@ -536,11 +533,11 @@ func readServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("netprofile", data["netprofile"])
 	d.Set("pathmonitor", data["pathmonitor"])
 	d.Set("pathmonitorindv", data["pathmonitorindv"])
-	d.Set("port", data["port"])
+	setToInt("port", d, data["port"])
 	d.Set("processlocal", data["processlocal"])
-	d.Set("riseapbrstatsmsgcode", data["riseapbrstatsmsgcode"])
+	setToInt("riseapbrstatsmsgcode", d, data["riseapbrstatsmsgcode"])
 	d.Set("rtspsessionidremap", data["rtspsessionidremap"])
-	d.Set("serverid", data["serverid"])
+	setToInt("serverid", d, data["serverid"])
 	d.Set("servername", data["servername"])
 	d.Set("servicetype", data["servicetype"])
 	if data["sp"] == "ON (but effectively OFF)" {
@@ -548,7 +545,7 @@ func readServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		d.Set("sp", data["sp"])
 	}
-	d.Set("svrtimeout", data["svrtimeout"])
+	setToInt("svrtimeout", d, data["svrtimeout"])
 	d.Set("tcpb", data["tcpb"])
 	d.Set("tcpprofilename", data["tcpprofilename"])
 	setToInt("td", d, data["td"])
@@ -589,7 +586,7 @@ func readServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasSslserviceProperties(d) {
 		err := readSslservice(d, client)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
@@ -597,7 +594,7 @@ func readServiceFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateServiceFunc(d *schema.ResourceData, meta interface{}) error {
+func updateServiceFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] netscaler-provider:  In updateServiceFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -873,7 +870,7 @@ func updateServiceFunc(d *schema.ResourceData, meta interface{}) error {
 		if oldLbmonitorName != "" && !oldMonitorIsDefault {
 			err := client.UnbindResource(service.Lbmonitor.Type(), oldLbmonitorName, service.Service.Type(), serviceName, "servicename")
 			if err != nil {
-				return fmt.Errorf("[ERROR] netscaler-provider: Error unbinding lbmonitor from service %s", oldLbmonitorName)
+				return diag.Errorf("[ERROR] netscaler-provider: Error unbinding lbmonitor from service %s", oldLbmonitorName)
 			}
 			log.Printf("[DEBUG] netscaler-provider: lbmonitor has been unbound from service for lb monitor %s ", oldLbmonitorName)
 		}
@@ -886,7 +883,7 @@ func updateServiceFunc(d *schema.ResourceData, meta interface{}) error {
 		if oldLbvserverName != "" {
 			err := client.UnbindResource(service.Lbvserver.Type(), oldLbvserverName, service.Service.Type(), serviceName, "servicename")
 			if err != nil {
-				return fmt.Errorf("[ERROR] netscaler-provider: Error unbinding lbvserver from service %s", oldLbvserverName)
+				return diag.Errorf("[ERROR] netscaler-provider: Error unbinding lbvserver from service %s", oldLbvserverName)
 			}
 			log.Printf("[DEBUG] netscaler-provider: lbvserver has been unbound from service for lb vserver %s ", oldLbvserverName)
 		}
@@ -895,7 +892,7 @@ func updateServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Service.Type(), serviceName, &svc)
 		if err != nil {
-			return fmt.Errorf("[ERROR] netscaler-provider: Error updating service %s", serviceName)
+			return diag.Errorf("[ERROR] netscaler-provider: Error updating service %s", serviceName)
 		}
 		log.Printf("[DEBUG] netscaler-provider: service has been updated  service %s ", serviceName)
 	}
@@ -915,7 +912,7 @@ func updateServiceFunc(d *schema.ResourceData, meta interface{}) error {
 		err := client.BindResource(service.Lbmonitor.Type(), lbmonitorName, service.Service.Type(), serviceName, &binding)
 		if err != nil {
 			log.Printf("[ERROR] netscaler-provider:  Failed to bind  lbmonitor %s to service %s", lbmonitorName, serviceName)
-			return fmt.Errorf("[ERROR] netscaler-provider:  Failed to bind lb monitor %s to service %s", lbmonitorName, serviceName)
+			return diag.Errorf("[ERROR] netscaler-provider:  Failed to bind lb monitor %s to service %s", lbmonitorName, serviceName)
 		}
 		log.Printf("[DEBUG] netscaler-provider: new lbmonitor has been bound to service  lbmonitor %s service %s", lbmonitorName, serviceName)
 	}
@@ -930,7 +927,7 @@ func updateServiceFunc(d *schema.ResourceData, meta interface{}) error {
 		err := client.BindResource(service.Lbvserver.Type(), lbvserverName, service.Service.Type(), serviceName, &binding)
 		if err != nil {
 			log.Printf("[ERROR] netscaler-provider:  Failed to bind  lbvserver %s to service %s", lbvserverName, serviceName)
-			return fmt.Errorf("[ERROR] netscaler-provider:  Failed to bind lb vserver %s to service %s", lbvserverName, serviceName)
+			return diag.Errorf("[ERROR] netscaler-provider:  Failed to bind lb vserver %s to service %s", lbvserverName, serviceName)
 		}
 		log.Printf("[DEBUG] netscaler-provider: new lbvserver has been bound to service  lbvserver %s service %s", lbvserverName, serviceName)
 	}
@@ -938,21 +935,21 @@ func updateServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasSslserviceProperties(d) {
 		err := syncSslservice(d, client)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	if stateChange {
 		err := doServiceStateChange(d, client)
 		if err != nil {
-			return fmt.Errorf("Error enabling/disabling service %s", serviceName)
+			return diag.Errorf("Error enabling/disabling service %s", serviceName)
 		}
 	}
 
-	return readServiceFunc(d, meta)
+	return readServiceFunc(ctx, d, meta)
 }
 
-func deleteServiceFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteServiceFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] netscaler-provider:  In deleteServiceFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -962,7 +959,7 @@ func deleteServiceFunc(d *schema.ResourceData, meta interface{}) error {
 	serviceName := d.Id()
 	err := client.DeleteResource(service.Service.Type(), serviceName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

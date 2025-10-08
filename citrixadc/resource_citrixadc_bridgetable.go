@@ -1,26 +1,30 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
 	"log"
 	"net/url"
 	"strconv"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcBridgetable() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createBridgetableFunc,
-		Read:          readBridgetableFunc,
-		Update:        updateBridgetableFunc,
-		Delete:        deleteBridgetableFunc,
+		CreateContext: createBridgetableFunc,
+		ReadContext:   readBridgetableFunc,
+		UpdateContext: updateBridgetableFunc,
+		DeleteContext: deleteBridgetableFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"mac": {
@@ -80,7 +84,7 @@ func resourceCitrixAdcBridgetable() *schema.Resource {
 	}
 }
 
-func createBridgetableFunc(d *schema.ResourceData, meta interface{}) error {
+func createBridgetableFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createBridgetableFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bridgetableName := fmt.Sprintf("%s,%s,%s", d.Get("mac").(string), strconv.Itoa(d.Get("vxlan").(int)), d.Get("vtep").(string))
@@ -97,7 +101,7 @@ func createBridgetableFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Bridgetable.Type(), bridgetableName, &bridgetable)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if _, ok := d.GetOk("bridgeage"); ok {
@@ -106,21 +110,16 @@ func createBridgetableFunc(d *schema.ResourceData, meta interface{}) error {
 		}
 		err1 := client.UpdateUnnamedResource(service.Bridgetable.Type(), &bridgetable2)
 		if err1 != nil {
-			return err1
+			return diag.FromErr(err1)
 		}
 	}
 
 	d.SetId(bridgetableName)
 
-	err = readBridgetableFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this bridgetable but we can't read it ?? %s", bridgetableName)
-		return nil
-	}
-	return nil
+	return readBridgetableFunc(ctx, d, meta)
 }
 
-func readBridgetableFunc(d *schema.ResourceData, meta interface{}) error {
+func readBridgetableFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readBridgetableFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bridgetableName := d.Id()
@@ -163,21 +162,21 @@ func readBridgetableFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	data := dataArray[foundIndex]
-	//d.Set("bridgeage", data["bridgeage"])
-	d.Set("devicevlan", data["devicevlan"])
+	//setToInt("bridgeage", d, data["bridgeage"])
+	setToInt("devicevlan", d, data["devicevlan"])
 	d.Set("ifnum", data["ifnum"])
 	d.Set("mac", data["mac"])
-	d.Set("nodeid", data["nodeid"])
-	d.Set("vlan", data["vlan"])
-	d.Set("vni", data["vni"])
+	setToInt("nodeid", d, data["nodeid"])
+	setToInt("vlan", d, data["vlan"])
+	setToInt("vni", d, data["vni"])
 	d.Set("vtep", data["vtep"])
-	d.Set("vxlan", data["vxlan"])
+	setToInt("vxlan", d, data["vxlan"])
 
 	return nil
 
 }
 
-func updateBridgetableFunc(d *schema.ResourceData, meta interface{}) error {
+func updateBridgetableFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateBridgetableFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bridgetableName := d.Id()
@@ -193,13 +192,13 @@ func updateBridgetableFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Bridgetable.Type(), &bridgetable)
 		if err != nil {
-			return fmt.Errorf("Error updating bridgetable %s", bridgetableName)
+			return diag.Errorf("Error updating bridgetable %s", bridgetableName)
 		}
 	}
-	return readBridgetableFunc(d, meta)
+	return readBridgetableFunc(ctx, d, meta)
 }
 
-func deleteBridgetableFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteBridgetableFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteBridgetableFunc")
 	client := meta.(*NetScalerNitroClient).client
 	argsMap := make(map[string]string)
@@ -210,7 +209,7 @@ func deleteBridgetableFunc(d *schema.ResourceData, meta interface{}) error {
 	argsMap["devicevlan"] = strconv.Itoa(d.Get("devicevlan").(int))
 	err := client.DeleteResourceWithArgsMap(service.Bridgetable.Type(), "", argsMap)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

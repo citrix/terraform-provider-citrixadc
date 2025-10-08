@@ -1,25 +1,28 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/rewrite"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcRewriteaction() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createRewriteactionFunc,
-		Read:          readRewriteactionFunc,
-		Update:        updateRewriteactionFunc,
-		Delete:        deleteRewriteactionFunc,
+		CreateContext: createRewriteactionFunc,
+		ReadContext:   readRewriteactionFunc,
+		UpdateContext: updateRewriteactionFunc,
+		DeleteContext: deleteRewriteactionFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"comment": {
@@ -62,7 +65,7 @@ func resourceCitrixAdcRewriteaction() *schema.Resource {
 	}
 }
 
-func createRewriteactionFunc(d *schema.ResourceData, meta interface{}) error {
+func createRewriteactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createRewriteactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var rewriteactionName string
@@ -84,20 +87,15 @@ func createRewriteactionFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Rewriteaction.Type(), rewriteactionName, &rewriteaction)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(rewriteactionName)
 
-	err = readRewriteactionFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this rewriteaction but we can't read it ?? %s", rewriteactionName)
-		return nil
-	}
-	return nil
+	return readRewriteactionFunc(ctx, d, meta)
 }
 
-func readRewriteactionFunc(d *schema.ResourceData, meta interface{}) error {
+func readRewriteactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readRewriteactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	rewriteactionName := d.Id()
@@ -121,7 +119,7 @@ func readRewriteactionFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateRewriteactionFunc(d *schema.ResourceData, meta interface{}) error {
+func updateRewriteactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateRewriteactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	rewriteactionName := d.Get("name").(string)
@@ -169,19 +167,19 @@ func updateRewriteactionFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Rewriteaction.Type(), rewriteactionName, &rewriteaction)
 		if err != nil {
-			return fmt.Errorf("Error updating rewriteaction %s.\n%s", rewriteactionName, err)
+			return diag.Errorf("Error updating rewriteaction %s.\n%s", rewriteactionName, err)
 		}
 	}
-	return readRewriteactionFunc(d, meta)
+	return readRewriteactionFunc(ctx, d, meta)
 }
 
-func deleteRewriteactionFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteRewriteactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteRewriteactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	rewriteactionName := d.Id()
 	err := client.DeleteResource(service.Rewriteaction.Type(), rewriteactionName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

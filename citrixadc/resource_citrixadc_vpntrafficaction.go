@@ -1,23 +1,24 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/vpn"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcVpntrafficaction() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createVpntrafficactionFunc,
-		Read:          readVpntrafficactionFunc,
-		Update:        updateVpntrafficactionFunc,
-		Delete:        deleteVpntrafficactionFunc,
+		CreateContext: createVpntrafficactionFunc,
+		ReadContext:   readVpntrafficactionFunc,
+		UpdateContext: updateVpntrafficactionFunc,
+		DeleteContext: deleteVpntrafficactionFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -89,7 +90,7 @@ func resourceCitrixAdcVpntrafficaction() *schema.Resource {
 	}
 }
 
-func createVpntrafficactionFunc(d *schema.ResourceData, meta interface{}) error {
+func createVpntrafficactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createVpntrafficactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vpntrafficactionName := d.Get("name").(string)
@@ -111,20 +112,15 @@ func createVpntrafficactionFunc(d *schema.ResourceData, meta interface{}) error 
 
 	_, err := client.AddResource(service.Vpntrafficaction.Type(), vpntrafficactionName, &vpntrafficaction)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(vpntrafficactionName)
 
-	err = readVpntrafficactionFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this vpntrafficaction but we can't read it ?? %s", vpntrafficactionName)
-		return nil
-	}
-	return nil
+	return readVpntrafficactionFunc(ctx, d, meta)
 }
 
-func readVpntrafficactionFunc(d *schema.ResourceData, meta interface{}) error {
+func readVpntrafficactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readVpntrafficactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vpntrafficactionName := d.Id()
@@ -136,7 +132,7 @@ func readVpntrafficactionFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	d.Set("name", data["name"])
-	d.Set("apptimeout", data["apptimeout"])
+	setToInt("apptimeout", d, data["apptimeout"])
 	d.Set("formssoaction", data["formssoaction"])
 	d.Set("fta", data["fta"])
 	d.Set("hdx", data["hdx"])
@@ -154,7 +150,7 @@ func readVpntrafficactionFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateVpntrafficactionFunc(d *schema.ResourceData, meta interface{}) error {
+func updateVpntrafficactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateVpntrafficactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vpntrafficactionName := d.Get("name").(string)
@@ -227,19 +223,19 @@ func updateVpntrafficactionFunc(d *schema.ResourceData, meta interface{}) error 
 	if hasChange {
 		_, err := client.UpdateResource(service.Vpntrafficaction.Type(), vpntrafficactionName, &vpntrafficaction)
 		if err != nil {
-			return fmt.Errorf("Error updating vpntrafficaction %s", vpntrafficactionName)
+			return diag.Errorf("Error updating vpntrafficaction %s", vpntrafficactionName)
 		}
 	}
-	return readVpntrafficactionFunc(d, meta)
+	return readVpntrafficactionFunc(ctx, d, meta)
 }
 
-func deleteVpntrafficactionFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteVpntrafficactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteVpntrafficactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vpntrafficactionName := d.Id()
 	err := client.DeleteResource(service.Vpntrafficaction.Type(), vpntrafficactionName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

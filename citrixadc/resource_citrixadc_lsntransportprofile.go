@@ -1,22 +1,25 @@
 package citrixadc
 
 import (
-	"github.com/citrix/adc-nitro-go/resource/config/lsn"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"context"
 
-	"fmt"
+	"github.com/citrix/adc-nitro-go/resource/config/lsn"
+
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcLsntransportprofile() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createLsntransportprofileFunc,
-		Read:          readLsntransportprofileFunc,
-		Update:        updateLsntransportprofileFunc,
-		Delete:        deleteLsntransportprofileFunc,
+		CreateContext: createLsntransportprofileFunc,
+		ReadContext:   readLsntransportprofileFunc,
+		UpdateContext: updateLsntransportprofileFunc,
+		DeleteContext: deleteLsntransportprofileFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"transportprofilename": {
@@ -83,7 +86,7 @@ func resourceCitrixAdcLsntransportprofile() *schema.Resource {
 	}
 }
 
-func createLsntransportprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func createLsntransportprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createLsntransportprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lsntransportprofileName := d.Get("transportprofilename").(string)
@@ -104,20 +107,15 @@ func createLsntransportprofileFunc(d *schema.ResourceData, meta interface{}) err
 
 	_, err := client.AddResource("lsntransportprofile", lsntransportprofileName, &lsntransportprofile)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(lsntransportprofileName)
 
-	err = readLsntransportprofileFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this lsntransportprofile but we can't read it ?? %s", lsntransportprofileName)
-		return nil
-	}
-	return nil
+	return readLsntransportprofileFunc(ctx, d, meta)
 }
 
-func readLsntransportprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func readLsntransportprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readLsntransportprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lsntransportprofileName := d.Id()
@@ -129,16 +127,16 @@ func readLsntransportprofileFunc(d *schema.ResourceData, meta interface{}) error
 		return nil
 	}
 	d.Set("transportprofilename", data["transportprofilename"])
-	d.Set("finrsttimeout", data["finrsttimeout"])
-	d.Set("groupsessionlimit", data["groupsessionlimit"])
+	setToInt("finrsttimeout", d, data["finrsttimeout"])
+	setToInt("groupsessionlimit", d, data["groupsessionlimit"])
 	d.Set("portpreserveparity", data["portpreserveparity"])
 	d.Set("portpreserverange", data["portpreserverange"])
-	d.Set("portquota", data["portquota"])
-	d.Set("sessionquota", data["sessionquota"])
-	d.Set("sessiontimeout", data["sessiontimeout"])
-	d.Set("stuntimeout", data["stuntimeout"])
+	setToInt("portquota", d, data["portquota"])
+	setToInt("sessionquota", d, data["sessionquota"])
+	setToInt("sessiontimeout", d, data["sessiontimeout"])
+	setToInt("stuntimeout", d, data["stuntimeout"])
 	d.Set("syncheck", data["syncheck"])
-	d.Set("synidletimeout", data["synidletimeout"])
+	setToInt("synidletimeout", d, data["synidletimeout"])
 	d.Set("transportprofilename", data["transportprofilename"])
 	d.Set("transportprotocol", data["transportprotocol"])
 
@@ -146,7 +144,7 @@ func readLsntransportprofileFunc(d *schema.ResourceData, meta interface{}) error
 
 }
 
-func updateLsntransportprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func updateLsntransportprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateLsntransportprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lsntransportprofileName := d.Get("transportprofilename").(string)
@@ -209,19 +207,19 @@ func updateLsntransportprofileFunc(d *schema.ResourceData, meta interface{}) err
 	if hasChange {
 		err := client.UpdateUnnamedResource("lsntransportprofile", &lsntransportprofile)
 		if err != nil {
-			return fmt.Errorf("Error updating lsntransportprofile %s", lsntransportprofileName)
+			return diag.Errorf("Error updating lsntransportprofile %s", lsntransportprofileName)
 		}
 	}
-	return readLsntransportprofileFunc(d, meta)
+	return readLsntransportprofileFunc(ctx, d, meta)
 }
 
-func deleteLsntransportprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteLsntransportprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteLsntransportprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lsntransportprofileName := d.Id()
 	err := client.DeleteResource("lsntransportprofile", lsntransportprofileName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

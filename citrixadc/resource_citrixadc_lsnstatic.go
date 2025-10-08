@@ -1,20 +1,22 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/lsn"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcLsnstatic() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createLsnstaticFunc,
-		Read:          readLsnstaticFunc,
-		Delete:        deleteLsnstaticFunc,
+		CreateContext: createLsnstaticFunc,
+		ReadContext:   readLsnstaticFunc,
+		DeleteContext: deleteLsnstaticFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -76,7 +78,7 @@ func resourceCitrixAdcLsnstatic() *schema.Resource {
 	}
 }
 
-func createLsnstaticFunc(d *schema.ResourceData, meta interface{}) error {
+func createLsnstaticFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createLsnstaticFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lsnstaticName := d.Get("name").(string)
@@ -96,20 +98,15 @@ func createLsnstaticFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource("lsnstatic", lsnstaticName, &lsnstatic)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(lsnstaticName)
 
-	err = readLsnstaticFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this lsnstatic but we can't read it ?? %s", lsnstaticName)
-		return nil
-	}
-	return nil
+	return readLsnstaticFunc(ctx, d, meta)
 }
 
-func readLsnstaticFunc(d *schema.ResourceData, meta interface{}) error {
+func readLsnstaticFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readLsnstaticFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lsnstaticName := d.Id()
@@ -124,20 +121,20 @@ func readLsnstaticFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("nattype", data["nattype"])
 	d.Set("network6", data["network6"])
 	d.Set("subscrip", data["subscrip"])
-	d.Set("subscrport", data["subscrport"])
-	d.Set("td", data["td"])
+	setToInt("subscrport", d, data["subscrport"])
+	setToInt("td", d, data["td"])
 	d.Set("transportprotocol", data["transportprotocol"])
 
 	return nil
 
 }
-func deleteLsnstaticFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteLsnstaticFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteLsnstaticFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lsnstaticName := d.Id()
 	err := client.DeleteResource("lsnstatic", lsnstaticName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

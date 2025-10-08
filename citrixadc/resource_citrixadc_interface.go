@@ -1,24 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
 	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcInterface() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createInterfaceFunc,
-		Read:          readInterfaceFunc,
-		Update:        updateInterfaceFunc,
-		Delete:        deleteInterfaceFunc,
+		CreateContext: createInterfaceFunc,
+		ReadContext:   readInterfaceFunc,
+		UpdateContext: updateInterfaceFunc,
+		DeleteContext: deleteInterfaceFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"autoneg": {
@@ -154,7 +157,7 @@ func resourceCitrixAdcInterface() *schema.Resource {
 	}
 }
 
-func createInterfaceFunc(d *schema.ResourceData, meta interface{}) error {
+func createInterfaceFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createInterfaceFunc")
 	client := meta.(*NetScalerNitroClient).client
 	interfaceId := d.Get("interface_id").(string)
@@ -189,20 +192,15 @@ func createInterfaceFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.UpdateResource(service.Interface.Type(), "", &Interface)
 	if err != nil {
-		return fmt.Errorf("Error creating Interface %s. %s", interfaceId, err.Error())
+		return diag.Errorf("Error creating Interface %s. %s", interfaceId, err.Error())
 	}
 
 	d.SetId(interfaceId)
 
-	err = readInterfaceFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this Interface but we can't read it ?? %s", interfaceId)
-		return nil
-	}
-	return nil
+	return readInterfaceFunc(ctx, d, meta)
 }
 
-func readInterfaceFunc(d *schema.ResourceData, meta interface{}) error {
+func readInterfaceFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readInterfaceFunc")
 	client := meta.(*NetScalerNitroClient).client
 	interfaceId := d.Id()
@@ -223,35 +221,35 @@ func readInterfaceFunc(d *schema.ResourceData, meta interface{}) error {
 	if !foundInterface {
 		log.Printf("[WARN] citrixadc-provider: Clearing interface state %s", interfaceId)
 		d.SetId("")
-		return fmt.Errorf("Could not read interface %v", interfaceId)
+		return diag.Errorf("Could not read interface %v", interfaceId)
 	}
 	// Fallthrough
 
 	data := array[foundIndex]
 
 	d.Set("autoneg", data["autoneg"])
-	d.Set("bandwidthhigh", data["bandwidthhigh"])
-	d.Set("bandwidthnormal", data["bandwidthnormal"])
+	setToInt("bandwidthhigh", d, data["bandwidthhigh"])
+	setToInt("bandwidthnormal", d, data["bandwidthnormal"])
 	d.Set("duplex", data["actduplex"])
 	d.Set("flowctl", data["actflowctl"])
 	d.Set("haheartbeat", data["haheartbeat"])
 	d.Set("hamonitor", data["hamonitor"])
 	d.Set("interface_id", interfaceId)
 	d.Set("ifalias", data["ifalias"])
-	d.Set("lacpkey", data["lacpkey"])
+	setToInt("lacpkey", d, data["lacpkey"])
 	d.Set("lacpmode", data["lacpmode"])
-	d.Set("lacppriority", data["lacppriority"])
+	setToInt("lacppriority", d, data["lacppriority"])
 	d.Set("lacptimeout", data["lacptimeout"])
 	d.Set("lagtype", data["lagtype"])
 	d.Set("linkredundancy", data["linkredundancy"])
 	d.Set("lldpmode", data["lldpmode"])
-	d.Set("lrsetpriority", data["lrsetpriority"])
+	setToInt("lrsetpriority", d, data["lrsetpriority"])
 	setToInt("mtu", d, data["mtu"])
-	d.Set("ringsize", data["ringsize"])
+	setToInt("ringsize", d, data["ringsize"])
 	d.Set("ringtype", data["ringtype"])
 	d.Set("speed", data["actspeed"])
 	d.Set("tagall", data["tagall"])
-	d.Set("throughput", data["actthroughput"])
+	setToInt("throughput", d, data["actthroughput"])
 	d.Set("trunk", data["trunk"])
 	d.Set("trunkmode", data["trunkmode"])
 
@@ -259,7 +257,7 @@ func readInterfaceFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateInterfaceFunc(d *schema.ResourceData, meta interface{}) error {
+func updateInterfaceFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateInterfaceFunc")
 	client := meta.(*NetScalerNitroClient).client
 	interfaceId := d.Get("interface_id").(string)
@@ -401,17 +399,17 @@ func updateInterfaceFunc(d *schema.ResourceData, meta interface{}) error {
 	if stateChange {
 		err := doInterfaceStateChange(d, client)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	if hasChange {
 		_, err := client.UpdateResource(service.Interface.Type(), "", &Interface)
 		if err != nil {
-			return fmt.Errorf("Error updating Interface %s. %s", interfaceId, err.Error())
+			return diag.Errorf("Error updating Interface %s. %s", interfaceId, err.Error())
 		}
 	}
-	return readInterfaceFunc(d, meta)
+	return readInterfaceFunc(ctx, d, meta)
 }
 
 func doInterfaceStateChange(d *schema.ResourceData, client *service.NitroClient) error {
@@ -441,7 +439,7 @@ func doInterfaceStateChange(d *schema.ResourceData, client *service.NitroClient)
 
 	return nil
 }
-func deleteInterfaceFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteInterfaceFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteInterfaceFunc")
 	// We cannot really delete the interface.
 	// Hardware changes can only delete interfaces

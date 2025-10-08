@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/aaa"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAaatacacsparams() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAaatacacsparamsFunc,
-		Read:          readAaatacacsparamsFunc,
-		Update:        updateAaatacacsparamsFunc,
-		Delete:        deleteAaatacacsparamsFunc,
+		CreateContext: createAaatacacsparamsFunc,
+		ReadContext:   readAaatacacsparamsFunc,
+		UpdateContext: updateAaatacacsparamsFunc,
+		DeleteContext: deleteAaatacacsparamsFunc,
 		Schema: map[string]*schema.Schema{
 			"accounting": {
 				Type:     schema.TypeString,
@@ -68,7 +71,7 @@ func resourceCitrixAdcAaatacacsparams() *schema.Resource {
 	}
 }
 
-func createAaatacacsparamsFunc(d *schema.ResourceData, meta interface{}) error {
+func createAaatacacsparamsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAaatacacsparamsFunc")
 	client := meta.(*NetScalerNitroClient).client
 	aaatacacsparamsName := resource.PrefixedUniqueId("tf-aaatacacsparams-")
@@ -87,20 +90,15 @@ func createAaatacacsparamsFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.UpdateUnnamedResource(service.Aaatacacsparams.Type(), &aaatacacsparams)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(aaatacacsparamsName)
 
-	err = readAaatacacsparamsFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this aaatacacsparams but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readAaatacacsparamsFunc(ctx, d, meta)
 }
 
-func readAaatacacsparamsFunc(d *schema.ResourceData, meta interface{}) error {
+func readAaatacacsparamsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAaatacacsparamsFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading aaatacacsparams state")
@@ -113,18 +111,18 @@ func readAaatacacsparamsFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("accounting", data["accounting"])
 	d.Set("auditfailedcmds", data["auditfailedcmds"])
 	d.Set("authorization", data["authorization"])
-	d.Set("authtimeout", data["authtimeout"])
+	setToInt("authtimeout", d, data["authtimeout"])
 	d.Set("defaultauthenticationgroup", data["defaultauthenticationgroup"])
 	d.Set("groupattrname", data["groupattrname"])
 	d.Set("serverip", data["serverip"])
-	d.Set("serverport", data["serverport"])
+	setToInt("serverport", d, data["serverport"])
 	d.Set("tacacssecret", data["tacacssecret"])
 
 	return nil
 
 }
 
-func updateAaatacacsparamsFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAaatacacsparamsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAaatacacsparamsFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -179,13 +177,13 @@ func updateAaatacacsparamsFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Aaatacacsparams.Type(), &aaatacacsparams)
 		if err != nil {
-			return fmt.Errorf("Error updating aaatacacsparams")
+			return diag.Errorf("Error updating aaatacacsparams")
 		}
 	}
-	return readAaatacacsparamsFunc(d, meta)
+	return readAaatacacsparamsFunc(ctx, d, meta)
 }
 
-func deleteAaatacacsparamsFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAaatacacsparamsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAaatacacsparamsFunc")
 	// aaatacacsparams does not support DELETE operation
 	d.SetId("")

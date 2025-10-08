@@ -1,12 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/policy"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 	"strings"
@@ -15,11 +16,11 @@ import (
 func resourceCitrixAdcPolicypatset_pattern_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createPolicypatset_pattern_bindingFunc,
-		Read:          readPolicypatset_pattern_bindingFunc,
-		Delete:        deletePolicypatset_pattern_bindingFunc,
+		CreateContext: createPolicypatset_pattern_bindingFunc,
+		ReadContext:   readPolicypatset_pattern_bindingFunc,
+		DeleteContext: deletePolicypatset_pattern_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"charset": {
@@ -60,7 +61,7 @@ func resourceCitrixAdcPolicypatset_pattern_binding() *schema.Resource {
 	}
 }
 
-func createPolicypatset_pattern_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createPolicypatset_pattern_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createPolicypatset_pattern_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name").(string)
@@ -78,20 +79,15 @@ func createPolicypatset_pattern_bindingFunc(d *schema.ResourceData, meta interfa
 
 	err := client.UpdateUnnamedResource(service.Policypatset_pattern_binding.Type(), &policypatset_pattern_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readPolicypatset_pattern_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this policypatset_pattern_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readPolicypatset_pattern_bindingFunc(ctx, d, meta)
 }
 
-func readPolicypatset_pattern_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readPolicypatset_pattern_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readPolicypatset_pattern_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -113,7 +109,7 @@ func readPolicypatset_pattern_bindingFunc(d *schema.ResourceData, meta interface
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -156,7 +152,7 @@ func readPolicypatset_pattern_bindingFunc(d *schema.ResourceData, meta interface
 
 }
 
-func deletePolicypatset_pattern_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deletePolicypatset_pattern_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deletePolicypatset_pattern_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -169,7 +165,7 @@ func deletePolicypatset_pattern_bindingFunc(d *schema.ResourceData, meta interfa
 
 	err := client.DeleteResourceWithArgsMap(service.Policypatset_pattern_binding.Type(), name, argsMap)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

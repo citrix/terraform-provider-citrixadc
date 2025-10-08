@@ -1,24 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
 	"strconv"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcNsweblogparam() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNsweblogparamFunc,
-		Read:          readNsweblogparamFunc,
-		Update:        updateNsweblogparamFunc,
-		Delete:        deleteNsweblogparamFunc,
+		CreateContext: createNsweblogparamFunc,
+		ReadContext:   readNsweblogparamFunc,
+		UpdateContext: updateNsweblogparamFunc,
+		DeleteContext: deleteNsweblogparamFunc,
 		Schema: map[string]*schema.Schema{
 			"buffersizemb": {
 				Type:     schema.TypeInt,
@@ -41,7 +44,7 @@ func resourceCitrixAdcNsweblogparam() *schema.Resource {
 	}
 }
 
-func createNsweblogparamFunc(d *schema.ResourceData, meta interface{}) error {
+func createNsweblogparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNsweblogparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var nsweblogparamName string
@@ -55,20 +58,15 @@ func createNsweblogparamFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.UpdateUnnamedResource(service.Nsweblogparam.Type(), &nsweblogparam)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(nsweblogparamName)
 
-	err = readNsweblogparamFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this nsweblogparam but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readNsweblogparamFunc(ctx, d, meta)
 }
 
-func readNsweblogparamFunc(d *schema.ResourceData, meta interface{}) error {
+func readNsweblogparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNsweblogparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading nsweblogparam state")
@@ -87,7 +85,7 @@ func readNsweblogparamFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateNsweblogparamFunc(d *schema.ResourceData, meta interface{}) error {
+func updateNsweblogparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateNsweblogparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -112,13 +110,13 @@ func updateNsweblogparamFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Nsweblogparam.Type(), &nsweblogparam)
 		if err != nil {
-			return fmt.Errorf("Error updating nsweblogparam")
+			return diag.Errorf("Error updating nsweblogparam")
 		}
 	}
-	return readNsweblogparamFunc(d, meta)
+	return readNsweblogparamFunc(ctx, d, meta)
 }
 
-func deleteNsweblogparamFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNsweblogparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNsweblogparamFunc")
 
 	d.SetId("")

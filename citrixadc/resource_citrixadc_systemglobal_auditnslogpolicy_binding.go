@@ -1,22 +1,24 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/system"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcSystemglobal_auditnslogpolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSystemglobal_auditnslogpolicy_bindingFunc,
-		Read:          readSystemglobal_auditnslogpolicy_bindingFunc,
-		Delete:        deleteSystemglobal_auditnslogpolicy_bindingFunc,
+		CreateContext: createSystemglobal_auditnslogpolicy_bindingFunc,
+		ReadContext:   readSystemglobal_auditnslogpolicy_bindingFunc,
+		DeleteContext: deleteSystemglobal_auditnslogpolicy_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"policyname": {
@@ -64,7 +66,7 @@ func resourceCitrixAdcSystemglobal_auditnslogpolicy_binding() *schema.Resource {
 	}
 }
 
-func createSystemglobal_auditnslogpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createSystemglobal_auditnslogpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSystemglobal_auditnslogpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policyname := d.Get("policyname").(string)
@@ -80,20 +82,15 @@ func createSystemglobal_auditnslogpolicy_bindingFunc(d *schema.ResourceData, met
 
 	err := client.UpdateUnnamedResource(service.Systemglobal_auditnslogpolicy_binding.Type(), &systemglobal_auditnslogpolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(policyname)
 
-	err = readSystemglobal_auditnslogpolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this systemglobal_auditnslogpolicy_binding but we can't read it ?? %s", policyname)
-		return nil
-	}
-	return nil
+	return readSystemglobal_auditnslogpolicy_bindingFunc(ctx, d, meta)
 }
 
-func readSystemglobal_auditnslogpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readSystemglobal_auditnslogpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSystemglobal_auditnslogpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policyname := d.Id()
@@ -109,7 +106,7 @@ func readSystemglobal_auditnslogpolicy_bindingFunc(d *schema.ResourceData, meta 
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -152,7 +149,7 @@ func readSystemglobal_auditnslogpolicy_bindingFunc(d *schema.ResourceData, meta 
 
 }
 
-func deleteSystemglobal_auditnslogpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSystemglobal_auditnslogpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSystemglobal_auditnslogpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -163,7 +160,7 @@ func deleteSystemglobal_auditnslogpolicy_bindingFunc(d *schema.ResourceData, met
 
 	err := client.DeleteResourceWithArgs(service.Systemglobal_auditnslogpolicy_binding.Type(), "", args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

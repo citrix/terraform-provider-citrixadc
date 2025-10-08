@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -49,9 +49,9 @@ const testAccVpnglobal_vpnclientlessaccesspolicy_binding_basic_step2 = `
 
 func TestAccVpnglobal_vpnclientlessaccesspolicy_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckVpnglobal_vpnclientlessaccesspolicy_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckVpnglobal_vpnclientlessaccesspolicy_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVpnglobal_vpnclientlessaccesspolicy_binding_basic,
@@ -88,7 +88,11 @@ func testAccCheckVpnglobal_vpnclientlessaccesspolicy_bindingExist(n string, id *
 			*id = rs.Primary.ID
 		}
 
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		policyname := rs.Primary.ID
 
@@ -122,7 +126,11 @@ func testAccCheckVpnglobal_vpnclientlessaccesspolicy_bindingExist(n string, id *
 
 func testAccCheckVpnglobal_vpnclientlessaccesspolicy_bindingNotExist(n string, id string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 		policyname := id
 
 		findParams := service.FindParams{
@@ -154,7 +162,11 @@ func testAccCheckVpnglobal_vpnclientlessaccesspolicy_bindingNotExist(n string, i
 }
 
 func testAccCheckVpnglobal_vpnclientlessaccesspolicy_bindingDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_vpnglobal_vpnclientlessaccesspolicy_binding" {
@@ -165,7 +177,7 @@ func testAccCheckVpnglobal_vpnclientlessaccesspolicy_bindingDestroy(s *terraform
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Vpnglobal_vpnclientlessaccesspolicy_binding.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Vpnglobal_vpnclientlessaccesspolicy_binding.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("vpnglobal_vpnclientlessaccesspolicy_binding %s still exists", rs.Primary.ID)
 		}

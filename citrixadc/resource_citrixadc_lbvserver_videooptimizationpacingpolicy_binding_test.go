@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"strings"
 	"testing"
 )
@@ -59,9 +59,9 @@ const testAccLbvserver_videooptimizationpacingpolicy_binding_basic_step2 = `
 func TestAccLbvserver_videooptimizationpacingpolicy_binding_basic(t *testing.T) {
 	t.Skipf("TODO: videooptimizationpacingpolicy is implemeted freshely need to update this later")
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckLbvserver_videooptimizationpacingpolicy_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckLbvserver_videooptimizationpacingpolicy_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLbvserver_videooptimizationpacingpolicy_binding_basic,
@@ -98,7 +98,11 @@ func testAccCheckLbvserver_videooptimizationpacingpolicy_bindingExist(n string, 
 			*id = rs.Primary.ID
 		}
 
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		bindingId := rs.Primary.ID
 
@@ -138,7 +142,11 @@ func testAccCheckLbvserver_videooptimizationpacingpolicy_bindingExist(n string, 
 
 func testAccCheckLbvserver_videooptimizationpacingpolicy_bindingNotExist(n string, id string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
@@ -178,7 +186,11 @@ func testAccCheckLbvserver_videooptimizationpacingpolicy_bindingNotExist(n strin
 }
 
 func testAccCheckLbvserver_videooptimizationpacingpolicy_bindingDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_lbvserver_videooptimizationpacingpolicy_binding" {
@@ -189,7 +201,7 @@ func testAccCheckLbvserver_videooptimizationpacingpolicy_bindingDestroy(s *terra
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource("lbvserver_videooptimizationpacingpolicy_binding", rs.Primary.ID)
+		_, err := client.FindResource("lbvserver_videooptimizationpacingpolicy_binding", rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("lbvserver_videooptimizationpacingpolicy_binding %s still exists", rs.Primary.ID)
 		}

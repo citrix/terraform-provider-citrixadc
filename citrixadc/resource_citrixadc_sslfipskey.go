@@ -1,22 +1,24 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/ssl"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcSslfipskey() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSslfipskeyFunc,
-		Read:          readSslfipskeyFunc,
-		Delete:        deleteSslfipskeyFunc,
+		CreateContext: createSslfipskeyFunc,
+		ReadContext:   readSslfipskeyFunc,
+		DeleteContext: deleteSslfipskeyFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"curve": {
@@ -75,7 +77,7 @@ func resourceCitrixAdcSslfipskey() *schema.Resource {
 	}
 }
 
-func createSslfipskeyFunc(d *schema.ResourceData, meta interface{}) error {
+func createSslfipskeyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSslfipskeyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var sslfipskeyName = d.Get("fipskeyname").(string)
@@ -94,20 +96,15 @@ func createSslfipskeyFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.ActOnResource(service.Sslfipskey.Type(), &sslfipskey, "create")
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(sslfipskeyName)
 
-	err = readSslfipskeyFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this sslfipskey but we can't read it ?? %s", sslfipskeyName)
-		return nil
-	}
-	return nil
+	return readSslfipskeyFunc(ctx, d, meta)
 }
 
-func readSslfipskeyFunc(d *schema.ResourceData, meta interface{}) error {
+func readSslfipskeyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSslfipskeyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	sslfipskeyName := d.Id()
@@ -126,20 +123,20 @@ func readSslfipskeyFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("iv", data["iv"])
 	d.Set("key", data["key"])
 	d.Set("keytype", data["keytype"])
-	d.Set("modulus", data["modulus"])
+	setToInt("modulus", d, data["modulus"])
 	d.Set("wrapkeyname", data["wrapkeyname"])
 
 	return nil
 
 }
 
-func deleteSslfipskeyFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSslfipskeyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSslfipskeyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	sslfipskeyName := d.Id()
 	err := client.DeleteResource(service.Sslfipskey.Type(), sslfipskeyName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

@@ -1,22 +1,24 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/tunnel"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcTunnelglobal_tunneltrafficpolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createTunnelglobal_tunneltrafficpolicy_bindingFunc,
-		Read:          readTunnelglobal_tunneltrafficpolicy_bindingFunc,
-		Delete:        deleteTunnelglobal_tunneltrafficpolicy_bindingFunc,
+		CreateContext: createTunnelglobal_tunneltrafficpolicy_bindingFunc,
+		ReadContext:   readTunnelglobal_tunneltrafficpolicy_bindingFunc,
+		DeleteContext: deleteTunnelglobal_tunneltrafficpolicy_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"policyname": {
@@ -58,7 +60,7 @@ func resourceCitrixAdcTunnelglobal_tunneltrafficpolicy_binding() *schema.Resourc
 	}
 }
 
-func createTunnelglobal_tunneltrafficpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createTunnelglobal_tunneltrafficpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createTunnelglobal_tunneltrafficpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policyname := d.Get("policyname").(string)
@@ -73,20 +75,15 @@ func createTunnelglobal_tunneltrafficpolicy_bindingFunc(d *schema.ResourceData, 
 
 	err := client.UpdateUnnamedResource(service.Tunnelglobal_tunneltrafficpolicy_binding.Type(), &tunnelglobal_tunneltrafficpolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(policyname)
 
-	err = readTunnelglobal_tunneltrafficpolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this tunnelglobal_tunneltrafficpolicy_binding but we can't read it ?? %s", policyname)
-		return nil
-	}
-	return nil
+	return readTunnelglobal_tunneltrafficpolicy_bindingFunc(ctx, d, meta)
 }
 
-func readTunnelglobal_tunneltrafficpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readTunnelglobal_tunneltrafficpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readTunnelglobal_tunneltrafficpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policyname := d.Id()
@@ -105,7 +102,7 @@ func readTunnelglobal_tunneltrafficpolicy_bindingFunc(d *schema.ResourceData, me
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -147,7 +144,7 @@ func readTunnelglobal_tunneltrafficpolicy_bindingFunc(d *schema.ResourceData, me
 
 }
 
-func deleteTunnelglobal_tunneltrafficpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteTunnelglobal_tunneltrafficpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteTunnelglobal_tunneltrafficpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -163,7 +160,7 @@ func deleteTunnelglobal_tunneltrafficpolicy_bindingFunc(d *schema.ResourceData, 
 	}
 	err := client.DeleteResourceWithArgs(service.Tunnelglobal_tunneltrafficpolicy_binding.Type(), "", args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

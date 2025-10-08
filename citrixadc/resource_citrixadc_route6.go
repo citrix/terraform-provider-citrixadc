@@ -1,12 +1,14 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 	"strconv"
@@ -15,12 +17,12 @@ import (
 func resourceCitrixAdcRoute6() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createRoute6Func,
-		Read:          readRoute6Func,
-		Update:        updateRoute6Func,
-		Delete:        deleteRoute6Func,
+		CreateContext: createRoute6Func,
+		ReadContext:   readRoute6Func,
+		UpdateContext: updateRoute6Func,
+		DeleteContext: deleteRoute6Func,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"network": {
@@ -97,7 +99,7 @@ func resourceCitrixAdcRoute6() *schema.Resource {
 	}
 }
 
-func createRoute6Func(d *schema.ResourceData, meta interface{}) error {
+func createRoute6Func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createRoute6Func")
 	client := meta.(*NetScalerNitroClient).client
 	route6Network := d.Get("network").(string)
@@ -120,27 +122,22 @@ func createRoute6Func(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Route6.Type(), route6Network, &route6)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(route6Network)
 
-	err = readRoute6Func(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this route6 but we can't read it ?? %s", route6Network)
-		return nil
-	}
-	return nil
+	return readRoute6Func(ctx, d, meta)
 }
 
-func readRoute6Func(d *schema.ResourceData, meta interface{}) error {
+func readRoute6Func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readRoute6Func")
 	client := meta.(*NetScalerNitroClient).client
 	route6Network := d.Id()
 	log.Printf("[DEBUG] citrixadc-provider: Reading route6 state %s", route6Network)
 	dataArr, err := client.FindAllResources(service.Route6.Type())
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	foundIndex := -1
 	for i, v := range dataArr {
@@ -159,25 +156,25 @@ func readRoute6Func(d *schema.ResourceData, meta interface{}) error {
 	}
 	data := dataArr[foundIndex]
 	d.Set("advertise", data["advertise"])
-	d.Set("cost", data["cost"])
+	setToInt("cost", d, data["cost"])
 	d.Set("detail", data["detail"])
-	d.Set("distance", data["distance"])
+	setToInt("distance", d, data["distance"])
 	d.Set("gateway", data["gateway"])
 	d.Set("monitor", data["monitor"])
 	d.Set("msr", data["msr"])
 	d.Set("network", data["network"])
 	d.Set("ownergroup", data["ownergroup"])
 	d.Set("routetype", data["routetype"])
-	d.Set("td", data["td"])
-	d.Set("vlan", data["vlan"])
-	d.Set("vxlan", data["vxlan"])
+	setToInt("td", d, data["td"])
+	setToInt("vlan", d, data["vlan"])
+	setToInt("vxlan", d, data["vxlan"])
 	setToInt("weight", d, data["weight"])
 
 	return nil
 
 }
 
-func updateRoute6Func(d *schema.ResourceData, meta interface{}) error {
+func updateRoute6Func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateRoute6Func")
 	client := meta.(*NetScalerNitroClient).client
 	route6Network := d.Get("network").(string)
@@ -255,13 +252,13 @@ func updateRoute6Func(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Route6.Type(), route6Network, &route6)
 		if err != nil {
-			return fmt.Errorf("Error updating route6 %s", route6Network)
+			return diag.Errorf("Error updating route6 %s", route6Network)
 		}
 	}
-	return readRoute6Func(d, meta)
+	return readRoute6Func(ctx, d, meta)
 }
 
-func deleteRoute6Func(d *schema.ResourceData, meta interface{}) error {
+func deleteRoute6Func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteRoute6Func")
 	client := meta.(*NetScalerNitroClient).client
 	//route6Name := d.Id()
@@ -291,7 +288,7 @@ func deleteRoute6Func(d *schema.ResourceData, meta interface{}) error {
 	}
 	err := client.DeleteResourceWithArgs(service.Route6.Type(), "", args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

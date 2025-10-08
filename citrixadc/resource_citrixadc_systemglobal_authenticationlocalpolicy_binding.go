@@ -1,22 +1,24 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/system"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcSystemglobal_authenticationlocalpolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSystemglobal_authenticationlocalpolicy_bindingFunc,
-		Read:          readSystemglobal_authenticationlocalpolicy_bindingFunc,
-		Delete:        deleteSystemglobal_authenticationlocalpolicy_bindingFunc,
+		CreateContext: createSystemglobal_authenticationlocalpolicy_bindingFunc,
+		ReadContext:   readSystemglobal_authenticationlocalpolicy_bindingFunc,
+		DeleteContext: deleteSystemglobal_authenticationlocalpolicy_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"policyname": {
@@ -64,7 +66,7 @@ func resourceCitrixAdcSystemglobal_authenticationlocalpolicy_binding() *schema.R
 	}
 }
 
-func createSystemglobal_authenticationlocalpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createSystemglobal_authenticationlocalpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSystemglobal_authenticationlocalpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policyname := d.Get("policyname").(string)
@@ -80,20 +82,15 @@ func createSystemglobal_authenticationlocalpolicy_bindingFunc(d *schema.Resource
 
 	err := client.UpdateUnnamedResource(service.Systemglobal_authenticationlocalpolicy_binding.Type(), &systemglobal_authenticationlocalpolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(policyname)
 
-	err = readSystemglobal_authenticationlocalpolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this systemglobal_authenticationlocalpolicy_binding but we can't read it ?? %s", policyname)
-		return nil
-	}
-	return nil
+	return readSystemglobal_authenticationlocalpolicy_bindingFunc(ctx, d, meta)
 }
 
-func readSystemglobal_authenticationlocalpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readSystemglobal_authenticationlocalpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSystemglobal_authenticationlocalpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policyname := d.Id()
@@ -109,7 +106,7 @@ func readSystemglobal_authenticationlocalpolicy_bindingFunc(d *schema.ResourceDa
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -152,7 +149,7 @@ func readSystemglobal_authenticationlocalpolicy_bindingFunc(d *schema.ResourceDa
 
 }
 
-func deleteSystemglobal_authenticationlocalpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSystemglobal_authenticationlocalpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSystemglobal_authenticationlocalpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -162,7 +159,7 @@ func deleteSystemglobal_authenticationlocalpolicy_bindingFunc(d *schema.Resource
 
 	err := client.DeleteResourceWithArgs(service.Systemglobal_authenticationlocalpolicy_binding.Type(), "", args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

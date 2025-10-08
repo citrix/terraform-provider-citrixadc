@@ -1,24 +1,26 @@
 package citrixadc
 
 import (
+	"context"
 	"fmt"
 	"log"
 
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/mitchellh/mapstructure"
 )
 
 func resourceCitrixAdcNsacls() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNsaclsFunc,
-		Update:        updateNsaclsFunc,
-		Read:          readNsaclsFunc,
-		Delete:        deleteNsaclsFunc,
+		CreateContext: createNsaclsFunc,
+		UpdateContext: updateNsaclsFunc,
+		ReadContext:   readNsaclsFunc,
+		DeleteContext: deleteNsaclsFunc,
 		Schema: map[string]*schema.Schema{
 			"aclsname": {
 				Type:     schema.TypeString,
@@ -163,7 +165,7 @@ func resourceCitrixAdcNsacls() *schema.Resource {
 	}
 }
 
-func createNsaclsFunc(d *schema.ResourceData, meta interface{}) error {
+func createNsaclsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  netscaler-provider: In createNsaclsFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -183,7 +185,7 @@ func createNsaclsFunc(d *schema.ResourceData, meta interface{}) error {
 	nsacls := ns.Nsacls{}
 	err := client.ApplyResource(service.Nsacls.Type(), &nsacls)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(nsaclsName)
@@ -191,14 +193,156 @@ func createNsaclsFunc(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func readNsaclsFunc(d *schema.ResourceData, meta interface{}) error {
+func readNsaclsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] netscaler-provider:  In readNsaclsFunc")
 	client := meta.(*NetScalerNitroClient).client
 	data, _ := client.FindAllResources(service.Nsacl.Type())
 	acls := make([]map[string]interface{}, len(data))
 	for i, a := range data {
-		//acls[i] = a.(map[string]interface{})
-		acls[i] = a
+		acl := make(map[string]interface{})
+		// Only set fields defined in the schema, with proper type casting
+		if v, ok := a["aclaction"]; ok {
+			acl["aclaction"] = v.(string)
+		}
+		if v, ok := a["aclname"]; ok {
+			acl["aclname"] = v.(string)
+		}
+		if v, ok := a["destipop"]; ok {
+			acl["destipop"] = v.(string)
+		}
+		if v, ok := a["destipval"]; ok {
+			acl["destipval"] = v.(string)
+		}
+		if v, ok := a["destportop"]; ok {
+			acl["destportop"] = v.(string)
+		}
+		if v, ok := a["destportval"]; ok {
+			acl["destportval"] = v.(string)
+		}
+		if v, ok := a["established"]; ok {
+			switch val := v.(type) {
+			case bool:
+				acl["established"] = val
+			case string:
+				acl["established"] = val == "true"
+			}
+		}
+		if v, ok := a["icmpcode"]; ok {
+			switch val := v.(type) {
+			case int:
+				acl["icmpcode"] = val
+			case string:
+				var intVal int
+				if _, err := fmt.Sscanf(val, "%d", &intVal); err == nil {
+					acl["icmpcode"] = intVal
+				}
+			}
+		}
+		if v, ok := a["icmptype"]; ok {
+			switch val := v.(type) {
+			case int:
+				acl["icmptype"] = val
+			case string:
+				var intVal int
+				if _, err := fmt.Sscanf(val, "%d", &intVal); err == nil {
+					acl["icmptype"] = intVal
+				}
+			}
+		}
+		if v, ok := a["interface"]; ok {
+			acl["interface"] = v.(string)
+		}
+		if v, ok := a["logstate"]; ok {
+			acl["logstate"] = v.(string)
+		}
+		if v, ok := a["priority"]; ok {
+			switch val := v.(type) {
+			case int:
+				acl["priority"] = val
+			case string:
+				var intVal int
+				if _, err := fmt.Sscanf(val, "%d", &intVal); err == nil {
+					acl["priority"] = intVal
+				}
+			}
+		}
+		if v, ok := a["protocol"]; ok {
+			acl["protocol"] = v.(string)
+		}
+		if v, ok := a["protocolnumber"]; ok {
+			switch val := v.(type) {
+			case int:
+				acl["protocolnumber"] = val
+			case string:
+				var intVal int
+				if _, err := fmt.Sscanf(val, "%d", &intVal); err == nil {
+					acl["protocolnumber"] = intVal
+				}
+			}
+		}
+		if v, ok := a["ratelimit"]; ok {
+			switch val := v.(type) {
+			case int:
+				acl["ratelimit"] = val
+			case string:
+				var intVal int
+				if _, err := fmt.Sscanf(val, "%d", &intVal); err == nil {
+					acl["ratelimit"] = intVal
+				}
+			}
+		}
+		if v, ok := a["srcipop"]; ok {
+			acl["srcipop"] = v.(string)
+		}
+		if v, ok := a["srcipval"]; ok {
+			acl["srcipval"] = v.(string)
+		}
+		if v, ok := a["srcmac"]; ok {
+			acl["srcmac"] = v.(string)
+		}
+		if v, ok := a["srcportop"]; ok {
+			acl["srcportop"] = v.(string)
+		}
+		if v, ok := a["srcportval"]; ok {
+			acl["srcportval"] = v.(string)
+		}
+		if v, ok := a["state"]; ok {
+			acl["state"] = v.(string)
+		}
+		if v, ok := a["td"]; ok {
+			switch val := v.(type) {
+			case int:
+				acl["td"] = val
+			case string:
+				var intVal int
+				if _, err := fmt.Sscanf(val, "%d", &intVal); err == nil {
+					acl["td"] = intVal
+				}
+			}
+		}
+		if v, ok := a["ttl"]; ok {
+			switch val := v.(type) {
+			case int:
+				acl["ttl"] = val
+			case string:
+				var intVal int
+				if _, err := fmt.Sscanf(val, "%d", &intVal); err == nil {
+					acl["ttl"] = intVal
+				}
+			}
+		}
+		if v, ok := a["vlan"]; ok {
+			switch val := v.(type) {
+			case int:
+				acl["vlan"] = val
+			case string:
+				var intVal int
+				if _, err := fmt.Sscanf(val, "%d", &intVal); err == nil {
+					acl["vlan"] = intVal
+				}
+			}
+		}
+		acls[i] = acl
 	}
 	d.Set("acl", acls)
 
@@ -212,7 +356,7 @@ func readNsaclsFunc(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func updateNsaclsFunc(d *schema.ResourceData, meta interface{}) error {
+func updateNsaclsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] netscaler-provider:  In updateNsaclsFunc")
 	client := meta.(*NetScalerNitroClient).client
 	if d.HasChange("acl") {
@@ -297,10 +441,10 @@ func updateNsaclsFunc(d *schema.ResourceData, meta interface{}) error {
 	nsacls := ns.Nsacls{}
 	err := client.ApplyResource(service.Nsacls.Type(), &nsacls)
 
-	return err
+	return diag.FromErr(err)
 }
 
-func deleteNsaclsFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNsaclsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  netscaler-provider: In deleteNsaclsFunc")
 	acls := d.Get("acl").(*schema.Set).List()
 
@@ -312,7 +456,7 @@ func deleteNsaclsFunc(d *schema.ResourceData, meta interface{}) error {
 	nsacls := ns.Nsacls{}
 	err := client.ApplyResource(service.Nsacls.Type(), &nsacls)
 	d.SetId("")
-	return err
+	return diag.FromErr(err)
 }
 
 func createSingleAcl(acl map[string]interface{}, meta interface{}) error {
@@ -345,8 +489,8 @@ func createSingleAcl(acl map[string]interface{}, meta interface{}) error {
 	if acl["destipop"] != nil && acl["destipval"] == nil {
 		return fmt.Errorf("Error in nsacl spec %s cannot have destipop without destipval", nsaclName)
 	}
-	if acl["destportop"] != nil && acl["destipval"] == nil {
-		return fmt.Errorf("Error in nsacl spec %s cannot have destipop without destipval", nsaclName)
+	if acl["destportop"] != nil && acl["destportval"] == nil {
+		return fmt.Errorf("Error in nsacl spec %s cannot have destportop without destportval", nsaclName)
 	}
 	if acl["srcipop"] != nil && acl["srcipval"] == nil {
 		return fmt.Errorf("Error in nsacl spec %s cannot have srcipop without srcipval", nsaclName)

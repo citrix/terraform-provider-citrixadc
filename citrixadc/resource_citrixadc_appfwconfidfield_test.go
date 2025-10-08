@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"log"
 	"net/url"
 	"testing"
@@ -46,9 +46,9 @@ const testAccAppfwconfidfield_update = `
 
 func TestAccAppfwconfidfield_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAppfwconfidfieldDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAppfwconfidfieldDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppfwconfidfield_add,
@@ -89,7 +89,11 @@ func testAccCheckAppfwconfidfieldExist(n string, id *string) resource.TestCheckF
 			*id = rs.Primary.ID
 		}
 		appfwconfidfieldName := rs.Primary.ID
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 		argsMap := make(map[string]string)
 		argsMap["fieldname"] = url.QueryEscape(rs.Primary.Attributes["fieldname"])
 		argsMap["url"] = url.QueryEscape(rs.Primary.Attributes["url"])
@@ -97,7 +101,7 @@ func testAccCheckAppfwconfidfieldExist(n string, id *string) resource.TestCheckF
 			ResourceType: service.Appfwconfidfield.Type(),
 			ArgsMap:      argsMap,
 		}
-		dataArray, err := nsClient.FindResourceArrayWithParams(findParams)
+		dataArray, err := client.FindResourceArrayWithParams(findParams)
 
 		if err != nil {
 			log.Printf("[WARN] citrix-provider: acceptance test: Clearing lb route state %s", appfwconfidfieldName)
@@ -117,7 +121,11 @@ func testAccCheckAppfwconfidfieldExist(n string, id *string) resource.TestCheckF
 }
 
 func testAccCheckAppfwconfidfieldDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_appfwconfidfield" {
@@ -134,7 +142,7 @@ func testAccCheckAppfwconfidfieldDestroy(s *terraform.State) error {
 			ResourceType: service.Appfwconfidfield.Type(),
 			ArgsMap:      argsMap,
 		}
-		_, err := nsClient.FindResourceArrayWithParams(findParams)
+		_, err := client.FindResourceArrayWithParams(findParams)
 
 		if err == nil {
 			return fmt.Errorf("appfwconfidfield %s still exists", rs.Primary.ID)

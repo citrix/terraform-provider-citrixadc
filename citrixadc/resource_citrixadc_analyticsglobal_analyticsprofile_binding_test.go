@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -48,9 +48,9 @@ const testAccAnalyticsglobal_analyticsprofile_binding_basic_step2 = `
 
 func TestAccAnalyticsglobal_analyticsprofile_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAnalyticsglobal_analyticsprofile_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAnalyticsglobal_analyticsprofile_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAnalyticsglobal_analyticsprofile_binding_basic,
@@ -87,7 +87,11 @@ func testAccCheckAnalyticsglobal_analyticsprofile_bindingExist(n string, id *str
 			*id = rs.Primary.ID
 		}
 
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		analyticsprofile := rs.Primary.ID
 
@@ -121,7 +125,11 @@ func testAccCheckAnalyticsglobal_analyticsprofile_bindingExist(n string, id *str
 
 func testAccCheckAnalyticsglobal_analyticsprofile_bindingNotExist(n string, id string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		analyticsprofile := id
 
@@ -154,7 +162,11 @@ func testAccCheckAnalyticsglobal_analyticsprofile_bindingNotExist(n string, id s
 }
 
 func testAccCheckAnalyticsglobal_analyticsprofile_bindingDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_analyticsglobal_analyticsprofile_binding" {
@@ -165,7 +177,7 @@ func testAccCheckAnalyticsglobal_analyticsprofile_bindingDestroy(s *terraform.St
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource("analyticsglobal", "")
+		_, err := client.FindResource("analyticsglobal", "")
 		if err == nil {
 			return fmt.Errorf("analyticsglobal_analyticsprofile_binding %s still exists", rs.Primary.ID)
 		}

@@ -1,20 +1,22 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/lsn"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcLsnclient() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createLsnclientFunc,
-		Read:          readLsnclientFunc,
-		Delete:        deleteLsnclientFunc,
+		CreateContext: createLsnclientFunc,
+		ReadContext:   readLsnclientFunc,
+		DeleteContext: deleteLsnclientFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"clientname": {
@@ -26,7 +28,7 @@ func resourceCitrixAdcLsnclient() *schema.Resource {
 	}
 }
 
-func createLsnclientFunc(d *schema.ResourceData, meta interface{}) error {
+func createLsnclientFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createLsnclientFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lsnclientName := d.Get("clientname").(string)
@@ -36,20 +38,15 @@ func createLsnclientFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource("lsnclient", lsnclientName, &lsnclient)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(lsnclientName)
 
-	err = readLsnclientFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this lsnclient but we can't read it ?? %s", lsnclientName)
-		return nil
-	}
-	return nil
+	return readLsnclientFunc(ctx, d, meta)
 }
 
-func readLsnclientFunc(d *schema.ResourceData, meta interface{}) error {
+func readLsnclientFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readLsnclientFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lsnclientName := d.Id()
@@ -66,13 +63,13 @@ func readLsnclientFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func deleteLsnclientFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteLsnclientFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteLsnclientFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lsnclientName := d.Id()
 	err := client.DeleteResource("lsnclient", lsnclientName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

@@ -1,21 +1,21 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/videooptimization"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
-	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcVideooptimizationpacingpolicy() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createVideooptimizationpacingpolicyFunc,
-		Read:          readVideooptimizationpacingpolicyFunc,
-		Update:        updateVideooptimizationpacingpolicyFunc,
-		Delete:        deleteVideooptimizationpacingpolicyFunc,
+		CreateContext: createVideooptimizationpacingpolicyFunc,
+		ReadContext:   readVideooptimizationpacingpolicyFunc,
+		UpdateContext: updateVideooptimizationpacingpolicyFunc,
+		DeleteContext: deleteVideooptimizationpacingpolicyFunc,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -56,7 +56,7 @@ func resourceCitrixAdcVideooptimizationpacingpolicy() *schema.Resource {
 	}
 }
 
-func createVideooptimizationpacingpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func createVideooptimizationpacingpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createVideooptimizationpacingpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	videooptimizationpacingpolicyName := d.Get("name").(string)
@@ -73,20 +73,15 @@ func createVideooptimizationpacingpolicyFunc(d *schema.ResourceData, meta interf
 
 	_, err := client.AddResource("videooptimizationpacingpolicy", videooptimizationpacingpolicyName, &videooptimizationpacingpolicy)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(videooptimizationpacingpolicyName)
 
-	err = readVideooptimizationpacingpolicyFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this videooptimizationpacingpolicy but we can't read it ?? %s", videooptimizationpacingpolicyName)
-		return nil
-	}
-	return nil
+	return readVideooptimizationpacingpolicyFunc(ctx, d, meta)
 }
 
-func readVideooptimizationpacingpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func readVideooptimizationpacingpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readVideooptimizationpacingpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	videooptimizationpacingpolicyName := d.Id()
@@ -109,7 +104,7 @@ func readVideooptimizationpacingpolicyFunc(d *schema.ResourceData, meta interfac
 
 }
 
-func updateVideooptimizationpacingpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func updateVideooptimizationpacingpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateVideooptimizationpacingpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	videooptimizationpacingpolicyName := d.Get("name").(string)
@@ -152,19 +147,19 @@ func updateVideooptimizationpacingpolicyFunc(d *schema.ResourceData, meta interf
 	if hasChange {
 		_, err := client.UpdateResource("videooptimizationpacingpolicy", videooptimizationpacingpolicyName, &videooptimizationpacingpolicy)
 		if err != nil {
-			return fmt.Errorf("Error updating videooptimizationpacingpolicy %s", videooptimizationpacingpolicyName)
+			return diag.Errorf("Error updating videooptimizationpacingpolicy %s", videooptimizationpacingpolicyName)
 		}
 	}
-	return readVideooptimizationpacingpolicyFunc(d, meta)
+	return readVideooptimizationpacingpolicyFunc(ctx, d, meta)
 }
 
-func deleteVideooptimizationpacingpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteVideooptimizationpacingpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteVideooptimizationpacingpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	videooptimizationpacingpolicyName := d.Id()
 	err := client.DeleteResource("videooptimizationpacingpolicy", videooptimizationpacingpolicyName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

@@ -17,8 +17,8 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -30,7 +30,7 @@ resource "citrixadc_icaparameter" "tf_icaparameter" {
 	edtpmtuddftimeout    = 200
 	l7latencyfrequency   = 0
 	enablesronhafailover = "YES"
-  }
+	}
   
 `
 const testAccIcaparameter_update = `
@@ -40,15 +40,15 @@ resource "citrixadc_icaparameter" "tf_icaparameter" {
 	edtpmtuddftimeout    = 100
 	l7latencyfrequency   = 30
 	enablesronhafailover = "NO"
-  }
+	}
   
 `
 
 func TestAccIcaparameter_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: nil,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIcaparameter_basic,
@@ -93,8 +93,12 @@ func testAccCheckIcaparameterExist(n string, id *string) resource.TestCheckFunc 
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource("icaparameter", "")
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource("icaparameter", "")
 
 		if err != nil {
 			return err

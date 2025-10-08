@@ -1,25 +1,29 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
 	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcNsacl() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNsaclFunc,
-		Read:          readNsaclFunc,
-		Update:        updateNsaclFunc,
-		Delete:        deleteNsaclFunc,
+		CreateContext: createNsaclFunc,
+		ReadContext:   readNsaclFunc,
+		UpdateContext: updateNsaclFunc,
+		DeleteContext: deleteNsaclFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"aclaction": {
@@ -162,11 +166,31 @@ func resourceCitrixAdcNsacl() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"srcip": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
+			"destip": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
+			"srcport": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
+			"destport": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
 		},
 	}
 }
 
-func createNsaclFunc(d *schema.ResourceData, meta interface{}) error {
+func createNsaclFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  netscaler-provider: In createNsaclFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var nsaclName string
@@ -194,16 +218,16 @@ func createNsaclFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.Get("destipop") != nil && d.Get("destipval") == nil {
-		return fmt.Errorf("Error in nsacl spec %s cannot have destipop without destipval", nsaclName)
+		return diag.Errorf("Error in nsacl spec %s cannot have destipop without destipval", nsaclName)
 	}
 	if d.Get("destportop") != nil && d.Get("destipval") == nil {
-		return fmt.Errorf("Error in nsacl spec %s cannot have destipop without destipval", nsaclName)
+		return diag.Errorf("Error in nsacl spec %s cannot have destipop without destipval", nsaclName)
 	}
 	if d.Get("srcipop") != nil && d.Get("srcipval") == nil {
-		return fmt.Errorf("Error in nsacl spec %s cannot have srcipop without srcipval", nsaclName)
+		return diag.Errorf("Error in nsacl spec %s cannot have srcipop without srcipval", nsaclName)
 	}
 	if d.Get("srcportop") != nil && d.Get("srcportval") == nil {
-		return fmt.Errorf("Error in nsacl spec %s cannot have srcportop without srcportval", nsaclName)
+		return diag.Errorf("Error in nsacl spec %s cannot have srcportop without srcportval", nsaclName)
 	}
 
 	nsacl := ns.Nsacl{
@@ -243,20 +267,15 @@ func createNsaclFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Nsacl.Type(), nsaclName, &nsacl)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(nsaclName)
 
-	err = readNsaclFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this nsacl but we can't read it ?? %s", nsaclName)
-		return nil
-	}
-	return nil
+	return readNsaclFunc(ctx, d, meta)
 }
 
-func readNsaclFunc(d *schema.ResourceData, meta interface{}) error {
+func readNsaclFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] netscaler-provider:  In readNsaclFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nsaclName := d.Id()
@@ -278,14 +297,14 @@ func readNsaclFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("destportval", data["destportval"])
 	d.Set("dfdhash", data["dfdhash"])
 	d.Set("established", data["established"])
-	d.Set("icmpcode", data["icmpcode"])
-	d.Set("icmptype", data["icmptype"])
+	setToInt("icmpcode", d, data["icmpcode"])
+	setToInt("icmptype", d, data["icmptype"])
 	d.Set("interface", data["interface"])
 	d.Set("logstate", data["logstate"])
 	setToInt("priority", d, data["priority"])
 	d.Set("protocol", data["protocol"])
-	d.Set("protocolnumber", data["protocolnumber"])
-	d.Set("ratelimit", data["ratelimit"])
+	setToInt("protocolnumber", d, data["protocolnumber"])
+	setToInt("ratelimit", d, data["ratelimit"])
 	d.Set("srcip", data["srcip"])
 	d.Set("srcipop", data["srcipop"])
 	d.Set("srcipval", data["srcipval"])
@@ -296,16 +315,16 @@ func readNsaclFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("srcportval", data["srcportval"])
 	d.Set("state", data["state"])
 	d.Set("stateful", data["stateful"])
-	d.Set("td", data["td"])
-	d.Set("ttl", data["ttl"])
-	d.Set("vlan", data["vlan"])
-	d.Set("vxlan", data["vxlan"])
+	setToInt("td", d, data["td"])
+	setToInt("ttl", d, data["ttl"])
+	setToInt("vlan", d, data["vlan"])
+	setToInt("vxlan", d, data["vxlan"])
 
 	return nil
 
 }
 
-func updateNsaclFunc(d *schema.ResourceData, meta interface{}) error {
+func updateNsaclFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  netscaler-provider: In updateNsaclFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nsaclName := d.Get("aclname").(string)
@@ -466,26 +485,26 @@ func updateNsaclFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Nsacl.Type(), nsaclName, &nsacl)
 		if err != nil {
-			return fmt.Errorf("Error updating nsacl %s", nsaclName)
+			return diag.Errorf("Error updating nsacl %s", nsaclName)
 		}
 	}
 
 	if stateChange {
 		err := doNsaclStateChange(d, client)
 		if err != nil {
-			return fmt.Errorf("Error enabling/disabling nsacl %s", nsaclName)
+			return diag.Errorf("Error enabling/disabling nsacl %s", nsaclName)
 		}
 	}
-	return readNsaclFunc(d, meta)
+	return readNsaclFunc(ctx, d, meta)
 }
 
-func deleteNsaclFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNsaclFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  netscaler-provider: In deleteNsaclFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nsaclName := d.Id()
 	err := client.DeleteResource(service.Nsacl.Type(), nsaclName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

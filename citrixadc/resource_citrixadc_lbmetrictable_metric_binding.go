@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/lb"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strings"
 )
@@ -13,11 +15,11 @@ import (
 func resourceCitrixAdcLbmetrictable_metric_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createLbmetrictable_metric_bindingFunc,
-		Read:          readLbmetrictable_metric_bindingFunc,
-		Delete:        deleteLbmetrictable_metric_bindingFunc,
+		CreateContext: createLbmetrictable_metric_bindingFunc,
+		ReadContext:   readLbmetrictable_metric_bindingFunc,
+		DeleteContext: deleteLbmetrictable_metric_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"metric": {
@@ -39,7 +41,7 @@ func resourceCitrixAdcLbmetrictable_metric_binding() *schema.Resource {
 	}
 }
 
-func createLbmetrictable_metric_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createLbmetrictable_metric_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createLbmetrictable_metric_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	metrictable := d.Get("metrictable")
@@ -53,20 +55,15 @@ func createLbmetrictable_metric_bindingFunc(d *schema.ResourceData, meta interfa
 
 	_, err := client.AddResource(service.Lbmetrictable_metric_binding.Type(), bindingId, &lbmetrictable_metric_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readLbmetrictable_metric_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this lbmetrictable_metric_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readLbmetrictable_metric_bindingFunc(ctx, d, meta)
 }
 
-func readLbmetrictable_metric_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readLbmetrictable_metric_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readLbmetrictable_metric_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -87,7 +84,7 @@ func readLbmetrictable_metric_bindingFunc(d *schema.ResourceData, meta interface
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -126,7 +123,7 @@ func readLbmetrictable_metric_bindingFunc(d *schema.ResourceData, meta interface
 
 }
 
-func deleteLbmetrictable_metric_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteLbmetrictable_metric_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteLbmetrictable_metric_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -141,7 +138,7 @@ func deleteLbmetrictable_metric_bindingFunc(d *schema.ResourceData, meta interfa
 
 	err := client.DeleteResourceWithArgs(service.Lbmetrictable_metric_binding.Type(), name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

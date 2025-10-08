@@ -1,22 +1,25 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/snmp"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcSnmpengineid() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSnmpengineidFunc,
-		Read:          readSnmpengineidFunc,
-		Update:        updateSnmpengineidFunc,
-		Delete:        deleteSnmpengineidFunc, // Thought snmpengineid resource donot have DELETE operation, it is required to set ID to "" d.SetID("") to maintain terraform state
+		CreateContext: createSnmpengineidFunc,
+		ReadContext:   readSnmpengineidFunc,
+		UpdateContext: updateSnmpengineidFunc,
+		DeleteContext: deleteSnmpengineidFunc, // Thought snmpengineid resource donot have DELETE operation, it is required to set ID to "" d.SetID("") to maintain terraform state
 		Schema: map[string]*schema.Schema{
 			"engineid": {
 				Type:     schema.TypeString,
@@ -29,7 +32,7 @@ func resourceCitrixAdcSnmpengineid() *schema.Resource {
 		},
 	}
 }
-func createSnmpengineidFunc(d *schema.ResourceData, meta interface{}) error {
+func createSnmpengineidFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSnmpengineidFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -42,20 +45,15 @@ func createSnmpengineidFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.UpdateUnnamedResource(service.Snmpengineid.Type(), &snmpengineid)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(snmpengineidName)
 
-	err = readSnmpengineidFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this snmpengineid but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readSnmpengineidFunc(ctx, d, meta)
 }
 
-func readSnmpengineidFunc(d *schema.ResourceData, meta interface{}) error {
+func readSnmpengineidFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSnmpengineidFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading snmpengineid state")
@@ -66,13 +64,13 @@ func readSnmpengineidFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	d.Set("engineid", data["engineid"])
-	d.Set("ownernode", data["ownernode"])
+	setToInt("ownernode", d, data["ownernode"])
 
 	return nil
 
 }
 
-func updateSnmpengineidFunc(d *schema.ResourceData, meta interface{}) error {
+func updateSnmpengineidFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateSnmpengineidFunc")
 	client := meta.(*NetScalerNitroClient).client
 	snmpengineid := snmp.Snmpengineid{}
@@ -92,13 +90,13 @@ func updateSnmpengineidFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Snmpengineid.Type(), &snmpengineid)
 		if err != nil {
-			return fmt.Errorf("Error updating snmpengineid")
+			return diag.Errorf("Error updating snmpengineid")
 		}
 	}
-	return readSnmpengineidFunc(d, meta)
+	return readSnmpengineidFunc(ctx, d, meta)
 }
 
-func deleteSnmpengineidFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSnmpengineidFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSnmpengineidFunc")
 	// snmpenigneid  does not have DELETE operation, but this function is required to set the ID to ""
 	d.SetId("")

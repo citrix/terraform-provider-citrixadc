@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/aaa"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strings"
 )
@@ -13,11 +15,11 @@ import (
 func resourceCitrixAdcAaauser_tmsessionpolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAaauser_tmsessionpolicy_bindingFunc,
-		Read:          readAaauser_tmsessionpolicy_bindingFunc,
-		Delete:        deleteAaauser_tmsessionpolicy_bindingFunc,
+		CreateContext: createAaauser_tmsessionpolicy_bindingFunc,
+		ReadContext:   readAaauser_tmsessionpolicy_bindingFunc,
+		DeleteContext: deleteAaauser_tmsessionpolicy_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"username": {
@@ -51,7 +53,7 @@ func resourceCitrixAdcAaauser_tmsessionpolicy_binding() *schema.Resource {
 	}
 }
 
-func createAaauser_tmsessionpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createAaauser_tmsessionpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAaauser_tmsessionpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	username := d.Get("username").(string)
@@ -67,20 +69,15 @@ func createAaauser_tmsessionpolicy_bindingFunc(d *schema.ResourceData, meta inte
 
 	err := client.UpdateUnnamedResource(service.Aaauser_tmsessionpolicy_binding.Type(), &aaauser_tmsessionpolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readAaauser_tmsessionpolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this aaauser_tmsessionpolicy_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readAaauser_tmsessionpolicy_bindingFunc(ctx, d, meta)
 }
 
-func readAaauser_tmsessionpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readAaauser_tmsessionpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAaauser_tmsessionpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -101,7 +98,7 @@ func readAaauser_tmsessionpolicy_bindingFunc(d *schema.ResourceData, meta interf
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -142,7 +139,7 @@ func readAaauser_tmsessionpolicy_bindingFunc(d *schema.ResourceData, meta interf
 
 }
 
-func deleteAaauser_tmsessionpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAaauser_tmsessionpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAaauser_tmsessionpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -161,7 +158,7 @@ func deleteAaauser_tmsessionpolicy_bindingFunc(d *schema.ResourceData, meta inte
 
 	err := client.DeleteResourceWithArgs(service.Aaauser_tmsessionpolicy_binding.Type(), name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

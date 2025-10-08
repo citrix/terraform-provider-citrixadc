@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcIp6tunnelparam() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createIp6tunnelparamFunc,
-		Read:          readIp6tunnelparamFunc,
-		Update:        updateIp6tunnelparamFunc,
-		Delete:        deleteIp6tunnelparamFunc,
+		CreateContext: createIp6tunnelparamFunc,
+		ReadContext:   readIp6tunnelparamFunc,
+		UpdateContext: updateIp6tunnelparamFunc,
+		DeleteContext: deleteIp6tunnelparamFunc,
 		Schema: map[string]*schema.Schema{
 			"dropfrag": {
 				Type:     schema.TypeString,
@@ -48,7 +51,7 @@ func resourceCitrixAdcIp6tunnelparam() *schema.Resource {
 	}
 }
 
-func createIp6tunnelparamFunc(d *schema.ResourceData, meta interface{}) error {
+func createIp6tunnelparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createIp6tunnelparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var ip6tunnelparamName string
@@ -64,20 +67,15 @@ func createIp6tunnelparamFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.UpdateUnnamedResource(service.Ip6tunnelparam.Type(), &ip6tunnelparam)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(ip6tunnelparamName)
 
-	err = readIp6tunnelparamFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this ip6tunnelparam but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readIp6tunnelparamFunc(ctx, d, meta)
 }
 
-func readIp6tunnelparamFunc(d *schema.ResourceData, meta interface{}) error {
+func readIp6tunnelparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readIp6tunnelparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading ip6tunnelparam state")
@@ -99,7 +97,7 @@ func readIp6tunnelparamFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateIp6tunnelparamFunc(d *schema.ResourceData, meta interface{}) error {
+func updateIp6tunnelparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateIp6tunnelparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -134,13 +132,13 @@ func updateIp6tunnelparamFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Ip6tunnelparam.Type(), &ip6tunnelparam)
 		if err != nil {
-			return fmt.Errorf("Error updating ip6tunnelparam")
+			return diag.Errorf("Error updating ip6tunnelparam")
 		}
 	}
-	return readIp6tunnelparamFunc(d, meta)
+	return readIp6tunnelparamFunc(ctx, d, meta)
 }
 
-func deleteIp6tunnelparamFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteIp6tunnelparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteIp6tunnelparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 	type ip6tunnelparamRemove struct {
@@ -173,7 +171,7 @@ func deleteIp6tunnelparamFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.ActOnResource(service.Ip6tunnelparam.Type(), &ip6tunnelparam, "unset")
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

@@ -1,27 +1,29 @@
 package citrixadc
 
 import (
+	"context"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/resource/config/dns"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
 	"net/url"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcDnssrvrec() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createDnssrvrecFunc,
-		Read:          readDnssrvrecFunc,
-		Update:        updateDnssrvrecFunc,
-		Delete:        deleteDnssrvrecFunc,
+		CreateContext: createDnssrvrecFunc,
+		ReadContext:   readDnssrvrecFunc,
+		UpdateContext: updateDnssrvrecFunc,
+		DeleteContext: deleteDnssrvrecFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"domain": {
@@ -73,7 +75,7 @@ func resourceCitrixAdcDnssrvrec() *schema.Resource {
 	}
 }
 
-func createDnssrvrecFunc(d *schema.ResourceData, meta interface{}) error {
+func createDnssrvrecFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createDnssrvrecFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnssrvrecName := d.Get("domain").(string) + "," + d.Get("target").(string)
@@ -91,20 +93,15 @@ func createDnssrvrecFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Dnssrvrec.Type(), dnssrvrecName, &dnssrvrec)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(dnssrvrecName)
 
-	err = readDnssrvrecFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this dnssrvrec but we can't read it ?? %s", dnssrvrecName)
-		return nil
-	}
-	return nil
+	return readDnssrvrecFunc(ctx, d, meta)
 }
 
-func readDnssrvrecFunc(d *schema.ResourceData, meta interface{}) error {
+func readDnssrvrecFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readDnssrvrecFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnssrvrecName := d.Id()
@@ -153,11 +150,11 @@ func readDnssrvrecFunc(d *schema.ResourceData, meta interface{}) error {
 	data := dataArray[foundIndex]
 	d.Set("domain", data["domain"])
 	d.Set("ecssubnet", data["ecssubnet"])
-	d.Set("nodeid", data["nodeid"])
+	setToInt("nodeid", d, data["nodeid"])
 	setToInt("port", d, data["port"])
 	setToInt("priority", d, data["priority"])
 	d.Set("target", data["target"])
-	d.Set("ttl", data["ttl"])
+	setToInt("ttl", d, data["ttl"])
 	d.Set("type", data["type"])
 	setToInt("weight", d, data["weight"])
 
@@ -165,7 +162,7 @@ func readDnssrvrecFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateDnssrvrecFunc(d *schema.ResourceData, meta interface{}) error {
+func updateDnssrvrecFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateDnssrvrecFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnssrvrecName := d.Get("domain").(string)
@@ -214,13 +211,13 @@ func updateDnssrvrecFunc(d *schema.ResourceData, meta interface{}) error {
 		dnssrvrec.Target = d.Get("target").(string)
 		err := client.UpdateUnnamedResource(service.Dnssrvrec.Type(), &dnssrvrec)
 		if err != nil {
-			return fmt.Errorf("Error updating dnssrvrec %s", dnssrvrecName)
+			return diag.Errorf("Error updating dnssrvrec %s", dnssrvrecName)
 		}
 	}
-	return readDnssrvrecFunc(d, meta)
+	return readDnssrvrecFunc(ctx, d, meta)
 }
 
-func deleteDnssrvrecFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteDnssrvrecFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteDnssrvrecFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -236,7 +233,7 @@ func deleteDnssrvrecFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	err := client.DeleteResourceWithArgsMap(service.Dnssrvrec.Type(), domain, argsMap)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

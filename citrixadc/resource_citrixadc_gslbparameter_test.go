@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -29,7 +29,7 @@ resource "citrixadc_gslbparameter" "tf_gslbparameter" {
 	ldnsentrytimeout = 50
 	rtttolerance     = 6
 	ldnsmask         = "255.255.255.255"
-  }
+	}
 `
 
 const testAccGslbparameter_update = `
@@ -38,13 +38,13 @@ resource "citrixadc_gslbparameter" "tf_gslbparameter" {
 	ldnsentrytimeout = 70
 	rtttolerance     = 8
 	ldnsmask         = "255.255.255.254"
-  }
+	}
 `
 
 func TestAccGslbparameter_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
 		// gslb resource do not have DELETE operation
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
@@ -89,8 +89,12 @@ func testAccCheckGslbparameterExist(n string, id *string) resource.TestCheckFunc
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Gslbparameter.Type(), "")
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Gslbparameter.Type(), "")
 
 		if err != nil {
 			return err

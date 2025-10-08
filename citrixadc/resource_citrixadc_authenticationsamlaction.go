@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/authentication"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAuthenticationsamlaction() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAuthenticationsamlactionFunc,
-		Read:          readAuthenticationsamlactionFunc,
-		Update:        updateAuthenticationsamlactionFunc,
-		Delete:        deleteAuthenticationsamlactionFunc,
+		CreateContext: createAuthenticationsamlactionFunc,
+		ReadContext:   readAuthenticationsamlactionFunc,
+		UpdateContext: updateAuthenticationsamlactionFunc,
+		DeleteContext: deleteAuthenticationsamlactionFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -261,7 +264,7 @@ func resourceCitrixAdcAuthenticationsamlaction() *schema.Resource {
 	}
 }
 
-func createAuthenticationsamlactionFunc(d *schema.ResourceData, meta interface{}) error {
+func createAuthenticationsamlactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAuthenticationsamlactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationsamlactionName := d.Get("name").(string)
@@ -317,20 +320,15 @@ func createAuthenticationsamlactionFunc(d *schema.ResourceData, meta interface{}
 
 	_, err := client.AddResource(service.Authenticationsamlaction.Type(), authenticationsamlactionName, &authenticationsamlaction)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(authenticationsamlactionName)
 
-	err = readAuthenticationsamlactionFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this authenticationsamlaction but we can't read it ?? %s", authenticationsamlactionName)
-		return nil
-	}
-	return nil
+	return readAuthenticationsamlactionFunc(ctx, d, meta)
 }
 
-func readAuthenticationsamlactionFunc(d *schema.ResourceData, meta interface{}) error {
+func readAuthenticationsamlactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAuthenticationsamlactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationsamlactionName := d.Id()
@@ -358,7 +356,7 @@ func readAuthenticationsamlactionFunc(d *schema.ResourceData, meta interface{}) 
 	d.Set("attribute7", data["attribute7"])
 	d.Set("attribute8", data["attribute8"])
 	d.Set("attribute9", data["attribute9"])
-	d.Set("attributeconsumingserviceindex", data["attributeconsumingserviceindex"])
+	setToInt("attributeconsumingserviceindex", d, data["attributeconsumingserviceindex"])
 	d.Set("attributes", data["attributes"])
 	d.Set("audience", data["audience"])
 	d.Set("authnctxclassref", data["authnctxclassref"])
@@ -370,12 +368,12 @@ func readAuthenticationsamlactionFunc(d *schema.ResourceData, meta interface{}) 
 	d.Set("groupnamefield", data["groupnamefield"])
 	d.Set("logoutbinding", data["logoutbinding"])
 	d.Set("logouturl", data["logouturl"])
-	d.Set("metadatarefreshinterval", data["metadatarefreshinterval"])
+	setToInt("metadatarefreshinterval", d, data["metadatarefreshinterval"])
 	d.Set("metadataurl", data["metadataurl"])
 	d.Set("name", data["name"])
 	d.Set("relaystaterule", data["relaystaterule"])
 	d.Set("requestedauthncontext", data["requestedauthncontext"])
-	d.Set("samlacsindex", data["samlacsindex"])
+	setToInt("samlacsindex", d, data["samlacsindex"])
 	d.Set("samlbinding", data["samlbinding"])
 	d.Set("samlidpcertname", data["samlidpcertname"])
 	d.Set("samlissuername", data["samlissuername"])
@@ -386,14 +384,14 @@ func readAuthenticationsamlactionFunc(d *schema.ResourceData, meta interface{}) 
 	d.Set("samluserfield", data["samluserfield"])
 	d.Set("sendthumbprint", data["sendthumbprint"])
 	d.Set("signaturealg", data["signaturealg"])
-	d.Set("skewtime", data["skewtime"])
+	setToInt("skewtime", d, data["skewtime"])
 	d.Set("storesamlresponse", data["storesamlresponse"])
 
 	return nil
 
 }
 
-func updateAuthenticationsamlactionFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAuthenticationsamlactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAuthenticationsamlactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationsamlactionName := d.Get("name").(string)
@@ -636,19 +634,19 @@ func updateAuthenticationsamlactionFunc(d *schema.ResourceData, meta interface{}
 	if hasChange {
 		_, err := client.UpdateResource(service.Authenticationsamlaction.Type(), authenticationsamlactionName, &authenticationsamlaction)
 		if err != nil {
-			return fmt.Errorf("Error updating authenticationsamlaction %s", authenticationsamlactionName)
+			return diag.Errorf("Error updating authenticationsamlaction %s", authenticationsamlactionName)
 		}
 	}
-	return readAuthenticationsamlactionFunc(d, meta)
+	return readAuthenticationsamlactionFunc(ctx, d, meta)
 }
 
-func deleteAuthenticationsamlactionFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAuthenticationsamlactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAuthenticationsamlactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationsamlactionName := d.Id()
 	err := client.DeleteResource(service.Authenticationsamlaction.Type(), authenticationsamlactionName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

@@ -1,26 +1,29 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/gslb"
 	"github.com/citrix/adc-nitro-go/service"
 
 	"github.com/mitchellh/mapstructure"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
 	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcGslbvserver() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createGslbvserverFunc,
-		Read:          readGslbvserverFunc,
-		Update:        updateGslbvserverFunc,
-		Delete:        deleteGslbvserverFunc,
+		CreateContext: createGslbvserverFunc,
+		ReadContext:   readGslbvserverFunc,
+		UpdateContext: updateGslbvserverFunc,
+		DeleteContext: deleteGslbvserverFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"appflowlog": {
@@ -293,12 +296,13 @@ func resourceCitrixAdcGslbvserver() *schema.Resource {
 					},
 				},
 				Optional: true,
+				Computed: true,
 			},
 		},
 	}
 }
 
-func createGslbvserverFunc(d *schema.ResourceData, meta interface{}) error {
+func createGslbvserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  netscaler-provider: In createGslbvserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	gslbvserverName := d.Get("name").(string)
@@ -346,7 +350,7 @@ func createGslbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Gslbvserver.Type(), gslbvserverName, &gslbvserver)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if _, ok := d.GetOk("backupvserver"); ok {
@@ -357,7 +361,7 @@ func createGslbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 
 		_, err := client.UpdateResource(service.Gslbvserver.Type(), gslbvserverName, backupvserverData)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
@@ -367,7 +371,7 @@ func createGslbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		domain := val.(map[string]interface{})
 		err = bindDomainToVserver(gslbvserverName, domain, meta)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
@@ -376,19 +380,14 @@ func createGslbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 		svc := val.(map[string]interface{})
 		err = bindGslbServiceToVserver(gslbvserverName, svc, meta)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
-	err = readGslbvserverFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this gslbvserver but we can't read it ?? %s", gslbvserverName)
-		return nil
-	}
-	return nil
+	return readGslbvserverFunc(ctx, d, meta)
 }
 
-func readGslbvserverFunc(d *schema.ResourceData, meta interface{}) error {
+func readGslbvserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] netscaler-provider:  In readGslbvserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	gslbvserverName := d.Id()
@@ -403,12 +402,12 @@ func readGslbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("appflowlog", data["appflowlog"])
 	d.Set("backupip", data["backupip"])
 	d.Set("backuplbmethod", data["backuplbmethod"])
-	d.Set("backupsessiontimeout", data["backupsessiontimeout"])
+	setToInt("backupsessiontimeout", d, data["backupsessiontimeout"])
 	d.Set("backupvserver", data["backupvserver"])
 	d.Set("comment", data["comment"])
 	d.Set("considereffectivestate", data["considereffectivestate"])
 	d.Set("cookiedomain", data["cookiedomain"])
-	d.Set("cookietimeout", data["cookietimeout"])
+	setToInt("cookietimeout", d, data["cookietimeout"])
 	d.Set("disableprimaryondown", data["disableprimaryondown"])
 	d.Set("dnsrecordtype", data["dnsrecordtype"])
 	d.Set("domainname", data["domainname"])
@@ -421,43 +420,132 @@ func readGslbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("mir", data["mir"])
 	d.Set("name", data["name"])
 	d.Set("netmask", data["netmask"])
-	d.Set("persistenceid", data["persistenceid"])
+	setToInt("persistenceid", d, data["persistenceid"])
 	d.Set("persistencetype", data["persistencetype"])
 	d.Set("persistmask", data["persistmask"])
 	d.Set("servicename", data["servicename"])
 	d.Set("servicetype", data["servicetype"])
-	d.Set("sitedomainttl", data["sitedomainttl"])
+	setToInt("sitedomainttl", d, data["sitedomainttl"])
 	d.Set("sobackupaction", data["sobackupaction"])
 	d.Set("somethod", data["somethod"])
 	d.Set("sopersistence", data["sopersistence"])
-	d.Set("sopersistencetimeout", data["sopersistencetimeout"])
-	d.Set("sothreshold", data["sothreshold"])
+	setToInt("sopersistencetimeout", d, data["sopersistencetimeout"])
+	setToInt("sothreshold", d, data["sothreshold"])
 	d.Set("state", data["state"])
-	d.Set("timeout", data["timeout"])
-	d.Set("tolerance", data["tolerance"])
-	d.Set("ttl", data["ttl"])
-	d.Set("v6netmasklen", data["v6netmasklen"])
-	d.Set("v6persistmasklen", data["v6persistmasklen"])
+	setToInt("timeout", d, data["timeout"])
+	setToInt("tolerance", d, data["tolerance"])
+	setToInt("ttl", d, data["ttl"])
+	setToInt("v6netmasklen", d, data["v6netmasklen"])
+	setToInt("v6persistmasklen", d, data["v6persistmasklen"])
 	setToInt("weight", d, data["weight"])
 
 	data2, _ := client.FindResourceArray(service.Gslbvserver_domain_binding.Type(), gslbvserverName)
 	domainBindings := make([]map[string]interface{}, len(data2))
 	for i, binding := range data2 {
-		domainBindings[i] = binding
+		// Only include keys defined in the schema and cast to int as needed
+		domain := make(map[string]interface{})
+		if v, ok := binding["backupip"]; ok {
+			domain["backupip"] = v
+		}
+		if v, ok := binding["backupipflag"]; ok {
+			// backupipflag is bool
+			if b, ok := v.(bool); ok {
+				domain["backupipflag"] = b
+			} else if s, ok := v.(string); ok && (s == "true" || s == "false") {
+				domain["backupipflag"] = (s == "true")
+			}
+		}
+		if v, ok := binding["cookiedomain"]; ok {
+			domain["cookiedomain"] = v
+		}
+		if v, ok := binding["cookiedomainflag"]; ok {
+			// cookiedomainflag is bool
+			if b, ok := v.(bool); ok {
+				domain["cookiedomainflag"] = b
+			} else if s, ok := v.(string); ok && (s == "true" || s == "false") {
+				domain["cookiedomainflag"] = (s == "true")
+			}
+		}
+		if v, ok := binding["cookietimeout"]; ok {
+			// cookietimeout is int
+			switch val := v.(type) {
+			case int:
+				domain["cookietimeout"] = val
+			case float64:
+				domain["cookietimeout"] = int(val)
+			case string:
+				var intval int
+				fmt.Sscanf(val, "%d", &intval)
+				domain["cookietimeout"] = intval
+			}
+		}
+		if v, ok := binding["domainname"]; ok {
+			domain["domainname"] = v
+		}
+		if v, ok := binding["name"]; ok {
+			domain["name"] = v
+		}
+		if v, ok := binding["sitedomainttl"]; ok {
+			// sitedomainttl is int
+			switch val := v.(type) {
+			case int:
+				domain["sitedomainttl"] = val
+			case float64:
+				domain["sitedomainttl"] = int(val)
+			case string:
+				var intval int
+				fmt.Sscanf(val, "%d", &intval)
+				domain["sitedomainttl"] = intval
+			}
+		}
+		if v, ok := binding["ttl"]; ok {
+			// ttl is int
+			switch val := v.(type) {
+			case int:
+				domain["ttl"] = val
+			case float64:
+				domain["ttl"] = int(val)
+			case string:
+				var intval int
+				fmt.Sscanf(val, "%d", &intval)
+				domain["ttl"] = intval
+			}
+		}
+		domainBindings[i] = domain
 	}
 	d.Set("domain", domainBindings)
 
 	data3, _ := client.FindResourceArray(service.Gslbvserver_gslbservice_binding.Type(), gslbvserverName)
 	svcBindings := make([]map[string]interface{}, len(data3))
 	for i, binding := range data3 {
-		svcBindings[i] = binding
+		svc := make(map[string]interface{})
+		if v, ok := binding["domainname"]; ok {
+			svc["domainname"] = v
+		}
+		if v, ok := binding["servicename"]; ok {
+			svc["servicename"] = v
+		}
+		if v, ok := binding["weight"]; ok {
+			// weight is int
+			switch val := v.(type) {
+			case int:
+				svc["weight"] = val
+			case float64:
+				svc["weight"] = int(val)
+			case string:
+				var intval int
+				fmt.Sscanf(val, "%d", &intval)
+				svc["weight"] = intval
+			}
+		}
+		svcBindings[i] = svc
 	}
 	d.Set("service", svcBindings)
 	return nil
 
 }
 
-func updateGslbvserverFunc(d *schema.ResourceData, meta interface{}) error {
+func updateGslbvserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  netscaler-provider: In updateGslbvserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	gslbvserverName := d.Get("name").(string)
@@ -665,7 +753,7 @@ func updateGslbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Gslbvserver.Type(), gslbvserverName, &gslbvserver)
 		if err != nil {
-			return fmt.Errorf("Error updating gslbvserver %s", gslbvserverName)
+			return diag.Errorf("Error updating gslbvserver %s", gslbvserverName)
 		}
 	}
 
@@ -729,7 +817,7 @@ func updateGslbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 			err := unbindGslbService(gslbvserverName, service, meta)
 			if err != nil {
 				log.Printf("[DEBUG]  netscaler-provider: error deleting gslb vserver binding to service %v", service)
-				return err
+				return diag.FromErr(err)
 			}
 		}
 
@@ -739,7 +827,7 @@ func updateGslbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 			err := bindGslbServiceToVserver(gslbvserverName, service, meta)
 			if err != nil {
 				log.Printf("[DEBUG]  netscaler-provider: error binding service %s", service["servicename"].(string))
-				return err
+				return diag.FromErr(err)
 			}
 		}
 
@@ -747,14 +835,14 @@ func updateGslbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	if stateChange {
 		err := doGslbvserverStateChange(d, client)
 		if err != nil {
-			return fmt.Errorf("Error enabling/disabling gslb vserver %s", gslbvserverName)
+			return diag.Errorf("Error enabling/disabling gslb vserver %s", gslbvserverName)
 		}
 	}
 
-	return readGslbvserverFunc(d, meta)
+	return readGslbvserverFunc(ctx, d, meta)
 }
 
-func deleteGslbvserverFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteGslbvserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  netscaler-provider: In deleteGslbvserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	gslbvserverName := d.Id()
@@ -765,7 +853,7 @@ func deleteGslbvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	err := client.DeleteResource(service.Gslbvserver.Type(), gslbvserverName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

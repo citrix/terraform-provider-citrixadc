@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strings"
 )
@@ -13,11 +15,11 @@ import (
 func resourceCitrixAdcMapdomain_mapbmr_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createMapdomain_mapbmr_bindingFunc,
-		Read:          readMapdomain_mapbmr_bindingFunc,
-		Delete:        deleteMapdomain_mapbmr_bindingFunc,
+		CreateContext: createMapdomain_mapbmr_bindingFunc,
+		ReadContext:   readMapdomain_mapbmr_bindingFunc,
+		DeleteContext: deleteMapdomain_mapbmr_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -36,7 +38,7 @@ func resourceCitrixAdcMapdomain_mapbmr_binding() *schema.Resource {
 	}
 }
 
-func createMapdomain_mapbmr_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createMapdomain_mapbmr_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createMapdomain_mapbmr_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name")
@@ -49,20 +51,15 @@ func createMapdomain_mapbmr_bindingFunc(d *schema.ResourceData, meta interface{}
 
 	err := client.UpdateUnnamedResource("mapdomain_mapbmr_binding", &mapdomain_mapbmr_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readMapdomain_mapbmr_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this mapdomain_mapbmr_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readMapdomain_mapbmr_bindingFunc(ctx, d, meta)
 }
 
-func readMapdomain_mapbmr_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readMapdomain_mapbmr_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readMapdomain_mapbmr_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -83,7 +80,7 @@ func readMapdomain_mapbmr_bindingFunc(d *schema.ResourceData, meta interface{}) 
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -121,7 +118,7 @@ func readMapdomain_mapbmr_bindingFunc(d *schema.ResourceData, meta interface{}) 
 
 }
 
-func deleteMapdomain_mapbmr_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteMapdomain_mapbmr_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteMapdomain_mapbmr_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -136,7 +133,7 @@ func deleteMapdomain_mapbmr_bindingFunc(d *schema.ResourceData, meta interface{}
 
 	err := client.DeleteResourceWithArgs("mapdomain_mapbmr_binding", name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

@@ -25,15 +25,15 @@ import (
 
 	"github.com/citrix/adc-nitro-go/resource/config/lb"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccLbvserver_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckLbvserverDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckLbvserverDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLbvserver_basic,
@@ -81,9 +81,9 @@ func TestAccLbvserver_quicbridgeprofile(t *testing.T) {
 		t.Skip("No support in CPX")
 	}
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckLbvserverDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckLbvserverDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLbvserver_quicbridgeprofile,
@@ -99,9 +99,9 @@ func TestAccLbvserver_quicbridgeprofile(t *testing.T) {
 
 func TestAccLbvserver_snicerts(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { doPreChecks(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckLbvserverDestroy,
+		PreCheck:          func() { doPreChecks(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckLbvserverDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testSslcertificateBindingsConfig(sniCertsTemplateConfig, "", "cert2-cert3"),
@@ -142,9 +142,9 @@ func TestAccLbvserver_standalone_ciphersuites_mixed(t *testing.T) {
 	// 	t.Skip("cluster ADC deployment")
 	// }
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckLbvserverDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckLbvserverDestroy,
 		Steps: []resource.TestStep{
 			// Initial
 			{
@@ -179,9 +179,9 @@ func TestAccLbvserver_cluster_ciphersuites(t *testing.T) {
 		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
 	}
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckLbvserverDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckLbvserverDestroy,
 		Steps: []resource.TestStep{
 			// Initial
 			{
@@ -219,9 +219,9 @@ func TestAccLbvserver_cluster_ciphers(t *testing.T) {
 		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
 	}
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckLbvserverDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckLbvserverDestroy,
 		Steps: []resource.TestStep{
 			// Initial
 			{
@@ -272,8 +272,12 @@ func testAccCheckLbvserverExist(n string, id *string) resource.TestCheckFunc {
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Lbvserver.Type(), rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Lbvserver.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -288,7 +292,11 @@ func testAccCheckLbvserverExist(n string, id *string) resource.TestCheckFunc {
 }
 
 func testAccCheckLbvserverDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_lbvserver" {
@@ -299,7 +307,7 @@ func testAccCheckLbvserverDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Lbvserver.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Lbvserver.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("LB vserver %s still exists", rs.Primary.ID)
 		}
@@ -492,9 +500,9 @@ resource "citrixadc_lbvserver" "tf_acc_lb_vserver" {
 
 func TestAccLbvserver_enable_disable(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckLbvserverDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckLbvserverDestroy,
 		Steps: []resource.TestStep{
 			// Create enabled
 			{

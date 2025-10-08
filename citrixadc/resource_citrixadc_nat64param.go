@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
 	"strconv"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcNat64param() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNat64paramFunc,
-		Read:          readNat64paramFunc,
-		Update:        updateNat64paramFunc,
-		Delete:        deleteNat64paramFunc,
+		CreateContext: createNat64paramFunc,
+		ReadContext:   readNat64paramFunc,
+		UpdateContext: updateNat64paramFunc,
+		DeleteContext: deleteNat64paramFunc,
 		Schema: map[string]*schema.Schema{
 			"nat64fragheader": {
 				Type:     schema.TypeString,
@@ -48,7 +51,7 @@ func resourceCitrixAdcNat64param() *schema.Resource {
 	}
 }
 
-func createNat64paramFunc(d *schema.ResourceData, meta interface{}) error {
+func createNat64paramFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNat64paramFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var nat64paramName string
@@ -65,20 +68,15 @@ func createNat64paramFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.UpdateUnnamedResource("nat64param", &nat64param)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(nat64paramName)
 
-	err = readNat64paramFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this nat64param but we can't read it ?? %s", nat64paramName)
-		return nil
-	}
-	return nil
+	return readNat64paramFunc(ctx, d, meta)
 }
 
-func readNat64paramFunc(d *schema.ResourceData, meta interface{}) error {
+func readNat64paramFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNat64paramFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading nat64param state")
@@ -100,7 +98,7 @@ func readNat64paramFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateNat64paramFunc(d *schema.ResourceData, meta interface{}) error {
+func updateNat64paramFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateNat64paramFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -135,13 +133,13 @@ func updateNat64paramFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource("nat64param", &nat64param)
 		if err != nil {
-			return fmt.Errorf("Error updating nat64param")
+			return diag.Errorf("Error updating nat64param")
 		}
 	}
-	return readNat64paramFunc(d, meta)
+	return readNat64paramFunc(ctx, d, meta)
 }
 
-func deleteNat64paramFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNat64paramFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNat64paramFunc")
 
 	d.SetId("")

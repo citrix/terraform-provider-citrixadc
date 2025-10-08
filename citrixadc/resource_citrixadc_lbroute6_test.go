@@ -21,8 +21,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccLbroute6_basic = `
@@ -102,9 +102,9 @@ resource "citrixadc_lbroute6" "demo_route6" {
 
 func TestAccLbroute6_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckLbroute6Destroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckLbroute6Destroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLbroute6_basic,
@@ -136,13 +136,17 @@ func testAccCheckLbroute6Exist(n string, id *string) resource.TestCheckFunc {
 		}
 
 		network := rs.Primary.ID
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		findParams := service.FindParams{
 			ResourceType: service.Lbroute6.Type(),
 		}
 
-		dataArray, err := nsClient.FindResourceArrayWithParams(findParams)
+		dataArray, err := client.FindResourceArrayWithParams(findParams)
 
 		foundIndex := -1
 		for i, lbroute6 := range dataArray {
@@ -166,7 +170,11 @@ func testAccCheckLbroute6Exist(n string, id *string) resource.TestCheckFunc {
 }
 
 func testAccCheckLbroute6Destroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_lbroute6" {
@@ -182,7 +190,7 @@ func testAccCheckLbroute6Destroy(s *terraform.State) error {
 		findParams := service.FindParams{
 			ResourceType: service.Lbroute6.Type(),
 		}
-		dataArray, err := nsClient.FindResourceArrayWithParams(findParams)
+		dataArray, err := client.FindResourceArrayWithParams(findParams)
 
 		if err != nil {
 			return err

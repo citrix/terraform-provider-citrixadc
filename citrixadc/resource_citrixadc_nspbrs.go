@@ -1,20 +1,23 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcNspbrs() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNspbrsFunc,
+		CreateContext: createNspbrsFunc,
 		Read:          schema.Noop,
 		Delete:        schema.Noop,
 		Schema: map[string]*schema.Schema{
@@ -28,7 +31,7 @@ func resourceCitrixAdcNspbrs() *schema.Resource {
 	}
 }
 
-func createNspbrsFunc(d *schema.ResourceData, meta interface{}) error {
+func createNspbrsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNspbrsFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nspbrsName := resource.PrefixedUniqueId("tf-nspbrs-")
@@ -43,11 +46,11 @@ func createNspbrsFunc(d *schema.ResourceData, meta interface{}) error {
 	} else if nspbrsAction == "renumber" {
 		err = client.ActOnResource(service.Nspbrs.Type(), &nspbrs, "renumber")
 	} else {
-		return fmt.Errorf("Invalid value for action %s. Supported values of action are `apply`, `clear` or `renumber`", nspbrsAction)
+		return diag.Errorf("Invalid value for action %s. Supported values of action are `apply`, `clear` or `renumber`", nspbrsAction)
 	}
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(nspbrsName)

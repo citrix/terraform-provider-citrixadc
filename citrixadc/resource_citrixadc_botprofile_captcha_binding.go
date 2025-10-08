@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/bot"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 	"strings"
@@ -14,11 +16,11 @@ import (
 func resourceCitrixAdcBotprofile_captcha_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createBotprofile_captcha_bindingFunc,
-		Read:          readBotprofile_captcha_bindingFunc,
-		Delete:        deleteBotprofile_captcha_bindingFunc,
+		CreateContext: createBotprofile_captcha_bindingFunc,
+		ReadContext:   readBotprofile_captcha_bindingFunc,
+		DeleteContext: deleteBotprofile_captcha_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -98,7 +100,7 @@ func resourceCitrixAdcBotprofile_captcha_binding() *schema.Resource {
 	}
 }
 
-func createBotprofile_captcha_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createBotprofile_captcha_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createBotprofile_captcha_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name")
@@ -121,20 +123,15 @@ func createBotprofile_captcha_bindingFunc(d *schema.ResourceData, meta interface
 
 	err := client.UpdateUnnamedResource("botprofile_captcha_binding", &botprofile_captcha_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readBotprofile_captcha_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this botprofile_captcha_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readBotprofile_captcha_bindingFunc(ctx, d, meta)
 }
 
-func readBotprofile_captcha_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readBotprofile_captcha_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readBotprofile_captcha_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -156,7 +153,7 @@ func readBotprofile_captcha_bindingFunc(d *schema.ResourceData, meta interface{}
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -192,19 +189,19 @@ func readBotprofile_captcha_bindingFunc(d *schema.ResourceData, meta interface{}
 	d.Set("bot_captcha_enabled", data["bot_captcha_enabled"])
 	d.Set("bot_captcha_url", data["bot_captcha_url"])
 	d.Set("captcharesource", data["captcharesource"])
-	d.Set("graceperiod", data["graceperiod"])
+	setToInt("graceperiod", d, data["graceperiod"])
 	d.Set("logmessage", data["logmessage"])
-	d.Set("muteperiod", data["muteperiod"])
+	setToInt("muteperiod", d, data["muteperiod"])
 	d.Set("name", data["name"])
-	d.Set("requestsizelimit", data["requestsizelimit"])
-	d.Set("retryattempts", data["retryattempts"])
-	d.Set("waittime", data["waittime"])
+	setToInt("requestsizelimit", d, data["requestsizelimit"])
+	setToInt("retryattempts", d, data["retryattempts"])
+	setToInt("waittime", d, data["waittime"])
 
 	return nil
 
 }
 
-func deleteBotprofile_captcha_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteBotprofile_captcha_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteBotprofile_captcha_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -222,7 +219,7 @@ func deleteBotprofile_captcha_bindingFunc(d *schema.ResourceData, meta interface
 
 	err := client.DeleteResourceWithArgs("botprofile_captcha_binding", name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

@@ -1,13 +1,14 @@
 package citrixadc
 
 import (
+	"hash/fnv"
 	"log"
 	"strconv"
 	"time"
 
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func isTargetAdcCluster(nsClient *service.NitroClient) bool {
@@ -77,6 +78,28 @@ func setToInt(attributeName string, d *schema.ResourceData, value interface{}) {
 	d.Set(attributeName, v)
 }
 
+// Convert various types (int, float64, etc.) to string
+func toString(value interface{}) string {
+	switch v := value.(type) {
+	case string:
+		return v
+	case int:
+		return strconv.Itoa(v)
+	case int64:
+		return strconv.FormatInt(v, 10)
+	case float64:
+		return strconv.FormatFloat(v, 'f', -1, 64)
+	case float32:
+		return strconv.FormatFloat(float64(v), 'f', -1, 32)
+	case bool:
+		return strconv.FormatBool(v)
+	case nil:
+		return ""
+	default:
+		return ""
+	}
+}
+
 // TODO: Better implementation can be done to check whether NetScaler is UP after reboot, by polling the NetScaler
 func rebootNetScaler(d *schema.ResourceData, meta interface{}, warm bool) error {
 	log.Printf("[DEBUG] netscaler-provider: In rebootAdc")
@@ -96,4 +119,12 @@ func rebootNetScaler(d *schema.ResourceData, meta interface{}, warm bool) error 
 	time.Sleep(time.Second * time.Duration(sleepTimeout))
 
 	return nil
+}
+
+// hashString returns a hash of the input string using FNV-1a
+// This replaces the hashcode.String function from SDK v1
+func hashString(input string) int {
+	h := fnv.New32a()
+	h.Write([]byte(input))
+	return int(h.Sum32() & 0x7fffffff) // Ensure positive int
 }

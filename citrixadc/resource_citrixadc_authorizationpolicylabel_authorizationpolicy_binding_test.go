@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"strings"
 	"testing"
 )
@@ -30,15 +30,15 @@ resource "citrixadc_authorizationpolicy" "authorize" {
 	name   = "tp-authorize-1"
 	rule   = "true"
 	action = "DENY"
-  }
+	}
   resource "citrixadc_authorizationpolicylabel" "authorizationpolicylabel" {
 	labelname = "trans_http_url"
-  }
+	}
   resource "citrixadc_authorizationpolicylabel_authorizationpolicy_binding" "authorizationpolicylabel_authorizationpolicy_binding" {
 	policyname = citrixadc_authorizationpolicy.authorize.name
 	labelname = citrixadc_authorizationpolicylabel.authorizationpolicylabel.labelname
 	priority = 2
-  }
+	}
 `
 
 const testAccAuthorizationpolicylabel_authorizationpolicy_binding_basic_step2 = `
@@ -46,17 +46,17 @@ const testAccAuthorizationpolicylabel_authorizationpolicy_binding_basic_step2 = 
 	name   = "tp-authorize-1"
 	rule   = "true"
 	action = "DENY"
-  }
+	}
 	resource "citrixadc_authorizationpolicylabel" "authorizationpolicylabel" {
 	labelname = "trans_http_url"
-  }
+	}
 `
 
 func TestAccAuthorizationpolicylabel_authorizationpolicy_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAuthorizationpolicylabel_authorizationpolicy_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAuthorizationpolicylabel_authorizationpolicy_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAuthorizationpolicylabel_authorizationpolicy_binding_basic,
@@ -93,7 +93,11 @@ func testAccCheckAuthorizationpolicylabel_authorizationpolicy_bindingExist(n str
 			*id = rs.Primary.ID
 		}
 
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		bindingId := rs.Primary.ID
 
@@ -133,7 +137,11 @@ func testAccCheckAuthorizationpolicylabel_authorizationpolicy_bindingExist(n str
 
 func testAccCheckAuthorizationpolicylabel_authorizationpolicy_bindingNotExist(n string, id string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
@@ -173,7 +181,11 @@ func testAccCheckAuthorizationpolicylabel_authorizationpolicy_bindingNotExist(n 
 }
 
 func testAccCheckAuthorizationpolicylabel_authorizationpolicy_bindingDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_authorizationpolicylabel_authorizationpolicy_binding" {
@@ -184,7 +196,7 @@ func testAccCheckAuthorizationpolicylabel_authorizationpolicy_bindingDestroy(s *
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Authorizationpolicylabel_authorizationpolicy_binding.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Authorizationpolicylabel_authorizationpolicy_binding.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("authorizationpolicylabel_authorizationpolicy_binding %s still exists", rs.Primary.ID)
 		}

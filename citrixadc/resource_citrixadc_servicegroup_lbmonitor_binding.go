@@ -1,24 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/basic"
 	"github.com/citrix/adc-nitro-go/service"
-
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
 	"log"
 	"strings"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcServicegroup_lbmonitor_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createServicegroup_lbmonitor_bindingFunc,
-		Read:          readServicegroup_lbmonitor_bindingFunc,
-		Delete:        deleteServicegroup_lbmonitor_bindingFunc,
+		CreateContext: createServicegroup_lbmonitor_bindingFunc,
+		ReadContext:   readServicegroup_lbmonitor_bindingFunc,
+		DeleteContext: deleteServicegroup_lbmonitor_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"customserverid": {
@@ -95,7 +98,7 @@ func resourceCitrixAdcServicegroup_lbmonitor_binding() *schema.Resource {
 	}
 }
 
-func createServicegroup_lbmonitor_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createServicegroup_lbmonitor_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createServicegroup_lbmonitor_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	servicegroupName := d.Get("servicegroupname")
@@ -120,31 +123,26 @@ func createServicegroup_lbmonitor_bindingFunc(d *schema.ResourceData, meta inter
 
 	err := client.UpdateUnnamedResource(service.Servicegroup_lbmonitor_binding.Type(), &servicegroup_lbmonitor_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(servicegroupLbmonitorBindingId)
 
-	err = readServicegroup_lbmonitor_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this servicegroup_lbmonitor_binding but we can't read it ?? %s", servicegroupLbmonitorBindingId)
-		return nil
-	}
-	return nil
+	return readServicegroup_lbmonitor_bindingFunc(ctx, d, meta)
 }
 
-func readServicegroup_lbmonitor_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readServicegroup_lbmonitor_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readServicegroup_lbmonitor_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	servicegroupLbmonitorBindingId := d.Id()
 	idSlice := strings.Split(servicegroupLbmonitorBindingId, ",")
 
 	if len(idSlice) < 2 {
-		return fmt.Errorf("Cannot deduce monitorname from id string")
+		return diag.Errorf("Cannot deduce monitorname from id string")
 	}
 
 	if len(idSlice) > 2 {
-		return fmt.Errorf("Too many separators \",\" in id string")
+		return diag.Errorf("Too many separators \",\" in id string")
 	}
 
 	servicegroupName := idSlice[0]
@@ -161,7 +159,7 @@ func readServicegroup_lbmonitor_bindingFunc(d *schema.ResourceData, meta interfa
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -192,16 +190,15 @@ func readServicegroup_lbmonitor_bindingFunc(d *schema.ResourceData, meta interfa
 
 	data := dataArr[foundIndex]
 
-	d.Set("name", data["name"])
 	d.Set("customserverid", data["customserverid"])
-	d.Set("dbsttl", data["dbsttl"])
-	d.Set("hashid", data["hashid"])
+	setToInt("dbsttl", d, data["dbsttl"])
+	setToInt("hashid", d, data["hashid"])
 	d.Set("monitorname", data["monitor_name"])
 	d.Set("monstate", data["monstate"])
 	d.Set("nameserver", data["nameserver"])
 	d.Set("passive", data["passive"])
-	d.Set("port", data["port"])
-	d.Set("serverid", data["serverid"])
+	setToInt("port", d, data["port"])
+	setToInt("serverid", d, data["serverid"])
 	d.Set("servicegroupname", data["servicegroupname"])
 	d.Set("state", data["state"])
 	setToInt("weight", d, data["weight"])
@@ -210,7 +207,7 @@ func readServicegroup_lbmonitor_bindingFunc(d *schema.ResourceData, meta interfa
 
 }
 
-func deleteServicegroup_lbmonitor_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteServicegroup_lbmonitor_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteServicegroup_lbmonitor_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	servicegroupLbmonitorBindingId := d.Id()
@@ -227,7 +224,7 @@ func deleteServicegroup_lbmonitor_bindingFunc(d *schema.ResourceData, meta inter
 
 	err := client.DeleteResourceWithArgs(service.Servicegroup_lbmonitor_binding.Type(), servicegroupName, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

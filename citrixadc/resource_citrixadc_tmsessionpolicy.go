@@ -1,24 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/tm"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcTmsessionpolicy() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createTmsessionpolicyFunc,
-		Read:          readTmsessionpolicyFunc,
-		Update:        updateTmsessionpolicyFunc,
-		Delete:        deleteTmsessionpolicyFunc,
+		CreateContext: createTmsessionpolicyFunc,
+		ReadContext:   readTmsessionpolicyFunc,
+		UpdateContext: updateTmsessionpolicyFunc,
+		DeleteContext: deleteTmsessionpolicyFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"action": {
@@ -38,7 +41,7 @@ func resourceCitrixAdcTmsessionpolicy() *schema.Resource {
 	}
 }
 
-func createTmsessionpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func createTmsessionpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createTmsessionpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	tmsessionpolicyName := d.Get("name").(string)
@@ -51,20 +54,15 @@ func createTmsessionpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Tmsessionpolicy.Type(), tmsessionpolicyName, &tmsessionpolicy)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(tmsessionpolicyName)
 
-	err = readTmsessionpolicyFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this tmsessionpolicy but we can't read it ?? %s", tmsessionpolicyName)
-		return nil
-	}
-	return nil
+	return readTmsessionpolicyFunc(ctx, d, meta)
 }
 
-func readTmsessionpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func readTmsessionpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readTmsessionpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	tmsessionpolicyName := d.Id()
@@ -83,7 +81,7 @@ func readTmsessionpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateTmsessionpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func updateTmsessionpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateTmsessionpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	tmsessionpolicyName := d.Get("name").(string)
@@ -106,19 +104,19 @@ func updateTmsessionpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Tmsessionpolicy.Type(), &tmsessionpolicy)
 		if err != nil {
-			return fmt.Errorf("Error updating tmsessionpolicy %s", tmsessionpolicyName)
+			return diag.Errorf("Error updating tmsessionpolicy %s", tmsessionpolicyName)
 		}
 	}
-	return readTmsessionpolicyFunc(d, meta)
+	return readTmsessionpolicyFunc(ctx, d, meta)
 }
 
-func deleteTmsessionpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteTmsessionpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteTmsessionpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	tmsessionpolicyName := d.Id()
 	err := client.DeleteResource(service.Tmsessionpolicy.Type(), tmsessionpolicyName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

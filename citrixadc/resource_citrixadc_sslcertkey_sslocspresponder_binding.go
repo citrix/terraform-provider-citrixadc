@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/ssl"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strings"
 )
@@ -13,11 +15,11 @@ import (
 func resourceCitrixAdcSslcertkey_sslocspresponder_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSslcertkey_sslocspresponder_bindingFunc,
-		Read:          readSslcertkey_sslocspresponder_bindingFunc,
-		Delete:        deleteSslcertkey_sslocspresponder_bindingFunc,
+		CreateContext: createSslcertkey_sslocspresponder_bindingFunc,
+		ReadContext:   readSslcertkey_sslocspresponder_bindingFunc,
+		DeleteContext: deleteSslcertkey_sslocspresponder_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"certkey": {
@@ -40,7 +42,7 @@ func resourceCitrixAdcSslcertkey_sslocspresponder_binding() *schema.Resource {
 	}
 }
 
-func createSslcertkey_sslocspresponder_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createSslcertkey_sslocspresponder_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSslcertkey_sslocspresponder_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	certkey := d.Get("certkey").(string)
@@ -54,20 +56,15 @@ func createSslcertkey_sslocspresponder_bindingFunc(d *schema.ResourceData, meta 
 
 	_, err := client.AddResource(service.Sslcertkey_sslocspresponder_binding.Type(), bindingId, &sslcertkey_sslocspresponder_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readSslcertkey_sslocspresponder_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this sslcertkey_sslocspresponder_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readSslcertkey_sslocspresponder_bindingFunc(ctx, d, meta)
 }
 
-func readSslcertkey_sslocspresponder_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readSslcertkey_sslocspresponder_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSslcertkey_sslocspresponder_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -88,7 +85,7 @@ func readSslcertkey_sslocspresponder_bindingFunc(d *schema.ResourceData, meta in
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -127,7 +124,7 @@ func readSslcertkey_sslocspresponder_bindingFunc(d *schema.ResourceData, meta in
 
 }
 
-func deleteSslcertkey_sslocspresponder_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSslcertkey_sslocspresponder_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSslcertkey_sslocspresponder_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -142,7 +139,7 @@ func deleteSslcertkey_sslocspresponder_bindingFunc(d *schema.ResourceData, meta 
 
 	err := client.DeleteResourceWithArgs(service.Sslcertkey_sslocspresponder_binding.Type(), name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

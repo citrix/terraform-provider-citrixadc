@@ -1,19 +1,23 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ssl"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcSslcert() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSslcertFunc,
+		CreateContext: createSslcertFunc,
 		Read:          schema.Noop,
 		Delete:        schema.Noop,
 		Schema: map[string]*schema.Schema{
@@ -105,7 +109,7 @@ func resourceCitrixAdcSslcert() *schema.Resource {
 	}
 }
 
-func createSslcertFunc(d *schema.ResourceData, meta interface{}) error {
+func createSslcertFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSslcertFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var sslcertName string
@@ -131,7 +135,7 @@ func createSslcertFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.ActOnResource(service.Sslcert.Type(), &sslcert, "create")
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(sslcertName)

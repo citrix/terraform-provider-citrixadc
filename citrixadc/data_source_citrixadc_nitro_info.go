@@ -1,20 +1,22 @@
 package citrixadc
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"log"
 )
 
 func dataSourceCitrixAdcNitroInfo() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceCitrixAdcNitroInfoRead,
+		ReadContext: dataSourceCitrixAdcNitroInfoRead,
 		Schema: map[string]*schema.Schema{
 			"workflow": {
 				Type:     schema.TypeMap,
@@ -62,7 +64,8 @@ func dataSourceCitrixAdcNitroInfo() *schema.Resource {
 	}
 }
 
-func dataSourceCitrixAdcNitroInfoRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceCitrixAdcNitroInfoRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	log.Printf("[DEBUG] citrixadc-provider:  In dataSourceCitrixAdcNitroInfoRead")
 	var err error
 	workflowMap := d.Get("workflow").(map[string]interface{})
@@ -75,7 +78,10 @@ func dataSourceCitrixAdcNitroInfoRead(d *schema.ResourceData, meta interface{}) 
 		err = fmt.Errorf("Lifecycle %s is not implemented", workflowMap["lifecycle"].(string))
 	}
 
-	return err
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	return diags
 }
 
 func dataSourceCitrixAdcNitroInfoBindingListRead(d *schema.ResourceData, meta interface{}) error {

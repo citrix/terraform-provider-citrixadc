@@ -1,10 +1,14 @@
 package citrixadc
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"context"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 type changePasswordPayload struct {
@@ -16,7 +20,7 @@ type changePasswordPayload struct {
 func resourceCitrixAdcChangePassword() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createChangePassword,
+		CreateContext: createChangePassword,
 		Read:          schema.Noop,
 		Delete:        schema.Noop,
 		Schema: map[string]*schema.Schema{
@@ -47,7 +51,7 @@ func resourceCitrixAdcChangePassword() *schema.Resource {
 	}
 }
 
-func createChangePassword(d *schema.ResourceData, meta interface{}) error {
+func createChangePassword(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createChangePassword")
 	client := meta.(*NetScalerNitroClient).client
 	id := resource.PrefixedUniqueId("tf-change-password-")
@@ -62,7 +66,7 @@ func createChangePassword(d *schema.ResourceData, meta interface{}) error {
 	if d.Get("first_time_password_reset").(bool) == true {
 		_, err := client.AddResource("login", "", &payload)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	} else {
 		new_payload := changePasswordPayload{
@@ -71,7 +75,7 @@ func createChangePassword(d *schema.ResourceData, meta interface{}) error {
 		}
 		err := client.UpdateUnnamedResource("systemuser", &new_payload)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 

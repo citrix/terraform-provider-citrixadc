@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/audit"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAuditnslogparams() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAuditnslogparamsFunc,
-		Read:          readAuditnslogparamsFunc,
-		Update:        updateAuditnslogparamsFunc,
-		Delete:        deleteAuditnslogparamsFunc,
+		CreateContext: createAuditnslogparamsFunc,
+		ReadContext:   readAuditnslogparamsFunc,
+		UpdateContext: updateAuditnslogparamsFunc,
+		DeleteContext: deleteAuditnslogparamsFunc,
 		Schema: map[string]*schema.Schema{
 			"acl": {
 				Type:     schema.TypeString,
@@ -104,7 +107,7 @@ func resourceCitrixAdcAuditnslogparams() *schema.Resource {
 	}
 }
 
-func createAuditnslogparamsFunc(d *schema.ResourceData, meta interface{}) error {
+func createAuditnslogparamsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAuditnslogparamsFunc")
 	client := meta.(*NetScalerNitroClient).client
 	auditnslogparamsName := resource.PrefixedUniqueId("tf-auditnslogparams-")
@@ -130,20 +133,15 @@ func createAuditnslogparamsFunc(d *schema.ResourceData, meta interface{}) error 
 
 	err := client.UpdateUnnamedResource(service.Auditnslogparams.Type(), &auditnslogparams)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(auditnslogparamsName)
 
-	err = readAuditnslogparamsFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this auditnslogparams but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readAuditnslogparamsFunc(ctx, d, meta)
 }
 
-func readAuditnslogparamsFunc(d *schema.ResourceData, meta interface{}) error {
+func readAuditnslogparamsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAuditnslogparamsFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading auditnslogparams state")
@@ -162,7 +160,7 @@ func readAuditnslogparamsFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("loglevel", data["loglevel"])
 	d.Set("lsn", data["lsn"])
 	d.Set("serverip", data["serverip"])
-	d.Set("serverport", data["serverport"])
+	setToInt("serverport", d, data["serverport"])
 	d.Set("sslinterception", data["sslinterception"])
 	d.Set("subscriberlog", data["subscriberlog"])
 	d.Set("tcp", data["tcp"])
@@ -174,7 +172,7 @@ func readAuditnslogparamsFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateAuditnslogparamsFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAuditnslogparamsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAuditnslogparamsFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -264,13 +262,13 @@ func updateAuditnslogparamsFunc(d *schema.ResourceData, meta interface{}) error 
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Auditnslogparams.Type(), &auditnslogparams)
 		if err != nil {
-			return fmt.Errorf("Error updating auditnslogparams")
+			return diag.Errorf("Error updating auditnslogparams")
 		}
 	}
-	return readAuditnslogparamsFunc(d, meta)
+	return readAuditnslogparamsFunc(ctx, d, meta)
 }
 
-func deleteAuditnslogparamsFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAuditnslogparamsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAuditnslogparamsFunc")
 	// auditnslogparams does not support DELETE operation
 	d.SetId("")

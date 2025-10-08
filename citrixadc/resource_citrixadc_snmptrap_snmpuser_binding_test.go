@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-	http://www.apache.org/licenses/LICENSE-2.0
+http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,32 +17,33 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"strings"
 	"testing"
+
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccSnmptrap_snmpuser_binding_basic = `
 	resource "citrixadc_snmpuser" "tf_snmpuser" {
-		name       = "tf_snmpuser"
-		group      = "all_group"
-		authtype   = "SHA"
-		authpasswd = "secretpassword"
-		privtype   = "AES"
-		privpasswd = "secretpassword"
+	name       = "tf_snmpuser"
+	group      = "all_group"
+	authtype   = "SHA"
+	authpasswd = "secretpassword"
+	privtype   = "AES"
+	privpasswd = "secretpassword"
 	}
 	resource "citrixadc_snmptrap" "tf_snmptrap" {
-		trapclass       = "generic"
-		trapdestination = "10.50.50.10"
-		version         = "V3"
+	trapclass       = "generic"
+	trapdestination = "10.50.50.10"
+	version         = "V3"
 	}
 	resource "citrixadc_snmptrap_snmpuser_binding" "tf_binding" {
-		trapclass       = citrixadc_snmptrap.tf_snmptrap.trapclass
-		trapdestination = citrixadc_snmptrap.tf_snmptrap.trapdestination
-		username        = citrixadc_snmpuser.tf_snmpuser.name
-		securitylevel   = "authPriv"
+	trapclass       = citrixadc_snmptrap.tf_snmptrap.trapclass
+	trapdestination = citrixadc_snmptrap.tf_snmptrap.trapdestination
+	username        = citrixadc_snmpuser.tf_snmpuser.name
+	securitylevel   = "authPriv"
 	}
 `
 
@@ -66,9 +67,9 @@ const testAccSnmptrap_snmpuser_binding_basic = `
 
 func TestAccSnmptrap_snmpuser_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckSnmptrap_snmpuser_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckSnmptrap_snmpuser_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSnmptrap_snmpuser_binding_basic,
@@ -105,7 +106,11 @@ func testAccCheckSnmptrap_snmpuser_bindingExist(n string, id *string) resource.T
 			*id = rs.Primary.ID
 		}
 
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		bindingId := rs.Primary.ID
 
@@ -153,7 +158,11 @@ func testAccCheckSnmptrap_snmpuser_bindingExist(n string, id *string) resource.T
 // FIXME: Know how to access the other attributes of the resource other than attributes that are included in the ID of the resource
 // func testAccCheckSnmptrap_snmpuser_bindingNotExist(n string, id string) resource.TestCheckFunc {
 // 	return func(s *terraform.State) error {
-// 		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+// 		Use the shared utility function to get a configured client
+// 		client, err := testAccGetClient()
+// 		if err != nil {
+// 			return fmt.Errorf("Failed to get test client: %v", err)
+// 		}
 // 		rs, _ := s.RootModule().Resources[n]
 // 		if !strings.Contains(id, ",") {
 // 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
@@ -203,7 +212,11 @@ func testAccCheckSnmptrap_snmpuser_bindingExist(n string, id *string) resource.T
 // }
 
 func testAccCheckSnmptrap_snmpuser_bindingDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_snmptrap_snmpuser_binding" {
@@ -214,7 +227,7 @@ func testAccCheckSnmptrap_snmpuser_bindingDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Snmptrap_snmpuser_binding.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Snmptrap_snmpuser_binding.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("snmptrap_snmpuser_binding %s still exists", rs.Primary.ID)
 		}

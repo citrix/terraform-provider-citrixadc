@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 	"strings"
@@ -14,11 +16,11 @@ import (
 func resourceCitrixAdcLinkset_channel_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createLinkset_channel_bindingFunc,
-		Read:          readLinkset_channel_bindingFunc,
-		Delete:        deleteLinkset_channel_bindingFunc,
+		CreateContext: createLinkset_channel_bindingFunc,
+		ReadContext:   readLinkset_channel_bindingFunc,
+		DeleteContext: deleteLinkset_channel_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"linkset_id": {
@@ -35,7 +37,7 @@ func resourceCitrixAdcLinkset_channel_binding() *schema.Resource {
 	}
 }
 
-func createLinkset_channel_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createLinkset_channel_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createLinkset_channel_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	id := d.Get("linkset_id").(string)
@@ -48,20 +50,15 @@ func createLinkset_channel_bindingFunc(d *schema.ResourceData, meta interface{})
 
 	err := client.UpdateUnnamedResource(service.Linkset_channel_binding.Type(), &linkset_channel_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readLinkset_channel_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this linkset_channel_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readLinkset_channel_bindingFunc(ctx, d, meta)
 }
 
-func readLinkset_channel_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readLinkset_channel_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readLinkset_channel_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -82,7 +79,7 @@ func readLinkset_channel_bindingFunc(d *schema.ResourceData, meta interface{}) e
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -120,7 +117,7 @@ func readLinkset_channel_bindingFunc(d *schema.ResourceData, meta interface{}) e
 
 }
 
-func deleteLinkset_channel_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteLinkset_channel_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteLinkset_channel_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -135,7 +132,7 @@ func deleteLinkset_channel_bindingFunc(d *schema.ResourceData, meta interface{})
 
 	err := client.DeleteResourceWithArgs(service.Linkset_channel_binding.Type(), name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

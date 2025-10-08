@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package plugin
 
 import (
@@ -42,10 +45,16 @@ func (s *RPCServer) Config() string { return "" }
 
 // ServerProtocol impl.
 func (s *RPCServer) Serve(lis net.Listener) {
+	defer s.done()
+
 	for {
 		conn, err := lis.Accept()
 		if err != nil {
-			log.Printf("[ERR] plugin: plugin server: %s", err)
+			severity := "ERR"
+			if errors.Is(err, net.ErrClosed) {
+				severity = "DEBUG"
+			}
+			log.Printf("[%s] plugin: plugin server: %s", severity, err)
 			return
 		}
 
@@ -60,7 +69,7 @@ func (s *RPCServer) ServeConn(conn io.ReadWriteCloser) {
 	// First create the yamux server to wrap this connection
 	mux, err := yamux.Server(conn, nil)
 	if err != nil {
-		conn.Close()
+		_ = conn.Close()
 		log.Printf("[ERR] plugin: error creating yamux server: %s", err)
 		return
 	}
@@ -68,7 +77,7 @@ func (s *RPCServer) ServeConn(conn io.ReadWriteCloser) {
 	// Accept the control connection
 	control, err := mux.Accept()
 	if err != nil {
-		mux.Close()
+		_ = mux.Close()
 		if err != io.EOF {
 			log.Printf("[ERR] plugin: error accepting control connection: %s", err)
 		}
@@ -78,10 +87,10 @@ func (s *RPCServer) ServeConn(conn io.ReadWriteCloser) {
 
 	// Connect the stdstreams (in, out, err)
 	stdstream := make([]net.Conn, 2)
-	for i, _ := range stdstream {
+	for i := range stdstream {
 		stdstream[i], err = mux.Accept()
 		if err != nil {
-			mux.Close()
+			_ = mux.Close()
 			log.Printf("[ERR] plugin: accepting stream %d: %s", i, err)
 			return
 		}
@@ -98,10 +107,10 @@ func (s *RPCServer) ServeConn(conn io.ReadWriteCloser) {
 	// Use the control connection to build the dispenser and serve the
 	// connection.
 	server := rpc.NewServer()
-	server.RegisterName("Control", &controlServer{
+	_ = server.RegisterName("Control", &controlServer{
 		server: s,
 	})
-	server.RegisterName("Dispenser", &dispenseServer{
+	_ = server.RegisterName("Dispenser", &dispenseServer{
 		broker:  broker,
 		plugins: s.Plugins,
 	})
@@ -129,13 +138,15 @@ type controlServer struct {
 // Ping can be called to verify the connection (and likely the binary)
 // is still alive to a plugin.
 func (c *controlServer) Ping(
-	null bool, response *struct{}) error {
+	null bool, response *struct{},
+) error {
 	*response = struct{}{}
 	return nil
 }
 
 func (c *controlServer) Quit(
-	null bool, response *struct{}) error {
+	null bool, response *struct{},
+) error {
 	// End the server
 	c.server.done()
 
@@ -152,7 +163,8 @@ type dispenseServer struct {
 }
 
 func (d *dispenseServer) Dispense(
-	name string, response *uint32) error {
+	name string, response *uint32,
+) error {
 	// Find the function to create this implementation
 	p, ok := d.plugins[name]
 	if !ok {

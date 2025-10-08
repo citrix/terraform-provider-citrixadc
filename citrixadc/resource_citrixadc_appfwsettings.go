@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/appfw"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAppfwsettings() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAppfwsettingsFunc,
-		Read:          readAppfwsettingsFunc,
-		Update:        updateAppfwsettingsFunc,
-		Delete:        deleteAppfwsettingsFunc,
+		CreateContext: createAppfwsettingsFunc,
+		ReadContext:   readAppfwsettingsFunc,
+		UpdateContext: updateAppfwsettingsFunc,
+		DeleteContext: deleteAppfwsettingsFunc,
 		Schema: map[string]*schema.Schema{
 			"ceflogging": {
 				Type:     schema.TypeString,
@@ -129,7 +132,7 @@ func resourceCitrixAdcAppfwsettings() *schema.Resource {
 	}
 }
 
-func createAppfwsettingsFunc(d *schema.ResourceData, meta interface{}) error {
+func createAppfwsettingsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppfwsettingsFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -161,20 +164,15 @@ func createAppfwsettingsFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.UpdateUnnamedResource(service.Appfwsettings.Type(), &appfwsettings)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(appfwsettingsName)
 
-	err = readAppfwsettingsFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this appfwsettings but we can't read it ?? %s", appfwsettingsName)
-		return nil
-	}
-	return nil
+	return readAppfwsettingsFunc(ctx, d, meta)
 }
 
-func readAppfwsettingsFunc(d *schema.ResourceData, meta interface{}) error {
+func readAppfwsettingsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAppfwsettingsFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appfwsettingsName := d.Id()
@@ -192,16 +190,16 @@ func readAppfwsettingsFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("defaultprofile", data["defaultprofile"])
 	d.Set("entitydecoding", data["entitydecoding"])
 	d.Set("geolocationlogging", data["geolocationlogging"])
-	d.Set("importsizelimit", data["importsizelimit"])
-	d.Set("learnratelimit", data["learnratelimit"])
+	setToInt("importsizelimit", d, data["importsizelimit"])
+	setToInt("learnratelimit", d, data["learnratelimit"])
 	d.Set("logmalformedreq", data["logmalformedreq"])
 	d.Set("malformedreqaction", data["malformedreqaction"])
-	d.Set("proxyport", data["proxyport"])
+	setToInt("proxyport", d, data["proxyport"])
 	d.Set("proxyserver", data["proxyserver"])
 	d.Set("sessioncookiename", data["sessioncookiename"])
-	d.Set("sessionlifetime", data["sessionlifetime"])
-	d.Set("sessionlimit", data["sessionlimit"])
-	d.Set("sessiontimeout", data["sessiontimeout"])
+	setToInt("sessionlifetime", d, data["sessionlifetime"])
+	setToInt("sessionlimit", d, data["sessionlimit"])
+	setToInt("sessiontimeout", d, data["sessiontimeout"])
 	d.Set("signatureautoupdate", data["signatureautoupdate"])
 	d.Set("signatureurl", data["signatureurl"])
 	d.Set("undefaction", data["undefaction"])
@@ -211,7 +209,7 @@ func readAppfwsettingsFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateAppfwsettingsFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAppfwsettingsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAppfwsettingsFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -327,13 +325,13 @@ func updateAppfwsettingsFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Appfwsettings.Type(), &appfwsettings)
 		if err != nil {
-			return fmt.Errorf("Error updating appfwsettings %s", err.Error())
+			return diag.Errorf("Error updating appfwsettings %s", err.Error())
 		}
 	}
-	return readAppfwsettingsFunc(d, meta)
+	return readAppfwsettingsFunc(ctx, d, meta)
 }
 
-func deleteAppfwsettingsFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAppfwsettingsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppfwsettingsFunc")
 
 	d.SetId("")

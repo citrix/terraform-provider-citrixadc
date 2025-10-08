@@ -1,24 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcNshttpprofile() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNshttpprofileFunc,
-		Read:          readNshttpprofileFunc,
-		Update:        updateNshttpprofileFunc,
-		Delete:        deleteNshttpprofileFunc,
+		CreateContext: createNshttpprofileFunc,
+		ReadContext:   readNshttpprofileFunc,
+		UpdateContext: updateNshttpprofileFunc,
+		DeleteContext: deleteNshttpprofileFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"adpttimeout": {
@@ -325,7 +327,7 @@ func resourceCitrixAdcNshttpprofile() *schema.Resource {
 	}
 }
 
-func createNshttpprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func createNshttpprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNshttpprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nshttpprofileName := d.Get("name").(string)
@@ -395,20 +397,15 @@ func createNshttpprofileFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Nshttpprofile.Type(), nshttpprofileName, &nshttpprofile)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(nshttpprofileName)
 
-	err = readNshttpprofileFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this nshttpprofile but we can't read it ?? %s", nshttpprofileName)
-		return nil
-	}
-	return nil
+	return readNshttpprofileFunc(ctx, d, meta)
 }
 
-func readNshttpprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func readNshttpprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNshttpprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nshttpprofileName := d.Id()
@@ -423,61 +420,61 @@ func readNshttpprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("adpttimeout", data["adpttimeout"])
 	d.Set("altsvc", data["altsvc"])
 	d.Set("altsvcvalue", data["altsvcvalue"])
-	d.Set("apdexcltresptimethreshold", data["apdexcltresptimethreshold"])
+	setToInt("apdexcltresptimethreshold", d, data["apdexcltresptimethreshold"])
 	d.Set("clientiphdrexpr", data["clientiphdrexpr"])
 	d.Set("cmponpush", data["cmponpush"])
 	d.Set("conmultiplex", data["conmultiplex"])
 	d.Set("dropextracrlf", data["dropextracrlf"])
 	d.Set("dropextradata", data["dropextradata"])
 	d.Set("dropinvalreqs", data["dropinvalreqs"])
-	d.Set("grpcholdlimit", data["grpcholdlimit"])
-	d.Set("grpcholdtimeout", data["grpcholdtimeout"])
+	setToInt("grpcholdlimit", d, data["grpcholdlimit"])
+	setToInt("grpcholdtimeout", d, data["grpcholdtimeout"])
 	d.Set("grpclengthdelimitation", data["grpclengthdelimitation"])
 	d.Set("http2", data["http2"])
 	d.Set("http2altsvcframe", data["http2altsvcframe"])
 	d.Set("http2direct", data["http2direct"])
-	d.Set("http2headertablesize", data["http2headertablesize"])
-	d.Set("http2initialconnwindowsize", data["http2initialconnwindowsize"])
-	d.Set("http2initialwindowsize", data["http2initialwindowsize"])
-	d.Set("http2maxconcurrentstreams", data["http2maxconcurrentstreams"])
-	d.Set("http2maxemptyframespermin", data["http2maxemptyframespermin"])
-	d.Set("http2maxframesize", data["http2maxframesize"])
-	d.Set("http2maxheaderlistsize", data["http2maxheaderlistsize"])
-	d.Set("http2maxpingframespermin", data["http2maxpingframespermin"])
-	d.Set("http2maxresetframespermin", data["http2maxresetframespermin"])
-	d.Set("http2maxsettingsframespermin", data["http2maxsettingsframespermin"])
-	d.Set("http2minseverconn", data["http2minseverconn"])
+	setToInt("http2headertablesize", d, data["http2headertablesize"])
+	setToInt("http2initialconnwindowsize", d, data["http2initialconnwindowsize"])
+	setToInt("http2initialwindowsize", d, data["http2initialwindowsize"])
+	setToInt("http2maxconcurrentstreams", d, data["http2maxconcurrentstreams"])
+	setToInt("http2maxemptyframespermin", d, data["http2maxemptyframespermin"])
+	setToInt("http2maxframesize", d, data["http2maxframesize"])
+	setToInt("http2maxheaderlistsize", d, data["http2maxheaderlistsize"])
+	setToInt("http2maxpingframespermin", d, data["http2maxpingframespermin"])
+	setToInt("http2maxresetframespermin", d, data["http2maxresetframespermin"])
+	setToInt("http2maxsettingsframespermin", d, data["http2maxsettingsframespermin"])
+	setToInt("http2minseverconn", d, data["http2minseverconn"])
 	d.Set("http2strictcipher", data["http2strictcipher"])
 	d.Set("http3", data["http3"])
-	d.Set("http3maxheaderblockedstreams", data["http3maxheaderblockedstreams"])
-	d.Set("http3maxheaderfieldsectionsize", data["http3maxheaderfieldsectionsize"])
-	d.Set("http3maxheadertablesize", data["http3maxheadertablesize"])
-	d.Set("incomphdrdelay", data["incomphdrdelay"])
+	setToInt("http3maxheaderblockedstreams", d, data["http3maxheaderblockedstreams"])
+	setToInt("http3maxheaderfieldsectionsize", d, data["http3maxheaderfieldsectionsize"])
+	setToInt("http3maxheadertablesize", d, data["http3maxheadertablesize"])
+	setToInt("incomphdrdelay", d, data["incomphdrdelay"])
 	d.Set("markconnreqinval", data["markconnreqinval"])
 	d.Set("markhttp09inval", data["markhttp09inval"])
 	d.Set("markhttpheaderextrawserror", data["markhttpheaderextrawserror"])
 	d.Set("markrfc7230noncompliantinval", data["markrfc7230noncompliantinval"])
 	d.Set("marktracereqinval", data["marktracereqinval"])
-	d.Set("maxheaderlen", data["maxheaderlen"])
-	d.Set("maxreq", data["maxreq"])
-	d.Set("maxreusepool", data["maxreusepool"])
-	d.Set("minreusepool", data["minreusepool"])
+	setToInt("maxheaderlen", d, data["maxheaderlen"])
+	setToInt("maxreq", d, data["maxreq"])
+	setToInt("maxreusepool", d, data["maxreusepool"])
+	setToInt("minreusepool", d, data["minreusepool"])
 	d.Set("name", data["name"])
 	d.Set("persistentetag", data["persistentetag"])
-	d.Set("reqtimeout", data["reqtimeout"])
+	setToInt("reqtimeout", d, data["reqtimeout"])
 	d.Set("reqtimeoutaction", data["reqtimeoutaction"])
-	d.Set("reusepooltimeout", data["reusepooltimeout"])
+	setToInt("reusepooltimeout", d, data["reusepooltimeout"])
 	d.Set("rtsptunnel", data["rtsptunnel"])
 	d.Set("weblog", data["weblog"])
 	d.Set("websocket", data["websocket"])
-	d.Set("maxheaderfieldlen", data["maxheaderfieldlen"])
-	d.Set("http2maxrxresetframespermin", data["http2maxrxresetframespermin"])
+	setToInt("maxheaderfieldlen", d, data["maxheaderfieldlen"])
+	setToInt("http2maxrxresetframespermin", d, data["http2maxrxresetframespermin"])
 	d.Set("http3webtransport", data["http3webtransport"])
-	d.Set("http3minseverconn", data["http3minseverconn"])
-	d.Set("httppipelinebuffsize", data["httppipelinebuffsize"])
+	setToInt("http3minseverconn", d, data["http3minseverconn"])
+	setToInt("httppipelinebuffsize", d, data["httppipelinebuffsize"])
 	d.Set("allowonlywordcharactersandhyphen", data["allowonlywordcharactersandhyphen"])
 	d.Set("hostheadervalidation", data["hostheadervalidation"])
-	d.Set("maxduplicateheaderfields", data["maxduplicateheaderfields"])
+	setToInt("maxduplicateheaderfields", d, data["maxduplicateheaderfields"])
 	d.Set("passprotocolupgrade", data["passprotocolupgrade"])
 	d.Set("http2extendedconnect", data["http2extendedconnect"])
 
@@ -485,7 +482,7 @@ func readNshttpprofileFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateNshttpprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func updateNshttpprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateNshttpprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nshttpprofileName := d.Get("name").(string)
@@ -798,19 +795,19 @@ func updateNshttpprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Nshttpprofile.Type(), nshttpprofileName, &nshttpprofile)
 		if err != nil {
-			return fmt.Errorf("Error updating nshttpprofile %s", nshttpprofileName)
+			return diag.Errorf("Error updating nshttpprofile %s", nshttpprofileName)
 		}
 	}
-	return readNshttpprofileFunc(d, meta)
+	return readNshttpprofileFunc(ctx, d, meta)
 }
 
-func deleteNshttpprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNshttpprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNshttpprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nshttpprofileName := d.Id()
 	err := client.DeleteResource(service.Nshttpprofile.Type(), nshttpprofileName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

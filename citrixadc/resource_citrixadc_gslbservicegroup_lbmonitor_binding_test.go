@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"strings"
 	"testing"
 )
@@ -31,7 +31,7 @@ resource "citrixadc_gslbservicegroup_lbmonitor_binding" "tf_gslbservicegroup_lbm
 	servicegroupname = citrixadc_gslbservicegroup.tf_gslbservicegroup.servicegroupname
 	monitor_name      = citrixadc_lbmonitor.tfmonitor1.monitorname
   
-  }
+	}
   
   resource "citrixadc_gslbservicegroup" "tf_gslbservicegroup" {
 	servicegroupname = "test_gslbvservicegroup"
@@ -39,19 +39,19 @@ resource "citrixadc_gslbservicegroup_lbmonitor_binding" "tf_gslbservicegroup_lbm
 	cip              = "DISABLED"
 	healthmonitor    = "NO"
 	sitename         = citrixadc_gslbsite.site_local.sitename
-  }
+	}
   
   resource "citrixadc_gslbsite" "site_local" {
 	sitename        = "Site-Local"
 	siteipaddress   = "172.31.96.234"
 	sessionexchange = "DISABLED"
 	sitepassword    = "password123"
-  }
+	}
   
   resource "citrixadc_lbmonitor" "tfmonitor1" {
 	monitorname = "tf_monitor"
 	type        = "HTTP"
-  } 
+	}
 `
 
 const testAccGslbservicegroup_lbmonitor_binding_basic_step2 = `
@@ -62,26 +62,26 @@ const testAccGslbservicegroup_lbmonitor_binding_basic_step2 = `
 	cip              = "DISABLED"
 	healthmonitor    = "NO"
 	sitename         = citrixadc_gslbsite.site_local.sitename
-  }
+	}
   
   resource "citrixadc_gslbsite" "site_local" {
 	sitename        = "Site-Local"
 	siteipaddress   = "172.31.96.234"
 	sessionexchange = "DISABLED"
 	sitepassword    = "password123"
-  }
+	}
   
   resource "citrixadc_lbmonitor" "tfmonitor1" {
 	monitorname = "tf_monitor"
 	type        = "HTTP"
-  } 
+	}
 `
 
 func TestAccGslbservicegroup_lbmonitor_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckGslbservicegroup_lbmonitor_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckGslbservicegroup_lbmonitor_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGslbservicegroup_lbmonitor_binding_basic,
@@ -118,7 +118,11 @@ func testAccCheckGslbservicegroup_lbmonitor_bindingExist(n string, id *string) r
 			*id = rs.Primary.ID
 		}
 
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		bindingId := rs.Primary.ID
 
@@ -158,7 +162,11 @@ func testAccCheckGslbservicegroup_lbmonitor_bindingExist(n string, id *string) r
 
 func testAccCheckGslbservicegroup_lbmonitor_bindingNotExist(n string, id string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
@@ -198,7 +206,11 @@ func testAccCheckGslbservicegroup_lbmonitor_bindingNotExist(n string, id string)
 }
 
 func testAccCheckGslbservicegroup_lbmonitor_bindingDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_gslbservicegroup_lbmonitor_binding" {
@@ -209,7 +221,7 @@ func testAccCheckGslbservicegroup_lbmonitor_bindingDestroy(s *terraform.State) e
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource("gslbservicegroup_lbmonitor_binding", rs.Primary.ID)
+		_, err := client.FindResource("gslbservicegroup_lbmonitor_binding", rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("gslbservicegroup_lbmonitor_binding %s still exists", rs.Primary.ID)
 		}

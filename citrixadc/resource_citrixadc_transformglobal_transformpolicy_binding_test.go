@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -28,17 +28,17 @@ const testAccTransformglobal_transformpolicy_binding_basic = `
 resource "citrixadc_transformprofile" "tf_trans_profile" {
 	name = "tf_trans_profile"
 	comment = "Some comment"
-  }
+	}
 resource "citrixadc_transformpolicy" "tf_trans_policy" {
 	name        = "tf_trans_policy"
 	profilename = citrixadc_transformprofile.tf_trans_profile.name
 	rule        = "http.REQ.URL.CONTAINS(\"test_url\")"
-  }
+	}
   resource "citrixadc_transformglobal_transformpolicy_binding" "transformglobal_transformpolicy_binding" {
 	policyname = citrixadc_transformpolicy.tf_trans_policy.name
 	priority   = 2
 	type       = "REQ_DEFAULT"
-  }
+	}
 `
 
 const testAccTransformglobal_transformpolicy_binding_basic_step2 = `
@@ -47,19 +47,19 @@ const testAccTransformglobal_transformpolicy_binding_basic_step2 = `
 	resource "citrixadc_transformprofile" "tf_trans_profile" {
 		name = "tf_trans_profile"
 		comment = "Some comment"
-	  }
+	}
 	resource "citrixadc_transformpolicy" "tf_trans_policy" {
 		name        = "tf_trans_policy"
 		profilename = citrixadc_transformprofile.tf_trans_profile.name
 		rule        = "http.REQ.URL.CONTAINS(\"test_url\")"
-	  }
+	}
 `
 
 func TestAccTransformglobal_transformpolicy_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckTransformglobal_transformpolicy_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckTransformglobal_transformpolicy_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransformglobal_transformpolicy_binding_basic,
@@ -96,7 +96,11 @@ func testAccCheckTransformglobal_transformpolicy_bindingExist(n string, id *stri
 			*id = rs.Primary.ID
 		}
 
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		policyname := rs.Primary.ID
 		typename := rs.Primary.Attributes["type"]
@@ -131,7 +135,11 @@ func testAccCheckTransformglobal_transformpolicy_bindingExist(n string, id *stri
 
 func testAccCheckTransformglobal_transformpolicy_bindingNotExist(n string, id string, typename string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 		policyname := id
 		findParams := service.FindParams{
 			ResourceType:             "transformglobal_transformpolicy_binding",
@@ -163,7 +171,11 @@ func testAccCheckTransformglobal_transformpolicy_bindingNotExist(n string, id st
 }
 
 func testAccCheckTransformglobal_transformpolicy_bindingDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_transformglobal_transformpolicy_binding" {
@@ -174,7 +186,7 @@ func testAccCheckTransformglobal_transformpolicy_bindingDestroy(s *terraform.Sta
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Transformglobal_transformpolicy_binding.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Transformglobal_transformpolicy_binding.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("transformglobal_transformpolicy_binding %s still exists", rs.Primary.ID)
 		}

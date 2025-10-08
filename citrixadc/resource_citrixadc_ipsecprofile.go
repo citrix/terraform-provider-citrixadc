@@ -1,22 +1,24 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/ipsec"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcIpsecprofile() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createIpsecprofileFunc,
-		Read:          readIpsecprofileFunc,
-		Delete:        deleteIpsecprofileFunc,
+		CreateContext: createIpsecprofileFunc,
+		ReadContext:   readIpsecprofileFunc,
+		DeleteContext: deleteIpsecprofileFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -108,7 +110,7 @@ func resourceCitrixAdcIpsecprofile() *schema.Resource {
 	}
 }
 
-func createIpsecprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func createIpsecprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createIpsecprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	ipsecprofileName := d.Get("name").(string)
@@ -132,20 +134,15 @@ func createIpsecprofileFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Ipsecprofile.Type(), ipsecprofileName, &ipsecprofile)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(ipsecprofileName)
 
-	err = readIpsecprofileFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this ipsecprofile but we can't read it ?? %s", ipsecprofileName)
-		return nil
-	}
-	return nil
+	return readIpsecprofileFunc(ctx, d, meta)
 }
 
-func readIpsecprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func readIpsecprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readIpsecprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	ipsecprofileName := d.Id()
@@ -159,30 +156,30 @@ func readIpsecprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", data["name"])
 	d.Set("encalgo", data["encalgo"])
 	d.Set("hashalgo", data["hashalgo"])
-	d.Set("ikeretryinterval", data["ikeretryinterval"])
+	setToInt("ikeretryinterval", d, data["ikeretryinterval"])
 	d.Set("ikeversion", data["ikeversion"])
-	d.Set("lifetime", data["lifetime"])
-	d.Set("livenesscheckinterval", data["livenesscheckinterval"])
+	setToInt("lifetime", d, data["lifetime"])
+	setToInt("livenesscheckinterval", d, data["livenesscheckinterval"])
 	d.Set("name", data["name"])
 	d.Set("peerpublickey", data["peerpublickey"])
 	//d.Set("perfectforwardsecrecy", data["perfectforwardsecrecy"])
 	d.Set("privatekey", data["privatekey"])
 	//d.Set("psk", data["psk"])
 	d.Set("publickey", data["publickey"])
-	d.Set("replaywindowsize", data["replaywindowsize"])
-	d.Set("retransmissiontime", data["retransmissiontime"])
+	setToInt("replaywindowsize", d, data["replaywindowsize"])
+	setToInt("retransmissiontime", d, data["retransmissiontime"])
 
 	return nil
 
 }
 
-func deleteIpsecprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteIpsecprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteIpsecprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	ipsecprofileName := d.Id()
 	err := client.DeleteResource(service.Ipsecprofile.Type(), ipsecprofileName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

@@ -1,19 +1,23 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ssl"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcSslcertreq() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSslcertreqFunc,
+		CreateContext: createSslcertreqFunc,
 		Read:          schema.Noop,
 		Delete:        schema.Noop,
 		Schema: map[string]*schema.Schema{
@@ -105,7 +109,7 @@ func resourceCitrixAdcSslcertreq() *schema.Resource {
 	}
 }
 
-func createSslcertreqFunc(d *schema.ResourceData, meta interface{}) error {
+func createSslcertreqFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSslcertreqFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -131,7 +135,7 @@ func createSslcertreqFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.ActOnResource(service.Sslcertreq.Type(), &sslcertreq, "create")
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(sslcertreqName)

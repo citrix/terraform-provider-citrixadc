@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/ssl"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strings"
 )
@@ -13,11 +15,11 @@ import (
 func resourceCitrixAdcSslcipher_sslciphersuite_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSslcipher_sslciphersuite_bindingFunc,
-		Read:          readSslcipher_sslciphersuite_bindingFunc,
-		Delete:        deleteSslcipher_sslciphersuite_bindingFunc,
+		CreateContext: createSslcipher_sslciphersuite_bindingFunc,
+		ReadContext:   readSslcipher_sslciphersuite_bindingFunc,
+		DeleteContext: deleteSslcipher_sslciphersuite_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"ciphergroupname": {
@@ -58,7 +60,7 @@ func resourceCitrixAdcSslcipher_sslciphersuite_binding() *schema.Resource {
 	}
 }
 
-func createSslcipher_sslciphersuite_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createSslcipher_sslciphersuite_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSslcipher_sslciphersuite_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	ciphergroupname := d.Get("ciphergroupname")
@@ -75,20 +77,15 @@ func createSslcipher_sslciphersuite_bindingFunc(d *schema.ResourceData, meta int
 
 	_, err := client.AddResource(service.Sslcipher_sslciphersuite_binding.Type(), bindingId, &sslcipher_sslciphersuite_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readSslcipher_sslciphersuite_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this sslcipher_sslciphersuite_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readSslcipher_sslciphersuite_bindingFunc(ctx, d, meta)
 }
 
-func readSslcipher_sslciphersuite_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readSslcipher_sslciphersuite_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSslcipher_sslciphersuite_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -109,7 +106,7 @@ func readSslcipher_sslciphersuite_bindingFunc(d *schema.ResourceData, meta inter
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -143,7 +140,7 @@ func readSslcipher_sslciphersuite_bindingFunc(d *schema.ResourceData, meta inter
 	d.Set("ciphergroupname", data["ciphergroupname"])
 	d.Set("ciphername", data["ciphername"])
 	d.Set("cipheroperation", data["cipheroperation"])
-	d.Set("cipherpriority", data["cipherpriority"])
+	setToInt("cipherpriority", d, data["cipherpriority"])
 	d.Set("ciphgrpals", data["ciphgrpals"])
 	d.Set("description", data["description"])
 
@@ -151,7 +148,7 @@ func readSslcipher_sslciphersuite_bindingFunc(d *schema.ResourceData, meta inter
 
 }
 
-func deleteSslcipher_sslciphersuite_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSslcipher_sslciphersuite_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSslcipher_sslciphersuite_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -166,7 +163,7 @@ func deleteSslcipher_sslciphersuite_bindingFunc(d *schema.ResourceData, meta int
 
 	err := client.DeleteResourceWithArgs(service.Sslcipher_sslciphersuite_binding.Type(), ciphergroupname, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

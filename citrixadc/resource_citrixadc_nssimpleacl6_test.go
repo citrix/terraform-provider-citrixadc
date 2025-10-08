@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -37,9 +37,9 @@ const testAccNssimpleacl6_basic = `
 
 func TestAccNssimpleacl6_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckNssimpleacl6Destroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckNssimpleacl6Destroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNssimpleacl6_basic,
@@ -73,8 +73,12 @@ func testAccCheckNssimpleacl6Exist(n string, id *string) resource.TestCheckFunc 
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Nssimpleacl6.Type(), rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Nssimpleacl6.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -89,7 +93,11 @@ func testAccCheckNssimpleacl6Exist(n string, id *string) resource.TestCheckFunc 
 }
 
 func testAccCheckNssimpleacl6Destroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_nssimpleacl6" {
@@ -100,7 +108,7 @@ func testAccCheckNssimpleacl6Destroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Nssimpleacl6.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Nssimpleacl6.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("nssimpleacl6 %s still exists", rs.Primary.ID)
 		}

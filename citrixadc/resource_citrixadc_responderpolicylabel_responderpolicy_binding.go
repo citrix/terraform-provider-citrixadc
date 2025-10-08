@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/responder"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 	"strings"
@@ -14,11 +16,11 @@ import (
 func resourceCitrixAdcResponderpolicylabel_responderpolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createResponderpolicylabel_responderpolicy_bindingFunc,
-		Read:          readResponderpolicylabel_responderpolicy_bindingFunc,
-		Delete:        deleteResponderpolicylabel_responderpolicy_bindingFunc,
+		CreateContext: createResponderpolicylabel_responderpolicy_bindingFunc,
+		ReadContext:   readResponderpolicylabel_responderpolicy_bindingFunc,
+		DeleteContext: deleteResponderpolicylabel_responderpolicy_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"gotopriorityexpression": {
@@ -64,7 +66,7 @@ func resourceCitrixAdcResponderpolicylabel_responderpolicy_binding() *schema.Res
 	}
 }
 
-func createResponderpolicylabel_responderpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createResponderpolicylabel_responderpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createResponderpolicylabel_responderpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	labelname := d.Get("labelname").(string)
@@ -82,20 +84,15 @@ func createResponderpolicylabel_responderpolicy_bindingFunc(d *schema.ResourceDa
 
 	_, err := client.AddResource(service.Responderpolicylabel_responderpolicy_binding.Type(), labelname, &responderpolicylabel_responderpolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readResponderpolicylabel_responderpolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this responderpolicylabel_responderpolicy_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readResponderpolicylabel_responderpolicy_bindingFunc(ctx, d, meta)
 }
 
-func readResponderpolicylabel_responderpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readResponderpolicylabel_responderpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readResponderpolicylabel_responderpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -116,7 +113,7 @@ func readResponderpolicylabel_responderpolicy_bindingFunc(d *schema.ResourceData
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -159,7 +156,7 @@ func readResponderpolicylabel_responderpolicy_bindingFunc(d *schema.ResourceData
 
 }
 
-func deleteResponderpolicylabel_responderpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteResponderpolicylabel_responderpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteResponderpolicylabel_responderpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -177,7 +174,7 @@ func deleteResponderpolicylabel_responderpolicy_bindingFunc(d *schema.ResourceDa
 	}
 	err := client.DeleteResourceWithArgsMap(service.Responderpolicylabel_responderpolicy_binding.Type(), labelname, argsMap)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

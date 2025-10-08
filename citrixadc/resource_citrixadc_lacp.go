@@ -1,25 +1,28 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
 	"strconv"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcLacp() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createLacpFunc,
-		Read:          readLacpFunc,
-		Update:        updateLacpFunc,
-		Delete:        deleteLacpFunc,
+		CreateContext: createLacpFunc,
+		ReadContext:   readLacpFunc,
+		UpdateContext: updateLacpFunc,
+		DeleteContext: deleteLacpFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"syspriority": {
@@ -35,7 +38,7 @@ func resourceCitrixAdcLacp() *schema.Resource {
 	}
 }
 
-func createLacpFunc(d *schema.ResourceData, meta interface{}) error {
+func createLacpFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createLacpFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lacpId := strconv.Itoa(d.Get("ownernode").(int))
@@ -49,20 +52,15 @@ func createLacpFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.UpdateUnnamedResource(service.Lacp.Type(), &lacp)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(lacpId)
 
-	err = readLacpFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this lacp but we can't read it %s??", lacpId)
-		return nil
-	}
-	return nil
+	return readLacpFunc(ctx, d, meta)
 }
 
-func readLacpFunc(d *schema.ResourceData, meta interface{}) error {
+func readLacpFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readLacpFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lacpId := d.Id()
@@ -74,14 +72,14 @@ func readLacpFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	d.Set("ownernode", data["ownernode"])
-	d.Set("syspriority", data["syspriority"])
+	setToInt("ownernode", d, data["ownernode"])
+	setToInt("syspriority", d, data["syspriority"])
 
 	return nil
 
 }
 
-func updateLacpFunc(d *schema.ResourceData, meta interface{}) error {
+func updateLacpFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateLacpFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lacpId := d.Id()
@@ -100,13 +98,13 @@ func updateLacpFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Lacp.Type(), &lacp)
 		if err != nil {
-			return fmt.Errorf("Error updating lacp %s", lacpId)
+			return diag.Errorf("Error updating lacp %s", lacpId)
 		}
 	}
-	return readLacpFunc(d, meta)
+	return readLacpFunc(ctx, d, meta)
 }
 
-func deleteLacpFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteLacpFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteLacpFunc")
 	//lacp does not support delete operation
 	d.SetId("")

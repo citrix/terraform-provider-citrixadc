@@ -1,24 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/policy"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcPolicyexpression() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createPolicyexpressionFunc,
-		Read:          readPolicyexpressionFunc,
-		Update:        updatePolicyexpressionFunc,
-		Delete:        deletePolicyexpressionFunc,
+		CreateContext: createPolicyexpressionFunc,
+		ReadContext:   readPolicyexpressionFunc,
+		UpdateContext: updatePolicyexpressionFunc,
+		DeleteContext: deletePolicyexpressionFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"clientsecuritymessage": {
@@ -45,7 +47,7 @@ func resourceCitrixAdcPolicyexpression() *schema.Resource {
 	}
 }
 
-func createPolicyexpressionFunc(d *schema.ResourceData, meta interface{}) error {
+func createPolicyexpressionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createPolicyexpressionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policyexpressionName := d.Get("name").(string)
@@ -58,20 +60,15 @@ func createPolicyexpressionFunc(d *schema.ResourceData, meta interface{}) error 
 
 	_, err := client.AddResource(service.Policyexpression.Type(), policyexpressionName, &policyexpression)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(policyexpressionName)
 
-	err = readPolicyexpressionFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this policyexpression but we can't read it ?? %s", policyexpressionName)
-		return nil
-	}
-	return nil
+	return readPolicyexpressionFunc(ctx, d, meta)
 }
 
-func readPolicyexpressionFunc(d *schema.ResourceData, meta interface{}) error {
+func readPolicyexpressionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readPolicyexpressionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policyexpressionName := d.Id()
@@ -92,7 +89,7 @@ func readPolicyexpressionFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updatePolicyexpressionFunc(d *schema.ResourceData, meta interface{}) error {
+func updatePolicyexpressionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updatePolicyexpressionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policyexpressionName := d.Get("name").(string)
@@ -125,19 +122,19 @@ func updatePolicyexpressionFunc(d *schema.ResourceData, meta interface{}) error 
 	if hasChange {
 		_, err := client.UpdateResource(service.Policyexpression.Type(), policyexpressionName, &policyexpression)
 		if err != nil {
-			return fmt.Errorf("Error updating policyexpression %s: %s", policyexpressionName, err.Error())
+			return diag.Errorf("Error updating policyexpression %s: %s", policyexpressionName, err.Error())
 		}
 	}
-	return readPolicyexpressionFunc(d, meta)
+	return readPolicyexpressionFunc(ctx, d, meta)
 }
 
-func deletePolicyexpressionFunc(d *schema.ResourceData, meta interface{}) error {
+func deletePolicyexpressionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deletePolicyexpressionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policyexpressionName := d.Id()
 	err := client.DeleteResource(service.Policyexpression.Type(), policyexpressionName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

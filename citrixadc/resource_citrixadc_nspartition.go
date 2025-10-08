@@ -1,22 +1,25 @@
 package citrixadc
 
 import (
-	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"context"
 
-	"fmt"
+	"github.com/citrix/adc-nitro-go/service"
+
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcNspartition() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNspartitionFunc,
-		Read:          readNspartitionFunc,
-		Update:        updateNspartitionFunc,
-		Delete:        deleteNspartitionFunc,
+		CreateContext: createNspartitionFunc,
+		ReadContext:   readNspartitionFunc,
+		UpdateContext: updateNspartitionFunc,
+		DeleteContext: deleteNspartitionFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"partitionname": {
@@ -64,7 +67,7 @@ func resourceCitrixAdcNspartition() *schema.Resource {
 	}
 }
 
-func createNspartitionFunc(d *schema.ResourceData, meta interface{}) error {
+func createNspartitionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNspartitionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nspartitionName := d.Get("partitionname").(string)
@@ -96,20 +99,15 @@ func createNspartitionFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	_, err := client.AddResource(service.Nspartition.Type(), nspartitionName, &nspartition)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(nspartitionName)
 
-	err = readNspartitionFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this nspartition but we can't read it ?? %s", nspartitionName)
-		return nil
-	}
-	return nil
+	return readNspartitionFunc(ctx, d, meta)
 }
 
-func readNspartitionFunc(d *schema.ResourceData, meta interface{}) error {
+func readNspartitionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNspartitionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nspartitionName := d.Id()
@@ -124,7 +122,7 @@ func readNspartitionFunc(d *schema.ResourceData, meta interface{}) error {
 	setToInt("maxbandwidth", d, data["maxbandwidth"])
 	setToInt("maxconn", d, data["maxconn"])
 	setToInt("maxmemlimit", d, data["maxmemlimit"])
-	// d.Set("minbandwidth", data["minbandwidth"])
+	// setToInt("minbandwidth", d, data["minbandwidth"])
 	d.Set("partitionmac", data["partitionmac"])
 	d.Set("partitionname", data["partitionname"])
 	d.Set("save", data["save"])
@@ -133,7 +131,7 @@ func readNspartitionFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateNspartitionFunc(d *schema.ResourceData, meta interface{}) error {
+func updateNspartitionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateNspartitionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nspartitionName := d.Get("partitionname").(string)
@@ -180,19 +178,19 @@ func updateNspartitionFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Nspartition.Type(), nspartitionName, &nspartition)
 		if err != nil {
-			return fmt.Errorf("Error updating nspartition %s", nspartitionName)
+			return diag.Errorf("Error updating nspartition %s", nspartitionName)
 		}
 	}
-	return readNspartitionFunc(d, meta)
+	return readNspartitionFunc(ctx, d, meta)
 }
 
-func deleteNspartitionFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNspartitionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNspartitionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nspartitionName := d.Id()
 	err := client.DeleteResource(service.Nspartition.Type(), nspartitionName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

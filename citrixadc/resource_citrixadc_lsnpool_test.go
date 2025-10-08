@@ -17,8 +17,8 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -50,9 +50,9 @@ const testAccLsnpool_update = `
 func TestAccLsnpool_basic(t *testing.T) {
 	t.Skip("TODO: Need to find a way to test this LSN resource!")
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckLsnpoolDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckLsnpoolDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLsnpool_basic,
@@ -99,8 +99,12 @@ func testAccCheckLsnpoolExist(n string, id *string) resource.TestCheckFunc {
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource("lsnpool", rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource("lsnpool", rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -115,7 +119,11 @@ func testAccCheckLsnpoolExist(n string, id *string) resource.TestCheckFunc {
 }
 
 func testAccCheckLsnpoolDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_lsnpool" {
@@ -126,7 +134,7 @@ func testAccCheckLsnpoolDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource("lsnpool", rs.Primary.ID)
+		_, err := client.FindResource("lsnpool", rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("lsnpool %s still exists", rs.Primary.ID)
 		}

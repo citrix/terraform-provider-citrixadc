@@ -1,24 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/transform"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcTransformpolicy() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createTransformpolicyFunc,
-		Read:          readTransformpolicyFunc,
-		Update:        updateTransformpolicyFunc,
-		Delete:        deleteTransformpolicyFunc,
+		CreateContext: createTransformpolicyFunc,
+		ReadContext:   readTransformpolicyFunc,
+		UpdateContext: updateTransformpolicyFunc,
+		DeleteContext: deleteTransformpolicyFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"comment": {
@@ -50,7 +52,7 @@ func resourceCitrixAdcTransformpolicy() *schema.Resource {
 	}
 }
 
-func createTransformpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func createTransformpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createTransformpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	transformpolicyName := d.Get("name").(string)
@@ -64,20 +66,15 @@ func createTransformpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Transformpolicy.Type(), transformpolicyName, &transformpolicy)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(transformpolicyName)
 
-	err = readTransformpolicyFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this transformpolicy but we can't read it ?? %s", transformpolicyName)
-		return nil
-	}
-	return nil
+	return readTransformpolicyFunc(ctx, d, meta)
 }
 
-func readTransformpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func readTransformpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readTransformpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	transformpolicyName := d.Id()
@@ -98,7 +95,7 @@ func readTransformpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateTransformpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func updateTransformpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateTransformpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	transformpolicyName := d.Get("name").(string)
@@ -136,19 +133,19 @@ func updateTransformpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Transformpolicy.Type(), transformpolicyName, &transformpolicy)
 		if err != nil {
-			return fmt.Errorf("Error updating transformpolicy %s", transformpolicyName)
+			return diag.Errorf("Error updating transformpolicy %s", transformpolicyName)
 		}
 	}
-	return readTransformpolicyFunc(d, meta)
+	return readTransformpolicyFunc(ctx, d, meta)
 }
 
-func deleteTransformpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteTransformpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteTransformpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	transformpolicyName := d.Id()
 	err := client.DeleteResource(service.Transformpolicy.Type(), transformpolicyName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

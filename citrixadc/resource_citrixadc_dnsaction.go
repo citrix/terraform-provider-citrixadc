@@ -1,24 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/dns"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcDnsaction() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createDnsactionFunc,
-		Read:          readDnsactionFunc,
-		Update:        updateDnsactionFunc,
-		Delete:        deleteDnsactionFunc,
+		CreateContext: createDnsactionFunc,
+		ReadContext:   readDnsactionFunc,
+		UpdateContext: updateDnsactionFunc,
+		DeleteContext: deleteDnsactionFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"actionname": {
@@ -62,7 +65,7 @@ func resourceCitrixAdcDnsaction() *schema.Resource {
 	}
 }
 
-func createDnsactionFunc(d *schema.ResourceData, meta interface{}) error {
+func createDnsactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createDnsactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnsactionName := d.Get("actionname").(string)
@@ -78,20 +81,15 @@ func createDnsactionFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Dnsaction.Type(), dnsactionName, &dnsaction)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(dnsactionName)
 
-	err = readDnsactionFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this dnsaction but we can't read it ?? %s", dnsactionName)
-		return nil
-	}
-	return nil
+	return readDnsactionFunc(ctx, d, meta)
 }
 
-func readDnsactionFunc(d *schema.ResourceData, meta interface{}) error {
+func readDnsactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readDnsactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnsactionName := d.Id()
@@ -108,14 +106,14 @@ func readDnsactionFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("dnsprofilename", data["dnsprofilename"])
 	d.Set("ipaddress", data["ipaddress"])
 	d.Set("preferredloclist", data["preferredloclist"])
-	d.Set("ttl", data["ttl"])
+	setToInt("ttl", d, data["ttl"])
 	d.Set("viewname", data["viewname"])
 
 	return nil
 
 }
 
-func updateDnsactionFunc(d *schema.ResourceData, meta interface{}) error {
+func updateDnsactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateDnsactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnsactionName := d.Get("actionname").(string)
@@ -158,19 +156,19 @@ func updateDnsactionFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Dnsaction.Type(), dnsactionName, &dnsaction)
 		if err != nil {
-			return fmt.Errorf("Error updating dnsaction %s", dnsactionName)
+			return diag.Errorf("Error updating dnsaction %s", dnsactionName)
 		}
 	}
-	return readDnsactionFunc(d, meta)
+	return readDnsactionFunc(ctx, d, meta)
 }
 
-func deleteDnsactionFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteDnsactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteDnsactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnsactionName := d.Id()
 	err := client.DeleteResource(service.Dnsaction.Type(), dnsactionName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

@@ -1,22 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/contentinspection"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcContentinspectionglobal_contentinspectionpolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createContentinspectionglobal_contentinspectionpolicy_bindingFunc,
-		Read:          readContentinspectionglobal_contentinspectionpolicy_bindingFunc,
-		Delete:        deleteContentinspectionglobal_contentinspectionpolicy_bindingFunc,
+		CreateContext: createContentinspectionglobal_contentinspectionpolicy_bindingFunc,
+		ReadContext:   readContentinspectionglobal_contentinspectionpolicy_bindingFunc,
+		DeleteContext: deleteContentinspectionglobal_contentinspectionpolicy_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"policyname": {
@@ -59,11 +63,17 @@ func resourceCitrixAdcContentinspectionglobal_contentinspectionpolicy_binding() 
 				Computed: true,
 				ForceNew: true,
 			},
+			"globalbindtype": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
 
-func createContentinspectionglobal_contentinspectionpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createContentinspectionglobal_contentinspectionpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createContentinspectionglobal_contentinspectionpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policyname := d.Get("policyname").(string)
@@ -75,24 +85,20 @@ func createContentinspectionglobal_contentinspectionpolicy_bindingFunc(d *schema
 		Policyname:             d.Get("policyname").(string),
 		Priority:               d.Get("priority").(int),
 		Type:                   d.Get("type").(string),
+		Globalbindtype:         d.Get("globalbindtype").(string),
 	}
 
 	err := client.UpdateUnnamedResource("contentinspectionglobal_contentinspectionpolicy_binding", &contentinspectionglobal_contentinspectionpolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(policyname)
 
-	err = readContentinspectionglobal_contentinspectionpolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this contentinspectionglobal_contentinspectionpolicy_binding but we can't read it ?? %s", policyname)
-		return nil
-	}
-	return nil
+	return readContentinspectionglobal_contentinspectionpolicy_bindingFunc(ctx, d, meta)
 }
 
-func readContentinspectionglobal_contentinspectionpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readContentinspectionglobal_contentinspectionpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readContentinspectionglobal_contentinspectionpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policyname := d.Id()
@@ -115,7 +121,7 @@ func readContentinspectionglobal_contentinspectionpolicy_bindingFunc(d *schema.R
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -159,7 +165,7 @@ func readContentinspectionglobal_contentinspectionpolicy_bindingFunc(d *schema.R
 
 }
 
-func deleteContentinspectionglobal_contentinspectionpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteContentinspectionglobal_contentinspectionpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteContentinspectionglobal_contentinspectionpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -177,7 +183,7 @@ func deleteContentinspectionglobal_contentinspectionpolicy_bindingFunc(d *schema
 
 	err := client.DeleteResourceWithArgs("contentinspectionglobal_contentinspectionpolicy_binding", "", args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

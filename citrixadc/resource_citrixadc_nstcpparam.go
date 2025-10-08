@@ -1,12 +1,16 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // We need to convert fields that are int and accept zero values to string for correct operation
@@ -61,9 +65,9 @@ type Nstcpparam struct {
 func resourceCitrixAdcNstcpparam() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNstcpparamFunc,
-		Read:          readNstcpparamFunc,
-		Delete:        deleteNstcpparamFunc,
+		CreateContext: createNstcpparamFunc,
+		ReadContext:   readNstcpparamFunc,
+		DeleteContext: deleteNstcpparamFunc,
 		Schema: map[string]*schema.Schema{
 			"ackonpush": {
 				Type:     schema.TypeString,
@@ -333,7 +337,7 @@ func resourceCitrixAdcNstcpparam() *schema.Resource {
 	}
 }
 
-func createNstcpparamFunc(d *schema.ResourceData, meta interface{}) error {
+func createNstcpparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNstcpparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nstcpparamName := resource.PrefixedUniqueId("tf-nstcpparam-")
@@ -387,20 +391,15 @@ func createNstcpparamFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.UpdateUnnamedResource(service.Nstcpparam.Type(), &nstcpparam)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(nstcpparamName)
 
-	err = readNstcpparamFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this nstcpparam but we can't read it ?? %s", nstcpparamName)
-		return nil
-	}
-	return nil
+	return readNstcpparamFunc(ctx, d, meta)
 }
 
-func readNstcpparamFunc(d *schema.ResourceData, meta interface{}) error {
+func readNstcpparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNstcpparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nstcpparamName := d.Id()
@@ -410,54 +409,54 @@ func readNstcpparamFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	dataArr, err := client.FindResourceArrayWithParams(findParams)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	// There is always a single entry
 	data := dataArr[0]
 	log.Printf("[DEBUG] citrixadc-provider: data read %v", data)
 
 	d.Set("ackonpush", data["ackonpush"])
-	d.Set("autosyncookietimeout", data["autosyncookietimeout"])
+	setToInt("autosyncookietimeout", d, data["autosyncookietimeout"])
 	d.Set("connflushifnomem", data["connflushifnomem"])
-	d.Set("connflushthres", data["connflushthres"])
-	d.Set("delayedack", data["delayedack"])
+	setToInt("connflushthres", d, data["connflushthres"])
+	setToInt("delayedack", d, data["delayedack"])
 	d.Set("downstaterst", data["downstaterst"])
-	d.Set("initialcwnd", data["initialcwnd"])
+	setToInt("initialcwnd", d, data["initialcwnd"])
 	d.Set("kaprobeupdatelastactivity", data["kaprobeupdatelastactivity"])
 	d.Set("learnvsvrmss", data["learnvsvrmss"])
 	d.Set("limitedpersist", data["limitedpersist"])
-	d.Set("maxburst", data["maxburst"])
-	d.Set("maxdynserverprobes", data["maxdynserverprobes"])
+	setToInt("maxburst", d, data["maxburst"])
+	setToInt("maxdynserverprobes", d, data["maxdynserverprobes"])
 	d.Set("maxpktpermss", data["maxpktpermss"])
-	d.Set("maxsynackretx", data["maxsynackretx"])
-	d.Set("maxsynhold", data["maxsynhold"])
-	d.Set("maxsynholdperprobe", data["maxsynholdperprobe"])
-	d.Set("maxtimewaitconn", data["maxtimewaitconn"])
-	d.Set("minrto", data["minrto"])
+	setToInt("maxsynackretx", d, data["maxsynackretx"])
+	setToInt("maxsynhold", d, data["maxsynhold"])
+	setToInt("maxsynholdperprobe", d, data["maxsynholdperprobe"])
+	setToInt("maxtimewaitconn", d, data["maxtimewaitconn"])
+	setToInt("minrto", d, data["minrto"])
 	d.Set("mptcpchecksum", data["mptcpchecksum"])
 	d.Set("mptcpclosemptcpsessiononlastsfclose", data["mptcpclosemptcpsessiononlastsfclose"])
 	d.Set("mptcpconcloseonpassivesf", data["mptcpconcloseonpassivesf"])
 	d.Set("mptcpimmediatesfcloseonfin", data["mptcpimmediatesfcloseonfin"])
 	d.Set("mptcpmaxpendingsf", data["mptcpmaxpendingsf"])
-	d.Set("mptcpmaxsf", data["mptcpmaxsf"])
+	setToInt("mptcpmaxsf", d, data["mptcpmaxsf"])
 	d.Set("mptcppendingjointhreshold", data["mptcppendingjointhreshold"])
-	d.Set("mptcprtostoswitchsf", data["mptcprtostoswitchsf"])
-	d.Set("mptcpsfreplacetimeout", data["mptcpsfreplacetimeout"])
-	d.Set("mptcpsftimeout", data["mptcpsftimeout"])
+	setToInt("mptcprtostoswitchsf", d, data["mptcprtostoswitchsf"])
+	d.Set("mptcpsfreplacetimeout", toString(data["mptcpsfreplacetimeout"]))
+	d.Set("mptcpsftimeout", toString(data["mptcpsftimeout"]))
 	d.Set("mptcpusebackupondss", data["mptcpusebackupondss"])
-	d.Set("msslearndelay", data["msslearndelay"])
-	d.Set("msslearninterval", data["msslearninterval"])
+	setToInt("msslearndelay", d, data["msslearndelay"])
+	setToInt("msslearninterval", d, data["msslearninterval"])
 	d.Set("nagle", data["nagle"])
 	d.Set("oooqsize", data["oooqsize"])
-	d.Set("pktperretx", data["pktperretx"])
-	d.Set("recvbuffsize", data["recvbuffsize"])
+	setToInt("pktperretx", d, data["pktperretx"])
+	setToInt("recvbuffsize", d, data["recvbuffsize"])
 	d.Set("sack", data["sack"])
-	d.Set("slowstartincr", data["slowstartincr"])
+	setToInt("slowstartincr", d, data["slowstartincr"])
 	d.Set("synattackdetection", data["synattackdetection"])
-	d.Set("synholdfastgiveup", data["synholdfastgiveup"])
-	d.Set("tcpfastopencookietimeout", data["tcpfastopencookietimeout"])
-	d.Set("tcpfintimeout", data["tcpfintimeout"])
-	d.Set("tcpmaxretries", data["tcpmaxretries"])
+	setToInt("synholdfastgiveup", d, data["synholdfastgiveup"])
+	d.Set("tcpfastopencookietimeout", toString(data["tcpfastopencookietimeout"]))
+	setToInt("tcpfintimeout", d, data["tcpfintimeout"])
+	setToInt("tcpmaxretries", d, data["tcpmaxretries"])
 	d.Set("ws", data["ws"])
 	d.Set("wsval", data["wsval"])
 
@@ -465,7 +464,7 @@ func readNstcpparamFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func deleteNstcpparamFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNstcpparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNstcpparamFunc")
 
 	d.SetId("")

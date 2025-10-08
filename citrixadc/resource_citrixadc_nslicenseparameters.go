@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
 	"strconv"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcNslicenseparameters() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNslicenseparametersFunc,
-		Read:          readNslicenseparametersFunc,
-		Update:        updateNslicenseparametersFunc,
-		Delete:        deleteNslicenseparametersFunc,
+		CreateContext: createNslicenseparametersFunc,
+		ReadContext:   readNslicenseparametersFunc,
+		UpdateContext: updateNslicenseparametersFunc,
+		DeleteContext: deleteNslicenseparametersFunc,
 		Schema: map[string]*schema.Schema{
 			"alert1gracetimeout": {
 				Type:     schema.TypeInt,
@@ -33,7 +36,7 @@ func resourceCitrixAdcNslicenseparameters() *schema.Resource {
 	}
 }
 
-func createNslicenseparametersFunc(d *schema.ResourceData, meta interface{}) error {
+func createNslicenseparametersFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNslicenseparametersFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var nslicenseparametersName string
@@ -46,20 +49,15 @@ func createNslicenseparametersFunc(d *schema.ResourceData, meta interface{}) err
 
 	err := client.UpdateUnnamedResource("nslicenseparameters", &nslicenseparameters)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(nslicenseparametersName)
 
-	err = readNslicenseparametersFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this nslicenseparameters but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readNslicenseparametersFunc(ctx, d, meta)
 }
 
-func readNslicenseparametersFunc(d *schema.ResourceData, meta interface{}) error {
+func readNslicenseparametersFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNslicenseparametersFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading nslicenseparameters state")
@@ -79,7 +77,7 @@ func readNslicenseparametersFunc(d *schema.ResourceData, meta interface{}) error
 
 }
 
-func updateNslicenseparametersFunc(d *schema.ResourceData, meta interface{}) error {
+func updateNslicenseparametersFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateNslicenseparametersFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -93,13 +91,13 @@ func updateNslicenseparametersFunc(d *schema.ResourceData, meta interface{}) err
 
 	err := client.UpdateUnnamedResource("nslicenseparameters", &nslicenseparameters)
 	if err != nil {
-		return fmt.Errorf("Error updating nslicenseparameters")
+		return diag.Errorf("Error updating nslicenseparameters")
 	}
 
-	return readNslicenseparametersFunc(d, meta)
+	return readNslicenseparametersFunc(ctx, d, meta)
 }
 
-func deleteNslicenseparametersFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNslicenseparametersFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNslicenseparametersFunc")
 
 	d.SetId("")

@@ -1,24 +1,26 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/snmp"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcSnmpgroup() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSnmpgroupFunc,
-		Read:          readSnmpgroupFunc,
-		Update:        updateSnmpgroupFunc,
-		Delete:        deleteSnmpgroupFunc,
+		CreateContext: createSnmpgroupFunc,
+		ReadContext:   readSnmpgroupFunc,
+		UpdateContext: updateSnmpgroupFunc,
+		DeleteContext: deleteSnmpgroupFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -39,7 +41,7 @@ func resourceCitrixAdcSnmpgroup() *schema.Resource {
 	}
 }
 
-func createSnmpgroupFunc(d *schema.ResourceData, meta interface{}) error {
+func createSnmpgroupFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSnmpgroupFunc")
 	client := meta.(*NetScalerNitroClient).client
 	snmpgroupName := d.Get("name").(string)
@@ -51,20 +53,15 @@ func createSnmpgroupFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Snmpgroup.Type(), snmpgroupName, &snmpgroup)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(snmpgroupName)
 
-	err = readSnmpgroupFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this snmpgroup but we can't read it ?? %s", snmpgroupName)
-		return nil
-	}
-	return nil
+	return readSnmpgroupFunc(ctx, d, meta)
 }
 
-func readSnmpgroupFunc(d *schema.ResourceData, meta interface{}) error {
+func readSnmpgroupFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSnmpgroupFunc")
 	client := meta.(*NetScalerNitroClient).client
 	snmpgroupName := d.Id()
@@ -108,7 +105,7 @@ func readSnmpgroupFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateSnmpgroupFunc(d *schema.ResourceData, meta interface{}) error {
+func updateSnmpgroupFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateSnmpgroupFunc")
 	client := meta.(*NetScalerNitroClient).client
 	snmpgroupName := d.Get("name").(string)
@@ -134,13 +131,13 @@ func updateSnmpgroupFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Snmpgroup.Type(), &snmpgroup)
 		if err != nil {
-			return fmt.Errorf("Error updating snmpgroup %s", snmpgroupName)
+			return diag.Errorf("Error updating snmpgroup %s", snmpgroupName)
 		}
 	}
-	return readSnmpgroupFunc(d, meta)
+	return readSnmpgroupFunc(ctx, d, meta)
 }
 
-func deleteSnmpgroupFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSnmpgroupFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSnmpgroupFunc")
 	client := meta.(*NetScalerNitroClient).client
 	snmpgroupName := d.Id()
@@ -150,7 +147,7 @@ func deleteSnmpgroupFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.DeleteResourceWithArgs(service.Snmpgroup.Type(), snmpgroupName, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

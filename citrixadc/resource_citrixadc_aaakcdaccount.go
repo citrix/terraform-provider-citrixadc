@@ -1,22 +1,23 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/aaa"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcAaakcdaccount() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAaakcdaccountFunc,
-		Read:          readAaakcdaccountFunc,
-		Update:        updateAaakcdaccountFunc,
-		Delete:        deleteAaakcdaccountFunc,
+		CreateContext: createAaakcdaccountFunc,
+		ReadContext:   readAaakcdaccountFunc,
+		UpdateContext: updateAaakcdaccountFunc,
+		DeleteContext: deleteAaakcdaccountFunc,
 		Schema: map[string]*schema.Schema{
 			"kcdaccount": {
 				Type:     schema.TypeString,
@@ -72,7 +73,7 @@ func resourceCitrixAdcAaakcdaccount() *schema.Resource {
 	}
 }
 
-func createAaakcdaccountFunc(d *schema.ResourceData, meta interface{}) error {
+func createAaakcdaccountFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAaakcdaccountFunc")
 	client := meta.(*NetScalerNitroClient).client
 	aaakcdaccountName := d.Get("kcdaccount").(string)
@@ -92,20 +93,15 @@ func createAaakcdaccountFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Aaakcdaccount.Type(), aaakcdaccountName, &aaakcdaccount)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(aaakcdaccountName)
 
-	err = readAaakcdaccountFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this aaakcdaccount but we can't read it ?? %s", aaakcdaccountName)
-		return nil
-	}
-	return nil
+	return readAaakcdaccountFunc(ctx, d, meta)
 }
 
-func readAaakcdaccountFunc(d *schema.ResourceData, meta interface{}) error {
+func readAaakcdaccountFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAaakcdaccountFunc")
 	client := meta.(*NetScalerNitroClient).client
 	aaakcdaccountName := d.Id()
@@ -132,7 +128,7 @@ func readAaakcdaccountFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateAaakcdaccountFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAaakcdaccountFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAaakcdaccountFunc")
 	client := meta.(*NetScalerNitroClient).client
 	aaakcdaccountName := d.Get("kcdaccount").(string)
@@ -190,19 +186,19 @@ func updateAaakcdaccountFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Aaakcdaccount.Type(), &aaakcdaccount)
 		if err != nil {
-			return fmt.Errorf("Error updating aaakcdaccount %s", aaakcdaccountName)
+			return diag.Errorf("Error updating aaakcdaccount %s", aaakcdaccountName)
 		}
 	}
-	return readAaakcdaccountFunc(d, meta)
+	return readAaakcdaccountFunc(ctx, d, meta)
 }
 
-func deleteAaakcdaccountFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAaakcdaccountFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAaakcdaccountFunc")
 	client := meta.(*NetScalerNitroClient).client
 	aaakcdaccountName := d.Id()
 	err := client.DeleteResource(service.Aaakcdaccount.Type(), aaakcdaccountName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -68,9 +68,9 @@ const testAccVpnglobal_authenticationradiuspolicy_binding_basic_step2 = `
 
 func TestAccVpnglobal_authenticationradiuspolicy_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckVpnglobal_authenticationradiuspolicy_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckVpnglobal_authenticationradiuspolicy_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVpnglobal_authenticationradiuspolicy_binding_basic,
@@ -107,7 +107,11 @@ func testAccCheckVpnglobal_authenticationradiuspolicy_bindingExist(n string, id 
 			*id = rs.Primary.ID
 		}
 
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		policyname := rs.Primary.ID
 		findParams := service.FindParams{
@@ -140,7 +144,11 @@ func testAccCheckVpnglobal_authenticationradiuspolicy_bindingExist(n string, id 
 
 func testAccCheckVpnglobal_authenticationradiuspolicy_bindingNotExist(n string, id string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 		policyname := id
 		findParams := service.FindParams{
 			ResourceType:             "vpnglobal_authenticationradiuspolicy_binding",
@@ -171,7 +179,11 @@ func testAccCheckVpnglobal_authenticationradiuspolicy_bindingNotExist(n string, 
 }
 
 func testAccCheckVpnglobal_authenticationradiuspolicy_bindingDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_vpnglobal_authenticationradiuspolicy_binding" {
@@ -182,7 +194,7 @@ func testAccCheckVpnglobal_authenticationradiuspolicy_bindingDestroy(s *terrafor
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Vpnglobal_authenticationradiuspolicy_binding.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Vpnglobal_authenticationradiuspolicy_binding.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("vpnglobal_authenticationradiuspolicy_binding %s still exists", rs.Primary.ID)
 		}

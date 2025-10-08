@@ -1,24 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/authentication"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAuthenticationcertaction() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAuthenticationcertactionFunc,
-		Read:          readAuthenticationcertactionFunc,
-		Update:        updateAuthenticationcertactionFunc,
-		Delete:        deleteAuthenticationcertactionFunc,
+		CreateContext: createAuthenticationcertactionFunc,
+		ReadContext:   readAuthenticationcertactionFunc,
+		UpdateContext: updateAuthenticationcertactionFunc,
+		DeleteContext: deleteAuthenticationcertactionFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -51,7 +54,7 @@ func resourceCitrixAdcAuthenticationcertaction() *schema.Resource {
 	}
 }
 
-func createAuthenticationcertactionFunc(d *schema.ResourceData, meta interface{}) error {
+func createAuthenticationcertactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAuthenticationcertactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationcertactionName := d.Get("name").(string)
@@ -65,20 +68,15 @@ func createAuthenticationcertactionFunc(d *schema.ResourceData, meta interface{}
 
 	_, err := client.AddResource(service.Authenticationcertaction.Type(), authenticationcertactionName, &authenticationcertaction)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(authenticationcertactionName)
 
-	err = readAuthenticationcertactionFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this authenticationcertaction but we can't read it ?? %s", authenticationcertactionName)
-		return nil
-	}
-	return nil
+	return readAuthenticationcertactionFunc(ctx, d, meta)
 }
 
-func readAuthenticationcertactionFunc(d *schema.ResourceData, meta interface{}) error {
+func readAuthenticationcertactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAuthenticationcertactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationcertactionName := d.Id()
@@ -99,7 +97,7 @@ func readAuthenticationcertactionFunc(d *schema.ResourceData, meta interface{}) 
 
 }
 
-func updateAuthenticationcertactionFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAuthenticationcertactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAuthenticationcertactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationcertactionName := d.Get("name").(string)
@@ -132,19 +130,19 @@ func updateAuthenticationcertactionFunc(d *schema.ResourceData, meta interface{}
 	if hasChange {
 		_, err := client.UpdateResource(service.Authenticationcertaction.Type(), authenticationcertactionName, &authenticationcertaction)
 		if err != nil {
-			return fmt.Errorf("Error updating authenticationcertaction %s", authenticationcertactionName)
+			return diag.Errorf("Error updating authenticationcertaction %s", authenticationcertactionName)
 		}
 	}
-	return readAuthenticationcertactionFunc(d, meta)
+	return readAuthenticationcertactionFunc(ctx, d, meta)
 }
 
-func deleteAuthenticationcertactionFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAuthenticationcertactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAuthenticationcertactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationcertactionName := d.Id()
 	err := client.DeleteResource(service.Authenticationcertaction.Type(), authenticationcertactionName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

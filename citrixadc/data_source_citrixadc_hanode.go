@@ -1,16 +1,18 @@
 package citrixadc
 
 import (
+	"context"
 	"log"
 	"strconv"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceCitrixAdcHanode() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceCitrixAdcHanodeRead,
+		ReadContext: dataSourceCitrixAdcHanodeRead,
 		Schema: map[string]*schema.Schema{
 			"hanode_id": {
 				Type:     schema.TypeInt,
@@ -105,7 +107,8 @@ func dataSourceCitrixAdcHanode() *schema.Resource {
 	}
 }
 
-func dataSourceCitrixAdcHanodeRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceCitrixAdcHanodeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	log.Printf("[DEBUG] citrixadc-provider:  In dataSourceCitrixAdcHanodeRead")
 	client := meta.(*NetScalerNitroClient).client
 	hanodeName := d.Get("hanode_id").(int)
@@ -113,31 +116,31 @@ func dataSourceCitrixAdcHanodeRead(d *schema.ResourceData, meta interface{}) err
 	data, err := client.FindResource(service.Hanode.Type(), strconv.Itoa(hanodeName))
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing hanode state")
-		return nil
+		return diags
 	}
 	d.SetId(data["id"].(string))
-	d.Set("hanode_id", data["id"])
+	setToInt("hanode_id", d, data["id"])
 	d.Set("ipaddress", data["ipaddress"])
-	d.Set("curflips", data["curflips"])
-	d.Set("completedfliptime", data["completedfliptime"])
-	d.Set("deadinterval", data["deadinterval"])
-	d.Set("enaifaces", data["enaifaces"])
+	setToInt("curflips", d, data["curflips"])
+	setToInt("completedfliptime", d, data["completedfliptime"])
+	setToInt("deadinterval", d, data["deadinterval"])
+	setToInt("enaifaces", d, data["enaifaces"])
 	d.Set("failsafe", data["failsafe"])
 	d.Set("haprop", data["haprop"])
 	d.Set("hastatus", data["hastatus"])
 	d.Set("hasync", data["hasync"])
-	d.Set("hellointerval", data["hellointerval"])
+	setToInt("hellointerval", d, data["hellointerval"])
 	d.Set("inc", data["inc"])
-	d.Set("masterstatetime", data["masterstatetime"])
-	d.Set("maxflips", data["maxflips"])
-	d.Set("maxfliptime", data["maxfliptime"])
+	setToInt("masterstatetime", d, data["masterstatetime"])
+	setToInt("maxflips", d, data["maxflips"])
+	setToInt("maxfliptime", d, data["maxfliptime"])
 	d.Set("netmask", data["netmask"])
 	d.Set("routemonitor", data["routemonitor"])
 	d.Set("routemonitorstate", data["routemonitorstate"])
 	d.Set("ssl2", data["ssl2"])
 	d.Set("state", data["state"])
 	d.Set("syncstatusstrictmode", data["syncstatusstrictmode"])
-	d.Set("syncvlan", data["syncvlan"])
+	setToInt("syncvlan", d, data["syncvlan"])
 
-	return nil
+	return diags
 }

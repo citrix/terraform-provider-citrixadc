@@ -1,13 +1,15 @@
 package citrixadc
 
 import (
+	"context"
 	"net/url"
 
 	"github.com/citrix/adc-nitro-go/resource/config/system"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strings"
 )
@@ -15,11 +17,11 @@ import (
 func resourceCitrixAdcSystemgroup_systemuser_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSystemgroup_systemuser_bindingFunc,
-		Read:          readSystemgroup_systemuser_bindingFunc,
-		Delete:        deleteSystemgroup_systemuser_bindingFunc,
+		CreateContext: createSystemgroup_systemuser_bindingFunc,
+		ReadContext:   readSystemgroup_systemuser_bindingFunc,
+		DeleteContext: deleteSystemgroup_systemuser_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"groupname": {
@@ -36,7 +38,7 @@ func resourceCitrixAdcSystemgroup_systemuser_binding() *schema.Resource {
 	}
 }
 
-func createSystemgroup_systemuser_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createSystemgroup_systemuser_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSystemgroup_systemuser_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	groupname := d.Get("groupname")
@@ -49,20 +51,15 @@ func createSystemgroup_systemuser_bindingFunc(d *schema.ResourceData, meta inter
 
 	_, err := client.AddResource(service.Systemgroup_systemuser_binding.Type(), bindingId, &systemgroup_systemuser_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readSystemgroup_systemuser_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this systemgroup_systemuser_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readSystemgroup_systemuser_bindingFunc(ctx, d, meta)
 }
 
-func readSystemgroup_systemuser_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readSystemgroup_systemuser_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSystemgroup_systemuser_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -83,7 +80,7 @@ func readSystemgroup_systemuser_bindingFunc(d *schema.ResourceData, meta interfa
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -121,7 +118,7 @@ func readSystemgroup_systemuser_bindingFunc(d *schema.ResourceData, meta interfa
 
 }
 
-func deleteSystemgroup_systemuser_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSystemgroup_systemuser_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSystemgroup_systemuser_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -136,7 +133,7 @@ func deleteSystemgroup_systemuser_bindingFunc(d *schema.ResourceData, meta inter
 
 	err := client.DeleteResourceWithArgs(service.Systemgroup_systemuser_binding.Type(), name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

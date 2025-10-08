@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/authentication"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAuthenticationradiuspolicy() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAuthenticationradiuspolicyFunc,
-		Read:          readAuthenticationradiuspolicyFunc,
-		Update:        updateAuthenticationradiuspolicyFunc,
-		Delete:        deleteAuthenticationradiuspolicyFunc,
+		CreateContext: createAuthenticationradiuspolicyFunc,
+		ReadContext:   readAuthenticationradiuspolicyFunc,
+		UpdateContext: updateAuthenticationradiuspolicyFunc,
+		DeleteContext: deleteAuthenticationradiuspolicyFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -40,7 +43,7 @@ func resourceCitrixAdcAuthenticationradiuspolicy() *schema.Resource {
 	}
 }
 
-func createAuthenticationradiuspolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func createAuthenticationradiuspolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAuthenticationradiuspolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationradiuspolicyName := d.Get("name").(string)
@@ -52,20 +55,15 @@ func createAuthenticationradiuspolicyFunc(d *schema.ResourceData, meta interface
 
 	_, err := client.AddResource(service.Authenticationradiuspolicy.Type(), authenticationradiuspolicyName, &authenticationradiuspolicy)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(authenticationradiuspolicyName)
 
-	err = readAuthenticationradiuspolicyFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this authenticationradiuspolicy but we can't read it ?? %s", authenticationradiuspolicyName)
-		return nil
-	}
-	return nil
+	return readAuthenticationradiuspolicyFunc(ctx, d, meta)
 }
 
-func readAuthenticationradiuspolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func readAuthenticationradiuspolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAuthenticationradiuspolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationradiuspolicyName := d.Id()
@@ -84,7 +82,7 @@ func readAuthenticationradiuspolicyFunc(d *schema.ResourceData, meta interface{}
 
 }
 
-func updateAuthenticationradiuspolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAuthenticationradiuspolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAuthenticationradiuspolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationradiuspolicyName := d.Get("name").(string)
@@ -107,19 +105,19 @@ func updateAuthenticationradiuspolicyFunc(d *schema.ResourceData, meta interface
 	if hasChange {
 		_, err := client.UpdateResource(service.Authenticationradiuspolicy.Type(), authenticationradiuspolicyName, &authenticationradiuspolicy)
 		if err != nil {
-			return fmt.Errorf("Error updating authenticationradiuspolicy %s", authenticationradiuspolicyName)
+			return diag.Errorf("Error updating authenticationradiuspolicy %s", authenticationradiuspolicyName)
 		}
 	}
-	return readAuthenticationradiuspolicyFunc(d, meta)
+	return readAuthenticationradiuspolicyFunc(ctx, d, meta)
 }
 
-func deleteAuthenticationradiuspolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAuthenticationradiuspolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAuthenticationradiuspolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationradiuspolicyName := d.Id()
 	err := client.DeleteResource(service.Authenticationradiuspolicy.Type(), authenticationradiuspolicyName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

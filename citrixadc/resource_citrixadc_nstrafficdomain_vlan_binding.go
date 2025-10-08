@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strconv"
 	"strings"
@@ -14,11 +16,11 @@ import (
 func resourceCitrixAdcNstrafficdomain_vlan_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNstrafficdomain_vlan_bindingFunc,
-		Read:          readNstrafficdomain_vlan_bindingFunc,
-		Delete:        deleteNstrafficdomain_vlan_bindingFunc,
+		CreateContext: createNstrafficdomain_vlan_bindingFunc,
+		ReadContext:   readNstrafficdomain_vlan_bindingFunc,
+		DeleteContext: deleteNstrafficdomain_vlan_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"td": {
@@ -37,7 +39,7 @@ func resourceCitrixAdcNstrafficdomain_vlan_binding() *schema.Resource {
 	}
 }
 
-func createNstrafficdomain_vlan_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createNstrafficdomain_vlan_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNstrafficdomain_vlan_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	td := strconv.Itoa(d.Get("td").(int))
@@ -50,20 +52,15 @@ func createNstrafficdomain_vlan_bindingFunc(d *schema.ResourceData, meta interfa
 
 	err := client.UpdateUnnamedResource(service.Nstrafficdomain_vlan_binding.Type(), &nstrafficdomain_vlan_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readNstrafficdomain_vlan_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this nstrafficdomain_vlan_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readNstrafficdomain_vlan_bindingFunc(ctx, d, meta)
 }
 
-func readNstrafficdomain_vlan_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readNstrafficdomain_vlan_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNstrafficdomain_vlan_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -84,7 +81,7 @@ func readNstrafficdomain_vlan_bindingFunc(d *schema.ResourceData, meta interface
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -115,14 +112,14 @@ func readNstrafficdomain_vlan_bindingFunc(d *schema.ResourceData, meta interface
 
 	data := dataArr[foundIndex]
 
-	d.Set("td", data["td"])
-	d.Set("vlan", data["vlan"])
+	setToInt("td", d, data["td"])
+	setToInt("vlan", d, data["vlan"])
 
 	return nil
 
 }
 
-func deleteNstrafficdomain_vlan_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNstrafficdomain_vlan_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNstrafficdomain_vlan_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -137,7 +134,7 @@ func deleteNstrafficdomain_vlan_bindingFunc(d *schema.ResourceData, meta interfa
 
 	err := client.DeleteResourceWithArgs(service.Nstrafficdomain_vlan_binding.Type(), name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

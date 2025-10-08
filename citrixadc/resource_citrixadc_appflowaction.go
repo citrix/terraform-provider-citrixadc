@@ -1,24 +1,25 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/appflow"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcAppflowaction() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAppflowactionFunc,
-		Read:          readAppflowactionFunc,
-		Update:        updateAppflowactionFunc,
-		Delete:        deleteAppflowactionFunc,
+		CreateContext: createAppflowactionFunc,
+		ReadContext:   readAppflowactionFunc,
+		UpdateContext: updateAppflowactionFunc,
+		DeleteContext: deleteAppflowactionFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -93,7 +94,7 @@ func resourceCitrixAdcAppflowaction() *schema.Resource {
 	}
 }
 
-func createAppflowactionFunc(d *schema.ResourceData, meta interface{}) error {
+func createAppflowactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppflowactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appflowactionName := d.Get("name").(string)
@@ -116,20 +117,15 @@ func createAppflowactionFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Appflowaction.Type(), appflowactionName, &appflowaction)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(appflowactionName)
 
-	err = readAppflowactionFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this appflowaction but we can't read it ?? %s", appflowactionName)
-		return nil
-	}
-	return nil
+	return readAppflowactionFunc(ctx, d, meta)
 }
 
-func readAppflowactionFunc(d *schema.ResourceData, meta interface{}) error {
+func readAppflowactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAppflowactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appflowactionName := d.Id()
@@ -158,7 +154,7 @@ func readAppflowactionFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateAppflowactionFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAppflowactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAppflowactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appflowactionName := d.Get("name").(string)
@@ -231,19 +227,19 @@ func updateAppflowactionFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Appflowaction.Type(), appflowactionName, &appflowaction)
 		if err != nil {
-			return fmt.Errorf("Error updating appflowaction %s", appflowactionName)
+			return diag.Errorf("Error updating appflowaction %s", appflowactionName)
 		}
 	}
-	return readAppflowactionFunc(d, meta)
+	return readAppflowactionFunc(ctx, d, meta)
 }
 
-func deleteAppflowactionFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAppflowactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppflowactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appflowactionName := d.Id()
 	err := client.DeleteResource(service.Appflowaction.Type(), appflowactionName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

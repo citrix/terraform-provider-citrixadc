@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/aaa"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAaaparameter() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAaaparameterFunc,
-		Read:          readAaaparameterFunc,
-		Update:        updateAaaparameterFunc,
-		Delete:        deleteAaaparameterFunc,
+		CreateContext: createAaaparameterFunc,
+		ReadContext:   readAaaparameterFunc,
+		UpdateContext: updateAaaparameterFunc,
+		DeleteContext: deleteAaaparameterFunc,
 		Schema: map[string]*schema.Schema{
 			"aaadloglevel": {
 				Type:     schema.TypeString,
@@ -149,7 +152,7 @@ func resourceCitrixAdcAaaparameter() *schema.Resource {
 	}
 }
 
-func createAaaparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func createAaaparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAaaparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	aaaparameterName := resource.PrefixedUniqueId("tf-aaaparameter-")
@@ -184,20 +187,15 @@ func createAaaparameterFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.UpdateUnnamedResource(service.Aaaparameter.Type(), &aaaparameter)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(aaaparameterName)
 
-	err = readAaaparameterFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this aaaparameter but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readAaaparameterFunc(ctx, d, meta)
 }
 
-func readAaaparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func readAaaparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAaaparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading aaaparameter state")
@@ -217,17 +215,17 @@ func readAaaparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("enableenhancedauthfeedback", data["enableenhancedauthfeedback"])
 	d.Set("enablesessionstickiness", data["enablesessionstickiness"])
 	d.Set("enablestaticpagecaching", data["enablestaticpagecaching"])
-	d.Set("failedlogintimeout", data["failedlogintimeout"])
+	setToInt("failedlogintimeout", d, data["failedlogintimeout"])
 	d.Set("ftmode", data["ftmode"])
 	d.Set("loginencryption", data["loginencryption"])
-	d.Set("maxaaausers", data["maxaaausers"])
-	d.Set("maxkbquestions", data["maxkbquestions"])
-	d.Set("maxloginattempts", data["maxloginattempts"])
-	d.Set("maxsamldeflatesize", data["maxsamldeflatesize"])
+	setToInt("maxaaausers", d, data["maxaaausers"])
+	setToInt("maxkbquestions", d, data["maxkbquestions"])
+	setToInt("maxloginattempts", d, data["maxloginattempts"])
+	setToInt("maxsamldeflatesize", d, data["maxsamldeflatesize"])
 	d.Set("persistentloginattempts", data["persistentloginattempts"])
-	d.Set("pwdexpirynotificationdays", data["pwdexpirynotificationdays"])
+	setToInt("pwdexpirynotificationdays", d, data["pwdexpirynotificationdays"])
 	d.Set("samesite", data["samesite"])
-	d.Set("tokenintrospectioninterval", data["tokenintrospectioninterval"])
+	setToInt("tokenintrospectioninterval", d, data["tokenintrospectioninterval"])
 	d.Set("httponlycookie", data["httponlycookie"])
 	d.Set("enhancedepa", data["enhancedepa"])
 	d.Set("wafprotection", data["wafprotection"])
@@ -237,7 +235,7 @@ func readAaaparameterFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateAaaparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAaaparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAaaparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -373,13 +371,13 @@ func updateAaaparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Aaaparameter.Type(), &aaaparameter)
 		if err != nil {
-			return fmt.Errorf("Error updating aaaparameter")
+			return diag.Errorf("Error updating aaaparameter")
 		}
 	}
-	return readAaaparameterFunc(d, meta)
+	return readAaaparameterFunc(ctx, d, meta)
 }
 
-func deleteAaaparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAaaparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAaaparameterFunc")
 	// aaaparameter does not support DELETE operation
 	d.SetId("")

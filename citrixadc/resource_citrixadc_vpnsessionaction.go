@@ -1,24 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/vpn"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcVpnsessionaction() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createVpnsessionactionFunc,
-		Read:          readVpnsessionactionFunc,
-		Update:        updateVpnsessionactionFunc,
-		Delete:        deleteVpnsessionactionFunc,
+		CreateContext: createVpnsessionactionFunc,
+		ReadContext:   readVpnsessionactionFunc,
+		UpdateContext: updateVpnsessionactionFunc,
+		DeleteContext: deleteVpnsessionactionFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -403,7 +406,7 @@ func resourceCitrixAdcVpnsessionaction() *schema.Resource {
 	}
 }
 
-func createVpnsessionactionFunc(d *schema.ResourceData, meta interface{}) error {
+func createVpnsessionactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createVpnsessionactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vpnsessionactionName := d.Get("name").(string)
@@ -487,20 +490,15 @@ func createVpnsessionactionFunc(d *schema.ResourceData, meta interface{}) error 
 
 	_, err := client.AddResource(service.Vpnsessionaction.Type(), vpnsessionactionName, &vpnsessionaction)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(vpnsessionactionName)
 
-	err = readVpnsessionactionFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this vpnsessionaction but we can't read it ?? %s", vpnsessionactionName)
-		return nil
-	}
-	return nil
+	return readVpnsessionactionFunc(ctx, d, meta)
 }
 
-func readVpnsessionactionFunc(d *schema.ResourceData, meta interface{}) error {
+func readVpnsessionactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readVpnsessionactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vpnsessionactionName := d.Id()
@@ -523,7 +521,7 @@ func readVpnsessionactionFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("clientcleanupprompt", data["clientcleanupprompt"])
 	d.Set("clientconfiguration", data["clientconfiguration"])
 	// d.Set("clientdebug", data["clientdebug"])
-	d.Set("clientidletimeout", data["clientidletimeout"])
+	setToInt("clientidletimeout", d, data["clientidletimeout"])
 	d.Set("clientlessmodeurlencoding", data["clientlessmodeurlencoding"])
 	d.Set("clientlesspersistentcookie", data["clientlesspersistentcookie"])
 	d.Set("clientlessvpnmode", data["clientlessvpnmode"])
@@ -537,13 +535,12 @@ func readVpnsessionactionFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("emailhome", data["emailhome"])
 	// d.Set("epaclienttype", data["epaclienttype"])
 	d.Set("forcecleanup", data["forcecleanup"])
-	d.Set("forcedtimeout", data["forcedtimeout"])
-	d.Set("forcedtimeoutwarning", data["forcedtimeoutwarning"])
+	setToInt("forcedtimeout", d, data["forcedtimeout"])
+	setToInt("forcedtimeoutwarning", d, data["forcedtimeoutwarning"])
 	d.Set("fqdnspoofedip", data["fqdnspoofedip"])
 	d.Set("ftpproxy", data["ftpproxy"])
 	d.Set("gopherproxy", data["gopherproxy"])
 	d.Set("homepage", data["homepage"])
-	d.Set("httpport", data["httpport"])
 	d.Set("httpproxy", data["httpproxy"])
 	d.Set("icaproxy", data["icaproxy"])
 	d.Set("iconwithreceiver", data["iconwithreceiver"])
@@ -565,7 +562,7 @@ func readVpnsessionactionFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("rdpclientprofilename", data["rdpclientprofilename"])
 	d.Set("rfc1918", data["rfc1918"])
 	d.Set("securebrowse", data["securebrowse"])
-	d.Set("sesstimeout", data["sesstimeout"])
+	setToInt("sesstimeout", d, data["sesstimeout"])
 	d.Set("sfgatewayauthtype", data["sfgatewayauthtype"])
 	d.Set("smartgroup", data["smartgroup"])
 	d.Set("socksproxy", data["socksproxy"])
@@ -587,12 +584,17 @@ func readVpnsessionactionFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("windowspluginupgrade", data["windowspluginupgrade"])
 	d.Set("winsip", data["winsip"])
 	d.Set("wiportalmode", data["wiportalmode"])
-
+	// Convert httpport from []string to []int before setting
+	if httpPort, ok := data["httpport"]; ok && httpPort != nil {
+		d.Set("httpport", stringListToIntList(httpPort.([]interface{})))
+	} else {
+		d.Set("httpport", nil)
+	}
 	return nil
 
 }
 
-func updateVpnsessionactionFunc(d *schema.ResourceData, meta interface{}) error {
+func updateVpnsessionactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateVpnsessionactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vpnsessionactionName := d.Get("name").(string)
@@ -975,19 +977,19 @@ func updateVpnsessionactionFunc(d *schema.ResourceData, meta interface{}) error 
 	if hasChange {
 		_, err := client.UpdateResource(service.Vpnsessionaction.Type(), vpnsessionactionName, &vpnsessionaction)
 		if err != nil {
-			return fmt.Errorf("Error updating vpnsessionaction %s", vpnsessionactionName)
+			return diag.Errorf("Error updating vpnsessionaction %s", vpnsessionactionName)
 		}
 	}
-	return readVpnsessionactionFunc(d, meta)
+	return readVpnsessionactionFunc(ctx, d, meta)
 }
 
-func deleteVpnsessionactionFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteVpnsessionactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteVpnsessionactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vpnsessionactionName := d.Id()
 	err := client.DeleteResource(service.Vpnsessionaction.Type(), vpnsessionactionName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

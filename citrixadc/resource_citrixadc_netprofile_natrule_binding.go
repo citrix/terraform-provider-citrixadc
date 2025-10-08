@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 	"strings"
@@ -14,11 +16,11 @@ import (
 func resourceCitrixAdcNetprofile_natrule_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNetprofile_natrule_bindingFunc,
-		Read:          readNetprofile_natrule_bindingFunc,
-		Delete:        deleteNetprofile_natrule_bindingFunc,
+		CreateContext: createNetprofile_natrule_bindingFunc,
+		ReadContext:   readNetprofile_natrule_bindingFunc,
+		DeleteContext: deleteNetprofile_natrule_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -49,7 +51,7 @@ func resourceCitrixAdcNetprofile_natrule_binding() *schema.Resource {
 	}
 }
 
-func createNetprofile_natrule_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createNetprofile_natrule_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNetprofile_natrule_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name")
@@ -64,20 +66,15 @@ func createNetprofile_natrule_bindingFunc(d *schema.ResourceData, meta interface
 
 	err := client.UpdateUnnamedResource(service.Netprofile_natrule_binding.Type(), &netprofile_natrule_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readNetprofile_natrule_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this netprofile_natrule_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readNetprofile_natrule_bindingFunc(ctx, d, meta)
 }
 
-func readNetprofile_natrule_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readNetprofile_natrule_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNetprofile_natrule_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -98,7 +95,7 @@ func readNetprofile_natrule_bindingFunc(d *schema.ResourceData, meta interface{}
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -138,7 +135,7 @@ func readNetprofile_natrule_bindingFunc(d *schema.ResourceData, meta interface{}
 
 }
 
-func deleteNetprofile_natrule_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNetprofile_natrule_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNetprofile_natrule_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -156,7 +153,7 @@ func deleteNetprofile_natrule_bindingFunc(d *schema.ResourceData, meta interface
 
 	err := client.DeleteResourceWithArgs(service.Netprofile_natrule_binding.Type(), name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

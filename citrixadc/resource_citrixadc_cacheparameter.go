@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/cache"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcCacheparameter() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createCacheparameterFunc,
-		Read:          readCacheparameterFunc,
-		Update:        updateCacheparameterFunc,
-		Delete:        deleteCacheparameterFunc,
+		CreateContext: createCacheparameterFunc,
+		ReadContext:   readCacheparameterFunc,
+		UpdateContext: updateCacheparameterFunc,
+		DeleteContext: deleteCacheparameterFunc,
 		Schema: map[string]*schema.Schema{
 			"enablebypass": {
 				Type:     schema.TypeString,
@@ -63,7 +66,7 @@ func resourceCitrixAdcCacheparameter() *schema.Resource {
 	}
 }
 
-func createCacheparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func createCacheparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createCacheparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	cacheparameterName := resource.PrefixedUniqueId("tf-cacheparameter-")
@@ -96,20 +99,15 @@ func createCacheparameterFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.UpdateUnnamedResource(service.Cacheparameter.Type(), &cacheparameter)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(cacheparameterName)
 
-	err = readCacheparameterFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this cacheparameter but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readCacheparameterFunc(ctx, d, meta)
 }
 
-func readCacheparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func readCacheparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readCacheparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading cacheparameter state")
@@ -121,9 +119,9 @@ func readCacheparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("enablebypass", data["enablebypass"])
 	d.Set("enablehaobjpersist", data["enablehaobjpersist"])
-	d.Set("maxpostlen", data["maxpostlen"])
-	d.Set("memlimit", data["memlimit"])
-	d.Set("prefetchmaxpending", data["prefetchmaxpending"])
+	setToInt("maxpostlen", d, data["maxpostlen"])
+	setToInt("memlimit", d, data["memlimit"])
+	setToInt("prefetchmaxpending", d, data["prefetchmaxpending"])
 	d.Set("undefaction", data["undefaction"])
 	d.Set("verifyusing", data["verifyusing"])
 	d.Set("via", data["via"])
@@ -132,7 +130,7 @@ func readCacheparameterFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateCacheparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func updateCacheparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateCacheparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -182,13 +180,13 @@ func updateCacheparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Cacheparameter.Type(), &cacheparameter)
 		if err != nil {
-			return fmt.Errorf("Error updating cacheparameter")
+			return diag.Errorf("Error updating cacheparameter")
 		}
 	}
-	return readCacheparameterFunc(d, meta)
+	return readCacheparameterFunc(ctx, d, meta)
 }
 
-func deleteCacheparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteCacheparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteCacheparameterFunc")
 	//cacheparameter does not suppor DELETE operation
 	d.SetId("")

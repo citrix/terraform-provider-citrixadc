@@ -21,8 +21,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccSslprofile_sslcertkey_binding_basic_step1 = `
@@ -72,9 +72,9 @@ resource "citrixadc_sslcertkey" "tf_sslcertkey" {
 
 func TestAccSslprofile_sslcertkey_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckSslprofile_sslcertkey_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckSslprofile_sslcertkey_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSslprofile_sslcertkey_binding_basic_step1,
@@ -111,7 +111,11 @@ func testAccCheckSslprofile_sslcertkey_bindingExist(n string, id *string) resour
 			*id = rs.Primary.ID
 		}
 
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		bindingId := rs.Primary.ID
 
@@ -151,7 +155,11 @@ func testAccCheckSslprofile_sslcertkey_bindingExist(n string, id *string) resour
 
 func testAccCheckSslprofile_sslcertkey_bindingNotExist(n string, id string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
@@ -192,7 +200,11 @@ func testAccCheckSslprofile_sslcertkey_bindingNotExist(n string, id string) reso
 }
 
 func testAccCheckSslprofile_sslcertkey_bindingDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_sslprofile_sslcertkey_binding" {
@@ -203,7 +215,7 @@ func testAccCheckSslprofile_sslcertkey_bindingDestroy(s *terraform.State) error 
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource("sslprofile_sslcertkey_binding", rs.Primary.ID)
+		_, err := client.FindResource("sslprofile_sslcertkey_binding", rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("sslprofile_sslcertkey_binding %s still exists", rs.Primary.ID)
 		}

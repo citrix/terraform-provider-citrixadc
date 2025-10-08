@@ -1,22 +1,24 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/appqoe"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcAppqoecustomresp() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAppqoecustomrespFunc,
-		Read:          readAppqoecustomrespFunc,
-		Delete:        deleteAppqoecustomrespFunc,
+		CreateContext: createAppqoecustomrespFunc,
+		ReadContext:   readAppqoecustomrespFunc,
+		DeleteContext: deleteAppqoecustomrespFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -33,7 +35,7 @@ func resourceCitrixAdcAppqoecustomresp() *schema.Resource {
 	}
 }
 
-func createAppqoecustomrespFunc(d *schema.ResourceData, meta interface{}) error {
+func createAppqoecustomrespFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppqoecustomrespFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appqoecustomrespName := d.Get("name").(string)
@@ -44,20 +46,15 @@ func createAppqoecustomrespFunc(d *schema.ResourceData, meta interface{}) error 
 
 	err := client.ActOnResource(service.Appqoecustomresp.Type(), &appqoecustomresp, "import")
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(appqoecustomrespName)
 
-	err = readAppqoecustomrespFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this appqoecustomresp but we can't read it ?? %s", appqoecustomrespName)
-		return nil
-	}
-	return nil
+	return readAppqoecustomrespFunc(ctx, d, meta)
 }
 
-func readAppqoecustomrespFunc(d *schema.ResourceData, meta interface{}) error {
+func readAppqoecustomrespFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAppqoecustomrespFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appqoecustomrespName := d.Id()
@@ -96,13 +93,13 @@ func readAppqoecustomrespFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func deleteAppqoecustomrespFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAppqoecustomrespFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppqoecustomrespFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appqoecustomrespName := d.Id()
 	err := client.DeleteResource(service.Appqoecustomresp.Type(), appqoecustomrespName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

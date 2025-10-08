@@ -18,7 +18,7 @@ import (
 )
 
 func uploadTestdataFile(c *NetScalerNitroClient, t *testing.T, filename, targetDir string) error {
-	nsClient := c.client
+	client := c.client
 
 	// Get here path
 	_, here_filename, _, _ := runtime.Caller(1)
@@ -33,14 +33,14 @@ func uploadTestdataFile(c *NetScalerNitroClient, t *testing.T, filename, targetD
 		Filecontent:  base64.StdEncoding.EncodeToString(b),
 		Filelocation: targetDir,
 	}
-	_, err = nsClient.AddResource(service.Systemfile.Type(), filename, &sf)
+	_, err = client.AddResource(service.Systemfile.Type(), filename, &sf)
 	if err != nil && strings.Contains(err.Error(), "File already exists") {
 		url_args := map[string]string{"filelocation": strings.Replace(targetDir, "/", "%2F", -1)}
-		err := nsClient.DeleteResourceWithArgsMap(service.Systemfile.Type(), filename, url_args)
+		err := client.DeleteResourceWithArgsMap(service.Systemfile.Type(), filename, url_args)
 		if err != nil {
 			return err
 		}
-		_, err = nsClient.AddResource(service.Systemfile.Type(), filename, &sf)
+		_, err = client.AddResource(service.Systemfile.Type(), filename, &sf)
 		if err != nil {
 			return err
 		}

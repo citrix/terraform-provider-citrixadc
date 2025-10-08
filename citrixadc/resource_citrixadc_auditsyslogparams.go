@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/audit"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAuditsyslogparams() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAuditsyslogparamsFunc,
-		Read:          readAuditsyslogparamsFunc,
-		Update:        updateAuditsyslogparamsFunc,
-		Delete:        deleteAuditsyslogparamsFunc,
+		CreateContext: createAuditsyslogparamsFunc,
+		ReadContext:   readAuditsyslogparamsFunc,
+		UpdateContext: updateAuditsyslogparamsFunc,
+		DeleteContext: deleteAuditsyslogparamsFunc,
 		Schema: map[string]*schema.Schema{
 			"acl": {
 				Type:     schema.TypeString,
@@ -109,7 +112,7 @@ func resourceCitrixAdcAuditsyslogparams() *schema.Resource {
 	}
 }
 
-func createAuditsyslogparamsFunc(d *schema.ResourceData, meta interface{}) error {
+func createAuditsyslogparamsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAuditsyslogparamsFunc")
 	client := meta.(*NetScalerNitroClient).client
 	auditsyslogparamsName := resource.PrefixedUniqueId("tf-auditsyslogparams-")
@@ -136,20 +139,15 @@ func createAuditsyslogparamsFunc(d *schema.ResourceData, meta interface{}) error
 
 	err := client.UpdateUnnamedResource(service.Auditsyslogparams.Type(), &auditsyslogparams)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(auditsyslogparamsName)
 
-	err = readAuditsyslogparamsFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this auditsyslogparams but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readAuditsyslogparamsFunc(ctx, d, meta)
 }
 
-func readAuditsyslogparamsFunc(d *schema.ResourceData, meta interface{}) error {
+func readAuditsyslogparamsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAuditsyslogparamsFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading auditsyslogparams state")
@@ -169,7 +167,7 @@ func readAuditsyslogparamsFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("loglevel", data["loglevel"])
 	d.Set("lsn", data["lsn"])
 	d.Set("serverip", data["serverip"])
-	d.Set("serverport", data["serverport"])
+	setToInt("serverport", d, data["serverport"])
 	d.Set("sslinterception", data["sslinterception"])
 	d.Set("subscriberlog", data["subscriberlog"])
 	d.Set("tcp", data["tcp"])
@@ -181,7 +179,7 @@ func readAuditsyslogparamsFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateAuditsyslogparamsFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAuditsyslogparamsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAuditsyslogparamsFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -276,13 +274,13 @@ func updateAuditsyslogparamsFunc(d *schema.ResourceData, meta interface{}) error
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Auditsyslogparams.Type(), &auditsyslogparams)
 		if err != nil {
-			return fmt.Errorf("Error updating auditsyslogparams")
+			return diag.Errorf("Error updating auditsyslogparams")
 		}
 	}
-	return readAuditsyslogparamsFunc(d, meta)
+	return readAuditsyslogparamsFunc(ctx, d, meta)
 }
 
-func deleteAuditsyslogparamsFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAuditsyslogparamsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAuditsyslogparamsFunc")
 	//auditsyslogparams does not support DELETE operation
 	d.SetId("")

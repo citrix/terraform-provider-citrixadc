@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ipsec"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcIpsecparameter() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createIpsecparameterFunc,
-		Read:          readIpsecparameterFunc,
-		Update:        updateIpsecparameterFunc,
-		Delete:        deleteIpsecparameterFunc,
+		CreateContext: createIpsecparameterFunc,
+		ReadContext:   readIpsecparameterFunc,
+		UpdateContext: updateIpsecparameterFunc,
+		DeleteContext: deleteIpsecparameterFunc,
 		Schema: map[string]*schema.Schema{
 			"encalgo": {
 				Type:     schema.TypeList,
@@ -70,7 +73,7 @@ func resourceCitrixAdcIpsecparameter() *schema.Resource {
 	}
 }
 
-func createIpsecparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func createIpsecparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createIpsecparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	ipsecparameterName := resource.PrefixedUniqueId("tf-ipsecparameter-")
@@ -89,20 +92,15 @@ func createIpsecparameterFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.UpdateUnnamedResource(service.Ipsecparameter.Type(), &ipsecparameter)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(ipsecparameterName)
 
-	err = readIpsecparameterFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this ipsecparameter but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readIpsecparameterFunc(ctx, d, meta)
 }
 
-func readIpsecparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func readIpsecparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readIpsecparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading ipsecparameter state")
@@ -112,22 +110,21 @@ func readIpsecparameterFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
-	d.Set("name", data["name"])
 	d.Set("encalgo", data["encalgo"])
 	d.Set("hashalgo", data["hashalgo"])
-	d.Set("ikeretryinterval", data["ikeretryinterval"])
+	setToInt("ikeretryinterval", d, data["ikeretryinterval"])
 	d.Set("ikeversion", data["ikeversion"])
-	d.Set("lifetime", data["lifetime"])
-	d.Set("livenesscheckinterval", data["livenesscheckinterval"])
+	setToInt("lifetime", d, data["lifetime"])
+	setToInt("livenesscheckinterval", d, data["livenesscheckinterval"])
 	d.Set("perfectforwardsecrecy", data["perfectforwardsecrecy"])
-	d.Set("replaywindowsize", data["replaywindowsize"])
-	d.Set("retransmissiontime", data["retransmissiontime"])
+	setToInt("replaywindowsize", d, data["replaywindowsize"])
+	setToInt("retransmissiontime", d, data["retransmissiontime"])
 
 	return nil
 
 }
 
-func updateIpsecparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func updateIpsecparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateIpsecparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -182,13 +179,13 @@ func updateIpsecparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Ipsecparameter.Type(), &ipsecparameter)
 		if err != nil {
-			return fmt.Errorf("Error updating ipsecparameter")
+			return diag.Errorf("Error updating ipsecparameter")
 		}
 	}
-	return readIpsecparameterFunc(d, meta)
+	return readIpsecparameterFunc(ctx, d, meta)
 }
 
-func deleteIpsecparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteIpsecparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteIpsecparameterFunc")
 	//ipsecparameter does not support DELETE operation
 	d.SetId("")

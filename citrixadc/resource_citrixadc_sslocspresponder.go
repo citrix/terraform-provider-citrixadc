@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ssl"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcSslocspresponder() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSslocspresponderFunc,
-		Read:          readSslocspresponderFunc,
-		Update:        updateSslocspresponderFunc,
-		Delete:        deleteSslocspresponderFunc,
+		CreateContext: createSslocspresponderFunc,
+		ReadContext:   readSslocspresponderFunc,
+		UpdateContext: updateSslocspresponderFunc,
+		DeleteContext: deleteSslocspresponderFunc,
 		Schema: map[string]*schema.Schema{
 			"batchingdelay": {
 				Type:     schema.TypeInt,
@@ -99,7 +102,7 @@ func resourceCitrixAdcSslocspresponder() *schema.Resource {
 	}
 }
 
-func createSslocspresponderFunc(d *schema.ResourceData, meta interface{}) error {
+func createSslocspresponderFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSslocspresponderFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var sslocspresponderName string
@@ -129,20 +132,15 @@ func createSslocspresponderFunc(d *schema.ResourceData, meta interface{}) error 
 
 	_, err := client.AddResource(service.Sslocspresponder.Type(), sslocspresponderName, &sslocspresponder)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(sslocspresponderName)
 
-	err = readSslocspresponderFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this sslocspresponder but we can't read it ?? %s", sslocspresponderName)
-		return nil
-	}
-	return nil
+	return readSslocspresponderFunc(ctx, d, meta)
 }
 
-func readSslocspresponderFunc(d *schema.ResourceData, meta interface{}) error {
+func readSslocspresponderFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSslocspresponderFunc")
 	client := meta.(*NetScalerNitroClient).client
 	sslocspresponderName := d.Id()
@@ -154,17 +152,17 @@ func readSslocspresponderFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	d.Set("name", data["name"])
-	d.Set("batchingdelay", data["batchingdelay"])
-	d.Set("batchingdepth", data["batchingdepth"])
+	setToInt("batchingdelay", d, data["batchingdelay"])
+	setToInt("batchingdepth", d, data["batchingdepth"])
 	d.Set("cache", data["cache"])
-	d.Set("cachetimeout", data["cachetimeout"])
+	setToInt("cachetimeout", d, data["cachetimeout"])
 	d.Set("httpmethod", data["httpmethod"])
 	d.Set("insertclientcert", data["insertclientcert"])
 	d.Set("name", data["name"])
-	d.Set("ocspurlresolvetimeout", data["ocspurlresolvetimeout"])
-	d.Set("producedattimeskew", data["producedattimeskew"])
+	setToInt("ocspurlresolvetimeout", d, data["ocspurlresolvetimeout"])
+	setToInt("producedattimeskew", d, data["producedattimeskew"])
 	d.Set("respondercert", data["respondercert"])
-	d.Set("resptimeout", data["resptimeout"])
+	setToInt("resptimeout", d, data["resptimeout"])
 	d.Set("signingcert", data["signingcert"])
 	d.Set("trustresponder", data["trustresponder"])
 	d.Set("url", data["url"])
@@ -174,7 +172,7 @@ func readSslocspresponderFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateSslocspresponderFunc(d *schema.ResourceData, meta interface{}) error {
+func updateSslocspresponderFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateSslocspresponderFunc")
 	client := meta.(*NetScalerNitroClient).client
 	sslocspresponderName := d.Get("name").(string)
@@ -262,19 +260,19 @@ func updateSslocspresponderFunc(d *schema.ResourceData, meta interface{}) error 
 	if hasChange {
 		_, err := client.UpdateResource(service.Sslocspresponder.Type(), sslocspresponderName, &sslocspresponder)
 		if err != nil {
-			return fmt.Errorf("Error updating sslocspresponder %s", sslocspresponderName)
+			return diag.Errorf("Error updating sslocspresponder %s", sslocspresponderName)
 		}
 	}
-	return readSslocspresponderFunc(d, meta)
+	return readSslocspresponderFunc(ctx, d, meta)
 }
 
-func deleteSslocspresponderFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSslocspresponderFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSslocspresponderFunc")
 	client := meta.(*NetScalerNitroClient).client
 	sslocspresponderName := d.Id()
 	err := client.DeleteResource(service.Sslocspresponder.Type(), sslocspresponderName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

@@ -21,15 +21,15 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccServicegroup_lbmonitor_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckServicegroup_lbmonitor_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckServicegroup_lbmonitor_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServicegroup_lbmonitor_binding_basic_step1,
@@ -74,7 +74,11 @@ func testAccCheckServicegroup_lbmonitor_bindingExist(n string, id *string) resou
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		servicegroupLbmonitorBindingId := rs.Primary.ID
 		idSlice := strings.Split(servicegroupLbmonitorBindingId, ",")
@@ -87,7 +91,7 @@ func testAccCheckServicegroup_lbmonitor_bindingExist(n string, id *string) resou
 			ResourceMissingErrorCode: 258,
 		}
 
-		dataArr, err := nsClient.FindResourceArrayWithParams(findParams)
+		dataArr, err := client.FindResourceArrayWithParams(findParams)
 
 		if err != nil {
 			return err
@@ -111,7 +115,11 @@ func testAccCheckServicegroup_lbmonitor_bindingExist(n string, id *string) resou
 }
 
 func testAccCheckServicegroup_lbmonitor_bindingDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_servicegroup_lbmonitor_binding" {
@@ -122,7 +130,7 @@ func testAccCheckServicegroup_lbmonitor_bindingDestroy(s *terraform.State) error
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Servicegroup_lbmonitor_binding.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Servicegroup_lbmonitor_binding.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("LB vserver %s still exists", rs.Primary.ID)
 		}

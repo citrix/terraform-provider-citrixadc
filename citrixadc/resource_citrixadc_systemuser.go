@@ -1,27 +1,27 @@
 package citrixadc
 
 import (
-	"github.com/citrix/adc-nitro-go/resource/config/system"
-	"github.com/citrix/adc-nitro-go/service"
-
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"strconv"
+
+	"github.com/citrix/adc-nitro-go/resource/config/system"
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcSystemuser() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSystemuserFunc,
-		Read:          readSystemuserFunc,
-		Update:        updateSystemuserFunc,
-		Delete:        deleteSystemuserFunc,
+		CreateContext: createSystemuserFunc,
+		ReadContext:   readSystemuserFunc,
+		UpdateContext: updateSystemuserFunc,
+		DeleteContext: deleteSystemuserFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"externalauth": {
@@ -96,7 +96,7 @@ func resourceCitrixAdcSystemuser() *schema.Resource {
 	}
 }
 
-func createSystemuserFunc(d *schema.ResourceData, meta interface{}) error {
+func createSystemuserFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSystemuserFunc")
 	client := meta.(*NetScalerNitroClient).client
 	login_username := (*meta.(*NetScalerNitroClient)).Username
@@ -105,7 +105,7 @@ func createSystemuserFunc(d *schema.ResourceData, meta interface{}) error {
 	if username == login_username || username == "nsroot" {
 		_, ok := d.GetOk("password")
 		if ok {
-			return fmt.Errorf("It seems you are trying to change the password of the Admin user. If so, please use the resource \"citrixadc_change_password\"")
+			return diag.Errorf("It seems you are trying to change the password of the Admin user. If so, please use the resource \"citrixadc_change_password\"")
 		}
 	}
 	systemuser := system.Systemuser{
@@ -123,12 +123,12 @@ func createSystemuserFunc(d *schema.ResourceData, meta interface{}) error {
 		_, err := client.UpdateResource(service.Systemuser.Type(), username, &systemuser)
 		if err != nil {
 			log.Printf("Error updating systemuser %s", username)
-			return err
+			return diag.FromErr(err)
 		}
 	} else {
 		_, err := client.AddResource(service.Systemuser.Type(), username, &systemuser)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
@@ -136,13 +136,13 @@ func createSystemuserFunc(d *schema.ResourceData, meta interface{}) error {
 	if _, ok := d.GetOk("cmdpolicybinding"); ok {
 		err := updateCmdpolicyBindings(d, meta)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	d.SetId(username)
 
-	err := readSystemuserFunc(d, meta)
+	err := readSystemuserFunc(ctx, d, meta)
 	if err != nil {
 		log.Printf("[ERROR] netscaler-provider: ?? we just created this systemuser but we can't read it ?? %s", username)
 		return nil
@@ -150,7 +150,7 @@ func createSystemuserFunc(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func readSystemuserFunc(d *schema.ResourceData, meta interface{}) error {
+func readSystemuserFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSystemuserFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -180,16 +180,16 @@ func readSystemuserFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("username", data["username"])
 	d.Set("externalauth", data["externalauth"])
 	d.Set("logging", data["logging"])
-	d.Set("maxsession", data["maxsession"])
+	setToInt("maxsession", d, data["maxsession"])
 	d.Set("hashedpassword", data["password"])
 	d.Set("promptstring", data["promptstring"])
-	d.Set("timeout", data["timeout"])
+	setToInt("timeout", d, data["timeout"])
 	d.Set("allowedmanagementinterface", data["allowedmanagementinterface"])
 
 	if _, ok := d.GetOk("cmdpolicybinding"); ok {
 		err = readCmdpolicybindings(d, meta)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
@@ -197,7 +197,7 @@ func readSystemuserFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateSystemuserFunc(d *schema.ResourceData, meta interface{}) error {
+func updateSystemuserFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateSystemuserFunc")
 	client := meta.(*NetScalerNitroClient).client
 	systemuserName := d.Get("username").(string)
@@ -245,18 +245,18 @@ func updateSystemuserFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Systemuser.Type(), systemuserName, &systemuser)
 		if err != nil {
-			return fmt.Errorf("Error updating systemuser %s", systemuserName)
+			return diag.Errorf("Error updating systemuser %s", systemuserName)
 		}
 	}
 	if d.HasChange("cmdpolicybinding") {
 		if err := updateCmdpolicyBindings(d, meta); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
-	return readSystemuserFunc(d, meta)
+	return readSystemuserFunc(ctx, d, meta)
 }
 
-func deleteSystemuserFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSystemuserFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSystemuserFunc")
 	client := meta.(*NetScalerNitroClient).client
 	systemuserName := d.Id()
@@ -268,7 +268,7 @@ func deleteSystemuserFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.DeleteResource(service.Systemuser.Type(), systemuserName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")
@@ -354,7 +354,7 @@ func cmdpolicybindingMappingHash(v interface{}) int {
 	if d, ok := m["priority"]; ok {
 		buf.WriteString(fmt.Sprintf("%d-", d.(int)))
 	}
-	return hashcode.String(buf.String())
+	return hashString(buf.String())
 }
 
 func readCmdpolicybindings(d *schema.ResourceData, meta interface{}) error {

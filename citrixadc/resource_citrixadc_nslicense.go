@@ -1,10 +1,11 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
 
@@ -19,15 +20,18 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcNslicense() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNslicenseFunc,
-		Read:          readNslicenseFunc,
-		Update:        updateNslicenseFunc,
-		Delete:        deleteNslicenseFunc,
+		CreateContext: createNslicenseFunc,
+		ReadContext:   readNslicenseFunc,
+		UpdateContext: updateNslicenseFunc,
+		DeleteContext: deleteNslicenseFunc,
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(20 * time.Minute),
 			Update: schema.DefaultTimeout(20 * time.Minute),
@@ -319,7 +323,7 @@ func ensureLicenseFileExists(sftpClient *sftp.Client, fileName string) error {
 	return err
 }
 
-func createNslicenseFunc(d *schema.ResourceData, meta interface{}) error {
+func createNslicenseFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] netscaler-provider: In createNslicenseFunc")
 	//client := meta.(*NetScalerNitroClient).client
 	licenseFile := d.Get("license_file").(string)
@@ -328,44 +332,43 @@ func createNslicenseFunc(d *schema.ResourceData, meta interface{}) error {
 
 	sshConn, err := getSshConnection(d, meta)
 	if err != nil {
-		return fmt.Errorf("Error creating ssh client. %s", err.Error())
+		return diag.Errorf("Error creating ssh client. %s", err.Error())
 	}
 	defer sshConn.Close()
 
 	sftpClient, err := getSftpClient(d, meta, sshConn)
 	if err != nil {
-		return fmt.Errorf("Error creating sftp client. %s", err.Error())
+		return diag.Errorf("Error creating sftp client. %s", err.Error())
 	}
 	defer sftpClient.Close()
 
 	err = uploadLicenseFile(d, meta, sftpClient)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if d.Get("reboot").(bool) {
 		err = powerCycleAndWait(d, meta, d.Timeout(schema.TimeoutCreate))
 		if err != nil {
-			return fmt.Errorf("Error power cycling ADC. %s", err.Error())
+			return diag.Errorf("Error power cycling ADC. %s", err.Error())
 		}
 	}
-	return readNslicenseFunc(d, meta)
-	// return nil
+	return readNslicenseFunc(ctx, d, meta)
 }
 
-func readNslicenseFunc(d *schema.ResourceData, meta interface{}) error {
+func readNslicenseFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] netscaler-provider: In readNslicenseFunc")
 	//client := meta.(*NetScalerNitroClient).client
 
 	sshConn, err := getSshConnection(d, meta)
 	if err != nil {
-		return fmt.Errorf("Error creating ssh client. %s", err.Error())
+		return diag.Errorf("Error creating ssh client. %s", err.Error())
 	}
 	defer sshConn.Close()
 
 	sftpClient, err := getSftpClient(d, meta, sshConn)
 	if err != nil {
-		return fmt.Errorf("Error creating sftp client. %s", err.Error())
+		return diag.Errorf("Error creating sftp client. %s", err.Error())
 	}
 	defer sftpClient.Close()
 
@@ -379,7 +382,7 @@ func readNslicenseFunc(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func updateNslicenseFunc(d *schema.ResourceData, meta interface{}) error {
+func updateNslicenseFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] netscaler-provider: In updateNslicenseFunc")
 	// Update is a noop
 	// The only relevant option change is for license_file
@@ -388,19 +391,19 @@ func updateNslicenseFunc(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func deleteNslicenseFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNslicenseFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] netscaler-provider: In deleteNslicenseFunc")
 	//client := meta.(*NetScalerNitroClient).client
 
 	sshConn, err := getSshConnection(d, meta)
 	if err != nil {
-		return fmt.Errorf("Error creating ssh client. %s", err.Error())
+		return diag.Errorf("Error creating ssh client. %s", err.Error())
 	}
 	defer sshConn.Close()
 
 	sftpClient, err := getSftpClient(d, meta, sshConn)
 	if err != nil {
-		return fmt.Errorf("Error creating sftp client. %s", err.Error())
+		return diag.Errorf("Error creating sftp client. %s", err.Error())
 	}
 	defer sftpClient.Close()
 
@@ -410,7 +413,7 @@ func deleteNslicenseFunc(d *schema.ResourceData, meta interface{}) error {
 	if d.Get("reboot").(bool) {
 		err = powerCycleAndWait(d, meta, d.Timeout(schema.TimeoutDelete))
 		if err != nil {
-			return fmt.Errorf("Error power cycling ADC. %s", err.Error())
+			return diag.Errorf("Error power cycling ADC. %s", err.Error())
 		}
 	}
 

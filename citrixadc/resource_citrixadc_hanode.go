@@ -1,25 +1,28 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ha"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
 	"strconv"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcHanode() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createHanodeFunc,
-		Read:          readHanodeFunc,
-		Update:        updateHanodeFunc,
-		Delete:        deleteHanodeFunc,
+		CreateContext: createHanodeFunc,
+		ReadContext:   readHanodeFunc,
+		UpdateContext: updateHanodeFunc,
+		DeleteContext: deleteHanodeFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"ipaddress": {
@@ -91,7 +94,7 @@ func resourceCitrixAdcHanode() *schema.Resource {
 	}
 }
 
-func createHanodeFunc(d *schema.ResourceData, meta interface{}) error {
+func createHanodeFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createHanodeFunc")
 	client := meta.(*NetScalerNitroClient).client
 	hanodeName := strconv.Itoa(d.Get("hanode_id").(int))
@@ -118,20 +121,15 @@ func createHanodeFunc(d *schema.ResourceData, meta interface{}) error {
 		err = client.UpdateUnnamedResource(service.Hanode.Type(), &hanode)
 	}
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(hanodeName)
 
-	err = readHanodeFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this hanode but we can't read it ?? %s", hanodeName)
-		return nil
-	}
-	return nil
+	return readHanodeFunc(ctx, d, meta)
 }
 
-func readHanodeFunc(d *schema.ResourceData, meta interface{}) error {
+func readHanodeFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readHanodeFunc")
 	client := meta.(*NetScalerNitroClient).client
 	hanodeName := d.Id()
@@ -147,24 +145,24 @@ func readHanodeFunc(d *schema.ResourceData, meta interface{}) error {
 	if data["hastatus"] == "UP" {
 		d.Set("hastatus", "ENABLED")
 	}
-	d.Set("hanode_id", data["id"])
-	d.Set("deadinterval", data["deadinterval"])
+	setToInt("hanode_id", d, data["id"])
+	setToInt("deadinterval", d, data["deadinterval"])
 	d.Set("failsafe", data["failsafe"])
 	d.Set("haprop", data["haprop"])
 	// d.Set("hastatus", data["hastatus"]) // We recieve "UP" as value from the NetScaler, if the user has given "ENABLED"
 	d.Set("hasync", data["hasync"])
-	d.Set("hellointerval", data["hellointerval"])
+	setToInt("hellointerval", d, data["hellointerval"])
 	d.Set("inc", data["inc"])
-	d.Set("maxflips", data["maxflips"])
-	d.Set("maxfliptime", data["maxfliptime"])
+	setToInt("maxflips", d, data["maxflips"])
+	setToInt("maxfliptime", d, data["maxfliptime"])
 	d.Set("syncstatusstrictmode", data["syncstatusstrictmode"])
-	d.Set("syncvlan", data["syncvlan"])
+	setToInt("syncvlan", d, data["syncvlan"])
 
 	return nil
 
 }
 
-func updateHanodeFunc(d *schema.ResourceData, meta interface{}) error {
+func updateHanodeFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateHanodeFunc")
 	client := meta.(*NetScalerNitroClient).client
 	hanodeName := d.Id()
@@ -232,19 +230,19 @@ func updateHanodeFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Hanode.Type(), &hanode)
 		if err != nil {
-			return fmt.Errorf("Error updating hanode %s", hanodeName)
+			return diag.Errorf("Error updating hanode %s", hanodeName)
 		}
 	}
-	return readHanodeFunc(d, meta)
+	return readHanodeFunc(ctx, d, meta)
 }
 
-func deleteHanodeFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteHanodeFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteHanodeFunc")
 	client := meta.(*NetScalerNitroClient).client
 	hanodeName := d.Id()
 	err := client.DeleteResource(service.Hanode.Type(), hanodeName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

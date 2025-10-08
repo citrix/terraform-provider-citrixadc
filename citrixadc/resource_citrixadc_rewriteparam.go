@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/rewrite"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcRewriteparam() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createRewriteparamFunc,
-		Read:          readRewriteparamFunc,
-		Update:        updateRewriteparamFunc,
-		Delete:        deleteRewriteparamFunc, // Thought rewriteparam resource does not have a DELETE operation, it is required to set ID to "" d.SetID("") to maintain terraform state
+		CreateContext: createRewriteparamFunc,
+		ReadContext:   readRewriteparamFunc,
+		UpdateContext: updateRewriteparamFunc,
+		DeleteContext: deleteRewriteparamFunc, // Thought rewriteparam resource does not have a DELETE operation, it is required to set ID to "" d.SetID("") to maintain terraform state
 		Schema: map[string]*schema.Schema{
 			"timeout": {
 				Type:     schema.TypeInt,
@@ -33,7 +36,7 @@ func resourceCitrixAdcRewriteparam() *schema.Resource {
 	}
 }
 
-func createRewriteparamFunc(d *schema.ResourceData, meta interface{}) error {
+func createRewriteparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createRewriteparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var rewriteparamName string
@@ -48,20 +51,15 @@ func createRewriteparamFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.UpdateUnnamedResource(service.Rewriteparam.Type(), &rewriteparam)
 	if err != nil {
-		return fmt.Errorf("Error updating rewriteparam")
+		return diag.Errorf("Error updating rewriteparam")
 	}
 
 	d.SetId(rewriteparamName)
 
-	err = readRewriteparamFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this rewriteparam but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readRewriteparamFunc(ctx, d, meta)
 }
 
-func readRewriteparamFunc(d *schema.ResourceData, meta interface{}) error {
+func readRewriteparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readRewriteparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading rewriteparam state")
@@ -71,14 +69,14 @@ func readRewriteparamFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
-	d.Set("timeout", data["timeout"])
+	setToInt("timeout", d, data["timeout"])
 	d.Set("undefaction", data["undefaction"])
 
 	return nil
 
 }
 
-func updateRewriteparamFunc(d *schema.ResourceData, meta interface{}) error {
+func updateRewriteparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateRewriteparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -99,13 +97,13 @@ func updateRewriteparamFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Rewriteparam.Type(), &rewriteparam)
 		if err != nil {
-			return fmt.Errorf("Error updating rewriteparam %s", err.Error())
+			return diag.Errorf("Error updating rewriteparam %s", err.Error())
 		}
 	}
-	return readRewriteparamFunc(d, meta)
+	return readRewriteparamFunc(ctx, d, meta)
 }
 
-func deleteRewriteparamFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteRewriteparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteRewriteparamFunc")
 	// rewriteparam does not have DELETE operation, but this function is required to set the ID to ""
 	d.SetId("")

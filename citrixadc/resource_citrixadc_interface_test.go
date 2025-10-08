@@ -20,8 +20,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccInterface_basic(t *testing.T) {
@@ -29,8 +29,8 @@ func TestAccInterface_basic(t *testing.T) {
 		t.Skip("skipping test CPX has different interface numbering")
 	}
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInterface_basic_step1,
@@ -67,9 +67,13 @@ func testAccCheckInterfaceExist(n string, id *string, interfaceId string) resour
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
-		array, _ := nsClient.FindAllResources(service.Interface.Type())
+		array, _ := client.FindAllResources(service.Interface.Type())
 
 		// Iterate over the retrieved addresses to find the particular interface id
 		foundInterface := false

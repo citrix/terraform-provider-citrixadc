@@ -1,21 +1,25 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
 	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcSnmpalarm() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSnmpalarmFunc,
-		Read:          readSnmpalarmFunc,
-		Update:        updateSnmpalarmFunc,
-		Delete:        deleteSnmpalarmFunc,
+		CreateContext: createSnmpalarmFunc,
+		ReadContext:   readSnmpalarmFunc,
+		UpdateContext: updateSnmpalarmFunc,
+		DeleteContext: deleteSnmpalarmFunc,
 		Schema: map[string]*schema.Schema{
 			"logging": {
 				Type:     schema.TypeString,
@@ -56,7 +60,7 @@ func resourceCitrixAdcSnmpalarm() *schema.Resource {
 	}
 }
 
-func createSnmpalarmFunc(d *schema.ResourceData, meta interface{}) error {
+func createSnmpalarmFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSnmpalarmFunc")
 	client := meta.(*NetScalerNitroClient).client
 	snmpalarmName := resource.PrefixedUniqueId("tf-snmpalarm-")
@@ -89,20 +93,15 @@ func createSnmpalarmFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.UpdateUnnamedResource(service.Snmpalarm.Type(), &snmpalarm)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(snmpalarmName)
 
-	err = readSnmpalarmFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this snmpalarm but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readSnmpalarmFunc(ctx, d, meta)
 }
 
-func readSnmpalarmFunc(d *schema.ResourceData, meta interface{}) error {
+func readSnmpalarmFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSnmpalarmFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading snmpalarm state")
@@ -114,18 +113,18 @@ func readSnmpalarmFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("trapname", data["trapname"])
 	d.Set("logging", data["logging"])
-	// d.Set("normalvalue", data["normalvalue"]) TODO: Not received from NetScaler
+	// setToInt("normalvalue", d, data["normalvalue"]) TODO: Not received from NetScaler
 	d.Set("severity", data["severity"])
 	d.Set("state", data["state"])
-	d.Set("thresholdvalue", data["thresholdvalue"])
-	d.Set("time", data["time"])
+	setToInt("thresholdvalue", d, data["thresholdvalue"])
+	setToInt("time", d, data["time"])
 	d.Set("trapname", data["trapname"])
 
 	return nil
 
 }
 
-func updateSnmpalarmFunc(d *schema.ResourceData, meta interface{}) error {
+func updateSnmpalarmFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateSnmpalarmFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -169,20 +168,20 @@ func updateSnmpalarmFunc(d *schema.ResourceData, meta interface{}) error {
 	if stateChange {
 		err := doSnmpalarmStateChange(d, client)
 		if err != nil {
-			return fmt.Errorf("Error enabling/disabling snmpalarm %s", d.Get("trapname").(string))
+			return diag.Errorf("Error enabling/disabling snmpalarm %s", d.Get("trapname").(string))
 		}
 	}
 
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Snmpalarm.Type(), &snmpalarm)
 		if err != nil {
-			return fmt.Errorf("Error updating snmpalarm")
+			return diag.Errorf("Error updating snmpalarm")
 		}
 	}
-	return readSnmpalarmFunc(d, meta)
+	return readSnmpalarmFunc(ctx, d, meta)
 }
 
-func deleteSnmpalarmFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSnmpalarmFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSnmpalarmFunc")
 	// snmpalarm do not have DELETE operation, but this function is required to set the ID to ""
 	d.SetId("")

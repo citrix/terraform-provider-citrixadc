@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/rewrite"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 	"strconv"
@@ -15,11 +17,11 @@ import (
 func resourceCitrixAdcRewriteglobal_rewritepolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createRewriteglobal_rewritepolicy_bindingFunc,
-		Read:          readRewriteglobal_rewritepolicy_bindingFunc,
-		Delete:        deleteRewriteglobal_rewritepolicy_bindingFunc,
+		CreateContext: createRewriteglobal_rewritepolicy_bindingFunc,
+		ReadContext:   readRewriteglobal_rewritepolicy_bindingFunc,
+		DeleteContext: deleteRewriteglobal_rewritepolicy_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"globalbindtype": {
@@ -71,7 +73,7 @@ func resourceCitrixAdcRewriteglobal_rewritepolicy_binding() *schema.Resource {
 	}
 }
 
-func createRewriteglobal_rewritepolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createRewriteglobal_rewritepolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createRewriteglobal_rewritepolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policyname := d.Get("policyname").(string)
@@ -91,20 +93,15 @@ func createRewriteglobal_rewritepolicy_bindingFunc(d *schema.ResourceData, meta 
 
 	_, err := client.AddResource(service.Rewriteglobal_rewritepolicy_binding.Type(), bindingId, &rewriteglobal_rewritepolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readRewriteglobal_rewritepolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this rewriteglobal_rewritepolicy_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readRewriteglobal_rewritepolicy_bindingFunc(ctx, d, meta)
 }
 
-func readRewriteglobal_rewritepolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readRewriteglobal_rewritepolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readRewriteglobal_rewritepolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -128,7 +125,7 @@ func readRewriteglobal_rewritepolicy_bindingFunc(d *schema.ResourceData, meta in
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -177,7 +174,7 @@ func readRewriteglobal_rewritepolicy_bindingFunc(d *schema.ResourceData, meta in
 
 }
 
-func deleteRewriteglobal_rewritepolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteRewriteglobal_rewritepolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteRewriteglobal_rewritepolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -195,7 +192,7 @@ func deleteRewriteglobal_rewritepolicy_bindingFunc(d *schema.ResourceData, meta 
 
 	err := client.DeleteResourceWithArgsMap(service.Rewriteglobal_rewritepolicy_binding.Type(), "", argsMap)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

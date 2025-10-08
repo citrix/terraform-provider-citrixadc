@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/cluster"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 	"strings"
@@ -14,11 +16,11 @@ import (
 func resourceCitrixAdcClusternodegroup_gslbsite_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createClusternodegroup_gslbsite_bindingFunc,
-		Read:          readClusternodegroup_gslbsite_bindingFunc,
-		Delete:        deleteClusternodegroup_gslbsite_bindingFunc,
+		CreateContext: createClusternodegroup_gslbsite_bindingFunc,
+		ReadContext:   readClusternodegroup_gslbsite_bindingFunc,
+		DeleteContext: deleteClusternodegroup_gslbsite_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"gslbsite": {
@@ -35,7 +37,7 @@ func resourceCitrixAdcClusternodegroup_gslbsite_binding() *schema.Resource {
 	}
 }
 
-func createClusternodegroup_gslbsite_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createClusternodegroup_gslbsite_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createClusternodegroup_gslbsite_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name")
@@ -48,20 +50,15 @@ func createClusternodegroup_gslbsite_bindingFunc(d *schema.ResourceData, meta in
 
 	err := client.UpdateUnnamedResource(service.Clusternodegroup_gslbsite_binding.Type(), &clusternodegroup_gslbsite_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readClusternodegroup_gslbsite_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this clusternodegroup_gslbsite_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readClusternodegroup_gslbsite_bindingFunc(ctx, d, meta)
 }
 
-func readClusternodegroup_gslbsite_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readClusternodegroup_gslbsite_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readClusternodegroup_gslbsite_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -82,7 +79,7 @@ func readClusternodegroup_gslbsite_bindingFunc(d *schema.ResourceData, meta inte
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -120,7 +117,7 @@ func readClusternodegroup_gslbsite_bindingFunc(d *schema.ResourceData, meta inte
 
 }
 
-func deleteClusternodegroup_gslbsite_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteClusternodegroup_gslbsite_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteClusternodegroup_gslbsite_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -136,7 +133,7 @@ func deleteClusternodegroup_gslbsite_bindingFunc(d *schema.ResourceData, meta in
 
 	err := client.DeleteResourceWithArgs(service.Clusternodegroup_gslbsite_binding.Type(), name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

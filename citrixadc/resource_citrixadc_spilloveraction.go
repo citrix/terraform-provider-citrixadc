@@ -1,22 +1,24 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/spillover"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcSpilloveraction() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSpilloveractionFunc,
-		Read:          readSpilloveractionFunc,
-		Delete:        deleteSpilloveractionFunc,
+		CreateContext: createSpilloveractionFunc,
+		ReadContext:   readSpilloveractionFunc,
+		DeleteContext: deleteSpilloveractionFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -33,7 +35,7 @@ func resourceCitrixAdcSpilloveraction() *schema.Resource {
 	}
 }
 
-func createSpilloveractionFunc(d *schema.ResourceData, meta interface{}) error {
+func createSpilloveractionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSpilloveractionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	spilloveractionName := d.Get("name").(string)
@@ -44,20 +46,15 @@ func createSpilloveractionFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Spilloveraction.Type(), spilloveractionName, &spilloveraction)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(spilloveractionName)
 
-	err = readSpilloveractionFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this spilloveraction but we can't read it ?? %s", spilloveractionName)
-		return nil
-	}
-	return nil
+	return readSpilloveractionFunc(ctx, d, meta)
 }
 
-func readSpilloveractionFunc(d *schema.ResourceData, meta interface{}) error {
+func readSpilloveractionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSpilloveractionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	spilloveractionName := d.Id()
@@ -75,13 +72,13 @@ func readSpilloveractionFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func deleteSpilloveractionFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSpilloveractionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSpilloveractionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	spilloveractionName := d.Id()
 	err := client.DeleteResource(service.Spilloveraction.Type(), spilloveractionName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

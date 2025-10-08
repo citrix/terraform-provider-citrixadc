@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/aaa"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strings"
 )
@@ -13,11 +15,11 @@ import (
 func resourceCitrixAdcAaauser_authorizationpolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAaauser_authorizationpolicy_bindingFunc,
-		Read:          readAaauser_authorizationpolicy_bindingFunc,
-		Delete:        deleteAaauser_authorizationpolicy_bindingFunc,
+		CreateContext: createAaauser_authorizationpolicy_bindingFunc,
+		ReadContext:   readAaauser_authorizationpolicy_bindingFunc,
+		DeleteContext: deleteAaauser_authorizationpolicy_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"username": {
@@ -51,7 +53,7 @@ func resourceCitrixAdcAaauser_authorizationpolicy_binding() *schema.Resource {
 	}
 }
 
-func createAaauser_authorizationpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createAaauser_authorizationpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAaauser_authorizationpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	username := d.Get("username").(string)
@@ -67,20 +69,15 @@ func createAaauser_authorizationpolicy_bindingFunc(d *schema.ResourceData, meta 
 
 	err := client.UpdateUnnamedResource(service.Aaauser_authorizationpolicy_binding.Type(), &aaauser_authorizationpolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readAaauser_authorizationpolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this aaauser_authorizationpolicy_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readAaauser_authorizationpolicy_bindingFunc(ctx, d, meta)
 }
 
-func readAaauser_authorizationpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readAaauser_authorizationpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAaauser_authorizationpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -101,7 +98,7 @@ func readAaauser_authorizationpolicy_bindingFunc(d *schema.ResourceData, meta in
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -142,7 +139,7 @@ func readAaauser_authorizationpolicy_bindingFunc(d *schema.ResourceData, meta in
 
 }
 
-func deleteAaauser_authorizationpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAaauser_authorizationpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAaauser_authorizationpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -161,7 +158,7 @@ func deleteAaauser_authorizationpolicy_bindingFunc(d *schema.ResourceData, meta 
 
 	err := client.DeleteResourceWithArgs(service.Aaauser_authorizationpolicy_binding.Type(), name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

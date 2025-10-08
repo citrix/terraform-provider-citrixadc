@@ -1,22 +1,25 @@
 package citrixadc
 
 import (
-	"github.com/citrix/adc-nitro-go/resource/config/lsn"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"context"
 
-	"fmt"
+	"github.com/citrix/adc-nitro-go/resource/config/lsn"
+
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcLsnrtspalgprofile() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createLsnrtspalgprofileFunc,
-		Read:          readLsnrtspalgprofileFunc,
-		Update:        updateLsnrtspalgprofileFunc,
-		Delete:        deleteLsnrtspalgprofileFunc,
+		CreateContext: createLsnrtspalgprofileFunc,
+		ReadContext:   readLsnrtspalgprofileFunc,
+		UpdateContext: updateLsnrtspalgprofileFunc,
+		DeleteContext: deleteLsnrtspalgprofileFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"rtspalgprofilename": {
@@ -43,7 +46,7 @@ func resourceCitrixAdcLsnrtspalgprofile() *schema.Resource {
 	}
 }
 
-func createLsnrtspalgprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func createLsnrtspalgprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createLsnrtspalgprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lsnrtspalgprofileName := d.Get("rtspalgprofilename").(string)
@@ -56,20 +59,15 @@ func createLsnrtspalgprofileFunc(d *schema.ResourceData, meta interface{}) error
 
 	_, err := client.AddResource("lsnrtspalgprofile", lsnrtspalgprofileName, &lsnrtspalgprofile)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(lsnrtspalgprofileName)
 
-	err = readLsnrtspalgprofileFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this lsnrtspalgprofile but we can't read it ?? %s", lsnrtspalgprofileName)
-		return nil
-	}
-	return nil
+	return readLsnrtspalgprofileFunc(ctx, d, meta)
 }
 
-func readLsnrtspalgprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func readLsnrtspalgprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readLsnrtspalgprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lsnrtspalgprofileName := d.Id()
@@ -81,7 +79,7 @@ func readLsnrtspalgprofileFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	d.Set("rtspalgprofilename", data["rtspalgprofilename"])
-	d.Set("rtspidletimeout", data["rtspidletimeout"])
+	setToInt("rtspidletimeout", d, data["rtspidletimeout"])
 	d.Set("rtspportrange", data["rtspportrange"])
 	d.Set("rtsptransportprotocol", data["rtsptransportprotocol"])
 
@@ -89,7 +87,7 @@ func readLsnrtspalgprofileFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateLsnrtspalgprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func updateLsnrtspalgprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateLsnrtspalgprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lsnrtspalgprofileName := d.Get("rtspalgprofilename").(string)
@@ -117,19 +115,19 @@ func updateLsnrtspalgprofileFunc(d *schema.ResourceData, meta interface{}) error
 	if hasChange {
 		_, err := client.UpdateResource("lsnrtspalgprofile", lsnrtspalgprofileName, &lsnrtspalgprofile)
 		if err != nil {
-			return fmt.Errorf("Error updating lsnrtspalgprofile %s", lsnrtspalgprofileName)
+			return diag.Errorf("Error updating lsnrtspalgprofile %s", lsnrtspalgprofileName)
 		}
 	}
-	return readLsnrtspalgprofileFunc(d, meta)
+	return readLsnrtspalgprofileFunc(ctx, d, meta)
 }
 
-func deleteLsnrtspalgprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteLsnrtspalgprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteLsnrtspalgprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lsnrtspalgprofileName := d.Id()
 	err := client.DeleteResource("lsnrtspalgprofile", lsnrtspalgprofileName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

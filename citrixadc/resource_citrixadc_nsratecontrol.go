@@ -1,24 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
 	"strconv"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcNsratecontrol() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNsratecontrolFunc,
-		Read:          readNsratecontrolFunc,
-		Update:        updateNsratecontrolFunc,
-		Delete:        deleteNsratecontrolFunc,
+		CreateContext: createNsratecontrolFunc,
+		ReadContext:   readNsratecontrolFunc,
+		UpdateContext: updateNsratecontrolFunc,
+		DeleteContext: deleteNsratecontrolFunc,
 		Schema: map[string]*schema.Schema{
 			"icmpthreshold": {
 				Type:     schema.TypeInt,
@@ -44,7 +47,7 @@ func resourceCitrixAdcNsratecontrol() *schema.Resource {
 	}
 }
 
-func createNsratecontrolFunc(d *schema.ResourceData, meta interface{}) error {
+func createNsratecontrolFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNsratecontrolFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var nsratecontrolName string
@@ -58,20 +61,15 @@ func createNsratecontrolFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.UpdateUnnamedResource(service.Nsratecontrol.Type(), &nsratecontrol)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(nsratecontrolName)
 
-	err = readNsratecontrolFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this nsratecontrol but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readNsratecontrolFunc(ctx, d, meta)
 }
 
-func readNsratecontrolFunc(d *schema.ResourceData, meta interface{}) error {
+func readNsratecontrolFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNsratecontrolFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading nsratecontrol state")
@@ -94,7 +92,7 @@ func readNsratecontrolFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateNsratecontrolFunc(d *schema.ResourceData, meta interface{}) error {
+func updateNsratecontrolFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateNsratecontrolFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -107,13 +105,13 @@ func updateNsratecontrolFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.UpdateUnnamedResource(service.Nsratecontrol.Type(), &nsratecontrol)
 	if err != nil {
-		return fmt.Errorf("Error updating nsratecontrol")
+		return diag.Errorf("Error updating nsratecontrol")
 	}
 
-	return readNsratecontrolFunc(d, meta)
+	return readNsratecontrolFunc(ctx, d, meta)
 }
 
-func deleteNsratecontrolFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNsratecontrolFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNsratecontrolFunc")
 	// nsratecontrol do not have DELETE operation, but this function is required to set the ID to ""
 	d.SetId("")

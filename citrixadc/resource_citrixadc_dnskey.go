@@ -1,24 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/dns"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcDnskey() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createDnskeyFunc,
-		Read:          readDnskeyFunc,
-		Update:        updateDnskeyFunc,
-		Delete:        deleteDnskeyFunc,
+		CreateContext: createDnskeyFunc,
+		ReadContext:   readDnskeyFunc,
+		UpdateContext: updateDnskeyFunc,
+		DeleteContext: deleteDnskeyFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"algorithm": {
@@ -100,7 +103,7 @@ func resourceCitrixAdcDnskey() *schema.Resource {
 	}
 }
 
-func createDnskeyFunc(d *schema.ResourceData, meta interface{}) error {
+func createDnskeyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createDnskeyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnskeyName := d.Get("keyname").(string)
@@ -124,20 +127,15 @@ func createDnskeyFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Dnskey.Type(), dnskeyName, &dnskey)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(dnskeyName)
 
-	err = readDnskeyFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this dnskey but we can't read it ?? %s", dnskeyName)
-		return nil
-	}
-	return nil
+	return readDnskeyFunc(ctx, d, meta)
 }
 
-func readDnskeyFunc(d *schema.ResourceData, meta interface{}) error {
+func readDnskeyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readDnskeyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnskeyName := d.Id()
@@ -149,17 +147,17 @@ func readDnskeyFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	d.Set("algorithm", data["algorithm"])
-	d.Set("expires", data["expires"])
+	setToInt("expires", d, data["expires"])
 	d.Set("filenameprefix", data["filenameprefix"])
 	d.Set("keyname", data["keyname"])
-	d.Set("keysize", data["keysize"])
+	setToInt("keysize", d, data["keysize"])
 	d.Set("keytype", data["keytype"])
-	d.Set("notificationperiod", data["notificationperiod"])
+	setToInt("notificationperiod", d, data["notificationperiod"])
 	d.Set("password", data["password"])
 	d.Set("privatekey", data["privatekey"])
 	d.Set("publickey", data["publickey"])
 	d.Set("src", data["src"])
-	d.Set("ttl", data["ttl"])
+	setToInt("ttl", d, data["ttl"])
 	d.Set("units1", data["units1"])
 	d.Set("units2", data["units2"])
 	d.Set("zonename", data["zonename"])
@@ -168,7 +166,7 @@ func readDnskeyFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateDnskeyFunc(d *schema.ResourceData, meta interface{}) error {
+func updateDnskeyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateDnskeyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnskeyName := d.Get("keyname").(string)
@@ -241,19 +239,19 @@ func updateDnskeyFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Dnskey.Type(), dnskeyName, &dnskey)
 		if err != nil {
-			return fmt.Errorf("Error updating dnskey %s", dnskeyName)
+			return diag.Errorf("Error updating dnskey %s", dnskeyName)
 		}
 	}
-	return readDnskeyFunc(d, meta)
+	return readDnskeyFunc(ctx, d, meta)
 }
 
-func deleteDnskeyFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteDnskeyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteDnskeyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnskeyName := d.Id()
 	err := client.DeleteResource(service.Dnskey.Type(), dnskeyName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

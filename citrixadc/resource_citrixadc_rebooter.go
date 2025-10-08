@@ -1,10 +1,11 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
 	"bytes"
 	"fmt"
@@ -12,12 +13,15 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcRebooter() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createRebooterFunc,
+		CreateContext: createRebooterFunc,
 		Read:          schema.Noop,
 		Delete:        schema.Noop,
 		Schema: map[string]*schema.Schema{
@@ -64,19 +68,19 @@ func resourceCitrixAdcRebooter() *schema.Resource {
 	}
 }
 
-func createRebooterFunc(d *schema.ResourceData, meta interface{}) error {
+func createRebooterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createRebooterFunc")
 	rebooterId := resource.PrefixedUniqueId("tf-rebooter-")
 
 	err := rebooterRebootAdcInstance(d, meta)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if d.Get("wait_until_reachable").(bool) {
 		err := rebooterWaitReachable(d, meta)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 

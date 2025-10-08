@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/aaa"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAaaradiusparams() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAaaradiusparamsFunc,
-		Read:          readAaaradiusparamsFunc,
-		Update:        updateAaaradiusparamsFunc,
-		Delete:        deleteAaaradiusparamsFunc,
+		CreateContext: createAaaradiusparamsFunc,
+		ReadContext:   readAaaradiusparamsFunc,
+		UpdateContext: updateAaaradiusparamsFunc,
+		DeleteContext: deleteAaaradiusparamsFunc,
 		Schema: map[string]*schema.Schema{
 			"radkey": {
 				Type:     schema.TypeString,
@@ -128,7 +131,7 @@ func resourceCitrixAdcAaaradiusparams() *schema.Resource {
 	}
 }
 
-func createAaaradiusparamsFunc(d *schema.ResourceData, meta interface{}) error {
+func createAaaradiusparamsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAaaradiusparamsFunc")
 	client := meta.(*NetScalerNitroClient).client
 	aaaradiusparamsName := resource.PrefixedUniqueId("tf-aaaradiusparams-")
@@ -159,20 +162,15 @@ func createAaaradiusparamsFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.UpdateUnnamedResource(service.Aaaradiusparams.Type(), &aaaradiusparams)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(aaaradiusparamsName)
 
-	err = readAaaradiusparamsFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this aaaradiusparams but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readAaaradiusparamsFunc(ctx, d, meta)
 }
 
-func readAaaradiusparamsFunc(d *schema.ResourceData, meta interface{}) error {
+func readAaaradiusparamsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAaaradiusparamsFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading aaaradiusparams state")
@@ -184,31 +182,31 @@ func readAaaradiusparamsFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("accounting", data["accounting"])
 	d.Set("authentication", data["authentication"])
-	d.Set("authservretry", data["authservretry"])
-	d.Set("authtimeout", data["authtimeout"])
+	setToInt("authservretry", d, data["authservretry"])
+	setToInt("authtimeout", d, data["authtimeout"])
 	d.Set("callingstationid", data["callingstationid"])
 	d.Set("defaultauthenticationgroup", data["defaultauthenticationgroup"])
-	d.Set("ipattributetype", data["ipattributetype"])
-	d.Set("ipvendorid", data["ipvendorid"])
+	setToInt("ipattributetype", d, data["ipattributetype"])
+	setToInt("ipvendorid", d, data["ipvendorid"])
 	d.Set("passencoding", data["passencoding"])
-	d.Set("pwdattributetype", data["pwdattributetype"])
-	d.Set("pwdvendorid", data["pwdvendorid"])
-	d.Set("radattributetype", data["radattributetype"])
+	setToInt("pwdattributetype", d, data["pwdattributetype"])
+	setToInt("pwdvendorid", d, data["pwdvendorid"])
+	setToInt("radattributetype", d, data["radattributetype"])
 	d.Set("radgroupseparator", data["radgroupseparator"])
 	d.Set("radgroupsprefix", data["radgroupsprefix"])
 	//d.Set("radkey", data["radkey"])
 	d.Set("radnasid", data["radnasid"])
 	d.Set("radnasip", data["radnasip"])
-	d.Set("radvendorid", data["radvendorid"])
+	setToInt("radvendorid", d, data["radvendorid"])
 	d.Set("serverip", data["serverip"])
-	d.Set("serverport", data["serverport"])
+	setToInt("serverport", d, data["serverport"])
 	d.Set("tunnelendpointclientip", data["tunnelendpointclientip"])
 
 	return nil
 
 }
 
-func updateAaaradiusparamsFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAaaradiusparamsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAaaradiusparamsFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -320,13 +318,13 @@ func updateAaaradiusparamsFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Aaaradiusparams.Type(), &aaaradiusparams)
 		if err != nil {
-			return fmt.Errorf("Error updating aaaradiusparams")
+			return diag.Errorf("Error updating aaaradiusparams")
 		}
 	}
-	return readAaaradiusparamsFunc(d, meta)
+	return readAaaradiusparamsFunc(ctx, d, meta)
 }
 
-func deleteAaaradiusparamsFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAaaradiusparamsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAaaradiusparamsFunc")
 	// aaaradiusparams does not support delete operation
 	d.SetId("")

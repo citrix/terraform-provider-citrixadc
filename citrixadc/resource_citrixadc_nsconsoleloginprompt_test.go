@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -36,9 +36,9 @@ const testAccNsconsoleloginprompt_update = `
 
 func TestAccNsconsoleloginprompt_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: nil,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNsconsoleloginprompt_add,
@@ -77,8 +77,12 @@ func testAccCheckNsconsoleloginpromptExist(n string, id *string) resource.TestCh
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Nsconsoleloginprompt.Type(), "")
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Nsconsoleloginprompt.Type(), "")
 
 		if err != nil {
 			return err
@@ -93,7 +97,11 @@ func testAccCheckNsconsoleloginpromptExist(n string, id *string) resource.TestCh
 }
 
 func testAccCheckNsconsoleloginpromptDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_nsconsoleloginprompt" {
@@ -104,7 +112,7 @@ func testAccCheckNsconsoleloginpromptDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Nsconsoleloginprompt.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Nsconsoleloginprompt.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("nsconsoleloginprompt %s still exists", rs.Primary.ID)
 		}

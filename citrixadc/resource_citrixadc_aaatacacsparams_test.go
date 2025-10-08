@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -31,7 +31,7 @@ resource "citrixadc_aaatacacsparams" "tf_aaatacacsparams" {
 	serverport    = 49
 	authtimeout   = 5
 	authorization = "OFF"
-  }
+	}
   
 `
 const testAccAaatacacsparams_update = `
@@ -42,15 +42,15 @@ resource "citrixadc_aaatacacsparams" "tf_aaatacacsparams" {
 	serverport    = 50
 	authtimeout   = 6
 	authorization = "ON"
-  }
+	}
   
 `
 
 func TestAccAaatacacsparams_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: nil,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAaatacacsparams_basic,
@@ -95,8 +95,12 @@ func testAccCheckAaatacacsparamsExist(n string, id *string) resource.TestCheckFu
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Aaatacacsparams.Type(), "")
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Aaatacacsparams.Type(), "")
 
 		if err != nil {
 			return err

@@ -2,6 +2,7 @@ package citrixadc
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"strconv"
@@ -9,19 +10,19 @@ import (
 	"github.com/citrix/adc-nitro-go/resource/config/ssl"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcSslprofile() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSslprofileFunc,
-		Read:          readSslprofileFunc,
-		Update:        updateSslprofileFunc,
-		Delete:        deleteSslprofileFunc,
+		CreateContext: createSslprofileFunc,
+		ReadContext:   readSslprofileFunc,
+		UpdateContext: updateSslprofileFunc,
+		DeleteContext: deleteSslprofileFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -379,7 +380,7 @@ func resourceCitrixAdcSslprofile() *schema.Resource {
 		},
 	}
 }
-func createSslprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func createSslprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSslprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	sslprofileName := d.Get("name").(string)
@@ -452,7 +453,7 @@ func createSslprofileFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Sslprofile.Type(), sslprofileName, &sslprofile)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(sslprofileName)
@@ -460,14 +461,14 @@ func createSslprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	if val, ok := d.GetOk("nodefaultecccurvebindings"); ok && val.(bool) {
 		err = deleteDefaultSslprofileEcccurveBinding(d, meta)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	if val, ok := d.GetOk("nodefaultcipherbindings"); ok && val.(bool) {
 		err = deleteDefaultSslprofileCipherBinding(d, meta)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
@@ -475,26 +476,21 @@ func createSslprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	if _, ok := d.GetOk("ecccurvebindings"); ok {
 		err = createSslprofileEcccurveBindings(d, meta)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 	// Ignore bindings unless there is an explicit configuration for it
 	if _, ok := d.GetOk("cipherbindings"); ok {
 		err = createSslprofileCipherBindings(d, meta)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
-	err = readSslprofileFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this sslprofile but we can't read it ?? %s", sslprofileName)
-		return nil
-	}
-	return nil
+	return readSslprofileFunc(ctx, d, meta)
 }
 
-func readSslprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func readSslprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSslprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	sslprofileName := d.Id()
@@ -510,12 +506,12 @@ func readSslprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	if _, ok := d.GetOk("ecccurvebindings"); ok {
 		err = readSslprofileEcccurvebindings(d, meta)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 	err = readSslprofileCipherbindings(d, meta)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.Set("name", data["name"])
@@ -586,7 +582,7 @@ func readSslprofileFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateSslprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func updateSslprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateSslprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	sslprofileName := d.Get("name").(string)
@@ -910,33 +906,33 @@ func updateSslprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Sslprofile.Type(), sslprofileName, &sslprofile)
 		if err != nil {
-			return fmt.Errorf("Error updating sslprofile %s", sslprofileName)
+			return diag.Errorf("Error updating sslprofile %s", sslprofileName)
 		}
 	}
 
 	if d.HasChange("ecccurvebindings") {
 		err := updateSslprofileEcccurveBindings(d, meta)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	if d.HasChange("cipherbindings") {
 		err := updateSslprofileCipherBindings(d, meta)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
-	return readSslprofileFunc(d, meta)
+	return readSslprofileFunc(ctx, d, meta)
 }
 
-func deleteSslprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSslprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSslprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	sslprofileName := d.Id()
 	err := client.DeleteResource(service.Sslprofile.Type(), sslprofileName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")
@@ -1270,5 +1266,5 @@ func sslprofileCipherbindingMappingHash(v interface{}) int {
 	if d, ok := m["cipherpriority"]; ok {
 		buf.WriteString(fmt.Sprintf("%d-", d.(int)))
 	}
-	return hashcode.String(buf.String())
+	return hashString(buf.String())
 }

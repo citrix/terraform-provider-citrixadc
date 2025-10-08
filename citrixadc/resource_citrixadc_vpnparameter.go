@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/vpn"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcVpnparameter() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createVpnparameterFunc,
-		Read:          readVpnparameterFunc,
-		Update:        updateVpnparameterFunc,
-		Delete:        deleteVpnparameterFunc, // Thought vpnparameter resource donot have DELETE operation, it is required to set ID to "" d.SetID("") to maintain terraform state
+		CreateContext: createVpnparameterFunc,
+		ReadContext:   readVpnparameterFunc,
+		UpdateContext: updateVpnparameterFunc,
+		DeleteContext: deleteVpnparameterFunc, // Thought vpnparameter resource donot have DELETE operation, it is required to set ID to "" d.SetID("") to maintain terraform state
 		Schema: map[string]*schema.Schema{
 			"advancedclientlessvpnmode": {
 				Type:     schema.TypeString,
@@ -442,7 +445,7 @@ func resourceCitrixAdcVpnparameter() *schema.Resource {
 	}
 }
 
-func createVpnparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func createVpnparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createVpnparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var vpnparameterName string
@@ -536,20 +539,15 @@ func createVpnparameterFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.UpdateUnnamedResource(service.Vpnparameter.Type(), &vpnparameter)
 	if err != nil {
-		return fmt.Errorf("Error updating vpnparameter")
+		return diag.Errorf("Error updating vpnparameter")
 	}
 
 	d.SetId(vpnparameterName)
 
-	err = readVpnparameterFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this vpnparameter but we can't read it ?? %s", vpnparameterName)
-		return nil
-	}
-	return nil
+	return readVpnparameterFunc(ctx, d, meta)
 }
 
-func readVpnparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func readVpnparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readVpnparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading vpnparameter state")
@@ -563,7 +561,7 @@ func readVpnparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("allowedlogingroups", data["allowedlogingroups"])
 	d.Set("allprotocolproxy", data["allprotocolproxy"])
 	d.Set("alwaysonprofilename", data["alwaysonprofilename"])
-	d.Set("apptokentimeout", data["apptokentimeout"])
+	setToInt("apptokentimeout", d, data["apptokentimeout"])
 	d.Set("authorizationgroup", data["authorizationgroup"])
 	d.Set("autoproxyurl", data["autoproxyurl"])
 	d.Set("backendcertvalidation", data["backendcertvalidation"])
@@ -573,7 +571,7 @@ func readVpnparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("clientcleanupprompt", data["clientcleanupprompt"])
 	d.Set("clientconfiguration", data["clientconfiguration"])
 	d.Set("clientdebug", data["clientdebug"])
-	d.Set("clientidletimeout", data["clientidletimeout"])
+	setToInt("clientidletimeout", d, data["clientidletimeout"])
 	d.Set("clientlessmodeurlencoding", data["clientlessmodeurlencoding"])
 	d.Set("clientlesspersistentcookie", data["clientlesspersistentcookie"])
 	d.Set("clientlessvpnmode", data["clientlessvpnmode"])
@@ -589,13 +587,12 @@ func readVpnparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("encryptcsecexp", data["encryptcsecexp"])
 	d.Set("epaclienttype", data["epaclienttype"])
 	d.Set("forcecleanup", data["forcecleanup"])
-	d.Set("forcedtimeout", data["forcedtimeout"])
-	d.Set("forcedtimeoutwarning", data["forcedtimeoutwarning"])
+	setToInt("forcedtimeout", d, data["forcedtimeout"])
+	setToInt("forcedtimeoutwarning", d, data["forcedtimeoutwarning"])
 	d.Set("fqdnspoofedip", data["fqdnspoofedip"])
 	d.Set("ftpproxy", data["ftpproxy"])
 	d.Set("gopherproxy", data["gopherproxy"])
 	d.Set("homepage", data["homepage"])
-	d.Set("httpport", data["httpport"])
 	d.Set("httpproxy", data["httpproxy"])
 	d.Set("icaproxy", data["icaproxy"])
 	d.Set("icasessiontimeout", data["icasessiontimeout"])
@@ -609,7 +606,7 @@ func readVpnparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("loginscript", data["loginscript"])
 	d.Set("logoutscript", data["logoutscript"])
 	d.Set("macpluginupgrade", data["macpluginupgrade"])
-	d.Set("mdxtokentimeout", data["mdxtokentimeout"])
+	setToInt("mdxtokentimeout", d, data["mdxtokentimeout"])
 	d.Set("netmask", data["netmask"])
 	d.Set("ntdomain", data["ntdomain"])
 	d.Set("pcoipprofilename", data["pcoipprofilename"])
@@ -620,7 +617,7 @@ func readVpnparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("rfc1918", data["rfc1918"])
 	d.Set("samesite", data["samesite"])
 	d.Set("securebrowse", data["securebrowse"])
-	d.Set("sesstimeout", data["sesstimeout"])
+	setToInt("sesstimeout", d, data["sesstimeout"])
 	d.Set("smartgroup", data["smartgroup"])
 	d.Set("socksproxy", data["socksproxy"])
 	d.Set("splitdns", data["splitdns"])
@@ -642,12 +639,16 @@ func readVpnparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("windowspluginupgrade", data["windowspluginupgrade"])
 	d.Set("winsip", data["winsip"])
 	d.Set("wiportalmode", data["wiportalmode"])
+	// Convert httpport from []string to []int before setting
+	if httpPort, ok := data["httpport"]; ok && httpPort != nil {
+		d.Set("httpport", stringListToIntList(httpPort.([]interface{})))
+	}
 
 	return nil
 
 }
 
-func updateVpnparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func updateVpnparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateVpnparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vpnparameter := vpn.Vpnparameter{}
@@ -1071,13 +1072,13 @@ func updateVpnparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Vpnparameter.Type(), &vpnparameter)
 		if err != nil {
-			return fmt.Errorf("Error updating vpnparameter %s", err.Error())
+			return diag.Errorf("Error updating vpnparameter %s", err.Error())
 		}
 	}
-	return readVpnparameterFunc(d, meta)
+	return readVpnparameterFunc(ctx, d, meta)
 }
 
-func deleteVpnparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteVpnparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteVpnparameterFunc")
 	// vpnparameter do not have DELETE operation, but this function is required to set the ID to ""
 	d.SetId("")

@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"strings"
 	"testing"
 )
@@ -73,9 +73,9 @@ const testAccAuthenticationpolicylabel_authenticationpolicy_binding_basic_step2 
 
 func TestAccAuthenticationpolicylabel_authenticationpolicy_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAuthenticationpolicylabel_authenticationpolicy_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAuthenticationpolicylabel_authenticationpolicy_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAuthenticationpolicylabel_authenticationpolicy_binding_basic,
@@ -115,7 +115,11 @@ func testAccCheckAuthenticationpolicylabel_authenticationpolicy_bindingExist(n s
 			*id = rs.Primary.ID
 		}
 
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		bindingId := rs.Primary.ID
 
@@ -155,7 +159,11 @@ func testAccCheckAuthenticationpolicylabel_authenticationpolicy_bindingExist(n s
 
 func testAccCheckAuthenticationpolicylabel_authenticationpolicy_bindingNotExist(n string, id string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
@@ -195,7 +203,11 @@ func testAccCheckAuthenticationpolicylabel_authenticationpolicy_bindingNotExist(
 }
 
 func testAccCheckAuthenticationpolicylabel_authenticationpolicy_bindingDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_authenticationpolicylabel_authenticationpolicy_binding" {
@@ -206,7 +218,7 @@ func testAccCheckAuthenticationpolicylabel_authenticationpolicy_bindingDestroy(s
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Authenticationpolicylabel_authenticationpolicy_binding.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Authenticationpolicylabel_authenticationpolicy_binding.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("authenticationpolicylabel_authenticationpolicy_binding %s still exists", rs.Primary.ID)
 		}

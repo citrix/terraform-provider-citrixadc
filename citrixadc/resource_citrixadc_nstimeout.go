@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcNstimeout() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNstimeoutFunc,
-		Read:          readNstimeoutFunc,
-		Update:        updateNstimeoutFunc,
-		Delete:        deleteNstimeoutFunc, // Thought nstimeout resource donot have DELETE operation, it is required to set ID to "" d.SetID("") to maintain terraform state
+		CreateContext: createNstimeoutFunc,
+		ReadContext:   readNstimeoutFunc,
+		UpdateContext: updateNstimeoutFunc,
+		DeleteContext: deleteNstimeoutFunc, // Thought nstimeout resource donot have DELETE operation, it is required to set ID to "" d.SetID("") to maintain terraform state
 		Schema: map[string]*schema.Schema{
 			"anyclient": {
 				Type:     schema.TypeInt,
@@ -103,7 +106,7 @@ func resourceCitrixAdcNstimeout() *schema.Resource {
 	}
 }
 
-func createNstimeoutFunc(d *schema.ResourceData, meta interface{}) error {
+func createNstimeoutFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNstimeoutFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nstimeoutName := resource.PrefixedUniqueId("tf-nstimeout-")
@@ -129,20 +132,15 @@ func createNstimeoutFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.UpdateUnnamedResource(service.Nstimeout.Type(), &nstimeout)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(nstimeoutName)
 
-	err = readNstimeoutFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this nstimeout but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readNstimeoutFunc(ctx, d, meta)
 }
 
-func readNstimeoutFunc(d *schema.ResourceData, meta interface{}) error {
+func readNstimeoutFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNstimeoutFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading nstimeout state")
@@ -152,28 +150,28 @@ func readNstimeoutFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
-	d.Set("anyclient", data["anyclient"])
-	d.Set("anyserver", data["anyserver"])
-	d.Set("anytcpclient", data["anytcpclient"])
-	d.Set("anytcpserver", data["anytcpserver"])
-	d.Set("client", data["client"])
-	d.Set("halfclose", data["halfclose"])
-	d.Set("httpclient", data["httpclient"])
-	d.Set("httpserver", data["httpserver"])
-	d.Set("newconnidletimeout", data["newconnidletimeout"])
-	d.Set("nontcpzombie", data["nontcpzombie"])
-	d.Set("reducedfintimeout", data["reducedfintimeout"])
-	d.Set("reducedrsttimeout", data["reducedrsttimeout"])
-	d.Set("server", data["server"])
-	d.Set("tcpclient", data["tcpclient"])
-	d.Set("tcpserver", data["tcpserver"])
-	d.Set("zombie", data["zombie"])
+	setToInt("anyclient", d, data["anyclient"])
+	setToInt("anyserver", d, data["anyserver"])
+	setToInt("anytcpclient", d, data["anytcpclient"])
+	setToInt("anytcpserver", d, data["anytcpserver"])
+	setToInt("client", d, data["client"])
+	setToInt("halfclose", d, data["halfclose"])
+	setToInt("httpclient", d, data["httpclient"])
+	setToInt("httpserver", d, data["httpserver"])
+	setToInt("newconnidletimeout", d, data["newconnidletimeout"])
+	setToInt("nontcpzombie", d, data["nontcpzombie"])
+	setToInt("reducedfintimeout", d, data["reducedfintimeout"])
+	setToInt("reducedrsttimeout", d, data["reducedrsttimeout"])
+	setToInt("server", d, data["server"])
+	setToInt("tcpclient", d, data["tcpclient"])
+	setToInt("tcpserver", d, data["tcpserver"])
+	setToInt("zombie", d, data["zombie"])
 
 	return nil
 
 }
 
-func updateNstimeoutFunc(d *schema.ResourceData, meta interface{}) error {
+func updateNstimeoutFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateNstimeoutFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -264,13 +262,13 @@ func updateNstimeoutFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Nstimeout.Type(), &nstimeout)
 		if err != nil {
-			return fmt.Errorf("Error updating nstimeout")
+			return diag.Errorf("Error updating nstimeout")
 		}
 	}
-	return readNstimeoutFunc(d, meta)
+	return readNstimeoutFunc(ctx, d, meta)
 }
 
-func deleteNstimeoutFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNstimeoutFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNstimeoutFunc")
 	// nstimeout do not have DELETE operation, but this function is required to set the ID to ""
 	d.SetId("")

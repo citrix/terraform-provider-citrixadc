@@ -1,24 +1,28 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcNspbr6() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNspbr6Func,
-		Read:          readNspbr6Func,
-		Update:        updateNspbr6Func,
-		Delete:        deleteNspbr6Func,
+		CreateContext: createNspbr6Func,
+		ReadContext:   readNspbr6Func,
+		UpdateContext: updateNspbr6Func,
+		DeleteContext: deleteNspbr6Func,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -191,7 +195,7 @@ func resourceCitrixAdcNspbr6() *schema.Resource {
 	}
 }
 
-func createNspbr6Func(d *schema.ResourceData, meta interface{}) error {
+func createNspbr6Func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNspbr6Func")
 	client := meta.(*NetScalerNitroClient).client
 	nspbr6Name := d.Get("name").(string)
@@ -233,20 +237,15 @@ func createNspbr6Func(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Nspbr6.Type(), nspbr6Name, &nspbr6)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(nspbr6Name)
 
-	err = readNspbr6Func(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this nspbr6 but we can't read it ?? %s", nspbr6Name)
-		return nil
-	}
-	return nil
+	return readNspbr6Func(ctx, d, meta)
 }
 
-func readNspbr6Func(d *schema.ResourceData, meta interface{}) error {
+func readNspbr6Func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNspbr6Func")
 	client := meta.(*NetScalerNitroClient).client
 	nspbr6Name := d.Id()
@@ -272,11 +271,11 @@ func readNspbr6Func(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", data["name"])
 	d.Set("nexthop", data["nexthop"])
 	d.Set("nexthopval", data["nexthopval"])
-	d.Set("nexthopvlan", data["nexthopvlan"])
+	setToInt("nexthopvlan", d, data["nexthopvlan"])
 	d.Set("ownergroup", data["ownergroup"])
 	setToInt("priority", d, data["priority"])
 	d.Set("protocol", data["protocol"])
-	d.Set("protocolnumber", data["protocolnumber"])
+	setToInt("protocolnumber", d, data["protocolnumber"])
 	d.Set("srcipop", data["srcipop"])
 	d.Set("srcipv6", data["srcipv6"])
 	d.Set("srcipv6val", data["srcipv6val"])
@@ -286,16 +285,16 @@ func readNspbr6Func(d *schema.ResourceData, meta interface{}) error {
 	d.Set("srcportop", data["srcportop"])
 	d.Set("srcportval", data["srcportval"])
 	d.Set("state", data["state"])
-	d.Set("td", data["td"])
-	d.Set("vlan", data["vlan"])
-	d.Set("vxlan", data["vxlan"])
+	setToInt("td", d, data["td"])
+	setToInt("vlan", d, data["vlan"])
+	setToInt("vxlan", d, data["vxlan"])
 	d.Set("vxlanvlanmap", data["vxlanvlanmap"])
 
 	return nil
 
 }
 
-func updateNspbr6Func(d *schema.ResourceData, meta interface{}) error {
+func updateNspbr6Func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateNspbr6Func")
 	client := meta.(*NetScalerNitroClient).client
 	nspbr6Name := d.Get("name").(string)
@@ -469,25 +468,25 @@ func updateNspbr6Func(d *schema.ResourceData, meta interface{}) error {
 	if stateChange {
 		err := doNspbr6StateChange(d, client)
 		if err != nil {
-			return fmt.Errorf("Error enabling/disabling nspbr6 %s", nspbr6Name)
+			return diag.Errorf("Error enabling/disabling nspbr6 %s", nspbr6Name)
 		}
 	}
 	if hasChange {
 		_, err := client.UpdateResource(service.Nspbr6.Type(), nspbr6Name, &nspbr6)
 		if err != nil {
-			return fmt.Errorf("Error updating nspbr6 %s", nspbr6Name)
+			return diag.Errorf("Error updating nspbr6 %s", nspbr6Name)
 		}
 	}
-	return readNspbr6Func(d, meta)
+	return readNspbr6Func(ctx, d, meta)
 }
 
-func deleteNspbr6Func(d *schema.ResourceData, meta interface{}) error {
+func deleteNspbr6Func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNspbr6Func")
 	client := meta.(*NetScalerNitroClient).client
 	nspbr6Name := d.Id()
 	err := client.DeleteResource(service.Nspbr6.Type(), nspbr6Name)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

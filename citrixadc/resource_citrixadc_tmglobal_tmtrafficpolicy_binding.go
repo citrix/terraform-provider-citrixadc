@@ -1,22 +1,24 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/tm"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcTmglobal_tmtrafficpolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createTmglobal_tmtrafficpolicy_bindingFunc,
-		Read:          readTmglobal_tmtrafficpolicy_bindingFunc,
-		Delete:        deleteTmglobal_tmtrafficpolicy_bindingFunc,
+		CreateContext: createTmglobal_tmtrafficpolicy_bindingFunc,
+		ReadContext:   readTmglobal_tmtrafficpolicy_bindingFunc,
+		DeleteContext: deleteTmglobal_tmtrafficpolicy_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"policyname": {
@@ -51,7 +53,7 @@ func resourceCitrixAdcTmglobal_tmtrafficpolicy_binding() *schema.Resource {
 	}
 }
 
-func createTmglobal_tmtrafficpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createTmglobal_tmtrafficpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createTmglobal_tmtrafficpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policyname := d.Get("policyname").(string)
@@ -65,20 +67,15 @@ func createTmglobal_tmtrafficpolicy_bindingFunc(d *schema.ResourceData, meta int
 
 	err := client.UpdateUnnamedResource(service.Tmglobal_tmtrafficpolicy_binding.Type(), &tmglobal_tmtrafficpolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(policyname)
 
-	err = readTmglobal_tmtrafficpolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this tmglobal_tmtrafficpolicy_binding but we can't read it ?? %s", policyname)
-		return nil
-	}
-	return nil
+	return readTmglobal_tmtrafficpolicy_bindingFunc(ctx, d, meta)
 }
 
-func readTmglobal_tmtrafficpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readTmglobal_tmtrafficpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readTmglobal_tmtrafficpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policyname := d.Id()
@@ -94,7 +91,7 @@ func readTmglobal_tmtrafficpolicy_bindingFunc(d *schema.ResourceData, meta inter
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -135,7 +132,7 @@ func readTmglobal_tmtrafficpolicy_bindingFunc(d *schema.ResourceData, meta inter
 
 }
 
-func deleteTmglobal_tmtrafficpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteTmglobal_tmtrafficpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteTmglobal_tmtrafficpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -146,7 +143,7 @@ func deleteTmglobal_tmtrafficpolicy_bindingFunc(d *schema.ResourceData, meta int
 
 	err := client.DeleteResourceWithArgs(service.Tmglobal_tmtrafficpolicy_binding.Type(), "", args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

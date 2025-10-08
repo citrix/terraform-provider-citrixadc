@@ -1,24 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/cr"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcCrpolicy() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createCrpolicyFunc,
-		Read:          readCrpolicyFunc,
-		Update:        updateCrpolicyFunc,
-		Delete:        deleteCrpolicyFunc,
+		CreateContext: createCrpolicyFunc,
+		ReadContext:   readCrpolicyFunc,
+		UpdateContext: updateCrpolicyFunc,
+		DeleteContext: deleteCrpolicyFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"policyname": {
@@ -45,7 +48,7 @@ func resourceCitrixAdcCrpolicy() *schema.Resource {
 	}
 }
 
-func createCrpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func createCrpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createCrpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	crpolicyName := d.Get("policyname").(string)
@@ -58,20 +61,15 @@ func createCrpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Crpolicy.Type(), crpolicyName, &crpolicy)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(crpolicyName)
 
-	err = readCrpolicyFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this crpolicy but we can't read it ?? %s", crpolicyName)
-		return nil
-	}
-	return nil
+	return readCrpolicyFunc(ctx, d, meta)
 }
 
-func readCrpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func readCrpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readCrpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	crpolicyName := d.Id()
@@ -91,7 +89,7 @@ func readCrpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateCrpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func updateCrpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateCrpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	crpolicyName := d.Get("policyname").(string)
@@ -119,19 +117,19 @@ func updateCrpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Crpolicy.Type(), crpolicyName, &crpolicy)
 		if err != nil {
-			return fmt.Errorf("Error updating crpolicy %s", crpolicyName)
+			return diag.Errorf("Error updating crpolicy %s", crpolicyName)
 		}
 	}
-	return readCrpolicyFunc(d, meta)
+	return readCrpolicyFunc(ctx, d, meta)
 }
 
-func deleteCrpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteCrpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteCrpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	crpolicyName := d.Id()
 	err := client.DeleteResource(service.Crpolicy.Type(), crpolicyName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

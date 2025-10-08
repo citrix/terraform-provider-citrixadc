@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -58,9 +58,9 @@ const testAccIcaglobal_icapolicy_binding_basic_step2 = `
 
 func TestAccIcaglobal_icapolicy_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckIcaglobal_icapolicy_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckIcaglobal_icapolicy_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIcaglobal_icapolicy_binding_basic,
@@ -97,7 +97,11 @@ func testAccCheckIcaglobal_icapolicy_bindingExist(n string, id *string) resource
 			*id = rs.Primary.ID
 		}
 
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		policyname := rs.Primary.ID
 
@@ -132,7 +136,11 @@ func testAccCheckIcaglobal_icapolicy_bindingExist(n string, id *string) resource
 
 func testAccCheckIcaglobal_icapolicy_bindingNotExist(n string, id string, typename string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		policyname := id
 
@@ -166,7 +174,11 @@ func testAccCheckIcaglobal_icapolicy_bindingNotExist(n string, id string, typena
 }
 
 func testAccCheckIcaglobal_icapolicy_bindingDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_icaglobal_icapolicy_binding" {
@@ -177,7 +189,7 @@ func testAccCheckIcaglobal_icapolicy_bindingDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource("icaglobal_icapolicy_binding", rs.Primary.ID)
+		_, err := client.FindResource("icaglobal_icapolicy_binding", rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("icaglobal_icapolicy_binding %s still exists", rs.Primary.ID)
 		}

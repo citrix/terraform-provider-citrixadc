@@ -1,28 +1,30 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ssl"
 	"github.com/citrix/adc-nitro-go/service"
-
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"bytes"
 	"fmt"
 	"log"
 	"sort"
 	"strconv"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcSslcipher() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSslcipherFunc,
-		Read:          readSslcipherFunc,
-		Update:        updateSslcipherFunc,
-		Delete:        deleteSslcipherFunc,
+		CreateContext: createSslcipherFunc,
+		ReadContext:   readSslcipherFunc,
+		UpdateContext: updateSslcipherFunc,
+		DeleteContext: deleteSslcipherFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"ciphergroupname": {
@@ -53,7 +55,7 @@ func resourceCitrixAdcSslcipher() *schema.Resource {
 	}
 }
 
-func createSslcipherFunc(d *schema.ResourceData, meta interface{}) error {
+func createSslcipherFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSslcipherFunc")
 	client := meta.(*NetScalerNitroClient).client
 	sslcipherGroupName := d.Get("ciphergroupname").(string)
@@ -64,7 +66,7 @@ func createSslcipherFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Sslcipher.Type(), sslcipherGroupName, &sslcipher)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(sslcipherGroupName)
@@ -73,19 +75,14 @@ func createSslcipherFunc(d *schema.ResourceData, meta interface{}) error {
 	if _, ok := d.GetOk("ciphersuitebinding"); ok {
 		err = updateSslCipherCipherSuiteBindings(d, meta)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
-	err = readSslcipherFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this sslcipher but we can't read it ?? %s", sslcipherGroupName)
-		return err
-	}
-	return nil
+	return readSslcipherFunc(ctx, d, meta)
 }
 
-func updateSslcipherFunc(d *schema.ResourceData, meta interface{}) error {
+func updateSslcipherFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateSslcipherFunc")
 	sslcipherGroupName := d.Get("ciphergroupname").(string)
 	hasChange := false
@@ -96,14 +93,14 @@ func updateSslcipherFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := updateSslCipherCipherSuiteBindings(d, meta)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	return nil
 }
 
-func readSslcipherFunc(d *schema.ResourceData, meta interface{}) error {
+func readSslcipherFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSslcipherFunc")
 	client := meta.(*NetScalerNitroClient).client
 	sslcipherGroupName := d.Id()
@@ -141,7 +138,7 @@ func readSslcipherFunc(d *schema.ResourceData, meta interface{}) error {
 	if _, ok := d.GetOk("ciphersuitebinding"); ok {
 		err = readSslCipherCipherSuitebindings(d, meta)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
@@ -151,13 +148,13 @@ func readSslcipherFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func deleteSslcipherFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSslcipherFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSslcipherFunc")
 	client := meta.(*NetScalerNitroClient).client
 	sslcipherGroupName := d.Id()
 	err := client.DeleteResource(service.Sslcipher.Type(), sslcipherGroupName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")
@@ -284,7 +281,7 @@ func sslcipherCipherSuitebindingMappingHash(v interface{}) int {
 	if d, ok := m["cipherpriority"]; ok {
 		buf.WriteString(fmt.Sprintf("%d-", d.(int)))
 	}
-	return hashcode.String(buf.String())
+	return hashString(buf.String())
 }
 
 func readSslCipherCipherSuitebindings(d *schema.ResourceData, meta interface{}) error {

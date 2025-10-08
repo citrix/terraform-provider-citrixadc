@@ -1,24 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcNsassignment() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNsassignmentFunc,
-		Read:          readNsassignmentFunc,
-		Update:        updateNsassignmentFunc,
-		Delete:        deleteNsassignmentFunc,
+		CreateContext: createNsassignmentFunc,
+		ReadContext:   readNsassignmentFunc,
+		UpdateContext: updateNsassignmentFunc,
+		DeleteContext: deleteNsassignmentFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -71,7 +74,7 @@ func resourceCitrixAdcNsassignment() *schema.Resource {
 	}
 }
 
-func createNsassignmentFunc(d *schema.ResourceData, meta interface{}) error {
+func createNsassignmentFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNsassignmentFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nsassignmentName := d.Get("name").(string)
@@ -89,20 +92,15 @@ func createNsassignmentFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Nsassignment.Type(), nsassignmentName, &nsassignment)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(nsassignmentName)
 
-	err = readNsassignmentFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this nsassignment but we can't read it ?? %s", nsassignmentName)
-		return nil
-	}
-	return nil
+	return readNsassignmentFunc(ctx, d, meta)
 }
 
-func readNsassignmentFunc(d *schema.ResourceData, meta interface{}) error {
+func readNsassignmentFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNsassignmentFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nsassignmentName := d.Id()
@@ -127,7 +125,7 @@ func readNsassignmentFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateNsassignmentFunc(d *schema.ResourceData, meta interface{}) error {
+func updateNsassignmentFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateNsassignmentFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nsassignmentName := d.Get("name").(string)
@@ -180,19 +178,19 @@ func updateNsassignmentFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Nsassignment.Type(), nsassignmentName, &nsassignment)
 		if err != nil {
-			return fmt.Errorf("Error updating nsassignment %s", nsassignmentName)
+			return diag.Errorf("Error updating nsassignment %s", nsassignmentName)
 		}
 	}
-	return readNsassignmentFunc(d, meta)
+	return readNsassignmentFunc(ctx, d, meta)
 }
 
-func deleteNsassignmentFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNsassignmentFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNsassignmentFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nsassignmentName := d.Id()
 	err := client.DeleteResource(service.Nsassignment.Type(), nsassignmentName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

@@ -1,6 +1,7 @@
 package citrixadc
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/url"
@@ -8,18 +9,19 @@ import (
 
 	"github.com/citrix/adc-nitro-go/resource/config/dns"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcDnsnameserver() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createDnsnameserverFunc,
-		Read:          readDnsnameserverFunc,
-		Update:        updateDnsnameserverFunc,
-		Delete:        deleteDnsnameserverFunc,
+		CreateContext: createDnsnameserverFunc,
+		ReadContext:   readDnsnameserverFunc,
+		UpdateContext: updateDnsnameserverFunc,
+		DeleteContext: deleteDnsnameserverFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"dnsprofilename": {
@@ -59,7 +61,7 @@ func resourceCitrixAdcDnsnameserver() *schema.Resource {
 	}
 }
 
-func createDnsnameserverFunc(d *schema.ResourceData, meta interface{}) error {
+func createDnsnameserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createDnsnameserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnsnameserver := dns.Dnsnameserver{
@@ -79,7 +81,7 @@ func createDnsnameserverFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Dnsnameserver.Type(), PrimaryId, &dnsnameserver)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if val, ok := d.GetOk("type"); ok {
 		PrimaryId = PrimaryId + "," + val.(string)
@@ -90,15 +92,10 @@ func createDnsnameserverFunc(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(PrimaryId)
 
-	err = readDnsnameserverFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this resource but we can't read it ?? %s", PrimaryId)
-		return nil
-	}
-	return nil
+	return readDnsnameserverFunc(ctx, d, meta)
 }
 
-func readDnsnameserverFunc(d *schema.ResourceData, meta interface{}) error {
+func readDnsnameserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readDnsnameserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	PrimaryId := d.Id()
@@ -173,7 +170,7 @@ func readDnsnameserverFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateDnsnameserverFunc(d *schema.ResourceData, meta interface{}) error {
+func updateDnsnameserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateDnsnameserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -207,19 +204,19 @@ func updateDnsnameserverFunc(d *schema.ResourceData, meta interface{}) error {
 	if stateChange {
 		err := doDnsvserverStateChange(d, client)
 		if err != nil {
-			return fmt.Errorf("Error enabling/disabling dnsnameserver %s", PrimaryId)
+			return diag.Errorf("Error enabling/disabling dnsnameserver %s", PrimaryId)
 		}
 	}
 	if hasChange {
 		_, err := client.UpdateResource(service.Dnsnameserver.Type(), name, &dnsnameserver)
 		if err != nil {
-			return fmt.Errorf("Error updating dnsnameserver %s", PrimaryId)
+			return diag.Errorf("Error updating dnsnameserver %s", PrimaryId)
 		}
 	}
-	return readDnsnameserverFunc(d, meta)
+	return readDnsnameserverFunc(ctx, d, meta)
 }
 
-func deleteDnsnameserverFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteDnsnameserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteDnsnameserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	PrimaryId := d.Id()
@@ -231,7 +228,7 @@ func deleteDnsnameserverFunc(d *schema.ResourceData, meta interface{}) error {
 	if val, ok := d.GetOk("dnsvservername"); ok && Name == val { // if the user gives `dnsvservername`, then we need to directly call delete operation.
 		err := client.DeleteResource(service.Dnsnameserver.Type(), Name)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		d.SetId("")
@@ -245,7 +242,7 @@ func deleteDnsnameserverFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	err := client.DeleteResourceWithArgsMap(service.Dnsnameserver.Type(), Name, argsMap)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

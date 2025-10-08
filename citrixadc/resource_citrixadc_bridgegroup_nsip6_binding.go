@@ -1,25 +1,29 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
 	"log"
 	"net/url"
 	"strconv"
 	"strings"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcBridgegroup_nsip6_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createBridgegroup_nsip6_bindingFunc,
-		Read:          readBridgegroup_nsip6_bindingFunc,
-		Delete:        deleteBridgegroup_nsip6_bindingFunc,
+		CreateContext: createBridgegroup_nsip6_bindingFunc,
+		ReadContext:   readBridgegroup_nsip6_bindingFunc,
+		DeleteContext: deleteBridgegroup_nsip6_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"bridgegroup_id": {
@@ -56,7 +60,7 @@ func resourceCitrixAdcBridgegroup_nsip6_binding() *schema.Resource {
 	}
 }
 
-func createBridgegroup_nsip6_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createBridgegroup_nsip6_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createBridgegroup_nsip6_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bridgegroup_id := strconv.Itoa(d.Get("bridgegroup_id").(int))
@@ -72,20 +76,15 @@ func createBridgegroup_nsip6_bindingFunc(d *schema.ResourceData, meta interface{
 
 	err := client.UpdateUnnamedResource(service.Bridgegroup_nsip6_binding.Type(), &bridgegroup_nsip6_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readBridgegroup_nsip6_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this bridgegroup_nsip6_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readBridgegroup_nsip6_bindingFunc(ctx, d, meta)
 }
 
-func readBridgegroup_nsip6_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readBridgegroup_nsip6_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readBridgegroup_nsip6_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -106,7 +105,7 @@ func readBridgegroup_nsip6_bindingFunc(d *schema.ResourceData, meta interface{})
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -137,17 +136,17 @@ func readBridgegroup_nsip6_bindingFunc(d *schema.ResourceData, meta interface{})
 
 	data := dataArr[foundIndex]
 
-	d.Set("bridgegroup_id", data["id"])
+	setToInt("bridgegroup_id", d, data["id"])
 	d.Set("ipaddress", data["ipaddress"])
 	d.Set("netmask", data["netmask"])
 	d.Set("ownergroup", data["ownergroup"])
-	d.Set("td", data["td"])
+	setToInt("td", d, data["td"])
 
 	return nil
 
 }
 
-func deleteBridgegroup_nsip6_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteBridgegroup_nsip6_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteBridgegroup_nsip6_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -171,7 +170,7 @@ func deleteBridgegroup_nsip6_bindingFunc(d *schema.ResourceData, meta interface{
 
 	err := client.DeleteResourceWithArgs(service.Bridgegroup_nsip6_binding.Type(), bridgegroup_id, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

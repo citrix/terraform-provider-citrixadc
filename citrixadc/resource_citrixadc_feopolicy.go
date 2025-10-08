@@ -1,22 +1,25 @@
 package citrixadc
 
 import (
-	"github.com/citrix/adc-nitro-go/resource/config/feo"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"context"
 
-	"fmt"
+	"github.com/citrix/adc-nitro-go/resource/config/feo"
+
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcFeopolicy() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createFeopolicyFunc,
-		Read:          readFeopolicyFunc,
-		Update:        updateFeopolicyFunc,
-		Delete:        deleteFeopolicyFunc,
+		CreateContext: createFeopolicyFunc,
+		ReadContext:   readFeopolicyFunc,
+		UpdateContext: updateFeopolicyFunc,
+		DeleteContext: deleteFeopolicyFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"action": {
@@ -36,7 +39,7 @@ func resourceCitrixAdcFeopolicy() *schema.Resource {
 	}
 }
 
-func createFeopolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func createFeopolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createFeopolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	feopolicyName := d.Get("name").(string)
@@ -48,20 +51,15 @@ func createFeopolicyFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource("feopolicy", feopolicyName, &feopolicy)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(feopolicyName)
 
-	err = readFeopolicyFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this feopolicy but we can't read it ?? %s", feopolicyName)
-		return nil
-	}
-	return nil
+	return readFeopolicyFunc(ctx, d, meta)
 }
 
-func readFeopolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func readFeopolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readFeopolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	feopolicyName := d.Id()
@@ -80,7 +78,7 @@ func readFeopolicyFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateFeopolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func updateFeopolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateFeopolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	feopolicyName := d.Get("name").(string)
@@ -103,19 +101,19 @@ func updateFeopolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource("feopolicy", &feopolicy)
 		if err != nil {
-			return fmt.Errorf("Error updating feopolicy %s", feopolicyName)
+			return diag.Errorf("Error updating feopolicy %s", feopolicyName)
 		}
 	}
-	return readFeopolicyFunc(d, meta)
+	return readFeopolicyFunc(ctx, d, meta)
 }
 
-func deleteFeopolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteFeopolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteFeopolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	feopolicyName := d.Id()
 	err := client.DeleteResource("feopolicy", feopolicyName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

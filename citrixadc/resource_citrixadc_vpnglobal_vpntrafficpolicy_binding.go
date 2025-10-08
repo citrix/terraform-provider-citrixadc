@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/vpn"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 )
@@ -13,11 +15,11 @@ import (
 func resourceCitrixAdcVpnglobal_vpntrafficpolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createVpnglobal_vpntrafficpolicy_bindingFunc,
-		Read:          readVpnglobal_vpntrafficpolicy_bindingFunc,
-		Delete:        deleteVpnglobal_vpntrafficpolicy_bindingFunc,
+		CreateContext: createVpnglobal_vpntrafficpolicy_bindingFunc,
+		ReadContext:   readVpnglobal_vpntrafficpolicy_bindingFunc,
+		DeleteContext: deleteVpnglobal_vpntrafficpolicy_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"policyname": {
@@ -54,7 +56,7 @@ func resourceCitrixAdcVpnglobal_vpntrafficpolicy_binding() *schema.Resource {
 	}
 }
 
-func createVpnglobal_vpntrafficpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createVpnglobal_vpntrafficpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createVpnglobal_vpntrafficpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policyname := d.Get("policyname").(string)
@@ -68,20 +70,15 @@ func createVpnglobal_vpntrafficpolicy_bindingFunc(d *schema.ResourceData, meta i
 
 	err := client.UpdateUnnamedResource(service.Vpnglobal_vpntrafficpolicy_binding.Type(), &vpnglobal_vpntrafficpolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(policyname)
 
-	err = readVpnglobal_vpntrafficpolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this vpnglobal_vpntrafficpolicy_binding but we can't read it ?? %s", policyname)
-		return nil
-	}
-	return nil
+	return readVpnglobal_vpntrafficpolicy_bindingFunc(ctx, d, meta)
 }
 
-func readVpnglobal_vpntrafficpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readVpnglobal_vpntrafficpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readVpnglobal_vpntrafficpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policyname := d.Id()
@@ -97,7 +94,7 @@ func readVpnglobal_vpntrafficpolicy_bindingFunc(d *schema.ResourceData, meta int
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -138,7 +135,7 @@ func readVpnglobal_vpntrafficpolicy_bindingFunc(d *schema.ResourceData, meta int
 
 }
 
-func deleteVpnglobal_vpntrafficpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteVpnglobal_vpntrafficpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteVpnglobal_vpntrafficpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -156,7 +153,7 @@ func deleteVpnglobal_vpntrafficpolicy_bindingFunc(d *schema.ResourceData, meta i
 
 	err := client.DeleteResourceWithArgs(service.Vpnglobal_vpntrafficpolicy_binding.Type(), "", args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

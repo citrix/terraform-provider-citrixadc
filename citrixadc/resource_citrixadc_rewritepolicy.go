@@ -1,31 +1,34 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/cs"
 	"github.com/citrix/adc-nitro-go/resource/config/lb"
 	"github.com/citrix/adc-nitro-go/resource/config/rewrite"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
 	"bytes"
 	"fmt"
 	"log"
 	"strconv"
 	"strings"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcRewritepolicy() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createRewritepolicyFunc,
-		Read:          readRewritepolicyFunc,
-		Update:        updateRewritepolicyFunc,
-		Delete:        deleteRewritepolicyFunc,
+		CreateContext: createRewritepolicyFunc,
+		ReadContext:   readRewritepolicyFunc,
+		UpdateContext: updateRewritepolicyFunc,
+		DeleteContext: deleteRewritepolicyFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"action": {
@@ -207,7 +210,7 @@ func resourceCitrixAdcRewritepolicy() *schema.Resource {
 	}
 }
 
-func createRewritepolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func createRewritepolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createRewritepolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var rewritepolicyName string
@@ -228,33 +231,27 @@ func createRewritepolicyFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Rewritepolicy.Type(), rewritepolicyName, &rewritepolicy)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(rewritepolicyName)
 
 	if err := updateRewriteGlobalBinding(d, meta); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := updateRewriteLbvserverBindings(d, meta); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := updateRewriteCsvserverBindings(d, meta); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	err = readRewritepolicyFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this rewritepolicy but we can't read it ?? %s", rewritepolicyName)
-		return nil
-	}
-
-	return nil
+	return readRewritepolicyFunc(ctx, d, meta)
 }
 
-func readRewritepolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func readRewritepolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readRewritepolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	rewritepolicyName := d.Id()
@@ -268,17 +265,17 @@ func readRewritepolicyFunc(d *schema.ResourceData, meta interface{}) error {
 
 	if _, ok := d.GetOk("globalbinding"); ok {
 		if err := readRewriteGlobalBinding(d, meta); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 	if _, ok := d.GetOk("lbvserverbinding"); ok {
 		if err := readRewriteLbvserverBindings(d, meta); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 	if _, ok := d.GetOk("csvserverbinding"); ok {
 		if err := readRewriteCsvserverBindings(d, meta); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
@@ -294,7 +291,7 @@ func readRewritepolicyFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateRewritepolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func updateRewritepolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateRewritepolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	rewritepolicyName := d.Get("name").(string)
@@ -337,26 +334,26 @@ func updateRewritepolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Rewritepolicy.Type(), rewritepolicyName, &rewritepolicy)
 		if err != nil {
-			return fmt.Errorf("Error updating rewritepolicy %s", rewritepolicyName)
+			return diag.Errorf("Error updating rewritepolicy %s", rewritepolicyName)
 		}
 	}
 
 	if err := updateRewriteGlobalBinding(d, meta); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := updateRewriteLbvserverBindings(d, meta); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := updateRewriteCsvserverBindings(d, meta); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	return readRewritepolicyFunc(d, meta)
+	return readRewritepolicyFunc(ctx, d, meta)
 }
 
-func deleteRewritepolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteRewritepolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteRewritepolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	rewritepolicyName := d.Id()
@@ -364,20 +361,20 @@ func deleteRewritepolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	// Delete all bindings prior to deleting rewrite policy
 
 	if err := deleteRewriteGlobalBinding(d, meta); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := deleteRewriteLbvserverBindings(d, meta); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := deleteRewriteCsvserverBindings(d, meta); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	err := client.DeleteResource(service.Rewritepolicy.Type(), rewritepolicyName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")
@@ -406,7 +403,7 @@ func rewritepolicyGlobalbindingMappingHash(v interface{}) int {
 	if d, ok := m["type"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", d.(string)))
 	}
-	return hashcode.String(buf.String())
+	return hashString(buf.String())
 }
 
 func addSingleRewriteGlobalBinding(d *schema.ResourceData, meta interface{}, binding map[string]interface{}) error {
@@ -593,7 +590,7 @@ func rewritepolicyLbVserverMappingHash(v interface{}) int {
 	if d, ok := m["priority"]; ok {
 		buf.WriteString(fmt.Sprintf("%d-", d.(int)))
 	}
-	return hashcode.String(buf.String())
+	return hashString(buf.String())
 }
 
 func readRewriteLbvserverBindings(d *schema.ResourceData, meta interface{}) error {

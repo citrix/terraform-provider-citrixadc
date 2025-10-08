@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 	//"strconv"
 )
@@ -34,7 +34,7 @@ resource "citrixadc_route6" "tf_route6" {
 	vlan     = citrixadc_vlan.tf_vlan.vlanid
 	weight   = 5
 	distance = 3
-  }
+	}
   
 `
 const testAccRoute6_update = `
@@ -47,15 +47,15 @@ resource "citrixadc_route6" "tf_route6" {
 	vlan     = citrixadc_vlan.tf_vlan.vlanid
 	weight   = 6
 	distance = 4
-  }
+	}
   
 `
 
 func TestAccRoute6_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRoute6Destroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckRoute6Destroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoute6_basic,
@@ -98,9 +98,13 @@ func testAccCheckRoute6Exist(n string, id *string) resource.TestCheckFunc {
 			*id = rs.Primary.ID
 		}
 		route6Network := rs.Primary.ID
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
-		dataArr, err := nsClient.FindAllResources(service.Route6.Type())
+		dataArr, err := client.FindAllResources(service.Route6.Type())
 		found := false
 		for _, v := range dataArr {
 			if v["network"] == route6Network &&
@@ -123,7 +127,11 @@ func testAccCheckRoute6Exist(n string, id *string) resource.TestCheckFunc {
 }
 
 func testAccCheckRoute6Destroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_route6" {
@@ -135,7 +143,7 @@ func testAccCheckRoute6Destroy(s *terraform.State) error {
 		}
 
 		route6Network := rs.Primary.ID
-		dataArr, err := nsClient.FindAllResources(service.Route6.Type())
+		dataArr, err := client.FindAllResources(service.Route6.Type())
 		if err != nil {
 			return err
 		}

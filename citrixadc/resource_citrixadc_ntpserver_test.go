@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -31,7 +31,7 @@ resource "citrixadc_ntpserver" "tf_ntpserver" {
 	maxpoll            = 9
 	preferredntpserver = "NO"
   
-  }
+	}
   
 `
 const testAccNtpserver_update_ip = `
@@ -42,14 +42,14 @@ resource "citrixadc_ntpserver" "tf_ntpserver" {
 	maxpoll            = 10
 	preferredntpserver = "YES"
   
-  } 
+	}
 `
 
 func TestAccNtpserver_ip(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckNtpserverDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckNtpserverDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNtpserver_basic_ip,
@@ -83,7 +83,7 @@ resource "citrixadc_ntpserver" "tf_ntpserver" {
 	maxpoll            = 9
 	preferredntpserver = "NO"
   
-  }
+	}
   
 `
 const testAccNtpserver_update_servername = `
@@ -94,15 +94,15 @@ resource "citrixadc_ntpserver" "tf_ntpserver" {
 	maxpoll            = 10
 	preferredntpserver = "YES"
   
-  }
+	}
   
 `
 
 func TestAccNtpserver_servername(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckNtpserverDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckNtpserverDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNtpserver_basic_servername,
@@ -146,8 +146,12 @@ func testAccCheckNtpserverExist(n string, id *string) resource.TestCheckFunc {
 			*id = rs.Primary.ID
 		}
 		ntpserverName := rs.Primary.ID
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		dataArr, err := nsClient.FindAllResources(service.Ntpserver.Type())
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		dataArr, err := client.FindAllResources(service.Ntpserver.Type())
 
 		if err != nil {
 			return err
@@ -170,7 +174,11 @@ func testAccCheckNtpserverExist(n string, id *string) resource.TestCheckFunc {
 }
 
 func testAccCheckNtpserverDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_ntpserver" {
@@ -182,7 +190,7 @@ func testAccCheckNtpserverDestroy(s *terraform.State) error {
 		}
 
 		ntpserverName := rs.Primary.ID
-		dataArr, err := nsClient.FindAllResources(service.Ntpserver.Type())
+		dataArr, err := client.FindAllResources(service.Ntpserver.Type())
 
 		if err != nil {
 			return err

@@ -17,8 +17,8 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -30,7 +30,7 @@ resource "citrixadc_icalatencyprofile" "tf_icalatencyprofile" {
 	l7latencymonitoring      = "ENABLED"
 	l7latencythresholdfactor = 120
 	l7latencywaittime        = 100
-  }
+	}
   
 `
 const testAccIcalatencyprofile_update = `
@@ -41,15 +41,15 @@ resource "citrixadc_icalatencyprofile" "tf_icalatencyprofile" {
 	l7latencymonitoring      = "DISABLED"
 	l7latencythresholdfactor = 100
 	l7latencywaittime        = 80
-  }
+	}
   
 `
 
 func TestAccIcalatencyprofile_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckIcalatencyprofileDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckIcalatencyprofileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIcalatencyprofile_basic,
@@ -94,8 +94,12 @@ func testAccCheckIcalatencyprofileExist(n string, id *string) resource.TestCheck
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource("icalatencyprofile", rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource("icalatencyprofile", rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -110,7 +114,11 @@ func testAccCheckIcalatencyprofileExist(n string, id *string) resource.TestCheck
 }
 
 func testAccCheckIcalatencyprofileDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_icalatencyprofile" {
@@ -121,7 +129,7 @@ func testAccCheckIcalatencyprofileDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource("icalatencyprofile", rs.Primary.ID)
+		_, err := client.FindResource("icalatencyprofile", rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("icalatencyprofile %s still exists", rs.Primary.ID)
 		}

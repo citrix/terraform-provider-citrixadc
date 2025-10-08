@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/appqoe"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAppqoeparameter() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAppqoeparameterFunc,
-		Read:          readAppqoeparameterFunc,
-		Update:        updateAppqoeparameterFunc,
-		Delete:        deleteAppqoeparameterFunc,
+		CreateContext: createAppqoeparameterFunc,
+		ReadContext:   readAppqoeparameterFunc,
+		UpdateContext: updateAppqoeparameterFunc,
+		DeleteContext: deleteAppqoeparameterFunc,
 		Schema: map[string]*schema.Schema{
 			"avgwaitingclient": {
 				Type:     schema.TypeInt,
@@ -43,7 +46,7 @@ func resourceCitrixAdcAppqoeparameter() *schema.Resource {
 	}
 }
 
-func createAppqoeparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func createAppqoeparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppqoeparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appqoeparameterName := resource.PrefixedUniqueId("tf-appqoeparameter-")
@@ -64,20 +67,15 @@ func createAppqoeparameterFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.UpdateUnnamedResource(service.Appqoeparameter.Type(), &appqoeparameter)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(appqoeparameterName)
 
-	err = readAppqoeparameterFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this appqoeparameter but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readAppqoeparameterFunc(ctx, d, meta)
 }
 
-func readAppqoeparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func readAppqoeparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAppqoeparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading appqoeparameter state")
@@ -87,16 +85,16 @@ func readAppqoeparameterFunc(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
-	d.Set("avgwaitingclient", data["avgwaitingclient"])
-	d.Set("dosattackthresh", data["dosattackthresh"])
-	d.Set("maxaltrespbandwidth", data["maxaltrespbandwidth"])
-	d.Set("sessionlife", data["sessionlife"])
+	setToInt("avgwaitingclient", d, data["avgwaitingclient"])
+	setToInt("dosattackthresh", d, data["dosattackthresh"])
+	setToInt("maxaltrespbandwidth", d, data["maxaltrespbandwidth"])
+	setToInt("sessionlife", d, data["sessionlife"])
 
 	return nil
 
 }
 
-func updateAppqoeparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAppqoeparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAppqoeparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -126,13 +124,13 @@ func updateAppqoeparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Appqoeparameter.Type(), &appqoeparameter)
 		if err != nil {
-			return fmt.Errorf("Error updating appqoeparameter")
+			return diag.Errorf("Error updating appqoeparameter")
 		}
 	}
-	return readAppqoeparameterFunc(d, meta)
+	return readAppqoeparameterFunc(ctx, d, meta)
 }
 
-func deleteAppqoeparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAppqoeparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppqoeparameterFunc")
 	//appqoeparameter does not suppor DELETE operation
 	d.SetId("")

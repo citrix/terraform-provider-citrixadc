@@ -1,25 +1,28 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 	"github.com/citrix/adc-nitro-go/service"
-
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
 	"log"
 	"net/url"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcIpset() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createIpsetFunc,
-		Read:          readIpsetFunc,
-		Update:        updateIpsetFunc,
-		Delete:        deleteIpsetFunc,
+		CreateContext: createIpsetFunc,
+		ReadContext:   readIpsetFunc,
+		UpdateContext: updateIpsetFunc,
+		DeleteContext: deleteIpsetFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -49,7 +52,7 @@ func resourceCitrixAdcIpset() *schema.Resource {
 	}
 }
 
-func createIpsetFunc(d *schema.ResourceData, meta interface{}) error {
+func createIpsetFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createIpsetFunc")
 	client := meta.(*NetScalerNitroClient).client
 	ipsetName := d.Get("name").(string)
@@ -61,48 +64,43 @@ func createIpsetFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Ipset.Type(), ipsetName, &ipset)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(ipsetName)
 
 	err = updateIpsetNsipBindings(d, meta)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	err = updateIpsetNsip6Bindings(d, meta)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	err = readIpsetFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this ipset but we can't read it ?? %s", ipsetName)
-		return nil
-	}
-	return nil
+	return readIpsetFunc(ctx, d, meta)
 }
 
-func updateIpsetFunc(d *schema.ResourceData, meta interface{}) error {
+func updateIpsetFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateIpsetFunc")
 
 	var err error
 
 	err = updateIpsetNsipBindings(d, meta)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	err = updateIpsetNsip6Bindings(d, meta)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	return readIpsetFunc(d, meta)
+	return readIpsetFunc(ctx, d, meta)
 }
 
-func readIpsetFunc(d *schema.ResourceData, meta interface{}) error {
+func readIpsetFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readIpsetFunc")
 	client := meta.(*NetScalerNitroClient).client
 	ipsetName := d.Id()
@@ -116,28 +114,28 @@ func readIpsetFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err = readIpsetNsipBindings(d, meta)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	err = readIpsetNsip6Bindings(d, meta)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.Set("name", data["name"])
-	d.Set("td", data["td"])
+	setToInt("td", d, data["td"])
 
 	return nil
 
 }
 
-func deleteIpsetFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteIpsetFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteIpsetFunc")
 	client := meta.(*NetScalerNitroClient).client
 	ipsetName := d.Id()
 	err := client.DeleteResource(service.Ipset.Type(), ipsetName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

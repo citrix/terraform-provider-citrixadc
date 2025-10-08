@@ -1,12 +1,14 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/snmp"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strings"
 )
@@ -14,12 +16,12 @@ import (
 func resourceCitrixAdcSnmptrap() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSnmptrapFunc,
-		Read:          readSnmptrapFunc,
-		Update:        updateSnmptrapFunc,
-		Delete:        deleteSnmptrapFunc,
+		CreateContext: createSnmptrapFunc,
+		ReadContext:   readSnmptrapFunc,
+		UpdateContext: updateSnmptrapFunc,
+		DeleteContext: deleteSnmptrapFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"trapdestination": {
@@ -72,7 +74,7 @@ func resourceCitrixAdcSnmptrap() *schema.Resource {
 	}
 }
 
-func createSnmptrapFunc(d *schema.ResourceData, meta interface{}) error {
+func createSnmptrapFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSnmptrapFunc")
 	client := meta.(*NetScalerNitroClient).client
 	snmptrapId := d.Get("trapclass").(string) + "," + d.Get("trapdestination").(string) + "," + d.Get("version").(string)
@@ -91,20 +93,15 @@ func createSnmptrapFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Snmptrap.Type(), snmptrapId, &snmptrap)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(snmptrapId)
 
-	err = readSnmptrapFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this snmptrap but we can't read it ?? %s", snmptrapId)
-		return nil
-	}
-	return nil
+	return readSnmptrapFunc(ctx, d, meta)
 }
 
-func readSnmptrapFunc(d *schema.ResourceData, meta interface{}) error {
+func readSnmptrapFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSnmptrapFunc")
 	client := meta.(*NetScalerNitroClient).client
 	snmptrapId := d.Id()
@@ -163,10 +160,10 @@ func readSnmptrapFunc(d *schema.ResourceData, meta interface{}) error {
 	data := dataArr[foundIndex]
 	d.Set("allpartitions", data["allpartitions"])
 	d.Set("communityname", data["communityname"])
-	d.Set("destport", data["destport"])
+	setToInt("destport", d, data["destport"])
 	d.Set("severity", data["severity"])
 	d.Set("srcip", data["srcip"])
-	d.Set("td", data["td"])
+	setToInt("td", d, data["td"])
 	d.Set("trapclass", data["trapclass"])
 	d.Set("trapdestination", data["trapdestination"])
 	d.Set("version", data["version"])
@@ -175,7 +172,7 @@ func readSnmptrapFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateSnmptrapFunc(d *schema.ResourceData, meta interface{}) error {
+func updateSnmptrapFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateSnmptrapFunc")
 	client := meta.(*NetScalerNitroClient).client
 	snmptrapId := d.Id()
@@ -225,13 +222,13 @@ func updateSnmptrapFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Snmptrap.Type(), &snmptrap)
 		if err != nil {
-			return fmt.Errorf("Error updating snmptrap %s", snmptrapId)
+			return diag.Errorf("Error updating snmptrap %s", snmptrapId)
 		}
 	}
-	return readSnmptrapFunc(d, meta)
+	return readSnmptrapFunc(ctx, d, meta)
 }
 
-func deleteSnmptrapFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSnmptrapFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSnmptrapFunc")
 	client := meta.(*NetScalerNitroClient).client
 	snmptrapId := d.Id()
@@ -251,7 +248,7 @@ func deleteSnmptrapFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.DeleteResourceWithArgs(service.Snmptrap.Type(), trapclass, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

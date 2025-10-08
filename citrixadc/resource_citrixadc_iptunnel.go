@@ -1,22 +1,23 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcIptunnel() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createIptunnelFunc,
-		Read:          readIptunnelFunc,
-		Delete:        deleteIptunnelFunc,
+		CreateContext: createIptunnelFunc,
+		ReadContext:   readIptunnelFunc,
+		DeleteContext: deleteIptunnelFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"grepayload": {
@@ -76,7 +77,7 @@ func resourceCitrixAdcIptunnel() *schema.Resource {
 	}
 }
 
-func createIptunnelFunc(d *schema.ResourceData, meta interface{}) error {
+func createIptunnelFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createIptunnelFunc")
 	client := meta.(*NetScalerNitroClient).client
 	iptunnelName := d.Get("name").(string)
@@ -95,20 +96,15 @@ func createIptunnelFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Iptunnel.Type(), iptunnelName, &iptunnel)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(iptunnelName)
 
-	err = readIptunnelFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this iptunnel but we can't read it ?? %s", iptunnelName)
-		return nil
-	}
-	return nil
+	return readIptunnelFunc(ctx, d, meta)
 }
 
-func readIptunnelFunc(d *schema.ResourceData, meta interface{}) error {
+func readIptunnelFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readIptunnelFunc")
 	client := meta.(*NetScalerNitroClient).client
 	iptunnelName := d.Id()
@@ -126,19 +122,19 @@ func readIptunnelFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("protocol", data["protocol"])
 	d.Set("remote", data["remote"])
 	d.Set("remotesubnetmask", data["remotesubnetmask"])
-	d.Set("vlan", data["vlan"])
+	setToInt("vlan", d, data["vlan"])
 
 	return nil
 
 }
 
-func deleteIptunnelFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteIptunnelFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteIptunnelFunc")
 	client := meta.(*NetScalerNitroClient).client
 	iptunnelName := d.Id()
 	err := client.DeleteResource(service.Iptunnel.Type(), iptunnelName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

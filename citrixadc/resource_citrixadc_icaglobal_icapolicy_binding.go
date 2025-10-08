@@ -1,22 +1,24 @@
 package citrixadc
 
 import (
+	"context"
 	"fmt"
 	"log"
 
 	"github.com/citrix/adc-nitro-go/resource/config/ica"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcIcaglobal_icapolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createIcaglobal_icapolicy_bindingFunc,
-		Read:          readIcaglobal_icapolicy_bindingFunc,
-		Delete:        deleteIcaglobal_icapolicy_bindingFunc,
+		CreateContext: createIcaglobal_icapolicy_bindingFunc,
+		ReadContext:   readIcaglobal_icapolicy_bindingFunc,
+		DeleteContext: deleteIcaglobal_icapolicy_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"policyname": {
@@ -50,7 +52,7 @@ func resourceCitrixAdcIcaglobal_icapolicy_binding() *schema.Resource {
 	}
 }
 
-func createIcaglobal_icapolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createIcaglobal_icapolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createIcaglobal_icapolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policyname := d.Get("policyname").(string)
@@ -64,20 +66,15 @@ func createIcaglobal_icapolicy_bindingFunc(d *schema.ResourceData, meta interfac
 
 	err := client.UpdateUnnamedResource("icaglobal_icapolicy_binding", &icaglobal_icapolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(policyname)
 
-	err = readIcaglobal_icapolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this icaglobal_icapolicy_binding but we can't read it ?? %s", policyname)
-		return nil
-	}
-	return nil
+	return readIcaglobal_icapolicy_bindingFunc(ctx, d, meta)
 }
 
-func readIcaglobal_icapolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readIcaglobal_icapolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readIcaglobal_icapolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policyname := d.Id()
@@ -94,7 +91,7 @@ func readIcaglobal_icapolicy_bindingFunc(d *schema.ResourceData, meta interface{
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -135,7 +132,7 @@ func readIcaglobal_icapolicy_bindingFunc(d *schema.ResourceData, meta interface{
 
 }
 
-func deleteIcaglobal_icapolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteIcaglobal_icapolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteIcaglobal_icapolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -148,7 +145,7 @@ func deleteIcaglobal_icapolicy_bindingFunc(d *schema.ResourceData, meta interfac
 
 	err := client.DeleteResourceWithArgs("icaglobal_icapolicy_binding", "", args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

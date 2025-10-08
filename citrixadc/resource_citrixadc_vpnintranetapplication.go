@@ -1,21 +1,23 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/vpn"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcVpnintranetapplication() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createVpnintranetapplicationFunc,
-		Read:          readVpnintranetapplicationFunc,
-		Delete:        deleteVpnintranetapplicationFunc,
+		CreateContext: createVpnintranetapplicationFunc,
+		ReadContext:   readVpnintranetapplicationFunc,
+		DeleteContext: deleteVpnintranetapplicationFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"intranetapplication": {
@@ -95,7 +97,7 @@ func resourceCitrixAdcVpnintranetapplication() *schema.Resource {
 	}
 }
 
-func createVpnintranetapplicationFunc(d *schema.ResourceData, meta interface{}) error {
+func createVpnintranetapplicationFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createVpnintranetapplicationFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vpnintranetapplicationName := d.Get("intranetapplication").(string)
@@ -116,20 +118,15 @@ func createVpnintranetapplicationFunc(d *schema.ResourceData, meta interface{}) 
 
 	_, err := client.AddResource(service.Vpnintranetapplication.Type(), vpnintranetapplicationName, &vpnintranetapplication)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(vpnintranetapplicationName)
 
-	err = readVpnintranetapplicationFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this vpnintranetapplication but we can't read it ?? %s", vpnintranetapplicationName)
-		return nil
-	}
-	return nil
+	return readVpnintranetapplicationFunc(ctx, d, meta)
 }
 
-func readVpnintranetapplicationFunc(d *schema.ResourceData, meta interface{}) error {
+func readVpnintranetapplicationFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readVpnintranetapplicationFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vpnintranetapplicationName := d.Id()
@@ -152,19 +149,19 @@ func readVpnintranetapplicationFunc(d *schema.ResourceData, meta interface{}) er
 	d.Set("protocol", data["protocol"])
 	d.Set("spoofiip", data["spoofiip"])
 	d.Set("srcip", data["srcip"])
-	d.Set("srcport", data["srcport"])
+	setToInt("srcport", d, data["srcport"])
 
 	return nil
 
 }
 
-func deleteVpnintranetapplicationFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteVpnintranetapplicationFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteVpnintranetapplicationFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vpnintranetapplicationName := d.Id()
 	err := client.DeleteResource(service.Vpnintranetapplication.Type(), vpnintranetapplicationName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

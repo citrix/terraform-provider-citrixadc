@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -64,9 +64,9 @@ const testAccRnatglobal_auditsyslogpolicy_binding_basic_step2 = `
 
 func TestAccRnatglobal_auditsyslogpolicy_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRnatglobal_auditsyslogpolicy_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckRnatglobal_auditsyslogpolicy_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRnatglobal_auditsyslogpolicy_binding_basic,
@@ -103,7 +103,11 @@ func testAccCheckRnatglobal_auditsyslogpolicy_bindingExist(n string, id *string)
 			*id = rs.Primary.ID
 		}
 
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		policy := rs.Primary.ID
 
@@ -137,7 +141,11 @@ func testAccCheckRnatglobal_auditsyslogpolicy_bindingExist(n string, id *string)
 
 func testAccCheckRnatglobal_auditsyslogpolicy_bindingNotExist(n string, id string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 		policy := id
 		findParams := service.FindParams{
 			ResourceType:             "rnatglobal_auditsyslogpolicy_binding",
@@ -168,7 +176,11 @@ func testAccCheckRnatglobal_auditsyslogpolicy_bindingNotExist(n string, id strin
 }
 
 func testAccCheckRnatglobal_auditsyslogpolicy_bindingDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_rnatglobal_auditsyslogpolicy_binding" {
@@ -179,7 +191,7 @@ func testAccCheckRnatglobal_auditsyslogpolicy_bindingDestroy(s *terraform.State)
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Rnatglobal_auditsyslogpolicy_binding.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Rnatglobal_auditsyslogpolicy_binding.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("rnatglobal_auditsyslogpolicy_binding %s still exists", rs.Primary.ID)
 		}

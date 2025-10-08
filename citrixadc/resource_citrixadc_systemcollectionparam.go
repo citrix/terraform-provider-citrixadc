@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/system"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcSystemcollectionparam() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSystemcollectionparamFunc,
-		Read:          readSystemcollectionparamFunc,
-		Update:        updateSystemcollectionparamFunc,
-		Delete:        deleteSystemcollectionparamFunc,
+		CreateContext: createSystemcollectionparamFunc,
+		ReadContext:   readSystemcollectionparamFunc,
+		UpdateContext: updateSystemcollectionparamFunc,
+		DeleteContext: deleteSystemcollectionparamFunc,
 		Schema: map[string]*schema.Schema{
 			"communityname": {
 				Type:     schema.TypeString,
@@ -38,7 +41,7 @@ func resourceCitrixAdcSystemcollectionparam() *schema.Resource {
 	}
 }
 
-func createSystemcollectionparamFunc(d *schema.ResourceData, meta interface{}) error {
+func createSystemcollectionparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSystemcollectionparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 	systemcollectionparamName := resource.PrefixedUniqueId("tf-systemcollectionparam-")
@@ -51,20 +54,15 @@ func createSystemcollectionparamFunc(d *schema.ResourceData, meta interface{}) e
 
 	err := client.UpdateUnnamedResource(service.Systemcollectionparam.Type(), &systemcollectionparam)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(systemcollectionparamName)
 
-	err = readSystemcollectionparamFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this systemcollectionparam but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readSystemcollectionparamFunc(ctx, d, meta)
 }
 
-func readSystemcollectionparamFunc(d *schema.ResourceData, meta interface{}) error {
+func readSystemcollectionparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSystemcollectionparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading systemcollectionparam state")
@@ -82,7 +80,7 @@ func readSystemcollectionparamFunc(d *schema.ResourceData, meta interface{}) err
 
 }
 
-func updateSystemcollectionparamFunc(d *schema.ResourceData, meta interface{}) error {
+func updateSystemcollectionparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateSystemcollectionparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -107,13 +105,13 @@ func updateSystemcollectionparamFunc(d *schema.ResourceData, meta interface{}) e
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Systemcollectionparam.Type(), &systemcollectionparam)
 		if err != nil {
-			return fmt.Errorf("Error updating systemcollectionparam")
+			return diag.Errorf("Error updating systemcollectionparam")
 		}
 	}
-	return readSystemcollectionparamFunc(d, meta)
+	return readSystemcollectionparamFunc(ctx, d, meta)
 }
 
-func deleteSystemcollectionparamFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSystemcollectionparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSystemcollectionparamFunc")
 	//systemcollecitonparam does not support delete operation
 	d.SetId("")

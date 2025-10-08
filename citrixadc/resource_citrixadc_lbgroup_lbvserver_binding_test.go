@@ -22,8 +22,8 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccLbgroup_lbvserver_binding_basic = `
@@ -59,9 +59,9 @@ const testAccLbgroup_lbvserver_binding_basic_step2 = `
 
 func TestAccLbgroup_lbvserver_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckLbgroup_lbvserver_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckLbgroup_lbvserver_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLbgroup_lbvserver_binding_basic,
@@ -98,7 +98,11 @@ func testAccCheckLbgroup_lbvserver_bindingExist(n string, id *string) resource.T
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 		bindingId := rs.Primary.ID
 		idSlice := strings.SplitN(bindingId, ",", 2)
 		lbgroupName := idSlice[0]
@@ -109,7 +113,7 @@ func testAccCheckLbgroup_lbvserver_bindingExist(n string, id *string) resource.T
 			ResourceName:             lbgroupName,
 			ResourceMissingErrorCode: 258,
 		}
-		dataArr, err := nsClient.FindResourceArrayWithParams(findParams)
+		dataArr, err := client.FindResourceArrayWithParams(findParams)
 
 		// Unexpected error
 		if err != nil {
@@ -136,7 +140,11 @@ func testAccCheckLbgroup_lbvserver_bindingExist(n string, id *string) resource.T
 
 func testAccCheckLbgroup_lbvserver_bindingNotExist(n string, id string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
@@ -176,7 +184,11 @@ func testAccCheckLbgroup_lbvserver_bindingNotExist(n string, id string) resource
 }
 
 func testAccCheckLbgroup_lbvserver_bindingDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_lbgroup_lbvserver_binding" {
@@ -187,7 +199,7 @@ func testAccCheckLbgroup_lbvserver_bindingDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Lbgroup_lbvserver_binding.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Lbgroup_lbvserver_binding.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("lbgroup_lbvserver_binding %s still exists", rs.Primary.ID)
 		}

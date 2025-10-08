@@ -1,23 +1,24 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/vpn"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcVpntrafficpolicy() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createVpntrafficpolicyFunc,
-		Read:          readVpntrafficpolicyFunc,
-		Update:        updateVpntrafficpolicyFunc,
-		Delete:        deleteVpntrafficpolicyFunc,
+		CreateContext: createVpntrafficpolicyFunc,
+		ReadContext:   readVpntrafficpolicyFunc,
+		UpdateContext: updateVpntrafficpolicyFunc,
+		DeleteContext: deleteVpntrafficpolicyFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -39,7 +40,7 @@ func resourceCitrixAdcVpntrafficpolicy() *schema.Resource {
 	}
 }
 
-func createVpntrafficpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func createVpntrafficpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createVpntrafficpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vpntrafficpolicyName := d.Get("name").(string)
@@ -51,20 +52,15 @@ func createVpntrafficpolicyFunc(d *schema.ResourceData, meta interface{}) error 
 
 	_, err := client.AddResource(service.Vpntrafficpolicy.Type(), vpntrafficpolicyName, &vpntrafficpolicy)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(vpntrafficpolicyName)
 
-	err = readVpntrafficpolicyFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this vpntrafficpolicy but we can't read it ?? %s", vpntrafficpolicyName)
-		return nil
-	}
-	return nil
+	return readVpntrafficpolicyFunc(ctx, d, meta)
 }
 
-func readVpntrafficpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func readVpntrafficpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readVpntrafficpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vpntrafficpolicyName := d.Id()
@@ -84,7 +80,7 @@ func readVpntrafficpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateVpntrafficpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func updateVpntrafficpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateVpntrafficpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vpntrafficpolicyName := d.Get("name").(string)
@@ -106,19 +102,19 @@ func updateVpntrafficpolicyFunc(d *schema.ResourceData, meta interface{}) error 
 	if hasChange {
 		_, err := client.UpdateResource(service.Vpntrafficpolicy.Type(), vpntrafficpolicyName, &vpntrafficpolicy)
 		if err != nil {
-			return fmt.Errorf("Error updating vpntrafficpolicy %s", vpntrafficpolicyName)
+			return diag.Errorf("Error updating vpntrafficpolicy %s", vpntrafficpolicyName)
 		}
 	}
-	return readVpntrafficpolicyFunc(d, meta)
+	return readVpntrafficpolicyFunc(ctx, d, meta)
 }
 
-func deleteVpntrafficpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteVpntrafficpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteVpntrafficpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vpntrafficpolicyName := d.Id()
 	err := client.DeleteResource(service.Vpntrafficpolicy.Type(), vpntrafficpolicyName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

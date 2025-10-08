@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -30,7 +30,7 @@ resource "citrixadc_clusternode" "tf_clusternode" {
 	nodeid             = 1
 	ipaddress          = "10.222.74.150"
 	state              = "PASSIVE"
-  }
+	}
   
 `
 const testAccClusternode_update_nogroup_config = `
@@ -40,7 +40,7 @@ resource "citrixadc_clusternode" "tf_clusternode" {
 	nodeid             = 1
 	ipaddress          = "10.222.74.150"
 	state              = "ACTIVE"  
-  }
+	}
   
 `
 
@@ -49,9 +49,9 @@ func TestAccClusternode_basic(t *testing.T) {
 		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
 	}
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckClusternodeDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckClusternodeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusternode_basic_nogroup_config,
@@ -100,9 +100,9 @@ func TestAccClusternode_group_config_yes(t *testing.T) {
 		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
 	}
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckClusternodeDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckClusternodeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusternode_basic_group_config_yes,
@@ -151,9 +151,9 @@ func TestAccClusternode_group_config_no(t *testing.T) {
 		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
 	}
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckClusternodeDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckClusternodeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusternode_basic_group_config_no,
@@ -194,8 +194,12 @@ func testAccCheckClusternodeExist(n string, id *string) resource.TestCheckFunc {
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Clusternode.Type(), rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Clusternode.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -210,7 +214,11 @@ func testAccCheckClusternodeExist(n string, id *string) resource.TestCheckFunc {
 }
 
 func testAccCheckClusternodeDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_clusternode" {
@@ -221,7 +229,7 @@ func testAccCheckClusternodeDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Clusternode.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Clusternode.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("clusternode %s still exists", rs.Primary.ID)
 		}

@@ -1,22 +1,25 @@
 package citrixadc
 
 import (
-	"github.com/citrix/adc-nitro-go/resource/config/rdp"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"context"
 
-	"fmt"
+	"github.com/citrix/adc-nitro-go/resource/config/rdp"
+
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcRdpclientprofile() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createRdpclientprofileFunc,
-		Read:          readRdpclientprofileFunc,
-		Update:        updateRdpclientprofileFunc,
-		Delete:        deleteRdpclientprofileFunc,
+		CreateContext: createRdpclientprofileFunc,
+		ReadContext:   readRdpclientprofileFunc,
+		UpdateContext: updateRdpclientprofileFunc,
+		DeleteContext: deleteRdpclientprofileFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -123,7 +126,7 @@ func resourceCitrixAdcRdpclientprofile() *schema.Resource {
 	}
 }
 
-func createRdpclientprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func createRdpclientprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createRdpclientprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	rdpclientprofileName := d.Get("name").(string)
@@ -152,20 +155,15 @@ func createRdpclientprofileFunc(d *schema.ResourceData, meta interface{}) error 
 
 	_, err := client.AddResource("rdpclientprofile", rdpclientprofileName, &rdpclientprofile)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(rdpclientprofileName)
 
-	err = readRdpclientprofileFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this rdpclientprofile but we can't read it ?? %s", rdpclientprofileName)
-		return nil
-	}
-	return nil
+	return readRdpclientprofileFunc(ctx, d, meta)
 }
 
-func readRdpclientprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func readRdpclientprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readRdpclientprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	rdpclientprofileName := d.Id()
@@ -183,7 +181,7 @@ func readRdpclientprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("multimonitorsupport", data["multimonitorsupport"])
 	d.Set("psk", data["psk"])
 	d.Set("randomizerdpfilename", data["randomizerdpfilename"])
-	d.Set("rdpcookievalidity", data["rdpcookievalidity"])
+	setToInt("rdpcookievalidity", d, data["rdpcookievalidity"])
 	d.Set("rdpcustomparams", data["rdpcustomparams"])
 	d.Set("rdpfilename", data["rdpfilename"])
 	d.Set("rdphost", data["rdphost"])
@@ -201,7 +199,7 @@ func readRdpclientprofileFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateRdpclientprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func updateRdpclientprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateRdpclientprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	rdpclientprofileName := d.Get("name").(string)
@@ -309,19 +307,19 @@ func updateRdpclientprofileFunc(d *schema.ResourceData, meta interface{}) error 
 	if hasChange {
 		err := client.UpdateUnnamedResource("rdpclientprofile", &rdpclientprofile)
 		if err != nil {
-			return fmt.Errorf("Error updating rdpclientprofile %s", rdpclientprofileName)
+			return diag.Errorf("Error updating rdpclientprofile %s", rdpclientprofileName)
 		}
 	}
-	return readRdpclientprofileFunc(d, meta)
+	return readRdpclientprofileFunc(ctx, d, meta)
 }
 
-func deleteRdpclientprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteRdpclientprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteRdpclientprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	rdpclientprofileName := d.Id()
 	err := client.DeleteResource("rdpclientprofile", rdpclientprofileName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

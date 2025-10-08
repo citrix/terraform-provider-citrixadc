@@ -4,8 +4,7 @@ import (
 	"github.com/citrix/adc-nitro-go/resource/config/ssl"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"bytes"
 	"fmt"
@@ -382,7 +381,7 @@ func sslpolicybindingMappingHash(v interface{}) int {
 		buf.WriteString(fmt.Sprintf("%s-", d.(string)))
 	}
 
-	return hashcode.String(buf.String())
+	return hashString(buf.String())
 }
 
 func readSslpolicyBindings(d *schema.ResourceData, meta interface{}, sslvserverName string) error {

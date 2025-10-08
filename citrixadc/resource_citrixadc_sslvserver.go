@@ -1,24 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ssl"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcSslvserver() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSslvserverFunc,
-		Read:          readSslvserverFunc,
-		Update:        updateSslvserverFunc,
-		Delete:        deleteSslvserverFunc,
+		CreateContext: createSslvserverFunc,
+		ReadContext:   readSslvserverFunc,
+		UpdateContext: updateSslvserverFunc,
+		DeleteContext: deleteSslvserverFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"cipherredirect": {
@@ -225,7 +228,7 @@ func resourceCitrixAdcSslvserver() *schema.Resource {
 	}
 }
 
-func createSslvserverFunc(d *schema.ResourceData, meta interface{}) error {
+func createSslvserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSslvserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var sslvserverName string
@@ -280,20 +283,15 @@ func createSslvserverFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.UpdateResource(service.Sslvserver.Type(), sslvserverName, &sslvserver)
 	if err != nil {
-		return fmt.Errorf("Error updating sslvserver %v: %v", sslvserverName, err)
+		return diag.Errorf("Error updating sslvserver %v: %v", sslvserverName, err)
 	}
 
 	d.SetId(sslvserverName)
 
-	err = readSslvserverFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just updated this sslvserver but we can't read it ?? %s", sslvserverName)
-		return nil
-	}
-	return nil
+	return readSslvserverFunc(ctx, d, meta)
 }
 
-func readSslvserverFunc(d *schema.ResourceData, meta interface{}) error {
+func readSslvserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSslvserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	sslvserverName := d.Id()
@@ -360,7 +358,7 @@ func readSslvserverFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateSslvserverFunc(d *schema.ResourceData, meta interface{}) error {
+func updateSslvserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateSslvserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	sslvserverName := d.Get("vservername").(string)
@@ -573,13 +571,13 @@ func updateSslvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Sslvserver.Type(), sslvserverName, &sslvserver)
 		if err != nil {
-			return fmt.Errorf("Error updating sslvserver %s", sslvserverName)
+			return diag.Errorf("Error updating sslvserver %s", sslvserverName)
 		}
 	}
-	return readSslvserverFunc(d, meta)
+	return readSslvserverFunc(ctx, d, meta)
 }
 
-func deleteSslvserverFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSslvserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSslvserverFunc")
 	// sslvserver does not have DELETE operation, but this function is required to set the ID to ""
 
@@ -595,7 +593,7 @@ func deleteSslvserverFunc(d *schema.ResourceData, meta interface{}) error {
 
 		err := client.ActOnResource("sslvserver", sslvserverunset, "unset")
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 

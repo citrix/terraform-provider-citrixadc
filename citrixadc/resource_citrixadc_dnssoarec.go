@@ -1,24 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/dns"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcDnssoarec() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createDnssoarecFunc,
-		Read:          readDnssoarecFunc,
-		Update:        updateDnssoarecFunc,
-		Delete:        deleteDnssoarecFunc,
+		CreateContext: createDnssoarecFunc,
+		ReadContext:   readDnssoarecFunc,
+		UpdateContext: updateDnssoarecFunc,
+		DeleteContext: deleteDnssoarecFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"contact": {
@@ -84,7 +86,7 @@ func resourceCitrixAdcDnssoarec() *schema.Resource {
 	}
 }
 
-func createDnssoarecFunc(d *schema.ResourceData, meta interface{}) error {
+func createDnssoarecFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createDnssoarecFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnssoarecId := d.Get("domain").(string)
@@ -105,20 +107,15 @@ func createDnssoarecFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Dnssoarec.Type(), dnssoarecId, &dnssoarec)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(dnssoarecId)
 
-	err = readDnssoarecFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this dnssoarec but we can't read it ?? %s", dnssoarecId)
-		return nil
-	}
-	return nil
+	return readDnssoarecFunc(ctx, d, meta)
 }
 
-func readDnssoarecFunc(d *schema.ResourceData, meta interface{}) error {
+func readDnssoarecFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readDnssoarecFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnssoarecName := d.Id()
@@ -132,21 +129,21 @@ func readDnssoarecFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("contact", data["contact"])
 	d.Set("domain", data["domain"])
 	d.Set("ecssubnet", data["ecssubnet"])
-	d.Set("expire", data["expire"])
-	d.Set("minimum", data["minimum"])
-	d.Set("nodeid", data["nodeid"])
+	setToInt("expire", d, data["expire"])
+	setToInt("minimum", d, data["minimum"])
+	setToInt("nodeid", d, data["nodeid"])
 	d.Set("originserver", data["originserver"])
-	d.Set("refresh", data["refresh"])
-	d.Set("retry", data["retry"])
-	d.Set("serial", data["serial"])
-	d.Set("ttl", data["ttl"])
+	setToInt("refresh", d, data["refresh"])
+	setToInt("retry", d, data["retry"])
+	setToInt("serial", d, data["serial"])
+	setToInt("ttl", d, data["ttl"])
 	d.Set("type", data["type"])
 
 	return nil
 
 }
 
-func updateDnssoarecFunc(d *schema.ResourceData, meta interface{}) error {
+func updateDnssoarecFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateDnssoarecFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnssoarecId := d.Get("domain").(string)
@@ -219,19 +216,19 @@ func updateDnssoarecFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Dnssoarec.Type(), dnssoarecId, &dnssoarec)
 		if err != nil {
-			return fmt.Errorf("Error updating dnssoarec %s. %s", dnssoarecId, err)
+			return diag.Errorf("Error updating dnssoarec %s. %s", dnssoarecId, err)
 		}
 	}
-	return readDnssoarecFunc(d, meta)
+	return readDnssoarecFunc(ctx, d, meta)
 }
 
-func deleteDnssoarecFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteDnssoarecFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteDnssoarecFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnssoarecId := d.Id()
 	err := client.DeleteResource(service.Dnssoarec.Type(), dnssoarecId)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

@@ -25,8 +25,8 @@ import (
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccNsconfigSave_basic = `
@@ -38,8 +38,8 @@ const testAccNsconfigSave_basic = `
 
 func TestAccNsconfigSave_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNsconfigSave_basic,
@@ -95,8 +95,8 @@ func testAccCheckNsconfigSaveExist(n string, id *string) resource.TestCheckFunc 
 
 func TestAccNsconfigSave_save_race_no_retry(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccSaveRaceSetup(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccSaveRaceSetup(t) },
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNsconfigSave_save_race_no_retry,
@@ -110,8 +110,8 @@ func TestAccNsconfigSave_save_race_no_retry(t *testing.T) {
 
 func TestAccNsconfigSave_save_race_retry(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccSaveRaceSetup(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccSaveRaceSetup(t) },
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNsconfigSave_save_race_retry,

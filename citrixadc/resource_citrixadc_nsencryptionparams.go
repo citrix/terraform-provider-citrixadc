@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcNsencryptionparams() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNsencryptionparamsFunc,
-		Read:          readNsencryptionparamsFunc,
-		Update:        updateNsencryptionparamsFunc,
-		Delete:        deleteNsencryptionparamsFunc,
+		CreateContext: createNsencryptionparamsFunc,
+		ReadContext:   readNsencryptionparamsFunc,
+		UpdateContext: updateNsencryptionparamsFunc,
+		DeleteContext: deleteNsencryptionparamsFunc,
 		Schema: map[string]*schema.Schema{
 			"method": {
 				Type:     schema.TypeString,
@@ -31,7 +34,7 @@ func resourceCitrixAdcNsencryptionparams() *schema.Resource {
 	}
 }
 
-func createNsencryptionparamsFunc(d *schema.ResourceData, meta interface{}) error {
+func createNsencryptionparamsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNsencryptionparamsFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nsencryptionparamsName := resource.PrefixedUniqueId("tf-nsencryptionparams-")
@@ -42,20 +45,15 @@ func createNsencryptionparamsFunc(d *schema.ResourceData, meta interface{}) erro
 
 	err := client.UpdateUnnamedResource(service.Nsencryptionparams.Type(), &nsencryptionparams)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(nsencryptionparamsName)
 
-	err = readNsencryptionparamsFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this nsencryptionparams but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readNsencryptionparamsFunc(ctx, d, meta)
 }
 
-func readNsencryptionparamsFunc(d *schema.ResourceData, meta interface{}) error {
+func readNsencryptionparamsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNsencryptionparamsFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading nsencryptionparams state")
@@ -72,7 +70,7 @@ func readNsencryptionparamsFunc(d *schema.ResourceData, meta interface{}) error 
 
 }
 
-func updateNsencryptionparamsFunc(d *schema.ResourceData, meta interface{}) error {
+func updateNsencryptionparamsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateNsencryptionparamsFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -93,13 +91,13 @@ func updateNsencryptionparamsFunc(d *schema.ResourceData, meta interface{}) erro
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Nsencryptionparams.Type(), &nsencryptionparams)
 		if err != nil {
-			return fmt.Errorf("Error updating nsencryptionparams")
+			return diag.Errorf("Error updating nsencryptionparams")
 		}
 	}
-	return readNsencryptionparamsFunc(d, meta)
+	return readNsencryptionparamsFunc(ctx, d, meta)
 }
 
-func deleteNsencryptionparamsFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNsencryptionparamsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNsencryptionparamsFunc")
 	// nsencryption does not support delete operation
 	d.SetId("")

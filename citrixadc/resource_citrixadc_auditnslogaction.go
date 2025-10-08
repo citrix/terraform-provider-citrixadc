@@ -1,24 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/audit"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAuditnslogaction() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAuditnslogactionFunc,
-		Read:          readAuditnslogactionFunc,
-		Update:        updateAuditnslogactionFunc,
-		Delete:        deleteAuditnslogactionFunc,
+		CreateContext: createAuditnslogactionFunc,
+		ReadContext:   readAuditnslogactionFunc,
+		UpdateContext: updateAuditnslogactionFunc,
+		DeleteContext: deleteAuditnslogactionFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -126,7 +129,7 @@ func resourceCitrixAdcAuditnslogaction() *schema.Resource {
 	}
 }
 
-func createAuditnslogactionFunc(d *schema.ResourceData, meta interface{}) error {
+func createAuditnslogactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAuditnslogactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	auditnslogactionName := d.Get("name").(string)
@@ -155,20 +158,15 @@ func createAuditnslogactionFunc(d *schema.ResourceData, meta interface{}) error 
 
 	_, err := client.AddResource(service.Auditnslogaction.Type(), auditnslogactionName, &auditnslogaction)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(auditnslogactionName)
 
-	err = readAuditnslogactionFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this auditnslogaction but we can't read it ?? %s", auditnslogactionName)
-		return nil
-	}
-	return nil
+	return readAuditnslogactionFunc(ctx, d, meta)
 }
 
-func readAuditnslogactionFunc(d *schema.ResourceData, meta interface{}) error {
+func readAuditnslogactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAuditnslogactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	auditnslogactionName := d.Id()
@@ -186,13 +184,13 @@ func readAuditnslogactionFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("contentinspectionlog", data["contentinspectionlog"])
 	d.Set("dateformat", data["dateformat"])
 	d.Set("domainresolvenow", data["domainresolvenow"])
-	d.Set("domainresolveretry", data["domainresolveretry"])
+	setToInt("domainresolveretry", d, data["domainresolveretry"])
 	d.Set("logfacility", data["logfacility"])
 	d.Set("loglevel", data["loglevel"])
 	d.Set("lsn", data["lsn"])
 	d.Set("serverdomainname", data["serverdomainname"])
 	d.Set("serverip", data["serverip"])
-	d.Set("serverport", data["serverport"])
+	setToInt("serverport", d, data["serverport"])
 	d.Set("sslinterception", data["sslinterception"])
 	d.Set("subscriberlog", data["subscriberlog"])
 	d.Set("tcp", data["tcp"])
@@ -204,7 +202,7 @@ func readAuditnslogactionFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateAuditnslogactionFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAuditnslogactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAuditnslogactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	auditnslogactionName := d.Get("name").(string)
@@ -312,19 +310,19 @@ func updateAuditnslogactionFunc(d *schema.ResourceData, meta interface{}) error 
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Auditnslogaction.Type(), &auditnslogaction)
 		if err != nil {
-			return fmt.Errorf("Error updating auditnslogaction %s", auditnslogactionName)
+			return diag.Errorf("Error updating auditnslogaction %s", auditnslogactionName)
 		}
 	}
-	return readAuditnslogactionFunc(d, meta)
+	return readAuditnslogactionFunc(ctx, d, meta)
 }
 
-func deleteAuditnslogactionFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAuditnslogactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAuditnslogactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	auditnslogactionName := d.Id()
 	err := client.DeleteResource(service.Auditnslogaction.Type(), auditnslogactionName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

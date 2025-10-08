@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/bot"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strings"
 )
@@ -13,11 +15,11 @@ import (
 func resourceCitrixAdcBotprofile_trapinsertionurl_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createBotprofile_trapinsertionurl_bindingFunc,
-		Read:          readBotprofile_trapinsertionurl_bindingFunc,
-		Delete:        deleteBotprofile_trapinsertionurl_bindingFunc,
+		CreateContext: createBotprofile_trapinsertionurl_bindingFunc,
+		ReadContext:   readBotprofile_trapinsertionurl_bindingFunc,
+		DeleteContext: deleteBotprofile_trapinsertionurl_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -60,7 +62,7 @@ func resourceCitrixAdcBotprofile_trapinsertionurl_binding() *schema.Resource {
 	}
 }
 
-func createBotprofile_trapinsertionurl_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createBotprofile_trapinsertionurl_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createBotprofile_trapinsertionurl_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name")
@@ -77,20 +79,15 @@ func createBotprofile_trapinsertionurl_bindingFunc(d *schema.ResourceData, meta 
 
 	err := client.UpdateUnnamedResource("botprofile_trapinsertionurl_binding", &botprofile_trapinsertionurl_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readBotprofile_trapinsertionurl_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this botprofile_trapinsertionurl_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readBotprofile_trapinsertionurl_bindingFunc(ctx, d, meta)
 }
 
-func readBotprofile_trapinsertionurl_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readBotprofile_trapinsertionurl_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readBotprofile_trapinsertionurl_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -111,7 +108,7 @@ func readBotprofile_trapinsertionurl_bindingFunc(d *schema.ResourceData, meta in
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -153,7 +150,7 @@ func readBotprofile_trapinsertionurl_bindingFunc(d *schema.ResourceData, meta in
 
 }
 
-func deleteBotprofile_trapinsertionurl_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteBotprofile_trapinsertionurl_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteBotprofile_trapinsertionurl_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -171,7 +168,7 @@ func deleteBotprofile_trapinsertionurl_bindingFunc(d *schema.ResourceData, meta 
 
 	err := client.DeleteResourceWithArgs("botprofile_trapinsertionurl_binding", name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

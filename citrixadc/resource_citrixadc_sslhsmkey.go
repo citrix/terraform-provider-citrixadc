@@ -1,20 +1,22 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/ssl"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcSslhsmkey() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSslhsmkeyFunc,
-		Read:          readSslhsmkeyFunc,
-		Delete:        deleteSslhsmkeyFunc,
+		CreateContext: createSslhsmkeyFunc,
+		ReadContext:   readSslhsmkeyFunc,
+		DeleteContext: deleteSslhsmkeyFunc,
 		Schema: map[string]*schema.Schema{
 			"hsmkeyname": {
 				Type:     schema.TypeString,
@@ -51,7 +53,7 @@ func resourceCitrixAdcSslhsmkey() *schema.Resource {
 	}
 }
 
-func createSslhsmkeyFunc(d *schema.ResourceData, meta interface{}) error {
+func createSslhsmkeyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSslhsmkeyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var sslhsmkeyName = d.Get("hsmkeyname").(string)
@@ -66,20 +68,15 @@ func createSslhsmkeyFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Sslhsmkey.Type(), sslhsmkeyName, &sslhsmkey)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(sslhsmkeyName)
 
-	err = readSslhsmkeyFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this sslhsmkey but we can't read it ?? %s", sslhsmkeyName)
-		return nil
-	}
-	return nil
+	return readSslhsmkeyFunc(ctx, d, meta)
 }
 
-func readSslhsmkeyFunc(d *schema.ResourceData, meta interface{}) error {
+func readSslhsmkeyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSslhsmkeyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	sslhsmkeyName := d.Id()
@@ -101,7 +98,7 @@ func readSslhsmkeyFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func deleteSslhsmkeyFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSslhsmkeyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSslhsmkeyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	sslhsmkeyName := d.Id()
@@ -126,7 +123,7 @@ func deleteSslhsmkeyFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.DeleteResourceWithArgsMap(service.Sslhsmkey.Type(), sslhsmkeyName, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

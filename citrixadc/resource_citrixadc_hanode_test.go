@@ -20,8 +20,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccHanodeLocal_basic = `
@@ -30,7 +30,7 @@ resource "citrixadc_hanode" "local_node" {
 	hanode_id     = 0
 	hellointerval = 200
 	deadinterval = 5
-  }
+	}
    
 `
 const testAccHanodeLocal_update = `
@@ -44,9 +44,9 @@ const testAccHanodeLocal_update = `
 
 func TestAccHanodeLocal_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: nil,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHanodeLocal_basic,
@@ -75,7 +75,7 @@ const testAccHanodeRemote_basic = `
 resource "citrixadc_hanode" "remote_node" {
 	hanode_id = 2
 	ipaddress = "10.222.74.145"
-  }
+	}
   
    
 `
@@ -92,9 +92,9 @@ func TestAccHanodeRemote_basic(t *testing.T) {
 		t.Skipf("ADC testbed is %s. Expected HA.", adcTestbed)
 	}
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckHanodeDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckHanodeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHanodeRemote_basic,
@@ -135,8 +135,12 @@ func testAccCheckHanodeExist(n string, id *string) resource.TestCheckFunc {
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Hanode.Type(), rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Hanode.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -151,7 +155,11 @@ func testAccCheckHanodeExist(n string, id *string) resource.TestCheckFunc {
 }
 
 func testAccCheckHanodeDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_hanode" {
@@ -162,7 +170,7 @@ func testAccCheckHanodeDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Hanode.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Hanode.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("hanode %s still exists", rs.Primary.ID)
 		}

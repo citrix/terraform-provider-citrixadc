@@ -1,22 +1,24 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/appflow"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcAppflowpolicylabel() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAppflowpolicylabelFunc,
-		Read:          readAppflowpolicylabelFunc,
-		Delete:        deleteAppflowpolicylabelFunc,
+		CreateContext: createAppflowpolicylabelFunc,
+		ReadContext:   readAppflowpolicylabelFunc,
+		DeleteContext: deleteAppflowpolicylabelFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"labelname": {
@@ -34,7 +36,7 @@ func resourceCitrixAdcAppflowpolicylabel() *schema.Resource {
 	}
 }
 
-func createAppflowpolicylabelFunc(d *schema.ResourceData, meta interface{}) error {
+func createAppflowpolicylabelFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppflowpolicylabelFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appflowpolicylabelName := d.Get("labelname").(string)
@@ -46,20 +48,15 @@ func createAppflowpolicylabelFunc(d *schema.ResourceData, meta interface{}) erro
 
 	_, err := client.AddResource(service.Appflowpolicylabel.Type(), appflowpolicylabelName, &appflowpolicylabel)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(appflowpolicylabelName)
 
-	err = readAppflowpolicylabelFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this appflowpolicylabel but we can't read it ?? %s", appflowpolicylabelName)
-		return nil
-	}
-	return nil
+	return readAppflowpolicylabelFunc(ctx, d, meta)
 }
 
-func readAppflowpolicylabelFunc(d *schema.ResourceData, meta interface{}) error {
+func readAppflowpolicylabelFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAppflowpolicylabelFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appflowpolicylabelName := d.Id()
@@ -77,13 +74,13 @@ func readAppflowpolicylabelFunc(d *schema.ResourceData, meta interface{}) error 
 
 }
 
-func deleteAppflowpolicylabelFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAppflowpolicylabelFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppflowpolicylabelFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appflowpolicylabelName := d.Id()
 	err := client.DeleteResource(service.Appflowpolicylabel.Type(), appflowpolicylabelName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

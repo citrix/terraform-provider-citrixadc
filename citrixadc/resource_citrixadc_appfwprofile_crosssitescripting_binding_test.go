@@ -22,8 +22,8 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccAppfwprofile_crosssitescripting_binding_basic = `
@@ -39,7 +39,7 @@ resource citrixadc_appfwprofile_crosssitescripting_binding demo_binding {
 	as_value_type_xss    = "Attribute"
 	as_value_expr_xss    = "value"
 	isvalueregex_xss     = "NOTREGEX"
-  }
+	}
 
   resource citrixadc_appfwprofile demo_appfw {
 	name                     = "demo_appfwprofile"
@@ -71,14 +71,14 @@ resource citrixadc_appfwprofile_crosssitescripting_binding demo_binding {
 	xmlvalidationaction      = ["none"]
 	xmlwsiaction             = ["none"]
 	xmlxssaction             = ["none"]
-  }
+	}
 `
 
 func TestAccAppfwprofile_crosssitescripting_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAppfwprofile_crosssitescripting_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAppfwprofile_crosssitescripting_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppfwprofile_crosssitescripting_binding_basic,
@@ -116,7 +116,11 @@ func testAccCheckAppfwprofile_crosssitescripting_bindingExist(n string, id *stri
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		bindingId := rs.Primary.ID
 		idSlice := strings.Split(bindingId, ",")
@@ -132,7 +136,7 @@ func testAccCheckAppfwprofile_crosssitescripting_bindingExist(n string, id *stri
 			ResourceName:             appFwName,
 			ResourceMissingErrorCode: 258,
 		}
-		dataArr, err := nsClient.FindResourceArrayWithParams(findParams)
+		dataArr, err := client.FindResourceArrayWithParams(findParams)
 
 		// Unexpected error
 		if err != nil {
@@ -164,7 +168,11 @@ func testAccCheckAppfwprofile_crosssitescripting_bindingExist(n string, id *stri
 }
 
 func testAccCheckAppfwprofile_crosssitescripting_bindingDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_appfwprofile_crosssitescripting_binding" {
@@ -175,7 +183,7 @@ func testAccCheckAppfwprofile_crosssitescripting_bindingDestroy(s *terraform.Sta
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Appfwprofile_crosssitescripting_binding.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Appfwprofile_crosssitescripting_binding.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("appfwprofile_crosssitescripting_binding %s still exists", rs.Primary.ID)
 		}

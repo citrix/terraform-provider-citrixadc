@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -110,9 +110,9 @@ const testAccAppfwglobal_appfwpolicy_binding_basic_step2 = `
 
 func TestAccAppfwglobal_appfwpolicy_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAppfwglobal_appfwpolicy_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAppfwglobal_appfwpolicy_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppfwglobal_appfwpolicy_binding_basic,
@@ -149,7 +149,11 @@ func testAccCheckAppfwglobal_appfwpolicy_bindingExist(n string, id *string) reso
 			*id = rs.Primary.ID
 		}
 
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		policyname := rs.Primary.ID
 		typename := rs.Primary.Attributes["type"]
@@ -184,7 +188,11 @@ func testAccCheckAppfwglobal_appfwpolicy_bindingExist(n string, id *string) reso
 
 func testAccCheckAppfwglobal_appfwpolicy_bindingNotExist(n string, id string, typename string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 		policyname := id
 		findParams := service.FindParams{
 			ResourceType:             "appfwglobal_appfwpolicy_binding",
@@ -216,7 +224,11 @@ func testAccCheckAppfwglobal_appfwpolicy_bindingNotExist(n string, id string, ty
 }
 
 func testAccCheckAppfwglobal_appfwpolicy_bindingDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_appfwglobal_appfwpolicy_binding" {
@@ -227,7 +239,7 @@ func testAccCheckAppfwglobal_appfwpolicy_bindingDestroy(s *terraform.State) erro
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Appfwglobal_appfwpolicy_binding.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Appfwglobal_appfwpolicy_binding.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("appfwglobal_appfwpolicy_binding %s still exists", rs.Primary.ID)
 		}

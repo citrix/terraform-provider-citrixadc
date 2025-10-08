@@ -1,23 +1,25 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcNsicapprofile() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNsicapprofileFunc,
-		Read:          readNsicapprofileFunc,
-		Update:        updateNsicapprofileFunc,
-		Delete:        deleteNsicapprofileFunc,
+		CreateContext: createNsicapprofileFunc,
+		ReadContext:   readNsicapprofileFunc,
+		UpdateContext: updateNsicapprofileFunc,
+		DeleteContext: deleteNsicapprofileFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -100,7 +102,7 @@ func resourceCitrixAdcNsicapprofile() *schema.Resource {
 	}
 }
 
-func createNsicapprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func createNsicapprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNsicapprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nsicapprofileName := d.Get("name").(string)
@@ -124,20 +126,15 @@ func createNsicapprofileFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource("nsicapprofile", nsicapprofileName, &nsicapprofile)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(nsicapprofileName)
 
-	err = readNsicapprofileFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this nsicapprofile but we can't read it ?? %s", nsicapprofileName)
-		return nil
-	}
-	return nil
+	return readNsicapprofileFunc(ctx, d, meta)
 }
 
-func readNsicapprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func readNsicapprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNsicapprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nsicapprofileName := d.Id()
@@ -157,9 +154,9 @@ func readNsicapprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("mode", data["mode"])
 	d.Set("name", data["name"])
 	d.Set("preview", data["preview"])
-	d.Set("previewlength", data["previewlength"])
+	setToInt("previewlength", d, data["previewlength"])
 	d.Set("queryparams", data["queryparams"])
-	d.Set("reqtimeout", data["reqtimeout"])
+	setToInt("reqtimeout", d, data["reqtimeout"])
 	d.Set("reqtimeoutaction", data["reqtimeoutaction"])
 	d.Set("uri", data["uri"])
 	d.Set("useragent", data["useragent"])
@@ -168,7 +165,7 @@ func readNsicapprofileFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateNsicapprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func updateNsicapprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateNsicapprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nsicapprofileName := d.Get("name").(string)
@@ -251,19 +248,19 @@ func updateNsicapprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource("nsicapprofile", nsicapprofileName, &nsicapprofile)
 		if err != nil {
-			return fmt.Errorf("Error updating nsicapprofile %s", nsicapprofileName)
+			return diag.Errorf("Error updating nsicapprofile %s", nsicapprofileName)
 		}
 	}
-	return readNsicapprofileFunc(d, meta)
+	return readNsicapprofileFunc(ctx, d, meta)
 }
 
-func deleteNsicapprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNsicapprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNsicapprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nsicapprofileName := d.Id()
 	err := client.DeleteResource("nsicapprofile", nsicapprofileName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

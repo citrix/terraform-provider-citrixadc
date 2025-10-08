@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -35,7 +35,7 @@ const testAccAuthenticationcertpolicy_add = `
 		name      = "tf_certpolicy"
 		rule      = "ns_true"
 		reqaction = citrixadc_authenticationcertaction.tf_certaction.name
-	  }
+	}
 `
 const testAccAuthenticationcertpolicy_update = `
 	resource "citrixadc_authenticationcertaction" "tf_certaction" {
@@ -49,14 +49,14 @@ const testAccAuthenticationcertpolicy_update = `
 		name      = "tf_certpolicy"
 		rule      = "ns_false"
 		reqaction = citrixadc_authenticationcertaction.tf_certaction.name
-	  }
+	}
 `
 
 func TestAccAuthenticationcertpolicy_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAuthenticationcertpolicyDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAuthenticationcertpolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAuthenticationcertpolicy_add,
@@ -97,8 +97,12 @@ func testAccCheckAuthenticationcertpolicyExist(n string, id *string) resource.Te
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Authenticationcertpolicy.Type(), rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Authenticationcertpolicy.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -113,7 +117,11 @@ func testAccCheckAuthenticationcertpolicyExist(n string, id *string) resource.Te
 }
 
 func testAccCheckAuthenticationcertpolicyDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_authenticationcertpolicy" {
@@ -124,7 +132,7 @@ func testAccCheckAuthenticationcertpolicyDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Authenticationcertpolicy.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Authenticationcertpolicy.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("authenticationcertpolicy %s still exists", rs.Primary.ID)
 		}

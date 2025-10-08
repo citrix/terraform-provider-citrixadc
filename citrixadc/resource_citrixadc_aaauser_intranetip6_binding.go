@@ -1,25 +1,29 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/aaa"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
 	"log"
 	"net/url"
 	"regexp"
 	"strings"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAaauser_intranetip6_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAaauser_intranetip6_bindingFunc,
-		Read:          readAaauser_intranetip6_bindingFunc,
-		Delete:        deleteAaauser_intranetip6_bindingFunc,
+		CreateContext: createAaauser_intranetip6_bindingFunc,
+		ReadContext:   readAaauser_intranetip6_bindingFunc,
+		DeleteContext: deleteAaauser_intranetip6_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"username": {
@@ -48,7 +52,7 @@ func resourceCitrixAdcAaauser_intranetip6_binding() *schema.Resource {
 	}
 }
 
-func createAaauser_intranetip6_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createAaauser_intranetip6_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAaauser_intranetip6_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	username := d.Get("username").(string)
@@ -76,20 +80,15 @@ func createAaauser_intranetip6_bindingFunc(d *schema.ResourceData, meta interfac
 
 	err := client.UpdateUnnamedResource(service.Aaauser_intranetip6_binding.Type(), &aaauser_intranetip6_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readAaauser_intranetip6_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this aaauser_intranetip6_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readAaauser_intranetip6_bindingFunc(ctx, d, meta)
 }
 
-func readAaauser_intranetip6_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readAaauser_intranetip6_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAaauser_intranetip6_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -110,7 +109,7 @@ func readAaauser_intranetip6_bindingFunc(d *schema.ResourceData, meta interface{
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -143,14 +142,14 @@ func readAaauser_intranetip6_bindingFunc(d *schema.ResourceData, meta interface{
 
 	d.Set("gotopriorityexpression", data["gotopriorityexpression"])
 	d.Set("intranetip6", data["intranetip6"])
-	d.Set("numaddr", data["numaddr"])
+	setToInt("numaddr", d, data["numaddr"])
 	d.Set("username", data["username"])
 
 	return nil
 
 }
 
-func deleteAaauser_intranetip6_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAaauser_intranetip6_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAaauser_intranetip6_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -169,7 +168,7 @@ func deleteAaauser_intranetip6_bindingFunc(d *schema.ResourceData, meta interfac
 
 	err := client.DeleteResourceWithArgs(service.Aaauser_intranetip6_binding.Type(), name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

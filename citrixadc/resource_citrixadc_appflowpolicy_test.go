@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -79,9 +79,9 @@ const testAccAppflowpolicy_update = `
 
 func TestAccAppflowpolicy_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAppflowpolicyDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAppflowpolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppflowpolicy_basic,
@@ -124,8 +124,12 @@ func testAccCheckAppflowpolicyExist(n string, id *string) resource.TestCheckFunc
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Appflowpolicy.Type(), rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Appflowpolicy.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -140,7 +144,11 @@ func testAccCheckAppflowpolicyExist(n string, id *string) resource.TestCheckFunc
 }
 
 func testAccCheckAppflowpolicyDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_appflowpolicy" {
@@ -151,7 +159,7 @@ func testAccCheckAppflowpolicyDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Appflowpolicy.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Appflowpolicy.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("appflowpolicy %s still exists", rs.Primary.ID)
 		}

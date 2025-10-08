@@ -1,24 +1,28 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/appfw"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
 	"log"
 	"net/url"
 	"strings"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAppfwprofile_fieldformat_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAppfwprofile_fieldformat_bindingFunc,
-		Read:          readAppfwprofile_fieldformat_bindingFunc,
-		Delete:        deleteAppfwprofile_fieldformat_bindingFunc,
+		CreateContext: createAppfwprofile_fieldformat_bindingFunc,
+		ReadContext:   readAppfwprofile_fieldformat_bindingFunc,
+		DeleteContext: deleteAppfwprofile_fieldformat_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -103,7 +107,7 @@ func resourceCitrixAdcAppfwprofile_fieldformat_binding() *schema.Resource {
 	}
 }
 
-func createAppfwprofile_fieldformat_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createAppfwprofile_fieldformat_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppfwprofile_fieldformat_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name")
@@ -128,20 +132,15 @@ func createAppfwprofile_fieldformat_bindingFunc(d *schema.ResourceData, meta int
 
 	err := client.UpdateUnnamedResource(service.Appfwprofile_fieldformat_binding.Type(), &appfwprofile_fieldformat_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readAppfwprofile_fieldformat_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this appfwprofile_fieldformat_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readAppfwprofile_fieldformat_bindingFunc(ctx, d, meta)
 }
 
-func readAppfwprofile_fieldformat_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readAppfwprofile_fieldformat_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAppfwprofile_fieldformat_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -163,7 +162,7 @@ func readAppfwprofile_fieldformat_bindingFunc(d *schema.ResourceData, meta inter
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -204,8 +203,8 @@ func readAppfwprofile_fieldformat_bindingFunc(d *schema.ResourceData, meta inter
 	// d.Set("alertonly", data["alertonly"])
 	d.Set("comment", data["comment"])
 	d.Set("fieldformat", data["fieldformat"])
-	d.Set("fieldformatmaxlength", data["fieldformatmaxlength"])
-	d.Set("fieldformatminlength", data["fieldformatminlength"])
+	setToInt("fieldformatmaxlength", d, data["fieldformatmaxlength"])
+	setToInt("fieldformatminlength", d, data["fieldformatminlength"])
 	d.Set("fieldtype", data["fieldtype"])
 	d.Set("formactionurl_ff", data["formactionurl_ff"])
 	d.Set("isautodeployed", data["isautodeployed"])
@@ -219,7 +218,7 @@ func readAppfwprofile_fieldformat_bindingFunc(d *schema.ResourceData, meta inter
 
 }
 
-func deleteAppfwprofile_fieldformat_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAppfwprofile_fieldformat_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppfwprofile_fieldformat_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -240,7 +239,7 @@ func deleteAppfwprofile_fieldformat_bindingFunc(d *schema.ResourceData, meta int
 
 	err := client.DeleteResourceWithArgs(service.Appfwprofile_fieldformat_binding.Type(), name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

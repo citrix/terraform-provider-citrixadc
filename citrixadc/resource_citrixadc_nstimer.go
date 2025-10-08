@@ -1,24 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcNstimer() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNstimerFunc,
-		Read:          readNstimerFunc,
-		Update:        updateNstimerFunc,
-		Delete:        deleteNstimerFunc,
+		CreateContext: createNstimerFunc,
+		ReadContext:   readNstimerFunc,
+		UpdateContext: updateNstimerFunc,
+		DeleteContext: deleteNstimerFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -51,7 +54,7 @@ func resourceCitrixAdcNstimer() *schema.Resource {
 	}
 }
 
-func createNstimerFunc(d *schema.ResourceData, meta interface{}) error {
+func createNstimerFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNstimerFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nstimerName := d.Get("name").(string)
@@ -65,20 +68,15 @@ func createNstimerFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Nstimer.Type(), nstimerName, &nstimer)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(nstimerName)
 
-	err = readNstimerFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this nstimer but we can't read it ?? %s", nstimerName)
-		return nil
-	}
-	return nil
+	return readNstimerFunc(ctx, d, meta)
 }
 
-func readNstimerFunc(d *schema.ResourceData, meta interface{}) error {
+func readNstimerFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNstimerFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nstimerName := d.Id()
@@ -90,7 +88,7 @@ func readNstimerFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	d.Set("comment", data["comment"])
-	d.Set("interval", data["interval"])
+	setToInt("interval", d, data["interval"])
 	d.Set("name", data["name"])
 	d.Set("newname", data["newname"])
 	d.Set("unit", data["unit"])
@@ -99,7 +97,7 @@ func readNstimerFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateNstimerFunc(d *schema.ResourceData, meta interface{}) error {
+func updateNstimerFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateNstimerFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nstimerName := d.Get("name").(string)
@@ -132,19 +130,19 @@ func updateNstimerFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Nstimer.Type(), nstimerName, &nstimer)
 		if err != nil {
-			return fmt.Errorf("Error updating nstimer %s", nstimerName)
+			return diag.Errorf("Error updating nstimer %s", nstimerName)
 		}
 	}
-	return readNstimerFunc(d, meta)
+	return readNstimerFunc(ctx, d, meta)
 }
 
-func deleteNstimerFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNstimerFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNstimerFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nstimerName := d.Id()
 	err := client.DeleteResource(service.Nstimer.Type(), nstimerName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

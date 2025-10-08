@@ -1,24 +1,25 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/vpn"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcVpnvserver() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createVpnvserverFunc,
-		Read:          readVpnvserverFunc,
-		Update:        updateVpnvserverFunc,
-		Delete:        deleteVpnvserverFunc,
+		CreateContext: createVpnvserverFunc,
+		ReadContext:   readVpnvserverFunc,
+		UpdateContext: updateVpnvserverFunc,
+		DeleteContext: deleteVpnvserverFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -240,7 +241,7 @@ func resourceCitrixAdcVpnvserver() *schema.Resource {
 	}
 }
 
-func createVpnvserverFunc(d *schema.ResourceData, meta interface{}) error {
+func createVpnvserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createVpnvserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vpnvserverName := d.Get("name").(string)
@@ -292,20 +293,15 @@ func createVpnvserverFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Vpnvserver.Type(), vpnvserverName, &vpnvserver)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(vpnvserverName)
 
-	err = readVpnvserverFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this vpnvserver but we can't read it ?? %s", vpnvserverName)
-		return nil
-	}
-	return nil
+	return readVpnvserverFunc(ctx, d, meta)
 }
 
-func readVpnvserverFunc(d *schema.ResourceData, meta interface{}) error {
+func readVpnvserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readVpnvserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vpnvserverName := d.Id()
@@ -329,7 +325,7 @@ func readVpnvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("doublehop", data["doublehop"])
 	d.Set("downstateflush", data["downstateflush"])
 	d.Set("dtls", data["dtls"])
-	d.Set("failedlogintimeout", data["failedlogintimeout"])
+	setToInt("failedlogintimeout", d, data["failedlogintimeout"])
 	d.Set("httpprofilename", data["httpprofilename"])
 	d.Set("icaonly", data["icaonly"])
 	d.Set("icaproxysessionmigration", data["icaproxysessionmigration"])
@@ -339,18 +335,18 @@ func readVpnvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("l2conn", data["l2conn"])
 	d.Set("linuxepapluginupgrade", data["linuxepapluginupgrade"])
 	d.Set("listenpolicy", data["listenpolicy"])
-	d.Set("listenpriority", data["listenpriority"])
+	setToInt("listenpriority", d, data["listenpriority"])
 	d.Set("loginonce", data["loginonce"])
 	d.Set("logoutonsmartcardremoval", data["logoutonsmartcardremoval"])
 	d.Set("macepapluginupgrade", data["macepapluginupgrade"])
-	d.Set("maxaaausers", data["maxaaausers"])
-	d.Set("maxloginattempts", data["maxloginattempts"])
+	setToInt("maxaaausers", d, data["maxaaausers"])
+	setToInt("maxloginattempts", d, data["maxloginattempts"])
 	// d.Set("name", data["name"])
 	d.Set("netprofile", data["netprofile"])
 	// d.Set("newname", data["newname"])
 	d.Set("pcoipvserverprofilename", data["pcoipvserverprofilename"])
-	d.Set("port", data["port"])
-	d.Set("range", data["range"])
+	setToInt("port", d, data["port"])
+	setToInt("range", d, data["range"])
 	d.Set("rdpserverprofilename", data["rdpserverprofilename"])
 	d.Set("rhistate", data["rhistate"])
 	d.Set("samesite", data["samesite"])
@@ -365,7 +361,7 @@ func readVpnvserverFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateVpnvserverFunc(d *schema.ResourceData, meta interface{}) error {
+func updateVpnvserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateVpnvserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vpnvserverName := d.Get("name").(string)
@@ -593,19 +589,19 @@ func updateVpnvserverFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Vpnvserver.Type(), vpnvserverName, &vpnvserver)
 		if err != nil {
-			return fmt.Errorf("Error updating vpnvserver %s", vpnvserverName)
+			return diag.Errorf("Error updating vpnvserver %s", vpnvserverName)
 		}
 	}
-	return readVpnvserverFunc(d, meta)
+	return readVpnvserverFunc(ctx, d, meta)
 }
 
-func deleteVpnvserverFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteVpnvserverFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteVpnvserverFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vpnvserverName := d.Id()
 	err := client.DeleteResource(service.Vpnvserver.Type(), vpnvserverName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

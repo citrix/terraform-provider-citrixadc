@@ -17,8 +17,8 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -27,7 +27,7 @@ const testAccReputationsettings_basic = `
 resource "citrixadc_reputationsettings" "tf_reputationsettings" {
 	proxyserver = "my_proxyserver"
 	proxyport   = 3500
-  }
+	}
   
 `
 const testAccReputationsettings_update = `
@@ -35,15 +35,15 @@ const testAccReputationsettings_update = `
 resource "citrixadc_reputationsettings" "tf_reputationsettings" {
 	proxyserver = "my_proxyserver"
 	proxyport   = 3600
-  }
+	}
   
 `
 
 func TestAccReputationsettings_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: nil,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReputationsettings_basic,
@@ -84,8 +84,12 @@ func testAccCheckReputationsettingsExist(n string, id *string) resource.TestChec
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource("reputationsettings", "")
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource("reputationsettings", "")
 
 		if err != nil {
 			return err

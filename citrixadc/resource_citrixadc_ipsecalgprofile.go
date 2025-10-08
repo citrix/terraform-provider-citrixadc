@@ -1,22 +1,25 @@
 package citrixadc
 
 import (
-	"github.com/citrix/adc-nitro-go/resource/config/ipsecalg"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"context"
 
-	"fmt"
+	"github.com/citrix/adc-nitro-go/resource/config/ipsecalg"
+
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcIpsecalgprofile() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createIpsecalgprofileFunc,
-		Read:          readIpsecalgprofileFunc,
-		Update:        updateIpsecalgprofileFunc,
-		Delete:        deleteIpsecalgprofileFunc,
+		CreateContext: createIpsecalgprofileFunc,
+		ReadContext:   readIpsecalgprofileFunc,
+		UpdateContext: updateIpsecalgprofileFunc,
+		DeleteContext: deleteIpsecalgprofileFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -48,7 +51,7 @@ func resourceCitrixAdcIpsecalgprofile() *schema.Resource {
 	}
 }
 
-func createIpsecalgprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func createIpsecalgprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createIpsecalgprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	ipsecalgprofileName := d.Get("name").(string)
@@ -62,20 +65,15 @@ func createIpsecalgprofileFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource("ipsecalgprofile", ipsecalgprofileName, &ipsecalgprofile)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(ipsecalgprofileName)
 
-	err = readIpsecalgprofileFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this ipsecalgprofile but we can't read it ?? %s", ipsecalgprofileName)
-		return nil
-	}
-	return nil
+	return readIpsecalgprofileFunc(ctx, d, meta)
 }
 
-func readIpsecalgprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func readIpsecalgprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readIpsecalgprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	ipsecalgprofileName := d.Id()
@@ -88,15 +86,15 @@ func readIpsecalgprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("name", data["name"])
 	d.Set("connfailover", data["connfailover"])
-	d.Set("espgatetimeout", data["espgatetimeout"])
-	d.Set("espsessiontimeout", data["espsessiontimeout"])
-	d.Set("ikesessiontimeout", data["ikesessiontimeout"])
+	setToInt("espgatetimeout", d, data["espgatetimeout"])
+	setToInt("espsessiontimeout", d, data["espsessiontimeout"])
+	setToInt("ikesessiontimeout", d, data["ikesessiontimeout"])
 
 	return nil
 
 }
 
-func updateIpsecalgprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func updateIpsecalgprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateIpsecalgprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	ipsecalgprofileName := d.Get("name").(string)
@@ -129,19 +127,19 @@ func updateIpsecalgprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource("ipsecalgprofile", &ipsecalgprofile)
 		if err != nil {
-			return fmt.Errorf("Error updating ipsecalgprofile %s", ipsecalgprofileName)
+			return diag.Errorf("Error updating ipsecalgprofile %s", ipsecalgprofileName)
 		}
 	}
-	return readIpsecalgprofileFunc(d, meta)
+	return readIpsecalgprofileFunc(ctx, d, meta)
 }
 
-func deleteIpsecalgprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteIpsecalgprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteIpsecalgprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	ipsecalgprofileName := d.Id()
 	err := client.DeleteResource("ipsecalgprofile", ipsecalgprofileName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

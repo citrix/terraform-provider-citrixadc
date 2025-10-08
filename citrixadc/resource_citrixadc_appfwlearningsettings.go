@@ -1,25 +1,28 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/appfw"
 
 	"github.com/citrix/adc-nitro-go/service"
-	// "github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	// "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAppfwlearningsettings() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAppfwlearningsettingsFunc,
-		Read:          readAppfwlearningsettingsFunc,
-		Update:        updateAppfwlearningsettingsFunc,
-		Delete:        deleteAppfwlearningsettingsFunc, // Thought appfwlearningsettings resource donot have DELETE operation, it is required to set ID to "" d.SetID("") to maintain terraform state
+		CreateContext: createAppfwlearningsettingsFunc,
+		ReadContext:   readAppfwlearningsettingsFunc,
+		UpdateContext: updateAppfwlearningsettingsFunc,
+		DeleteContext: deleteAppfwlearningsettingsFunc, // Thought appfwlearningsettings resource donot have DELETE operation, it is required to set ID to "" d.SetID("") to maintain terraform state
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"profilename": {
@@ -182,7 +185,7 @@ func resourceCitrixAdcAppfwlearningsettings() *schema.Resource {
 	}
 }
 
-func createAppfwlearningsettingsFunc(d *schema.ResourceData, meta interface{}) error {
+func createAppfwlearningsettingsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppfwlearningsettingsFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appfwlearningsettingsName := d.Get("profilename").(string)
@@ -214,29 +217,24 @@ func createAppfwlearningsettingsFunc(d *schema.ResourceData, meta interface{}) e
 		Sqlinjectionpercentthreshold:            d.Get("sqlinjectionpercentthreshold").(int),
 		Starturlautodeploygraceperiod:           d.Get("starturlautodeploygraceperiod").(int),
 		Starturlminthreshold:                    d.Get("starturlminthreshold").(int),
-		Starturlpercentthreshold:                d.Get("starturlpercentthreshold").(int),
 		Xmlattachmentminthreshold:               d.Get("xmlattachmentminthreshold").(int),
 		Xmlattachmentpercentthreshold:           d.Get("xmlattachmentpercentthreshold").(int),
 		Xmlwsiminthreshold:                      d.Get("xmlwsiminthreshold").(int),
 		Xmlwsipercentthreshold:                  d.Get("xmlwsipercentthreshold").(int),
+		Starturlpercentthreshold:                d.Get("starturlpercentthreshold").(int),
 	}
 
 	err := client.UpdateUnnamedResource(service.Appfwlearningsettings.Type(), &appfwlearningsettings)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(appfwlearningsettingsName)
 
-	err = readAppfwlearningsettingsFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this appfwlearningsettings but we can't read it ?? %s", appfwlearningsettingsName)
-		return nil
-	}
-	return nil
+	return readAppfwlearningsettingsFunc(ctx, d, meta)
 }
 
-func readAppfwlearningsettingsFunc(d *schema.ResourceData, meta interface{}) error {
+func readAppfwlearningsettingsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAppfwlearningsettingsFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appfwlearningsettingsName := d.Id()
@@ -248,42 +246,42 @@ func readAppfwlearningsettingsFunc(d *schema.ResourceData, meta interface{}) err
 		return nil
 	}
 	d.Set("profilename", data["profilename"])
-	d.Set("contenttypeautodeploygraceperiod", data["contenttypeautodeploygraceperiod"])
-	d.Set("contenttypeminthreshold", data["contenttypeminthreshold"])
-	d.Set("contenttypepercentthreshold", data["contenttypepercentthreshold"])
-	d.Set("cookieconsistencyautodeploygraceperiod", data["cookieconsistencyautodeploygraceperiod"])
-	d.Set("cookieconsistencyminthreshold", data["cookieconsistencyminthreshold"])
-	d.Set("cookieconsistencypercentthreshold", data["cookieconsistencypercentthreshold"])
-	d.Set("creditcardnumberminthreshold", data["creditcardnumberminthreshold"])
-	d.Set("creditcardnumberpercentthreshold", data["creditcardnumberpercentthreshold"])
-	d.Set("crosssitescriptingautodeploygraceperiod", data["crosssitescriptingautodeploygraceperiod"])
-	d.Set("crosssitescriptingminthreshold", data["crosssitescriptingminthreshold"])
-	d.Set("crosssitescriptingpercentthreshold", data["crosssitescriptingpercentthreshold"])
-	d.Set("csrftagautodeploygraceperiod", data["csrftagautodeploygraceperiod"])
-	d.Set("csrftagminthreshold", data["csrftagminthreshold"])
-	d.Set("csrftagpercentthreshold", data["csrftagpercentthreshold"])
-	d.Set("fieldconsistencyautodeploygraceperiod", data["fieldconsistencyautodeploygraceperiod"])
-	d.Set("fieldconsistencyminthreshold", data["fieldconsistencyminthreshold"])
-	d.Set("fieldconsistencypercentthreshold", data["fieldconsistencypercentthreshold"])
-	d.Set("fieldformatautodeploygraceperiod", data["fieldformatautodeploygraceperiod"])
-	d.Set("fieldformatminthreshold", data["fieldformatminthreshold"])
-	d.Set("fieldformatpercentthreshold", data["fieldformatpercentthreshold"])
-	d.Set("sqlinjectionautodeploygraceperiod", data["sqlinjectionautodeploygraceperiod"])
-	d.Set("sqlinjectionminthreshold", data["sqlinjectionminthreshold"])
-	d.Set("sqlinjectionpercentthreshold", data["sqlinjectionpercentthreshold"])
-	d.Set("starturlautodeploygraceperiod", data["starturlautodeploygraceperiod"])
-	d.Set("starturlminthreshold", data["starturlminthreshold"])
-	d.Set("starturlpercentthreshold", data["starturlpercentthreshold"])
-	d.Set("xmlattachmentminthreshold", data["xmlattachmentminthreshold"])
-	d.Set("xmlattachmentpercentthreshold", data["xmlattachmentpercentthreshold"])
-	d.Set("xmlwsiminthreshold", data["xmlwsiminthreshold"])
-	d.Set("xmlwsipercentthreshold", data["xmlwsipercentthreshold"])
+	setToInt("contenttypeautodeploygraceperiod", d, data["contenttypeautodeploygraceperiod"])
+	setToInt("contenttypeminthreshold", d, data["contenttypeminthreshold"])
+	setToInt("contenttypepercentthreshold", d, data["contenttypepercentthreshold"])
+	setToInt("cookieconsistencyautodeploygraceperiod", d, data["cookieconsistencyautodeploygraceperiod"])
+	setToInt("cookieconsistencyminthreshold", d, data["cookieconsistencyminthreshold"])
+	setToInt("cookieconsistencypercentthreshold", d, data["cookieconsistencypercentthreshold"])
+	setToInt("creditcardnumberminthreshold", d, data["creditcardnumberminthreshold"])
+	setToInt("creditcardnumberpercentthreshold", d, data["creditcardnumberpercentthreshold"])
+	setToInt("crosssitescriptingautodeploygraceperiod", d, data["crosssitescriptingautodeploygraceperiod"])
+	setToInt("crosssitescriptingminthreshold", d, data["crosssitescriptingminthreshold"])
+	setToInt("crosssitescriptingpercentthreshold", d, data["crosssitescriptingpercentthreshold"])
+	setToInt("csrftagautodeploygraceperiod", d, data["csrftagautodeploygraceperiod"])
+	setToInt("csrftagminthreshold", d, data["csrftagminthreshold"])
+	setToInt("csrftagpercentthreshold", d, data["csrftagpercentthreshold"])
+	setToInt("fieldconsistencyautodeploygraceperiod", d, data["fieldconsistencyautodeploygraceperiod"])
+	setToInt("fieldconsistencyminthreshold", d, data["fieldconsistencyminthreshold"])
+	setToInt("fieldconsistencypercentthreshold", d, data["fieldconsistencypercentthreshold"])
+	setToInt("fieldformatautodeploygraceperiod", d, data["fieldformatautodeploygraceperiod"])
+	setToInt("fieldformatminthreshold", d, data["fieldformatminthreshold"])
+	setToInt("fieldformatpercentthreshold", d, data["fieldformatpercentthreshold"])
+	setToInt("sqlinjectionautodeploygraceperiod", d, data["sqlinjectionautodeploygraceperiod"])
+	setToInt("sqlinjectionminthreshold", d, data["sqlinjectionminthreshold"])
+	setToInt("sqlinjectionpercentthreshold", d, data["sqlinjectionpercentthreshold"])
+	setToInt("starturlautodeploygraceperiod", d, data["starturlautodeploygraceperiod"])
+	setToInt("starturlminthreshold", d, data["starturlminthreshold"])
+	setToInt("starturlpercentthreshold", d, data["starturlpercentthreshold"])
+	setToInt("xmlattachmentminthreshold", d, data["xmlattachmentminthreshold"])
+	setToInt("xmlattachmentpercentthreshold", d, data["xmlattachmentpercentthreshold"])
+	setToInt("xmlwsiminthreshold", d, data["xmlwsiminthreshold"])
+	setToInt("xmlwsipercentthreshold", d, data["xmlwsipercentthreshold"])
 
 	return nil
 
 }
 
-func updateAppfwlearningsettingsFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAppfwlearningsettingsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAppfwlearningsettingsFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appfwlearningsettingsName := d.Get("profilename").(string)
@@ -446,13 +444,13 @@ func updateAppfwlearningsettingsFunc(d *schema.ResourceData, meta interface{}) e
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Appfwlearningsettings.Type(), &appfwlearningsettings)
 		if err != nil {
-			return fmt.Errorf("Error updating appfwlearningsettings %s", appfwlearningsettingsName)
+			return diag.Errorf("Error updating appfwlearningsettings %s", appfwlearningsettingsName)
 		}
 	}
-	return readAppfwlearningsettingsFunc(d, meta)
+	return readAppfwlearningsettingsFunc(ctx, d, meta)
 }
 
-func deleteAppfwlearningsettingsFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAppfwlearningsettingsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppfwlearningsettingsFunc")
 
 	d.SetId("")

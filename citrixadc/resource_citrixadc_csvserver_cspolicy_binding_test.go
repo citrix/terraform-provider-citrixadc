@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
 	"fmt"
 	"strings"
@@ -28,9 +28,9 @@ import (
 
 func TestAccCsvserver_cspolicy_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckCsvserver_cspolicy_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckCsvserver_cspolicy_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCsvserver_cspolicy_binding_basic_step1,
@@ -68,7 +68,11 @@ func testAccCheckCsvserver_cspolicy_bindingExist(n string, id *string) resource.
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		bindingId := rs.Primary.ID
 		idSlice := strings.Split(bindingId, ",")
@@ -81,7 +85,7 @@ func testAccCheckCsvserver_cspolicy_bindingExist(n string, id *string) resource.
 			ResourceMissingErrorCode: 258,
 		}
 
-		dataArr, err := nsClient.FindResourceArrayWithParams(findParams)
+		dataArr, err := client.FindResourceArrayWithParams(findParams)
 
 		if err != nil {
 			return err
@@ -105,7 +109,11 @@ func testAccCheckCsvserver_cspolicy_bindingExist(n string, id *string) resource.
 }
 
 func testAccCheckCsvserver_cspolicy_bindingDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_csvserver_cspolicy_binding" {
@@ -127,7 +135,7 @@ func testAccCheckCsvserver_cspolicy_bindingDestroy(s *terraform.State) error {
 			ResourceMissingErrorCode: 258,
 		}
 
-		dataArr, err := nsClient.FindResourceArrayWithParams(findParams)
+		dataArr, err := client.FindResourceArrayWithParams(findParams)
 
 		if err != nil {
 			return err

@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
-	"github.com/citrix/adc-nitro-go/resource/config/feo"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"context"
 
-	"fmt"
+	"github.com/citrix/adc-nitro-go/resource/config/feo"
+
 	"log"
 	"strconv"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcFeoaction() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createFeoactionFunc,
-		Read:          readFeoactionFunc,
-		Update:        updateFeoactionFunc,
-		Delete:        deleteFeoactionFunc,
+		CreateContext: createFeoactionFunc,
+		ReadContext:   readFeoactionFunc,
+		UpdateContext: updateFeoactionFunc,
+		DeleteContext: deleteFeoactionFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -140,7 +143,7 @@ func resourceCitrixAdcFeoaction() *schema.Resource {
 	}
 }
 
-func createFeoactionFunc(d *schema.ResourceData, meta interface{}) error {
+func createFeoactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createFeoactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	feoactionName := d.Get("name").(string)
@@ -219,20 +222,15 @@ func createFeoactionFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	_, err := client.AddResource("feoaction", feoactionName, &feoaction)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(feoactionName)
 
-	err = readFeoactionFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this feoaction but we can't read it ?? %s", feoactionName)
-		return nil
-	}
-	return nil
+	return readFeoactionFunc(ctx, d, meta)
 }
 
-func readFeoactionFunc(d *schema.ResourceData, meta interface{}) error {
+func readFeoactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readFeoactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	feoactionName := d.Id()
@@ -270,7 +268,7 @@ func readFeoactionFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateFeoactionFunc(d *schema.ResourceData, meta interface{}) error {
+func updateFeoactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateFeoactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	feoactionName := d.Get("name").(string)
@@ -394,19 +392,19 @@ func updateFeoactionFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource("feoaction", feoactionName, &feoaction)
 		if err != nil {
-			return fmt.Errorf("Error updating feoaction %s", feoactionName)
+			return diag.Errorf("Error updating feoaction %s", feoactionName)
 		}
 	}
-	return readFeoactionFunc(d, meta)
+	return readFeoactionFunc(ctx, d, meta)
 }
 
-func deleteFeoactionFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteFeoactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteFeoactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	feoactionName := d.Id()
 	err := client.DeleteResource("feoaction", feoactionName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

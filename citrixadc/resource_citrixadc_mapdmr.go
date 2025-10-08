@@ -1,20 +1,22 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/network"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcMapdmr() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createMapdmrFunc,
-		Read:          readMapdmrFunc,
-		Delete:        deleteMapdmrFunc,
+		CreateContext: createMapdmrFunc,
+		ReadContext:   readMapdmrFunc,
+		DeleteContext: deleteMapdmrFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -33,7 +35,7 @@ func resourceCitrixAdcMapdmr() *schema.Resource {
 	}
 }
 
-func createMapdmrFunc(d *schema.ResourceData, meta interface{}) error {
+func createMapdmrFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createMapdmrFunc")
 	client := meta.(*NetScalerNitroClient).client
 	mapdmrName := d.Get("name").(string)
@@ -44,20 +46,15 @@ func createMapdmrFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource("mapdmr", mapdmrName, &mapdmr)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(mapdmrName)
 
-	err = readMapdmrFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this mapdmr but we can't read it ?? %s", mapdmrName)
-		return nil
-	}
-	return nil
+	return readMapdmrFunc(ctx, d, meta)
 }
 
-func readMapdmrFunc(d *schema.ResourceData, meta interface{}) error {
+func readMapdmrFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readMapdmrFunc")
 	client := meta.(*NetScalerNitroClient).client
 	mapdmrName := d.Id()
@@ -75,13 +72,13 @@ func readMapdmrFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func deleteMapdmrFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteMapdmrFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteMapdmrFunc")
 	client := meta.(*NetScalerNitroClient).client
 	mapdmrName := d.Id()
 	err := client.DeleteResource("mapdmr", mapdmrName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

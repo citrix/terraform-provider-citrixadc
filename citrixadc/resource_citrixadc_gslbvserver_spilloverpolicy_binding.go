@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/gslb"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strings"
 )
@@ -13,11 +15,11 @@ import (
 func resourceCitrixAdcGslbvserver_spilloverpolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createGslbvserver_spilloverpolicy_bindingFunc,
-		Read:          readGslbvserver_spilloverpolicy_bindingFunc,
-		Delete:        deleteGslbvserver_spilloverpolicy_bindingFunc,
+		CreateContext: createGslbvserver_spilloverpolicy_bindingFunc,
+		ReadContext:   readGslbvserver_spilloverpolicy_bindingFunc,
+		DeleteContext: deleteGslbvserver_spilloverpolicy_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -52,7 +54,7 @@ func resourceCitrixAdcGslbvserver_spilloverpolicy_binding() *schema.Resource {
 	}
 }
 
-func createGslbvserver_spilloverpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createGslbvserver_spilloverpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createGslbvserver_spilloverpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name")
@@ -69,20 +71,15 @@ func createGslbvserver_spilloverpolicy_bindingFunc(d *schema.ResourceData, meta 
 
 	err := client.UpdateUnnamedResource(service.Gslbvserver_spilloverpolicy_binding.Type(), &gslbvserver_spilloverpolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readGslbvserver_spilloverpolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this gslbvserver_spilloverpolicy_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readGslbvserver_spilloverpolicy_bindingFunc(ctx, d, meta)
 }
 
-func readGslbvserver_spilloverpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readGslbvserver_spilloverpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readGslbvserver_spilloverpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -103,7 +100,7 @@ func readGslbvserver_spilloverpolicy_bindingFunc(d *schema.ResourceData, meta in
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -144,7 +141,7 @@ func readGslbvserver_spilloverpolicy_bindingFunc(d *schema.ResourceData, meta in
 
 }
 
-func deleteGslbvserver_spilloverpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteGslbvserver_spilloverpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteGslbvserver_spilloverpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -159,7 +156,7 @@ func deleteGslbvserver_spilloverpolicy_bindingFunc(d *schema.ResourceData, meta 
 
 	err := client.DeleteResourceWithArgs(service.Gslbvserver_spilloverpolicy_binding.Type(), name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

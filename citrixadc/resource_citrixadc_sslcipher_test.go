@@ -21,8 +21,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccSslcipher_add = `
@@ -34,15 +34,15 @@ const testAccSslcipher_add = `
 		ciphersuitebinding {
 			ciphername     = "TLS1.2-ECDHE-RSA-AES128-GCM-SHA256"
 			cipherpriority = 1
-		}
+	}
 		ciphersuitebinding {
 			ciphername     = "TLS1.2-ECDHE-RSA-AES256-GCM-SHA384"
 			cipherpriority = 2
-		}
+	}
 		ciphersuitebinding {
 			ciphername     = "TLS1.2-ECDHE-RSA-AES-128-SHA256"
 			cipherpriority = 3
-		}
+	}
 	}
 `
 
@@ -55,15 +55,15 @@ const testAccSslcipher_transpose = `
 		ciphersuitebinding {
 			ciphername     = "TLS1.2-ECDHE-RSA-AES128-GCM-SHA256"
 			cipherpriority = 3
-		}
+	}
 		ciphersuitebinding {
 			ciphername     = "TLS1.2-ECDHE-RSA-AES256-GCM-SHA384"
 			cipherpriority = 2
-		}
+	}
 		ciphersuitebinding {
 			ciphername     = "TLS1.2-ECDHE-RSA-AES-128-SHA256"
 			cipherpriority = 1
-		}
+	}
 	}
 `
 
@@ -77,15 +77,15 @@ const testAccSslcipher_update = `
 		ciphersuitebinding {
 			ciphername     = "TLS1.2-ECDHE-RSA-AES128-GCM-SHA256"
 			cipherpriority = 1
-		}
+	}
 	}
 `
 
 func TestAccSslcipher_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckSslcipherDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckSslcipherDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSslcipher_add,
@@ -138,8 +138,12 @@ func testAccCheckSslcipherExist(n string, id *string) resource.TestCheckFunc {
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		dataArr, err := nsClient.FindAllResources(service.Sslcipher.Type())
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		dataArr, err := client.FindAllResources(service.Sslcipher.Type())
 
 		if err != nil {
 			return err
@@ -176,7 +180,11 @@ func testAccCheckSslcipherExist(n string, id *string) resource.TestCheckFunc {
 
 func testAccCheckSslcipherCiphersuiteBinding(ciphergroupname string, ciphername string, expectedpriority int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "citrixadc_sslcipher" {
@@ -187,7 +195,7 @@ func testAccCheckSslcipherCiphersuiteBinding(ciphergroupname string, ciphername 
 				return fmt.Errorf("No name is set")
 			}
 
-			bindings, _ := nsClient.FindResourceArray(service.Sslcipher_sslciphersuite_binding.Type(), ciphergroupname)
+			bindings, _ := client.FindResourceArray(service.Sslcipher_sslciphersuite_binding.Type(), ciphergroupname)
 			for _, binding := range bindings {
 				if binding["ciphername"].(string) == ciphername {
 					receivedpriority, _ := strconv.Atoi(binding["cipherpriority"].(string))
@@ -205,7 +213,11 @@ func testAccCheckSslcipherCiphersuiteBinding(ciphergroupname string, ciphername 
 }
 
 func testAccCheckSslcipherDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_sslcipher" {
@@ -216,7 +228,7 @@ func testAccCheckSslcipherDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Sslcipher.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Sslcipher.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("sslciphergroup %s still exists", rs.Primary.ID)
 		}

@@ -17,8 +17,8 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -29,7 +29,7 @@ resource "citrixadc_lsnstatic" "tf_lsnstatic" {
 	transportprotocol = "TCP"
 	subscrip          = "10.222.74.128"
 	subscrport        = 3000
-  }
+	}
   
 `
 const testAccLsnstatic_update = `
@@ -39,16 +39,16 @@ resource "citrixadc_lsnstatic" "tf_lsnstatic" {
 	transportprotocol = "UDP"
 	subscrip          = "10.222.74.128"
 	subscrport        = 4000
-  }
+	}
   
 `
 
 func TestAccLsnstatic_basic(t *testing.T) {
 	t.Skip("TODO: Need to find a way to test this LSN resource!")
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckLsnstaticDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckLsnstaticDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLsnstatic_basic,
@@ -93,8 +93,12 @@ func testAccCheckLsnstaticExist(n string, id *string) resource.TestCheckFunc {
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource("lsnstatic", rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource("lsnstatic", rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -109,7 +113,11 @@ func testAccCheckLsnstaticExist(n string, id *string) resource.TestCheckFunc {
 }
 
 func testAccCheckLsnstaticDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_lsnstatic" {
@@ -120,7 +128,7 @@ func testAccCheckLsnstaticDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource("lsnstatic", rs.Primary.ID)
+		_, err := client.FindResource("lsnstatic", rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("lsnstatic %s still exists", rs.Primary.ID)
 		}

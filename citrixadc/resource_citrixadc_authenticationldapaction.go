@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/authentication"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAuthenticationldapaction() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAuthenticationldapactionFunc,
-		Read:          readAuthenticationldapactionFunc,
-		Update:        updateAuthenticationldapactionFunc,
-		Delete:        deleteAuthenticationldapactionFunc,
+		CreateContext: createAuthenticationldapactionFunc,
+		ReadContext:   readAuthenticationldapactionFunc,
+		UpdateContext: updateAuthenticationldapactionFunc,
+		DeleteContext: deleteAuthenticationldapactionFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -300,7 +303,7 @@ func resourceCitrixAdcAuthenticationldapaction() *schema.Resource {
 	}
 }
 
-func createAuthenticationldapactionFunc(d *schema.ResourceData, meta interface{}) error {
+func createAuthenticationldapactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAuthenticationldapactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationldapactionName := d.Get("name").(string)
@@ -364,20 +367,15 @@ func createAuthenticationldapactionFunc(d *schema.ResourceData, meta interface{}
 
 	_, err := client.AddResource(service.Authenticationldapaction.Type(), authenticationldapactionName, &authenticationldapaction)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(authenticationldapactionName)
 
-	err = readAuthenticationldapactionFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this authenticationldapaction but we can't read it ?? %s", authenticationldapactionName)
-		return nil
-	}
-	return nil
+	return readAuthenticationldapactionFunc(ctx, d, meta)
 }
 
-func readAuthenticationldapactionFunc(d *schema.ResourceData, meta interface{}) error {
+func readAuthenticationldapactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAuthenticationldapactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationldapactionName := d.Id()
@@ -408,7 +406,7 @@ func readAuthenticationldapactionFunc(d *schema.ResourceData, meta interface{}) 
 	d.Set("attribute9", data["attribute9"])
 	d.Set("attributes", data["attributes"])
 	d.Set("authentication", data["authentication"])
-	d.Set("authtimeout", data["authtimeout"])
+	setToInt("authtimeout", d, data["authtimeout"])
 	d.Set("cloudattributes", data["cloudattributes"])
 	d.Set("defaultauthenticationgroup", data["defaultauthenticationgroup"])
 	d.Set("email", data["email"])
@@ -424,8 +422,8 @@ func readAuthenticationldapactionFunc(d *schema.ResourceData, meta interface{}) 
 	// d.Set("ldapbinddnpassword", data["ldapbinddnpassword"]) // We get the hash value from the NetScaler, which creates terraform to update the resource attribute on our next terraform apply command
 	d.Set("ldaphostname", data["ldaphostname"])
 	d.Set("ldaploginname", data["ldaploginname"])
-	d.Set("maxldapreferrals", data["maxldapreferrals"])
-	d.Set("maxnestinglevel", data["maxnestinglevel"])
+	setToInt("maxldapreferrals", d, data["maxldapreferrals"])
+	setToInt("maxnestinglevel", d, data["maxnestinglevel"])
 	d.Set("mssrvrecordlocation", data["mssrvrecordlocation"])
 	d.Set("name", data["name"])
 	d.Set("nestedgroupextraction", data["nestedgroupextraction"])
@@ -438,7 +436,7 @@ func readAuthenticationldapactionFunc(d *schema.ResourceData, meta interface{}) 
 	d.Set("sectype", data["sectype"])
 	d.Set("serverip", data["serverip"])
 	d.Set("servername", data["servername"])
-	d.Set("serverport", data["serverport"])
+	setToInt("serverport", d, data["serverport"])
 	d.Set("sshpublickey", data["sshpublickey"])
 	d.Set("ssonameattribute", data["ssonameattribute"])
 	d.Set("subattributename", data["subattributename"])
@@ -449,7 +447,7 @@ func readAuthenticationldapactionFunc(d *schema.ResourceData, meta interface{}) 
 
 }
 
-func updateAuthenticationldapactionFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAuthenticationldapactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAuthenticationldapactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationldapactionName := d.Get("name").(string)
@@ -732,19 +730,19 @@ func updateAuthenticationldapactionFunc(d *schema.ResourceData, meta interface{}
 	if hasChange {
 		_, err := client.UpdateResource(service.Authenticationldapaction.Type(), authenticationldapactionName, &authenticationldapaction)
 		if err != nil {
-			return fmt.Errorf("Error updating authenticationldapaction %s", authenticationldapactionName)
+			return diag.Errorf("Error updating authenticationldapaction %s", authenticationldapactionName)
 		}
 	}
-	return readAuthenticationldapactionFunc(d, meta)
+	return readAuthenticationldapactionFunc(ctx, d, meta)
 }
 
-func deleteAuthenticationldapactionFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAuthenticationldapactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAuthenticationldapactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationldapactionName := d.Id()
 	err := client.DeleteResource(service.Authenticationldapaction.Type(), authenticationldapactionName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

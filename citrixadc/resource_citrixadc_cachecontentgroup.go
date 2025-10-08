@@ -1,22 +1,25 @@
 package citrixadc
 
 import (
-	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"context"
 
-	"fmt"
+	"github.com/citrix/adc-nitro-go/service"
+
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcCachecontentgroup() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createCachecontentgroupFunc,
-		Read:          readCachecontentgroupFunc,
-		Update:        updateCachecontentgroupFunc,
-		Delete:        deleteCachecontentgroupFunc,
+		CreateContext: createCachecontentgroupFunc,
+		ReadContext:   readCachecontentgroupFunc,
+		UpdateContext: updateCachecontentgroupFunc,
+		DeleteContext: deleteCachecontentgroupFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -242,7 +245,7 @@ func resourceCitrixAdcCachecontentgroup() *schema.Resource {
 	}
 }
 
-func createCachecontentgroupFunc(d *schema.ResourceData, meta interface{}) error {
+func createCachecontentgroupFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createCachecontentgroupFunc")
 	client := meta.(*NetScalerNitroClient).client
 	cachecontentgroupName := d.Get("name").(string)
@@ -420,20 +423,15 @@ func createCachecontentgroupFunc(d *schema.ResourceData, meta interface{}) error
 
 	_, err := client.AddResource(service.Cachecontentgroup.Type(), cachecontentgroupName, &cachecontentgroup)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(cachecontentgroupName)
 
-	err = readCachecontentgroupFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this cachecontentgroup but we can't read it ?? %s", cachecontentgroupName)
-		return nil
-	}
-	return nil
+	return readCachecontentgroupFunc(ctx, d, meta)
 }
 
-func readCachecontentgroupFunc(d *schema.ResourceData, meta interface{}) error {
+func readCachecontentgroupFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readCachecontentgroupFunc")
 	client := meta.(*NetScalerNitroClient).client
 	cachecontentgroupName := d.Id()
@@ -451,7 +449,7 @@ func readCachecontentgroupFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("cachecontrol", data["cachecontrol"])
 	d.Set("expireatlastbyte", data["expireatlastbyte"])
 	d.Set("flashcache", data["flashcache"])
-	d.Set("heurexpiryparam", data["heurexpiryparam"])
+	setToInt("heurexpiryparam", d, data["heurexpiryparam"])
 	d.Set("hitparams", data["hitparams"])
 	d.Set("hitselector", data["hitselector"])
 	d.Set("host", data["host"])
@@ -466,33 +464,33 @@ func readCachecontentgroupFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("invalselector", data["invalselector"])
 	d.Set("lazydnsresolve", data["lazydnsresolve"])
 	d.Set("matchcookies", data["matchcookies"])
-	d.Set("maxressize", data["maxressize"])
-	d.Set("memlimit", data["memlimit"])
-	d.Set("minhits", data["minhits"])
-	d.Set("minressize", data["minressize"])
+	setToInt("maxressize", d, data["maxressize"])
+	setToInt("memlimit", d, data["memlimit"])
+	setToInt("minhits", d, data["minhits"])
+	setToInt("minressize", d, data["minressize"])
 	d.Set("persistha", data["persistha"])
 	d.Set("pinned", data["pinned"])
 	d.Set("polleverytime", data["polleverytime"])
 	d.Set("prefetch", data["prefetch"])
-	d.Set("prefetchmaxpending", data["prefetchmaxpending"])
-	d.Set("prefetchperiod", data["prefetchperiod"])
-	d.Set("prefetchperiodmillisec", data["prefetchperiodmillisec"])
+	setToInt("prefetchmaxpending", d, data["prefetchmaxpending"])
+	setToInt("prefetchperiod", d, data["prefetchperiod"])
+	setToInt("prefetchperiodmillisec", d, data["prefetchperiodmillisec"])
 	d.Set("query", data["query"])
-	d.Set("quickabortsize", data["quickabortsize"])
-	d.Set("relexpiry", data["relexpiry"])
-	d.Set("relexpirymillisec", data["relexpirymillisec"])
+	setToInt("quickabortsize", d, data["quickabortsize"])
+	setToInt("relexpiry", d, data["relexpiry"])
+	setToInt("relexpirymillisec", d, data["relexpirymillisec"])
 	d.Set("removecookies", data["removecookies"])
 	d.Set("selectorvalue", data["selectorvalue"])
 	d.Set("tosecondary", data["tosecondary"])
 	d.Set("type", data["type"])
-	d.Set("weaknegrelexpiry", data["weaknegrelexpiry"])
-	d.Set("weakposrelexpiry", data["weakposrelexpiry"])
+	setToInt("weaknegrelexpiry", d, data["weaknegrelexpiry"])
+	setToInt("weakposrelexpiry", d, data["weakposrelexpiry"])
 
 	return nil
 
 }
 
-func updateCachecontentgroupFunc(d *schema.ResourceData, meta interface{}) error {
+func updateCachecontentgroupFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateCachecontentgroupFunc")
 	client := meta.(*NetScalerNitroClient).client
 	cachecontentgroupName := d.Get("name").(string)
@@ -715,19 +713,19 @@ func updateCachecontentgroupFunc(d *schema.ResourceData, meta interface{}) error
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Cachecontentgroup.Type(), &cachecontentgroup)
 		if err != nil {
-			return fmt.Errorf("Error updating cachecontentgroup %s", cachecontentgroupName)
+			return diag.Errorf("Error updating cachecontentgroup %s", cachecontentgroupName)
 		}
 	}
-	return readCachecontentgroupFunc(d, meta)
+	return readCachecontentgroupFunc(ctx, d, meta)
 }
 
-func deleteCachecontentgroupFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteCachecontentgroupFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteCachecontentgroupFunc")
 	client := meta.(*NetScalerNitroClient).client
 	cachecontentgroupName := d.Id()
 	err := client.DeleteResource(service.Cachecontentgroup.Type(), cachecontentgroupName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

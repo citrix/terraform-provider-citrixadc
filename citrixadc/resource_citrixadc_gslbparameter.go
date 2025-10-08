@@ -1,25 +1,28 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/gslb"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcGslbparameter() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createGslbparameterFunc,
-		Read:          readGslbparameterFunc,
-		Update:        updateGslbparameterFunc,
-		Delete:        deleteGslbparameterFunc,
+		CreateContext: createGslbparameterFunc,
+		ReadContext:   readGslbparameterFunc,
+		UpdateContext: updateGslbparameterFunc,
+		DeleteContext: deleteGslbparameterFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"automaticconfigsync": {
@@ -96,7 +99,7 @@ func resourceCitrixAdcGslbparameter() *schema.Resource {
 		},
 	}
 }
-func createGslbparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func createGslbparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createGslbparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	gslbparameterName := resource.PrefixedUniqueId("tf-gslbparameter-")
@@ -120,19 +123,14 @@ func createGslbparameterFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.UpdateUnnamedResource(service.Gslbparameter.Type(), &gslbparameter)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(gslbparameterName)
-	err = readGslbparameterFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just updated this gslbparameter but we can't read it ?? ")
-		return nil
-	}
-	return nil
+	return readGslbparameterFunc(ctx, d, meta)
 }
 
-func readGslbparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func readGslbparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readGslbparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading gslbparameter state ")
@@ -145,23 +143,23 @@ func readGslbparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("automaticconfigsync", data["automaticconfigsync"])
 	d.Set("dropldnsreq", data["dropldnsreq"])
 	d.Set("gslbconfigsyncmonitor", data["gslbconfigsyncmonitor"])
-	d.Set("gslbsvcstatedelaytime", data["gslbsvcstatedelaytime"])
-	d.Set("gslbsyncinterval", data["gslbsyncinterval"])
+	setToInt("gslbsvcstatedelaytime", d, data["gslbsvcstatedelaytime"])
+	setToInt("gslbsyncinterval", d, data["gslbsyncinterval"])
 	d.Set("gslbsynclocfiles", data["gslbsynclocfiles"])
 	d.Set("gslbsyncmode", data["gslbsyncmode"])
-	d.Set("ldnsentrytimeout", data["ldnsentrytimeout"])
+	setToInt("ldnsentrytimeout", d, data["ldnsentrytimeout"])
 	d.Set("ldnsmask", data["ldnsmask"])
 	d.Set("ldnsprobeorder", data["ldnsprobeorder"])
-	d.Set("mepkeepalivetimeout", data["mepkeepalivetimeout"])
-	d.Set("rtttolerance", data["rtttolerance"])
-	d.Set("svcstatelearningtime", data["svcstatelearningtime"])
-	d.Set("v6ldnsmasklen", data["v6ldnsmasklen"])
+	setToInt("mepkeepalivetimeout", d, data["mepkeepalivetimeout"])
+	setToInt("rtttolerance", d, data["rtttolerance"])
+	setToInt("svcstatelearningtime", d, data["svcstatelearningtime"])
+	setToInt("v6ldnsmasklen", d, data["v6ldnsmasklen"])
 
 	return nil
 
 }
 
-func updateGslbparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func updateGslbparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateGslbparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -241,13 +239,13 @@ func updateGslbparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Gslbparameter.Type(), &gslbparameter)
 		if err != nil {
-			return fmt.Errorf("Error updating gslbparameter: %s", err.Error())
+			return diag.Errorf("Error updating gslbparameter: %s", err.Error())
 		}
 	}
-	return readGslbparameterFunc(d, meta)
+	return readGslbparameterFunc(ctx, d, meta)
 }
 
-func deleteGslbparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteGslbparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteGslbparameterFunc")
 	// gslbparameter does not have DELETE operation, but this function is required to set the ID to ""
 	d.SetId("")

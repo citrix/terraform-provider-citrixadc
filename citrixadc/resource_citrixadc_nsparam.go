@@ -1,20 +1,24 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcNsparam() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNsparamFunc,
-		Read:          readNsparamFunc,
-		Delete:        deleteNsparamFunc,
+		CreateContext: createNsparamFunc,
+		ReadContext:   readNsparamFunc,
+		DeleteContext: deleteNsparamFunc,
 		Schema: map[string]*schema.Schema{
 			"advancedanalyticsstats": {
 				Type:     schema.TypeString,
@@ -188,7 +192,7 @@ func resourceCitrixAdcNsparam() *schema.Resource {
 	}
 }
 
-func createNsparamFunc(d *schema.ResourceData, meta interface{}) error {
+func createNsparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNsparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nsparamId := resource.PrefixedUniqueId("tf-nsparam-")
@@ -277,20 +281,15 @@ func createNsparamFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.UpdateUnnamedResource(service.Nsparam.Type(), &nsparam)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(nsparamId)
 
-	err = readNsparamFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this nsparam but we can't read it ??")
-		return err
-	}
-	return nil
+	return readNsparamFunc(ctx, d, meta)
 }
 
-func readNsparamFunc(d *schema.ResourceData, meta interface{}) error {
+func readNsparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNsparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nsparamName := d.Id()
@@ -307,21 +306,21 @@ func readNsparamFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("cipheader", data["cipheader"])
 	d.Set("cookieversion", data["cookieversion"])
 	d.Set("crportrange", data["crportrange"])
-	d.Set("exclusivequotamaxclient", data["exclusivequotamaxclient"])
-	d.Set("exclusivequotaspillover", data["exclusivequotaspillover"])
+	setToInt("exclusivequotamaxclient", d, data["exclusivequotamaxclient"])
+	setToInt("exclusivequotaspillover", d, data["exclusivequotaspillover"])
 	d.Set("ftpportrange", data["ftpportrange"])
-	d.Set("grantquotamaxclient", data["grantquotamaxclient"])
-	d.Set("grantquotaspillover", data["grantquotaspillover"])
+	setToInt("grantquotamaxclient", d, data["grantquotamaxclient"])
+	setToInt("grantquotaspillover", d, data["grantquotaspillover"])
 	d.Set("internaluserlogin", data["internaluserlogin"])
-	d.Set("maxconn", data["maxconn"])
-	d.Set("maxreq", data["maxreq"])
-	d.Set("mgmthttpport", data["mgmthttpport"])
-	d.Set("mgmthttpsport", data["mgmthttpsport"])
-	d.Set("pmtumin", data["pmtumin"])
-	d.Set("pmtutimeout", data["pmtutimeout"])
+	setToInt("maxconn", d, data["maxconn"])
+	setToInt("maxreq", d, data["maxreq"])
+	setToInt("mgmthttpport", d, data["mgmthttpport"])
+	setToInt("mgmthttpsport", d, data["mgmthttpsport"])
+	setToInt("pmtumin", d, data["pmtumin"])
+	setToInt("pmtutimeout", d, data["pmtutimeout"])
 	d.Set("proxyprotocol", data["proxyprotocol"])
 	d.Set("securecookie", data["securecookie"])
-	d.Set("servicepathingressvlan", data["servicepathingressvlan"])
+	setToInt("servicepathingressvlan", d, data["servicepathingressvlan"])
 	d.Set("tcpcip", data["tcpcip"])
 	// d.Set("timezone", data["timezone"]) // This is received as different value from the NetScaler
 	d.Set("useproxyport", data["useproxyport"])
@@ -339,13 +338,13 @@ func readNsparamFunc(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		d.Set("icaports", nil)
 	}
-	d.Set("ipttl", data["ipttl"])
+	setToInt("ipttl", d, data["ipttl"])
 
 	return nil
 
 }
 
-func deleteNsparamFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNsparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNsparamFunc")
 
 	d.SetId("")

@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/ssl"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 	"strings"
@@ -14,11 +16,11 @@ import (
 func resourceCitrixAdcSslservicegroup_ecccurve_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSslservicegroup_ecccurve_bindingFunc,
-		Read:          readSslservicegroup_ecccurve_bindingFunc,
-		Delete:        deleteSslservicegroup_ecccurve_bindingFunc,
+		CreateContext: createSslservicegroup_ecccurve_bindingFunc,
+		ReadContext:   readSslservicegroup_ecccurve_bindingFunc,
+		DeleteContext: deleteSslservicegroup_ecccurve_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"ecccurvename": {
@@ -35,7 +37,7 @@ func resourceCitrixAdcSslservicegroup_ecccurve_binding() *schema.Resource {
 	}
 }
 
-func createSslservicegroup_ecccurve_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createSslservicegroup_ecccurve_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSslservicegroup_ecccurve_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	servicegroupname := d.Get("servicegroupname").(string)
@@ -48,20 +50,15 @@ func createSslservicegroup_ecccurve_bindingFunc(d *schema.ResourceData, meta int
 
 	err := client.UpdateUnnamedResource(service.Sslservicegroup_ecccurve_binding.Type(), &sslservicegroup_ecccurve_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readSslservicegroup_ecccurve_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this sslservicegroup_ecccurve_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readSslservicegroup_ecccurve_bindingFunc(ctx, d, meta)
 }
 
-func readSslservicegroup_ecccurve_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readSslservicegroup_ecccurve_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSslservicegroup_ecccurve_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -82,7 +79,7 @@ func readSslservicegroup_ecccurve_bindingFunc(d *schema.ResourceData, meta inter
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -120,7 +117,7 @@ func readSslservicegroup_ecccurve_bindingFunc(d *schema.ResourceData, meta inter
 
 }
 
-func deleteSslservicegroup_ecccurve_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSslservicegroup_ecccurve_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSslservicegroup_ecccurve_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -135,7 +132,7 @@ func deleteSslservicegroup_ecccurve_bindingFunc(d *schema.ResourceData, meta int
 
 	err := client.DeleteResourceWithArgsMap(service.Sslservicegroup_ecccurve_binding.Type(), name, argsMap)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

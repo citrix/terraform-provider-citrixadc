@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/cmp"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcCmpparameter() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createCmpparameterFunc,
-		Read:          readCmpparameterFunc,
-		Update:        updateCmpparameterFunc,
-		Delete:        deleteCmpparameterFunc,
+		CreateContext: createCmpparameterFunc,
+		ReadContext:   readCmpparameterFunc,
+		UpdateContext: updateCmpparameterFunc,
+		DeleteContext: deleteCmpparameterFunc,
 		Schema: map[string]*schema.Schema{
 			"addvaryheader": {
 				Type:     schema.TypeString,
@@ -88,7 +91,7 @@ func resourceCitrixAdcCmpparameter() *schema.Resource {
 	}
 }
 
-func createCmpparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func createCmpparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createCmpparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	cmpparameterName := resource.PrefixedUniqueId("tf-cmpparameter-")
@@ -111,20 +114,15 @@ func createCmpparameterFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.UpdateUnnamedResource(service.Cmpparameter.Type(), &cmpparameter)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(cmpparameterName)
 
-	err = readCmpparameterFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this cmpparameter but we can't read it ?? ")
-		return nil
-	}
-	return nil
+	return readCmpparameterFunc(ctx, d, meta)
 }
 
-func readCmpparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func readCmpparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readCmpparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading cmpparameter state")
@@ -135,16 +133,16 @@ func readCmpparameterFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	d.Set("addvaryheader", data["addvaryheader"])
-	d.Set("cmpbypasspct", data["cmpbypasspct"])
+	setToInt("cmpbypasspct", d, data["cmpbypasspct"])
 	d.Set("cmplevel", data["cmplevel"])
 	d.Set("cmponpush", data["cmponpush"])
 	d.Set("externalcache", data["externalcache"])
 	d.Set("heurexpiry", data["heurexpiry"])
-	d.Set("heurexpiryhistwt", data["heurexpiryhistwt"])
-	d.Set("heurexpirythres", data["heurexpirythres"])
-	d.Set("minressize", data["minressize"])
+	setToInt("heurexpiryhistwt", d, data["heurexpiryhistwt"])
+	setToInt("heurexpirythres", d, data["heurexpirythres"])
+	setToInt("minressize", d, data["minressize"])
 	d.Set("policytype", data["policytype"])
-	d.Set("quantumsize", data["quantumsize"])
+	setToInt("quantumsize", d, data["quantumsize"])
 	d.Set("servercmp", data["servercmp"])
 	d.Set("varyheadervalue", data["varyheadervalue"])
 
@@ -152,7 +150,7 @@ func readCmpparameterFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateCmpparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func updateCmpparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateCmpparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -227,13 +225,13 @@ func updateCmpparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Cmpparameter.Type(), &cmpparameter)
 		if err != nil {
-			return fmt.Errorf("Error updating cmpparameter")
+			return diag.Errorf("Error updating cmpparameter")
 		}
 	}
-	return readCmpparameterFunc(d, meta)
+	return readCmpparameterFunc(ctx, d, meta)
 }
 
-func deleteCmpparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteCmpparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteCmpparameterFunc")
 	// cmpparameter does not support DELETE operation
 	d.SetId("")

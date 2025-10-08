@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/appfw"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 	"strings"
@@ -14,11 +16,11 @@ import (
 func resourceCitrixAdcAppfwprofile_xmlxss_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAppfwprofile_xmlxss_bindingFunc,
-		Read:          readAppfwprofile_xmlxss_bindingFunc,
-		Delete:        deleteAppfwprofile_xmlxss_bindingFunc,
+		CreateContext: createAppfwprofile_xmlxss_bindingFunc,
+		ReadContext:   readAppfwprofile_xmlxss_bindingFunc,
+		DeleteContext: deleteAppfwprofile_xmlxss_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -85,7 +87,7 @@ func resourceCitrixAdcAppfwprofile_xmlxss_binding() *schema.Resource {
 	}
 }
 
-func createAppfwprofile_xmlxss_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createAppfwprofile_xmlxss_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppfwprofile_xmlxss_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name")
@@ -107,20 +109,15 @@ func createAppfwprofile_xmlxss_bindingFunc(d *schema.ResourceData, meta interfac
 
 	err := client.UpdateUnnamedResource(service.Appfwprofile_xmlxss_binding.Type(), &appfwprofile_xmlxss_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readAppfwprofile_xmlxss_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this appfwprofile_xmlxss_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readAppfwprofile_xmlxss_bindingFunc(ctx, d, meta)
 }
 
-func readAppfwprofile_xmlxss_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readAppfwprofile_xmlxss_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAppfwprofile_xmlxss_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -142,7 +139,7 @@ func readAppfwprofile_xmlxss_bindingFunc(d *schema.ResourceData, meta interface{
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -195,7 +192,7 @@ func readAppfwprofile_xmlxss_bindingFunc(d *schema.ResourceData, meta interface{
 
 }
 
-func deleteAppfwprofile_xmlxss_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAppfwprofile_xmlxss_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppfwprofile_xmlxss_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -215,7 +212,7 @@ func deleteAppfwprofile_xmlxss_bindingFunc(d *schema.ResourceData, meta interfac
 
 	err := client.DeleteResourceWithArgs(service.Appfwprofile_xmlxss_binding.Type(), name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

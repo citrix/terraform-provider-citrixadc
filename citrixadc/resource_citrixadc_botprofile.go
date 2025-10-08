@@ -1,22 +1,25 @@
 package citrixadc
 
 import (
-	"github.com/citrix/adc-nitro-go/resource/config/bot"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"context"
 
-	"fmt"
+	"github.com/citrix/adc-nitro-go/resource/config/bot"
+
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcBotprofile() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createBotprofileFunc,
-		Read:          readBotprofileFunc,
-		Update:        updateBotprofileFunc,
-		Delete:        deleteBotprofileFunc,
+		CreateContext: createBotprofileFunc,
+		ReadContext:   readBotprofileFunc,
+		UpdateContext: updateBotprofileFunc,
+		DeleteContext: deleteBotprofileFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -133,7 +136,7 @@ func resourceCitrixAdcBotprofile() *schema.Resource {
 	}
 }
 
-func createBotprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func createBotprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createBotprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -164,20 +167,15 @@ func createBotprofileFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource("botprofile", botprofileName, &botprofile)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(botprofileName)
 
-	err = readBotprofileFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this botprofile but we can't read it ?? %s", botprofileName)
-		return nil
-	}
-	return nil
+	return readBotprofileFunc(ctx, d, meta)
 }
 
-func readBotprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func readBotprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readBotprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	botprofileName := d.Id()
@@ -201,7 +199,7 @@ func readBotprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("devicefingerprintmobile", data["devicefingerprintmobile"])
 	d.Set("errorurl", data["errorurl"])
 	d.Set("kmdetection", data["kmdetection"])
-	d.Set("kmeventspostbodylimit", data["kmeventspostbodylimit"])
+	setToInt("kmeventspostbodylimit", d, data["kmeventspostbodylimit"])
 	d.Set("kmjavascriptname", data["kmjavascriptname"])
 	d.Set("signature", data["signature"])
 	d.Set("signaturemultipleuseragentheaderaction", data["signaturemultipleuseragentheaderaction"])
@@ -214,7 +212,7 @@ func readBotprofileFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateBotprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func updateBotprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateBotprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	botprofileName := d.Get("name").(string)
@@ -327,19 +325,19 @@ func updateBotprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource("botprofile", botprofileName, &botprofile)
 		if err != nil {
-			return fmt.Errorf("Error updating botprofile %s", botprofileName)
+			return diag.Errorf("Error updating botprofile %s", botprofileName)
 		}
 	}
-	return readBotprofileFunc(d, meta)
+	return readBotprofileFunc(ctx, d, meta)
 }
 
-func deleteBotprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteBotprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteBotprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	botprofileName := d.Id()
 	err := client.DeleteResource("botprofile", botprofileName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

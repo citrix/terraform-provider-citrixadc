@@ -1,25 +1,26 @@
 package citrixadc
 
 import (
+	"context"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/resource/config/lb"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcLbvserver_appfwpolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createLbvserver_appfwpolicy_bindingFunc,
-		Read:          readLbvserver_appfwpolicy_bindingFunc,
-		Delete:        deleteLbvserver_appfwpolicy_bindingFunc,
+		CreateContext: createLbvserver_appfwpolicy_bindingFunc,
+		ReadContext:   readLbvserver_appfwpolicy_bindingFunc,
+		DeleteContext: deleteLbvserver_appfwpolicy_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -72,7 +73,7 @@ func resourceCitrixAdcLbvserver_appfwpolicy_binding() *schema.Resource {
 	}
 }
 
-func createLbvserver_appfwpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createLbvserver_appfwpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createLbvserver_appfwpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lbvserverName := d.Get("name").(string)
@@ -92,20 +93,15 @@ func createLbvserver_appfwpolicy_bindingFunc(d *schema.ResourceData, meta interf
 
 	_, err := client.AddResource(service.Lbvserver_appfwpolicy_binding.Type(), lbvserverName, &lbvserver_appfwpolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readLbvserver_appfwpolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this lbvserver_appfwpolicy_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readLbvserver_appfwpolicy_bindingFunc(ctx, d, meta)
 }
 
-func readLbvserver_appfwpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readLbvserver_appfwpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readLbvserver_appfwpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -126,7 +122,7 @@ func readLbvserver_appfwpolicy_bindingFunc(d *schema.ResourceData, meta interfac
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -170,7 +166,7 @@ func readLbvserver_appfwpolicy_bindingFunc(d *schema.ResourceData, meta interfac
 
 }
 
-func deleteLbvserver_appfwpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteLbvserver_appfwpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteLbvserver_appfwpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -183,7 +179,7 @@ func deleteLbvserver_appfwpolicy_bindingFunc(d *schema.ResourceData, meta interf
 	args["policyname"] = appfwPolicyName
 	err := client.DeleteResourceWithArgsMap(service.Lbvserver_appfwpolicy_binding.Type(), lbvserverName, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

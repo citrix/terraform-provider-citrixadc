@@ -1,20 +1,22 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/contentinspection"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcContentinspectionpolicylabel() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createContentinspectionpolicylabelFunc,
-		Read:          readContentinspectionpolicylabelFunc,
-		Delete:        deleteContentinspectionpolicylabelFunc,
+		CreateContext: createContentinspectionpolicylabelFunc,
+		ReadContext:   readContentinspectionpolicylabelFunc,
+		DeleteContext: deleteContentinspectionpolicylabelFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"labelname": {
@@ -36,7 +38,7 @@ func resourceCitrixAdcContentinspectionpolicylabel() *schema.Resource {
 	}
 }
 
-func createContentinspectionpolicylabelFunc(d *schema.ResourceData, meta interface{}) error {
+func createContentinspectionpolicylabelFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createContentinspectionpolicylabelFunc")
 	client := meta.(*NetScalerNitroClient).client
 	contentinspectionpolicylabelName := d.Get("labelname").(string)
@@ -48,20 +50,15 @@ func createContentinspectionpolicylabelFunc(d *schema.ResourceData, meta interfa
 
 	_, err := client.AddResource("contentinspectionpolicylabel", contentinspectionpolicylabelName, &contentinspectionpolicylabel)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(contentinspectionpolicylabelName)
 
-	err = readContentinspectionpolicylabelFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this contentinspectionpolicylabel but we can't read it ?? %s", contentinspectionpolicylabelName)
-		return nil
-	}
-	return nil
+	return readContentinspectionpolicylabelFunc(ctx, d, meta)
 }
 
-func readContentinspectionpolicylabelFunc(d *schema.ResourceData, meta interface{}) error {
+func readContentinspectionpolicylabelFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readContentinspectionpolicylabelFunc")
 	client := meta.(*NetScalerNitroClient).client
 	contentinspectionpolicylabelName := d.Id()
@@ -81,13 +78,13 @@ func readContentinspectionpolicylabelFunc(d *schema.ResourceData, meta interface
 
 }
 
-func deleteContentinspectionpolicylabelFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteContentinspectionpolicylabelFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteContentinspectionpolicylabelFunc")
 	client := meta.(*NetScalerNitroClient).client
 	contentinspectionpolicylabelName := d.Id()
 	err := client.DeleteResource("contentinspectionpolicylabel", contentinspectionpolicylabelName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

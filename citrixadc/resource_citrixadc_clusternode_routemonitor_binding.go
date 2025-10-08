@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/cluster"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 	"strconv"
@@ -15,11 +17,11 @@ import (
 func resourceCitrixAdcClusternode_routemonitor_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createClusternode_routemonitor_bindingFunc,
-		Read:          readClusternode_routemonitor_bindingFunc,
-		Delete:        deleteClusternode_routemonitor_bindingFunc,
+		CreateContext: createClusternode_routemonitor_bindingFunc,
+		ReadContext:   readClusternode_routemonitor_bindingFunc,
+		DeleteContext: deleteClusternode_routemonitor_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"nodeid": {
@@ -41,7 +43,7 @@ func resourceCitrixAdcClusternode_routemonitor_binding() *schema.Resource {
 	}
 }
 
-func createClusternode_routemonitor_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createClusternode_routemonitor_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createClusternode_routemonitor_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nodeid := strconv.Itoa(d.Get("nodeid").(int))
@@ -55,20 +57,15 @@ func createClusternode_routemonitor_bindingFunc(d *schema.ResourceData, meta int
 
 	err := client.UpdateUnnamedResource("clusternode_routemonitor_binding", &clusternode_routemonitor_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readClusternode_routemonitor_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this clusternode_routemonitor_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readClusternode_routemonitor_bindingFunc(ctx, d, meta)
 }
 
-func readClusternode_routemonitor_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readClusternode_routemonitor_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readClusternode_routemonitor_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -89,7 +86,7 @@ func readClusternode_routemonitor_bindingFunc(d *schema.ResourceData, meta inter
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -121,7 +118,7 @@ func readClusternode_routemonitor_bindingFunc(d *schema.ResourceData, meta inter
 	data := dataArr[foundIndex]
 	nodeid_int, err := strconv.Atoi(data["nodeid"].(string))
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	d.Set("netmask", data["netmask"])
 	d.Set("nodeid", nodeid_int)
@@ -131,7 +128,7 @@ func readClusternode_routemonitor_bindingFunc(d *schema.ResourceData, meta inter
 
 }
 
-func deleteClusternode_routemonitor_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteClusternode_routemonitor_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteClusternode_routemonitor_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -147,7 +144,7 @@ func deleteClusternode_routemonitor_bindingFunc(d *schema.ResourceData, meta int
 
 	err := client.DeleteResourceWithArgs("clusternode_routemonitor_binding", name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

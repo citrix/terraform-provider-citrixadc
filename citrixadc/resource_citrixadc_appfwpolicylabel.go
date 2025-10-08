@@ -1,20 +1,21 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/appfw"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcAppfwpolicylabel() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAppfwpolicylabelFunc,
-		Read:          readAppfwpolicylabelFunc,
-		Delete:        deleteAppfwpolicylabelFunc,
+		CreateContext: createAppfwpolicylabelFunc,
+		ReadContext:   readAppfwpolicylabelFunc,
+		DeleteContext: deleteAppfwpolicylabelFunc,
 		Schema: map[string]*schema.Schema{
 			"labelname": {
 				Type:     schema.TypeString,
@@ -30,7 +31,7 @@ func resourceCitrixAdcAppfwpolicylabel() *schema.Resource {
 	}
 }
 
-func createAppfwpolicylabelFunc(d *schema.ResourceData, meta interface{}) error {
+func createAppfwpolicylabelFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppfwpolicylabelFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appfwpolicylabelName := d.Get("labelname").(string)
@@ -41,20 +42,15 @@ func createAppfwpolicylabelFunc(d *schema.ResourceData, meta interface{}) error 
 
 	_, err := client.AddResource(service.Appfwpolicylabel.Type(), appfwpolicylabelName, &appfwpolicylabel)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(appfwpolicylabelName)
 
-	err = readAppfwpolicylabelFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this appfwpolicylabel but we can't read it ?? %s", appfwpolicylabelName)
-		return nil
-	}
-	return nil
+	return readAppfwpolicylabelFunc(ctx, d, meta)
 }
 
-func readAppfwpolicylabelFunc(d *schema.ResourceData, meta interface{}) error {
+func readAppfwpolicylabelFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAppfwpolicylabelFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appfwpolicylabelName := d.Id()
@@ -72,13 +68,13 @@ func readAppfwpolicylabelFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func deleteAppfwpolicylabelFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAppfwpolicylabelFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppfwpolicylabelFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appfwpolicylabelName := d.Id()
 	err := client.DeleteResource(service.Appfwpolicylabel.Type(), appfwpolicylabelName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

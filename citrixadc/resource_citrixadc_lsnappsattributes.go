@@ -1,22 +1,25 @@
 package citrixadc
 
 import (
-	"github.com/citrix/adc-nitro-go/resource/config/lsn"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"context"
 
-	"fmt"
+	"github.com/citrix/adc-nitro-go/resource/config/lsn"
+
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcLsnappsattributes() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createLsnappsattributesFunc,
-		Read:          readLsnappsattributesFunc,
-		Update:        updateLsnappsattributesFunc,
-		Delete:        deleteLsnappsattributesFunc,
+		CreateContext: createLsnappsattributesFunc,
+		ReadContext:   readLsnappsattributesFunc,
+		UpdateContext: updateLsnappsattributesFunc,
+		DeleteContext: deleteLsnappsattributesFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -43,7 +46,7 @@ func resourceCitrixAdcLsnappsattributes() *schema.Resource {
 	}
 }
 
-func createLsnappsattributesFunc(d *schema.ResourceData, meta interface{}) error {
+func createLsnappsattributesFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createLsnappsattributesFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lsnappsattributesName := d.Get("name").(string)
@@ -56,20 +59,15 @@ func createLsnappsattributesFunc(d *schema.ResourceData, meta interface{}) error
 
 	_, err := client.AddResource("lsnappsattributes", lsnappsattributesName, &lsnappsattributes)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(lsnappsattributesName)
 
-	err = readLsnappsattributesFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this lsnappsattributes but we can't read it ?? %s", lsnappsattributesName)
-		return nil
-	}
-	return nil
+	return readLsnappsattributesFunc(ctx, d, meta)
 }
 
-func readLsnappsattributesFunc(d *schema.ResourceData, meta interface{}) error {
+func readLsnappsattributesFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readLsnappsattributesFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lsnappsattributesName := d.Id()
@@ -82,14 +80,14 @@ func readLsnappsattributesFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("name", data["name"])
 	d.Set("port", data["port"])
-	d.Set("sessiontimeout", data["sessiontimeout"])
+	setToInt("sessiontimeout", d, data["sessiontimeout"])
 	d.Set("transportprotocol", data["transportprotocol"])
 
 	return nil
 
 }
 
-func updateLsnappsattributesFunc(d *schema.ResourceData, meta interface{}) error {
+func updateLsnappsattributesFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateLsnappsattributesFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lsnappsattributesName := d.Get("name").(string)
@@ -108,19 +106,19 @@ func updateLsnappsattributesFunc(d *schema.ResourceData, meta interface{}) error
 	if hasChange {
 		err := client.UpdateUnnamedResource("lsnappsattributes", &lsnappsattributes)
 		if err != nil {
-			return fmt.Errorf("Error updating lsnappsattributes %s", lsnappsattributesName)
+			return diag.Errorf("Error updating lsnappsattributes %s", lsnappsattributesName)
 		}
 	}
-	return readLsnappsattributesFunc(d, meta)
+	return readLsnappsattributesFunc(ctx, d, meta)
 }
 
-func deleteLsnappsattributesFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteLsnappsattributesFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteLsnappsattributesFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lsnappsattributesName := d.Id()
 	err := client.DeleteResource("lsnappsattributes", lsnappsattributesName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

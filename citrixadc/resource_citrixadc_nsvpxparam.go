@@ -1,12 +1,16 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // We do not use the go-nitro struct because we need the
@@ -22,9 +26,9 @@ type Nsvpxparam struct {
 func resourceCitrixAdcNsvpxparam() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNsvpxparamFunc,
-		Read:          readNsvpxparamFunc,
-		Delete:        deleteNsvpxparamFunc,
+		CreateContext: createNsvpxparamFunc,
+		ReadContext:   readNsvpxparamFunc,
+		DeleteContext: deleteNsvpxparamFunc,
 		Schema: map[string]*schema.Schema{
 			"cpuyield": {
 				Type:     schema.TypeString,
@@ -48,7 +52,7 @@ func resourceCitrixAdcNsvpxparam() *schema.Resource {
 	}
 }
 
-func createNsvpxparamFunc(d *schema.ResourceData, meta interface{}) error {
+func createNsvpxparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNsvpxparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nsvpxparamName := resource.PrefixedUniqueId("tf-nsvpxparam-")
@@ -61,20 +65,15 @@ func createNsvpxparamFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.UpdateUnnamedResource("nsvpxparam", &nsvpxparam)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(nsvpxparamName)
 
-	err = readNsvpxparamFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this nsvpxparam but we can't read it ?? %s", nsvpxparamName)
-		return nil
-	}
-	return nil
+	return readNsvpxparamFunc(ctx, d, meta)
 }
 
-func readNsvpxparamFunc(d *schema.ResourceData, meta interface{}) error {
+func readNsvpxparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNsvpxparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nsvpxparamName := d.Id()
@@ -84,7 +83,7 @@ func readNsvpxparamFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	dataArr, err := client.FindResourceArrayWithParams(findParams)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	ownernode, ownernodeOk := d.GetOk("ownernode")
@@ -117,7 +116,7 @@ func readNsvpxparamFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func deleteNsvpxparamFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNsvpxparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNsvpxparamFunc")
 	// Just delete the reference
 	// Actual configuration cannot be deleted

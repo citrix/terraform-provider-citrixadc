@@ -21,15 +21,15 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccPolicydataset_value_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckPolicydataset_value_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckPolicydataset_value_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicydataset_value_binding_basic_step1,
@@ -69,7 +69,11 @@ func testAccCheckPolicydatasetValue(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No binding id")
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 		idSlice := strings.Split(rs.Primary.ID, ",")
 
 		name := idSlice[0]
@@ -80,7 +84,7 @@ func testAccCheckPolicydatasetValue(n string) resource.TestCheckFunc {
 			ResourceName:             name,
 			ResourceMissingErrorCode: 2823,
 		}
-		dataArr, err := nsClient.FindResourceArrayWithParams(findParams)
+		dataArr, err := client.FindResourceArrayWithParams(findParams)
 
 		// Unexpected error
 		if err != nil {
@@ -111,7 +115,11 @@ func testAccCheckPolicydatasetValue(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckPolicydataset_value_bindingDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_policydataset_value_binding" {
@@ -122,7 +130,7 @@ func testAccCheckPolicydataset_value_bindingDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Policydataset_value_binding.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Policydataset_value_binding.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("LB vserver %s still exists", rs.Primary.ID)
 		}

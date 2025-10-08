@@ -1,20 +1,22 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/appfw"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcAppfwmultipartformcontenttype() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAppfwmultipartformcontenttypeFunc,
-		Read:          readAppfwmultipartformcontenttypeFunc,
-		Delete:        deleteAppfwmultipartformcontenttypeFunc,
+		CreateContext: createAppfwmultipartformcontenttypeFunc,
+		ReadContext:   readAppfwmultipartformcontenttypeFunc,
+		DeleteContext: deleteAppfwmultipartformcontenttypeFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"multipartformcontenttypevalue": {
@@ -33,7 +35,7 @@ func resourceCitrixAdcAppfwmultipartformcontenttype() *schema.Resource {
 	}
 }
 
-func createAppfwmultipartformcontenttypeFunc(d *schema.ResourceData, meta interface{}) error {
+func createAppfwmultipartformcontenttypeFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppfwmultipartformcontenttypeFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appfwmultipartformcontenttypeName := d.Get("multipartformcontenttypevalue").(string)
@@ -44,20 +46,15 @@ func createAppfwmultipartformcontenttypeFunc(d *schema.ResourceData, meta interf
 
 	_, err := client.AddResource("appfwmultipartformcontenttype", appfwmultipartformcontenttypeName, &appfwmultipartformcontenttype)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(appfwmultipartformcontenttypeName)
 
-	err = readAppfwmultipartformcontenttypeFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this appfwmultipartformcontenttype but we can't read it ?? %s", appfwmultipartformcontenttypeName)
-		return nil
-	}
-	return nil
+	return readAppfwmultipartformcontenttypeFunc(ctx, d, meta)
 }
 
-func readAppfwmultipartformcontenttypeFunc(d *schema.ResourceData, meta interface{}) error {
+func readAppfwmultipartformcontenttypeFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAppfwmultipartformcontenttypeFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appfwmultipartformcontenttypeName := d.Id()
@@ -75,13 +72,13 @@ func readAppfwmultipartformcontenttypeFunc(d *schema.ResourceData, meta interfac
 
 }
 
-func deleteAppfwmultipartformcontenttypeFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAppfwmultipartformcontenttypeFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppfwmultipartformcontenttypeFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appfwmultipartformcontenttypeName := d.Id()
 	err := client.DeleteResource("appfwmultipartformcontenttype", appfwmultipartformcontenttypeName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

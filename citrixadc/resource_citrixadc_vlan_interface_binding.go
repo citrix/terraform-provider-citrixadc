@@ -1,6 +1,7 @@
 package citrixadc
 
 import (
+	"context"
 	"fmt"
 	"net/url"
 	"strconv"
@@ -9,19 +10,20 @@ import (
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcVlan_interface_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createVlan_interface_bindingFunc,
-		Read:          readVlan_interface_bindingFunc,
-		Delete:        deleteVlan_interface_bindingFunc,
+		CreateContext: createVlan_interface_bindingFunc,
+		ReadContext:   readVlan_interface_bindingFunc,
+		DeleteContext: deleteVlan_interface_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"vlanid": {
@@ -50,7 +52,7 @@ func resourceCitrixAdcVlan_interface_binding() *schema.Resource {
 	}
 }
 
-func createVlan_interface_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createVlan_interface_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createVlan_interface_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vlanid := strconv.Itoa(d.Get("vlanid").(int))
@@ -65,20 +67,15 @@ func createVlan_interface_bindingFunc(d *schema.ResourceData, meta interface{}) 
 
 	err := client.UpdateUnnamedResource(service.Vlan_interface_binding.Type(), &vlan_interface_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readVlan_interface_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this vlan_interface_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readVlan_interface_bindingFunc(ctx, d, meta)
 }
 
-func readVlan_interface_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readVlan_interface_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readVlan_interface_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vlan_interface_bindingName := d.Id()
@@ -101,7 +98,7 @@ func readVlan_interface_bindingFunc(d *schema.ResourceData, meta interface{}) er
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -141,7 +138,7 @@ func readVlan_interface_bindingFunc(d *schema.ResourceData, meta interface{}) er
 
 }
 
-func deleteVlan_interface_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteVlan_interface_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteVlan_interface_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -152,7 +149,7 @@ func deleteVlan_interface_bindingFunc(d *schema.ResourceData, meta interface{}) 
 	args[0] = fmt.Sprintf("ifnum:%s", url.QueryEscape(ifnum))
 	err := client.DeleteResourceWithArgs(service.Vlan_interface_binding.Type(), vlanid, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

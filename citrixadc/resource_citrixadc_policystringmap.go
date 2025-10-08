@@ -1,22 +1,24 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/policy"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcPolicystringmap() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createPolicystringmapFunc,
-		Read:          readPolicystringmapFunc,
-		Update:        updatePolicystringmapFunc,
-		Delete:        deletePolicystringmapFunc,
+		CreateContext: createPolicystringmapFunc,
+		ReadContext:   readPolicystringmapFunc,
+		UpdateContext: updatePolicystringmapFunc,
+		DeleteContext: deletePolicystringmapFunc,
 		Schema: map[string]*schema.Schema{
 			"comment": {
 				Type:     schema.TypeString,
@@ -31,7 +33,7 @@ func resourceCitrixAdcPolicystringmap() *schema.Resource {
 	}
 }
 
-func createPolicystringmapFunc(d *schema.ResourceData, meta interface{}) error {
+func createPolicystringmapFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createPolicystringmapFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -44,20 +46,15 @@ func createPolicystringmapFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Policystringmap.Type(), policystringmapName, &policystringmap)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(policystringmapName)
 
-	err = readPolicystringmapFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this policystringmap but we can't read it ?? %s", policystringmapName)
-		return nil
-	}
-	return nil
+	return readPolicystringmapFunc(ctx, d, meta)
 }
 
-func readPolicystringmapFunc(d *schema.ResourceData, meta interface{}) error {
+func readPolicystringmapFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readPolicystringmapFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policystringmapName := d.Id()
@@ -75,7 +72,7 @@ func readPolicystringmapFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updatePolicystringmapFunc(d *schema.ResourceData, meta interface{}) error {
+func updatePolicystringmapFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updatePolicystringmapFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policystringmapName := d.Get("name").(string)
@@ -98,19 +95,19 @@ func updatePolicystringmapFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Policystringmap.Type(), policystringmapName, &policystringmap)
 		if err != nil {
-			return fmt.Errorf("Error updating policystringmap %s", policystringmapName)
+			return diag.Errorf("Error updating policystringmap %s", policystringmapName)
 		}
 	}
-	return readPolicystringmapFunc(d, meta)
+	return readPolicystringmapFunc(ctx, d, meta)
 }
 
-func deletePolicystringmapFunc(d *schema.ResourceData, meta interface{}) error {
+func deletePolicystringmapFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deletePolicystringmapFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policystringmapName := d.Id()
 	err := client.DeleteResource(service.Policystringmap.Type(), policystringmapName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

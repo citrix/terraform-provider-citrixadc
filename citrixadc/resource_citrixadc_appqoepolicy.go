@@ -1,24 +1,25 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/appqoe"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcAppqoepolicy() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAppqoepolicyFunc,
-		Read:          readAppqoepolicyFunc,
-		Update:        updateAppqoepolicyFunc,
-		Delete:        deleteAppqoepolicyFunc,
+		CreateContext: createAppqoepolicyFunc,
+		ReadContext:   readAppqoepolicyFunc,
+		UpdateContext: updateAppqoepolicyFunc,
+		DeleteContext: deleteAppqoepolicyFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"action": {
@@ -38,7 +39,7 @@ func resourceCitrixAdcAppqoepolicy() *schema.Resource {
 	}
 }
 
-func createAppqoepolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func createAppqoepolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppqoepolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appqoepolicyName := d.Get("name").(string)
@@ -50,20 +51,15 @@ func createAppqoepolicyFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Appqoepolicy.Type(), appqoepolicyName, &appqoepolicy)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(appqoepolicyName)
 
-	err = readAppqoepolicyFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this appqoepolicy but we can't read it ?? %s", appqoepolicyName)
-		return nil
-	}
-	return nil
+	return readAppqoepolicyFunc(ctx, d, meta)
 }
 
-func readAppqoepolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func readAppqoepolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAppqoepolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appqoepolicyName := d.Id()
@@ -82,7 +78,7 @@ func readAppqoepolicyFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateAppqoepolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAppqoepolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAppqoepolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appqoepolicyName := d.Get("name").(string)
@@ -105,19 +101,19 @@ func updateAppqoepolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Appqoepolicy.Type(), &appqoepolicy)
 		if err != nil {
-			return fmt.Errorf("Error updating appqoepolicy %s", appqoepolicyName)
+			return diag.Errorf("Error updating appqoepolicy %s", appqoepolicyName)
 		}
 	}
-	return readAppqoepolicyFunc(d, meta)
+	return readAppqoepolicyFunc(ctx, d, meta)
 }
 
-func deleteAppqoepolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAppqoepolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppqoepolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appqoepolicyName := d.Id()
 	err := client.DeleteResource(service.Appqoepolicy.Type(), appqoepolicyName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

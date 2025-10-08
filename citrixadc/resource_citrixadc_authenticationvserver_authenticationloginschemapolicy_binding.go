@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/authentication"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 	"strings"
@@ -14,11 +16,11 @@ import (
 func resourceCitrixAdcAuthenticationvserver_authenticationloginschemapolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAuthenticationvserver_authenticationloginschemapolicy_bindingFunc,
-		Read:          readAuthenticationvserver_authenticationloginschemapolicy_bindingFunc,
-		Delete:        deleteAuthenticationvserver_authenticationloginschemapolicy_bindingFunc,
+		CreateContext: createAuthenticationvserver_authenticationloginschemapolicy_bindingFunc,
+		ReadContext:   readAuthenticationvserver_authenticationloginschemapolicy_bindingFunc,
+		DeleteContext: deleteAuthenticationvserver_authenticationloginschemapolicy_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -73,7 +75,7 @@ func resourceCitrixAdcAuthenticationvserver_authenticationloginschemapolicy_bind
 	}
 }
 
-func createAuthenticationvserver_authenticationloginschemapolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createAuthenticationvserver_authenticationloginschemapolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAuthenticationvserver_authenticationloginschemapolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name")
@@ -92,20 +94,15 @@ func createAuthenticationvserver_authenticationloginschemapolicy_bindingFunc(d *
 
 	err := client.UpdateUnnamedResource(service.Authenticationvserver_authenticationloginschemapolicy_binding.Type(), &authenticationvserver_authenticationloginschemapolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readAuthenticationvserver_authenticationloginschemapolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this authenticationvserver_authenticationloginschemapolicy_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readAuthenticationvserver_authenticationloginschemapolicy_bindingFunc(ctx, d, meta)
 }
 
-func readAuthenticationvserver_authenticationloginschemapolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readAuthenticationvserver_authenticationloginschemapolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAuthenticationvserver_authenticationloginschemapolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -126,7 +123,7 @@ func readAuthenticationvserver_authenticationloginschemapolicy_bindingFunc(d *sc
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -170,7 +167,7 @@ func readAuthenticationvserver_authenticationloginschemapolicy_bindingFunc(d *sc
 
 }
 
-func deleteAuthenticationvserver_authenticationloginschemapolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAuthenticationvserver_authenticationloginschemapolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAuthenticationvserver_authenticationloginschemapolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -194,7 +191,7 @@ func deleteAuthenticationvserver_authenticationloginschemapolicy_bindingFunc(d *
 
 	err := client.DeleteResourceWithArgs(service.Authenticationvserver_authenticationloginschemapolicy_binding.Type(), name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

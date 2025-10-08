@@ -1,22 +1,25 @@
 package citrixadc
 
 import (
-	"github.com/citrix/adc-nitro-go/resource/config/authentication"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"context"
 
-	"fmt"
+	"github.com/citrix/adc-nitro-go/resource/config/authentication"
+
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAuthenticationpushservice() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAuthenticationpushserviceFunc,
-		Read:          readAuthenticationpushserviceFunc,
-		Update:        updateAuthenticationpushserviceFunc,
-		Delete:        deleteAuthenticationpushserviceFunc,
+		CreateContext: createAuthenticationpushserviceFunc,
+		ReadContext:   readAuthenticationpushserviceFunc,
+		UpdateContext: updateAuthenticationpushserviceFunc,
+		DeleteContext: deleteAuthenticationpushserviceFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -49,7 +52,7 @@ func resourceCitrixAdcAuthenticationpushservice() *schema.Resource {
 	}
 }
 
-func createAuthenticationpushserviceFunc(d *schema.ResourceData, meta interface{}) error {
+func createAuthenticationpushserviceFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAuthenticationpushserviceFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationpushserviceName := d.Get("name").(string)
@@ -63,20 +66,15 @@ func createAuthenticationpushserviceFunc(d *schema.ResourceData, meta interface{
 
 	_, err := client.AddResource("authenticationpushservice", authenticationpushserviceName, &authenticationpushservice)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(authenticationpushserviceName)
 
-	err = readAuthenticationpushserviceFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this authenticationpushservice but we can't read it ?? %s", authenticationpushserviceName)
-		return nil
-	}
-	return nil
+	return readAuthenticationpushserviceFunc(ctx, d, meta)
 }
 
-func readAuthenticationpushserviceFunc(d *schema.ResourceData, meta interface{}) error {
+func readAuthenticationpushserviceFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAuthenticationpushserviceFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationpushserviceName := d.Id()
@@ -91,13 +89,13 @@ func readAuthenticationpushserviceFunc(d *schema.ResourceData, meta interface{})
 	//d.Set("clientsecret", data["clientsecret"]) different value is received each time
 	d.Set("customerid", data["customerid"])
 	d.Set("name", data["name"])
-	d.Set("refreshinterval", data["refreshinterval"])
+	setToInt("refreshinterval", d, data["refreshinterval"])
 
 	return nil
 
 }
 
-func updateAuthenticationpushserviceFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAuthenticationpushserviceFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAuthenticationpushserviceFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationpushserviceName := d.Get("name").(string)
@@ -135,19 +133,19 @@ func updateAuthenticationpushserviceFunc(d *schema.ResourceData, meta interface{
 	if hasChange {
 		_, err := client.UpdateResource("authenticationpushservice", authenticationpushserviceName, &authenticationpushservice)
 		if err != nil {
-			return fmt.Errorf("Error updating authenticationpushservice %s", authenticationpushserviceName)
+			return diag.Errorf("Error updating authenticationpushservice %s", authenticationpushserviceName)
 		}
 	}
-	return readAuthenticationpushserviceFunc(d, meta)
+	return readAuthenticationpushserviceFunc(ctx, d, meta)
 }
 
-func deleteAuthenticationpushserviceFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAuthenticationpushserviceFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAuthenticationpushserviceFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationpushserviceName := d.Id()
 	err := client.DeleteResource("authenticationpushservice", authenticationpushserviceName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

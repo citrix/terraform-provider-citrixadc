@@ -1,22 +1,25 @@
 package citrixadc
 
 import (
-	"github.com/citrix/adc-nitro-go/resource/config/lb"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"context"
 
-	"fmt"
+	"github.com/citrix/adc-nitro-go/resource/config/lb"
+
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcLbpolicy() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createLbpolicyFunc,
-		Read:          readLbpolicyFunc,
-		Update:        updateLbpolicyFunc,
-		Delete:        deleteLbpolicyFunc,
+		CreateContext: createLbpolicyFunc,
+		ReadContext:   readLbpolicyFunc,
+		UpdateContext: updateLbpolicyFunc,
+		DeleteContext: deleteLbpolicyFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"action": {
@@ -59,7 +62,7 @@ func resourceCitrixAdcLbpolicy() *schema.Resource {
 	}
 }
 
-func createLbpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func createLbpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createLbpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -77,20 +80,15 @@ func createLbpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource("lbpolicy", lbpolicyName, &lbpolicy)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(lbpolicyName)
 
-	err = readLbpolicyFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this lbpolicy but we can't read it ?? %s", lbpolicyName)
-		return nil
-	}
-	return nil
+	return readLbpolicyFunc(ctx, d, meta)
 }
 
-func readLbpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func readLbpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readLbpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lbpolicyName := d.Id()
@@ -113,7 +111,7 @@ func readLbpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateLbpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func updateLbpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateLbpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lbpolicyName := d.Get("name").(string)
@@ -161,19 +159,19 @@ func updateLbpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource("lbpolicy", lbpolicyName, &lbpolicy)
 		if err != nil {
-			return fmt.Errorf("Error updating lbpolicy %s", lbpolicyName)
+			return diag.Errorf("Error updating lbpolicy %s", lbpolicyName)
 		}
 	}
-	return readLbpolicyFunc(d, meta)
+	return readLbpolicyFunc(ctx, d, meta)
 }
 
-func deleteLbpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteLbpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteLbpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lbpolicyName := d.Id()
 	err := client.DeleteResource("lbpolicy", lbpolicyName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

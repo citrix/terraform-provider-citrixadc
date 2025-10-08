@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/authentication"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAuthenticationpolicy() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAuthenticationpolicyFunc,
-		Read:          readAuthenticationpolicyFunc,
-		Update:        updateAuthenticationpolicyFunc,
-		Delete:        deleteAuthenticationpolicyFunc,
+		CreateContext: createAuthenticationpolicyFunc,
+		ReadContext:   readAuthenticationpolicyFunc,
+		UpdateContext: updateAuthenticationpolicyFunc,
+		DeleteContext: deleteAuthenticationpolicyFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -60,7 +63,7 @@ func resourceCitrixAdcAuthenticationpolicy() *schema.Resource {
 	}
 }
 
-func createAuthenticationpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func createAuthenticationpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAuthenticationpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationpolicyName := d.Get("name").(string)
@@ -76,20 +79,15 @@ func createAuthenticationpolicyFunc(d *schema.ResourceData, meta interface{}) er
 
 	_, err := client.AddResource(service.Authenticationpolicy.Type(), authenticationpolicyName, &authenticationpolicy)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(authenticationpolicyName)
 
-	err = readAuthenticationpolicyFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this authenticationpolicy but we can't read it ?? %s", authenticationpolicyName)
-		return nil
-	}
-	return nil
+	return readAuthenticationpolicyFunc(ctx, d, meta)
 }
 
-func readAuthenticationpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func readAuthenticationpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAuthenticationpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationpolicyName := d.Id()
@@ -113,7 +111,7 @@ func readAuthenticationpolicyFunc(d *schema.ResourceData, meta interface{}) erro
 
 }
 
-func updateAuthenticationpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAuthenticationpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAuthenticationpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationpolicyName := d.Get("name").(string)
@@ -156,19 +154,19 @@ func updateAuthenticationpolicyFunc(d *schema.ResourceData, meta interface{}) er
 	if hasChange {
 		_, err := client.UpdateResource(service.Authenticationpolicy.Type(), authenticationpolicyName, &authenticationpolicy)
 		if err != nil {
-			return fmt.Errorf("Error updating authenticationpolicy %s", authenticationpolicyName)
+			return diag.Errorf("Error updating authenticationpolicy %s", authenticationpolicyName)
 		}
 	}
-	return readAuthenticationpolicyFunc(d, meta)
+	return readAuthenticationpolicyFunc(ctx, d, meta)
 }
 
-func deleteAuthenticationpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAuthenticationpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAuthenticationpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationpolicyName := d.Id()
 	err := client.DeleteResource(service.Authenticationpolicy.Type(), authenticationpolicyName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

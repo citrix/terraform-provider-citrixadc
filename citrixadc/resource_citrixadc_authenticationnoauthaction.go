@@ -1,22 +1,25 @@
 package citrixadc
 
 import (
-	"github.com/citrix/adc-nitro-go/resource/config/authentication"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"context"
 
-	"fmt"
+	"github.com/citrix/adc-nitro-go/resource/config/authentication"
+
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAuthenticationnoauthaction() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAuthenticationnoauthactionFunc,
-		Read:          readAuthenticationnoauthactionFunc,
-		Update:        updateAuthenticationnoauthactionFunc,
-		Delete:        deleteAuthenticationnoauthactionFunc,
+		CreateContext: createAuthenticationnoauthactionFunc,
+		ReadContext:   readAuthenticationnoauthactionFunc,
+		UpdateContext: updateAuthenticationnoauthactionFunc,
+		DeleteContext: deleteAuthenticationnoauthactionFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -34,7 +37,7 @@ func resourceCitrixAdcAuthenticationnoauthaction() *schema.Resource {
 	}
 }
 
-func createAuthenticationnoauthactionFunc(d *schema.ResourceData, meta interface{}) error {
+func createAuthenticationnoauthactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAuthenticationnoauthactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationnoauthactionName := d.Get("name").(string)
@@ -45,20 +48,15 @@ func createAuthenticationnoauthactionFunc(d *schema.ResourceData, meta interface
 
 	_, err := client.AddResource("authenticationnoauthaction", authenticationnoauthactionName, &authenticationnoauthaction)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(authenticationnoauthactionName)
 
-	err = readAuthenticationnoauthactionFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this authenticationnoauthaction but we can't read it ?? %s", authenticationnoauthactionName)
-		return nil
-	}
-	return nil
+	return readAuthenticationnoauthactionFunc(ctx, d, meta)
 }
 
-func readAuthenticationnoauthactionFunc(d *schema.ResourceData, meta interface{}) error {
+func readAuthenticationnoauthactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAuthenticationnoauthactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationnoauthactionName := d.Id()
@@ -76,7 +74,7 @@ func readAuthenticationnoauthactionFunc(d *schema.ResourceData, meta interface{}
 
 }
 
-func updateAuthenticationnoauthactionFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAuthenticationnoauthactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAuthenticationnoauthactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationnoauthactionName := d.Get("name").(string)
@@ -94,19 +92,19 @@ func updateAuthenticationnoauthactionFunc(d *schema.ResourceData, meta interface
 	if hasChange {
 		_, err := client.UpdateResource("authenticationnoauthaction", authenticationnoauthactionName, &authenticationnoauthaction)
 		if err != nil {
-			return fmt.Errorf("Error updating authenticationnoauthaction %s", authenticationnoauthactionName)
+			return diag.Errorf("Error updating authenticationnoauthaction %s", authenticationnoauthactionName)
 		}
 	}
-	return readAuthenticationnoauthactionFunc(d, meta)
+	return readAuthenticationnoauthactionFunc(ctx, d, meta)
 }
 
-func deleteAuthenticationnoauthactionFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAuthenticationnoauthactionFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAuthenticationnoauthactionFunc")
 	client := meta.(*NetScalerNitroClient).client
 	authenticationnoauthactionName := d.Id()
 	err := client.DeleteResource("authenticationnoauthaction", authenticationnoauthactionName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

@@ -1,21 +1,24 @@
 package citrixadc
 
 import (
-	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"context"
 
-	"fmt"
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcNtpparam() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNtpparamFunc,
-		Read:          readNtpparamFunc,
-		Update:        updateNtpparamFunc,
-		Delete:        deleteNtpparamFunc,
+		CreateContext: createNtpparamFunc,
+		ReadContext:   readNtpparamFunc,
+		UpdateContext: updateNtpparamFunc,
+		DeleteContext: deleteNtpparamFunc,
 		Schema: map[string]*schema.Schema{
 			"authentication": {
 				Type:     schema.TypeString,
@@ -42,7 +45,7 @@ func resourceCitrixAdcNtpparam() *schema.Resource {
 	}
 }
 
-func createNtpparamFunc(d *schema.ResourceData, meta interface{}) error {
+func createNtpparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNtpparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 	ntpparamName := resource.PrefixedUniqueId("tf-ntpparam-")
@@ -64,20 +67,15 @@ func createNtpparamFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.UpdateUnnamedResource(service.Ntpparam.Type(), &ntpparam)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(ntpparamName)
 
-	err = readNtpparamFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this ntpparam but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readNtpparamFunc(ctx, d, meta)
 }
 
-func readNtpparamFunc(d *schema.ResourceData, meta interface{}) error {
+func readNtpparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNtpparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading ntpparam state")
@@ -88,15 +86,18 @@ func readNtpparamFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	d.Set("authentication", data["authentication"])
-	d.Set("autokeylogsec", data["autokeylogsec"])
-	d.Set("revokelogsec", data["revokelogsec"])
-	d.Set("trustedkey", data["trustedkey"])
+	setToInt("autokeylogsec", d, data["autokeylogsec"])
+	setToInt("revokelogsec", d, data["revokelogsec"])
+	// Convert trustedkey from []string to []int before setting
+	if trustedKeys, ok := data["trustedkey"]; ok && trustedKeys != nil {
+		d.Set("trustedkey", stringListToIntList(trustedKeys.([]interface{})))
+	}
 
 	return nil
 
 }
 
-func updateNtpparamFunc(d *schema.ResourceData, meta interface{}) error {
+func updateNtpparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateNtpparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -126,13 +127,13 @@ func updateNtpparamFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Ntpparam.Type(), &ntpparam)
 		if err != nil {
-			return fmt.Errorf("Error updating ntpparam")
+			return diag.Errorf("Error updating ntpparam")
 		}
 	}
-	return readNtpparamFunc(d, meta)
+	return readNtpparamFunc(ctx, d, meta)
 }
 
-func deleteNtpparamFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNtpparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNtpparamFunc")
 	// ntpparam does not support DELETE operation
 	d.SetId("")

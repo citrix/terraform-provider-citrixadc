@@ -1,24 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/filter"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcFilterpolicy() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createFilterpolicyFunc,
-		Read:          readFilterpolicyFunc,
-		Update:        updateFilterpolicyFunc,
-		Delete:        deleteFilterpolicyFunc,
+		CreateContext: createFilterpolicyFunc,
+		ReadContext:   readFilterpolicyFunc,
+		UpdateContext: updateFilterpolicyFunc,
+		DeleteContext: deleteFilterpolicyFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -44,7 +46,7 @@ func resourceCitrixAdcFilterpolicy() *schema.Resource {
 	}
 }
 
-func createFilterpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func createFilterpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createFilterpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	filterpolicyName := d.Get("name").(string)
@@ -57,20 +59,15 @@ func createFilterpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Filterpolicy.Type(), filterpolicyName, &filterpolicy)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(filterpolicyName)
 
-	err = readFilterpolicyFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this filterpolicy but we can't read it ?? %s", filterpolicyName)
-		return nil
-	}
-	return nil
+	return readFilterpolicyFunc(ctx, d, meta)
 }
 
-func readFilterpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func readFilterpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readFilterpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	filterpolicyName := d.Id()
@@ -91,7 +88,7 @@ func readFilterpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateFilterpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func updateFilterpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateFilterpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	filterpolicyName := d.Get("name").(string)
@@ -124,19 +121,19 @@ func updateFilterpolicyFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Filterpolicy.Type(), filterpolicyName, &filterpolicy)
 		if err != nil {
-			return fmt.Errorf("Error updating filterpolicy %s", filterpolicyName)
+			return diag.Errorf("Error updating filterpolicy %s", filterpolicyName)
 		}
 	}
-	return readFilterpolicyFunc(d, meta)
+	return readFilterpolicyFunc(ctx, d, meta)
 }
 
-func deleteFilterpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteFilterpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteFilterpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	filterpolicyName := d.Id()
 	err := client.DeleteResource(service.Filterpolicy.Type(), filterpolicyName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

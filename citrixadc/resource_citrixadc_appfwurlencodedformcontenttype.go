@@ -1,20 +1,22 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/appfw"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcAppfwurlencodedformcontenttype() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAppfwurlencodedformcontenttypeFunc,
-		Read:          readAppfwurlencodedformcontenttypeFunc,
-		Delete:        deleteAppfwurlencodedformcontenttypeFunc,
+		CreateContext: createAppfwurlencodedformcontenttypeFunc,
+		ReadContext:   readAppfwurlencodedformcontenttypeFunc,
+		DeleteContext: deleteAppfwurlencodedformcontenttypeFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"urlencodedformcontenttypevalue": {
@@ -33,7 +35,7 @@ func resourceCitrixAdcAppfwurlencodedformcontenttype() *schema.Resource {
 	}
 }
 
-func createAppfwurlencodedformcontenttypeFunc(d *schema.ResourceData, meta interface{}) error {
+func createAppfwurlencodedformcontenttypeFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppfwurlencodedformcontenttypeFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appfwurlencodedformcontenttypeName := d.Get("urlencodedformcontenttypevalue").(string)
@@ -44,20 +46,15 @@ func createAppfwurlencodedformcontenttypeFunc(d *schema.ResourceData, meta inter
 
 	_, err := client.AddResource("appfwurlencodedformcontenttype", appfwurlencodedformcontenttypeName, &appfwurlencodedformcontenttype)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(appfwurlencodedformcontenttypeName)
 
-	err = readAppfwurlencodedformcontenttypeFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this appfwurlencodedformcontenttype but we can't read it ?? %s", appfwurlencodedformcontenttypeName)
-		return nil
-	}
-	return nil
+	return readAppfwurlencodedformcontenttypeFunc(ctx, d, meta)
 }
 
-func readAppfwurlencodedformcontenttypeFunc(d *schema.ResourceData, meta interface{}) error {
+func readAppfwurlencodedformcontenttypeFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAppfwurlencodedformcontenttypeFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appfwurlencodedformcontenttypeName := d.Id()
@@ -75,13 +72,13 @@ func readAppfwurlencodedformcontenttypeFunc(d *schema.ResourceData, meta interfa
 
 }
 
-func deleteAppfwurlencodedformcontenttypeFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAppfwurlencodedformcontenttypeFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppfwurlencodedformcontenttypeFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appfwurlencodedformcontenttypeName := d.Id()
 	err := client.DeleteResource("appfwurlencodedformcontenttype", appfwurlencodedformcontenttypeName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

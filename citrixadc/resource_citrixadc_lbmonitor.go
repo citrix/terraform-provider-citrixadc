@@ -1,26 +1,29 @@
 package citrixadc
 
 import (
+	"context"
 	"strconv"
 
 	"github.com/citrix/adc-nitro-go/resource/config/lb"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcLbmonitor() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createLbmonitorFunc,
-		Read:          readLbmonitorFunc,
-		Update:        updateLbmonitorFunc,
-		Delete:        deleteLbmonitorFunc,
+		CreateContext: createLbmonitorFunc,
+		ReadContext:   readLbmonitorFunc,
+		UpdateContext: updateLbmonitorFunc,
+		DeleteContext: deleteLbmonitorFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"action": {
@@ -589,7 +592,7 @@ func resourceCitrixAdcLbmonitor() *schema.Resource {
 	}
 }
 
-func createLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
+func createLbmonitorFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] netscaler-provider:  In createLbmonitorFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -718,20 +721,15 @@ func createLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Lbmonitor.Type(), lbmonitorName, &lbmonitor)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(lbmonitorName)
 
-	err = readLbmonitorFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this lbmonitor but we can't read it ?? %s", lbmonitorName)
-		return nil
-	}
-	return nil
+	return readLbmonitorFunc(ctx, d, meta)
 }
 
-func readLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
+func readLbmonitorFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] netscaler-provider:  In readLbmonitorFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -744,7 +742,7 @@ func readLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	d.Set("action", data["action"])
-	d.Set("alertretries", data["alertretries"])
+	setToInt("alertretries", d, data["alertretries"])
 	d.Set("application", data["application"])
 	d.Set("attribute", data["attribute"])
 	d.Set("basedn", data["basedn"])
@@ -752,34 +750,34 @@ func readLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("customheaders", data["customheaders"])
 	d.Set("database", data["database"])
 	d.Set("destip", data["destip"])
-	d.Set("destport", data["destport"])
-	d.Set("deviation", data["deviation"])
+	setToInt("destport", d, data["destport"])
+	setToInt("deviation", d, data["deviation"])
 	d.Set("dispatcherip", data["dispatcherip"])
-	d.Set("dispatcherport", data["dispatcherport"])
+	setToInt("dispatcherport", d, data["dispatcherport"])
 	d.Set("domain", data["domain"])
-	d.Set("downtime", data["downtime"])
+	setToInt("downtime", d, data["downtime"])
 	d.Set("evalrule", data["evalrule"])
-	d.Set("failureretries", data["failureretries"])
+	setToInt("failureretries", d, data["failureretries"])
 	d.Set("filename", data["filename"])
 	d.Set("filter", data["filter"])
-	d.Set("firmwarerevision", data["firmwarerevision"])
+	setToInt("firmwarerevision", d, data["firmwarerevision"])
 	d.Set("group", data["group"])
 	d.Set("hostipaddress", data["hostipaddress"])
 	d.Set("hostname", data["hostname"])
 	d.Set("httprequest", data["httprequest"])
 	d.Set("inbandsecurityid", data["inbandsecurityid"])
-	// d.Set("interval", data["interval"])
+	// setToInt("interval", d, data["interval"])
 	d.Set("ipaddress", data["ipaddress"])
 	d.Set("iptunnel", data["iptunnel"])
 	d.Set("kcdaccount", data["kcdaccount"])
 	d.Set("lasversion", data["lasversion"])
 	d.Set("logonpointname", data["logonpointname"])
 	d.Set("lrtm", data["lrtm"])
-	d.Set("maxforwards", data["maxforwards"])
+	setToInt("maxforwards", d, data["maxforwards"])
 	d.Set("metric", data["metric"])
 	d.Set("metrictable", data["metrictable"])
-	d.Set("metricthreshold", data["metricthreshold"])
-	d.Set("metricweight", data["metricweight"])
+	setToInt("metricthreshold", d, data["metricthreshold"])
+	setToInt("metricweight", d, data["metricweight"])
 	d.Set("monitorname", data["monitorname"])
 	d.Set("mssqlprotocolversion", data["mssqlprotocolversion"])
 	d.Set("netprofile", data["netprofile"])
@@ -791,7 +789,7 @@ func readLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("query", data["query"])
 	d.Set("querytype", data["querytype"])
 	d.Set("radaccountsession", data["radaccountsession"])
-	d.Set("radaccounttype", data["radaccounttype"])
+	setToInt("radaccounttype", d, data["radaccounttype"])
 	d.Set("radapn", data["radapn"])
 	d.Set("radframedip", data["radframedip"])
 	// d.Set("radkey", data["radkey"]) // We get the hash value from the NetScaler, which creates terraform to update the resource attribute on our next terraform apply command
@@ -799,9 +797,9 @@ func readLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("radnasid", data["radnasid"])
 	d.Set("radnasip", data["radnasip"])
 	d.Set("recv", data["recv"])
-	d.Set("resptimeout", data["resptimeout"])
-	d.Set("resptimeoutthresh", data["resptimeoutthresh"])
-	d.Set("retries", data["retries"])
+	setToInt("resptimeout", d, data["resptimeout"])
+	setToInt("resptimeoutthresh", d, data["resptimeoutthresh"])
+	setToInt("retries", d, data["retries"])
 	d.Set("reverse", data["reverse"])
 	d.Set("rtsprequest", data["rtsprequest"])
 	d.Set("scriptargs", data["scriptargs"])
@@ -826,11 +824,11 @@ func readLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("storefrontacctservice", data["storefrontacctservice"])
 	d.Set("storefrontcheckbackendservices", data["storefrontcheckbackendservices"])
 	d.Set("storename", data["storename"])
-	d.Set("successretries", data["successretries"])
+	setToInt("successretries", d, data["successretries"])
 	d.Set("tos", data["tos"])
-	d.Set("tosid", data["tosid"])
+	setToInt("tosid", d, data["tosid"])
 	d.Set("transparent", data["transparent"])
-	d.Set("trofscode", data["trofscode"])
+	setToInt("trofscode", d, data["trofscode"])
 	d.Set("trofsstring", data["trofsstring"])
 	d.Set("type", data["type"])
 	d.Set("units1", data["units1"])
@@ -839,8 +837,8 @@ func readLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("units4", data["units4"])
 	d.Set("username", data["username"])
 	d.Set("validatecred", data["validatecred"])
-	d.Set("vendorid", data["vendorid"])
-	d.Set("vendorspecificvendorid", data["vendorspecificvendorid"])
+	setToInt("vendorid", d, data["vendorid"])
+	setToInt("vendorspecificvendorid", d, data["vendorspecificvendorid"])
 	// d.Set("respcode", data["respcode"]) // we receive different value from NetScaler
 	d.Set("secureargs", data["secureargs"])
 	d.Set("authapplicationid", data["authapplicationid"])
@@ -849,7 +847,7 @@ func readLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("vendorspecificauthapplicationids", data["vendorspecificauthapplicationids"])
 	d.Set("vendorspecificacctapplicationids", data["vendorspecificacctapplicationids"])
 	d.Set("mqttclientidentifier", data["mqttclientidentifier"])
-	d.Set("mqttversion", data["mqttversion"])
+	setToInt("mqttversion", d, data["mqttversion"])
 	d.Set("grpchealthcheck", data["grpchealthcheck"])
 	d.Set("grpcstatuscode", data["grpcstatuscode"])
 	d.Set("grpcservicename", data["grpcservicename"])
@@ -868,14 +866,14 @@ func readLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 		}
 	} else {
 		d.Set("units3", data["units3"])
-		d.Set("interval", data["interval"])
+		setToInt("interval", d, data["interval"])
 	}
 
 	return nil
 
 }
 
-func updateLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
+func updateLbmonitorFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] netscaler-provider:  In updateLbmonitorFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -1468,13 +1466,13 @@ func updateLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Lbmonitor.Type(), lbmonitorName, &lbmonitor)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
-	return readLbmonitorFunc(d, meta)
+	return readLbmonitorFunc(ctx, d, meta)
 }
 
-func deleteLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteLbmonitorFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] netscaler-provider:  In deleteLbmonitorFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -1486,7 +1484,7 @@ func deleteLbmonitorFunc(d *schema.ResourceData, meta interface{}) error {
 	args[0] = "type:" + d.Get("type").(string)
 	err := client.DeleteResourceWithArgs(service.Lbmonitor.Type(), lbmonitorName, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

@@ -1,12 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/appfw"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 )
@@ -14,12 +15,12 @@ import (
 func resourceCitrixAdcAppfwconfidfield() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAppfwconfidfieldFunc,
-		Read:          readAppfwconfidfieldFunc,
-		Update:        updateAppfwconfidfieldFunc,
-		Delete:        deleteAppfwconfidfieldFunc,
+		CreateContext: createAppfwconfidfieldFunc,
+		ReadContext:   readAppfwconfidfieldFunc,
+		UpdateContext: updateAppfwconfidfieldFunc,
+		DeleteContext: deleteAppfwconfidfieldFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"fieldname": {
@@ -53,7 +54,7 @@ func resourceCitrixAdcAppfwconfidfield() *schema.Resource {
 	}
 }
 
-func createAppfwconfidfieldFunc(d *schema.ResourceData, meta interface{}) error {
+func createAppfwconfidfieldFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppfwconfidfieldFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appfwconfidfieldName := d.Get("fieldname").(string) + "," + d.Get("url").(string)
@@ -67,20 +68,15 @@ func createAppfwconfidfieldFunc(d *schema.ResourceData, meta interface{}) error 
 
 	_, err := client.AddResource(service.Appfwconfidfield.Type(), appfwconfidfieldName, &appfwconfidfield)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(appfwconfidfieldName)
 
-	err = readAppfwconfidfieldFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this appfwconfidfield but we can't read it ?? %s", appfwconfidfieldName)
-		return nil
-	}
-	return nil
+	return readAppfwconfidfieldFunc(ctx, d, meta)
 }
 
-func readAppfwconfidfieldFunc(d *schema.ResourceData, meta interface{}) error {
+func readAppfwconfidfieldFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAppfwconfidfieldFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appfwconfidfieldName := d.Id()
@@ -131,7 +127,7 @@ func readAppfwconfidfieldFunc(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func updateAppfwconfidfieldFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAppfwconfidfieldFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAppfwconfidfieldFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -161,13 +157,13 @@ func updateAppfwconfidfieldFunc(d *schema.ResourceData, meta interface{}) error 
 
 		err := client.UpdateUnnamedResource(service.Appfwconfidfield.Type(), &appfwconfidfield)
 		if err != nil {
-			return fmt.Errorf("Error updating appfwconfidfield %s", appfwconfidfieldName)
+			return diag.Errorf("Error updating appfwconfidfield %s", appfwconfidfieldName)
 		}
 	}
-	return readAppfwconfidfieldFunc(d, meta)
+	return readAppfwconfidfieldFunc(ctx, d, meta)
 }
 
-func deleteAppfwconfidfieldFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAppfwconfidfieldFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppfwconfidfieldFunc")
 	client := meta.(*NetScalerNitroClient).client
 	argsMap := make(map[string]string)
@@ -177,7 +173,7 @@ func deleteAppfwconfidfieldFunc(d *schema.ResourceData, meta interface{}) error 
 
 	err := client.DeleteResourceWithArgsMap(service.Appfwconfidfield.Type(), "", argsMap)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

@@ -1,10 +1,12 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strconv"
 )
@@ -12,9 +14,9 @@ import (
 func resourceCitrixAdcArp() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createArpFunc,
-		Read:          readArpFunc,
-		Delete:        deleteArpFunc,
+		CreateContext: createArpFunc,
+		ReadContext:   readArpFunc,
+		DeleteContext: deleteArpFunc,
 		Schema: map[string]*schema.Schema{
 			"ipaddress": {
 				Type:     schema.TypeString,
@@ -77,7 +79,7 @@ func resourceCitrixAdcArp() *schema.Resource {
 	}
 }
 
-func createArpFunc(d *schema.ResourceData, meta interface{}) error {
+func createArpFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createArpFunc")
 	client := meta.(*NetScalerNitroClient).client
 	arpName := d.Get("ipaddress").(string)
@@ -105,20 +107,15 @@ func createArpFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Arp.Type(), arpName, &arp)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(arpName)
 
-	err = readArpFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this arp but we can't read it ?? %s", arpName)
-		return nil
-	}
-	return nil
+	return readArpFunc(ctx, d, meta)
 }
 
-func readArpFunc(d *schema.ResourceData, meta interface{}) error {
+func readArpFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readArpFunc")
 	client := meta.(*NetScalerNitroClient).client
 	arpName := d.Id()
@@ -155,18 +152,18 @@ func readArpFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("ifnum", data["ifnum"])
 	d.Set("ipaddress", data["ipaddress"])
 	//d.Set("mac", data["mac"])
-	d.Set("nodeid", data["nodeid"])
-	d.Set("ownernode", data["ownernode"])
-	d.Set("td", data["td"])
-	d.Set("vlan", data["vlan"])
+	setToInt("nodeid", d, data["nodeid"])
+	setToInt("ownernode", d, data["ownernode"])
+	setToInt("td", d, data["td"])
+	setToInt("vlan", d, data["vlan"])
 	d.Set("vtep", data["vtep"])
-	d.Set("vxlan", data["vxlan"])
+	setToInt("vxlan", d, data["vxlan"])
 
 	return nil
 
 }
 
-func deleteArpFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteArpFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteArpFunc")
 	client := meta.(*NetScalerNitroClient).client
 	arpName := d.Id()
@@ -190,7 +187,7 @@ func deleteArpFunc(d *schema.ResourceData, meta interface{}) error {
 		err = client.DeleteResourceWithArgs(service.Arp.Type(), arpName, args)
 	}
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

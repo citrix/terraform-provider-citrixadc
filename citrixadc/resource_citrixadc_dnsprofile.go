@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/dns"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcDnsprofile() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createDnsprofileFunc,
-		Read:          readDnsprofileFunc,
-		Update:        updateDnsprofileFunc,
-		Delete:        deleteDnsprofileFunc,
+		CreateContext: createDnsprofileFunc,
+		ReadContext:   readDnsprofileFunc,
+		UpdateContext: updateDnsprofileFunc,
+		DeleteContext: deleteDnsprofileFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"cacheecsresponses": {
@@ -94,7 +97,7 @@ func resourceCitrixAdcDnsprofile() *schema.Resource {
 	}
 }
 
-func createDnsprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func createDnsprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createDnsprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnsprofileName := d.Get("dnsprofilename").(string)
@@ -117,20 +120,15 @@ func createDnsprofileFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Dnsprofile.Type(), dnsprofileName, &dnsprofile)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(dnsprofileName)
 
-	err = readDnsprofileFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this dnsprofile but we can't read it ?? %s", dnsprofileName)
-		return nil
-	}
-	return nil
+	return readDnsprofileFunc(ctx, d, meta)
 }
 
-func readDnsprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func readDnsprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readDnsprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnsprofileName := d.Id()
@@ -154,14 +152,14 @@ func readDnsprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("recursiveresolution", data["recursiveresolution"])
 	d.Set("insertecs", data["insertecs"])
 	d.Set("replaceecs", data["replaceecs"])
-	d.Set("maxcacheableecsprefixlength", data["maxcacheableecsprefixlength"])
-	d.Set("maxcacheableecsprefixlength6", data["maxcacheableecsprefixlength6"])
+	setToInt("maxcacheableecsprefixlength", d, data["maxcacheableecsprefixlength"])
+	setToInt("maxcacheableecsprefixlength6", d, data["maxcacheableecsprefixlength6"])
 
 	return nil
 
 }
 
-func updateDnsprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func updateDnsprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateDnsprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnsprofileName := d.Get("dnsprofilename").(string)
@@ -239,19 +237,19 @@ func updateDnsprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Dnsprofile.Type(), dnsprofileName, &dnsprofile)
 		if err != nil {
-			return fmt.Errorf("Error updating dnsprofile %s", dnsprofileName)
+			return diag.Errorf("Error updating dnsprofile %s", dnsprofileName)
 		}
 	}
-	return readDnsprofileFunc(d, meta)
+	return readDnsprofileFunc(ctx, d, meta)
 }
 
-func deleteDnsprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteDnsprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteDnsprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnsprofileName := d.Id()
 	err := client.DeleteResource(service.Dnsprofile.Type(), dnsprofileName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

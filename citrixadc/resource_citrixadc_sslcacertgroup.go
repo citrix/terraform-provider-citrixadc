@@ -1,21 +1,22 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/ssl"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcSslcacertgroup() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSslcacertgroupFunc,
-		Read:          readSslcacertgroupFunc,
-		Delete:        deleteSslcacertgroupFunc,
+		CreateContext: createSslcacertgroupFunc,
+		ReadContext:   readSslcacertgroupFunc,
+		DeleteContext: deleteSslcacertgroupFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"cacertgroupname": {
@@ -27,7 +28,7 @@ func resourceCitrixAdcSslcacertgroup() *schema.Resource {
 	}
 }
 
-func createSslcacertgroupFunc(d *schema.ResourceData, meta interface{}) error {
+func createSslcacertgroupFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSslcacertgroupFunc")
 	client := meta.(*NetScalerNitroClient).client
 	sslcacertgroupName := d.Get("cacertgroupname").(string)
@@ -38,20 +39,15 @@ func createSslcacertgroupFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource("sslcacertgroup", sslcacertgroupName, &sslcacertgroup)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(sslcacertgroupName)
 
-	err = readSslcacertgroupFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this sslcacertgroup but we can't read it ?? %s", sslcacertgroupName)
-		return nil
-	}
-	return nil
+	return readSslcacertgroupFunc(ctx, d, meta)
 }
 
-func readSslcacertgroupFunc(d *schema.ResourceData, meta interface{}) error {
+func readSslcacertgroupFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSslcacertgroupFunc")
 	client := meta.(*NetScalerNitroClient).client
 	sslcacertgroupName := d.Id()
@@ -68,13 +64,13 @@ func readSslcacertgroupFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func deleteSslcacertgroupFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSslcacertgroupFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSslcacertgroupFunc")
 	client := meta.(*NetScalerNitroClient).client
 	sslcacertgroupName := d.Id()
 	err := client.DeleteResource("sslcacertgroup", sslcacertgroupName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

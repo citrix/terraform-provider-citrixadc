@@ -1,22 +1,25 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/cluster"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcClusternodegroup() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createClusternodegroupFunc,
-		Read:          readClusternodegroupFunc,
-		Update:        updateClusternodegroupFunc,
-		Delete:        deleteClusternodegroupFunc,
+		CreateContext: createClusternodegroupFunc,
+		ReadContext:   readClusternodegroupFunc,
+		UpdateContext: updateClusternodegroupFunc,
+		DeleteContext: deleteClusternodegroupFunc,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -48,7 +51,7 @@ func resourceCitrixAdcClusternodegroup() *schema.Resource {
 	}
 }
 
-func createClusternodegroupFunc(d *schema.ResourceData, meta interface{}) error {
+func createClusternodegroupFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createClusternodegroupFunc")
 	client := meta.(*NetScalerNitroClient).client
 	clusternodegroupName := d.Get("name").(string)
@@ -63,20 +66,15 @@ func createClusternodegroupFunc(d *schema.ResourceData, meta interface{}) error 
 
 	_, err := client.AddResource(service.Clusternodegroup.Type(), clusternodegroupName, &clusternodegroup)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(clusternodegroupName)
 
-	err = readClusternodegroupFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this clusternodegroup but we can't read it ?? %s", clusternodegroupName)
-		return nil
-	}
-	return nil
+	return readClusternodegroupFunc(ctx, d, meta)
 }
 
-func readClusternodegroupFunc(d *schema.ResourceData, meta interface{}) error {
+func readClusternodegroupFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readClusternodegroupFunc")
 	client := meta.(*NetScalerNitroClient).client
 	clusternodegroupName := d.Id()
@@ -97,7 +95,7 @@ func readClusternodegroupFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateClusternodegroupFunc(d *schema.ResourceData, meta interface{}) error {
+func updateClusternodegroupFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateClusternodegroupFunc")
 	client := meta.(*NetScalerNitroClient).client
 	clusternodegroupName := d.Get("name").(string)
@@ -130,19 +128,19 @@ func updateClusternodegroupFunc(d *schema.ResourceData, meta interface{}) error 
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Clusternodegroup.Type(), &clusternodegroup)
 		if err != nil {
-			return fmt.Errorf("Error updating clusternodegroup %s", clusternodegroupName)
+			return diag.Errorf("Error updating clusternodegroup %s", clusternodegroupName)
 		}
 	}
-	return readClusternodegroupFunc(d, meta)
+	return readClusternodegroupFunc(ctx, d, meta)
 }
 
-func deleteClusternodegroupFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteClusternodegroupFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteClusternodegroupFunc")
 	client := meta.(*NetScalerNitroClient).client
 	clusternodegroupName := d.Id()
 	err := client.DeleteResource(service.Clusternodegroup.Type(), clusternodegroupName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

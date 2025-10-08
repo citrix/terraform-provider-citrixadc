@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/aaa"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strings"
 )
@@ -13,11 +15,11 @@ import (
 func resourceCitrixAdcAaagroup_vpnintranetapplication_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAaagroup_vpnintranetapplication_bindingFunc,
-		Read:          readAaagroup_vpnintranetapplication_bindingFunc,
-		Delete:        deleteAaagroup_vpnintranetapplication_bindingFunc,
+		CreateContext: createAaagroup_vpnintranetapplication_bindingFunc,
+		ReadContext:   readAaagroup_vpnintranetapplication_bindingFunc,
+		DeleteContext: deleteAaagroup_vpnintranetapplication_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"groupname": {
@@ -40,7 +42,7 @@ func resourceCitrixAdcAaagroup_vpnintranetapplication_binding() *schema.Resource
 	}
 }
 
-func createAaagroup_vpnintranetapplication_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createAaagroup_vpnintranetapplication_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAaagroup_vpnintranetapplication_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	groupname := d.Get("groupname").(string)
@@ -54,20 +56,15 @@ func createAaagroup_vpnintranetapplication_bindingFunc(d *schema.ResourceData, m
 
 	err := client.UpdateUnnamedResource(service.Aaagroup_vpnintranetapplication_binding.Type(), &aaagroup_vpnintranetapplication_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readAaagroup_vpnintranetapplication_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this aaagroup_vpnintranetapplication_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readAaagroup_vpnintranetapplication_bindingFunc(ctx, d, meta)
 }
 
-func readAaagroup_vpnintranetapplication_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readAaagroup_vpnintranetapplication_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAaagroup_vpnintranetapplication_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -88,7 +85,7 @@ func readAaagroup_vpnintranetapplication_bindingFunc(d *schema.ResourceData, met
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -127,7 +124,7 @@ func readAaagroup_vpnintranetapplication_bindingFunc(d *schema.ResourceData, met
 
 }
 
-func deleteAaagroup_vpnintranetapplication_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAaagroup_vpnintranetapplication_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAaagroup_vpnintranetapplication_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -142,7 +139,7 @@ func deleteAaagroup_vpnintranetapplication_bindingFunc(d *schema.ResourceData, m
 
 	err := client.DeleteResourceWithArgs(service.Aaagroup_vpnintranetapplication_binding.Type(), name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

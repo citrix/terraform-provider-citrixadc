@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
-	"github.com/citrix/adc-nitro-go/resource/config/lsn"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"context"
 
-	"fmt"
+	"github.com/citrix/adc-nitro-go/resource/config/lsn"
+
 	"log"
 	"strconv"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcLsngroup() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createLsngroupFunc,
-		Read:          readLsngroupFunc,
-		Update:        updateLsngroupFunc,
-		Delete:        deleteLsngroupFunc,
+		CreateContext: createLsngroupFunc,
+		ReadContext:   readLsngroupFunc,
+		UpdateContext: updateLsngroupFunc,
+		DeleteContext: deleteLsngroupFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"groupname": {
@@ -99,7 +102,7 @@ func resourceCitrixAdcLsngroup() *schema.Resource {
 	}
 }
 
-func createLsngroupFunc(d *schema.ResourceData, meta interface{}) error {
+func createLsngroupFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createLsngroupFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lsngroupName := d.Get("groupname").(string)
@@ -154,20 +157,15 @@ func createLsngroupFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource("lsngroup", lsngroupName, &lsngroup)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(lsngroupName)
 
-	err = readLsngroupFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this lsngroup but we can't read it ?? %s", lsngroupName)
-		return nil
-	}
-	return nil
+	return readLsngroupFunc(ctx, d, meta)
 }
 
-func readLsngroupFunc(d *schema.ResourceData, meta interface{}) error {
+func readLsngroupFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readLsngroupFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lsngroupName := d.Id()
@@ -187,7 +185,7 @@ func readLsngroupFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("ip6profile", data["ip6profile"])
 	d.Set("logging", data["logging"])
 	d.Set("nattype", data["nattype"])
-	d.Set("portblocksize", data["portblocksize"])
+	setToInt("portblocksize", d, data["portblocksize"])
 	d.Set("pptp", data["pptp"])
 	d.Set("rtspalg", data["rtspalg"])
 	d.Set("sessionlogging", data["sessionlogging"])
@@ -199,7 +197,7 @@ func readLsngroupFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateLsngroupFunc(d *schema.ResourceData, meta interface{}) error {
+func updateLsngroupFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateLsngroupFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lsngroupName := d.Get("groupname").(string)
@@ -264,19 +262,19 @@ func updateLsngroupFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource("lsngroup", &lsngroup)
 		if err != nil {
-			return fmt.Errorf("Error updating lsngroup %s", lsngroupName)
+			return diag.Errorf("Error updating lsngroup %s", lsngroupName)
 		}
 	}
-	return readLsngroupFunc(d, meta)
+	return readLsngroupFunc(ctx, d, meta)
 }
 
-func deleteLsngroupFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteLsngroupFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteLsngroupFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lsngroupName := d.Id()
 	err := client.DeleteResource("lsngroup", lsngroupName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

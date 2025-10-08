@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/vpn"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 	"strings"
@@ -14,11 +16,11 @@ import (
 func resourceCitrixAdcVpnvserver_appflowpolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createVpnvserver_appflowpolicy_bindingFunc,
-		Read:          readVpnvserver_appflowpolicy_bindingFunc,
-		Delete:        deleteVpnvserver_appflowpolicy_bindingFunc,
+		CreateContext: createVpnvserver_appflowpolicy_bindingFunc,
+		ReadContext:   readVpnvserver_appflowpolicy_bindingFunc,
+		DeleteContext: deleteVpnvserver_appflowpolicy_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -67,7 +69,7 @@ func resourceCitrixAdcVpnvserver_appflowpolicy_binding() *schema.Resource {
 	}
 }
 
-func createVpnvserver_appflowpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createVpnvserver_appflowpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createVpnvserver_appflowpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name")
@@ -86,20 +88,15 @@ func createVpnvserver_appflowpolicy_bindingFunc(d *schema.ResourceData, meta int
 
 	err := client.UpdateUnnamedResource(service.Vpnvserver_appflowpolicy_binding.Type(), &vpnvserver_appflowpolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readVpnvserver_appflowpolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this vpnvserver_appflowpolicy_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readVpnvserver_appflowpolicy_bindingFunc(ctx, d, meta)
 }
 
-func readVpnvserver_appflowpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readVpnvserver_appflowpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readVpnvserver_appflowpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -112,7 +109,7 @@ func readVpnvserver_appflowpolicy_bindingFunc(d *schema.ResourceData, meta inter
 		if _, ok := d.GetOk("bindpoint"); ok {
 			bindingId = bindingId + "," + d.Get("bindpoint").(string)
 		} else {
-			return fmt.Errorf("bindpoint should be given, as it is the part of Id. The id of the vpnvserver_appflowpolicy_binding is the concatenation of the `name`, `policy` and `bindpoint` attributes separated by a comma")
+			return diag.Errorf("bindpoint should be given, as it is the part of Id. The id of the vpnvserver_appflowpolicy_binding is the concatenation of the `name`, `policy` and `bindpoint` attributes separated by a comma")
 		}
 		d.SetId(bindingId)
 	}
@@ -135,7 +132,7 @@ func readVpnvserver_appflowpolicy_bindingFunc(d *schema.ResourceData, meta inter
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -178,7 +175,7 @@ func readVpnvserver_appflowpolicy_bindingFunc(d *schema.ResourceData, meta inter
 
 }
 
-func deleteVpnvserver_appflowpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteVpnvserver_appflowpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteVpnvserver_appflowpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -201,7 +198,7 @@ func deleteVpnvserver_appflowpolicy_bindingFunc(d *schema.ResourceData, meta int
 
 	err := client.DeleteResourceWithArgs(service.Vpnvserver_appflowpolicy_binding.Type(), name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

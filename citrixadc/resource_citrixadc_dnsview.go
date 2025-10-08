@@ -1,22 +1,24 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/dns"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcDnsview() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createDnsviewFunc,
-		Read:          readDnsviewFunc,
-		Delete:        deleteDnsviewFunc,
+		CreateContext: createDnsviewFunc,
+		ReadContext:   readDnsviewFunc,
+		DeleteContext: deleteDnsviewFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"viewname": {
@@ -28,7 +30,7 @@ func resourceCitrixAdcDnsview() *schema.Resource {
 	}
 }
 
-func createDnsviewFunc(d *schema.ResourceData, meta interface{}) error {
+func createDnsviewFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createDnsviewFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnsviewName := d.Get("viewname").(string)
@@ -38,20 +40,15 @@ func createDnsviewFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Dnsview.Type(), dnsviewName, &dnsview)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(dnsviewName)
 
-	err = readDnsviewFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this dnsview but we can't read it ?? %s", dnsviewName)
-		return nil
-	}
-	return nil
+	return readDnsviewFunc(ctx, d, meta)
 }
 
-func readDnsviewFunc(d *schema.ResourceData, meta interface{}) error {
+func readDnsviewFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readDnsviewFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnsviewName := d.Id()
@@ -68,13 +65,13 @@ func readDnsviewFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func deleteDnsviewFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteDnsviewFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteDnsviewFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnsviewName := d.Id()
 	err := client.DeleteResource(service.Dnsview.Type(), dnsviewName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

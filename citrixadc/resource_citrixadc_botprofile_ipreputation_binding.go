@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/bot"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strings"
 )
@@ -13,11 +15,11 @@ import (
 func resourceCitrixAdcBotprofile_ipreputation_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createBotprofile_ipreputation_bindingFunc,
-		Read:          readBotprofile_ipreputation_bindingFunc,
-		Delete:        deleteBotprofile_ipreputation_bindingFunc,
+		CreateContext: createBotprofile_ipreputation_bindingFunc,
+		ReadContext:   readBotprofile_ipreputation_bindingFunc,
+		DeleteContext: deleteBotprofile_ipreputation_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -67,7 +69,7 @@ func resourceCitrixAdcBotprofile_ipreputation_binding() *schema.Resource {
 	}
 }
 
-func createBotprofile_ipreputation_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createBotprofile_ipreputation_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createBotprofile_ipreputation_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name")
@@ -85,20 +87,15 @@ func createBotprofile_ipreputation_bindingFunc(d *schema.ResourceData, meta inte
 
 	err := client.UpdateUnnamedResource("botprofile_ipreputation_binding", &botprofile_ipreputation_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readBotprofile_ipreputation_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this botprofile_ipreputation_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readBotprofile_ipreputation_bindingFunc(ctx, d, meta)
 }
 
-func readBotprofile_ipreputation_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readBotprofile_ipreputation_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readBotprofile_ipreputation_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -119,7 +116,7 @@ func readBotprofile_ipreputation_bindingFunc(d *schema.ResourceData, meta interf
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -162,7 +159,7 @@ func readBotprofile_ipreputation_bindingFunc(d *schema.ResourceData, meta interf
 
 }
 
-func deleteBotprofile_ipreputation_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteBotprofile_ipreputation_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteBotprofile_ipreputation_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -180,7 +177,7 @@ func deleteBotprofile_ipreputation_bindingFunc(d *schema.ResourceData, meta inte
 
 	err := client.DeleteResourceWithArgs("botprofile_ipreputation_binding", name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

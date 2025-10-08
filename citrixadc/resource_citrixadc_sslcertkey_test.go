@@ -22,16 +22,16 @@ import (
 
 	"github.com/citrix/adc-nitro-go/resource/config/ssl"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccSslcertkey_basic(t *testing.T) {
 	t.Skip("TODO: Need to find a way to test this resource!")
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { doSslcertkeyPreChecks(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckSslcertkeyDestroy,
+		PreCheck:          func() { doSslcertkeyPreChecks(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckSslcertkeyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSslcertkey_basic,
@@ -69,8 +69,12 @@ func testAccCheckSslcertkeyExist(n string, id *string) resource.TestCheckFunc {
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Sslcertkey.Type(), rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Sslcertkey.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -85,7 +89,11 @@ func testAccCheckSslcertkeyExist(n string, id *string) resource.TestCheckFunc {
 }
 
 func testAccCheckSslcertkeyDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_sslcertkey" {
@@ -96,7 +104,7 @@ func testAccCheckSslcertkeyDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Sslcertkey.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Sslcertkey.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("SSL certkey %s still exists", rs.Primary.ID)
 		}
@@ -149,9 +157,9 @@ resource "citrixadc_sslcertkey" "foo" {
 func TestAccSslcertkey_linkcert(t *testing.T) {
 	t.Skip("TODO: Need to find a way to test this resource!")
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { doSslcertkeyPreChecks(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckSslcertkeyDestroy,
+		PreCheck:          func() { doSslcertkeyPreChecks(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckSslcertkeyDestroy,
 		Steps: []resource.TestStep{
 
 			// Check initial link

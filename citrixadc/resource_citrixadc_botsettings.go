@@ -1,25 +1,29 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/bot"
+
 	//"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcBotsettings() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createBotsettingsFunc,
-		Read:          readBotsettingsFunc,
-		Update:        updateBotsettingsFunc,
-		Delete:        deleteBotsettingsFunc, // Thought botsettings resource donot have DELETE operation, it is required to set ID to "" d.SetID("") to maintain terraform state
+		CreateContext: createBotsettingsFunc,
+		ReadContext:   readBotsettingsFunc,
+		UpdateContext: updateBotsettingsFunc,
+		DeleteContext: deleteBotsettingsFunc, // Thought botsettings resource donot have DELETE operation, it is required to set ID to "" d.SetID("") to maintain terraform state
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"defaultprofile": {
@@ -91,7 +95,7 @@ func resourceCitrixAdcBotsettings() *schema.Resource {
 	}
 }
 
-func createBotsettingsFunc(d *schema.ResourceData, meta interface{}) error {
+func createBotsettingsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createBotsettingsFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var botsettingsName string
@@ -117,20 +121,15 @@ func createBotsettingsFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.UpdateUnnamedResource("botsettings", &botsettings)
 	if err != nil {
-		return fmt.Errorf("Error updating botsettings")
+		return diag.Errorf("Error updating botsettings")
 	}
 
 	d.SetId(botsettingsName)
 
-	err = readBotsettingsFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just updated the botsettings but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readBotsettingsFunc(ctx, d, meta)
 }
 
-func readBotsettingsFunc(d *schema.ResourceData, meta interface{}) error {
+func readBotsettingsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readBotsettingsFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading Botsettings state")
@@ -149,17 +148,15 @@ func readBotsettingsFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("signatureautoupdate", data["signatureautoupdate"])
 	d.Set("signatureurl", data["signatureurl"])
 	d.Set("proxyserver", data["proxyserver"])
-	d.Set("proxyport", data["proxyport"])
+	setToInt("proxyport", d, data["proxyport"])
 	d.Set("trapurlautogenerate", data["trapurlautogenerate"])
 	setToInt("trapurlinterval", d, data["trapurlinterval"])
 	setToInt("trapurllength", d, data["trapurllength"])
-	d.Set("builtin", data["builtin"])
-	d.Set("feature", data["feature"])
 
 	return nil
 }
 
-func updateBotsettingsFunc(d *schema.ResourceData, meta interface{}) error {
+func updateBotsettingsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateBotsettingsFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -235,13 +232,13 @@ func updateBotsettingsFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource("botsettings", &botsettings)
 		if err != nil {
-			return fmt.Errorf("Error updating botsettings: %s", err.Error())
+			return diag.Errorf("Error updating botsettings: %s", err.Error())
 		}
 	}
-	return readBotsettingsFunc(d, meta)
+	return readBotsettingsFunc(ctx, d, meta)
 }
 
-func deleteBotsettingsFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteBotsettingsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteBotsettingsFunc")
 	// botsettings do not have DELETE operation, but this function is required to set the ID to ""
 	d.SetId("")

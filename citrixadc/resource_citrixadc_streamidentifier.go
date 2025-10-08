@@ -1,24 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/stream"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcStreamidentifier() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createStreamidentifierFunc,
-		Read:          readStreamidentifierFunc,
-		Update:        updateStreamidentifierFunc,
-		Delete:        deleteStreamidentifierFunc,
+		CreateContext: createStreamidentifierFunc,
+		ReadContext:   readStreamidentifierFunc,
+		UpdateContext: updateStreamidentifierFunc,
+		DeleteContext: deleteStreamidentifierFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -90,7 +93,7 @@ func resourceCitrixAdcStreamidentifier() *schema.Resource {
 	}
 }
 
-func createStreamidentifierFunc(d *schema.ResourceData, meta interface{}) error {
+func createStreamidentifierFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createStreamidentifierFunc")
 	client := meta.(*NetScalerNitroClient).client
 	streamidentifierName := d.Get("name").(string)
@@ -112,20 +115,15 @@ func createStreamidentifierFunc(d *schema.ResourceData, meta interface{}) error 
 
 	_, err := client.AddResource(service.Streamidentifier.Type(), streamidentifierName, &streamidentifier)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(streamidentifierName)
 
-	err = readStreamidentifierFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this streamidentifier but we can't read it ?? %s", streamidentifierName)
-		return nil
-	}
-	return nil
+	return readStreamidentifierFunc(ctx, d, meta)
 }
 
-func readStreamidentifierFunc(d *schema.ResourceData, meta interface{}) error {
+func readStreamidentifierFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readStreamidentifierFunc")
 	client := meta.(*NetScalerNitroClient).client
 	streamidentifierName := d.Id()
@@ -138,12 +136,12 @@ func readStreamidentifierFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("acceptancethreshold", data["acceptancethreshold"])
 	d.Set("appflowlog", data["appflowlog"])
-	d.Set("breachthreshold", data["breachthreshold"])
-	d.Set("interval", data["interval"])
-	d.Set("maxtransactionthreshold", data["maxtransactionthreshold"])
-	d.Set("mintransactionthreshold", data["mintransactionthreshold"])
+	setToInt("breachthreshold", d, data["breachthreshold"])
+	setToInt("interval", d, data["interval"])
+	setToInt("maxtransactionthreshold", d, data["maxtransactionthreshold"])
+	setToInt("mintransactionthreshold", d, data["mintransactionthreshold"])
 	d.Set("name", data["name"])
-	d.Set("samplecount", data["samplecount"])
+	setToInt("samplecount", d, data["samplecount"])
 	d.Set("selectorname", data["selectorname"])
 	d.Set("snmptrap", data["snmptrap"])
 	d.Set("sort", data["sort"])
@@ -154,7 +152,7 @@ func readStreamidentifierFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateStreamidentifierFunc(d *schema.ResourceData, meta interface{}) error {
+func updateStreamidentifierFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateStreamidentifierFunc")
 	client := meta.(*NetScalerNitroClient).client
 	streamidentifierName := d.Get("name").(string)
@@ -227,19 +225,19 @@ func updateStreamidentifierFunc(d *schema.ResourceData, meta interface{}) error 
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Streamidentifier.Type(), &streamidentifier)
 		if err != nil {
-			return fmt.Errorf("Error updating streamidentifier %s", streamidentifierName)
+			return diag.Errorf("Error updating streamidentifier %s", streamidentifierName)
 		}
 	}
-	return readStreamidentifierFunc(d, meta)
+	return readStreamidentifierFunc(ctx, d, meta)
 }
 
-func deleteStreamidentifierFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteStreamidentifierFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteStreamidentifierFunc")
 	client := meta.(*NetScalerNitroClient).client
 	streamidentifierName := d.Id()
 	err := client.DeleteResource(service.Streamidentifier.Type(), streamidentifierName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

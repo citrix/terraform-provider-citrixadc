@@ -1,24 +1,25 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/aaa"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcAaapreauthenticationpolicy() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAaapreauthenticationpolicyFunc,
-		Read:          readAaapreauthenticationpolicyFunc,
-		Update:        updateAaapreauthenticationpolicyFunc,
-		Delete:        deleteAaapreauthenticationpolicyFunc,
+		CreateContext: createAaapreauthenticationpolicyFunc,
+		ReadContext:   readAaapreauthenticationpolicyFunc,
+		UpdateContext: updateAaapreauthenticationpolicyFunc,
+		DeleteContext: deleteAaapreauthenticationpolicyFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -39,7 +40,7 @@ func resourceCitrixAdcAaapreauthenticationpolicy() *schema.Resource {
 	}
 }
 
-func createAaapreauthenticationpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func createAaapreauthenticationpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAaapreauthenticationpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	aaapreauthenticationpolicyName := d.Get("name").(string)
@@ -52,20 +53,15 @@ func createAaapreauthenticationpolicyFunc(d *schema.ResourceData, meta interface
 
 	_, err := client.AddResource(service.Aaapreauthenticationpolicy.Type(), aaapreauthenticationpolicyName, &aaapreauthenticationpolicy)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(aaapreauthenticationpolicyName)
 
-	err = readAaapreauthenticationpolicyFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this aaapreauthenticationpolicy but we can't read it ?? %s", aaapreauthenticationpolicyName)
-		return nil
-	}
-	return nil
+	return readAaapreauthenticationpolicyFunc(ctx, d, meta)
 }
 
-func readAaapreauthenticationpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func readAaapreauthenticationpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAaapreauthenticationpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	aaapreauthenticationpolicyName := d.Id()
@@ -84,7 +80,7 @@ func readAaapreauthenticationpolicyFunc(d *schema.ResourceData, meta interface{}
 
 }
 
-func updateAaapreauthenticationpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAaapreauthenticationpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAaapreauthenticationpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	aaapreauthenticationpolicyName := d.Get("name").(string)
@@ -107,19 +103,19 @@ func updateAaapreauthenticationpolicyFunc(d *schema.ResourceData, meta interface
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Aaapreauthenticationpolicy.Type(), &aaapreauthenticationpolicy)
 		if err != nil {
-			return fmt.Errorf("Error updating aaapreauthenticationpolicy %s", aaapreauthenticationpolicyName)
+			return diag.Errorf("Error updating aaapreauthenticationpolicy %s", aaapreauthenticationpolicyName)
 		}
 	}
-	return readAaapreauthenticationpolicyFunc(d, meta)
+	return readAaapreauthenticationpolicyFunc(ctx, d, meta)
 }
 
-func deleteAaapreauthenticationpolicyFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAaapreauthenticationpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAaapreauthenticationpolicyFunc")
 	client := meta.(*NetScalerNitroClient).client
 	aaapreauthenticationpolicyName := d.Id()
 	err := client.DeleteResource(service.Aaapreauthenticationpolicy.Type(), aaapreauthenticationpolicyName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

@@ -1,16 +1,17 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/basic"
 	"github.com/citrix/adc-nitro-go/resource/config/gslb"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
 	"bytes"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strconv"
 )
@@ -18,12 +19,12 @@ import (
 func resourceCitrixAdcGslbservice() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createGslbserviceFunc,
-		Read:          readGslbserviceFunc,
-		Update:        updateGslbserviceFunc,
-		Delete:        deleteGslbserviceFunc,
+		CreateContext: createGslbserviceFunc,
+		ReadContext:   readGslbserviceFunc,
+		UpdateContext: updateGslbserviceFunc,
+		DeleteContext: deleteGslbserviceFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"appflowlog": {
@@ -250,7 +251,7 @@ func resourceCitrixAdcGslbservice() *schema.Resource {
 	}
 }
 
-func createGslbserviceFunc(d *schema.ResourceData, meta interface{}) error {
+func createGslbserviceFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  netscaler-provider: In createGslbserviceFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var gslbserviceName string
@@ -301,24 +302,19 @@ func createGslbserviceFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Gslbservice.Type(), gslbserviceName, &gslbservice)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := updateLbmonitorBindinds(d, meta); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(gslbserviceName)
 
-	err = readGslbserviceFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this gslbservice but we can't read it ?? %s", gslbserviceName)
-		return nil
-	}
-	return nil
+	return readGslbserviceFunc(ctx, d, meta)
 }
 
-func readGslbserviceFunc(d *schema.ResourceData, meta interface{}) error {
+func readGslbserviceFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] netscaler-provider:  In readGslbserviceFunc")
 	client := meta.(*NetScalerNitroClient).client
 	gslbserviceName := d.Id()
@@ -333,28 +329,28 @@ func readGslbserviceFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("appflowlog", data["appflowlog"])
 	d.Set("cip", data["cip"])
 	d.Set("cipheader", data["cipheader"])
-	d.Set("clttimeout", data["clttimeout"])
+	setToInt("clttimeout", d, data["clttimeout"])
 	d.Set("cnameentry", data["cnameentry"])
 	d.Set("comment", data["comment"])
-	d.Set("cookietimeout", data["cookietimeout"])
+	setToInt("cookietimeout", d, data["cookietimeout"])
 	d.Set("downstateflush", data["downstateflush"])
-	d.Set("hashid", data["hashid"])
+	setToInt("hashid", d, data["hashid"])
 	d.Set("healthmonitor", data["healthmonitor"])
 	d.Set("ip", data["ipaddress"]) //ip is not returned, but it ipaddress is returned by NITRO
 	d.Set("ipaddress", data["ipaddress"])
-	d.Set("maxaaausers", data["maxaaausers"])
-	d.Set("maxbandwidth", data["maxbandwidth"])
-	d.Set("maxclient", data["maxclient"])
+	setToInt("maxaaausers", d, data["maxaaausers"])
+	setToInt("maxbandwidth", d, data["maxbandwidth"])
+	setToInt("maxclient", d, data["maxclient"])
 	d.Set("monitornamesvc", data["monitornamesvc"])
-	d.Set("monthreshold", data["monthreshold"])
-	d.Set("naptrdomainttl", data["naptrdomainttl"])
-	d.Set("naptrorder", data["naptrorder"])
-	d.Set("naptrpreference", data["naptrpreference"])
+	setToInt("monthreshold", d, data["monthreshold"])
+	setToInt("naptrdomainttl", d, data["naptrdomainttl"])
+	setToInt("naptrorder", d, data["naptrorder"])
+	setToInt("naptrpreference", d, data["naptrpreference"])
 	d.Set("naptrreplacement", data["naptrreplacement"])
 	d.Set("naptrservices", data["naptrservices"])
-	d.Set("port", data["port"])
+	setToInt("port", d, data["port"])
 	d.Set("publicip", data["publicip"])
-	d.Set("publicport", data["publicport"])
+	setToInt("publicport", d, data["publicport"])
 	d.Set("servername", data["servername"])
 	d.Set("servicename", data["servicename"])
 	d.Set("servicetype", data["servicetype"])
@@ -362,20 +358,20 @@ func readGslbserviceFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("sitepersistence", data["sitepersistence"])
 	d.Set("siteprefix", data["siteprefix"])
 	d.Set("state", data["state"])
-	d.Set("svrtimeout", data["svrtimeout"])
+	setToInt("svrtimeout", d, data["svrtimeout"])
 	d.Set("viewip", data["viewip"])
 	d.Set("viewname", data["viewname"])
 	setToInt("weight", d, data["weight"])
 
 	if err := readLbmonitorBindinds(d, meta); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	return nil
 
 }
 
-func updateGslbserviceFunc(d *schema.ResourceData, meta interface{}) error {
+func updateGslbserviceFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  netscaler-provider: In updateGslbserviceFunc")
 	client := meta.(*NetScalerNitroClient).client
 	gslbserviceName := d.Get("servicename").(string)
@@ -568,38 +564,38 @@ func updateGslbserviceFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Gslbservice.Type(), gslbserviceName, &gslbservice)
 		if err != nil {
-			return fmt.Errorf("Error updating gslbservice %s", gslbserviceName)
+			return diag.Errorf("Error updating gslbservice %s", gslbserviceName)
 		}
 	}
 
 	if stateChange {
 		err := doGslbServiceStateChange(d, client)
 		if err != nil {
-			return fmt.Errorf("Error enabling/disabling glsb service %s", gslbserviceName)
+			return diag.Errorf("Error enabling/disabling glsb service %s", gslbserviceName)
 		}
 	}
 
 	if d.HasChange("lbmonitorbinding") {
 		if err := updateLbmonitorBindinds(d, meta); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 	}
 
-	return readGslbserviceFunc(d, meta)
+	return readGslbserviceFunc(ctx, d, meta)
 }
 
-func deleteGslbserviceFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteGslbserviceFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  netscaler-provider: In deleteGslbserviceFunc")
 	client := meta.(*NetScalerNitroClient).client
 	gslbserviceName := d.Id()
 	err := client.DeleteResource(service.Gslbservice.Type(), gslbserviceName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := deleteLbmonitorBindinds(d, meta); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")
@@ -774,5 +770,5 @@ func lbmonitorMappingHash(v interface{}) int {
 	if d, ok := m["monstate"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", d.(string)))
 	}
-	return hashcode.String(buf.String())
+	return hashString(buf.String())
 }

@@ -20,8 +20,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAuditsyslogpolicy_basic(t *testing.T) {
@@ -29,9 +29,9 @@ func TestAccAuditsyslogpolicy_basic(t *testing.T) {
 		t.Skip("global binding causes issues with ADC version 12.0")
 	}
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAuditsyslogpolicyDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAuditsyslogpolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAuditsyslogpolicy_basic_step1,
@@ -74,8 +74,12 @@ func testAccCheckAuditsyslogpolicyExist(n string, id *string) resource.TestCheck
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Auditsyslogpolicy.Type(), rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Auditsyslogpolicy.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -90,7 +94,11 @@ func testAccCheckAuditsyslogpolicyExist(n string, id *string) resource.TestCheck
 }
 
 func testAccCheckAuditsyslogpolicyDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_auditsyslogpolicy" {
@@ -101,7 +109,7 @@ func testAccCheckAuditsyslogpolicyDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Auditsyslogpolicy.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Auditsyslogpolicy.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("%s still exists", rs.Primary.ID)
 		}
@@ -153,7 +161,7 @@ resource "citrixadc_auditsyslogpolicy" "tf_syslogpolicy" {
         priority = 120
         feature = "SYSTEM"
         globalbindtype = "SYSTEM_GLOBAL"
-    }
+	}
 }
 
 `
@@ -179,7 +187,7 @@ resource "citrixadc_auditsyslogpolicy" "tf_syslogpolicy" {
         priority = 110
         feature = "SYSTEM"
         globalbindtype = "SYSTEM_GLOBAL"
-    }
+	}
 }
 
 `

@@ -1,24 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/appfw"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAppfwprofile() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAppfwprofileFunc,
-		Read:          readAppfwprofileFunc,
-		Update:        updateAppfwprofileFunc,
-		Delete:        deleteAppfwprofileFunc,
+		CreateContext: createAppfwprofileFunc,
+		ReadContext:   readAppfwprofileFunc,
+		UpdateContext: updateAppfwprofileFunc,
+		DeleteContext: deleteAppfwprofileFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"addcookieflags": {
@@ -567,7 +569,7 @@ func resourceCitrixAdcAppfwprofile() *schema.Resource {
 	}
 }
 
-func createAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func createAppfwprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppfwprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appfwprofileName := d.Get("name").(string)
@@ -680,20 +682,15 @@ func createAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Appfwprofile.Type(), appfwprofileName, &appfwprofile)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(appfwprofileName)
 
-	err = readAppfwprofileFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this appfwprofile but we can't read it ?? %s", appfwprofileName)
-		return nil
-	}
-	return nil
+	return readAppfwprofileFunc(ctx, d, meta)
 }
 
-func readAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func readAppfwprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAppfwprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appfwprofileName := d.Id()
@@ -712,31 +709,30 @@ func readAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("cmdinjectionaction", data["cmdinjectionaction"])
 	d.Set("addcookieflags", data["addcookieflags"])
 	d.Set("archivename", data["archivename"])
-	d.Set("bufferoverflowmaxcookielength", data["bufferoverflowmaxcookielength"])
-	d.Set("bufferoverflowmaxheaderlength", data["bufferoverflowmaxheaderlength"])
-	d.Set("bufferoverflowmaxurllength", data["bufferoverflowmaxurllength"])
+	setToInt("bufferoverflowmaxcookielength", d, data["bufferoverflowmaxcookielength"])
+	setToInt("bufferoverflowmaxheaderlength", d, data["bufferoverflowmaxheaderlength"])
+	setToInt("bufferoverflowmaxurllength", d, data["bufferoverflowmaxurllength"])
 	d.Set("canonicalizehtmlresponse", data["canonicalizehtmlresponse"])
 	d.Set("checkrequestheaders", data["checkrequestheaders"])
 	d.Set("comment", data["comment"])
 	d.Set("cookieencryption", data["cookieencryption"])
 	d.Set("cookieproxying", data["cookieproxying"])
 	d.Set("cookietransforms", data["cookietransforms"])
-	d.Set("creditcardmaxallowed", data["creditcardmaxallowed"])
+	setToInt("creditcardmaxallowed", d, data["creditcardmaxallowed"])
 	d.Set("creditcardxout", data["creditcardxout"])
 	d.Set("crosssitescriptingcheckcompleteurls", data["crosssitescriptingcheckcompleteurls"])
 	d.Set("crosssitescriptingtransformunsafehtml", data["crosssitescriptingtransformunsafehtml"])
 	d.Set("customsettings", data["customsettings"])
 	d.Set("defaultcharset", data["defaultcharset"])
-	d.Set("defaultfieldformatmaxlength", data["defaultfieldformatmaxlength"])
-	d.Set("defaultfieldformatminlength", data["defaultfieldformatminlength"])
-	d.Set("defaultfieldformattype", data["defaultfieldformattype"])
+	setToInt("defaultfieldformatmaxlength", d, data["defaultfieldformatmaxlength"])
+	setToInt("defaultfieldformatminlength", d, data["defaultfieldformatminlength"])
 	d.Set("defaults", data["defaults"])
 	d.Set("dosecurecreditcardlogging", data["dosecurecreditcardlogging"])
 	d.Set("enableformtagging", data["enableformtagging"])
 	d.Set("errorurl", data["errorurl"])
 	d.Set("excludefileuploadfromchecks", data["excludefileuploadfromchecks"])
 	d.Set("exemptclosureurlsfromsecuritychecks", data["exemptclosureurlsfromsecuritychecks"])
-	d.Set("fileuploadmaxnum", data["fileuploadmaxnum"])
+	setToInt("fileuploadmaxnum", d, data["fileuploadmaxnum"])
 	d.Set("htmlerrorobject", data["htmlerrorobject"])
 	d.Set("invalidpercenthandling", data["invalidpercenthandling"])
 	d.Set("jsonerrorobject", data["jsonerrorobject"])
@@ -745,8 +741,8 @@ func readAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", data["name"])
 	d.Set("optimizepartialreqs", data["optimizepartialreqs"])
 	d.Set("percentdecoderecursively", data["percentdecoderecursively"])
-	d.Set("postbodylimit", data["postbodylimit"])
-	d.Set("postbodylimitsignature", data["postbodylimitsignature"])
+	setToInt("postbodylimit", d, data["postbodylimit"])
+	setToInt("postbodylimitsignature", d, data["postbodylimitsignature"])
 	d.Set("refererheadercheck", data["refererheadercheck"])
 	d.Set("requestcontenttype", data["requestcontenttype"])
 	d.Set("responsecontenttype", data["responsecontenttype"])
@@ -813,7 +809,7 @@ func readAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAppfwprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAppfwprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appfwprofileName := d.Get("name").(string)
@@ -1364,19 +1360,19 @@ func updateAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Appfwprofile.Type(), appfwprofileName, &appfwprofile)
 		if err != nil {
-			return fmt.Errorf("Error updating appfwprofile %s", appfwprofileName)
+			return diag.Errorf("Error updating appfwprofile %s", appfwprofileName)
 		}
 	}
-	return readAppfwprofileFunc(d, meta)
+	return readAppfwprofileFunc(ctx, d, meta)
 }
 
-func deleteAppfwprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAppfwprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppfwprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appfwprofileName := d.Id()
 	err := client.DeleteResource(service.Appfwprofile.Type(), appfwprofileName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

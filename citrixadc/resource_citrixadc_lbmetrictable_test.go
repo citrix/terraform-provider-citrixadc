@@ -19,8 +19,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccLbmetrictable_add = `
@@ -31,9 +31,9 @@ resource "citrixadc_lbmetrictable" "tfAcc_lbmetrictable" {
 
 func TestAccLbmetrictable_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckLbmetrictableDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckLbmetrictableDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLbmetrictable_add,
@@ -65,8 +65,12 @@ func testAccCheckLbmetrictableExist(n string, id *string) resource.TestCheckFunc
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource("lbmetrictable", rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource("lbmetrictable", rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -81,7 +85,11 @@ func testAccCheckLbmetrictableExist(n string, id *string) resource.TestCheckFunc
 }
 
 func testAccCheckLbmetrictableDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_lbmetrictable" {
@@ -92,7 +100,7 @@ func testAccCheckLbmetrictableDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource("lbmetrictable", rs.Primary.ID)
+		_, err := client.FindResource("lbmetrictable", rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("LB metrictable %s still exists", rs.Primary.ID)
 		}

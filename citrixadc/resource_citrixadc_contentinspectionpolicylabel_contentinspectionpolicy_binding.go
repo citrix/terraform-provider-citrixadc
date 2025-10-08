@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/contentinspection"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strings"
 )
@@ -13,11 +15,11 @@ import (
 func resourceCitrixAdcContentinspectionpolicylabel_contentinspectionpolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createContentinspectionpolicylabel_contentinspectionpolicy_bindingFunc,
-		Read:          readContentinspectionpolicylabel_contentinspectionpolicy_bindingFunc,
-		Delete:        deleteContentinspectionpolicylabel_contentinspectionpolicy_bindingFunc,
+		CreateContext: createContentinspectionpolicylabel_contentinspectionpolicy_bindingFunc,
+		ReadContext:   readContentinspectionpolicylabel_contentinspectionpolicy_bindingFunc,
+		DeleteContext: deleteContentinspectionpolicylabel_contentinspectionpolicy_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"policyname": {
@@ -63,7 +65,7 @@ func resourceCitrixAdcContentinspectionpolicylabel_contentinspectionpolicy_bindi
 	}
 }
 
-func createContentinspectionpolicylabel_contentinspectionpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createContentinspectionpolicylabel_contentinspectionpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createContentinspectionpolicylabel_contentinspectionpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	labelname := d.Get("labelname")
@@ -81,20 +83,15 @@ func createContentinspectionpolicylabel_contentinspectionpolicy_bindingFunc(d *s
 
 	err := client.UpdateUnnamedResource("contentinspectionpolicylabel_contentinspectionpolicy_binding", &contentinspectionpolicylabel_contentinspectionpolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readContentinspectionpolicylabel_contentinspectionpolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this contentinspectionpolicylabel_contentinspectionpolicy_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readContentinspectionpolicylabel_contentinspectionpolicy_bindingFunc(ctx, d, meta)
 }
 
-func readContentinspectionpolicylabel_contentinspectionpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readContentinspectionpolicylabel_contentinspectionpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readContentinspectionpolicylabel_contentinspectionpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -115,7 +112,7 @@ func readContentinspectionpolicylabel_contentinspectionpolicy_bindingFunc(d *sch
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -158,7 +155,7 @@ func readContentinspectionpolicylabel_contentinspectionpolicy_bindingFunc(d *sch
 
 }
 
-func deleteContentinspectionpolicylabel_contentinspectionpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteContentinspectionpolicylabel_contentinspectionpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteContentinspectionpolicylabel_contentinspectionpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -174,7 +171,7 @@ func deleteContentinspectionpolicylabel_contentinspectionpolicy_bindingFunc(d *s
 
 	err := client.DeleteResourceWithArgs("contentinspectionpolicylabel_contentinspectionpolicy_binding", name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

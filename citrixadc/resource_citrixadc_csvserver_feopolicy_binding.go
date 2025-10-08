@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/cs"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 	"strings"
@@ -14,11 +16,11 @@ import (
 func resourceCitrixAdcCsvserver_feopolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createCsvserver_feopolicy_bindingFunc,
-		Read:          readCsvserver_feopolicy_bindingFunc,
-		Delete:        deleteCsvserver_feopolicy_bindingFunc,
+		CreateContext: createCsvserver_feopolicy_bindingFunc,
+		ReadContext:   readCsvserver_feopolicy_bindingFunc,
+		DeleteContext: deleteCsvserver_feopolicy_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"bindpoint": {
@@ -77,7 +79,7 @@ func resourceCitrixAdcCsvserver_feopolicy_binding() *schema.Resource {
 	}
 }
 
-func createCsvserver_feopolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createCsvserver_feopolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createCsvserver_feopolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name").(string)
@@ -97,20 +99,15 @@ func createCsvserver_feopolicy_bindingFunc(d *schema.ResourceData, meta interfac
 
 	_, err := client.AddResource(service.Csvserver_feopolicy_binding.Type(), name, &csvserver_feopolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readCsvserver_feopolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this csvserver_feopolicy_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readCsvserver_feopolicy_bindingFunc(ctx, d, meta)
 }
 
-func readCsvserver_feopolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readCsvserver_feopolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readCsvserver_feopolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -131,7 +128,7 @@ func readCsvserver_feopolicy_bindingFunc(d *schema.ResourceData, meta interface{
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -176,7 +173,7 @@ func readCsvserver_feopolicy_bindingFunc(d *schema.ResourceData, meta interface{
 
 }
 
-func deleteCsvserver_feopolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteCsvserver_feopolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteCsvserver_feopolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -198,7 +195,7 @@ func deleteCsvserver_feopolicy_bindingFunc(d *schema.ResourceData, meta interfac
 	}
 	err := client.DeleteResourceWithArgsMap(service.Csvserver_feopolicy_binding.Type(), name, argsMap)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

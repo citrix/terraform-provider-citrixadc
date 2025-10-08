@@ -1,26 +1,29 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/dns"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
 	"net/url"
 	"strconv"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcDnsmxrec() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createDnsmxrecFunc,
-		Read:          readDnsmxrecFunc,
-		Update:        updateDnsmxrecFunc,
-		Delete:        deleteDnsmxrecFunc,
+		CreateContext: createDnsmxrecFunc,
+		ReadContext:   readDnsmxrecFunc,
+		UpdateContext: updateDnsmxrecFunc,
+		DeleteContext: deleteDnsmxrecFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"domain": {
@@ -64,7 +67,7 @@ func resourceCitrixAdcDnsmxrec() *schema.Resource {
 	}
 }
 
-func createDnsmxrecFunc(d *schema.ResourceData, meta interface{}) error {
+func createDnsmxrecFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createDnsmxrecFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnsmxrecName := d.Get("domain").(string)
@@ -80,20 +83,15 @@ func createDnsmxrecFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Dnsmxrec.Type(), dnsmxrecName, &dnsmxrec)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(dnsmxrecName)
 
-	err = readDnsmxrecFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this dnsmxrec but we can't read it ?? %s", dnsmxrecName)
-		return nil
-	}
-	return nil
+	return readDnsmxrecFunc(ctx, d, meta)
 }
 
-func readDnsmxrecFunc(d *schema.ResourceData, meta interface{}) error {
+func readDnsmxrecFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readDnsmxrecFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnsmxrecName := d.Id()
@@ -109,16 +107,16 @@ func readDnsmxrecFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("domain", data["domain"])
 	d.Set("ecssubnet", data["ecssubnet"])
 	d.Set("mx", data["mx"])
-	d.Set("nodeid", data["nodeid"])
+	setToInt("nodeid", d, data["nodeid"])
 	d.Set("pref", pref1)
-	d.Set("ttl", data["ttl"])
+	setToInt("ttl", d, data["ttl"])
 	d.Set("type", data["type"])
 	log.Printf("set functionality:  %v", data)
 	return nil
 
 }
 
-func updateDnsmxrecFunc(d *schema.ResourceData, meta interface{}) error {
+func updateDnsmxrecFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateDnsmxrecFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnsmxrecName := d.Get("domain").(string)
@@ -156,13 +154,13 @@ func updateDnsmxrecFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Dnsmxrec.Type(), dnsmxrecName, &dnsmxrec)
 		if err != nil {
-			return fmt.Errorf("Error updating dnsmxrec %s", dnsmxrecName)
+			return diag.Errorf("Error updating dnsmxrec %s", dnsmxrecName)
 		}
 	}
-	return readDnsmxrecFunc(d, meta)
+	return readDnsmxrecFunc(ctx, d, meta)
 }
 
-func deleteDnsmxrecFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteDnsmxrecFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteDnsmxrecFunc")
 	client := meta.(*NetScalerNitroClient).client
 	dnsmxrecName := d.Id()
@@ -176,7 +174,7 @@ func deleteDnsmxrecFunc(d *schema.ResourceData, meta interface{}) error {
 	//argsMap["domain"] = dnsmxrecName
 	err := client.DeleteResourceWithArgsMap(service.Dnsmxrec.Type(), dnsmxrecName, argsMap)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

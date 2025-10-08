@@ -20,8 +20,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccFilterglobal_filterpolicy_binding_basic_step1 = `
@@ -66,9 +66,9 @@ resource "citrixadc_filterpolicy" "tf_filterpolicy" {
 func TestAccFilterglobal_filterpolicy_binding_basic(t *testing.T) {
 	t.Skipf("filterpolicy is not supported in 13.1")
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckFilterglobal_filterpolicy_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckFilterglobal_filterpolicy_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFilterglobal_filterpolicy_binding_basic_step1,
@@ -111,7 +111,11 @@ func testAccCheckFilterglobal_filterpolicy_bindingExist(n string, id *string) re
 			*id = rs.Primary.ID
 		}
 
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		policyname := rs.Primary.ID
 
@@ -144,7 +148,11 @@ func testAccCheckFilterglobal_filterpolicy_bindingExist(n string, id *string) re
 
 func testAccCheckFilterglobal_filterpolicy_bindingNotExist(n string, id string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		policyname := id
 
@@ -176,7 +184,11 @@ func testAccCheckFilterglobal_filterpolicy_bindingNotExist(n string, id string) 
 }
 
 func testAccCheckFilterglobal_filterpolicy_bindingDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_filterglobal_filterpolicy_binding" {
@@ -192,7 +204,7 @@ func testAccCheckFilterglobal_filterpolicy_bindingDestroy(s *terraform.State) er
 		findParams := service.FindParams{
 			ResourceType: "filterglobal_filterpolicy_binding",
 		}
-		dataArr, err := nsClient.FindResourceArrayWithParams(findParams)
+		dataArr, err := client.FindResourceArrayWithParams(findParams)
 
 		// Unexpected error
 		if err != nil {

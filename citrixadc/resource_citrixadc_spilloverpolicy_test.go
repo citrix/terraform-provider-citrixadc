@@ -18,8 +18,8 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -50,9 +50,9 @@ const testAccSpilloverpolicy_update = `
 
 func TestAccSpilloverpolicy_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckSpilloverpolicyDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckSpilloverpolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSpilloverpolicy_add,
@@ -93,8 +93,12 @@ func testAccCheckSpilloverpolicyExist(n string, id *string) resource.TestCheckFu
 			*id = rs.Primary.ID
 		}
 
-		nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
-		data, err := nsClient.FindResource(service.Spilloverpolicy.Type(), rs.Primary.ID)
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Spilloverpolicy.Type(), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -109,7 +113,11 @@ func testAccCheckSpilloverpolicyExist(n string, id *string) resource.TestCheckFu
 }
 
 func testAccCheckSpilloverpolicyDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_spilloverpolicy" {
@@ -120,7 +128,7 @@ func testAccCheckSpilloverpolicyDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource(service.Spilloverpolicy.Type(), rs.Primary.ID)
+		_, err := client.FindResource(service.Spilloverpolicy.Type(), rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("spilloverpolicy %s still exists", rs.Primary.ID)
 		}

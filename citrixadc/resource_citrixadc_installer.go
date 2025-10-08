@@ -1,10 +1,11 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/utility"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
 	"bytes"
 	"fmt"
@@ -12,12 +13,15 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcInstaller() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createInstallerFunc,
+		CreateContext: createInstallerFunc,
 		Read:          schema.Noop,
 		Delete:        schema.Noop,
 		Schema: map[string]*schema.Schema{
@@ -84,19 +88,19 @@ func resourceCitrixAdcInstaller() *schema.Resource {
 	}
 }
 
-func createInstallerFunc(d *schema.ResourceData, meta interface{}) error {
+func createInstallerFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createInstallFunc")
 	installerId := resource.PrefixedUniqueId("tf-installer-")
 
 	err := installerInstallBuild(d, meta)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if d.Get("wait_until_reachable").(bool) {
 		err := installerWaitReachable(d, meta)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
@@ -194,7 +198,7 @@ func installerPollLicense(d *schema.ResourceData, meta interface{}) error {
 			return err
 		} else {
 			// Expected timeout error
-			return fmt.Errorf("Timeout")
+			return err
 		}
 	} else {
 		log.Printf("Status code is %v\n", resp.Status)

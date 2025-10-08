@@ -21,8 +21,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccLbvserver_analyticsprofile_binding_basic = `
@@ -41,9 +41,9 @@ resource "citrixadc_lbvserver" "test_server" {
 
 func TestAccLbvserver_analyticsprofile_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckLbvserver_analyticsprofile_bindingDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckLbvserver_analyticsprofile_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLbvserver_analyticsprofile_binding_basic,
@@ -74,7 +74,11 @@ func testAccCheckLbvserver_analyticsprofile_bindingExist(n string, id *string) r
 			*id = rs.Primary.ID
 		}
 
-		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
 
 		bindingId := rs.Primary.ID
 
@@ -113,7 +117,11 @@ func testAccCheckLbvserver_analyticsprofile_bindingExist(n string, id *string) r
 }
 
 func testAccCheckLbvserver_analyticsprofile_bindingDestroy(s *terraform.State) error {
-	nsClient := testAccProvider.Meta().(*NetScalerNitroClient).client
+	// Use the shared utility function to get a configured client
+	client, err := testAccGetClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "citrixadc_lbvserver_analyticsprofile_binding" {
@@ -124,7 +132,7 @@ func testAccCheckLbvserver_analyticsprofile_bindingDestroy(s *terraform.State) e
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := nsClient.FindResource("lbvserver_analyticsprofile_binding", rs.Primary.ID)
+		_, err := client.FindResource("lbvserver_analyticsprofile_binding", rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("lbvserver_analyticsprofile_binding %s still exists", rs.Primary.ID)
 		}

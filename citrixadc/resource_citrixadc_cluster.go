@@ -1,14 +1,14 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/cluster"
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 	"github.com/citrix/adc-nitro-go/resource/config/router"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
 	"bytes"
 	"fmt"
@@ -18,15 +18,18 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcCluster() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createClusterFunc,
-		Read:          readClusterFunc,
-		Update:        updateClusterFunc,
-		Delete:        deleteClusterFunc,
+		CreateContext: createClusterFunc,
+		ReadContext:   readClusterFunc,
+		UpdateContext: updateClusterFunc,
+		DeleteContext: deleteClusterFunc,
 		Schema: map[string]*schema.Schema{
 			"backplanebasedview": {
 				Type:     schema.TypeString,
@@ -291,25 +294,21 @@ func resourceCitrixAdcCluster() *schema.Resource {
 	}
 }
 
-func createClusterFunc(d *schema.ResourceData, meta interface{}) error {
+func createClusterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createClusterFunc")
 	var err error
 	clid := strconv.Itoa(d.Get("clid").(int))
 
 	if err = bootstrapCluster(d, meta); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(clid)
 
-	err = readClusterFunc(d, meta)
-	if err != nil {
-		return err
-	}
-	return nil
+	return readClusterFunc(ctx, d, meta)
 }
 
-func readClusterFunc(d *schema.ResourceData, meta interface{}) error {
+func readClusterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readClusterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	clusterId := d.Id()
@@ -318,17 +317,17 @@ func readClusterFunc(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		log.Printf("[WARN] citrixadc-provider: Clearing cluster state %s", clusterId)
 		d.SetId("")
-		return err
+		return diag.FromErr(err)
 	}
 
 	if len(datalist) == 0 {
-		return fmt.Errorf("[ERROR] could not retrieve cluster instance information.")
+		return diag.Errorf("[ERROR] could not retrieve cluster instance information.")
 	}
 
 	data := datalist[0]
 	clid, err := strconv.Atoi(data["clid"].(string))
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	d.Set("clid", clid)
 	log.Printf("clid %v", clid)
@@ -352,12 +351,12 @@ func readClusterFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err = readClusterNodes(d, meta)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if isClusterModeL3(d) {
 		err = readClusterNodegroups(d, meta)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
@@ -365,7 +364,7 @@ func readClusterFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateClusterFunc(d *schema.ResourceData, meta interface{}) error {
+func updateClusterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateClusterFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -435,35 +434,35 @@ func updateClusterFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Clusterinstance.Type(), clid, &clusterinstance)
 		if err != nil {
-			return fmt.Errorf("Error updating clusterinstance %s. %s", clid, err.Error())
+			return diag.Errorf("Error updating clusterinstance %s. %s", clid, err.Error())
 		}
 	}
 
 	// Add and update nodgroups before nodes
 	if isClusterModeL3(d) && clusterNodegroupChanged {
 		if err := addClusterNodegroups(d, meta); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := updateClusterNodegroups(d, meta); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	if err := updateClusterNodes(d, meta); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Delete nodegroups after nodes
 	if isClusterModeL3(d) && clusterNodegroupChanged {
 		if err := deleteClusterNodegroups(d, meta); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
-	return readClusterFunc(d, meta)
+	return readClusterFunc(ctx, d, meta)
 }
 
-func deleteClusterFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteClusterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteClusterFunc")
 	//client := meta.(*NetScalerNitroClient).client
 
@@ -473,7 +472,7 @@ func deleteClusterFunc(d *schema.ResourceData, meta interface{}) error {
 		nodeData := getClusterNodeByid(d, nodeid)
 		err := deleteSingleClusterNode(d, meta, nodeData, true)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
@@ -482,7 +481,7 @@ func deleteClusterFunc(d *schema.ResourceData, meta interface{}) error {
 	// Don't wait for CLIP migration on deletion of last node
 	err := deleteSingleClusterNode(d, meta, nodeData, false)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")
@@ -516,7 +515,7 @@ func clusternodegroupMappingHash(v interface{}) int {
 		buf.WriteString(fmt.Sprintf("%s-", d.(string)))
 	}
 
-	return hashcode.String(buf.String())
+	return hashString(buf.String())
 }
 
 func clusternodeMappingHash(v interface{}) int {
@@ -561,7 +560,7 @@ func clusternodeMappingHash(v interface{}) int {
 		buf.WriteString(fmt.Sprintf("%s-", d.(string)))
 	}
 
-	return hashcode.String(buf.String())
+	return hashString(buf.String())
 }
 
 type nodePriority struct {

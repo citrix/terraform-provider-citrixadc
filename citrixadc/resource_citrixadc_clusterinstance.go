@@ -1,24 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/cluster"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
 	"strconv"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcClusterinstance() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createClusterinstanceFunc,
-		Read:          readClusterinstanceFunc,
-		Update:        updateClusterinstanceFunc,
-		Delete:        deleteClusterinstanceFunc,
+		CreateContext: createClusterinstanceFunc,
+		ReadContext:   readClusterinstanceFunc,
+		UpdateContext: updateClusterinstanceFunc,
+		DeleteContext: deleteClusterinstanceFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"clid": {
@@ -80,7 +83,7 @@ func resourceCitrixAdcClusterinstance() *schema.Resource {
 	}
 }
 
-func createClusterinstanceFunc(d *schema.ResourceData, meta interface{}) error {
+func createClusterinstanceFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createClusterinstanceFunc")
 	client := meta.(*NetScalerNitroClient).client
 	clusterinstanceName := d.Get("clid").(int)
@@ -101,20 +104,15 @@ func createClusterinstanceFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource(service.Clusterinstance.Type(), strconv.Itoa(clusterinstanceName), &clusterinstance)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(strconv.Itoa(clusterinstanceName))
 
-	err = readClusterinstanceFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this clusterinstance but we can't read it ?? %s", strconv.Itoa(clusterinstanceName))
-		return nil
-	}
-	return nil
+	return readClusterinstanceFunc(ctx, d, meta)
 }
 
-func readClusterinstanceFunc(d *schema.ResourceData, meta interface{}) error {
+func readClusterinstanceFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readClusterinstanceFunc")
 	client := meta.(*NetScalerNitroClient).client
 	clusterinstanceName := d.Id()
@@ -126,9 +124,9 @@ func readClusterinstanceFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	d.Set("backplanebasedview", data["backplanebasedview"])
-	d.Set("clid", data["clid"])
-	d.Set("deadinterval", data["deadinterval"])
-	d.Set("hellointerval", data["hellointerval"])
+	setToInt("clid", d, data["clid"])
+	setToInt("deadinterval", d, data["deadinterval"])
+	setToInt("hellointerval", d, data["hellointerval"])
 	d.Set("inc", data["inc"])
 	d.Set("nodegroup", data["nodegroup"])
 	d.Set("preemption", data["preemption"])
@@ -141,7 +139,7 @@ func readClusterinstanceFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateClusterinstanceFunc(d *schema.ResourceData, meta interface{}) error {
+func updateClusterinstanceFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateClusterinstanceFunc")
 	client := meta.(*NetScalerNitroClient).client
 	clusterinstanceName := d.Get("clid").(int)
@@ -204,19 +202,19 @@ func updateClusterinstanceFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Clusterinstance.Type(), &clusterinstance)
 		if err != nil {
-			return fmt.Errorf("Error updating clusterinstance %s", strconv.Itoa(clusterinstanceName))
+			return diag.Errorf("Error updating clusterinstance %s", strconv.Itoa(clusterinstanceName))
 		}
 	}
-	return readClusterinstanceFunc(d, meta)
+	return readClusterinstanceFunc(ctx, d, meta)
 }
 
-func deleteClusterinstanceFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteClusterinstanceFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteClusterinstanceFunc")
 	client := meta.(*NetScalerNitroClient).client
 	clusterinstanceName := d.Id()
 	err := client.DeleteResource(service.Clusterinstance.Type(), clusterinstanceName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

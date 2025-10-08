@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/bot"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 	"strings"
@@ -14,11 +16,11 @@ import (
 func resourceCitrixAdcBotprofile_ratelimit_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createBotprofile_ratelimit_bindingFunc,
-		Read:          readBotprofile_ratelimit_bindingFunc,
-		Delete:        deleteBotprofile_ratelimit_bindingFunc,
+		CreateContext: createBotprofile_ratelimit_bindingFunc,
+		ReadContext:   readBotprofile_ratelimit_bindingFunc,
+		DeleteContext: deleteBotprofile_ratelimit_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -92,7 +94,7 @@ func resourceCitrixAdcBotprofile_ratelimit_binding() *schema.Resource {
 	}
 }
 
-func createBotprofile_ratelimit_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createBotprofile_ratelimit_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createBotprofile_ratelimit_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	name := d.Get("name")
@@ -114,20 +116,15 @@ func createBotprofile_ratelimit_bindingFunc(d *schema.ResourceData, meta interfa
 
 	err := client.UpdateUnnamedResource("botprofile_ratelimit_binding", &botprofile_ratelimit_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(bindingId)
 
-	err = readBotprofile_ratelimit_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this botprofile_ratelimit_binding but we can't read it ?? %s", bindingId)
-		return nil
-	}
-	return nil
+	return readBotprofile_ratelimit_bindingFunc(ctx, d, meta)
 }
 
-func readBotprofile_ratelimit_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readBotprofile_ratelimit_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readBotprofile_ratelimit_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
@@ -148,7 +145,7 @@ func readBotprofile_ratelimit_bindingFunc(d *schema.ResourceData, meta interface
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -188,14 +185,14 @@ func readBotprofile_ratelimit_bindingFunc(d *schema.ResourceData, meta interface
 	d.Set("cookiename", data["cookiename"])
 	d.Set("logmessage", data["logmessage"])
 	d.Set("name", data["name"])
-	d.Set("rate", data["rate"])
-	d.Set("timeslice", data["timeslice"])
+	setToInt("rate", d, data["rate"])
+	setToInt("timeslice", d, data["timeslice"])
 
 	return nil
 
 }
 
-func deleteBotprofile_ratelimit_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteBotprofile_ratelimit_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteBotprofile_ratelimit_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -219,7 +216,7 @@ func deleteBotprofile_ratelimit_bindingFunc(d *schema.ResourceData, meta interfa
 
 	err := client.DeleteResourceWithArgs("botprofile_ratelimit_binding", name, args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

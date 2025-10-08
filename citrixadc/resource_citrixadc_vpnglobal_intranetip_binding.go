@@ -1,11 +1,13 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/vpn"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
 )
@@ -13,11 +15,11 @@ import (
 func resourceCitrixAdcVpnglobal_intranetip_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createVpnglobal_intranetip_bindingFunc,
-		Read:          readVpnglobal_intranetip_bindingFunc,
-		Delete:        deleteVpnglobal_intranetip_bindingFunc,
+		CreateContext: createVpnglobal_intranetip_bindingFunc,
+		ReadContext:   readVpnglobal_intranetip_bindingFunc,
+		DeleteContext: deleteVpnglobal_intranetip_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"intranetip": {
@@ -42,7 +44,7 @@ func resourceCitrixAdcVpnglobal_intranetip_binding() *schema.Resource {
 	}
 }
 
-func createVpnglobal_intranetip_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createVpnglobal_intranetip_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createVpnglobal_intranetip_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	intranetip := d.Get("intranetip").(string)
@@ -54,20 +56,15 @@ func createVpnglobal_intranetip_bindingFunc(d *schema.ResourceData, meta interfa
 
 	err := client.UpdateUnnamedResource(service.Vpnglobal_intranetip_binding.Type(), &vpnglobal_intranetip_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(intranetip)
 
-	err = readVpnglobal_intranetip_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this vpnglobal_intranetip_binding but we can't read it ?? %s", intranetip)
-		return nil
-	}
-	return nil
+	return readVpnglobal_intranetip_bindingFunc(ctx, d, meta)
 }
 
-func readVpnglobal_intranetip_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readVpnglobal_intranetip_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readVpnglobal_intranetip_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	intranetip := d.Id()
@@ -83,7 +80,7 @@ func readVpnglobal_intranetip_bindingFunc(d *schema.ResourceData, meta interface
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -122,7 +119,7 @@ func readVpnglobal_intranetip_bindingFunc(d *schema.ResourceData, meta interface
 
 }
 
-func deleteVpnglobal_intranetip_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteVpnglobal_intranetip_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteVpnglobal_intranetip_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -136,7 +133,7 @@ func deleteVpnglobal_intranetip_bindingFunc(d *schema.ResourceData, meta interfa
 
 	err := client.DeleteResourceWithArgs(service.Vpnglobal_intranetip_binding.Type(), "", args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

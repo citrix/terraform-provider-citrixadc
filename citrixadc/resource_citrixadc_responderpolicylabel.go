@@ -1,22 +1,23 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/responder"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcResponderpolicylabel() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createResponderpolicylabelFunc,
-		Read:          readResponderpolicylabelFunc,
-		Delete:        deleteResponderpolicylabelFunc,
+		CreateContext: createResponderpolicylabelFunc,
+		ReadContext:   readResponderpolicylabelFunc,
+		DeleteContext: deleteResponderpolicylabelFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"comment": {
@@ -41,7 +42,7 @@ func resourceCitrixAdcResponderpolicylabel() *schema.Resource {
 	}
 }
 
-func createResponderpolicylabelFunc(d *schema.ResourceData, meta interface{}) error {
+func createResponderpolicylabelFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createResponderpolicylabelFunc")
 	client := meta.(*NetScalerNitroClient).client
 	responderpolicylabelName := d.Get("labelname").(string)
@@ -53,20 +54,15 @@ func createResponderpolicylabelFunc(d *schema.ResourceData, meta interface{}) er
 
 	_, err := client.AddResource(service.Responderpolicylabel.Type(), responderpolicylabelName, &responderpolicylabel)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(responderpolicylabelName)
 
-	err = readResponderpolicylabelFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this responderpolicylabel but we can't read it ?? %s", responderpolicylabelName)
-		return nil
-	}
-	return nil
+	return readResponderpolicylabelFunc(ctx, d, meta)
 }
 
-func readResponderpolicylabelFunc(d *schema.ResourceData, meta interface{}) error {
+func readResponderpolicylabelFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readResponderpolicylabelFunc")
 	client := meta.(*NetScalerNitroClient).client
 	responderpolicylabelName := d.Id()
@@ -85,13 +81,13 @@ func readResponderpolicylabelFunc(d *schema.ResourceData, meta interface{}) erro
 
 }
 
-func deleteResponderpolicylabelFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteResponderpolicylabelFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteResponderpolicylabelFunc")
 	client := meta.(*NetScalerNitroClient).client
 	responderpolicylabelName := d.Id()
 	err := client.DeleteResource(service.Responderpolicylabel.Type(), responderpolicylabelName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

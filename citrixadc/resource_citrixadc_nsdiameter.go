@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcNsdiameter() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createNsdiameterFunc,
-		Read:          readNsdiameterFunc,
-		Update:        updateNsdiameterFunc,
-		Delete:        deleteNsdiameterFunc,
+		CreateContext: createNsdiameterFunc,
+		ReadContext:   readNsdiameterFunc,
+		UpdateContext: updateNsdiameterFunc,
+		DeleteContext: deleteNsdiameterFunc,
 		Schema: map[string]*schema.Schema{
 			"identity": {
 				Type:     schema.TypeString,
@@ -43,7 +46,7 @@ func resourceCitrixAdcNsdiameter() *schema.Resource {
 	}
 }
 
-func createNsdiameterFunc(d *schema.ResourceData, meta interface{}) error {
+func createNsdiameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNsdiameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	var nsdiameterName string
@@ -58,20 +61,15 @@ func createNsdiameterFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.UpdateUnnamedResource(service.Nsdiameter.Type(), &nsdiameter)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(nsdiameterName)
 
-	err = readNsdiameterFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this nsdiameter but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readNsdiameterFunc(ctx, d, meta)
 }
 
-func readNsdiameterFunc(d *schema.ResourceData, meta interface{}) error {
+func readNsdiameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readNsdiameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading nsdiameter state")
@@ -82,7 +80,7 @@ func readNsdiameterFunc(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	d.Set("identity", data["identity"])
-	d.Set("ownernode", data["ownernode"])
+	setToInt("ownernode", d, data["ownernode"])
 	d.Set("realm", data["realm"])
 	// d.Set("serverclosepropagation", data["serverclosepropagation"])
 
@@ -90,7 +88,7 @@ func readNsdiameterFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateNsdiameterFunc(d *schema.ResourceData, meta interface{}) error {
+func updateNsdiameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateNsdiameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -121,13 +119,13 @@ func updateNsdiameterFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Nsdiameter.Type(), &nsdiameter)
 		if err != nil {
-			return fmt.Errorf("Error updating nsdiameter")
+			return diag.Errorf("Error updating nsdiameter")
 		}
 	}
-	return readNsdiameterFunc(d, meta)
+	return readNsdiameterFunc(ctx, d, meta)
 }
 
-func deleteNsdiameterFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteNsdiameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNsdiameterFunc")
 	// nsdiameter do not have DELETE operation, but this function is required to set the ID to ""
 

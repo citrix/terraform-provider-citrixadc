@@ -1,23 +1,27 @@
 package citrixadc
 
 import (
+	"context"
+	"fmt"
+
 	"github.com/citrix/adc-nitro-go/resource/config/bot"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"fmt"
 	"log"
 	"net/url"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcBotglobal_botpolicy_binding() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createBotglobal_botpolicy_bindingFunc,
-		Read:          readBotglobal_botpolicy_bindingFunc,
-		Delete:        deleteBotglobal_botpolicy_bindingFunc,
+		CreateContext: createBotglobal_botpolicy_bindingFunc,
+		ReadContext:   readBotglobal_botpolicy_bindingFunc,
+		DeleteContext: deleteBotglobal_botpolicy_bindingFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"policyname": {
@@ -72,7 +76,7 @@ func resourceCitrixAdcBotglobal_botpolicy_binding() *schema.Resource {
 	}
 }
 
-func createBotglobal_botpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func createBotglobal_botpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createBotglobal_botpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policyname := d.Get("policyname").(string)
@@ -89,20 +93,15 @@ func createBotglobal_botpolicy_bindingFunc(d *schema.ResourceData, meta interfac
 
 	err := client.UpdateUnnamedResource("botglobal_botpolicy_binding", &botglobal_botpolicy_binding)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(policyname)
 
-	err = readBotglobal_botpolicy_bindingFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this botglobal_botpolicy_binding but we can't read it ?? %s", policyname)
-		return nil
-	}
-	return nil
+	return readBotglobal_botpolicy_bindingFunc(ctx, d, meta)
 }
 
-func readBotglobal_botpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func readBotglobal_botpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readBotglobal_botpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policyname := d.Id()
@@ -119,7 +118,7 @@ func readBotglobal_botpolicy_bindingFunc(d *schema.ResourceData, meta interface{
 	// Unexpected error
 	if err != nil {
 		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Resource is missing
@@ -163,7 +162,7 @@ func readBotglobal_botpolicy_bindingFunc(d *schema.ResourceData, meta interface{
 
 }
 
-func deleteBotglobal_botpolicy_bindingFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteBotglobal_botpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteBotglobal_botpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -180,7 +179,7 @@ func deleteBotglobal_botpolicy_bindingFunc(d *schema.ResourceData, meta interfac
 
 	err := client.DeleteResourceWithArgs("botglobal_botpolicy_binding", "", args)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

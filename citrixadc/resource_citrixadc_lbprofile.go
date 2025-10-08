@@ -1,23 +1,25 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/lb"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcLbprofile() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createLbprofileFunc,
-		Read:          readLbprofileFunc,
-		Update:        updateLbprofileFunc,
-		Delete:        deleteLbprofileFunc,
+		CreateContext: createLbprofileFunc,
+		ReadContext:   readLbprofileFunc,
+		UpdateContext: updateLbprofileFunc,
+		DeleteContext: deleteLbprofileFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"lbprofilename": {
@@ -84,7 +86,7 @@ func resourceCitrixAdcLbprofile() *schema.Resource {
 	}
 }
 
-func createLbprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func createLbprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createLbprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lbprofileName := d.Get("lbprofilename").(string)
@@ -106,20 +108,15 @@ func createLbprofileFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AddResource("lbprofile", lbprofileName, &lbprofile)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(lbprofileName)
 
-	err = readLbprofileFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this lbprofile but we can't read it ?? %s", lbprofileName)
-		return nil
-	}
-	return nil
+	return readLbprofileFunc(ctx, d, meta)
 }
 
-func readLbprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func readLbprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readLbprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lbprofileName := d.Id()
@@ -141,13 +138,13 @@ func readLbprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("computedadccookieattribute", data["computedadccookieattribute"])
 	d.Set("storemqttclientidandusername", data["storemqttclientidandusername"])
 	d.Set("lbhashalgorithm", data["lbhashalgorithm"])
-	d.Set("lbhashfingers", data["lbhashfingers"])
+	setToInt("lbhashfingers", d, data["lbhashfingers"])
 
 	return nil
 
 }
 
-func updateLbprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func updateLbprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateLbprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lbprofileName := d.Get("lbprofilename").(string)
@@ -221,19 +218,19 @@ func updateLbprofileFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource("lbprofile", lbprofileName, &lbprofile)
 		if err != nil {
-			return fmt.Errorf("Error updating lbprofile %s", lbprofileName)
+			return diag.Errorf("Error updating lbprofile %s", lbprofileName)
 		}
 	}
-	return readLbprofileFunc(d, meta)
+	return readLbprofileFunc(ctx, d, meta)
 }
 
-func deleteLbprofileFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteLbprofileFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteLbprofileFunc")
 	client := meta.(*NetScalerNitroClient).client
 	lbprofileName := d.Id()
 	err := client.DeleteResource("lbprofile", lbprofileName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

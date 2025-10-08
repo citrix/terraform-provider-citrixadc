@@ -1,25 +1,28 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ssl"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcSslservicegroup() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createSslservicegroupFunc,
-		Read:          readSslservicegroupFunc,
-		Update:        updateSslservicegroupFunc,
-		Delete:        deleteSslservicegroupFunc,
+		CreateContext: createSslservicegroupFunc,
+		ReadContext:   readSslservicegroupFunc,
+		UpdateContext: updateSslservicegroupFunc,
+		DeleteContext: deleteSslservicegroupFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"commonname": {
@@ -101,7 +104,7 @@ func resourceCitrixAdcSslservicegroup() *schema.Resource {
 	}
 }
 
-func createSslservicegroupFunc(d *schema.ResourceData, meta interface{}) error {
+func createSslservicegroupFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createSslservicegroupFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -133,20 +136,15 @@ func createSslservicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.UpdateResource(service.Sslservicegroup.Type(), sslservicegroupName, &sslservicegroup)
 	if err != nil {
-		return fmt.Errorf("Error updating sslservicegroup")
+		return diag.Errorf("Error updating sslservicegroup")
 	}
 
 	d.SetId(sslservicegroupName)
 
-	err = readSslservicegroupFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this sslservicegroup but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readSslservicegroupFunc(ctx, d, meta)
 }
 
-func readSslservicegroupFunc(d *schema.ResourceData, meta interface{}) error {
+func readSslservicegroupFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readSslservicegroupFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading sslservicegroup state")
@@ -164,7 +162,7 @@ func readSslservicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 	d.Set("serverauth", data["serverauth"])
 	d.Set("servicegroupname", data["servicegroupname"])
 	d.Set("sessreuse", data["sessreuse"])
-	d.Set("sesstimeout", data["sesstimeout"])
+	setToInt("sesstimeout", d, data["sesstimeout"])
 	d.Set("snienable", data["snienable"])
 	d.Set("ssl3", data["ssl3"])
 	d.Set("sslprofile", data["sslprofile"])
@@ -178,7 +176,7 @@ func readSslservicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateSslservicegroupFunc(d *schema.ResourceData, meta interface{}) error {
+func updateSslservicegroupFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateSslservicegroupFunc")
 	client := meta.(*NetScalerNitroClient).client
 	servicegroupname := d.Get("servicegroupname").(string)
@@ -267,13 +265,13 @@ func updateSslservicegroupFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		_, err := client.UpdateResource(service.Sslservicegroup.Type(), servicegroupname, &sslservicegroup)
 		if err != nil {
-			return fmt.Errorf("Error updating sslservicegroup %s", servicegroupname)
+			return diag.Errorf("Error updating sslservicegroup %s", servicegroupname)
 		}
 	}
-	return readSslservicegroupFunc(d, meta)
+	return readSslservicegroupFunc(ctx, d, meta)
 }
 
-func deleteSslservicegroupFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteSslservicegroupFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteSslservicegroupFunc")
 	// sslservicegroup does not have DELETE operation, but this function is required to set the ID to ""
 	d.SetId("")

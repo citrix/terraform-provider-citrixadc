@@ -1,22 +1,25 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ica"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcIcaparameter() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createIcaparameterFunc,
-		Read:          readIcaparameterFunc,
-		Update:        updateIcaparameterFunc,
-		Delete:        deleteIcaparameterFunc,
+		CreateContext: createIcaparameterFunc,
+		ReadContext:   readIcaparameterFunc,
+		UpdateContext: updateIcaparameterFunc,
+		DeleteContext: deleteIcaparameterFunc,
 		Schema: map[string]*schema.Schema{
 			"enablesronhafailover": {
 				Type:     schema.TypeString,
@@ -47,7 +50,7 @@ func resourceCitrixAdcIcaparameter() *schema.Resource {
 	}
 }
 
-func createIcaparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func createIcaparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createIcaparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	icaparameterName := resource.PrefixedUniqueId("tf-icaparameter-")
@@ -62,20 +65,15 @@ func createIcaparameterFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.UpdateUnnamedResource("icaparameter", &icaparameter)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(icaparameterName)
 
-	err = readIcaparameterFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this icaparameter but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readIcaparameterFunc(ctx, d, meta)
 }
 
-func readIcaparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func readIcaparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readIcaparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading icaparameter state")
@@ -87,15 +85,15 @@ func readIcaparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("enablesronhafailover", data["enablesronhafailover"])
 	d.Set("hdxinsightnonnsap", data["hdxinsightnonnsap"])
-	d.Set("l7latencyfrequency", data["l7latencyfrequency"])
+	setToInt("l7latencyfrequency", d, data["l7latencyfrequency"])
 	d.Set("edtpmtuddf", data["edtpmtuddf"])
-	d.Set("edtpmtuddftimeout", data["edtpmtuddftimeout"])
+	setToInt("edtpmtuddftimeout", d, data["edtpmtuddftimeout"])
 
 	return nil
 
 }
 
-func updateIcaparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func updateIcaparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateIcaparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -130,13 +128,13 @@ func updateIcaparameterFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource("icaparameter", &icaparameter)
 		if err != nil {
-			return fmt.Errorf("Error updating icaparameter")
+			return diag.Errorf("Error updating icaparameter")
 		}
 	}
-	return readIcaparameterFunc(d, meta)
+	return readIcaparameterFunc(ctx, d, meta)
 }
 
-func deleteIcaparameterFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteIcaparameterFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteIcaparameterFunc")
 	// icaparameter does not support DELETE operation
 	d.SetId("")

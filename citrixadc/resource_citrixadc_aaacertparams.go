@@ -1,23 +1,26 @@
 package citrixadc
 
 import (
+	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/aaa"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"fmt"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAaacertparams() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAaacertparamsFunc,
-		Read:          readAaacertparamsFunc,
-		Update:        updateAaacertparamsFunc,
-		Delete:        deleteAaacertparamsFunc,
+		CreateContext: createAaacertparamsFunc,
+		ReadContext:   readAaacertparamsFunc,
+		UpdateContext: updateAaacertparamsFunc,
+		DeleteContext: deleteAaacertparamsFunc,
 		Schema: map[string]*schema.Schema{
 			"defaultauthenticationgroup": {
 				Type:     schema.TypeString,
@@ -38,7 +41,7 @@ func resourceCitrixAdcAaacertparams() *schema.Resource {
 	}
 }
 
-func createAaacertparamsFunc(d *schema.ResourceData, meta interface{}) error {
+func createAaacertparamsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAaacertparamsFunc")
 	client := meta.(*NetScalerNitroClient).client
 	aaacertparamsName := resource.PrefixedUniqueId("tf-aaacertparams-")
@@ -51,20 +54,15 @@ func createAaacertparamsFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.UpdateUnnamedResource(service.Aaacertparams.Type(), &aaacertparams)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(aaacertparamsName)
 
-	err = readAaacertparamsFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this aaacertparams but we can't read it ??")
-		return nil
-	}
-	return nil
+	return readAaacertparamsFunc(ctx, d, meta)
 }
 
-func readAaacertparamsFunc(d *schema.ResourceData, meta interface{}) error {
+func readAaacertparamsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAaacertparamsFunc")
 	client := meta.(*NetScalerNitroClient).client
 	log.Printf("[DEBUG] citrixadc-provider: Reading aaacertparams state")
@@ -82,7 +80,7 @@ func readAaacertparamsFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func updateAaacertparamsFunc(d *schema.ResourceData, meta interface{}) error {
+func updateAaacertparamsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In updateAaacertparamsFunc")
 	client := meta.(*NetScalerNitroClient).client
 
@@ -107,13 +105,13 @@ func updateAaacertparamsFunc(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		err := client.UpdateUnnamedResource(service.Aaacertparams.Type(), &aaacertparams)
 		if err != nil {
-			return fmt.Errorf("Error updating aaacertparams")
+			return diag.Errorf("Error updating aaacertparams")
 		}
 	}
-	return readAaacertparamsFunc(d, meta)
+	return readAaacertparamsFunc(ctx, d, meta)
 }
 
-func deleteAaacertparamsFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAaacertparamsFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAaacertparamsFunc")
 	// aaacertparams does not support delete operations
 	d.SetId("")

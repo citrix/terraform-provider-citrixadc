@@ -1,22 +1,24 @@
 package citrixadc
 
 import (
+	"context"
 	"github.com/citrix/adc-nitro-go/resource/config/appfw"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 )
 
 func resourceCitrixAdcAppfwxmlschema() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createAppfwxmlschemaFunc,
-		Read:          readAppfwxmlschemaFunc,
-		Delete:        deleteAppfwxmlschemaFunc,
+		CreateContext: createAppfwxmlschemaFunc,
+		ReadContext:   readAppfwxmlschemaFunc,
+		DeleteContext: deleteAppfwxmlschemaFunc,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -47,7 +49,7 @@ func resourceCitrixAdcAppfwxmlschema() *schema.Resource {
 	}
 }
 
-func createAppfwxmlschemaFunc(d *schema.ResourceData, meta interface{}) error {
+func createAppfwxmlschemaFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppfwxmlschemaFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appfwxmlschemaName := d.Get("name").(string)
@@ -60,20 +62,15 @@ func createAppfwxmlschemaFunc(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.ActOnResource(service.Appfwxmlschema.Type(), &appfwxmlschema, "Import")
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(appfwxmlschemaName)
 
-	err = readAppfwxmlschemaFunc(d, meta)
-	if err != nil {
-		log.Printf("[ERROR] netscaler-provider: ?? we just created this appfwxmlschema but we can't read it ?? %s", appfwxmlschemaName)
-		return nil
-	}
-	return nil
+	return readAppfwxmlschemaFunc(ctx, d, meta)
 }
 
-func readAppfwxmlschemaFunc(d *schema.ResourceData, meta interface{}) error {
+func readAppfwxmlschemaFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAppfwxmlschemaFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appfwxmlschemaName := d.Id()
@@ -90,13 +87,13 @@ func readAppfwxmlschemaFunc(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func deleteAppfwxmlschemaFunc(d *schema.ResourceData, meta interface{}) error {
+func deleteAppfwxmlschemaFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppfwxmlschemaFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appfwxmlschemaName := d.Id()
 	err := client.DeleteResource(service.Appfwxmlschema.Type(), appfwxmlschemaName)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")
