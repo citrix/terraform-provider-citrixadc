@@ -68,6 +68,8 @@ resource citrixadc_appfwprofile_crosssitescripting_binding demo_binding {
 * `comment` - (Optional) Any comments about the purpose of profile, or other useful information about the profile.
 * `isautodeployed` - (Optional) Is the rule auto deployed by dynamic profile ?. Possible values: [ AUTODEPLOYED, NOTAUTODEPLOYED ]
 * `alertonly` - (Optional) Send SNMP alert?. Possible values: [ on, off ]
+* `resourceid` - (Optional) A unique id that identifies the rule.
+* `ruletype` - (Optional) Specifies rule type of binding.
 
 ## Attribute Reference
 

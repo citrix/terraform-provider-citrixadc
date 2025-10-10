@@ -78,7 +78,7 @@ resource "citrixadc_appfwprofile_cmdinjection_binding" "tf_binding" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the appfwprofile_cmdinjection_binding. It is the concatenation of `name` ,`cmdinjection` and `formactionurl_cmd` attributes separated by comma.
+* `id` - The id of the appfwprofile_cmdinjection_binding. It is the concatenation of the `name`, `cmdinjection`, `formactionurl_cmd`, `as_scan_location_cmd`, `as_value_type_cmd` and `as_value_expr_cmd` attributes separated by a comma.
 
 
 ## Import
@@ -86,5 +86,11 @@ In addition to the arguments, the following attributes are available:
 A appfwprofile_cmdinjection_binding can be imported using its id, e.g.
 
 ```shell
-terraform import citrixadc_appfwprofile_cmdinjection_binding.tf_binding tf_appfwprofile,tf_cmdinjection,http://10.10.10.10/
+terraform import citrixadc_appfwprofile_cmdinjection_binding.tf_binding tf_appfwprofile,tf_cmdinjection,http://10.10.10.10/,HEADER,Keyword,[a-z]+grep
+```
+
+A appfwprofile_cmdinjection_binding which does not have values set for as_value_type_cmd and as_value_expr_cmd can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_appfwprofile_cmdinjection_binding.tf_binding tf_appfwprofile,tf_cmdinjection,http://10.10.10.10/,HEADER
 ```

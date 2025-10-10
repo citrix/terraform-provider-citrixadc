@@ -27,34 +27,7 @@ import (
 const testAccAppfwprofile_xmldosurl_binding_basic = `
 	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
 		name                     = "tf_appfwprofile"
-		bufferoverflowaction     = ["none"]
-		contenttypeaction        = ["none"]
-		cookieconsistencyaction  = ["none"]
-		creditcard               = ["none"]
-		creditcardaction         = ["none"]
-		crosssitescriptingaction = ["none"]
-		csrftagaction            = ["none"]
-		denyurlaction            = ["none"]
-		dynamiclearning          = ["none"]
-		fieldconsistencyaction   = ["none"]
-		fieldformataction        = ["none"]
-		fileuploadtypesaction    = ["none"]
-		inspectcontenttypes      = ["none"]
-		jsondosaction            = ["none"]
-		jsonsqlinjectionaction   = ["none"]
-		jsonxssaction            = ["none"]
-		multipleheaderaction     = ["none"]
-		sqlinjectionaction       = ["none"]
-		starturlaction           = ["none"]
 		type                     = ["HTML"]
-		xmlattachmentaction      = ["none"]
-		xmldosaction             = ["none"]
-		xmlformataction          = ["none"]
-		xmlsoapfaultaction       = ["none"]
-		xmlsqlinjectionaction    = ["none"]
-		xmlvalidationaction      = ["none"]
-		xmlwsiaction             = ["none"]
-		xmlxssaction             = ["none"]
 	}
 	resource "citrixadc_appfwprofile_xmldosurl_binding" "tf_binding" {
 		name                           = citrixadc_appfwprofile.tf_appfwprofile.name
@@ -85,34 +58,7 @@ const testAccAppfwprofile_xmldosurl_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
 	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
 		name                     = "tf_appfwprofile"
-		bufferoverflowaction     = ["none"]
-		contenttypeaction        = ["none"]
-		cookieconsistencyaction  = ["none"]
-		creditcard               = ["none"]
-		creditcardaction         = ["none"]
-		crosssitescriptingaction = ["none"]
-		csrftagaction            = ["none"]
-		denyurlaction            = ["none"]
-		dynamiclearning          = ["none"]
-		fieldconsistencyaction   = ["none"]
-		fieldformataction        = ["none"]
-		fileuploadtypesaction    = ["none"]
-		inspectcontenttypes      = ["none"]
-		jsondosaction            = ["none"]
-		jsonsqlinjectionaction   = ["none"]
-		jsonxssaction            = ["none"]
-		multipleheaderaction     = ["none"]
-		sqlinjectionaction       = ["none"]
-		starturlaction           = ["none"]
 		type                     = ["HTML"]
-		xmlattachmentaction      = ["none"]
-		xmldosaction             = ["none"]
-		xmlformataction          = ["none"]
-		xmlsoapfaultaction       = ["none"]
-		xmlsqlinjectionaction    = ["none"]
-		xmlvalidationaction      = ["none"]
-		xmlwsiaction             = ["none"]
-		xmlxssaction             = ["none"]
 	}
 `
 
@@ -126,6 +72,27 @@ func TestAccAppfwprofile_xmldosurl_binding_basic(t *testing.T) {
 				Config: testAccAppfwprofile_xmldosurl_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppfwprofile_xmldosurl_bindingExist("citrixadc_appfwprofile_xmldosurl_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmldosurl_binding.tf_binding", "name", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmldosurl_binding.tf_binding", "xmldosurl", ".*"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmldosurl_binding.tf_binding", "state", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmldosurl_binding.tf_binding", "xmlsoaparraycheck", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmldosurl_binding.tf_binding", "xmlmaxelementdepthcheck", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmldosurl_binding.tf_binding", "xmlmaxfilesize", "100000"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmldosurl_binding.tf_binding", "xmlmaxfilesizecheck", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmldosurl_binding.tf_binding", "xmlmaxnamespaceurilength", "200"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmldosurl_binding.tf_binding", "xmlmaxnamespaceurilengthcheck", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmldosurl_binding.tf_binding", "xmlmaxelementnamelength", "300"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmldosurl_binding.tf_binding", "xmlmaxelementnamelengthcheck", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmldosurl_binding.tf_binding", "xmlmaxelements", "30"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmldosurl_binding.tf_binding", "xmlmaxelementscheck", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmldosurl_binding.tf_binding", "xmlmaxattributes", "20"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmldosurl_binding.tf_binding", "xmlmaxattributescheck", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmldosurl_binding.tf_binding", "xmlmaxchardatalength", "1000"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmldosurl_binding.tf_binding", "xmlmaxchardatalengthcheck", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmldosurl_binding.tf_binding", "xmlmaxnamespaces", "30"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmldosurl_binding.tf_binding", "xmlmaxnamespacescheck", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmldosurl_binding.tf_binding", "xmlmaxattributenamelength", "200"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmldosurl_binding.tf_binding", "xmlmaxattributenamelengthcheck", "ON"),
 				),
 			},
 			{

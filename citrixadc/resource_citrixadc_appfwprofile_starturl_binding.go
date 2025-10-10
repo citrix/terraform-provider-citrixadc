@@ -50,6 +50,17 @@ func resourceCitrixAdcAppfwprofileStarturlBinding() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			"ruletype": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+			"resourceid": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -71,6 +82,8 @@ func createAppfwprofileStarturlBindingFunc(d *schema.ResourceData, meta interfac
 		Isautodeployed: d.Get("isautodeployed").(string),
 		Name:           d.Get("name").(string),
 		State:          d.Get("state").(string),
+		Ruletype:       d.Get("ruletype").(string),
+		Resourceid:     d.Get("resourceid").(string),
 	}
 
 	err := client.UpdateUnnamedResource(service.Appfwprofile_starturl_binding.Type(), &appfwprofileStarturlBinding)
@@ -135,6 +148,8 @@ func readAppfwprofileStarturlBindingFunc(d *schema.ResourceData, meta interface{
 	d.Set("isautodeployed", data["isautodeployed"])
 	d.Set("name", data["name"])
 	d.Set("state", data["state"])
+	d.Set("ruletype", data["ruletype"])
+	d.Set("resourceid", data["resourceid"])
 
 	return nil
 

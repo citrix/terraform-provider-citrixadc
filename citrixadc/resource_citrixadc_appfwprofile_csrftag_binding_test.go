@@ -17,49 +17,32 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccAppfwprofile_csrftag_binding_basic = `
 	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
 		name                     = "tf_appfwprofile"
-		bufferoverflowaction     = ["none"]
-		contenttypeaction        = ["none"]
-		cookieconsistencyaction  = ["none"]
-		creditcard               = ["none"]
-		creditcardaction         = ["none"]
-		crosssitescriptingaction = ["none"]
-		csrftagaction            = ["none"]
-		denyurlaction            = ["none"]
-		dynamiclearning          = ["none"]
-		fieldconsistencyaction   = ["none"]
-		fieldformataction        = ["none"]
-		fileuploadtypesaction    = ["none"]
-		inspectcontenttypes      = ["none"]
-		jsondosaction            = ["none"]
-		jsonsqlinjectionaction   = ["none"]
-		jsonxssaction            = ["none"]
-		multipleheaderaction     = ["none"]
-		sqlinjectionaction       = ["none"]
-		starturlaction           = ["none"]
 		type                     = ["HTML"]
-		xmlattachmentaction      = ["none"]
-		xmldosaction             = ["none"]
-		xmlformataction          = ["none"]
-		xmlsoapfaultaction       = ["none"]
-		xmlsqlinjectionaction    = ["none"]
-		xmlvalidationaction      = ["none"]
-		xmlwsiaction             = ["none"]
-		xmlxssaction             = ["none"]
 	}
 	resource "citrixadc_appfwprofile_csrftag_binding" "tf_binding" {
 		name              = citrixadc_appfwprofile.tf_appfwprofile.name
 		csrftag           = "www.source.com"
-		csrfformactionurl = "www.action.com"
+		csrfformactionurl = "^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/document/content$"
+		isautodeployed    = "NOTAUTODEPLOYED"
+		comment           = "Testing"
+		state             = "ENABLED"
+		alertonly         = "OFF"
+	}
+	resource "citrixadc_appfwprofile_csrftag_binding" "tf_binding2" {
+		name              = citrixadc_appfwprofile.tf_appfwprofile.name
+		csrftag           = "www.source.com"
+		csrfformactionurl = "^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/v1/resource/temp$"
 		isautodeployed    = "NOTAUTODEPLOYED"
 		comment           = "Testing"
 		state             = "ENABLED"
@@ -71,34 +54,7 @@ const testAccAppfwprofile_csrftag_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
 	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
 		name                     = "tf_appfwprofile"
-		bufferoverflowaction     = ["none"]
-		contenttypeaction        = ["none"]
-		cookieconsistencyaction  = ["none"]
-		creditcard               = ["none"]
-		creditcardaction         = ["none"]
-		crosssitescriptingaction = ["none"]
-		csrftagaction            = ["none"]
-		denyurlaction            = ["none"]
-		dynamiclearning          = ["none"]
-		fieldconsistencyaction   = ["none"]
-		fieldformataction        = ["none"]
-		fileuploadtypesaction    = ["none"]
-		inspectcontenttypes      = ["none"]
-		jsondosaction            = ["none"]
-		jsonsqlinjectionaction   = ["none"]
-		jsonxssaction            = ["none"]
-		multipleheaderaction     = ["none"]
-		sqlinjectionaction       = ["none"]
-		starturlaction           = ["none"]
 		type                     = ["HTML"]
-		xmlattachmentaction      = ["none"]
-		xmldosaction             = ["none"]
-		xmlformataction          = ["none"]
-		xmlsoapfaultaction       = ["none"]
-		xmlsqlinjectionaction    = ["none"]
-		xmlvalidationaction      = ["none"]
-		xmlwsiaction             = ["none"]
-		xmlxssaction             = ["none"]
 	}
 `
 
@@ -112,12 +68,26 @@ func TestAccAppfwprofile_csrftag_binding_basic(t *testing.T) {
 				Config: testAccAppfwprofile_csrftag_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppfwprofile_csrftag_bindingExist("citrixadc_appfwprofile_csrftag_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr(
+						"citrixadc_appfwprofile_csrftag_binding.tf_binding", "name", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_appfwprofile_csrftag_binding.tf_binding", "csrftag", "www.source.com"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_appfwprofile_csrftag_binding.tf_binding", "csrfformactionurl", "^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/document/content$"),
+					testAccCheckAppfwprofile_csrftag_bindingExist("citrixadc_appfwprofile_csrftag_binding.tf_binding2", nil),
+					resource.TestCheckResourceAttr(
+						"citrixadc_appfwprofile_csrftag_binding.tf_binding2", "name", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_appfwprofile_csrftag_binding.tf_binding2", "csrftag", "www.source.com"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_appfwprofile_csrftag_binding.tf_binding2", "csrfformactionurl", "^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/v1/resource/temp$"),
 				),
 			},
 			{
 				Config: testAccAppfwprofile_csrftag_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppfwprofile_csrftag_bindingNotExist("citrixadc_appfwprofile_csrftag_binding.tf_binding", "tf_appfwprofile,www.source.com"),
+					testAccCheckAppfwprofile_csrftag_bindingNotExist("citrixadc_appfwprofile_csrftag_binding.tf_binding", "tf_appfwprofile,www.source.com,^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/document/content$"),
+					testAccCheckAppfwprofile_csrftag_bindingNotExist("citrixadc_appfwprofile_csrftag_binding.tf_binding2", "tf_appfwprofile,www.source.com,^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/v1/resource/temp$"),
 				),
 			},
 		},
@@ -147,10 +117,11 @@ func testAccCheckAppfwprofile_csrftag_bindingExist(n string, id *string) resourc
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
+		idSlice := strings.SplitN(bindingId, ",", 3)
 
 		name := idSlice[0]
 		csrftag := idSlice[1]
+		csrfformactionurl := idSlice[2]
 
 		findParams := service.FindParams{
 			ResourceType:             "appfwprofile_csrftag_binding",
@@ -167,7 +138,7 @@ func testAccCheckAppfwprofile_csrftag_bindingExist(n string, id *string) resourc
 		// Iterate through results to find the one with the matching secondIdComponent
 		found := false
 		for _, v := range dataArr {
-			if v["csrftag"].(string) == csrftag {
+			if v["csrftag"].(string) == csrftag && v["csrfformactionurl"].(string) == csrfformactionurl {
 				found = true
 				break
 			}
@@ -188,10 +159,11 @@ func testAccCheckAppfwprofile_csrftag_bindingNotExist(n string, id string) resou
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
+		idSlice := strings.SplitN(id, ",", 3)
 
 		name := idSlice[0]
 		csrftag := idSlice[1]
+		csrfformactionurl := idSlice[2]
 
 		findParams := service.FindParams{
 			ResourceType:             "appfwprofile_csrftag_binding",
@@ -208,7 +180,7 @@ func testAccCheckAppfwprofile_csrftag_bindingNotExist(n string, id string) resou
 		// Iterate through results to hopefully not find the one with the matching secondIdComponent
 		found := false
 		for _, v := range dataArr {
-			if v["csrftag"].(string) == csrftag {
+			if v["csrftag"].(string) == csrftag && v["csrfformactionurl"].(string) == csrfformactionurl {
 				found = true
 				break
 			}

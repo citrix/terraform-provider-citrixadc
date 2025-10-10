@@ -17,46 +17,20 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccAppfwprofile_jsondosurl_binding_basic = `
 	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
 		name                     = "tf_appfwprofile"
-		bufferoverflowaction     = ["none"]
-		contenttypeaction        = ["none"]
-		cookieconsistencyaction  = ["none"]
-		creditcard               = ["none"]
-		creditcardaction         = ["none"]
-		crosssitescriptingaction = ["none"]
-		csrftagaction            = ["none"]
-		denyurlaction            = ["none"]
-		dynamiclearning          = ["none"]
-		fieldconsistencyaction   = ["none"]
-		fieldformataction        = ["none"]
-		fileuploadtypesaction    = ["none"]
-		inspectcontenttypes      = ["none"]
-		jsondosaction            = ["none"]
-		jsonsqlinjectionaction   = ["none"]
-		jsonxssaction            = ["none"]
-		multipleheaderaction     = ["none"]
-		sqlinjectionaction       = ["none"]
-		starturlaction           = ["none"]
 		type                     = ["HTML"]
-		xmlattachmentaction      = ["none"]
-		xmldosaction             = ["none"]
-		xmlformataction          = ["none"]
-		xmlsoapfaultaction       = ["none"]
-		xmlsqlinjectionaction    = ["none"]
-		xmlvalidationaction      = ["none"]
-		xmlwsiaction             = ["none"]
-		xmlxssaction             = ["none"]
 	}
-	resource "citrixadc_appfwprofile_jsondosurl_binding" "tf_binding" {
+	resource "citrixadc_appfwprofile_jsondosurl_binding" "tf_binding1" {
 		name                        = citrixadc_appfwprofile.tf_appfwprofile.name
 		jsondosurl                  = ".*"
 		state                       = "ENABLED"
@@ -82,34 +56,7 @@ const testAccAppfwprofile_jsondosurl_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
 	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
 		name                     = "tf_appfwprofile"
-		bufferoverflowaction     = ["none"]
-		contenttypeaction        = ["none"]
-		cookieconsistencyaction  = ["none"]
-		creditcard               = ["none"]
-		creditcardaction         = ["none"]
-		crosssitescriptingaction = ["none"]
-		csrftagaction            = ["none"]
-		denyurlaction            = ["none"]
-		dynamiclearning          = ["none"]
-		fieldconsistencyaction   = ["none"]
-		fieldformataction        = ["none"]
-		fileuploadtypesaction    = ["none"]
-		inspectcontenttypes      = ["none"]
-		jsondosaction            = ["none"]
-		jsonsqlinjectionaction   = ["none"]
-		jsonxssaction            = ["none"]
-		multipleheaderaction     = ["none"]
-		sqlinjectionaction       = ["none"]
-		starturlaction           = ["none"]
 		type                     = ["HTML"]
-		xmlattachmentaction      = ["none"]
-		xmldosaction             = ["none"]
-		xmlformataction          = ["none"]
-		xmlsoapfaultaction       = ["none"]
-		xmlsqlinjectionaction    = ["none"]
-		xmlvalidationaction      = ["none"]
-		xmlwsiaction             = ["none"]
-		xmlxssaction             = ["none"]
 	}
 `
 
@@ -122,13 +69,31 @@ func TestAccAppfwprofile_jsondosurl_binding_basic(t *testing.T) {
 			{
 				Config: testAccAppfwprofile_jsondosurl_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppfwprofile_jsondosurl_bindingExist("citrixadc_appfwprofile_jsondosurl_binding.tf_binding", nil),
+					testAccCheckAppfwprofile_jsondosurl_bindingExist("citrixadc_appfwprofile_jsondosurl_binding.tf_binding1", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_jsondosurl_binding.tf_binding1", "name", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_jsondosurl_binding.tf_binding1", "jsondosurl", ".*"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_jsondosurl_binding.tf_binding1", "state", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_jsondosurl_binding.tf_binding1", "alertonly", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_jsondosurl_binding.tf_binding1", "isautodeployed", "AUTODEPLOYED"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_jsondosurl_binding.tf_binding1", "jsonmaxarraylengthcheck", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_jsondosurl_binding.tf_binding1", "jsonmaxdocumentlengthcheck", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_jsondosurl_binding.tf_binding1", "jsonmaxcontainerdepth", "5"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_jsondosurl_binding.tf_binding1", "jsonmaxobjectkeylengthcheck", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_jsondosurl_binding.tf_binding1", "jsonmaxarraylength", "100000"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_jsondosurl_binding.tf_binding1", "jsonmaxdocumentlength", "200000"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_jsondosurl_binding.tf_binding1", "jsonmaxobjectkeycountcheck", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_jsondosurl_binding.tf_binding1", "jsonmaxobjectkeylength", "128"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_jsondosurl_binding.tf_binding1", "jsonmaxobjectkeycount", "1000"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_jsondosurl_binding.tf_binding1", "jsonmaxstringlengthcheck", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_jsondosurl_binding.tf_binding1", "jsonmaxcontainerdepthcheck", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_jsondosurl_binding.tf_binding1", "jsonmaxstringlength", "1000"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_jsondosurl_binding.tf_binding1", "comment", "Testing"),
 				),
 			},
 			{
 				Config: testAccAppfwprofile_jsondosurl_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppfwprofile_jsondosurl_bindingNotExist("citrixadc_appfwprofile_jsondosurl_binding.tf_binding", "tf_appfwprofile,.*"),
+					testAccCheckAppfwprofile_jsondosurl_bindingNotExist("citrixadc_appfwprofile_jsondosurl_binding.tf_binding1", "tf_appfwprofile,.*"),
 				),
 			},
 		},

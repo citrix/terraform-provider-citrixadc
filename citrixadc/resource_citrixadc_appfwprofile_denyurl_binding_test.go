@@ -30,34 +30,7 @@ import (
 const testAccAppfwprofile_denyurl_binding_basic = `
 	resource citrixadc_appfwprofile demo_appfw {
 		name = "tfAcc_appfwprofile"
-		bufferoverflowaction = ["none"]
-		contenttypeaction = ["none"]
-		cookieconsistencyaction = ["none"]
-		creditcard = ["none"]
-		creditcardaction = ["none"]
-		crosssitescriptingaction = ["none"]
-		csrftagaction = ["none"]
-		denyurlaction = ["none"]
-		dynamiclearning = ["none"]
-		fieldconsistencyaction = ["none"]
-		fieldformataction = ["none"]
-		fileuploadtypesaction = ["none"]
-		inspectcontenttypes = ["none"]
-		jsondosaction = ["none"]
-		jsonsqlinjectionaction = ["none"]
-		jsonxssaction = ["none"]
-		multipleheaderaction = ["none"]
-		sqlinjectionaction = ["none"]
-		starturlaction = ["none"]
 		type = ["HTML"]
-		xmlattachmentaction = ["none"]
-		xmldosaction = ["none"]
-		xmlformataction = ["none"]
-		xmlsoapfaultaction = ["none"]
-		xmlsqlinjectionaction = ["none"]
-		xmlvalidationaction = ["none"]
-		xmlwsiaction = ["none"]
-		xmlxssaction = ["none"]
 	}
 
 	resource citrixadc_appfwprofile_denyurl_binding appfwprofile_denyurl1 {
@@ -66,6 +39,20 @@ const testAccAppfwprofile_denyurl_binding_basic = `
 		alertonly      = "OFF"
 		isautodeployed = "NOTAUTODEPLOYED"
 		state          = "ENABLED"
+	}
+	
+	resource citrixadc_appfwprofile_denyurl_binding appfwprofile_denyurl2 {
+		name = citrixadc_appfwprofile.demo_appfw.name
+		denyurl = "warning[.][^/?]*(|[?].*)$"
+		alertonly      = "OFF"
+		isautodeployed = "NOTAUTODEPLOYED"
+		state          = "ENABLED"
+	}
+`
+const testAccAppfwprofile_denyurl_binding_basic_step2 = `
+	resource citrixadc_appfwprofile demo_appfw {
+		name = "tfAcc_appfwprofile"
+		type = ["HTML"]
 	}
 `
 
@@ -81,6 +68,23 @@ func TestAccAppfwprofile_denyurl_binding_basic(t *testing.T) {
 					testAccCheckAppfwprofile_denyurl_bindingExist("citrixadc_appfwprofile_denyurl_binding.appfwprofile_denyurl1", nil),
 					resource.TestCheckResourceAttr("citrixadc_appfwprofile_denyurl_binding.appfwprofile_denyurl1", "name", "tfAcc_appfwprofile"),
 					resource.TestCheckResourceAttr("citrixadc_appfwprofile_denyurl_binding.appfwprofile_denyurl1", "denyurl", "debug[.][^/?]*(|[?].*)$"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_denyurl_binding.appfwprofile_denyurl1", "alertonly", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_denyurl_binding.appfwprofile_denyurl1", "isautodeployed", "NOTAUTODEPLOYED"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_denyurl_binding.appfwprofile_denyurl1", "state", "ENABLED"),
+
+					testAccCheckAppfwprofile_denyurl_bindingExist("citrixadc_appfwprofile_denyurl_binding.appfwprofile_denyurl2", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_denyurl_binding.appfwprofile_denyurl2", "name", "tfAcc_appfwprofile"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_denyurl_binding.appfwprofile_denyurl2", "denyurl", "warning[.][^/?]*(|[?].*)$"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_denyurl_binding.appfwprofile_denyurl2", "alertonly", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_denyurl_binding.appfwprofile_denyurl2", "isautodeployed", "NOTAUTODEPLOYED"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_denyurl_binding.appfwprofile_denyurl2", "state", "ENABLED"),
+				),
+			},
+			{
+				Config: testAccAppfwprofile_denyurl_binding_basic_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwprofile_denyurl_bindingNotExist("citrixadc_appfwprofile_denyurl_binding.appfwprofile_denyurl1", "tfAcc_appfwprofile,debug[.][^/?]*(|[?].*)$"),
+					testAccCheckAppfwprofile_denyurl_bindingNotExist("citrixadc_appfwprofile_denyurl_binding.appfwprofile_denyurl2", "tfAcc_appfwprofile,warning[.][^/?]*(|[?].*)$"),
 				),
 			},
 		},
@@ -132,6 +136,47 @@ func testAccCheckAppfwprofile_denyurl_bindingExist(n string, id *string) resourc
 
 		if data == nil {
 			return fmt.Errorf("appfwprofile_denyurl_binding %s not found", n)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAppfwprofile_denyurl_bindingNotExist(n string, id string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client := testAccProvider.Meta().(*NetScalerNitroClient).client
+
+		if !strings.Contains(id, ",") {
+			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
+		}
+		idSlice := strings.SplitN(id, ",", 3)
+
+		name := idSlice[0]
+		denyurl := idSlice[1]
+
+		findParams := service.FindParams{
+			ResourceType:             "appfwprofile_denyurl_binding",
+			ResourceName:             name,
+			ResourceMissingErrorCode: 258,
+		}
+		dataArr, err := client.FindResourceArrayWithParams(findParams)
+
+		// Unexpected error
+		if err != nil {
+			return err
+		}
+
+		// Iterate through results to hopefully not find the one with the matching secondIdComponent
+		found := false
+		for _, v := range dataArr {
+			if v["denyurl"].(string) == denyurl {
+				found = true
+				break
+			}
+		}
+
+		if found {
+			return fmt.Errorf("appfwprofile_denyurl_binding %s was found, but it should have been destroyed", n)
 		}
 
 		return nil

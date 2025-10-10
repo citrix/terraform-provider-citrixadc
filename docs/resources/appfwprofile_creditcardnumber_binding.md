@@ -77,5 +77,5 @@ In addition to the arguments, the following attributes are available:
 A appfwprofile_creditcardnumber_binding can be imported using its id, e.g.
 
 ```shell
-terraform import citrixadc_appfwprofile_creditcardnumber_binding.tf_binding tf_csaction
+terraform import citrixadc_appfwprofile_creditcardnumber_binding.tf_binding tf_appfwprofile,123456789,www.example.com
 ```

@@ -17,49 +17,30 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccAppfwprofile_xmlxss_binding_basic = `
 	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
 		name                     = "tf_appfwprofile"
-		bufferoverflowaction     = ["none"]
-		contenttypeaction        = ["none"]
-		cookieconsistencyaction  = ["none"]
-		creditcard               = ["none"]
-		creditcardaction         = ["none"]
-		crosssitescriptingaction = ["none"]
-		csrftagaction            = ["none"]
-		denyurlaction            = ["none"]
-		dynamiclearning          = ["none"]
-		fieldconsistencyaction   = ["none"]
-		fieldformataction        = ["none"]
-		fileuploadtypesaction    = ["none"]
-		inspectcontenttypes      = ["none"]
-		jsondosaction            = ["none"]
-		jsonsqlinjectionaction   = ["none"]
-		jsonxssaction            = ["none"]
-		multipleheaderaction     = ["none"]
-		sqlinjectionaction       = ["none"]
-		starturlaction           = ["none"]
 		type                     = ["HTML"]
-		xmlattachmentaction      = ["none"]
-		xmldosaction             = ["none"]
-		xmlformataction          = ["none"]
-		xmlsoapfaultaction       = ["none"]
-		xmlsqlinjectionaction    = ["none"]
-		xmlvalidationaction      = ["none"]
-		xmlwsiaction             = ["none"]
-		xmlxssaction             = ["none"]
 	}
-	resource "citrixadc_appfwprofile_xmlxss_binding" "tf_binding" {
+	resource "citrixadc_appfwprofile_xmlxss_binding" "tf_binding1" {
 		name                    = citrixadc_appfwprofile.tf_appfwprofile.name
 		xmlxss                  = "tf_xmlxss"
-		as_scan_location_xmlxss = "ELEMENT"
+		state                   = "ENABLED"
+		alertonly               = "ON"
+		isregex_xmlxss          = "NOTREGEX"
+		isautodeployed          = "AUTODEPLOYED"
+	}
+	resource "citrixadc_appfwprofile_xmlxss_binding" "tf_binding2" {
+		name                    = citrixadc_appfwprofile.tf_appfwprofile.name
+		xmlxss                  = "new_tf_xmlxss"
 		state                   = "ENABLED"
 		alertonly               = "ON"
 		isregex_xmlxss          = "NOTREGEX"
@@ -71,34 +52,7 @@ const testAccAppfwprofile_xmlxss_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
 	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
 		name                     = "tf_appfwprofile"
-		bufferoverflowaction     = ["none"]
-		contenttypeaction        = ["none"]
-		cookieconsistencyaction  = ["none"]
-		creditcard               = ["none"]
-		creditcardaction         = ["none"]
-		crosssitescriptingaction = ["none"]
-		csrftagaction            = ["none"]
-		denyurlaction            = ["none"]
-		dynamiclearning          = ["none"]
-		fieldconsistencyaction   = ["none"]
-		fieldformataction        = ["none"]
-		fileuploadtypesaction    = ["none"]
-		inspectcontenttypes      = ["none"]
-		jsondosaction            = ["none"]
-		jsonsqlinjectionaction   = ["none"]
-		jsonxssaction            = ["none"]
-		multipleheaderaction     = ["none"]
-		sqlinjectionaction       = ["none"]
-		starturlaction           = ["none"]
 		type                     = ["HTML"]
-		xmlattachmentaction      = ["none"]
-		xmldosaction             = ["none"]
-		xmlformataction          = ["none"]
-		xmlsoapfaultaction       = ["none"]
-		xmlsqlinjectionaction    = ["none"]
-		xmlvalidationaction      = ["none"]
-		xmlwsiaction             = ["none"]
-		xmlxssaction             = ["none"]
 	}
 `
 
@@ -111,7 +65,22 @@ func TestAccAppfwprofile_xmlxss_binding_basic(t *testing.T) {
 			{
 				Config: testAccAppfwprofile_xmlxss_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppfwprofile_xmlxss_bindingExist("citrixadc_appfwprofile_xmlxss_binding.tf_binding", nil),
+					testAccCheckAppfwprofile_xmlxss_bindingExist("citrixadc_appfwprofile_xmlxss_binding.tf_binding1", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlxss_binding.tf_binding1", "name", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlxss_binding.tf_binding1", "xmlxss", "tf_xmlxss"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlxss_binding.tf_binding1", "state", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlxss_binding.tf_binding1", "alertonly", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlxss_binding.tf_binding1", "isautodeployed", "AUTODEPLOYED"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlxss_binding.tf_binding1", "isregex_xmlxss", "NOTREGEX"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlxss_binding.tf_binding1", "as_scan_location_xmlxss", "ELEMENT"),
+					testAccCheckAppfwprofile_xmlxss_bindingExist("citrixadc_appfwprofile_xmlxss_binding.tf_binding2", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlxss_binding.tf_binding2", "name", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlxss_binding.tf_binding2", "xmlxss", "new_tf_xmlxss"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlxss_binding.tf_binding2", "state", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlxss_binding.tf_binding2", "alertonly", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlxss_binding.tf_binding2", "isautodeployed", "AUTODEPLOYED"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlxss_binding.tf_binding2", "isregex_xmlxss", "NOTREGEX"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlxss_binding.tf_binding2", "as_scan_location_xmlxss", "ELEMENT"),
 				),
 			},
 			{

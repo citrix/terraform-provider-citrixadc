@@ -88,6 +88,18 @@ func resourceCitrixAdcAppfwprofile_sqlinjection_binding() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
+			"ruletype": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"resourceid": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -103,7 +115,11 @@ func createAppfwprofile_sqlinjection_bindingFunc(d *schema.ResourceData, meta in
 	as_value_expr_sql := d.Get("as_value_expr_sql").(string)
 	bindingId := fmt.Sprintf("%s,%s,%s,%s", appFwName, sqlinjection, formactionurl_sql, as_scan_location_sql)
 	if as_value_type_sql != "" && as_value_expr_sql != "" {
-		bindingId = fmt.Sprintf("%s,%s,%s", bindingId, as_value_type_sql, as_value_expr_sql)
+		rule_type := d.Get("ruletype").(string)
+		if rule_type == "" {
+			rule_type = "ALLOW"
+		}
+		bindingId = fmt.Sprintf("%s,%s,%s,%s", bindingId, as_value_type_sql, as_value_expr_sql, rule_type)
 	}
 
 	appfwprofile_sqlinjection_binding := appfw.Appfwprofilesqlinjectionbinding{
@@ -119,6 +135,8 @@ func createAppfwprofile_sqlinjection_bindingFunc(d *schema.ResourceData, meta in
 		Name:              appFwName,
 		Sqlinjection:      sqlinjection,
 		State:             d.Get("state").(string),
+		Ruletype:          d.Get("ruletype").(string),
+		Resourceid:        d.Get("resourceid").(string),
 	}
 
 	_, err := client.AddResource(service.Appfwprofile_sqlinjection_binding.Type(), appFwName, &appfwprofile_sqlinjection_binding)
@@ -148,6 +166,7 @@ func readAppfwprofile_sqlinjection_bindingFunc(d *schema.ResourceData, meta inte
 	as_scan_location_sql := ""
 	as_value_type_sql := ""
 	as_value_expr_sql := ""
+	rule_type := ""
 	if len(idSlice) > 2 {
 		formactionurl_sql = idSlice[2]
 		as_scan_location_sql = idSlice[3]
@@ -159,11 +178,16 @@ func readAppfwprofile_sqlinjection_bindingFunc(d *schema.ResourceData, meta inte
 	if len(idSlice) > 4 {
 		as_value_type_sql = idSlice[4]
 		as_value_expr_sql = idSlice[5]
+		rule_type = idSlice[6]
 	} else {
 		as_value_type_sql = d.Get("as_value_type_sql").(string)
 		as_value_expr_sql = d.Get("as_value_expr_sql").(string)
 		if as_value_type_sql != "" && as_value_expr_sql != "" {
-			bindingId = fmt.Sprintf("%s,%s,%s", bindingId, as_value_type_sql, as_value_expr_sql)
+			rule_type = d.Get("ruletype").(string)
+			if rule_type == "" {
+				rule_type = "ALLOW"
+			}
+			bindingId = fmt.Sprintf("%s,%s,%s,%s", bindingId, as_value_type_sql, as_value_expr_sql, rule_type)
 		}
 	}
 	d.SetId(bindingId)
@@ -195,7 +219,7 @@ func readAppfwprofile_sqlinjection_bindingFunc(d *schema.ResourceData, meta inte
 	for i, v := range dataArr {
 		if v["sqlinjection"].(string) == sqlinjection && v["formactionurl_sql"].(string) == formactionurl_sql && v["as_scan_location_sql"].(string) == as_scan_location_sql {
 			if as_value_type_sql != "" && as_value_expr_sql != "" {
-				if v["as_value_type_sql"] != nil && v["as_value_expr_sql"] != nil && v["as_value_type_sql"].(string) == as_value_type_sql && v["as_value_expr_sql"].(string) == as_value_expr_sql {
+				if v["as_value_type_sql"] != nil && v["as_value_expr_sql"] != nil && v["as_value_type_sql"].(string) == as_value_type_sql && v["as_value_expr_sql"].(string) == as_value_expr_sql && v["ruletype"].(string) == rule_type {
 					foundIndex = i
 					break
 				}
@@ -229,6 +253,8 @@ func readAppfwprofile_sqlinjection_bindingFunc(d *schema.ResourceData, meta inte
 	d.Set("name", data["name"])
 	d.Set("sqlinjection", data["sqlinjection"])
 	d.Set("state", data["state"])
+	d.Set("ruletype", data["ruletype"])
+	d.Set("resourceid", data["resourceid"])
 
 	return nil
 
