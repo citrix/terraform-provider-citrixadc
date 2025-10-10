@@ -58,6 +58,7 @@ func resourceCitrixAdcAppfwsignatures() *schema.Resource {
 			},
 			"src": {
 				Type:     schema.TypeString,
+				ForceNew: true,
 				Required: true,
 			},
 			"vendortype": {
