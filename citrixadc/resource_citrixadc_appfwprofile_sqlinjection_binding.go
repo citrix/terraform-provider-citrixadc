@@ -217,11 +217,7 @@ func readAppfwprofile_sqlinjection_bindingFunc(d *schema.ResourceData, meta inte
 	// Iterate through results to find the one with the right policy name
 	foundIndex := -1
 	for i, v := range dataArr {
-		unescapedURL, err := unescapeStringURL(v["formactionurl_sql"].(string))
-		if err != nil {
-			return err
-		}
-		if v["sqlinjection"].(string) == sqlinjection && unescapedURL == formactionurl_sql && v["as_scan_location_sql"].(string) == as_scan_location_sql {
+		if v["sqlinjection"].(string) == sqlinjection && v["formactionurl_sql"].(string) == formactionurl_sql && v["as_scan_location_sql"].(string) == as_scan_location_sql {
 			if as_value_type_sql != "" && as_value_expr_sql != "" {
 				if v["as_value_type_sql"] != nil && v["as_value_expr_sql"] != nil && v["as_value_type_sql"].(string) == as_value_type_sql && v["as_value_expr_sql"].(string) == as_value_expr_sql && v["ruletype"].(string) == rule_type {
 					foundIndex = i
@@ -244,18 +240,13 @@ func readAppfwprofile_sqlinjection_bindingFunc(d *schema.ResourceData, meta inte
 	// Fallthrough
 	data := dataArr[foundIndex]
 
-	unescaped_formactionurl_sql, err := unescapeStringURL(data["formactionurl_sql"].(string))
-	if err != nil {
-		return err
-	}
-
 	d.Set("name", data["name"])
 	d.Set("alertonly", data["alertonly"])
 	d.Set("as_scan_location_sql", data["as_scan_location_sql"])
 	d.Set("as_value_expr_sql", data["as_value_expr_sql"])
 	d.Set("as_value_type_sql", data["as_value_type_sql"])
 	d.Set("comment", data["comment"])
-	d.Set("formactionurl_sql", unescaped_formactionurl_sql)
+	d.Set("formactionurl_sql", data["formactionurl_sql"].(string))
 	d.Set("isautodeployed", data["isautodeployed"])
 	d.Set("isregex_sql", data["isregex_sql"])
 	d.Set("isvalueregex_sql", data["isvalueregex_sql"])

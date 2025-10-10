@@ -156,11 +156,7 @@ func testAccCheckAppfwprofile_sqlinjection_bindingExist(n string, id *string) re
 		foundIndex := -1
 		for i, v := range dataArr {
 			if v["sqlinjection"].(string) == sqlinjection {
-				unescapedURL, err := unescapeStringURL(v["formactionurl_sql"].(string))
-				if err != nil {
-					return err
-				}
-				if v["formactionurl_sql"] != nil && v["as_scan_location_sql"] != nil && v["as_value_type_sql"] != nil && v["as_value_expr_sql"] != nil && v["as_value_type_sql"].(string) == as_value_type_sql && v["as_value_expr_sql"].(string) == as_value_expr_sql && v["as_scan_location_sql"].(string) == as_scan_location_sql && unescapedURL == formactionurl_sql {
+				if v["formactionurl_sql"] != nil && v["as_scan_location_sql"] != nil && v["as_value_type_sql"] != nil && v["as_value_expr_sql"] != nil && v["as_value_type_sql"].(string) == as_value_type_sql && v["as_value_expr_sql"].(string) == as_value_expr_sql && v["as_scan_location_sql"].(string) == as_scan_location_sql && v["formactionurl_sql"].(string) == formactionurl_sql {
 					foundIndex = i
 					break
 				}
