@@ -104,8 +104,8 @@ func createAppfwprofile_fileuploadtype_bindingFunc(d *schema.ResourceData, meta 
 	name := d.Get("name")
 	fileuploadtype := d.Get("fileuploadtype")
 	as_fileuploadtypes_url := d.Get("as_fileuploadtypes_url")
-	filetype := strings.Join(toStringList(d.Get("filetype").([]interface{})), " ")
-	bindingId := fmt.Sprintf("%s,%s,%s,%s", name, fileuploadtype, as_fileuploadtypes_url, url.QueryEscape(filetype))
+	filetype := strings.Join(toStringList(d.Get("filetype").([]interface{})), ";")
+	bindingId := fmt.Sprintf("%s,%s,%s,%s", name, fileuploadtype, as_fileuploadtypes_url, filetype)
 	appfwprofile_fileuploadtype_binding := appfw.Appfwprofilefileuploadtypebinding{
 		Alertonly:                 d.Get("alertonly").(string),
 		Asfileuploadtypesurl:      d.Get("as_fileuploadtypes_url").(string),
@@ -149,7 +149,7 @@ func readAppfwprofile_fileuploadtype_bindingFunc(d *schema.ResourceData, meta in
 	if len(idSlice) > 3 {
 		filetype = idSlice[3]
 	} else {
-		filetype = url.QueryEscape(strings.Join(toStringList(d.Get("filetype").([]interface{})), " "))
+		filetype = strings.Join(toStringList(d.Get("filetype").([]interface{})), ";")
 		bindingId = fmt.Sprintf("%s,%s,%s,%s", name, fileuploadtype, as_fileuploadtypes_url, filetype)
 	}
 
@@ -186,7 +186,7 @@ func readAppfwprofile_fileuploadtype_bindingFunc(d *schema.ResourceData, meta in
 				dataFiletype := ""
 				if v["filetype"] != nil {
 					if filetypeSlice, ok := v["filetype"].([]interface{}); ok {
-						dataFiletype = url.QueryEscape(strings.Join(toStringList(filetypeSlice), " "))
+						dataFiletype = strings.Join(toStringList(filetypeSlice), ";")
 					}
 				}
 				if dataFiletype == filetype {
@@ -234,18 +234,12 @@ func deleteAppfwprofile_fileuploadtype_bindingFunc(d *schema.ResourceData, meta 
 	name := idSlice[0]
 	fileuploadtype := idSlice[1]
 	as_fileuploadtypes_url := idSlice[2]
-	filetype := ""
-	if len(idSlice) > 3 {
-		filetype = idSlice[3]
-	} else {
-		filetype = url.QueryEscape(strings.Join(toStringList(d.Get("filetype").([]interface{})), " "))
-	}
 
 	args := make([]string, 0)
 	args = append(args, fmt.Sprintf("fileuploadtype:%s", fileuploadtype))
-	args = append(args, fmt.Sprintf("as_fileuploadtypes_url:%s", as_fileuploadtypes_url))
-	if filetype != "" {
-		args = append(args, fmt.Sprintf("filetype:%s", filetype))
+	args = append(args, fmt.Sprintf("as_fileuploadtypes_url:%s", url.QueryEscape(as_fileuploadtypes_url)))
+	if _, ok := d.GetOk("filetype"); ok {
+		args = append(args, fmt.Sprintf("filetype:%s", strings.Join(toStringList(d.Get("filetype").([]interface{})), ";")))
 	}
 	if val, ok := d.GetOk("ruletype"); ok {
 		args = append(args, fmt.Sprintf("ruletype:%s", url.QueryEscape(val.(string))))

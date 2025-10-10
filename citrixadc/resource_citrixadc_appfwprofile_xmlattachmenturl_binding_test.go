@@ -27,34 +27,7 @@ import (
 const testAccAppfwprofile_xmlattachmenturl_binding_basic = `
 	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
 		name                     = "tf_appfwprofile"
-		bufferoverflowaction     = ["none"]
-		contenttypeaction        = ["none"]
-		cookieconsistencyaction  = ["none"]
-		creditcard               = ["none"]
-		creditcardaction         = ["none"]
-		crosssitescriptingaction = ["none"]
-		csrftagaction            = ["none"]
-		denyurlaction            = ["none"]
-		dynamiclearning          = ["none"]
-		fieldconsistencyaction   = ["none"]
-		fieldformataction        = ["none"]
-		fileuploadtypesaction    = ["none"]
-		inspectcontenttypes      = ["none"]
-		jsondosaction            = ["none"]
-		jsonsqlinjectionaction   = ["none"]
-		jsonxssaction            = ["none"]
-		multipleheaderaction     = ["none"]
-		sqlinjectionaction       = ["none"]
-		starturlaction           = ["none"]
 		type                     = ["HTML"]
-		xmlattachmentaction      = ["none"]
-		xmldosaction             = ["none"]
-		xmlformataction          = ["none"]
-		xmlsoapfaultaction       = ["none"]
-		xmlsqlinjectionaction    = ["none"]
-		xmlvalidationaction      = ["none"]
-		xmlwsiaction             = ["none"]
-		xmlxssaction             = ["none"]
 	}
 	resource "citrixadc_appfwprofile_xmlattachmenturl_binding" "tf_binding" {
 		name                          = citrixadc_appfwprofile.tf_appfwprofile.name
@@ -74,34 +47,7 @@ const testAccAppfwprofile_xmlattachmenturl_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
 	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
 		name                     = "tf_appfwprofile"
-		bufferoverflowaction     = ["none"]
-		contenttypeaction        = ["none"]
-		cookieconsistencyaction  = ["none"]
-		creditcard               = ["none"]
-		creditcardaction         = ["none"]
-		crosssitescriptingaction = ["none"]
-		csrftagaction            = ["none"]
-		denyurlaction            = ["none"]
-		dynamiclearning          = ["none"]
-		fieldconsistencyaction   = ["none"]
-		fieldformataction        = ["none"]
-		fileuploadtypesaction    = ["none"]
-		inspectcontenttypes      = ["none"]
-		jsondosaction            = ["none"]
-		jsonsqlinjectionaction   = ["none"]
-		jsonxssaction            = ["none"]
-		multipleheaderaction     = ["none"]
-		sqlinjectionaction       = ["none"]
-		starturlaction           = ["none"]
 		type                     = ["HTML"]
-		xmlattachmentaction      = ["none"]
-		xmldosaction             = ["none"]
-		xmlformataction          = ["none"]
-		xmlsoapfaultaction       = ["none"]
-		xmlsqlinjectionaction    = ["none"]
-		xmlvalidationaction      = ["none"]
-		xmlwsiaction             = ["none"]
-		xmlxssaction             = ["none"]
 	}
 `
 
@@ -115,6 +61,16 @@ func TestAccAppfwprofile_xmlattachmenturl_binding_basic(t *testing.T) {
 				Config: testAccAppfwprofile_xmlattachmenturl_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppfwprofile_xmlattachmenturl_bindingExist("citrixadc_appfwprofile_xmlattachmenturl_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlattachmenturl_binding.tf_binding", "name", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlattachmenturl_binding.tf_binding", "xmlattachmenturl", ".*"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlattachmenturl_binding.tf_binding", "xmlattachmentcontenttype", "abc*"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlattachmenturl_binding.tf_binding", "alertonly", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlattachmenturl_binding.tf_binding", "state", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlattachmenturl_binding.tf_binding", "isautodeployed", "AUTODEPLOYED"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlattachmenturl_binding.tf_binding", "comment", "Testing"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlattachmenturl_binding.tf_binding", "xmlattachmentcontenttypecheck", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlattachmenturl_binding.tf_binding", "xmlmaxattachmentsize", "1000"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlattachmenturl_binding.tf_binding", "xmlmaxattachmentsizecheck", "ON"),
 				),
 			},
 			{

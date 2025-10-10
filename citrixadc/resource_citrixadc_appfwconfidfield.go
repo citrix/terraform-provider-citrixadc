@@ -58,7 +58,7 @@ func createAppfwconfidfieldFunc(d *schema.ResourceData, meta interface{}) error 
 	client := meta.(*NetScalerNitroClient).client
 	appfwconfidfieldName := d.Get("fieldname").(string)
 	appfwconfidfieldUrl := d.Get("url").(string)
-	bindingId := fmt.Sprintf("%s,%s", appfwconfidfieldName, appfwconfidfieldUrl)
+	resourceId := fmt.Sprintf("%s,%s", appfwconfidfieldName, appfwconfidfieldUrl)
 	appfwconfidfield := appfw.Appfwconfidfield{
 		Comment:   d.Get("comment").(string),
 		Fieldname: d.Get("fieldname").(string),
@@ -72,7 +72,7 @@ func createAppfwconfidfieldFunc(d *schema.ResourceData, meta interface{}) error 
 		return err
 	}
 
-	d.SetId(bindingId)
+	d.SetId(resourceId)
 
 	err = readAppfwconfidfieldFunc(d, meta)
 	if err != nil {
@@ -163,7 +163,7 @@ func updateAppfwconfidfieldFunc(d *schema.ResourceData, meta interface{}) error 
 
 		err := client.UpdateUnnamedResource(service.Appfwconfidfield.Type(), &appfwconfidfield)
 		if err != nil {
-			return fmt.Errorf("Error updating appfwconfidfield %s", appfwconfidfieldName)
+			return fmt.Errorf("error updating appfwconfidfield %s", appfwconfidfieldName)
 		}
 	}
 	return readAppfwconfidfieldFunc(d, meta)

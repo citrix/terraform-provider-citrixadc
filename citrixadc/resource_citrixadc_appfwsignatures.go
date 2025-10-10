@@ -116,7 +116,6 @@ func createAppfwsignaturesFunc(d *schema.ResourceData, meta interface{}) error {
 		Vendortype:              d.Get("vendortype").(string),
 		Xslt:                    d.Get("xslt").(string),
 		Autoenablenewsignatures: d.Get("autoenablenewsignatures").(string),
-		Ruleid:                  toIntegerList(d.Get("ruleid").([]interface{})),
 		Category:                d.Get("category").(string),
 		Enabled:                 d.Get("enabled").(string),
 		Action:                  toStringList(d.Get("action").([]interface{})),
@@ -130,6 +129,14 @@ func createAppfwsignaturesFunc(d *schema.ResourceData, meta interface{}) error {
 	err := client.ActOnResource(service.Appfwsignatures.Type(), &appfwsignatures, "Import")
 	if err != nil {
 		return err
+	}
+
+	if _, ok := d.GetOk("ruleid"); ok {
+		appfwsignatures.Ruleid = toIntegerList(d.Get("ruleid").([]interface{}))
+		err := client.ActOnResource(service.Appfwsignatures.Type(), &appfwsignatures, "Import")
+		if err != nil {
+			return err
+		}
 	}
 
 	err = client.ActOnResource(service.Appfwsignatures.Type(), &appfwsignatures_update_obj, "update")
@@ -267,12 +274,9 @@ func deleteAppfwsignaturesFunc(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppfwsignaturesFunc")
 	client := meta.(*NetScalerNitroClient).client
 	appfwsignaturesName := d.Id()
-	// Only delete if "ruleid" is not set by user
-	if _, ok := d.GetOk("ruleid"); !ok {
-		err := client.DeleteResource(service.Appfwsignatures.Type(), appfwsignaturesName)
-		if err != nil {
-			return err
-		}
+	err := client.DeleteResource(service.Appfwsignatures.Type(), appfwsignaturesName)
+	if err != nil {
+		return err
 	}
 
 	d.SetId("")

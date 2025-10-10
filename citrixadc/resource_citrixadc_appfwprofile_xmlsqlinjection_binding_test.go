@@ -28,38 +28,19 @@ import (
 const testAccAppfwprofile_xmlsqlinjection_binding_basic = `
 	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
 		name                     = "tf_appfwprofile"
-		bufferoverflowaction     = ["none"]
-		contenttypeaction        = ["none"]
-		cookieconsistencyaction  = ["none"]
-		creditcard               = ["none"]
-		creditcardaction         = ["none"]
-		crosssitescriptingaction = ["none"]
-		csrftagaction            = ["none"]
-		denyurlaction            = ["none"]
-		dynamiclearning          = ["none"]
-		fieldconsistencyaction   = ["none"]
-		fieldformataction        = ["none"]
-		fileuploadtypesaction    = ["none"]
-		inspectcontenttypes      = ["none"]
-		jsondosaction            = ["none"]
-		jsonsqlinjectionaction   = ["none"]
-		jsonxssaction            = ["none"]
-		multipleheaderaction     = ["none"]
-		sqlinjectionaction       = ["none"]
-		starturlaction           = ["none"]
 		type                     = ["HTML"]
-		xmlattachmentaction      = ["none"]
-		xmldosaction             = ["none"]
-		xmlformataction          = ["none"]
-		xmlsoapfaultaction       = ["none"]
-		xmlsqlinjectionaction    = ["none"]
-		xmlvalidationaction      = ["none"]
-		xmlwsiaction             = ["none"]
-		xmlxssaction             = ["none"]
 	}
-	resource "citrixadc_appfwprofile_xmlsqlinjection_binding" "tf_binding" {
+	resource "citrixadc_appfwprofile_xmlsqlinjection_binding" "tf_binding1" {
 		name                    = citrixadc_appfwprofile.tf_appfwprofile.name
 		xmlsqlinjection         = "hello"
+		alertonly               = "ON"
+		isautodeployed          = "AUTODEPLOYED"
+		state                   = "ENABLED"
+		comment                 = "Testing"
+	}
+	resource "citrixadc_appfwprofile_xmlsqlinjection_binding" "tf_binding2" {
+		name                    = citrixadc_appfwprofile.tf_appfwprofile.name
+		xmlsqlinjection         = "world"
 		alertonly               = "ON"
 		isautodeployed          = "AUTODEPLOYED"
 		state                   = "ENABLED"
@@ -71,34 +52,7 @@ const testAccAppfwprofile_xmlsqlinjection_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
 	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
 		name                     = "tf_appfwprofile"
-		bufferoverflowaction     = ["none"]
-		contenttypeaction        = ["none"]
-		cookieconsistencyaction  = ["none"]
-		creditcard               = ["none"]
-		creditcardaction         = ["none"]
-		crosssitescriptingaction = ["none"]
-		csrftagaction            = ["none"]
-		denyurlaction            = ["none"]
-		dynamiclearning          = ["none"]
-		fieldconsistencyaction   = ["none"]
-		fieldformataction        = ["none"]
-		fileuploadtypesaction    = ["none"]
-		inspectcontenttypes      = ["none"]
-		jsondosaction            = ["none"]
-		jsonsqlinjectionaction   = ["none"]
-		jsonxssaction            = ["none"]
-		multipleheaderaction     = ["none"]
-		sqlinjectionaction       = ["none"]
-		starturlaction           = ["none"]
 		type                     = ["HTML"]
-		xmlattachmentaction      = ["none"]
-		xmldosaction             = ["none"]
-		xmlformataction          = ["none"]
-		xmlsoapfaultaction       = ["none"]
-		xmlsqlinjectionaction    = ["none"]
-		xmlvalidationaction      = ["none"]
-		xmlwsiaction             = ["none"]
-		xmlxssaction             = ["none"]
 	}
 `
 
@@ -111,20 +65,29 @@ func TestAccAppfwprofile_xmlsqlinjection_binding_basic(t *testing.T) {
 			{
 				Config: testAccAppfwprofile_xmlsqlinjection_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppfwprofile_xmlsqlinjection_bindingExist("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding", nil),
-					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding", "name", "tf_appfwprofile"),
-					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding", "xmlsqlinjection", "hello"),
-					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding", "alertonly", "ON"),
-					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding", "isautodeployed", "AUTODEPLOYED"),
-					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding", "state", "ENABLED"),
-					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding", "comment", "Testing"),
-					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding", "as_scan_location_xmlsql", "ELEMENT"),
+					testAccCheckAppfwprofile_xmlsqlinjection_bindingExist("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding1", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding1", "name", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding1", "xmlsqlinjection", "hello"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding1", "alertonly", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding1", "isautodeployed", "AUTODEPLOYED"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding1", "state", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding1", "comment", "Testing"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding1", "as_scan_location_xmlsql", "ELEMENT"),
+					testAccCheckAppfwprofile_xmlsqlinjection_bindingExist("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding2", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding2", "name", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding2", "xmlsqlinjection", "world"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding2", "alertonly", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding2", "isautodeployed", "AUTODEPLOYED"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding2", "state", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding2", "comment", "Testing"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding2", "as_scan_location_xmlsql", "ELEMENT"),
 				),
 			},
 			{
 				Config: testAccAppfwprofile_xmlsqlinjection_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppfwprofile_xmlsqlinjection_bindingNotExist("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding", "tf_appfwprofile,hello", "ELEMENT"),
+					testAccCheckAppfwprofile_xmlsqlinjection_bindingNotExist("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding1", "tf_appfwprofile,hello", "ELEMENT"),
+					testAccCheckAppfwprofile_xmlsqlinjection_bindingNotExist("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding2", "tf_appfwprofile,world", "ELEMENT"),
 				),
 			},
 		},

@@ -28,34 +28,7 @@ import (
 const testAccAppfwprofile_jsonsqlurl_binding_basic = `
 	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
 		name                     = "tf_appfwprofile"
-		bufferoverflowaction     = ["none"]
-		contenttypeaction        = ["none"]
-		cookieconsistencyaction  = ["none"]
-		creditcard               = ["none"]
-		creditcardaction         = ["none"]
-		crosssitescriptingaction = ["none"]
-		csrftagaction            = ["none"]
-		denyurlaction            = ["none"]
-		dynamiclearning          = ["none"]
-		fieldconsistencyaction   = ["none"]
-		fieldformataction        = ["none"]
-		fileuploadtypesaction    = ["none"]
-		inspectcontenttypes      = ["none"]
-		jsondosaction            = ["none"]
-		jsonsqlinjectionaction   = ["none"]
-		jsonxssaction            = ["none"]
-		multipleheaderaction     = ["none"]
-		sqlinjectionaction       = ["none"]
-		starturlaction           = ["none"]
 		type                     = ["HTML"]
-		xmlattachmentaction      = ["none"]
-		xmldosaction             = ["none"]
-		xmlformataction          = ["none"]
-		xmlsoapfaultaction       = ["none"]
-		xmlsqlinjectionaction    = ["none"]
-		xmlvalidationaction      = ["none"]
-		xmlwsiaction             = ["none"]
-		xmlxssaction             = ["none"]
 	}
 	resource "citrixadc_appfwprofile_jsonsqlurl_binding" "tf_binding" {
 		name           = citrixadc_appfwprofile.tf_appfwprofile.name
@@ -82,34 +55,7 @@ const testAccAppfwprofile_jsonsqlurl_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
 	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
 		name                     = "tf_appfwprofile"
-		bufferoverflowaction     = ["none"]
-		contenttypeaction        = ["none"]
-		cookieconsistencyaction  = ["none"]
-		creditcard               = ["none"]
-		creditcardaction         = ["none"]
-		crosssitescriptingaction = ["none"]
-		csrftagaction            = ["none"]
-		denyurlaction            = ["none"]
-		dynamiclearning          = ["none"]
-		fieldconsistencyaction   = ["none"]
-		fieldformataction        = ["none"]
-		fileuploadtypesaction    = ["none"]
-		inspectcontenttypes      = ["none"]
-		jsondosaction            = ["none"]
-		jsonsqlinjectionaction   = ["none"]
-		jsonxssaction            = ["none"]
-		multipleheaderaction     = ["none"]
-		sqlinjectionaction       = ["none"]
-		starturlaction           = ["none"]
 		type                     = ["HTML"]
-		xmlattachmentaction      = ["none"]
-		xmldosaction             = ["none"]
-		xmlformataction          = ["none"]
-		xmlsoapfaultaction       = ["none"]
-		xmlsqlinjectionaction    = ["none"]
-		xmlvalidationaction      = ["none"]
-		xmlwsiaction             = ["none"]
-		xmlxssaction             = ["none"]
 	}
 `
 
@@ -123,9 +69,9 @@ func TestAccAppfwprofile_jsonsqlurl_binding_basic(t *testing.T) {
 				Config: testAccAppfwprofile_jsonsqlurl_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppfwprofile_jsonsqlurl_bindingExist("citrixadc_appfwprofile_jsonsqlurl_binding.tf_binding", nil),
-					testAccCheckAppfwprofile_jsonsqlurl_bindingExist("citrixadc_appfwprofile_jsonsqlurl_binding.tf_binding2", nil),
 					resource.TestCheckResourceAttr("citrixadc_appfwprofile_jsonsqlurl_binding.tf_binding", "name", "tf_appfwprofile"),
 					resource.TestCheckResourceAttr("citrixadc_appfwprofile_jsonsqlurl_binding.tf_binding", "jsonsqlurl", "[abc][a-z]a*"),
+					testAccCheckAppfwprofile_jsonsqlurl_bindingExist("citrixadc_appfwprofile_jsonsqlurl_binding.tf_binding2", nil),
 					resource.TestCheckResourceAttr("citrixadc_appfwprofile_jsonsqlurl_binding.tf_binding2", "name", "tf_appfwprofile"),
 					resource.TestCheckResourceAttr("citrixadc_appfwprofile_jsonsqlurl_binding.tf_binding2", "keyname_json_sql", "id"),
 					resource.TestCheckResourceAttr("citrixadc_appfwprofile_jsonsqlurl_binding.tf_binding2", "as_value_type_json_sql", "SpecialString"),

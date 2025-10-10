@@ -27,34 +27,7 @@ import (
 const testAccAppfwpolicy_add = `
 	resource citrixadc_appfwprofile tfAcc_appfwprofile {
 		name = "tfAcc_appfwprofile"
-		bufferoverflowaction = ["none"]
-		contenttypeaction = ["none"]
-		cookieconsistencyaction = ["none"]
-		creditcard = ["none"]
-		creditcardaction = ["none"]
-		crosssitescriptingaction = ["none"]
-		csrftagaction = ["none"]
-		denyurlaction = ["none"]
-		dynamiclearning = ["none"]
-		fieldconsistencyaction = ["none"]
-		fieldformataction = ["none"]
-		fileuploadtypesaction = ["none"]
-		inspectcontenttypes = ["none"]
-		jsondosaction = ["none"]
-		jsonsqlinjectionaction = ["none"]
-		jsonxssaction = ["none"]
-		multipleheaderaction = ["none"]
-		sqlinjectionaction = ["none"]
-		starturlaction = ["none"]
 		type = ["HTML"]
-		xmlattachmentaction = ["none"]
-		xmldosaction = ["none"]
-		xmlformataction = ["none"]
-		xmlsoapfaultaction = ["none"]
-		xmlsqlinjectionaction = ["none"]
-		xmlvalidationaction = ["none"]
-		xmlwsiaction = ["none"]
-		xmlxssaction = ["none"]
 	}
 
 	resource citrixadc_appfwpolicy tfAcc_appfwpolicy1 {
@@ -66,34 +39,7 @@ const testAccAppfwpolicy_add = `
 const testAccAppfwpolicy_update = `
 	resource citrixadc_appfwprofile tfAcc_appfwprofile {
 		name = "tfAcc_appfwprofile"
-		bufferoverflowaction = ["none"]
-		contenttypeaction = ["none"]
-		cookieconsistencyaction = ["none"]
-		creditcard = ["none"]
-		creditcardaction = ["none"]
-		crosssitescriptingaction = ["none"]
-		csrftagaction = ["none"]
-		denyurlaction = ["none"]
-		dynamiclearning = ["none"]
-		fieldconsistencyaction = ["none"]
-		fieldformataction = ["none"]
-		fileuploadtypesaction = ["none"]
-		inspectcontenttypes = ["none"]
-		jsondosaction = ["none"]
-		jsonsqlinjectionaction = ["none"]
-		jsonxssaction = ["none"]
-		multipleheaderaction = ["none"]
-		sqlinjectionaction = ["none"]
-		starturlaction = ["none"]
 		type = ["HTML"]
-		xmlattachmentaction = ["none"]
-		xmldosaction = ["none"]
-		xmlformataction = ["none"]
-		xmlsoapfaultaction = ["none"]
-		xmlsqlinjectionaction = ["none"]
-		xmlvalidationaction = ["none"]
-		xmlwsiaction = ["none"]
-		xmlxssaction = ["none"]
 	}
 
 	resource citrixadc_appfwpolicy tfAcc_appfwpolicy1 {
