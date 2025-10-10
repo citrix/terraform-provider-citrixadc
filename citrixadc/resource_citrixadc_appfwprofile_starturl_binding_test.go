@@ -85,7 +85,7 @@ func TestAccAppfwprofile_starturl_binding_basic(t *testing.T) {
 					testAccCheckAppfwprofile_starturl_bindingNotExist("citrixadc_appfwprofile_starturl_binding.appfwprofile_starturl1", "tfAcc_appfwprofile,^[^?]+[.](html?|shtml|js|gif|jpg|jpeg|png|swf|pif|pdf|css|csv)$"),
 					testAccCheckAppfwprofile_starturl_bindingNotExist("citrixadc_appfwprofile_starturl_binding.appfwprofile_starturl2", "tfAcc_appfwprofile,^[^?]+[.](html?|shtml|js|gif|jpg|jpeg|png|swf|pdf|css|csv)$"),
 				),
-			},	
+			},
 		},
 	})
 }

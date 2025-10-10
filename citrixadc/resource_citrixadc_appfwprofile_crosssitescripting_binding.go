@@ -7,7 +7,6 @@ import (
 
 	"fmt"
 	"log"
-	"strconv"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -282,13 +281,4 @@ func deleteAppfwprofile_crosssitescripting_bindingFunc(d *schema.ResourceData, m
 	d.SetId("")
 
 	return nil
-}
-
-func unescapeStringURL(url string) (string, error) {
-	// Unescape the URL
-	unescapedURL, err := strconv.Unquote("\"" + url + "\"")
-	if err != nil {
-		return "", err
-	}
-	return unescapedURL, nil
 }
