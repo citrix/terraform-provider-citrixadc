@@ -70,7 +70,7 @@ resource "citrixadc_appfwprofile_fileuploadtype_binding" "tf_binding" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the appfwprofile_fileuploadtype_binding. It is the concatenation of `name`, `fileuploadtype`, `as_fileuploadtypes_url`, and `filetype` attributes separated by comma. The `filetype` is a space-separated(`%20`) string of all file types (e.g., `pdf text`).
+* `id` - The id of the appfwprofile_fileuploadtype_binding. It is the concatenation of `name`, `fileuploadtype`, `as_fileuploadtypes_url`, and `filetype` attributes separated by comma. The `filetype` is a semicolon-separated(`;`) string of all file types (e.g., `pdf text`).
 
 
 ## Import
@@ -78,5 +78,5 @@ In addition to the arguments, the following attributes are available:
 A appfwprofile_fileuploadtype_binding can be imported using its id, e.g.
 
 ```shell
-terraform import citrixadc_appfwprofile_fileuploadtype_binding.tf_binding tf_appfwprofile,tf_uploadtype,www.example.com,pdf%20text
+terraform import citrixadc_appfwprofile_fileuploadtype_binding.tf_binding tf_appfwprofile,tf_uploadtype,www.example.com,pdf;text
 ```
