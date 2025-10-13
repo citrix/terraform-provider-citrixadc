@@ -34,12 +34,3 @@ resource "citrixadc_sslhsmkey" "demo_sslhsmkey" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the sslhsmkey. It has the same value as the `hsmkeyname` attribute.
-
-
-## Import
-
-A sslhsmkey can be imported using its hsmkeyname, e.g.
-
-```shell
-terraform import citrixadc_sslhsmkey.tf_sslhsmkey demo_sslhsmkey
-```
