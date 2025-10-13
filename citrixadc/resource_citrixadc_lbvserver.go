@@ -1681,7 +1681,10 @@ func doLbvserverStateChange(d *schema.ResourceData, client *service.NitroClient)
 
 	// We need a new instance of the struct since
 	// ActOnResource will fail if we put in superfluous attributes
-	lbvserver := Lbvserver{
+	type lbvserverStateChange struct {
+		Name string `json:"name,omitempty"`
+	}
+	lbvserver := lbvserverStateChange{
 		Name: d.Get("name").(string),
 	}
 
