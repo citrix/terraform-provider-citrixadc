@@ -268,6 +268,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_csparameter":                                                   resourceCitrixAdcCsparameter(),
 		"citrixadc_cspolicylabel":                                                 resourceCitrixAdcCspolicylabel(),
 		"citrixadc_csvserver_analyticsprofile_binding":                            resourceCitrixAdcCsvserver_analyticsprofile_binding(),
+		"citrixadc_csvserver_appflowpolicy_binding":                               resourceCitrixAdcCsvserver_appflowpolicy_binding(),
 		"citrixadc_csvserver_appqoepolicy_binding":                                resourceCitrixAdcCsvserver_appqoepolicy_binding(),
 		"citrixadc_sslvserver":                                                    resourceCitrixAdcSslvserver(),
 		"citrixadc_sslservicegroup_sslcertkey_binding":                            resourceCitrixAdcSslservicegroup_sslcertkey_binding(),
