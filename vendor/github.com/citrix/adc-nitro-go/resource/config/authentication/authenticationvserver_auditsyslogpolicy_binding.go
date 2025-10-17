@@ -27,7 +27,7 @@ type Authenticationvserverauditsyslogpolicybinding struct {
 	/**
 	* The priority, if any, of the vpn vserver policy.
 	*/
-	Priority int `json:"priority,omitempty"`
+	Priority *int `json:"priority,omitempty"`
 	/**
 	* Name of the authentication virtual server to which to bind the policy.
 	*/

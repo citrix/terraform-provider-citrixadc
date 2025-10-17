@@ -45,9 +45,13 @@ func createNstrafficdomain_vxlan_bindingFunc(ctx context.Context, d *schema.Reso
 	td := strconv.Itoa(d.Get("td").(int))
 	vxlan := strconv.Itoa(d.Get("vxlan").(int))
 	bindingId := fmt.Sprintf("%s,%s", td, vxlan)
-	nstrafficdomain_vxlan_binding := ns.Nstrafficdomainvxlanbinding{
-		Td:    d.Get("td").(int),
-		Vxlan: d.Get("vxlan").(int),
+	nstrafficdomain_vxlan_binding := ns.Nstrafficdomainvxlanbinding{}
+
+	if raw := d.GetRawConfig().GetAttr("td"); !raw.IsNull() {
+		nstrafficdomain_vxlan_binding.Td = intPtr(d.Get("td").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("vxlan"); !raw.IsNull() {
+		nstrafficdomain_vxlan_binding.Vxlan = intPtr(d.Get("vxlan").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Nstrafficdomain_vxlan_binding.Type(), &nstrafficdomain_vxlan_binding)

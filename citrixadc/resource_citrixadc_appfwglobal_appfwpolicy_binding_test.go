@@ -17,43 +17,18 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAppfwglobal_appfwpolicy_binding_basic = `
 	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
 		name                     = "tf_appfwprofile"
-		bufferoverflowaction     = ["none"]
-		contenttypeaction        = ["none"]
-		cookieconsistencyaction  = ["none"]
-		creditcard               = ["none"]
-		creditcardaction         = ["none"]
-		crosssitescriptingaction = ["none"]
-		csrftagaction            = ["none"]
-		denyurlaction            = ["none"]
-		dynamiclearning          = ["none"]
-		fieldconsistencyaction   = ["none"]
-		fieldformataction        = ["none"]
-		fileuploadtypesaction    = ["none"]
-		inspectcontenttypes      = ["none"]
-		jsondosaction            = ["none"]
-		jsonsqlinjectionaction   = ["none"]
-		jsonxssaction            = ["none"]
-		multipleheaderaction     = ["none"]
-		sqlinjectionaction       = ["none"]
-		starturlaction           = ["none"]
 		type                     = ["HTML"]
-		xmlattachmentaction      = ["none"]
-		xmldosaction             = ["none"]
-		xmlformataction          = ["none"]
-		xmlsoapfaultaction       = ["none"]
-		xmlsqlinjectionaction    = ["none"]
-		xmlvalidationaction      = ["none"]
-		xmlwsiaction             = ["none"]
-		xmlxssaction             = ["none"]
 	}
 	resource "citrixadc_appfwpolicy" "tf_appfwpolicy" {
 		name        = "tf_appfwpolicy"
@@ -64,7 +39,12 @@ const testAccAppfwglobal_appfwpolicy_binding_basic = `
 		policyname = citrixadc_appfwpolicy.tf_appfwpolicy.name
 		priority   = 30
 		state      = "ENABLED"
-		type       = "REQ_DEFAULT"
+	}
+	resource "citrixadc_appfwglobal_appfwpolicy_binding" "tf_binding2" {
+		policyname = citrixadc_appfwpolicy.tf_appfwpolicy.name
+		priority   = 30
+		state      = "ENABLED"
+		type  = "REQ_OVERRIDE"
 	}
 `
 
@@ -72,34 +52,7 @@ const testAccAppfwglobal_appfwpolicy_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
 	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
 		name                     = "tf_appfwprofile"
-		bufferoverflowaction     = ["none"]
-		contenttypeaction        = ["none"]
-		cookieconsistencyaction  = ["none"]
-		creditcard               = ["none"]
-		creditcardaction         = ["none"]
-		crosssitescriptingaction = ["none"]
-		csrftagaction            = ["none"]
-		denyurlaction            = ["none"]
-		dynamiclearning          = ["none"]
-		fieldconsistencyaction   = ["none"]
-		fieldformataction        = ["none"]
-		fileuploadtypesaction    = ["none"]
-		inspectcontenttypes      = ["none"]
-		jsondosaction            = ["none"]
-		jsonsqlinjectionaction   = ["none"]
-		jsonxssaction            = ["none"]
-		multipleheaderaction     = ["none"]
-		sqlinjectionaction       = ["none"]
-		starturlaction           = ["none"]
 		type                     = ["HTML"]
-		xmlattachmentaction      = ["none"]
-		xmldosaction             = ["none"]
-		xmlformataction          = ["none"]
-		xmlsoapfaultaction       = ["none"]
-		xmlsqlinjectionaction    = ["none"]
-		xmlvalidationaction      = ["none"]
-		xmlwsiaction             = ["none"]
-		xmlxssaction             = ["none"]
 	}
 	resource "citrixadc_appfwpolicy" "tf_appfwpolicy" {
 		name        = "tf_appfwpolicy"
@@ -118,12 +71,24 @@ func TestAccAppfwglobal_appfwpolicy_binding_basic(t *testing.T) {
 				Config: testAccAppfwglobal_appfwpolicy_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppfwglobal_appfwpolicy_bindingExist("citrixadc_appfwglobal_appfwpolicy_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwglobal_appfwpolicy_binding.tf_binding", "policyname", "tf_appfwpolicy"),
+					resource.TestCheckResourceAttr("citrixadc_appfwglobal_appfwpolicy_binding.tf_binding", "priority", "30"),
+					resource.TestCheckResourceAttr("citrixadc_appfwglobal_appfwpolicy_binding.tf_binding", "state", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_appfwglobal_appfwpolicy_binding.tf_binding", "type", "REQ_DEFAULT"),
+					resource.TestCheckResourceAttr("citrixadc_appfwglobal_appfwpolicy_binding.tf_binding", "globalbindtype", "SYSTEM_GLOBAL"),
+					testAccCheckAppfwglobal_appfwpolicy_bindingExist("citrixadc_appfwglobal_appfwpolicy_binding.tf_binding2", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwglobal_appfwpolicy_binding.tf_binding2", "policyname", "tf_appfwpolicy"),
+					resource.TestCheckResourceAttr("citrixadc_appfwglobal_appfwpolicy_binding.tf_binding2", "priority", "30"),
+					resource.TestCheckResourceAttr("citrixadc_appfwglobal_appfwpolicy_binding.tf_binding2", "state", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_appfwglobal_appfwpolicy_binding.tf_binding2", "type", "REQ_OVERRIDE"),
+					resource.TestCheckResourceAttr("citrixadc_appfwglobal_appfwpolicy_binding.tf_binding2", "globalbindtype", "SYSTEM_GLOBAL"),
 				),
 			},
 			{
 				Config: testAccAppfwglobal_appfwpolicy_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppfwglobal_appfwpolicy_bindingNotExist("citrixadc_appfwglobal_appfwpolicy_binding.tf_binding", "tf_appfwpolicy", "REQ_DEFAULT"),
+					testAccCheckAppfwglobal_appfwpolicy_bindingNotExist("citrixadc_appfwglobal_appfwpolicy_binding.tf_binding2", "tf_appfwpolicy", "REQ_OVERRIDE"),
 				),
 			},
 		},
@@ -155,11 +120,15 @@ func testAccCheckAppfwglobal_appfwpolicy_bindingExist(n string, id *string) reso
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		policyname := rs.Primary.ID
-		typename := rs.Primary.Attributes["type"]
+		bindingId := rs.Primary.ID
+		idSlice := strings.Split(bindingId, ",")
+		policyname := idSlice[0]
+		bindpoint_type := idSlice[1]
+		globalbindtype := idSlice[2]
+
 		findParams := service.FindParams{
 			ResourceType:             "appfwglobal_appfwpolicy_binding",
-			ArgsMap:                  map[string]string{"type": typename},
+			ArgsMap:                  map[string]string{"type": bindpoint_type},
 			ResourceMissingErrorCode: 258,
 		}
 		dataArr, err := client.FindResourceArrayWithParams(findParams)
@@ -172,7 +141,7 @@ func testAccCheckAppfwglobal_appfwpolicy_bindingExist(n string, id *string) reso
 		// Iterate through results to find the one with the matching secondIdComponent
 		found := false
 		for _, v := range dataArr {
-			if v["policyname"].(string) == policyname {
+			if v["policyname"].(string) == policyname && v["globalbindtype"].(string) == globalbindtype {
 				found = true
 				break
 			}

@@ -94,9 +94,7 @@ func createTmtrafficactionFunc(ctx context.Context, d *schema.ResourceData, meta
 	tmtrafficactionName := d.Get("name").(string)
 
 	tmtrafficaction := tm.Tmtrafficaction{
-		Apptimeout:       d.Get("apptimeout").(int),
 		Forcedtimeout:    d.Get("forcedtimeout").(string),
-		Forcedtimeoutval: d.Get("forcedtimeoutval").(int),
 		Formssoaction:    d.Get("formssoaction").(string),
 		Initiatelogout:   d.Get("initiatelogout").(string),
 		Kcdaccount:       d.Get("kcdaccount").(string),
@@ -106,6 +104,13 @@ func createTmtrafficactionFunc(ctx context.Context, d *schema.ResourceData, meta
 		Samlssoprofile:   d.Get("samlssoprofile").(string),
 		Sso:              d.Get("sso").(string),
 		Userexpression:   d.Get("userexpression").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("apptimeout"); !raw.IsNull() {
+		tmtrafficaction.Apptimeout = intPtr(d.Get("apptimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("forcedtimeoutval"); !raw.IsNull() {
+		tmtrafficaction.Forcedtimeoutval = intPtr(d.Get("forcedtimeoutval").(int))
 	}
 
 	_, err := client.AddResource(service.Tmtrafficaction.Type(), tmtrafficactionName, &tmtrafficaction)
@@ -157,7 +162,7 @@ func updateTmtrafficactionFunc(ctx context.Context, d *schema.ResourceData, meta
 	hasChange := false
 	if d.HasChange("apptimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Apptimeout has changed for tmtrafficaction %s, starting update", tmtrafficactionName)
-		tmtrafficaction.Apptimeout = d.Get("apptimeout").(int)
+		tmtrafficaction.Apptimeout = intPtr(d.Get("apptimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("forcedtimeout") {
@@ -167,7 +172,7 @@ func updateTmtrafficactionFunc(ctx context.Context, d *schema.ResourceData, meta
 	}
 	if d.HasChange("forcedtimeoutval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Forcedtimeoutval has changed for tmtrafficaction %s, starting update", tmtrafficactionName)
-		tmtrafficaction.Forcedtimeoutval = d.Get("forcedtimeoutval").(int)
+		tmtrafficaction.Forcedtimeoutval = intPtr(d.Get("forcedtimeoutval").(int))
 		hasChange = true
 	}
 	if d.HasChange("formssoaction") {

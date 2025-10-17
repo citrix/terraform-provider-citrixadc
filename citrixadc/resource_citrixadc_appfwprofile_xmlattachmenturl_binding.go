@@ -116,8 +116,11 @@ func createAppfwprofile_xmlattachmenturl_bindingFunc(ctx context.Context, d *sch
 		Xmlattachmentcontenttype:      d.Get("xmlattachmentcontenttype").(string),
 		Xmlattachmentcontenttypecheck: d.Get("xmlattachmentcontenttypecheck").(string),
 		Xmlattachmenturl:              d.Get("xmlattachmenturl").(string),
-		Xmlmaxattachmentsize:          d.Get("xmlmaxattachmentsize").(int),
 		Xmlmaxattachmentsizecheck:     d.Get("xmlmaxattachmentsizecheck").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("xmlmaxattachmentsize"); !raw.IsNull() {
+		appfwprofile_xmlattachmenturl_binding.Xmlmaxattachmentsize = intPtr(d.Get("xmlmaxattachmentsize").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Appfwprofile_xmlattachmenturl_binding.Type(), &appfwprofile_xmlattachmenturl_binding)

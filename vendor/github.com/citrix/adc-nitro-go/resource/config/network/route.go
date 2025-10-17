@@ -35,27 +35,27 @@ type Route struct {
 	/**
 	* VLAN as the gateway for this route.
 	*/
-	Vlan int `json:"vlan,omitempty"`
+	Vlan *int `json:"vlan,omitempty"`
 	/**
 	* Positive integer used by the routing algorithms to determine preference for using this route. The lower the cost, the higher the preference.
 	*/
-	Cost int `json:"cost,omitempty"`
+	Cost *int `json:"cost,omitempty"`
 	/**
 	* Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.
 	*/
-	Td int `json:"td,omitempty"`
+	Td *int `json:"td,omitempty"`
 	/**
 	* Administrative distance of this route, which determines the preference of this route over other routes, with same destination, from different routing protocols. A lower value is preferred.
 	*/
-	Distance int `json:"distance,omitempty"`
+	Distance *int `json:"distance,omitempty"`
 	/**
 	* The cost of a route is used to compare routes of the same type. The route having the lowest cost is the most preferred route. Possible values: 0 through 65535. Default: 0.
 	*/
-	Cost1 int `json:"cost1,omitempty"`
+	Cost1 *int `json:"cost1,omitempty"`
 	/**
 	* Positive integer used by the routing algorithms to determine preference for this route over others of equal cost. The lower the weight, the higher the preference.
 	*/
-	Weight int `json:"weight,omitempty"`
+	Weight *int `json:"weight,omitempty"`
 	/**
 	* Advertise this route.
 	*/

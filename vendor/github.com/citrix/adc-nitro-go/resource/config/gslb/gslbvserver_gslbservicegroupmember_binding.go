@@ -31,7 +31,7 @@ type Gslbvservergslbservicegroupmemberbinding struct {
 	/**
 	* Port number.
 	*/
-	Port int `json:"port,omitempty"`
+	Port *int `json:"port,omitempty"`
 	/**
 	* Protocol used by services bound to the virtual server.
 	*/
@@ -43,7 +43,7 @@ type Gslbvservergslbservicegroupmemberbinding struct {
 	/**
 	* Weight for the service.
 	*/
-	Weight int `json:"weight,omitempty"`
+	Weight *int `json:"weight,omitempty"`
 	/**
 	* Specify if the appliance should consider the service count, service weights, or ignore both when using weight-based load balancing methods. The state of the number of services bound to the virtual server help the appliance to select the service.
 	*/
@@ -59,11 +59,11 @@ type Gslbvservergslbservicegroupmemberbinding struct {
 	/**
 	* Tells whether threshold exceeded for this service participating in CUSTOMLB
 	*/
-	Thresholdvalue int `json:"thresholdvalue,omitempty"`
+	Thresholdvalue *int `json:"thresholdvalue,omitempty"`
 	/**
 	* Indicates if gslb svc has reached threshold
 	*/
-	Gslbthreshold int `json:"gslbthreshold,omitempty"`
+	Gslbthreshold *int `json:"gslbthreshold,omitempty"`
 	/**
 	* This field is introduced for displaying the cookie in cluster setup.
 	*/
@@ -75,7 +75,7 @@ type Gslbvservergslbservicegroupmemberbinding struct {
 	/**
 	* Order number to be assigned to the service when it is bound to the lb vserver.
 	*/
-	Order int `json:"order,omitempty"`
+	Order *int `json:"order,omitempty"`
 	/**
 	* Order number in string form assigned to the service when it is bound to the lb vserver.
 	*/

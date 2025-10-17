@@ -31,7 +31,7 @@ type Lbvserverservicebinding struct {
 	/**
 	* Port number for the virtual server.
 	*/
-	Port int `json:"port,omitempty"`
+	Port *int `json:"port,omitempty"`
 	/**
 	* Protocol used by the service (also called the service type).
 	*/
@@ -43,11 +43,11 @@ type Lbvserverservicebinding struct {
 	/**
 	* Weight to assign to the specified service.
 	*/
-	Weight int `json:"weight,omitempty"`
+	Weight *int `json:"weight,omitempty"`
 	/**
 	* Dynamic weight
 	*/
-	Dynamicweight int `json:"dynamicweight,omitempty"`
+	Dynamicweight *int `json:"dynamicweight,omitempty"`
 	/**
 	* Encryped Ip address and port of the service that is inserted into the set-cookie http header
 	*/
@@ -63,7 +63,7 @@ type Lbvserverservicebinding struct {
 	/**
 	* used for showing ports of bound entities
 	*/
-	Vsvrbindsvcport int `json:"vsvrbindsvcport,omitempty"`
+	Vsvrbindsvcport *int `json:"vsvrbindsvcport,omitempty"`
 	/**
 	* Used for displaying the location of bound services.
 	*/
@@ -71,7 +71,7 @@ type Lbvserverservicebinding struct {
 	/**
 	* Order number to be assigned to the service when it is bound to the lb vserver.
 	*/
-	Order int `json:"order,omitempty"`
+	Order *int `json:"order,omitempty"`
 	/**
 	* Order in string form assigned to the service when it is bound to the lb vserver.
 	*/

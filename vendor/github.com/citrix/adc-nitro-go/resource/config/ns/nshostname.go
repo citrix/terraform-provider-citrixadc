@@ -27,7 +27,7 @@ type Nshostname struct {
 	/**
 	* ID of the cluster node for which you are setting the hostname. Can be configured only through the cluster IP address.
 	*/
-	Ownernode int `json:"ownernode,omitempty"`
+	Ownernode *int `json:"ownernode,omitempty"`
 
 	//------- Read only Parameter ---------;
 

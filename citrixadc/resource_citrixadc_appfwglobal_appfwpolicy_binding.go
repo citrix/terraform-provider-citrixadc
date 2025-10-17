@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"net/url"
+	"strings"
 )
 
 func resourceCitrixAdcAppfwglobal_appfwpolicy_binding() *schema.Resource {
@@ -37,8 +38,8 @@ func resourceCitrixAdcAppfwglobal_appfwpolicy_binding() *schema.Resource {
 			"globalbindtype": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 				ForceNew: true,
+				Default:  "SYSTEM_GLOBAL",
 			},
 			"gotopriorityexpression": {
 				Type:     schema.TypeString,
@@ -73,8 +74,8 @@ func resourceCitrixAdcAppfwglobal_appfwpolicy_binding() *schema.Resource {
 			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 				ForceNew: true,
+				Default:  "REQ_DEFAULT",
 			},
 		},
 	}
@@ -84,16 +85,22 @@ func createAppfwglobal_appfwpolicy_bindingFunc(ctx context.Context, d *schema.Re
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppfwglobal_appfwpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	policyname := d.Get("policyname").(string)
+	bindpoint_type := d.Get("type").(string)
+	globalbindtype := d.Get("globalbindtype").(string)
+	bindingId := fmt.Sprintf("%s,%s,%s", policyname, bindpoint_type, globalbindtype)
 	appfwglobal_appfwpolicy_binding := appfw.Appfwglobalappfwpolicybinding{
-		Globalbindtype:         d.Get("globalbindtype").(string),
+		Globalbindtype:         globalbindtype,
 		Gotopriorityexpression: d.Get("gotopriorityexpression").(string),
 		Invoke:                 d.Get("invoke").(bool),
 		Labelname:              d.Get("labelname").(string),
 		Labeltype:              d.Get("labeltype").(string),
-		Policyname:             d.Get("policyname").(string),
-		Priority:               d.Get("priority").(int),
+		Policyname:             policyname,
 		State:                  d.Get("state").(string),
-		Type:                   d.Get("type").(string),
+		Type:                   bindpoint_type,
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		appfwglobal_appfwpolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Appfwglobal_appfwpolicy_binding.Type(), &appfwglobal_appfwpolicy_binding)
@@ -101,7 +108,7 @@ func createAppfwglobal_appfwpolicy_bindingFunc(ctx context.Context, d *schema.Re
 		return diag.FromErr(err)
 	}
 
-	d.SetId(policyname)
+	d.SetId(bindingId)
 
 	return readAppfwglobal_appfwpolicy_bindingFunc(ctx, d, meta)
 }
@@ -109,13 +116,16 @@ func createAppfwglobal_appfwpolicy_bindingFunc(ctx context.Context, d *schema.Re
 func readAppfwglobal_appfwpolicy_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] citrixadc-provider:  In readAppfwglobal_appfwpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
-	policyname := d.Id()
-
+	bindingId := d.Id()
+	idSlice := strings.Split(bindingId, ",")
+	policyname := idSlice[0]
+	bindpoint_type := idSlice[1]
+	globalbindtype := idSlice[2]
 	log.Printf("[DEBUG] citrixadc-provider: Reading appfwglobal_appfwpolicy_binding state %s", policyname)
 
 	findParams := service.FindParams{
 		ResourceType:             "appfwglobal_appfwpolicy_binding",
-		ArgsMap:                  map[string]string{"type": d.Get("type").(string)},
+		ArgsMap:                  map[string]string{"type": bindpoint_type},
 		ResourceMissingErrorCode: 258,
 	}
 	dataArr, err := client.FindResourceArrayWithParams(findParams)
@@ -137,7 +147,7 @@ func readAppfwglobal_appfwpolicy_bindingFunc(ctx context.Context, d *schema.Reso
 	// Iterate through results to find the one with the right id
 	foundIndex := -1
 	for i, v := range dataArr {
-		if v["policyname"].(string) == policyname {
+		if v["policyname"].(string) == policyname && v["globalbindtype"].(string) == globalbindtype {
 			foundIndex = i
 			break
 		}
@@ -172,7 +182,9 @@ func deleteAppfwglobal_appfwpolicy_bindingFunc(ctx context.Context, d *schema.Re
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppfwglobal_appfwpolicy_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 
-	policyname := d.Id()
+	bindingId := d.Id()
+	idSlice := strings.Split(bindingId, ",")
+	policyname := idSlice[0]
 
 	args := make([]string, 0)
 	args = append(args, fmt.Sprintf("policyname:%s", policyname))
@@ -181,6 +193,9 @@ func deleteAppfwglobal_appfwpolicy_bindingFunc(ctx context.Context, d *schema.Re
 	}
 	if val, ok := d.GetOk("priority"); ok {
 		args = append(args, fmt.Sprintf("priority:%d", val.(int)))
+	}
+	if val, ok := d.GetOk("globalbindtype"); ok {
+		args = append(args, fmt.Sprintf("globalbindtype:%s", url.QueryEscape(val.(string))))
 	}
 
 	err := client.DeleteResourceWithArgs(service.Appfwglobal_appfwpolicy_binding.Type(), "", args)

@@ -168,21 +168,36 @@ func createAaaparameterFunc(ctx context.Context, d *schema.ResourceData, meta in
 		Enableenhancedauthfeedback: d.Get("enableenhancedauthfeedback").(string),
 		Enablesessionstickiness:    d.Get("enablesessionstickiness").(string),
 		Enablestaticpagecaching:    d.Get("enablestaticpagecaching").(string),
-		Failedlogintimeout:         d.Get("failedlogintimeout").(int),
 		Ftmode:                     d.Get("ftmode").(string),
 		Loginencryption:            d.Get("loginencryption").(string),
-		Maxaaausers:                d.Get("maxaaausers").(int),
-		Maxkbquestions:             d.Get("maxkbquestions").(int),
-		Maxloginattempts:           d.Get("maxloginattempts").(int),
-		Maxsamldeflatesize:         d.Get("maxsamldeflatesize").(int),
 		Persistentloginattempts:    d.Get("persistentloginattempts").(string),
-		Pwdexpirynotificationdays:  d.Get("pwdexpirynotificationdays").(int),
 		Samesite:                   d.Get("samesite").(string),
-		Tokenintrospectioninterval: d.Get("tokenintrospectioninterval").(int),
 		Httponlycookie:             d.Get("httponlycookie").(string),
 		Enhancedepa:                d.Get("enhancedepa").(string),
 		Wafprotection:              toStringList(d.Get("wafprotection").([]interface{})),
 		Securityinsights:           d.Get("securityinsights").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("failedlogintimeout"); !raw.IsNull() {
+		aaaparameter.Failedlogintimeout = intPtr(d.Get("failedlogintimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxaaausers"); !raw.IsNull() {
+		aaaparameter.Maxaaausers = intPtr(d.Get("maxaaausers").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxkbquestions"); !raw.IsNull() {
+		aaaparameter.Maxkbquestions = intPtr(d.Get("maxkbquestions").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxloginattempts"); !raw.IsNull() {
+		aaaparameter.Maxloginattempts = intPtr(d.Get("maxloginattempts").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxsamldeflatesize"); !raw.IsNull() {
+		aaaparameter.Maxsamldeflatesize = intPtr(d.Get("maxsamldeflatesize").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("pwdexpirynotificationdays"); !raw.IsNull() {
+		aaaparameter.Pwdexpirynotificationdays = intPtr(d.Get("pwdexpirynotificationdays").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("tokenintrospectioninterval"); !raw.IsNull() {
+		aaaparameter.Tokenintrospectioninterval = intPtr(d.Get("tokenintrospectioninterval").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Aaaparameter.Type(), &aaaparameter)
@@ -293,8 +308,8 @@ func updateAaaparameterFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("failedlogintimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Failedlogintimeout has changed for aaaparameter, starting update")
-		aaaparameter.Failedlogintimeout = d.Get("failedlogintimeout").(int)
-		aaaparameter.Maxloginattempts = d.Get("maxloginattempts").(int)
+		aaaparameter.Failedlogintimeout = intPtr(d.Get("failedlogintimeout").(int))
+		aaaparameter.Maxloginattempts = intPtr(d.Get("maxloginattempts").(int))
 		hasChange = true
 	}
 	if d.HasChange("ftmode") {
@@ -309,22 +324,22 @@ func updateAaaparameterFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("maxaaausers") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxaaausers has changed for aaaparameter, starting update")
-		aaaparameter.Maxaaausers = d.Get("maxaaausers").(int)
+		aaaparameter.Maxaaausers = intPtr(d.Get("maxaaausers").(int))
 		hasChange = true
 	}
 	if d.HasChange("maxkbquestions") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxkbquestions has changed for aaaparameter, starting update")
-		aaaparameter.Maxkbquestions = d.Get("maxkbquestions").(int)
+		aaaparameter.Maxkbquestions = intPtr(d.Get("maxkbquestions").(int))
 		hasChange = true
 	}
 	if d.HasChange("maxloginattempts") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxloginattempts has changed for aaaparameter, starting update")
-		aaaparameter.Maxloginattempts = d.Get("maxloginattempts").(int)
+		aaaparameter.Maxloginattempts = intPtr(d.Get("maxloginattempts").(int))
 		hasChange = true
 	}
 	if d.HasChange("maxsamldeflatesize") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxsamldeflatesize has changed for aaaparameter, starting update")
-		aaaparameter.Maxsamldeflatesize = d.Get("maxsamldeflatesize").(int)
+		aaaparameter.Maxsamldeflatesize = intPtr(d.Get("maxsamldeflatesize").(int))
 		hasChange = true
 	}
 	if d.HasChange("persistentloginattempts") {
@@ -334,7 +349,7 @@ func updateAaaparameterFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("pwdexpirynotificationdays") {
 		log.Printf("[DEBUG]  citrixadc-provider: Pwdexpirynotificationdays has changed for aaaparameter, starting update")
-		aaaparameter.Pwdexpirynotificationdays = d.Get("pwdexpirynotificationdays").(int)
+		aaaparameter.Pwdexpirynotificationdays = intPtr(d.Get("pwdexpirynotificationdays").(int))
 		hasChange = true
 	}
 	if d.HasChange("samesite") {
@@ -344,7 +359,7 @@ func updateAaaparameterFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("tokenintrospectioninterval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Tokenintrospectioninterval has changed for aaaparameter, starting update")
-		aaaparameter.Tokenintrospectioninterval = d.Get("tokenintrospectioninterval").(int)
+		aaaparameter.Tokenintrospectioninterval = intPtr(d.Get("tokenintrospectioninterval").(int))
 		hasChange = true
 	}
 	if d.HasChange("httponlycookie") {

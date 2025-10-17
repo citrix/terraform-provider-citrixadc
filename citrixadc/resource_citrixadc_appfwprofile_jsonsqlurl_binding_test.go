@@ -17,48 +17,33 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccAppfwprofile_jsonsqlurl_binding_basic = `
 	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
 		name                     = "tf_appfwprofile"
-		bufferoverflowaction     = ["none"]
-		contenttypeaction        = ["none"]
-		cookieconsistencyaction  = ["none"]
-		creditcard               = ["none"]
-		creditcardaction         = ["none"]
-		crosssitescriptingaction = ["none"]
-		csrftagaction            = ["none"]
-		denyurlaction            = ["none"]
-		dynamiclearning          = ["none"]
-		fieldconsistencyaction   = ["none"]
-		fieldformataction        = ["none"]
-		fileuploadtypesaction    = ["none"]
-		inspectcontenttypes      = ["none"]
-		jsondosaction            = ["none"]
-		jsonsqlinjectionaction   = ["none"]
-		jsonxssaction            = ["none"]
-		multipleheaderaction     = ["none"]
-		sqlinjectionaction       = ["none"]
-		starturlaction           = ["none"]
 		type                     = ["HTML"]
-		xmlattachmentaction      = ["none"]
-		xmldosaction             = ["none"]
-		xmlformataction          = ["none"]
-		xmlsoapfaultaction       = ["none"]
-		xmlsqlinjectionaction    = ["none"]
-		xmlvalidationaction      = ["none"]
-		xmlwsiaction             = ["none"]
-		xmlxssaction             = ["none"]
 	}
 	resource "citrixadc_appfwprofile_jsonsqlurl_binding" "tf_binding" {
 		name           = citrixadc_appfwprofile.tf_appfwprofile.name
 		jsonsqlurl     = "[abc][a-z]a*"
+		isautodeployed = "AUTODEPLOYED"
+		state          = "ENABLED"
+		alertonly      = "ON"
+		comment        = "Testing"
+	}
+	resource "citrixadc_appfwprofile_jsonsqlurl_binding" "tf_binding2" {
+		name           = citrixadc_appfwprofile.tf_appfwprofile.name
+		jsonsqlurl     = "[abc][a-z]a*"
+		keyname_json_sql = "id"
+		as_value_type_json_sql = "SpecialString"
+		as_value_expr_json_sql = "p"
 		isautodeployed = "AUTODEPLOYED"
 		state          = "ENABLED"
 		alertonly      = "ON"
@@ -70,34 +55,7 @@ const testAccAppfwprofile_jsonsqlurl_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
 	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
 		name                     = "tf_appfwprofile"
-		bufferoverflowaction     = ["none"]
-		contenttypeaction        = ["none"]
-		cookieconsistencyaction  = ["none"]
-		creditcard               = ["none"]
-		creditcardaction         = ["none"]
-		crosssitescriptingaction = ["none"]
-		csrftagaction            = ["none"]
-		denyurlaction            = ["none"]
-		dynamiclearning          = ["none"]
-		fieldconsistencyaction   = ["none"]
-		fieldformataction        = ["none"]
-		fileuploadtypesaction    = ["none"]
-		inspectcontenttypes      = ["none"]
-		jsondosaction            = ["none"]
-		jsonsqlinjectionaction   = ["none"]
-		jsonxssaction            = ["none"]
-		multipleheaderaction     = ["none"]
-		sqlinjectionaction       = ["none"]
-		starturlaction           = ["none"]
 		type                     = ["HTML"]
-		xmlattachmentaction      = ["none"]
-		xmldosaction             = ["none"]
-		xmlformataction          = ["none"]
-		xmlsoapfaultaction       = ["none"]
-		xmlsqlinjectionaction    = ["none"]
-		xmlvalidationaction      = ["none"]
-		xmlwsiaction             = ["none"]
-		xmlxssaction             = ["none"]
 	}
 `
 
@@ -111,12 +69,20 @@ func TestAccAppfwprofile_jsonsqlurl_binding_basic(t *testing.T) {
 				Config: testAccAppfwprofile_jsonsqlurl_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppfwprofile_jsonsqlurl_bindingExist("citrixadc_appfwprofile_jsonsqlurl_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_jsonsqlurl_binding.tf_binding", "name", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_jsonsqlurl_binding.tf_binding", "jsonsqlurl", "[abc][a-z]a*"),
+					testAccCheckAppfwprofile_jsonsqlurl_bindingExist("citrixadc_appfwprofile_jsonsqlurl_binding.tf_binding2", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_jsonsqlurl_binding.tf_binding2", "name", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_jsonsqlurl_binding.tf_binding2", "keyname_json_sql", "id"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_jsonsqlurl_binding.tf_binding2", "as_value_type_json_sql", "SpecialString"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_jsonsqlurl_binding.tf_binding2", "as_value_expr_json_sql", "p"),
 				),
 			},
 			{
 				Config: testAccAppfwprofile_jsonsqlurl_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppfwprofile_jsonsqlurl_bindingNotExist("citrixadc_appfwprofile_jsonsqlurl_binding.tf_binding", "tf_appfwprofile,[abc][a-z]a*"),
+					testAccCheckAppfwprofile_jsonsqlurl_bindingNotExist("citrixadc_appfwprofile_jsonsqlurl_binding.tf_binding2", "tf_appfwprofile,[abc][a-z]a*,id,SpecialString,p"),
 				),
 			},
 		},
@@ -149,11 +115,20 @@ func testAccCheckAppfwprofile_jsonsqlurl_bindingExist(n string, id *string) reso
 		}
 
 		bindingId := rs.Primary.ID
-
-		idSlice := strings.SplitN(bindingId, ",", 2)
+		idSlice := strings.Split(bindingId, ",")
 
 		name := idSlice[0]
 		jsonsqlurl := idSlice[1]
+		keyname_json_sql := ""
+		as_value_type_json_sql := ""
+		as_value_expr_json_sql := ""
+		if len(idSlice) > 2 {
+			keyname_json_sql = idSlice[2]
+		}
+		if len(idSlice) > 4 {
+			as_value_type_json_sql = idSlice[3]
+			as_value_expr_json_sql = idSlice[4]
+		}
 
 		findParams := service.FindParams{
 			ResourceType:             "appfwprofile_jsonsqlurl_binding",
@@ -167,12 +142,38 @@ func testAccCheckAppfwprofile_jsonsqlurl_bindingExist(n string, id *string) reso
 			return err
 		}
 
-		// Iterate through results to find the one with the matching secondIdComponent
+		// Iterate through results to find the one with the matching components
 		found := false
 		for _, v := range dataArr {
-			if v["jsonsqlurl"].(string) == jsonsqlurl {
-				found = true
-				break
+			if v["jsonsqlurl"] != nil && v["jsonsqlurl"].(string) == jsonsqlurl {
+				vKeyname := ""
+				if v["keyname_json_sql"] != nil {
+					vKeyname = v["keyname_json_sql"].(string)
+				}
+				if keyname_json_sql != "" {
+					if vKeyname == keyname_json_sql {
+						vType := ""
+						vExpr := ""
+						if v["as_value_type_json_sql"] != nil {
+							vType = v["as_value_type_json_sql"].(string)
+						}
+						if v["as_value_expr_json_sql"] != nil {
+							vExpr = v["as_value_expr_json_sql"].(string)
+						}
+						if as_value_type_json_sql != "" && as_value_expr_json_sql != "" {
+							if vType == as_value_type_json_sql && vExpr == as_value_expr_json_sql {
+								found = true
+								break
+							}
+						} else if v["as_value_type_json_sql"] == nil && v["as_value_expr_json_sql"] == nil {
+							found = true
+							break
+						}
+					}
+				} else if v["keyname_json_sql"] == nil {
+					found = true
+					break
+				}
 			}
 		}
 
@@ -195,10 +196,20 @@ func testAccCheckAppfwprofile_jsonsqlurl_bindingNotExist(n string, id string) re
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
+		idSlice := strings.Split(id, ",")
 
 		name := idSlice[0]
 		jsonsqlurl := idSlice[1]
+		keyname_json_sql := ""
+		as_value_type_json_sql := ""
+		as_value_expr_json_sql := ""
+		if len(idSlice) > 2 {
+			keyname_json_sql = idSlice[2]
+		}
+		if len(idSlice) > 4 {
+			as_value_type_json_sql = idSlice[3]
+			as_value_expr_json_sql = idSlice[4]
+		}
 
 		findParams := service.FindParams{
 			ResourceType:             "appfwprofile_jsonsqlurl_binding",
@@ -212,12 +223,38 @@ func testAccCheckAppfwprofile_jsonsqlurl_bindingNotExist(n string, id string) re
 			return err
 		}
 
-		// Iterate through results to hopefully not find the one with the matching secondIdComponent
+		// Iterate through results to hopefully not find the one with the matching components
 		found := false
 		for _, v := range dataArr {
-			if v["jsonsqlurl"].(string) == jsonsqlurl {
-				found = true
-				break
+			if v["jsonsqlurl"] != nil && v["jsonsqlurl"].(string) == jsonsqlurl {
+				vKeyname := ""
+				if v["keyname_json_sql"] != nil {
+					vKeyname = v["keyname_json_sql"].(string)
+				}
+				if keyname_json_sql != "" {
+					if vKeyname == keyname_json_sql {
+						vType := ""
+						vExpr := ""
+						if v["as_value_type_json_sql"] != nil {
+							vType = v["as_value_type_json_sql"].(string)
+						}
+						if v["as_value_expr_json_sql"] != nil {
+							vExpr = v["as_value_expr_json_sql"].(string)
+						}
+						if as_value_type_json_sql != "" && as_value_expr_json_sql != "" {
+							if vType == as_value_type_json_sql && vExpr == as_value_expr_json_sql {
+								found = true
+								break
+							}
+						} else if v["as_value_type_json_sql"] == nil && v["as_value_expr_json_sql"] == nil {
+							found = true
+							break
+						}
+					}
+				} else if v["keyname_json_sql"] == nil {
+					found = true
+					break
+				}
 			}
 		}
 

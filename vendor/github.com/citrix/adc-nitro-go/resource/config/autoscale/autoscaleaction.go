@@ -39,11 +39,11 @@ type Autoscaleaction struct {
 	/**
 	* Time in minutes a VM is kept in inactive state before destroying
 	*/
-	Vmdestroygraceperiod int `json:"vmdestroygraceperiod,omitempty"`
+	Vmdestroygraceperiod *int `json:"vmdestroygraceperiod,omitempty"`
 	/**
 	* Time in seconds no other policy is evaluated or action is taken
 	*/
-	Quiettime int `json:"quiettime,omitempty"`
+	Quiettime *int `json:"quiettime,omitempty"`
 	/**
 	* Name of the vserver on which autoscale action has to be taken.
 	*/

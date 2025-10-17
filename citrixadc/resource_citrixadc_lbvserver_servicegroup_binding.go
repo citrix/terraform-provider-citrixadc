@@ -53,7 +53,10 @@ func createLbvserver_servicegroup_bindingFunc(ctx context.Context, d *schema.Res
 	lbvserver_servicegroup_binding := lb.Lbvserverservicegroupbinding{
 		Name:             d.Get("name").(string),
 		Servicegroupname: d.Get("servicegroupname").(string),
-		Order:            d.Get("order").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("order"); !raw.IsNull() {
+		lbvserver_servicegroup_binding.Order = intPtr(d.Get("order").(int))
 	}
 
 	_, err := client.AddResource(service.Lbvserver_servicegroup_binding.Type(), name, &lbvserver_servicegroup_binding)

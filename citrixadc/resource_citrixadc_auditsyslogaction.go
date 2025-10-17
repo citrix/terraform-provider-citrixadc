@@ -206,17 +206,14 @@ func createAuditsyslogactionFunc(ctx context.Context, d *schema.ResourceData, me
 		Dateformat:           d.Get("dateformat").(string),
 		Dns:                  d.Get("dns").(string),
 		Domainresolvenow:     d.Get("domainresolvenow").(bool),
-		Domainresolveretry:   d.Get("domainresolveretry").(int),
 		Lbvservername:        d.Get("lbvservername").(string),
 		Logfacility:          d.Get("logfacility").(string),
 		Loglevel:             toStringList(loglevelValue(d)),
 		Lsn:                  d.Get("lsn").(string),
-		Maxlogdatasizetohold: d.Get("maxlogdatasizetohold").(int),
 		Name:                 d.Get("name").(string),
 		Netprofile:           d.Get("netprofile").(string),
 		Serverdomainname:     d.Get("serverdomainname").(string),
 		Serverip:             d.Get("serverip").(string),
-		Serverport:           d.Get("serverport").(int),
 		Sslinterception:      d.Get("sslinterception").(string),
 		Subscriberlog:        d.Get("subscriberlog").(string),
 		Tcp:                  d.Get("tcp").(string),
@@ -229,6 +226,16 @@ func createAuditsyslogactionFunc(ctx context.Context, d *schema.ResourceData, me
 		Httpauthtoken:        d.Get("httpauthtoken").(string),
 		Httpendpointurl:      d.Get("httpendpointurl").(string),
 		Streamanalytics:      d.Get("streamanalytics").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("domainresolveretry"); !raw.IsNull() {
+		auditsyslogaction.Domainresolveretry = intPtr(d.Get("domainresolveretry").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxlogdatasizetohold"); !raw.IsNull() {
+		auditsyslogaction.Maxlogdatasizetohold = intPtr(d.Get("maxlogdatasizetohold").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("serverport"); !raw.IsNull() {
+		auditsyslogaction.Serverport = intPtr(d.Get("serverport").(int))
 	}
 	if listVal, ok := d.Get("managementlog").([]interface{}); ok {
 		auditsyslogaction.Managementlog = toStringList(listVal)
@@ -354,7 +361,7 @@ func updateAuditsyslogactionFunc(ctx context.Context, d *schema.ResourceData, me
 	}
 	if d.HasChange("domainresolveretry") {
 		log.Printf("[DEBUG]  citrixadc-provider: Domainresolveretry has changed for auditsyslogaction %s, starting update", auditsyslogactionName)
-		auditsyslogaction.Domainresolveretry = d.Get("domainresolveretry").(int)
+		auditsyslogaction.Domainresolveretry = intPtr(d.Get("domainresolveretry").(int))
 		hasChange = true
 	}
 	if d.HasChange("lbvservername") {
@@ -379,7 +386,7 @@ func updateAuditsyslogactionFunc(ctx context.Context, d *schema.ResourceData, me
 	}
 	if d.HasChange("maxlogdatasizetohold") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxlogdatasizetohold has changed for auditsyslogaction %s, starting update", auditsyslogactionName)
-		auditsyslogaction.Maxlogdatasizetohold = d.Get("maxlogdatasizetohold").(int)
+		auditsyslogaction.Maxlogdatasizetohold = intPtr(d.Get("maxlogdatasizetohold").(int))
 		hasChange = true
 	}
 	if d.HasChange("name") {
@@ -404,7 +411,7 @@ func updateAuditsyslogactionFunc(ctx context.Context, d *schema.ResourceData, me
 	}
 	if d.HasChange("serverport") {
 		log.Printf("[DEBUG]  citrixadc-provider: Serverport has changed for auditsyslogaction %s, starting update", auditsyslogactionName)
-		auditsyslogaction.Serverport = d.Get("serverport").(int)
+		auditsyslogaction.Serverport = intPtr(d.Get("serverport").(int))
 		hasChange = true
 	}
 	if d.HasChange("sslinterception") {

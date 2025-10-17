@@ -91,8 +91,11 @@ func createCsvserver_appfwpolicy_bindingFunc(ctx context.Context, d *schema.Reso
 		Labeltype:              d.Get("labeltype").(string),
 		Name:                   csvserverName,
 		Policyname:             appfwPolicyName,
-		Priority:               d.Get("priority").(int),
 		Targetlbvserver:        d.Get("targetlbvserver").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		csvserver_appfwpolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	_, err := client.AddResource(service.Csvserver_appfwpolicy_binding.Type(), csvserverName, &csvserver_appfwpolicy_binding)

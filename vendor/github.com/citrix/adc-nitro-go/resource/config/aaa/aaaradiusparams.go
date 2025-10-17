@@ -27,11 +27,11 @@ type Aaaradiusparams struct {
 	/**
 	* Port number on which the RADIUS server listens for connections.
 	*/
-	Serverport int `json:"serverport,omitempty"`
+	Serverport *int `json:"serverport,omitempty"`
 	/**
 	* Maximum number of seconds that the Citrix ADC waits for a response from the RADIUS server.
 	*/
-	Authtimeout int `json:"authtimeout,omitempty"`
+	Authtimeout *int `json:"authtimeout,omitempty"`
 	/**
 	* The key shared between the RADIUS server and clients.
 		Required for allowing the Citrix ADC to communicate with the RADIUS server.
@@ -48,11 +48,11 @@ type Aaaradiusparams struct {
 	/**
 	* Vendor ID for RADIUS group extraction.
 	*/
-	Radvendorid int `json:"radvendorid,omitempty"`
+	Radvendorid *int `json:"radvendorid,omitempty"`
 	/**
 	* Attribute type for RADIUS group extraction.
 	*/
-	Radattributetype int `json:"radattributetype,omitempty"`
+	Radattributetype *int `json:"radattributetype,omitempty"`
 	/**
 	* Prefix string that precedes group names within a RADIUS attribute for RADIUS group extraction.
 	*/
@@ -69,11 +69,11 @@ type Aaaradiusparams struct {
 	* Vendor ID attribute in the RADIUS response.
 		If the attribute is not vendor-encoded, it is set to 0.
 	*/
-	Ipvendorid int `json:"ipvendorid,omitempty"`
+	Ipvendorid *int `json:"ipvendorid,omitempty"`
 	/**
 	* IP attribute type in the RADIUS response.
 	*/
-	Ipattributetype int `json:"ipattributetype,omitempty"`
+	Ipattributetype *int `json:"ipattributetype,omitempty"`
 	/**
 	* Configure the RADIUS server state to accept or refuse accounting messages.
 	*/
@@ -81,11 +81,11 @@ type Aaaradiusparams struct {
 	/**
 	* Vendor ID of the password in the RADIUS response. Used to extract the user password.
 	*/
-	Pwdvendorid int `json:"pwdvendorid,omitempty"`
+	Pwdvendorid *int `json:"pwdvendorid,omitempty"`
 	/**
 	* Attribute type of the Vendor ID in the RADIUS response.
 	*/
-	Pwdattributetype int `json:"pwdattributetype,omitempty"`
+	Pwdattributetype *int `json:"pwdattributetype,omitempty"`
 	/**
 	* This is the default group that is chosen when the authentication succeeds in addition to extracted groups.
 	*/
@@ -97,7 +97,7 @@ type Aaaradiusparams struct {
 	/**
 	* Number of retry by the Citrix ADC before getting response from the RADIUS server.
 	*/
-	Authservretry int `json:"authservretry,omitempty"`
+	Authservretry *int `json:"authservretry,omitempty"`
 	/**
 	* Configure the RADIUS server state to accept or refuse authentication messages.
 	*/

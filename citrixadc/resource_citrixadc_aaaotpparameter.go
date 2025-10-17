@@ -40,8 +40,11 @@ func createAaaotpparameterFunc(ctx context.Context, d *schema.ResourceData, meta
 	aaaotpparameterName := resource.PrefixedUniqueId("tf-aaaotpparameter-")
 
 	aaaotpparameter := aaa.Aaaotpparameter{
-		Encryption:    d.Get("encryption").(string),
-		Maxotpdevices: d.Get("maxotpdevices").(int),
+		Encryption: d.Get("encryption").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("maxotpdevices"); !raw.IsNull() {
+		aaaotpparameter.Maxotpdevices = intPtr(d.Get("maxotpdevices").(int))
 	}
 
 	err := client.UpdateUnnamedResource("aaaotpparameter", &aaaotpparameter)
@@ -84,7 +87,7 @@ func updateAaaotpparameterFunc(ctx context.Context, d *schema.ResourceData, meta
 	}
 	if d.HasChange("maxotpdevices") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxotpdevices has changed for aaaotpparameter, starting update")
-		aaaotpparameter.Maxotpdevices = d.Get("maxotpdevices").(int)
+		aaaotpparameter.Maxotpdevices = intPtr(d.Get("maxotpdevices").(int))
 		hasChange = true
 	}
 

@@ -131,14 +131,10 @@ func createNscqaparamFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	nscqaparamName := resource.PrefixedUniqueId("tf-nscqaparam-")
 
 	nscqaparam := ns.Nscqaparam{
-		Harqretxdelay: d.Get("harqretxdelay").(int),
 		Lr1coeflist:   d.Get("lr1coeflist").(string),
 		Lr1probthresh: d.Get("lr1probthresh").(float64),
 		Lr2coeflist:   d.Get("lr2coeflist").(string),
 		Lr2probthresh: d.Get("lr2probthresh").(float64),
-		Minrttnet1:    d.Get("minrttnet1").(int),
-		Minrttnet2:    d.Get("minrttnet2").(int),
-		Minrttnet3:    d.Get("minrttnet3").(int),
 		Net1cclscale:  d.Get("net1cclscale").(string),
 		Net1csqscale:  d.Get("net1csqscale").(string),
 		Net1label:     d.Get("net1label").(string),
@@ -151,6 +147,19 @@ func createNscqaparamFunc(ctx context.Context, d *schema.ResourceData, meta inte
 		Net3csqscale:  d.Get("net3csqscale").(string),
 		Net3label:     d.Get("net3label").(string),
 		Net3logcoef:   d.Get("net3logcoef").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("harqretxdelay"); !raw.IsNull() {
+		nscqaparam.Harqretxdelay = intPtr(d.Get("harqretxdelay").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("minrttnet1"); !raw.IsNull() {
+		nscqaparam.Minrttnet1 = intPtr(d.Get("minrttnet1").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("minrttnet2"); !raw.IsNull() {
+		nscqaparam.Minrttnet2 = intPtr(d.Get("minrttnet2").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("minrttnet3"); !raw.IsNull() {
+		nscqaparam.Minrttnet3 = intPtr(d.Get("minrttnet3").(int))
 	}
 
 	err := client.UpdateUnnamedResource("nscqaparam", &nscqaparam)
@@ -206,7 +215,7 @@ func updateNscqaparamFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	hasChange := false
 	if d.HasChange("harqretxdelay") {
 		log.Printf("[DEBUG]  citrixadc-provider: Harqretxdelay has changed for nscqaparam, starting update")
-		nscqaparam.Harqretxdelay = d.Get("harqretxdelay").(int)
+		nscqaparam.Harqretxdelay = intPtr(d.Get("harqretxdelay").(int))
 		hasChange = true
 	}
 	if d.HasChange("lr1coeflist") {
@@ -231,17 +240,17 @@ func updateNscqaparamFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	if d.HasChange("minrttnet1") {
 		log.Printf("[DEBUG]  citrixadc-provider: Minrttnet1 has changed for nscqaparam, starting update")
-		nscqaparam.Minrttnet1 = d.Get("minrttnet1").(int)
+		nscqaparam.Minrttnet1 = intPtr(d.Get("minrttnet1").(int))
 		hasChange = true
 	}
 	if d.HasChange("minrttnet2") {
 		log.Printf("[DEBUG]  citrixadc-provider: Minrttnet2 has changed for nscqaparam, starting update")
-		nscqaparam.Minrttnet2 = d.Get("minrttnet2").(int)
+		nscqaparam.Minrttnet2 = intPtr(d.Get("minrttnet2").(int))
 		hasChange = true
 	}
 	if d.HasChange("minrttnet3") {
 		log.Printf("[DEBUG]  citrixadc-provider: Minrttnet3 has changed for nscqaparam, starting update")
-		nscqaparam.Minrttnet3 = d.Get("minrttnet3").(int)
+		nscqaparam.Minrttnet3 = intPtr(d.Get("minrttnet3").(int))
 		hasChange = true
 	}
 	if d.HasChange("net1cclscale") {

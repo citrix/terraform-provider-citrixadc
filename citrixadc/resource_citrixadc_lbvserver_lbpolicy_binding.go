@@ -93,9 +93,14 @@ func createLbvserver_lbpolicy_bindingFunc(ctx context.Context, d *schema.Resourc
 		Labelname:              d.Get("labelname").(string),
 		Labeltype:              d.Get("labeltype").(string),
 		Name:                   d.Get("name").(string),
-		Order:                  d.Get("order").(int),
 		Policyname:             d.Get("policyname").(string),
-		Priority:               d.Get("priority").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("order"); !raw.IsNull() {
+		lbvserver_lbpolicy_binding.Order = intPtr(d.Get("order").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		lbvserver_lbpolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	_, err := client.AddResource("lbvserver_lbpolicy_binding", bindingId, &lbvserver_lbpolicy_binding)

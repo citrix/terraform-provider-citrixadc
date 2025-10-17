@@ -224,7 +224,7 @@ func updateLsngroupFunc(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 	if d.HasChange("portblocksize") {
 		log.Printf("[DEBUG]  citrixadc-provider: Portblocksize has changed for lsngroup %s, starting update", lsngroupName)
-		lsngroup.Portblocksize = d.Get("portblocksize").(int)
+		lsngroup.Portblocksize = intPtr(d.Get("portblocksize").(int))
 		hasChange = true
 	}
 	if d.HasChange("pptp") {
@@ -255,7 +255,7 @@ func updateLsngroupFunc(ctx context.Context, d *schema.ResourceData, meta interf
 	if d.HasChange("snmptraplimit") {
 		log.Printf("[DEBUG]  citrixadc-provider: Snmptraplimit has changed for lsngroup %s, starting update", lsngroupName)
 		val, _ := strconv.Atoi(d.Get("snmptraplimit").(string))
-		lsngroup.Snmptraplimit = val
+		lsngroup.Snmptraplimit = intPtr(val)
 		hasChange = true
 	}
 

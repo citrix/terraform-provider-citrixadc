@@ -61,12 +61,21 @@ func createIcalatencyprofileFunc(ctx context.Context, d *schema.ResourceData, me
 	client := meta.(*NetScalerNitroClient).client
 	icalatencyprofileName := d.Get("name").(string)
 	icalatencyprofile := ica.Icalatencyprofile{
-		L7latencymaxnotifycount:  d.Get("l7latencymaxnotifycount").(int),
-		L7latencymonitoring:      d.Get("l7latencymonitoring").(string),
-		L7latencynotifyinterval:  d.Get("l7latencynotifyinterval").(int),
-		L7latencythresholdfactor: d.Get("l7latencythresholdfactor").(int),
-		L7latencywaittime:        d.Get("l7latencywaittime").(int),
-		Name:                     d.Get("name").(string),
+		L7latencymonitoring: d.Get("l7latencymonitoring").(string),
+		Name:                d.Get("name").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("l7latencymaxnotifycount"); !raw.IsNull() {
+		icalatencyprofile.L7latencymaxnotifycount = intPtr(d.Get("l7latencymaxnotifycount").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("l7latencynotifyinterval"); !raw.IsNull() {
+		icalatencyprofile.L7latencynotifyinterval = intPtr(d.Get("l7latencynotifyinterval").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("l7latencythresholdfactor"); !raw.IsNull() {
+		icalatencyprofile.L7latencythresholdfactor = intPtr(d.Get("l7latencythresholdfactor").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("l7latencywaittime"); !raw.IsNull() {
+		icalatencyprofile.L7latencywaittime = intPtr(d.Get("l7latencywaittime").(int))
 	}
 
 	_, err := client.AddResource("icalatencyprofile", icalatencyprofileName, &icalatencyprofile)
@@ -112,7 +121,7 @@ func updateIcalatencyprofileFunc(ctx context.Context, d *schema.ResourceData, me
 	hasChange := false
 	if d.HasChange("l7latencymaxnotifycount") {
 		log.Printf("[DEBUG]  citrixadc-provider: L7latencymaxnotifycount has changed for icalatencyprofile %s, starting update", icalatencyprofileName)
-		icalatencyprofile.L7latencymaxnotifycount = d.Get("l7latencymaxnotifycount").(int)
+		icalatencyprofile.L7latencymaxnotifycount = intPtr(d.Get("l7latencymaxnotifycount").(int))
 		hasChange = true
 	}
 	if d.HasChange("l7latencymonitoring") {
@@ -122,17 +131,17 @@ func updateIcalatencyprofileFunc(ctx context.Context, d *schema.ResourceData, me
 	}
 	if d.HasChange("l7latencynotifyinterval") {
 		log.Printf("[DEBUG]  citrixadc-provider: L7latencynotifyinterval has changed for icalatencyprofile %s, starting update", icalatencyprofileName)
-		icalatencyprofile.L7latencynotifyinterval = d.Get("l7latencynotifyinterval").(int)
+		icalatencyprofile.L7latencynotifyinterval = intPtr(d.Get("l7latencynotifyinterval").(int))
 		hasChange = true
 	}
 	if d.HasChange("l7latencythresholdfactor") {
 		log.Printf("[DEBUG]  citrixadc-provider: L7latencythresholdfactor has changed for icalatencyprofile %s, starting update", icalatencyprofileName)
-		icalatencyprofile.L7latencythresholdfactor = d.Get("l7latencythresholdfactor").(int)
+		icalatencyprofile.L7latencythresholdfactor = intPtr(d.Get("l7latencythresholdfactor").(int))
 		hasChange = true
 	}
 	if d.HasChange("l7latencywaittime") {
 		log.Printf("[DEBUG]  citrixadc-provider: L7latencywaittime has changed for icalatencyprofile %s, starting update", icalatencyprofileName)
-		icalatencyprofile.L7latencywaittime = d.Get("l7latencywaittime").(int)
+		icalatencyprofile.L7latencywaittime = intPtr(d.Get("l7latencywaittime").(int))
 		hasChange = true
 	}
 

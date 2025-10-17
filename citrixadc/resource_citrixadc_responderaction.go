@@ -84,14 +84,17 @@ func createResponderactionFunc(ctx context.Context, d *schema.ResourceData, meta
 		d.Set("name", responderactionName)
 	}
 	responderaction := responder.Responderaction{
-		Bypasssafetycheck:  d.Get("bypasssafetycheck").(string),
-		Comment:            d.Get("comment").(string),
-		Htmlpage:           d.Get("htmlpage").(string),
-		Name:               d.Get("name").(string),
-		Reasonphrase:       d.Get("reasonphrase").(string),
-		Responsestatuscode: d.Get("responsestatuscode").(int),
-		Target:             d.Get("target").(string),
-		Type:               d.Get("type").(string),
+		Bypasssafetycheck: d.Get("bypasssafetycheck").(string),
+		Comment:           d.Get("comment").(string),
+		Htmlpage:          d.Get("htmlpage").(string),
+		Name:              d.Get("name").(string),
+		Reasonphrase:      d.Get("reasonphrase").(string),
+		Target:            d.Get("target").(string),
+		Type:              d.Get("type").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("responsestatuscode"); !raw.IsNull() {
+		responderaction.Responsestatuscode = intPtr(d.Get("responsestatuscode").(int))
 	}
 
 	_, err := client.AddResource(service.Responderaction.Type(), responderactionName, &responderaction)
@@ -178,7 +181,7 @@ func updateResponderactionFunc(ctx context.Context, d *schema.ResourceData, meta
 	}
 	if d.HasChange("responsestatuscode") {
 		log.Printf("[DEBUG]  citrixadc-provider: Responsestatuscode has changed for responderaction %s, starting update", responderactionName)
-		responderaction.Responsestatuscode = d.Get("responsestatuscode").(int)
+		responderaction.Responsestatuscode = intPtr(d.Get("responsestatuscode").(int))
 		hasChange = true
 	}
 	if d.HasChange("target") {

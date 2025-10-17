@@ -35,11 +35,11 @@ type Icaparameter struct {
 	/**
 	* DF enforcement timeout for EDTPMTUDDF
 	*/
-	Edtpmtuddftimeout int `json:"edtpmtuddftimeout,omitempty"`
+	Edtpmtuddftimeout *int `json:"edtpmtuddftimeout,omitempty"`
 	/**
 	* Specify the time interval/period for which L7 Client Latency value is to be calculated. By default, L7 Client Latency is calculated for every packet. The default value is 0
 	*/
-	L7latencyfrequency int `json:"l7latencyfrequency,omitempty"`
+	L7latencyfrequency *int `json:"l7latencyfrequency,omitempty"`
 	/**
 	* Enable/Disable EDT Loss Tolerant feature
 	*/

@@ -23,7 +23,7 @@ type Policyparam struct {
 	/**
 	* Maximum time in milliseconds to allow for processing expressions and policies without interruption. If the timeout is reached then the evaluation causes an UNDEF to be raised and no further processing is performed.
 	*/
-	Timeout int `json:"timeout,omitempty"`
+	Timeout *int `json:"timeout,omitempty"`
 
 	//------- Read only Parameter ---------;
 

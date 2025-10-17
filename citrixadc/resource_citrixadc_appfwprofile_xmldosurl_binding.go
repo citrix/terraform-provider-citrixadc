@@ -309,39 +309,74 @@ func createAppfwprofile_xmldosurl_bindingFunc(ctx context.Context, d *schema.Res
 		Xmlblockexternalentities:        d.Get("xmlblockexternalentities").(string),
 		Xmlblockpi:                      d.Get("xmlblockpi").(string),
 		Xmldosurl:                       d.Get("xmldosurl").(string),
-		Xmlmaxattributenamelength:       d.Get("xmlmaxattributenamelength").(int),
 		Xmlmaxattributenamelengthcheck:  d.Get("xmlmaxattributenamelengthcheck").(string),
-		Xmlmaxattributes:                d.Get("xmlmaxattributes").(int),
 		Xmlmaxattributescheck:           d.Get("xmlmaxattributescheck").(string),
-		Xmlmaxattributevaluelength:      d.Get("xmlmaxattributevaluelength").(int),
 		Xmlmaxattributevaluelengthcheck: d.Get("xmlmaxattributevaluelengthcheck").(string),
-		Xmlmaxchardatalength:            d.Get("xmlmaxchardatalength").(int),
 		Xmlmaxchardatalengthcheck:       d.Get("xmlmaxchardatalengthcheck").(string),
-		Xmlmaxelementchildren:           d.Get("xmlmaxelementchildren").(int),
 		Xmlmaxelementchildrencheck:      d.Get("xmlmaxelementchildrencheck").(string),
-		Xmlmaxelementdepth:              d.Get("xmlmaxelementdepth").(int),
 		Xmlmaxelementdepthcheck:         d.Get("xmlmaxelementdepthcheck").(string),
-		Xmlmaxelementnamelength:         d.Get("xmlmaxelementnamelength").(int),
 		Xmlmaxelementnamelengthcheck:    d.Get("xmlmaxelementnamelengthcheck").(string),
-		Xmlmaxelements:                  d.Get("xmlmaxelements").(int),
 		Xmlmaxelementscheck:             d.Get("xmlmaxelementscheck").(string),
-		Xmlmaxentityexpansiondepth:      d.Get("xmlmaxentityexpansiondepth").(int),
 		Xmlmaxentityexpansiondepthcheck: d.Get("xmlmaxentityexpansiondepthcheck").(string),
-		Xmlmaxentityexpansions:          d.Get("xmlmaxentityexpansions").(int),
 		Xmlmaxentityexpansionscheck:     d.Get("xmlmaxentityexpansionscheck").(string),
-		Xmlmaxfilesize:                  d.Get("xmlmaxfilesize").(int),
 		Xmlmaxfilesizecheck:             d.Get("xmlmaxfilesizecheck").(string),
-		Xmlmaxnamespaces:                d.Get("xmlmaxnamespaces").(int),
 		Xmlmaxnamespacescheck:           d.Get("xmlmaxnamespacescheck").(string),
-		Xmlmaxnamespaceurilength:        d.Get("xmlmaxnamespaceurilength").(int),
 		Xmlmaxnamespaceurilengthcheck:   d.Get("xmlmaxnamespaceurilengthcheck").(string),
-		Xmlmaxnodes:                     d.Get("xmlmaxnodes").(int),
 		Xmlmaxnodescheck:                d.Get("xmlmaxnodescheck").(string),
-		Xmlmaxsoaparrayrank:             d.Get("xmlmaxsoaparrayrank").(int),
-		Xmlmaxsoaparraysize:             d.Get("xmlmaxsoaparraysize").(int),
-		Xmlminfilesize:                  d.Get("xmlminfilesize").(int),
 		Xmlminfilesizecheck:             d.Get("xmlminfilesizecheck").(string),
 		Xmlsoaparraycheck:               d.Get("xmlsoaparraycheck").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("xmlmaxattributenamelength"); !raw.IsNull() {
+		appfwprofile_xmldosurl_binding.Xmlmaxattributenamelength = intPtr(d.Get("xmlmaxattributenamelength").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("xmlmaxattributes"); !raw.IsNull() {
+		appfwprofile_xmldosurl_binding.Xmlmaxattributes = intPtr(d.Get("xmlmaxattributes").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("xmlmaxattributevaluelength"); !raw.IsNull() {
+		appfwprofile_xmldosurl_binding.Xmlmaxattributevaluelength = intPtr(d.Get("xmlmaxattributevaluelength").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("xmlmaxchardatalength"); !raw.IsNull() {
+		appfwprofile_xmldosurl_binding.Xmlmaxchardatalength = intPtr(d.Get("xmlmaxchardatalength").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("xmlmaxelementchildren"); !raw.IsNull() {
+		appfwprofile_xmldosurl_binding.Xmlmaxelementchildren = intPtr(d.Get("xmlmaxelementchildren").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("xmlmaxelementdepth"); !raw.IsNull() {
+		appfwprofile_xmldosurl_binding.Xmlmaxelementdepth = intPtr(d.Get("xmlmaxelementdepth").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("xmlmaxelementnamelength"); !raw.IsNull() {
+		appfwprofile_xmldosurl_binding.Xmlmaxelementnamelength = intPtr(d.Get("xmlmaxelementnamelength").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("xmlmaxelements"); !raw.IsNull() {
+		appfwprofile_xmldosurl_binding.Xmlmaxelements = intPtr(d.Get("xmlmaxelements").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("xmlmaxentityexpansiondepth"); !raw.IsNull() {
+		appfwprofile_xmldosurl_binding.Xmlmaxentityexpansiondepth = intPtr(d.Get("xmlmaxentityexpansiondepth").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("xmlmaxentityexpansions"); !raw.IsNull() {
+		appfwprofile_xmldosurl_binding.Xmlmaxentityexpansions = intPtr(d.Get("xmlmaxentityexpansions").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("xmlmaxfilesize"); !raw.IsNull() {
+		appfwprofile_xmldosurl_binding.Xmlmaxfilesize = intPtr(d.Get("xmlmaxfilesize").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("xmlmaxnamespaces"); !raw.IsNull() {
+		appfwprofile_xmldosurl_binding.Xmlmaxnamespaces = intPtr(d.Get("xmlmaxnamespaces").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("xmlmaxnamespaceurilength"); !raw.IsNull() {
+		appfwprofile_xmldosurl_binding.Xmlmaxnamespaceurilength = intPtr(d.Get("xmlmaxnamespaceurilength").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("xmlmaxnodes"); !raw.IsNull() {
+		appfwprofile_xmldosurl_binding.Xmlmaxnodes = intPtr(d.Get("xmlmaxnodes").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("xmlmaxsoaparrayrank"); !raw.IsNull() {
+		appfwprofile_xmldosurl_binding.Xmlmaxsoaparrayrank = intPtr(d.Get("xmlmaxsoaparrayrank").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("xmlmaxsoaparraysize"); !raw.IsNull() {
+		appfwprofile_xmldosurl_binding.Xmlmaxsoaparraysize = intPtr(d.Get("xmlmaxsoaparraysize").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("xmlminfilesize"); !raw.IsNull() {
+		appfwprofile_xmldosurl_binding.Xmlminfilesize = intPtr(d.Get("xmlminfilesize").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Appfwprofile_xmldosurl_binding.Type(), &appfwprofile_xmldosurl_binding)

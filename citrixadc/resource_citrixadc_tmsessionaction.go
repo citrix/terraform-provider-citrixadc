@@ -95,11 +95,16 @@ func createTmsessionactionFunc(ctx context.Context, d *schema.ResourceData, meta
 		Kcdaccount:                 d.Get("kcdaccount").(string),
 		Name:                       d.Get("name").(string),
 		Persistentcookie:           d.Get("persistentcookie").(string),
-		Persistentcookievalidity:   d.Get("persistentcookievalidity").(int),
-		Sesstimeout:                d.Get("sesstimeout").(int),
 		Sso:                        d.Get("sso").(string),
 		Ssocredential:              d.Get("ssocredential").(string),
 		Ssodomain:                  d.Get("ssodomain").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("persistentcookievalidity"); !raw.IsNull() {
+		tmsessionaction.Persistentcookievalidity = intPtr(d.Get("persistentcookievalidity").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("sesstimeout"); !raw.IsNull() {
+		tmsessionaction.Sesstimeout = intPtr(d.Get("sesstimeout").(int))
 	}
 
 	_, err := client.AddResource(service.Tmsessionaction.Type(), tmsessionactionName, &tmsessionaction)
@@ -175,12 +180,12 @@ func updateTmsessionactionFunc(ctx context.Context, d *schema.ResourceData, meta
 	}
 	if d.HasChange("persistentcookievalidity") {
 		log.Printf("[DEBUG]  citrixadc-provider: Persistentcookievalidity has changed for tmsessionaction %s, starting update", tmsessionactionName)
-		tmsessionaction.Persistentcookievalidity = d.Get("persistentcookievalidity").(int)
+		tmsessionaction.Persistentcookievalidity = intPtr(d.Get("persistentcookievalidity").(int))
 		hasChange = true
 	}
 	if d.HasChange("sesstimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Sesstimeout has changed for tmsessionaction %s, starting update", tmsessionactionName)
-		tmsessionaction.Sesstimeout = d.Get("sesstimeout").(int)
+		tmsessionaction.Sesstimeout = intPtr(d.Get("sesstimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("sso") {

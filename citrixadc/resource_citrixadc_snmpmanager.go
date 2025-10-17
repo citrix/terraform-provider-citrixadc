@@ -49,9 +49,12 @@ func createSnmpmanagerFunc(ctx context.Context, d *schema.ResourceData, meta int
 	snmpmanagerName := d.Get("ipaddress").(string)
 
 	snmpmanager := snmp.Snmpmanager{
-		Domainresolveretry: d.Get("domainresolveretry").(int),
-		Ipaddress:          d.Get("ipaddress").(string),
-		Netmask:            d.Get("netmask").(string),
+		Ipaddress: d.Get("ipaddress").(string),
+		Netmask:   d.Get("netmask").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("domainresolveretry"); !raw.IsNull() {
+		snmpmanager.Domainresolveretry = intPtr(d.Get("domainresolveretry").(int))
 	}
 
 	_, err := client.AddResource(service.Snmpmanager.Type(), snmpmanagerName, &snmpmanager)
@@ -118,7 +121,7 @@ func updateSnmpmanagerFunc(ctx context.Context, d *schema.ResourceData, meta int
 	hasChange := false
 	if d.HasChange("domainresolveretry") {
 		log.Printf("[DEBUG]  citrixadc-provider: Domainresolveretry has changed for snmpmanager %s, starting update", snmpmanagerName)
-		snmpmanager.Domainresolveretry = d.Get("domainresolveretry").(int)
+		snmpmanager.Domainresolveretry = intPtr(d.Get("domainresolveretry").(int))
 		hasChange = true
 	}
 	if d.HasChange("netmask") {

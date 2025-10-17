@@ -89,14 +89,25 @@ func createBridgetableFunc(ctx context.Context, d *schema.ResourceData, meta int
 	client := meta.(*NetScalerNitroClient).client
 	bridgetableName := fmt.Sprintf("%s,%s,%s", d.Get("mac").(string), strconv.Itoa(d.Get("vxlan").(int)), d.Get("vtep").(string))
 	bridgetable := network.Bridgetable{
-		Devicevlan: d.Get("devicevlan").(int),
-		Mac:        d.Get("mac").(string),
-		Vni:        d.Get("vni").(int),
-		Vtep:       d.Get("vtep").(string),
-		Vxlan:      d.Get("vxlan").(int),
-		Ifnum:      d.Get("ifnum").(string),
-		Nodeid:     d.Get("nodeid").(int),
-		Vlan:       d.Get("vlan").(int),
+		Mac:   d.Get("mac").(string),
+		Vtep:  d.Get("vtep").(string),
+		Ifnum: d.Get("ifnum").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("devicevlan"); !raw.IsNull() {
+		bridgetable.Devicevlan = intPtr(d.Get("devicevlan").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("vni"); !raw.IsNull() {
+		bridgetable.Vni = intPtr(d.Get("vni").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("vxlan"); !raw.IsNull() {
+		bridgetable.Vxlan = intPtr(d.Get("vxlan").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("nodeid"); !raw.IsNull() {
+		bridgetable.Nodeid = intPtr(d.Get("nodeid").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("vlan"); !raw.IsNull() {
+		bridgetable.Vlan = intPtr(d.Get("vlan").(int))
 	}
 
 	_, err := client.AddResource(service.Bridgetable.Type(), bridgetableName, &bridgetable)
@@ -105,8 +116,10 @@ func createBridgetableFunc(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if _, ok := d.GetOk("bridgeage"); ok {
-		bridgetable2 := network.Bridgetable{
-			Bridgeage: d.Get("bridgeage").(int),
+		bridgetable2 := network.Bridgetable{}
+
+		if raw := d.GetRawConfig().GetAttr("bridgeage"); !raw.IsNull() {
+			bridgetable2.Bridgeage = intPtr(d.Get("bridgeage").(int))
 		}
 		err1 := client.UpdateUnnamedResource(service.Bridgetable.Type(), &bridgetable2)
 		if err1 != nil {
@@ -185,7 +198,7 @@ func updateBridgetableFunc(ctx context.Context, d *schema.ResourceData, meta int
 	hasChange := false
 	if d.HasChange("bridgeage") {
 		log.Printf("[DEBUG]  citrixadc-provider: Bridgeage has changed for bridgetable %s, starting update", bridgetableName)
-		bridgetable.Bridgeage = d.Get("bridgeage").(int)
+		bridgetable.Bridgeage = intPtr(d.Get("bridgeage").(int))
 		hasChange = true
 	}
 

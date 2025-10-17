@@ -39,7 +39,7 @@ type Systemglobaldata struct {
 	/**
 	* Last is literal way of saying a certain time period from the current moment. Example: -last 1 hour, -last 1 day, et cetera.
 	*/
-	Last int `json:"last,omitempty"`
+	Last *int `json:"last,omitempty"`
 	/**
 	* Specify the  time period from current moment. Example 1 x where x = hours/ days/ years.
 	*/
@@ -51,7 +51,7 @@ type Systemglobaldata struct {
 	/**
 	* Specify core ID of the PE in nCore.
 	*/
-	Core int `json:"core,omitempty"`
+	Core *int `json:"core,omitempty"`
 
 	//------- Read only Parameter ---------;
 

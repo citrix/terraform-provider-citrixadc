@@ -31,7 +31,7 @@ type Nslicenseproxyserver struct {
 	/**
 	* License proxy server port.
 	*/
-	Port int `json:"port,omitempty"`
+	Port *int `json:"port,omitempty"`
 
 	//------- Read only Parameter ---------;
 

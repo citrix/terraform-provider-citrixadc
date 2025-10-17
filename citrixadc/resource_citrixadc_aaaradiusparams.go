@@ -139,25 +139,44 @@ func createAaaradiusparamsFunc(ctx context.Context, d *schema.ResourceData, meta
 	aaaradiusparams := aaa.Aaaradiusparams{
 		Accounting:                 d.Get("accounting").(string),
 		Authentication:             d.Get("authentication").(string),
-		Authservretry:              d.Get("authservretry").(int),
-		Authtimeout:                d.Get("authtimeout").(int),
 		Callingstationid:           d.Get("callingstationid").(string),
 		Defaultauthenticationgroup: d.Get("defaultauthenticationgroup").(string),
-		Ipattributetype:            d.Get("ipattributetype").(int),
-		Ipvendorid:                 d.Get("ipvendorid").(int),
 		Passencoding:               d.Get("passencoding").(string),
-		Pwdattributetype:           d.Get("pwdattributetype").(int),
-		Pwdvendorid:                d.Get("pwdvendorid").(int),
-		Radattributetype:           d.Get("radattributetype").(int),
 		Radgroupseparator:          d.Get("radgroupseparator").(string),
 		Radgroupsprefix:            d.Get("radgroupsprefix").(string),
 		Radkey:                     d.Get("radkey").(string),
 		Radnasid:                   d.Get("radnasid").(string),
 		Radnasip:                   d.Get("radnasip").(string),
-		Radvendorid:                d.Get("radvendorid").(int),
 		Serverip:                   d.Get("serverip").(string),
-		Serverport:                 d.Get("serverport").(int),
 		Tunnelendpointclientip:     d.Get("tunnelendpointclientip").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("authservretry"); !raw.IsNull() {
+		aaaradiusparams.Authservretry = intPtr(d.Get("authservretry").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("authtimeout"); !raw.IsNull() {
+		aaaradiusparams.Authtimeout = intPtr(d.Get("authtimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("ipattributetype"); !raw.IsNull() {
+		aaaradiusparams.Ipattributetype = intPtr(d.Get("ipattributetype").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("ipvendorid"); !raw.IsNull() {
+		aaaradiusparams.Ipvendorid = intPtr(d.Get("ipvendorid").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("pwdattributetype"); !raw.IsNull() {
+		aaaradiusparams.Pwdattributetype = intPtr(d.Get("pwdattributetype").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("pwdvendorid"); !raw.IsNull() {
+		aaaradiusparams.Pwdvendorid = intPtr(d.Get("pwdvendorid").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("radattributetype"); !raw.IsNull() {
+		aaaradiusparams.Radattributetype = intPtr(d.Get("radattributetype").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("radvendorid"); !raw.IsNull() {
+		aaaradiusparams.Radvendorid = intPtr(d.Get("radvendorid").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("serverport"); !raw.IsNull() {
+		aaaradiusparams.Serverport = intPtr(d.Get("serverport").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Aaaradiusparams.Type(), &aaaradiusparams)
@@ -226,12 +245,12 @@ func updateAaaradiusparamsFunc(ctx context.Context, d *schema.ResourceData, meta
 	}
 	if d.HasChange("authservretry") {
 		log.Printf("[DEBUG]  citrixadc-provider: Authservretry has changed for aaaradiusparams, starting update")
-		aaaradiusparams.Authservretry = d.Get("authservretry").(int)
+		aaaradiusparams.Authservretry = intPtr(d.Get("authservretry").(int))
 		hasChange = true
 	}
 	if d.HasChange("authtimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Authtimeout has changed for aaaradiusparams, starting update")
-		aaaradiusparams.Authtimeout = d.Get("authtimeout").(int)
+		aaaradiusparams.Authtimeout = intPtr(d.Get("authtimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("callingstationid") {
@@ -246,12 +265,12 @@ func updateAaaradiusparamsFunc(ctx context.Context, d *schema.ResourceData, meta
 	}
 	if d.HasChange("ipattributetype") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ipattributetype has changed for aaaradiusparams, starting update")
-		aaaradiusparams.Ipattributetype = d.Get("ipattributetype").(int)
+		aaaradiusparams.Ipattributetype = intPtr(d.Get("ipattributetype").(int))
 		hasChange = true
 	}
 	if d.HasChange("ipvendorid") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ipvendorid has changed for aaaradiusparams, starting update")
-		aaaradiusparams.Ipvendorid = d.Get("ipvendorid").(int)
+		aaaradiusparams.Ipvendorid = intPtr(d.Get("ipvendorid").(int))
 		hasChange = true
 	}
 	if d.HasChange("passencoding") {
@@ -261,17 +280,17 @@ func updateAaaradiusparamsFunc(ctx context.Context, d *schema.ResourceData, meta
 	}
 	if d.HasChange("pwdattributetype") {
 		log.Printf("[DEBUG]  citrixadc-provider: Pwdattributetype has changed for aaaradiusparams, starting update")
-		aaaradiusparams.Pwdattributetype = d.Get("pwdattributetype").(int)
+		aaaradiusparams.Pwdattributetype = intPtr(d.Get("pwdattributetype").(int))
 		hasChange = true
 	}
 	if d.HasChange("pwdvendorid") {
 		log.Printf("[DEBUG]  citrixadc-provider: Pwdvendorid has changed for aaaradiusparams, starting update")
-		aaaradiusparams.Pwdvendorid = d.Get("pwdvendorid").(int)
+		aaaradiusparams.Pwdvendorid = intPtr(d.Get("pwdvendorid").(int))
 		hasChange = true
 	}
 	if d.HasChange("radattributetype") {
 		log.Printf("[DEBUG]  citrixadc-provider: Radattributetype has changed for aaaradiusparams, starting update")
-		aaaradiusparams.Radattributetype = d.Get("radattributetype").(int)
+		aaaradiusparams.Radattributetype = intPtr(d.Get("radattributetype").(int))
 		hasChange = true
 	}
 	if d.HasChange("radgroupseparator") {
@@ -296,7 +315,7 @@ func updateAaaradiusparamsFunc(ctx context.Context, d *schema.ResourceData, meta
 	}
 	if d.HasChange("radvendorid") {
 		log.Printf("[DEBUG]  citrixadc-provider: Radvendorid has changed for aaaradiusparams, starting update")
-		aaaradiusparams.Radvendorid = d.Get("radvendorid").(int)
+		aaaradiusparams.Radvendorid = intPtr(d.Get("radvendorid").(int))
 		hasChange = true
 	}
 	if d.HasChange("serverip") {
@@ -306,7 +325,7 @@ func updateAaaradiusparamsFunc(ctx context.Context, d *schema.ResourceData, meta
 	}
 	if d.HasChange("serverport") {
 		log.Printf("[DEBUG]  citrixadc-provider: Serverport has changed for aaaradiusparams, starting update")
-		aaaradiusparams.Serverport = d.Get("serverport").(int)
+		aaaradiusparams.Serverport = intPtr(d.Get("serverport").(int))
 		hasChange = true
 	}
 	if d.HasChange("tunnelendpointclientip") {

@@ -511,7 +511,10 @@ func createTmsamlssoprofileFunc(ctx context.Context, d *schema.ResourceData, met
 		Sendpassword:                d.Get("sendpassword").(string),
 		Signassertion:               d.Get("signassertion").(string),
 		Signaturealg:                d.Get("signaturealg").(string),
-		Skewtime:                    d.Get("skewtime").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("skewtime"); !raw.IsNull() {
+		tmsamlssoprofile.Skewtime = intPtr(d.Get("skewtime").(int))
 	}
 
 	_, err := client.AddResource(service.Tmsamlssoprofile.Type(), tmsamlssoprofileName, &tmsamlssoprofile)
@@ -1021,7 +1024,7 @@ func updateTmsamlssoprofileFunc(ctx context.Context, d *schema.ResourceData, met
 	}
 	if d.HasChange("skewtime") {
 		log.Printf("[DEBUG]  citrixadc-provider: Skewtime has changed for tmsamlssoprofile %s, starting update", tmsamlssoprofileName)
-		tmsamlssoprofile.Skewtime = d.Get("skewtime").(int)
+		tmsamlssoprofile.Skewtime = intPtr(d.Get("skewtime").(int))
 		hasChange = true
 	}
 

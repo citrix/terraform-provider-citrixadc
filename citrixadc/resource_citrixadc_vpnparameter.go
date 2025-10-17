@@ -456,7 +456,6 @@ func createVpnparameterFunc(ctx context.Context, d *schema.ResourceData, meta in
 		Allowedlogingroups:         d.Get("allowedlogingroups").(string),
 		Allprotocolproxy:           d.Get("allprotocolproxy").(string),
 		Alwaysonprofilename:        d.Get("alwaysonprofilename").(string),
-		Apptokentimeout:            d.Get("apptokentimeout").(int),
 		Authorizationgroup:         d.Get("authorizationgroup").(string),
 		Autoproxyurl:               d.Get("autoproxyurl").(string),
 		Backendcertvalidation:      d.Get("backendcertvalidation").(string),
@@ -466,7 +465,6 @@ func createVpnparameterFunc(ctx context.Context, d *schema.ResourceData, meta in
 		Clientcleanupprompt:        d.Get("clientcleanupprompt").(string),
 		Clientconfiguration:        toStringList(d.Get("clientconfiguration").([]interface{})),
 		Clientdebug:                d.Get("clientdebug").(string),
-		Clientidletimeout:          d.Get("clientidletimeout").(int),
 		Clientlessmodeurlencoding:  d.Get("clientlessmodeurlencoding").(string),
 		Clientlesspersistentcookie: d.Get("clientlesspersistentcookie").(string),
 		Clientlessvpnmode:          d.Get("clientlessvpnmode").(string),
@@ -482,8 +480,6 @@ func createVpnparameterFunc(ctx context.Context, d *schema.ResourceData, meta in
 		Encryptcsecexp:             d.Get("encryptcsecexp").(string),
 		Epaclienttype:              d.Get("epaclienttype").(string),
 		Forcecleanup:               toStringList(d.Get("forcecleanup").([]interface{})),
-		Forcedtimeout:              d.Get("forcedtimeout").(int),
-		Forcedtimeoutwarning:       d.Get("forcedtimeoutwarning").(int),
 		Fqdnspoofedip:              d.Get("fqdnspoofedip").(string),
 		Ftpproxy:                   d.Get("ftpproxy").(string),
 		Gopherproxy:                d.Get("gopherproxy").(string),
@@ -502,7 +498,6 @@ func createVpnparameterFunc(ctx context.Context, d *schema.ResourceData, meta in
 		Loginscript:                d.Get("loginscript").(string),
 		Logoutscript:               d.Get("logoutscript").(string),
 		Macpluginupgrade:           d.Get("macpluginupgrade").(string),
-		Mdxtokentimeout:            d.Get("mdxtokentimeout").(int),
 		Netmask:                    d.Get("netmask").(string),
 		Ntdomain:                   d.Get("ntdomain").(string),
 		Pcoipprofilename:           d.Get("pcoipprofilename").(string),
@@ -513,7 +508,6 @@ func createVpnparameterFunc(ctx context.Context, d *schema.ResourceData, meta in
 		Rfc1918:                    d.Get("rfc1918").(string),
 		Samesite:                   d.Get("samesite").(string),
 		Securebrowse:               d.Get("securebrowse").(string),
-		Sesstimeout:                d.Get("sesstimeout").(int),
 		Smartgroup:                 d.Get("smartgroup").(string),
 		Socksproxy:                 d.Get("socksproxy").(string),
 		Splitdns:                   d.Get("splitdns").(string),
@@ -535,6 +529,25 @@ func createVpnparameterFunc(ctx context.Context, d *schema.ResourceData, meta in
 		Windowspluginupgrade:       d.Get("windowspluginupgrade").(string),
 		Winsip:                     d.Get("winsip").(string),
 		Wiportalmode:               d.Get("wiportalmode").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("apptokentimeout"); !raw.IsNull() {
+		vpnparameter.Apptokentimeout = intPtr(d.Get("apptokentimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("clientidletimeout"); !raw.IsNull() {
+		vpnparameter.Clientidletimeout = intPtr(d.Get("clientidletimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("forcedtimeout"); !raw.IsNull() {
+		vpnparameter.Forcedtimeout = intPtr(d.Get("forcedtimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("forcedtimeoutwarning"); !raw.IsNull() {
+		vpnparameter.Forcedtimeoutwarning = intPtr(d.Get("forcedtimeoutwarning").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("mdxtokentimeout"); !raw.IsNull() {
+		vpnparameter.Mdxtokentimeout = intPtr(d.Get("mdxtokentimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("sesstimeout"); !raw.IsNull() {
+		vpnparameter.Sesstimeout = intPtr(d.Get("sesstimeout").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Vpnparameter.Type(), &vpnparameter)
@@ -675,7 +688,7 @@ func updateVpnparameterFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("apptokentimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Apptokentimeout has changed for vpnparameter vpnparameter, starting update")
-		vpnparameter.Apptokentimeout = d.Get("apptokentimeout").(int)
+		vpnparameter.Apptokentimeout = intPtr(d.Get("apptokentimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("authorizationgroup") {
@@ -725,7 +738,7 @@ func updateVpnparameterFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("clientidletimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Clientidletimeout has changed for vpnparameter vpnparameter, starting update")
-		vpnparameter.Clientidletimeout = d.Get("clientidletimeout").(int)
+		vpnparameter.Clientidletimeout = intPtr(d.Get("clientidletimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("clientlessmodeurlencoding") {
@@ -805,12 +818,12 @@ func updateVpnparameterFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("forcedtimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Forcedtimeout has changed for vpnparameter vpnparameter, starting update")
-		vpnparameter.Forcedtimeout = d.Get("forcedtimeout").(int)
+		vpnparameter.Forcedtimeout = intPtr(d.Get("forcedtimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("forcedtimeoutwarning") {
 		log.Printf("[DEBUG]  citrixadc-provider: Forcedtimeoutwarning has changed for vpnparameter vpnparameter, starting update")
-		vpnparameter.Forcedtimeoutwarning = d.Get("forcedtimeoutwarning").(int)
+		vpnparameter.Forcedtimeoutwarning = intPtr(d.Get("forcedtimeoutwarning").(int))
 		hasChange = true
 	}
 	if d.HasChange("fqdnspoofedip") {
@@ -905,7 +918,7 @@ func updateVpnparameterFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("mdxtokentimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Mdxtokentimeout has changed for vpnparameter vpnparameter, starting update")
-		vpnparameter.Mdxtokentimeout = d.Get("mdxtokentimeout").(int)
+		vpnparameter.Mdxtokentimeout = intPtr(d.Get("mdxtokentimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("netmask") {
@@ -960,7 +973,7 @@ func updateVpnparameterFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("sesstimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Sesstimeout has changed for vpnparameter vpnparameter, starting update")
-		vpnparameter.Sesstimeout = d.Get("sesstimeout").(int)
+		vpnparameter.Sesstimeout = intPtr(d.Get("sesstimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("smartgroup") {

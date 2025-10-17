@@ -27,7 +27,7 @@ type Policydatasetvaluebinding struct {
 	/**
 	* The index of the value (ipv4, ipv6, number) associated with the set.
 	*/
-	Index int `json:"index,omitempty"`
+	Index *int `json:"index,omitempty"`
 	/**
 	* Any comments to preserve information about this dataset or a data bound to this dataset.
 	*/

@@ -81,13 +81,24 @@ func createIpsecparameterFunc(ctx context.Context, d *schema.ResourceData, meta 
 	ipsecparameter := ipsec.Ipsecparameter{
 		Encalgo:               toStringList(d.Get("encalgo").([]interface{})),
 		Hashalgo:              toStringList(d.Get("hashalgo").([]interface{})),
-		Ikeretryinterval:      d.Get("ikeretryinterval").(int),
 		Ikeversion:            d.Get("ikeversion").(string),
-		Lifetime:              d.Get("lifetime").(int),
-		Livenesscheckinterval: d.Get("livenesscheckinterval").(int),
 		Perfectforwardsecrecy: d.Get("perfectforwardsecrecy").(string),
-		Replaywindowsize:      d.Get("replaywindowsize").(int),
-		Retransmissiontime:    d.Get("retransmissiontime").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("ikeretryinterval"); !raw.IsNull() {
+		ipsecparameter.Ikeretryinterval = intPtr(d.Get("ikeretryinterval").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("lifetime"); !raw.IsNull() {
+		ipsecparameter.Lifetime = intPtr(d.Get("lifetime").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("livenesscheckinterval"); !raw.IsNull() {
+		ipsecparameter.Livenesscheckinterval = intPtr(d.Get("livenesscheckinterval").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("replaywindowsize"); !raw.IsNull() {
+		ipsecparameter.Replaywindowsize = intPtr(d.Get("replaywindowsize").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("retransmissiontime"); !raw.IsNull() {
+		ipsecparameter.Retransmissiontime = intPtr(d.Get("retransmissiontime").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Ipsecparameter.Type(), &ipsecparameter)
@@ -142,7 +153,7 @@ func updateIpsecparameterFunc(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	if d.HasChange("ikeretryinterval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ikeretryinterval has changed for ipsecparameter, starting update")
-		ipsecparameter.Ikeretryinterval = d.Get("ikeretryinterval").(int)
+		ipsecparameter.Ikeretryinterval = intPtr(d.Get("ikeretryinterval").(int))
 		hasChange = true
 	}
 	if d.HasChange("ikeversion") {
@@ -152,12 +163,12 @@ func updateIpsecparameterFunc(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	if d.HasChange("lifetime") {
 		log.Printf("[DEBUG]  citrixadc-provider: Lifetime has changed for ipsecparameter, starting update")
-		ipsecparameter.Lifetime = d.Get("lifetime").(int)
+		ipsecparameter.Lifetime = intPtr(d.Get("lifetime").(int))
 		hasChange = true
 	}
 	if d.HasChange("livenesscheckinterval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Livenesscheckinterval has changed for ipsecparameter, starting update")
-		ipsecparameter.Livenesscheckinterval = d.Get("livenesscheckinterval").(int)
+		ipsecparameter.Livenesscheckinterval = intPtr(d.Get("livenesscheckinterval").(int))
 		hasChange = true
 	}
 	if d.HasChange("perfectforwardsecrecy") {
@@ -167,12 +178,12 @@ func updateIpsecparameterFunc(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	if d.HasChange("replaywindowsize") {
 		log.Printf("[DEBUG]  citrixadc-provider: Replaywindowsize has changed for ipsecparameter, starting update")
-		ipsecparameter.Replaywindowsize = d.Get("replaywindowsize").(int)
+		ipsecparameter.Replaywindowsize = intPtr(d.Get("replaywindowsize").(int))
 		hasChange = true
 	}
 	if d.HasChange("retransmissiontime") {
 		log.Printf("[DEBUG]  citrixadc-provider: Retransmissiontime has changed for ipsecparameter, starting update")
-		ipsecparameter.Retransmissiontime = d.Get("retransmissiontime").(int)
+		ipsecparameter.Retransmissiontime = intPtr(d.Get("retransmissiontime").(int))
 		hasChange = true
 	}
 

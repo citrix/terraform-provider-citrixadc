@@ -27,7 +27,7 @@ type Sslprofilesslciphersuitebinding struct {
 	/**
 	* cipher priority
 	*/
-	Cipherpriority int `json:"cipherpriority,omitempty"`
+	Cipherpriority *int `json:"cipherpriority,omitempty"`
 	/**
 	* The cipher suite description.
 	*/

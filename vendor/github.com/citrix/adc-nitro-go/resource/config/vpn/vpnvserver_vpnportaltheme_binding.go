@@ -24,7 +24,7 @@ type Vpnvservervpnportalthemebinding struct {
 	* Name of the portal theme bound to VPN vserver
 	*/
 	Portaltheme string `json:"portaltheme,omitempty"`
-	Acttype int `json:"acttype,omitempty"`
+	Acttype *int `json:"acttype,omitempty"`
 	/**
 	* Name of the virtual server.
 	*/

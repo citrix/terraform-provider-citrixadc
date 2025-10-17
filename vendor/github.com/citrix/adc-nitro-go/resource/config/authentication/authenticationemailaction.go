@@ -49,7 +49,7 @@ type Authenticationemailaction struct {
 	/**
 	* Time after which the code expires.
 	*/
-	Timeout int `json:"timeout,omitempty"`
+	Timeout *int `json:"timeout,omitempty"`
 	/**
 	* Type of the email action. Default type is SMTP.
 	*/

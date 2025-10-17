@@ -80,10 +80,13 @@ func createTmformssoactionFunc(ctx context.Context, d *schema.ResourceData, meta
 		Namevaluepair:  d.Get("namevaluepair").(string),
 		Nvtype:         d.Get("nvtype").(string),
 		Passwdfield:    d.Get("passwdfield").(string),
-		Responsesize:   d.Get("responsesize").(int),
 		Ssosuccessrule: d.Get("ssosuccessrule").(string),
 		Submitmethod:   d.Get("submitmethod").(string),
 		Userfield:      d.Get("userfield").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("responsesize"); !raw.IsNull() {
+		tmformssoaction.Responsesize = intPtr(d.Get("responsesize").(int))
 	}
 
 	_, err := client.AddResource(service.Tmformssoaction.Type(), tmformssoactionName, &tmformssoaction)
@@ -152,7 +155,7 @@ func updateTmformssoactionFunc(ctx context.Context, d *schema.ResourceData, meta
 	}
 	if d.HasChange("responsesize") {
 		log.Printf("[DEBUG]  citrixadc-provider: Responsesize has changed for tmformssoaction %s, starting update", tmformssoactionName)
-		tmformssoaction.Responsesize = d.Get("responsesize").(int)
+		tmformssoaction.Responsesize = intPtr(d.Get("responsesize").(int))
 		hasChange = true
 	}
 	if d.HasChange("ssosuccessrule") {

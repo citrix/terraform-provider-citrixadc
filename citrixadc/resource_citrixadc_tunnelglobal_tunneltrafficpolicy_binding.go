@@ -68,9 +68,12 @@ func createTunnelglobal_tunneltrafficpolicy_bindingFunc(ctx context.Context, d *
 		Feature:                d.Get("feature").(string),
 		Gotopriorityexpression: d.Get("gotopriorityexpression").(string),
 		Policyname:             d.Get("policyname").(string),
-		Priority:               d.Get("priority").(int),
 		State:                  d.Get("state").(string),
 		Type:                   d.Get("type").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		tunnelglobal_tunneltrafficpolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Tunnelglobal_tunneltrafficpolicy_binding.Type(), &tunnelglobal_tunneltrafficpolicy_binding)

@@ -27,8 +27,8 @@ type Vpnvserverintranetip6binding struct {
 	/**
 	* The number of ipv6 addresses
 	*/
-	Numaddr int `json:"numaddr,omitempty"`
-	Acttype int `json:"acttype,omitempty"`
+	Numaddr *int `json:"numaddr,omitempty"`
+	Acttype *int `json:"acttype,omitempty"`
 	/**
 	* Name of the virtual server.
 	*/

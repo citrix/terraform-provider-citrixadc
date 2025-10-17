@@ -24,8 +24,8 @@ type Authenticationloginschemapolicyvpnvserverbinding struct {
 	* The entity name to which policy is bound
 	*/
 	Boundto string `json:"boundto,omitempty"`
-	Priority int `json:"priority,omitempty"`
-	Activepolicy int `json:"activepolicy,omitempty"`
+	Priority *int `json:"priority,omitempty"`
+	Activepolicy *int `json:"activepolicy,omitempty"`
 	/**
 	* Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 	*/

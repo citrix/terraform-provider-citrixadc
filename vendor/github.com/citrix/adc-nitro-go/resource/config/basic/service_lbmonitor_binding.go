@@ -39,27 +39,27 @@ type Servicelbmonitorbinding struct {
 	/**
 	* Weight to assign to the monitor-service binding. When a monitor is UP, the weight assigned to its binding with the service determines how much the monitor contributes toward keeping the health of the service above the value configured for the Monitor Threshold parameter.
 	*/
-	Weight int `json:"weight,omitempty"`
+	Weight *int `json:"weight,omitempty"`
 	/**
 	* The weight of the monitor.
 	*/
-	Dupweight int `json:"dup_weight,omitempty"`
+	Dupweight *int `json:"dup_weight,omitempty"`
 	/**
 	* The total number of probs sent.
 	*/
-	Totalprobes int `json:"totalprobes,omitempty"`
+	Totalprobes *int `json:"totalprobes,omitempty"`
 	/**
 	* The total number of failed probs.
 	*/
-	Totalfailedprobes int `json:"totalfailedprobes,omitempty"`
+	Totalfailedprobes *int `json:"totalfailedprobes,omitempty"`
 	/**
 	* Number of the current failed monitoring probes.
 	*/
-	Failedprobes int `json:"failedprobes,omitempty"`
+	Failedprobes *int `json:"failedprobes,omitempty"`
 	/**
 	* The code indicating the monitor response.
 	*/
-	Monstatcode int `json:"monstatcode,omitempty"`
+	Monstatcode *int `json:"monstatcode,omitempty"`
 	/**
 	* The string form of monstatcode.
 	*/
@@ -67,31 +67,31 @@ type Servicelbmonitorbinding struct {
 	/**
 	* First parameter for use with message code.
 	*/
-	Monstatparam1 int `json:"monstatparam1,omitempty"`
+	Monstatparam1 *int `json:"monstatparam1,omitempty"`
 	/**
 	* Second parameter for use with message code.
 	*/
-	Monstatparam2 int `json:"monstatparam2,omitempty"`
+	Monstatparam2 *int `json:"monstatparam2,omitempty"`
 	/**
 	* Third parameter for use with message code.
 	*/
-	Monstatparam3 int `json:"monstatparam3,omitempty"`
+	Monstatparam3 *int `json:"monstatparam3,omitempty"`
 	/**
 	* Response time of this monitor.
 	*/
-	Responsetime int `json:"responsetime,omitempty"`
+	Responsetime *int `json:"responsetime,omitempty"`
 	/**
 	* Total number of probes sent to monitor this service.
 	*/
-	Monitortotalprobes int `json:"monitortotalprobes,omitempty"`
+	Monitortotalprobes *int `json:"monitortotalprobes,omitempty"`
 	/**
 	* Total number of failed probes
 	*/
-	Monitortotalfailedprobes int `json:"monitortotalfailedprobes,omitempty"`
+	Monitortotalfailedprobes *int `json:"monitortotalfailedprobes,omitempty"`
 	/**
 	* Total number of currently failed probes
 	*/
-	Monitorcurrentfailedprobes int `json:"monitorcurrentfailedprobes,omitempty"`
+	Monitorcurrentfailedprobes *int `json:"monitorcurrentfailedprobes,omitempty"`
 	/**
 	* Indicates if load monitor is passive. A passive load monitor does not remove service from LB decision when threshold is breached.
 	*/

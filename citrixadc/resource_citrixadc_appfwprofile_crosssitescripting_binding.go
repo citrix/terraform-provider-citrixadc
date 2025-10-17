@@ -8,7 +8,6 @@ import (
 
 	"fmt"
 	"log"
-	"strconv"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -91,6 +90,18 @@ func resourceCitrixAdcAppfwprofile_crosssitescripting_binding() *schema.Resource
 				Computed: true,
 				ForceNew: true,
 			},
+			"resourceid": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"ruletype": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -122,6 +133,8 @@ func createAppfwprofile_crosssitescripting_bindingFunc(ctx context.Context, d *s
 		Isvalueregexxss:    d.Get("isvalueregex_xss").(string),
 		Name:               appFwName,
 		State:              d.Get("state").(string),
+		Resourceid:         d.Get("resourceid").(string),
+		Ruletype:           d.Get("ruletype").(string),
 	}
 
 	_, err := client.AddResource(service.Appfwprofile_crosssitescripting_binding.Type(), appFwName, &appfwprofile_crosssitescripting_binding)
@@ -191,11 +204,7 @@ func readAppfwprofile_crosssitescripting_bindingFunc(ctx context.Context, d *sch
 	// Iterate through results to find the one with the right policy name
 	foundIndex := -1
 	for i, v := range dataArr {
-		unescapedURL, err := unescapeStringURL(v["formactionurl_xss"].(string))
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		if v["crosssitescripting"].(string) == crosssitescripting && unescapedURL == formactionurl_xss && v["as_scan_location_xss"].(string) == as_scan_location_xss {
+		if v["crosssitescripting"].(string) == crosssitescripting && v["formactionurl_xss"].(string) == formactionurl_xss && v["as_scan_location_xss"].(string) == as_scan_location_xss {
 			if as_value_type_xss != "" && as_value_expr_xss != "" {
 				if v["as_value_type_xss"] != nil && v["as_value_expr_xss"] != nil && v["as_value_type_xss"].(string) == as_value_type_xss && v["as_value_expr_xss"].(string) == as_value_expr_xss {
 					foundIndex = i
@@ -218,11 +227,6 @@ func readAppfwprofile_crosssitescripting_bindingFunc(ctx context.Context, d *sch
 	// Fallthrough
 	data := dataArr[foundIndex]
 
-	unescaped_formactionurl_xss, err := unescapeStringURL(data["formactionurl_xss"].(string))
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
 	d.Set("name", data["name"])
 	d.Set("alertonly", data["alertonly"])
 	d.Set("as_scan_location_xss", data["as_scan_location_xss"])
@@ -230,12 +234,14 @@ func readAppfwprofile_crosssitescripting_bindingFunc(ctx context.Context, d *sch
 	d.Set("as_value_type_xss", data["as_value_type_xss"])
 	d.Set("comment", data["comment"])
 	d.Set("crosssitescripting", data["crosssitescripting"])
-	d.Set("formactionurl_xss", unescaped_formactionurl_xss)
+	d.Set("formactionurl_xss", data["formactionurl_xss"].(string))
 	d.Set("isautodeployed", data["isautodeployed"])
 	d.Set("isregex_xss", data["isregex_xss"])
 	d.Set("isvalueregex_xss", data["isvalueregex_xss"])
 	d.Set("name", data["name"])
 	d.Set("state", data["state"])
+	d.Set("resourceid", data["resourceid"])
+	d.Set("ruletype", data["ruletype"])
 
 	return nil
 
@@ -272,13 +278,4 @@ func deleteAppfwprofile_crosssitescripting_bindingFunc(ctx context.Context, d *s
 	d.SetId("")
 
 	return nil
-}
-
-func unescapeStringURL(url string) (string, error) {
-	// Unescape the URL
-	unescapedURL, err := strconv.Unquote("\"" + url + "\"")
-	if err != nil {
-		return "", err
-	}
-	return unescapedURL, nil
 }

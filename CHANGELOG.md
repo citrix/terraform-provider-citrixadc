@@ -1,3 +1,14 @@
+## 1.45.0 (Oct 13, 2025)
+
+BUG FIXES
+* **citrixadc_appfwprofile_crosssitescripting_binding**: Rectified the approach to handle special chars in formactionurl.
+* **citrixadc_appfwprofile_sqlinjection_binding**: Rectified the approach to handle special chars in formactionurl.
+* **citrixadc_lbvserver.go**: Handling '0' value for timeout and port attributes.
+* **provider**: Reintroducing basic auth as a short term fix to prevent session leaks.
+
+UPDATES
+* **citrixadc_appfw**: Refreshing Appfw resources and their bindings with updated attribtes, enhancing Id construction logic considering optional attributes that contributes to uniqueness.
+
 ## 1.43.5 (Sept 29, 2025)
 
 BUG FIXES

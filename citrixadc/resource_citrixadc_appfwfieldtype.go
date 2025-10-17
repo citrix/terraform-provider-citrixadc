@@ -59,8 +59,11 @@ func createAppfwfieldtypeFunc(ctx context.Context, d *schema.ResourceData, meta 
 		Comment:    d.Get("comment").(string),
 		Name:       appfwfieldtypeName,
 		Nocharmaps: d.Get("nocharmaps").(bool),
-		Priority:   d.Get("priority").(int),
 		Regex:      d.Get("regex").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		appfwfieldtype.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	_, err := client.AddResource(service.Appfwfieldtype.Type(), appfwfieldtypeName, &appfwfieldtype)
@@ -86,7 +89,6 @@ func readAppfwfieldtypeFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	d.Set("name", data["name"])
 	d.Set("comment", data["comment"])
-	d.Set("name", data["name"])
 	d.Set("nocharmaps", data["nocharmaps"])
 	setToInt("priority", d, data["priority"])
 	d.Set("regex", data["regex"])
@@ -110,11 +112,6 @@ func updateAppfwfieldtypeFunc(ctx context.Context, d *schema.ResourceData, meta 
 		appfwfieldtype.Comment = d.Get("comment").(string)
 		hasChange = true
 	}
-	if d.HasChange("name") {
-		log.Printf("[DEBUG]  citrixadc-provider: Name has changed for appfwfieldtype %s, starting update", appfwfieldtypeName)
-		appfwfieldtype.Name = d.Get("name").(string)
-		hasChange = true
-	}
 	if d.HasChange("nocharmaps") {
 		log.Printf("[DEBUG]  citrixadc-provider: Nocharmaps has changed for appfwfieldtype %s, starting update", appfwfieldtypeName)
 		appfwfieldtype.Nocharmaps = d.Get("nocharmaps").(bool)
@@ -122,14 +119,9 @@ func updateAppfwfieldtypeFunc(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	if d.HasChange("priority") {
 		log.Printf("[DEBUG]  citrixadc-provider: Priority has changed for appfwfieldtype %s, starting update", appfwfieldtypeName)
-		appfwfieldtype.Priority = d.Get("priority").(int)
+		appfwfieldtype.Priority = intPtr(d.Get("priority").(int))
 		hasChange = true
 	}
-	// if d.HasChange("regex") {
-	// 	log.Printf("[DEBUG]  citrixadc-provider: Regex has changed for appfwfieldtype %s, starting update", appfwfieldtypeName)
-	// 	appfwfieldtype.Regex = d.Get("regex").(string)
-	// 	hasChange = true
-	// }
 
 	if hasChange {
 		_, err := client.UpdateResource(service.Appfwfieldtype.Type(), appfwfieldtypeName, &appfwfieldtype)

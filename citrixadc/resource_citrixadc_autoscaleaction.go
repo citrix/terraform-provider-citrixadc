@@ -68,13 +68,18 @@ func createAutoscaleactionFunc(ctx context.Context, d *schema.ResourceData, meta
 	client := meta.(*NetScalerNitroClient).client
 	autoscaleactionName := d.Get("name").(string)
 	autoscaleaction := autoscale.Autoscaleaction{
-		Name:                 d.Get("name").(string),
-		Parameters:           d.Get("parameters").(string),
-		Profilename:          d.Get("profilename").(string),
-		Quiettime:            d.Get("quiettime").(int),
-		Type:                 d.Get("type").(string),
-		Vmdestroygraceperiod: d.Get("vmdestroygraceperiod").(int),
-		Vserver:              d.Get("vserver").(string),
+		Name:        d.Get("name").(string),
+		Parameters:  d.Get("parameters").(string),
+		Profilename: d.Get("profilename").(string),
+		Type:        d.Get("type").(string),
+		Vserver:     d.Get("vserver").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("quiettime"); !raw.IsNull() {
+		autoscaleaction.Quiettime = intPtr(d.Get("quiettime").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("vmdestroygraceperiod"); !raw.IsNull() {
+		autoscaleaction.Vmdestroygraceperiod = intPtr(d.Get("vmdestroygraceperiod").(int))
 	}
 
 	_, err := client.AddResource(service.Autoscaleaction.Type(), autoscaleactionName, &autoscaleaction)
@@ -131,12 +136,12 @@ func updateAutoscaleactionFunc(ctx context.Context, d *schema.ResourceData, meta
 	}
 	if d.HasChange("quiettime") {
 		log.Printf("[DEBUG]  citrixadc-provider: Quiettime has changed for autoscaleaction %s, starting update", autoscaleactionName)
-		autoscaleaction.Quiettime = d.Get("quiettime").(int)
+		autoscaleaction.Quiettime = intPtr(d.Get("quiettime").(int))
 		hasChange = true
 	}
 	if d.HasChange("vmdestroygraceperiod") {
 		log.Printf("[DEBUG]  citrixadc-provider: Vmdestroygraceperiod has changed for autoscaleaction %s, starting update", autoscaleactionName)
-		autoscaleaction.Vmdestroygraceperiod = d.Get("vmdestroygraceperiod").(int)
+		autoscaleaction.Vmdestroygraceperiod = intPtr(d.Get("vmdestroygraceperiod").(int))
 		hasChange = true
 	}
 	if d.HasChange("vserver") {

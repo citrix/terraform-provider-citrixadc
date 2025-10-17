@@ -61,10 +61,15 @@ func createDnsptrrecFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	dnsptrrec := dns.Dnsptrrec{
 		Domain:        d.Get("domain").(string),
 		Ecssubnet:     d.Get("ecssubnet").(string),
-		Nodeid:        d.Get("nodeid").(int),
 		Reversedomain: d.Get("reversedomain").(string),
-		Ttl:           d.Get("ttl").(int),
 		Type:          d.Get("type").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("nodeid"); !raw.IsNull() {
+		dnsptrrec.Nodeid = intPtr(d.Get("nodeid").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("ttl"); !raw.IsNull() {
+		dnsptrrec.Ttl = intPtr(d.Get("ttl").(int))
 	}
 
 	_, err := client.AddResource(service.Dnsptrrec.Type(), dnsptrrecName, &dnsptrrec)

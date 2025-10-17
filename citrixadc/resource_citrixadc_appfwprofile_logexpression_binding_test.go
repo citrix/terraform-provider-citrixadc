@@ -27,38 +27,20 @@ import (
 const testAccAppfwprofile_logexpression_binding_basic = `
 	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
 		name                     = "tf_appfwprofile"
-		bufferoverflowaction     = ["none"]
-		contenttypeaction        = ["none"]
-		cookieconsistencyaction  = ["none"]
-		creditcard               = ["none"]
-		creditcardaction         = ["none"]
-		crosssitescriptingaction = ["none"]
-		csrftagaction            = ["none"]
-		denyurlaction            = ["none"]
-		dynamiclearning          = ["none"]
-		fieldconsistencyaction   = ["none"]
-		fieldformataction        = ["none"]
-		fileuploadtypesaction    = ["none"]
-		inspectcontenttypes      = ["none"]
-		jsondosaction            = ["none"]
-		jsonsqlinjectionaction   = ["none"]
-		jsonxssaction            = ["none"]
-		multipleheaderaction     = ["none"]
-		sqlinjectionaction       = ["none"]
-		starturlaction           = ["none"]
 		type                     = ["HTML"]
-		xmlattachmentaction      = ["none"]
-		xmldosaction             = ["none"]
-		xmlformataction          = ["none"]
-		xmlsoapfaultaction       = ["none"]
-		xmlsqlinjectionaction    = ["none"]
-		xmlvalidationaction      = ["none"]
-		xmlwsiaction             = ["none"]
-		xmlxssaction             = ["none"]
 	}
-	resource "citrixadc_appfwprofile_logexpression_binding" "tf_binding" {
+	resource "citrixadc_appfwprofile_logexpression_binding" "tf_binding1" {
 		name             = citrixadc_appfwprofile.tf_appfwprofile.name
 		logexpression    = "tf_logexp"
+		as_logexpression = "HTTP.REQ.IS_VALID"
+		alertonly        = "ON"
+		isautodeployed   = "AUTODEPLOYED"
+		comment          = "Testing"
+		state            = "ENABLED"
+	}
+	resource "citrixadc_appfwprofile_logexpression_binding" "tf_binding2" {
+		name             = citrixadc_appfwprofile.tf_appfwprofile.name
+		logexpression    = "new_tf_logexp"
 		as_logexpression = "HTTP.REQ.IS_VALID"
 		alertonly        = "ON"
 		isautodeployed   = "AUTODEPLOYED"
@@ -71,34 +53,7 @@ const testAccAppfwprofile_logexpression_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
 	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
 		name                     = "tf_appfwprofile"
-		bufferoverflowaction     = ["none"]
-		contenttypeaction        = ["none"]
-		cookieconsistencyaction  = ["none"]
-		creditcard               = ["none"]
-		creditcardaction         = ["none"]
-		crosssitescriptingaction = ["none"]
-		csrftagaction            = ["none"]
-		denyurlaction            = ["none"]
-		dynamiclearning          = ["none"]
-		fieldconsistencyaction   = ["none"]
-		fieldformataction        = ["none"]
-		fileuploadtypesaction    = ["none"]
-		inspectcontenttypes      = ["none"]
-		jsondosaction            = ["none"]
-		jsonsqlinjectionaction   = ["none"]
-		jsonxssaction            = ["none"]
-		multipleheaderaction     = ["none"]
-		sqlinjectionaction       = ["none"]
-		starturlaction           = ["none"]
 		type                     = ["HTML"]
-		xmlattachmentaction      = ["none"]
-		xmldosaction             = ["none"]
-		xmlformataction          = ["none"]
-		xmlsoapfaultaction       = ["none"]
-		xmlsqlinjectionaction    = ["none"]
-		xmlvalidationaction      = ["none"]
-		xmlwsiaction             = ["none"]
-		xmlxssaction             = ["none"]
 	}
 `
 
@@ -111,13 +66,29 @@ func TestAccAppfwprofile_logexpression_binding_basic(t *testing.T) {
 			{
 				Config: testAccAppfwprofile_logexpression_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppfwprofile_logexpression_bindingExist("citrixadc_appfwprofile_logexpression_binding.tf_binding", nil),
+					testAccCheckAppfwprofile_logexpression_bindingExist("citrixadc_appfwprofile_logexpression_binding.tf_binding1", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_logexpression_binding.tf_binding1", "name", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_logexpression_binding.tf_binding1", "logexpression", "tf_logexp"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_logexpression_binding.tf_binding1", "as_logexpression", "HTTP.REQ.IS_VALID"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_logexpression_binding.tf_binding1", "alertonly", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_logexpression_binding.tf_binding1", "isautodeployed", "AUTODEPLOYED"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_logexpression_binding.tf_binding1", "comment", "Testing"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_logexpression_binding.tf_binding1", "state", "ENABLED"),
+					testAccCheckAppfwprofile_logexpression_bindingExist("citrixadc_appfwprofile_logexpression_binding.tf_binding2", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_logexpression_binding.tf_binding2", "name", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_logexpression_binding.tf_binding2", "logexpression", "new_tf_logexp"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_logexpression_binding.tf_binding2", "as_logexpression", "HTTP.REQ.IS_VALID"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_logexpression_binding.tf_binding2", "alertonly", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_logexpression_binding.tf_binding2", "isautodeployed", "AUTODEPLOYED"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_logexpression_binding.tf_binding2", "comment", "Testing"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_logexpression_binding.tf_binding2", "state", "ENABLED"),
 				),
 			},
 			{
 				Config: testAccAppfwprofile_logexpression_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppfwprofile_logexpression_bindingNotExist("citrixadc_appfwprofile_logexpression_binding.tf_binding", "tf_appfwprofile,tf_logexp"),
+					testAccCheckAppfwprofile_logexpression_bindingNotExist("citrixadc_appfwprofile_logexpression_binding.tf_binding1", "tf_appfwprofile,tf_logexp"),
+					testAccCheckAppfwprofile_logexpression_bindingNotExist("citrixadc_appfwprofile_logexpression_binding.tf_binding2", "tf_appfwprofile,new_tf_logexp"),
 				),
 			},
 		},

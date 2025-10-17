@@ -35,7 +35,7 @@ type Lsnstatic struct {
 	/**
 	* Port of the LSN subscriber for the LSN mapping entry. * represents all ports being used. Used in case of static wildcard
 	*/
-	Subscrport int `json:"subscrport,omitempty"`
+	Subscrport *int `json:"subscrport,omitempty"`
 	/**
 	* B4 address in DS-Lite setup
 	*/
@@ -44,7 +44,7 @@ type Lsnstatic struct {
 	* ID of the traffic domain to which the subscriber belongs. 
 		If you do not specify an ID, the subscriber is assumed to be a part of the default traffic domain.
 	*/
-	Td int `json:"td"` // Zero is a valid value
+	Td *int `json:"td"` // Zero is a valid value
 	/**
 	* IPv4 address, already existing on the Citrix ADC as type LSN, to be used as NAT IP address for this mapping entry.
 	*/
@@ -52,7 +52,7 @@ type Lsnstatic struct {
 	/**
 	* NAT port for this LSN mapping entry. * represents all ports being used. Used in case of static wildcard
 	*/
-	Natport int `json:"natport,omitempty"`
+	Natport *int `json:"natport,omitempty"`
 	/**
 	* Destination IP address for the LSN mapping entry.
 	*/
@@ -61,7 +61,7 @@ type Lsnstatic struct {
 	* ID of the traffic domain through which the destination IP address for this LSN mapping entry is reachable from the Citrix ADC.
 		If you do not specify an ID, the destination IP address is assumed to be reachable through the default traffic domain, which has an ID of 0.
 	*/
-	Dsttd int `json:"dsttd,omitempty"`
+	Dsttd *int `json:"dsttd,omitempty"`
 	/**
 	* Type of sessions to be displayed.
 	*/

@@ -27,7 +27,7 @@ type Nssimpleacl6 struct {
 	/**
 	* Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.
 	*/
-	Td int `json:"td,omitempty"`
+	Td *int `json:"td,omitempty"`
 	/**
 	* Drop incoming IPv6 packets that match the simple ACL6 rule.
 	*/
@@ -40,7 +40,7 @@ type Nssimpleacl6 struct {
 	* Port number to match against the destination port number of an incoming IPv6 packet.
 		DestPort is mandatory while setting Protocol. Omitting the port number and protocol creates an all-ports  and all protocol simple ACL6 rule, which matches any port and any protocol. In that case, you cannot create another simple ACL6 rule specifying a specific port and the same source IPv6 address.
 	*/
-	Destport int `json:"destport,omitempty"`
+	Destport *int `json:"destport,omitempty"`
 	/**
 	* Protocol to match against the protocol of an incoming IPv6 packet. You must set this parameter if you set the Destination Port parameter.
 	*/
@@ -48,7 +48,7 @@ type Nssimpleacl6 struct {
 	/**
 	* Number of seconds, in multiples of four, after which the simple ACL6 rule expires. If you do not want the simple ACL6 rule to expire, do not specify a TTL value.
 	*/
-	Ttl int `json:"ttl,omitempty"`
+	Ttl *int `json:"ttl,omitempty"`
 	Estsessions bool `json:"estsessions,omitempty"`
 
 	//------- Read only Parameter ---------;

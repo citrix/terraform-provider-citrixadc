@@ -75,10 +75,17 @@ func createDnsmxrecFunc(ctx context.Context, d *schema.ResourceData, meta interf
 		Domain:    d.Get("domain").(string),
 		Ecssubnet: d.Get("ecssubnet").(string),
 		Mx:        d.Get("mx").(string),
-		Nodeid:    d.Get("nodeid").(int),
-		Pref:      d.Get("pref").(int),
-		Ttl:       d.Get("ttl").(int),
 		Type:      d.Get("type").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("nodeid"); !raw.IsNull() {
+		dnsmxrec.Nodeid = intPtr(d.Get("nodeid").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("pref"); !raw.IsNull() {
+		dnsmxrec.Pref = intPtr(d.Get("pref").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("ttl"); !raw.IsNull() {
+		dnsmxrec.Ttl = intPtr(d.Get("ttl").(int))
 	}
 
 	_, err := client.AddResource(service.Dnsmxrec.Type(), dnsmxrecName, &dnsmxrec)
@@ -132,17 +139,17 @@ func updateDnsmxrecFunc(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 	if d.HasChange("nodeid") {
 		log.Printf("[DEBUG]  citrixadc-provider: Nodeid has changed for dnsmxrec %s, starting update", dnsmxrecName)
-		dnsmxrec.Nodeid = d.Get("nodeid").(int)
+		dnsmxrec.Nodeid = intPtr(d.Get("nodeid").(int))
 		hasChange = true
 	}
 	if d.HasChange("pref") {
 		log.Printf("[DEBUG]  citrixadc-provider: Pref has changed for dnsmxrec %s, starting update", dnsmxrecName)
-		dnsmxrec.Pref = d.Get("pref").(int)
+		dnsmxrec.Pref = intPtr(d.Get("pref").(int))
 		hasChange = true
 	}
 	if d.HasChange("ttl") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ttl has changed for dnsmxrec %s, starting update", dnsmxrecName)
-		dnsmxrec.Ttl = d.Get("ttl").(int)
+		dnsmxrec.Ttl = intPtr(d.Get("ttl").(int))
 		hasChange = true
 	}
 	if d.HasChange("type") {

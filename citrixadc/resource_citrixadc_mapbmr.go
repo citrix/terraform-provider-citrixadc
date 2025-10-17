@@ -58,11 +58,18 @@ func createMapbmrFunc(ctx context.Context, d *schema.ResourceData, meta interfac
 	client := meta.(*NetScalerNitroClient).client
 	mapbmrName := d.Get("name").(string)
 	mapbmr := network.Mapbmr{
-		Eabitlength:    d.Get("eabitlength").(int),
 		Name:           d.Get("name").(string),
-		Psidlength:     d.Get("psidlength").(int),
-		Psidoffset:     d.Get("psidoffset").(int),
 		Ruleipv6prefix: d.Get("ruleipv6prefix").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("eabitlength"); !raw.IsNull() {
+		mapbmr.Eabitlength = intPtr(d.Get("eabitlength").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("psidlength"); !raw.IsNull() {
+		mapbmr.Psidlength = intPtr(d.Get("psidlength").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("psidoffset"); !raw.IsNull() {
+		mapbmr.Psidoffset = intPtr(d.Get("psidoffset").(int))
 	}
 
 	_, err := client.AddResource("mapbmr", mapbmrName, &mapbmr)

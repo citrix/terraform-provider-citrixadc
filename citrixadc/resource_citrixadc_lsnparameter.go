@@ -48,7 +48,10 @@ func createLsnparameterFunc(ctx context.Context, d *schema.ResourceData, meta in
 	lsnparameter := lsn.Lsnparameter{
 		Sessionsync:          d.Get("sessionsync").(string),
 		Subscrsessionremoval: d.Get("subscrsessionremoval").(string),
-		Memlimit:             d.Get("memlimit").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("memlimit"); !raw.IsNull() {
+		lsnparameter.Memlimit = intPtr(d.Get("memlimit").(int))
 	}
 
 	err := client.UpdateUnnamedResource("lsnparameter", &lsnparameter)
@@ -87,7 +90,7 @@ func updateLsnparameterFunc(ctx context.Context, d *schema.ResourceData, meta in
 	hasChange := false
 	if d.HasChange("memlimit") {
 		log.Printf("[DEBUG]  citrixadc-provider: Memlimit has changed for lsnparameter, starting update")
-		lsnparameter.Memlimit = d.Get("memlimit").(int)
+		lsnparameter.Memlimit = intPtr(d.Get("memlimit").(int))
 		hasChange = true
 	}
 	if d.HasChange("sessionsync") {

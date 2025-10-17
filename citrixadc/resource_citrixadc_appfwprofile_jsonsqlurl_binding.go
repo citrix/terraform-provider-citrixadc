@@ -108,9 +108,19 @@ func resourceCitrixAdcAppfwprofile_jsonsqlurl_binding() *schema.Resource {
 func createAppfwprofile_jsonsqlurl_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppfwprofile_jsonsqlurl_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
-	name := d.Get("name")
-	jsonsqlurl := d.Get("jsonsqlurl")
+	name := d.Get("name").(string)
+	jsonsqlurl := d.Get("jsonsqlurl").(string)
 	bindingId := fmt.Sprintf("%s,%s", name, jsonsqlurl)
+	keyname_json_sql := d.Get("keyname_json_sql").(string)
+	as_value_type_json_sql := d.Get("as_value_type_json_sql").(string)
+	as_value_expr_json_sql := d.Get("as_value_expr_json_sql").(string)
+
+	if keyname_json_sql != "" {
+		bindingId = fmt.Sprintf("%s,%s", bindingId, keyname_json_sql)
+		if as_value_type_json_sql != "" && as_value_expr_json_sql != "" {
+			bindingId = fmt.Sprintf("%s,%s,%s", bindingId, as_value_type_json_sql, url.QueryEscape(as_value_expr_json_sql))
+		}
+	}
 	appfwprofile_jsonsqlurl_binding := appfw.Appfwprofilejsonsqlurlbinding{
 		Alertonly:           d.Get("alertonly").(string),
 		Comment:             d.Get("comment").(string),
@@ -141,11 +151,32 @@ func readAppfwprofile_jsonsqlurl_bindingFunc(ctx context.Context, d *schema.Reso
 	log.Printf("[DEBUG] citrixadc-provider:  In readAppfwprofile_jsonsqlurl_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
-	idSlice := strings.SplitN(bindingId, ",", 2)
+	idSlice := strings.Split(bindingId, ",")
 
 	name := idSlice[0]
 	jsonsqlurl := idSlice[1]
-
+	keyname_json_sql := ""
+	as_value_type_json_sql := ""
+	as_value_expr_json_sql := ""
+	if len(idSlice) > 2 {
+		keyname_json_sql = idSlice[2]
+	} else {
+		keyname_json_sql = d.Get("keyname_json_sql").(string)
+		if keyname_json_sql != "" {
+			bindingId = fmt.Sprintf("%s,%s", bindingId, keyname_json_sql)
+		}
+	}
+	if len(idSlice) > 4 {
+		as_value_type_json_sql = idSlice[3]
+		as_value_expr_json_sql = idSlice[4]
+	} else {
+		as_value_type_json_sql = d.Get("as_value_type_json_sql").(string)
+		as_value_expr_json_sql = d.Get("as_value_expr_json_sql").(string)
+		if as_value_type_json_sql != "" && as_value_expr_json_sql != "" {
+			bindingId = fmt.Sprintf("%s,%s,%s", bindingId, as_value_type_json_sql, url.QueryEscape(as_value_expr_json_sql))
+		}
+	}
+	d.SetId(bindingId)
 	log.Printf("[DEBUG] citrixadc-provider: Reading appfwprofile_jsonsqlurl_binding state %s", bindingId)
 
 	findParams := service.FindParams{
@@ -169,12 +200,38 @@ func readAppfwprofile_jsonsqlurl_bindingFunc(ctx context.Context, d *schema.Reso
 		return nil
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the matching components
 	foundIndex := -1
 	for i, v := range dataArr {
-		if v["jsonsqlurl"].(string) == jsonsqlurl {
-			foundIndex = i
-			break
+		if v["jsonsqlurl"] != nil && v["jsonsqlurl"].(string) == jsonsqlurl {
+			vKeyname := ""
+			if v["keyname_json_sql"] != nil {
+				vKeyname = v["keyname_json_sql"].(string)
+			}
+			if keyname_json_sql != "" {
+				if vKeyname == keyname_json_sql {
+					vType := ""
+					vExpr := ""
+					if v["as_value_type_json_sql"] != nil {
+						vType = v["as_value_type_json_sql"].(string)
+					}
+					if v["as_value_expr_json_sql"] != nil {
+						vExpr = v["as_value_expr_json_sql"].(string)
+					}
+					if as_value_type_json_sql != "" && as_value_expr_json_sql != "" {
+						if strings.EqualFold(vType, as_value_type_json_sql) && vExpr == as_value_expr_json_sql {
+							foundIndex = i
+							break
+						}
+					} else if v["as_value_type_json_sql"] == nil && v["as_value_expr_json_sql"] == nil {
+						foundIndex = i
+						break
+					}
+				}
+			} else if v["keyname_json_sql"] == nil {
+				foundIndex = i
+				break
+			}
 		}
 	}
 
@@ -212,7 +269,7 @@ func deleteAppfwprofile_jsonsqlurl_bindingFunc(ctx context.Context, d *schema.Re
 	client := meta.(*NetScalerNitroClient).client
 
 	bindingId := d.Id()
-	idSlice := strings.SplitN(bindingId, ",", 2)
+	idSlice := strings.Split(bindingId, ",")
 
 	name := idSlice[0]
 	jsonsqlurl := idSlice[1]

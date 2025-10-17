@@ -23,15 +23,15 @@ type Nstrace struct {
 	/**
 	* Number of files to be generated in cycle.
 	*/
-	Nf int `json:"nf,omitempty"`
+	Nf *int `json:"nf,omitempty"`
 	/**
 	* Time per file (sec).
 	*/
-	Time int `json:"time,omitempty"`
+	Time *int `json:"time,omitempty"`
 	/**
 	* Size of the captured data. Set 0 for full packet trace.
 	*/
-	Size int `json:"size,omitempty"`
+	Size *int `json:"size,omitempty"`
 	/**
 	* Capturing mode for trace. Mode can be any of the following values or combination of these values:
 		RX          Received packets before NIC pipelining (Filter does not work when RX capturing mode is ON)
@@ -180,7 +180,7 @@ type Nstrace struct {
 	/**
 	* File size, in MB, treshold for rollover. If free disk space is less than 2GB at the time of rollover, trace will stop
 	*/
-	Filesize int `json:"filesize,omitempty"`
+	Filesize *int `json:"filesize,omitempty"`
 	/**
 	* Format in which trace will be generated
 	*/
@@ -196,7 +196,7 @@ type Nstrace struct {
 	/**
 	* Number of 16KB trace buffers
 	*/
-	Tracebuffers int `json:"tracebuffers,omitempty"`
+	Tracebuffers *int `json:"tracebuffers,omitempty"`
 	/**
 	* skip RPC packets
 	*/
@@ -221,7 +221,7 @@ type Nstrace struct {
 	/**
 	* Unique number that identifies the cluster node.
 	*/
-	Nodeid int `json:"nodeid,omitempty"`
+	Nodeid *int `json:"nodeid,omitempty"`
 
 	//------- Read only Parameter ---------;
 

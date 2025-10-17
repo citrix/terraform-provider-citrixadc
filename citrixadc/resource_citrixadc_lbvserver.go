@@ -2,19 +2,126 @@ package citrixadc
 
 import (
 	"context"
-
-	"github.com/citrix/adc-nitro-go/resource/config/lb"
-	"github.com/citrix/adc-nitro-go/resource/config/ssl"
-	"github.com/citrix/adc-nitro-go/service"
-
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-
 	"fmt"
 	"log"
 
+	"github.com/citrix/adc-nitro-go/resource/config/ssl"
+	"github.com/citrix/adc-nitro-go/service"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
+
+type Lbvserver struct {
+	Adfsproxyprofile                   string `json:"adfsproxyprofile,omitempty"`
+	Apiprofile                         string `json:"apiprofile,omitempty"`
+	Appflowlog                         string `json:"appflowlog,omitempty"`
+	Authentication                     string `json:"authentication,omitempty"`
+	Authenticationhost                 string `json:"authenticationhost,omitempty"`
+	Authn401                           string `json:"authn401,omitempty"`
+	Authnprofile                       string `json:"authnprofile,omitempty"`
+	Authnvsname                        string `json:"authnvsname,omitempty"`
+	Backuplbmethod                     string `json:"backuplbmethod,omitempty"`
+	Backuppersistencetimeout           *int   `json:"backuppersistencetimeout,omitempty"`
+	Backupvserver                      string `json:"backupvserver,omitempty"`
+	Bypassaaaa                         string `json:"bypassaaaa,omitempty"`
+	Cacheable                          string `json:"cacheable,omitempty"`
+	Clttimeout                         *int   `json:"clttimeout,omitempty"`
+	Comment                            string `json:"comment,omitempty"`
+	Connfailover                       string `json:"connfailover,omitempty"`
+	Cookiename                         string `json:"cookiename,omitempty"`
+	Datalength                         *int   `json:"datalength,omitempty"`
+	Dataoffset                         *int   `json:"dataoffset,omitempty"`
+	Dbprofilename                      string `json:"dbprofilename,omitempty"`
+	Dbslb                              string `json:"dbslb,omitempty"`
+	Disableprimaryondown               string `json:"disableprimaryondown,omitempty"`
+	Dns64                              string `json:"dns64,omitempty"`
+	Dnsoverhttps                       string `json:"dnsoverhttps,omitempty"`
+	Dnsprofilename                     string `json:"dnsprofilename,omitempty"`
+	Downstateflush                     string `json:"downstateflush,omitempty"`
+	Hashlength                         *int   `json:"hashlength,omitempty"`
+	Healththreshold                    *int   `json:"healththreshold,omitempty"`
+	Httpprofilename                    string `json:"httpprofilename,omitempty"`
+	Httpsredirecturl                   string `json:"httpsredirecturl,omitempty"`
+	Icmpvsrresponse                    string `json:"icmpvsrresponse,omitempty"`
+	Insertvserveripport                string `json:"insertvserveripport,omitempty"`
+	Ipmask                             string `json:"ipmask,omitempty"`
+	Ippattern                          string `json:"ippattern,omitempty"`
+	Ipset                              string `json:"ipset,omitempty"`
+	Ipv46                              string `json:"ipv46,omitempty"`
+	L2conn                             string `json:"l2conn,omitempty"`
+	Lbmethod                           string `json:"lbmethod,omitempty"`
+	Lbprofilename                      string `json:"lbprofilename,omitempty"`
+	Listenpolicy                       string `json:"listenpolicy,omitempty"`
+	Listenpriority                     *int   `json:"listenpriority,omitempty"`
+	M                                  string `json:"m,omitempty"`
+	Macmoderetainvlan                  string `json:"macmoderetainvlan,omitempty"`
+	Maxautoscalemembers                *int   `json:"maxautoscalemembers,omitempty"`
+	Minautoscalemembers                *int   `json:"minautoscalemembers,omitempty"`
+	Mssqlserverversion                 string `json:"mssqlserverversion,omitempty"`
+	Mysqlcharacterset                  *int   `json:"mysqlcharacterset,omitempty"`
+	Mysqlprotocolversion               *int   `json:"mysqlprotocolversion,omitempty"`
+	Mysqlservercapabilities            *int   `json:"mysqlservercapabilities,omitempty"`
+	Mysqlserverversion                 string `json:"mysqlserverversion,omitempty"`
+	Name                               string `json:"name,omitempty"`
+	Netmask                            string `json:"netmask,omitempty"`
+	Netprofile                         string `json:"netprofile,omitempty"`
+	Newname                            string `json:"newname,omitempty"`
+	Newservicerequest                  *int   `json:"newservicerequest,omitempty"`
+	Newservicerequestincrementinterval *int   `json:"newservicerequestincrementinterval,omitempty"`
+	Newservicerequestunit              string `json:"newservicerequestunit,omitempty"`
+	Oracleserverversion                string `json:"oracleserverversion,omitempty"`
+	Order                              *int   `json:"order,omitempty"`
+	Orderthreshold                     *int   `json:"orderthreshold,omitempty"`
+	Persistavpno                       []int  `json:"persistavpno,omitempty"`
+	Persistencebackup                  string `json:"persistencebackup,omitempty"`
+	Persistencetype                    string `json:"persistencetype,omitempty"`
+	Persistmask                        string `json:"persistmask,omitempty"`
+	Port                               *int   `json:"port,omitempty"`
+	Probeport                          *int   `json:"probeport,omitempty"`
+	Probeprotocol                      string `json:"probeprotocol,omitempty"`
+	Probesuccessresponsecode           string `json:"probesuccessresponsecode,omitempty"`
+	Processlocal                       string `json:"processlocal,omitempty"`
+	Push                               string `json:"push,omitempty"`
+	Pushlabel                          string `json:"pushlabel,omitempty"`
+	Pushmulticlients                   string `json:"pushmulticlients,omitempty"`
+	Pushvserver                        string `json:"pushvserver,omitempty"`
+	Quicbridgeprofilename              string `json:"quicbridgeprofilename,omitempty"`
+	Quicprofilename                    string `json:"quicprofilename,omitempty"`
+	Range                              *int   `json:"range,omitempty"`
+	Recursionavailable                 string `json:"recursionavailable,omitempty"`
+	Redirectfromport                   *int   `json:"redirectfromport,omitempty"`
+	Redirectportrewrite                string `json:"redirectportrewrite,omitempty"`
+	Redirurl                           string `json:"redirurl,omitempty"`
+	Redirurlflags                      bool   `json:"redirurlflags,omitempty"`
+	Resrule                            string `json:"resrule,omitempty"`
+	Retainconnectionsoncluster         string `json:"retainconnectionsoncluster,omitempty"`
+	Rhistate                           string `json:"rhistate,omitempty"`
+	Rtspnat                            string `json:"rtspnat,omitempty"`
+	Rule                               string `json:"rule,omitempty"`
+	Servicename                        string `json:"servicename,omitempty"`
+	Servicetype                        string `json:"servicetype,omitempty"`
+	Sessionless                        string `json:"sessionless,omitempty"`
+	Skippersistency                    string `json:"skippersistency,omitempty"`
+	Sobackupaction                     string `json:"sobackupaction,omitempty"`
+	Somethod                           string `json:"somethod,omitempty"`
+	Sopersistence                      string `json:"sopersistence,omitempty"`
+	Sopersistencetimeout               *int   `json:"sopersistencetimeout,omitempty"`
+	Sothreshold                        *int   `json:"sothreshold,omitempty"`
+	State                              string `json:"state,omitempty"`
+	Tcpprobeport                       *int   `json:"tcpprobeport,omitempty"`
+	Tcpprofilename                     string `json:"tcpprofilename,omitempty"`
+	Td                                 *int   `json:"td,omitempty"`
+	Timeout                            *int   `json:"timeout"` // 0 is a valid value for timeout, hence removing omitempty
+	Toggleorder                        string `json:"toggleorder,omitempty"`
+	Tosid                              *int   `json:"tosid,omitempty"`
+	Trofspersistence                   string `json:"trofspersistence,omitempty"`
+	V6netmasklen                       *int   `json:"v6netmasklen,omitempty"`
+	V6persistmasklen                   *int   `json:"v6persistmasklen,omitempty"`
+	Vipheader                          string `json:"vipheader,omitempty"`
+	Weight                             *int   `json:"weight,omitempty"`
+}
 
 func resourceCitrixAdcLbvserver() *schema.Resource {
 	return &schema.Resource{
@@ -618,104 +725,157 @@ func createLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	lbvserver := lb.Lbvserver{
-		Name:                               lbvserverName,
-		Appflowlog:                         d.Get("appflowlog").(string),
-		Authentication:                     d.Get("authentication").(string),
-		Authenticationhost:                 d.Get("authenticationhost").(string),
-		Authn401:                           d.Get("authn401").(string),
-		Authnprofile:                       d.Get("authnprofile").(string),
-		Authnvsname:                        d.Get("authnvsname").(string),
-		Backuplbmethod:                     d.Get("backuplbmethod").(string),
-		Backuppersistencetimeout:           d.Get("backuppersistencetimeout").(int),
-		Backupvserver:                      d.Get("backupvserver").(string),
-		Bypassaaaa:                         d.Get("bypassaaaa").(string),
-		Cacheable:                          d.Get("cacheable").(string),
-		Clttimeout:                         d.Get("clttimeout").(int),
-		Comment:                            d.Get("comment").(string),
-		Connfailover:                       d.Get("connfailover").(string),
-		Cookiename:                         d.Get("cookiename").(string),
-		Datalength:                         d.Get("datalength").(int),
-		Dataoffset:                         d.Get("dataoffset").(int),
-		Dbprofilename:                      d.Get("dbprofilename").(string),
-		Dbslb:                              d.Get("dbslb").(string),
-		Disableprimaryondown:               d.Get("disableprimaryondown").(string),
-		Dns64:                              d.Get("dns64").(string),
-		Dnsprofilename:                     d.Get("dnsprofilename").(string),
-		Downstateflush:                     d.Get("downstateflush").(string),
-		Hashlength:                         d.Get("hashlength").(int),
-		Healththreshold:                    d.Get("healththreshold").(int),
-		Httpprofilename:                    d.Get("httpprofilename").(string),
-		Httpsredirecturl:                   d.Get("httpsredirecturl").(string),
-		Icmpvsrresponse:                    d.Get("icmpvsrresponse").(string),
-		Insertvserveripport:                d.Get("insertvserveripport").(string),
-		Ipmask:                             d.Get("ipmask").(string),
-		Ippattern:                          d.Get("ippattern").(string),
-		Ipset:                              d.Get("ipset").(string),
-		Ipv46:                              d.Get("ipv46").(string),
-		L2conn:                             d.Get("l2conn").(string),
-		Lbmethod:                           d.Get("lbmethod").(string),
-		Lbprofilename:                      d.Get("lbprofilename").(string),
-		Listenpolicy:                       d.Get("listenpolicy").(string),
-		Listenpriority:                     d.Get("listenpriority").(int),
-		M:                                  d.Get("m").(string),
-		Macmoderetainvlan:                  d.Get("macmoderetainvlan").(string),
-		Maxautoscalemembers:                d.Get("maxautoscalemembers").(int),
-		Minautoscalemembers:                d.Get("minautoscalemembers").(int),
-		Mssqlserverversion:                 d.Get("mssqlserverversion").(string),
-		Mysqlcharacterset:                  d.Get("mysqlcharacterset").(int),
-		Mysqlprotocolversion:               d.Get("mysqlprotocolversion").(int),
-		Mysqlservercapabilities:            d.Get("mysqlservercapabilities").(int),
-		Mysqlserverversion:                 d.Get("mysqlserverversion").(string),
-		Netmask:                            d.Get("netmask").(string),
-		Netprofile:                         d.Get("netprofile").(string),
-		Newname:                            d.Get("newname").(string),
-		Newservicerequest:                  d.Get("newservicerequest").(int),
-		Newservicerequestincrementinterval: d.Get("newservicerequestincrementinterval").(int),
-		Newservicerequestunit:              d.Get("newservicerequestunit").(string),
-		Oracleserverversion:                d.Get("oracleserverversion").(string),
-		Persistencebackup:                  d.Get("persistencebackup").(string),
-		Persistencetype:                    d.Get("persistencetype").(string),
-		Persistmask:                        d.Get("persistmask").(string),
-		Port:                               d.Get("port").(int),
-		Processlocal:                       d.Get("processlocal").(string),
-		Push:                               d.Get("push").(string),
-		Pushlabel:                          d.Get("pushlabel").(string),
-		Pushmulticlients:                   d.Get("pushmulticlients").(string),
-		Pushvserver:                        d.Get("pushvserver").(string),
-		Range:                              d.Get("range").(int),
-		Recursionavailable:                 d.Get("recursionavailable").(string),
-		Redirectfromport:                   d.Get("redirectfromport").(int),
-		Redirectportrewrite:                d.Get("redirectportrewrite").(string),
-		Redirurl:                           d.Get("redirurl").(string),
-		Redirurlflags:                      d.Get("redirurlflags").(bool),
-		Resrule:                            d.Get("resrule").(string),
-		Retainconnectionsoncluster:         d.Get("retainconnectionsoncluster").(string),
-		Rhistate:                           d.Get("rhistate").(string),
-		Rtspnat:                            d.Get("rtspnat").(string),
-		Rule:                               d.Get("rule").(string),
-		Servicename:                        d.Get("servicename").(string),
-		Servicetype:                        d.Get("servicetype").(string),
-		Sessionless:                        d.Get("sessionless").(string),
-		Skippersistency:                    d.Get("skippersistency").(string),
-		Sobackupaction:                     d.Get("sobackupaction").(string),
-		Somethod:                           d.Get("somethod").(string),
-		Sopersistence:                      d.Get("sopersistence").(string),
-		Sopersistencetimeout:               d.Get("sopersistencetimeout").(int),
-		Sothreshold:                        d.Get("sothreshold").(int),
-		State:                              d.Get("state").(string),
-		Tcpprofilename:                     d.Get("tcpprofilename").(string),
-		Td:                                 d.Get("td").(int),
-		Timeout:                            d.Get("timeout").(int),
-		Tosid:                              d.Get("tosid").(int),
-		Trofspersistence:                   d.Get("trofspersistence").(string),
-		V6netmasklen:                       d.Get("v6netmasklen").(int),
-		V6persistmasklen:                   d.Get("v6persistmasklen").(int),
-		Vipheader:                          d.Get("vipheader").(string),
-		Weight:                             d.Get("weight").(int),
-		Quicbridgeprofilename:              d.Get("quicbridgeprofilename").(string),
-		Probeport:                          d.Get("probeport").(int),
-		Probeprotocol:                      d.Get("probeprotocol").(string),
+	lbvserver := Lbvserver{
+		Name:                       lbvserverName,
+		Appflowlog:                 d.Get("appflowlog").(string),
+		Authentication:             d.Get("authentication").(string),
+		Authenticationhost:         d.Get("authenticationhost").(string),
+		Authn401:                   d.Get("authn401").(string),
+		Authnprofile:               d.Get("authnprofile").(string),
+		Authnvsname:                d.Get("authnvsname").(string),
+		Backuplbmethod:             d.Get("backuplbmethod").(string),
+		Backupvserver:              d.Get("backupvserver").(string),
+		Bypassaaaa:                 d.Get("bypassaaaa").(string),
+		Cacheable:                  d.Get("cacheable").(string),
+		Comment:                    d.Get("comment").(string),
+		Connfailover:               d.Get("connfailover").(string),
+		Cookiename:                 d.Get("cookiename").(string),
+		Dbprofilename:              d.Get("dbprofilename").(string),
+		Dbslb:                      d.Get("dbslb").(string),
+		Disableprimaryondown:       d.Get("disableprimaryondown").(string),
+		Dns64:                      d.Get("dns64").(string),
+		Dnsprofilename:             d.Get("dnsprofilename").(string),
+		Downstateflush:             d.Get("downstateflush").(string),
+		Httpprofilename:            d.Get("httpprofilename").(string),
+		Httpsredirecturl:           d.Get("httpsredirecturl").(string),
+		Icmpvsrresponse:            d.Get("icmpvsrresponse").(string),
+		Insertvserveripport:        d.Get("insertvserveripport").(string),
+		Ipmask:                     d.Get("ipmask").(string),
+		Ippattern:                  d.Get("ippattern").(string),
+		Ipset:                      d.Get("ipset").(string),
+		Ipv46:                      d.Get("ipv46").(string),
+		L2conn:                     d.Get("l2conn").(string),
+		Lbmethod:                   d.Get("lbmethod").(string),
+		Lbprofilename:              d.Get("lbprofilename").(string),
+		Listenpolicy:               d.Get("listenpolicy").(string),
+		M:                          d.Get("m").(string),
+		Macmoderetainvlan:          d.Get("macmoderetainvlan").(string),
+		Mssqlserverversion:         d.Get("mssqlserverversion").(string),
+		Mysqlserverversion:         d.Get("mysqlserverversion").(string),
+		Netmask:                    d.Get("netmask").(string),
+		Netprofile:                 d.Get("netprofile").(string),
+		Newname:                    d.Get("newname").(string),
+		Newservicerequestunit:      d.Get("newservicerequestunit").(string),
+		Oracleserverversion:        d.Get("oracleserverversion").(string),
+		Persistencebackup:          d.Get("persistencebackup").(string),
+		Persistencetype:            d.Get("persistencetype").(string),
+		Persistmask:                d.Get("persistmask").(string),
+		Processlocal:               d.Get("processlocal").(string),
+		Push:                       d.Get("push").(string),
+		Pushlabel:                  d.Get("pushlabel").(string),
+		Pushmulticlients:           d.Get("pushmulticlients").(string),
+		Pushvserver:                d.Get("pushvserver").(string),
+		Recursionavailable:         d.Get("recursionavailable").(string),
+		Redirectportrewrite:        d.Get("redirectportrewrite").(string),
+		Redirurl:                   d.Get("redirurl").(string),
+		Redirurlflags:              d.Get("redirurlflags").(bool),
+		Resrule:                    d.Get("resrule").(string),
+		Retainconnectionsoncluster: d.Get("retainconnectionsoncluster").(string),
+		Rhistate:                   d.Get("rhistate").(string),
+		Rtspnat:                    d.Get("rtspnat").(string),
+		Rule:                       d.Get("rule").(string),
+		Servicename:                d.Get("servicename").(string),
+		Servicetype:                d.Get("servicetype").(string),
+		Sessionless:                d.Get("sessionless").(string),
+		Skippersistency:            d.Get("skippersistency").(string),
+		Sobackupaction:             d.Get("sobackupaction").(string),
+		Somethod:                   d.Get("somethod").(string),
+		Sopersistence:              d.Get("sopersistence").(string),
+		State:                      d.Get("state").(string),
+		Tcpprofilename:             d.Get("tcpprofilename").(string),
+		Trofspersistence:           d.Get("trofspersistence").(string),
+		Vipheader:                  d.Get("vipheader").(string),
+		Quicbridgeprofilename:      d.Get("quicbridgeprofilename").(string),
+		Probeprotocol:              d.Get("probeprotocol").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("backuppersistencetimeout"); !raw.IsNull() {
+		lbvserver.Backuppersistencetimeout = intPtr(d.Get("backuppersistencetimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("clttimeout"); !raw.IsNull() {
+		lbvserver.Clttimeout = intPtr(d.Get("clttimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("datalength"); !raw.IsNull() {
+		lbvserver.Datalength = intPtr(d.Get("datalength").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("dataoffset"); !raw.IsNull() {
+		lbvserver.Dataoffset = intPtr(d.Get("dataoffset").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("hashlength"); !raw.IsNull() {
+		lbvserver.Hashlength = intPtr(d.Get("hashlength").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("healththreshold"); !raw.IsNull() {
+		lbvserver.Healththreshold = intPtr(d.Get("healththreshold").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("listenpriority"); !raw.IsNull() {
+		lbvserver.Listenpriority = intPtr(d.Get("listenpriority").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxautoscalemembers"); !raw.IsNull() {
+		lbvserver.Maxautoscalemembers = intPtr(d.Get("maxautoscalemembers").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("minautoscalemembers"); !raw.IsNull() {
+		lbvserver.Minautoscalemembers = intPtr(d.Get("minautoscalemembers").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("mysqlcharacterset"); !raw.IsNull() {
+		lbvserver.Mysqlcharacterset = intPtr(d.Get("mysqlcharacterset").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("mysqlprotocolversion"); !raw.IsNull() {
+		lbvserver.Mysqlprotocolversion = intPtr(d.Get("mysqlprotocolversion").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("mysqlservercapabilities"); !raw.IsNull() {
+		lbvserver.Mysqlservercapabilities = intPtr(d.Get("mysqlservercapabilities").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("newservicerequest"); !raw.IsNull() {
+		lbvserver.Newservicerequest = intPtr(d.Get("newservicerequest").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("newservicerequestincrementinterval"); !raw.IsNull() {
+		lbvserver.Newservicerequestincrementinterval = intPtr(d.Get("newservicerequestincrementinterval").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("port"); !raw.IsNull() {
+		lbvserver.Port = intPtr(d.Get("port").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("range"); !raw.IsNull() {
+		lbvserver.Range = intPtr(d.Get("range").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("redirectfromport"); !raw.IsNull() {
+		lbvserver.Redirectfromport = intPtr(d.Get("redirectfromport").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("sopersistencetimeout"); !raw.IsNull() {
+		lbvserver.Sopersistencetimeout = intPtr(d.Get("sopersistencetimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("sothreshold"); !raw.IsNull() {
+		lbvserver.Sothreshold = intPtr(d.Get("sothreshold").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("td"); !raw.IsNull() {
+		lbvserver.Td = intPtr(d.Get("td").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("timeout"); !raw.IsNull() {
+		lbvserver.Timeout = intPtr(d.Get("timeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("tosid"); !raw.IsNull() {
+		lbvserver.Tosid = intPtr(d.Get("tosid").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("v6netmasklen"); !raw.IsNull() {
+		lbvserver.V6netmasklen = intPtr(d.Get("v6netmasklen").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("v6persistmasklen"); !raw.IsNull() {
+		lbvserver.V6persistmasklen = intPtr(d.Get("v6persistmasklen").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("weight"); !raw.IsNull() {
+		lbvserver.Weight = intPtr(d.Get("weight").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("probeport"); !raw.IsNull() {
+		lbvserver.Probeport = intPtr(d.Get("probeport").(int))
 	}
 
 	_, err := client.AddResource(service.Lbvserver.Type(), lbvserverName, &lbvserver)
@@ -933,7 +1093,7 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	client := meta.(*NetScalerNitroClient).client
 	lbvserverName := d.Get("name").(string)
 
-	lbvserver := lb.Lbvserver{
+	lbvserver := Lbvserver{
 		Name: d.Get("name").(string),
 	}
 	stateChange := false
@@ -980,7 +1140,7 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("backuppersistencetimeout") {
 		log.Printf("[DEBUG] netscaler-provider:  Backuppersistencetimeout has changed for lbvserver %s, starting update", lbvserverName)
-		lbvserver.Backuppersistencetimeout = d.Get("backuppersistencetimeout").(int)
+		lbvserver.Backuppersistencetimeout = intPtr(d.Get("backuppersistencetimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("backupvserver") {
@@ -1000,7 +1160,7 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("clttimeout") {
 		log.Printf("[DEBUG] netscaler-provider:  Clttimeout has changed for lbvserver %s, starting update", lbvserverName)
-		lbvserver.Clttimeout = d.Get("clttimeout").(int)
+		lbvserver.Clttimeout = intPtr(d.Get("clttimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("comment") {
@@ -1020,12 +1180,12 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("datalength") {
 		log.Printf("[DEBUG] netscaler-provider:  Datalength has changed for lbvserver %s, starting update", lbvserverName)
-		lbvserver.Datalength = d.Get("datalength").(int)
+		lbvserver.Datalength = intPtr(d.Get("datalength").(int))
 		hasChange = true
 	}
 	if d.HasChange("dataoffset") {
 		log.Printf("[DEBUG] netscaler-provider:  Dataoffset has changed for lbvserver %s, starting update", lbvserverName)
-		lbvserver.Dataoffset = d.Get("dataoffset").(int)
+		lbvserver.Dataoffset = intPtr(d.Get("dataoffset").(int))
 		hasChange = true
 	}
 	if d.HasChange("dbprofilename") {
@@ -1060,12 +1220,12 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("hashlength") {
 		log.Printf("[DEBUG] netscaler-provider:  Hashlength has changed for lbvserver %s, starting update", lbvserverName)
-		lbvserver.Hashlength = d.Get("hashlength").(int)
+		lbvserver.Hashlength = intPtr(d.Get("hashlength").(int))
 		hasChange = true
 	}
 	if d.HasChange("healththreshold") {
 		log.Printf("[DEBUG] netscaler-provider:  Healththreshold has changed for lbvserver %s, starting update", lbvserverName)
-		lbvserver.Healththreshold = d.Get("healththreshold").(int)
+		lbvserver.Healththreshold = intPtr(d.Get("healththreshold").(int))
 		hasChange = true
 	}
 	if d.HasChange("httpprofilename") {
@@ -1130,7 +1290,7 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("listenpriority") {
 		log.Printf("[DEBUG] netscaler-provider:  Listenpriority has changed for lbvserver %s, starting update", lbvserverName)
-		lbvserver.Listenpriority = d.Get("listenpriority").(int)
+		lbvserver.Listenpriority = intPtr(d.Get("listenpriority").(int))
 		hasChange = true
 	}
 	if d.HasChange("m") {
@@ -1145,12 +1305,12 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("maxautoscalemembers") {
 		log.Printf("[DEBUG] netscaler-provider:  Maxautoscalemembers has changed for lbvserver %s, starting update", lbvserverName)
-		lbvserver.Maxautoscalemembers = d.Get("maxautoscalemembers").(int)
+		lbvserver.Maxautoscalemembers = intPtr(d.Get("maxautoscalemembers").(int))
 		hasChange = true
 	}
 	if d.HasChange("minautoscalemembers") {
 		log.Printf("[DEBUG] netscaler-provider:  Minautoscalemembers has changed for lbvserver %s, starting update", lbvserverName)
-		lbvserver.Minautoscalemembers = d.Get("minautoscalemembers").(int)
+		lbvserver.Minautoscalemembers = intPtr(d.Get("minautoscalemembers").(int))
 		hasChange = true
 	}
 	if d.HasChange("mssqlserverversion") {
@@ -1160,17 +1320,17 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("mysqlcharacterset") {
 		log.Printf("[DEBUG] netscaler-provider:  Mysqlcharacterset has changed for lbvserver %s, starting update", lbvserverName)
-		lbvserver.Mysqlcharacterset = d.Get("mysqlcharacterset").(int)
+		lbvserver.Mysqlcharacterset = intPtr(d.Get("mysqlcharacterset").(int))
 		hasChange = true
 	}
 	if d.HasChange("mysqlprotocolversion") {
 		log.Printf("[DEBUG] netscaler-provider:  Mysqlprotocolversion has changed for lbvserver %s, starting update", lbvserverName)
-		lbvserver.Mysqlprotocolversion = d.Get("mysqlprotocolversion").(int)
+		lbvserver.Mysqlprotocolversion = intPtr(d.Get("mysqlprotocolversion").(int))
 		hasChange = true
 	}
 	if d.HasChange("mysqlservercapabilities") {
 		log.Printf("[DEBUG] netscaler-provider:  Mysqlservercapabilities has changed for lbvserver %s, starting update", lbvserverName)
-		lbvserver.Mysqlservercapabilities = d.Get("mysqlservercapabilities").(int)
+		lbvserver.Mysqlservercapabilities = intPtr(d.Get("mysqlservercapabilities").(int))
 		hasChange = true
 	}
 	if d.HasChange("mysqlserverversion") {
@@ -1200,12 +1360,12 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("newservicerequest") {
 		log.Printf("[DEBUG] netscaler-provider:  Newservicerequest has changed for lbvserver %s, starting update", lbvserverName)
-		lbvserver.Newservicerequest = d.Get("newservicerequest").(int)
+		lbvserver.Newservicerequest = intPtr(d.Get("newservicerequest").(int))
 		hasChange = true
 	}
 	if d.HasChange("newservicerequestincrementinterval") {
 		log.Printf("[DEBUG] netscaler-provider:  Newservicerequestincrementinterval has changed for lbvserver %s, starting update", lbvserverName)
-		lbvserver.Newservicerequestincrementinterval = d.Get("newservicerequestincrementinterval").(int)
+		lbvserver.Newservicerequestincrementinterval = intPtr(d.Get("newservicerequestincrementinterval").(int))
 		hasChange = true
 	}
 	if d.HasChange("newservicerequestunit") {
@@ -1235,12 +1395,12 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("port") {
 		log.Printf("[DEBUG] netscaler-provider:  Port has changed for lbvserver %s, starting update", lbvserverName)
-		lbvserver.Port = d.Get("port").(int)
+		lbvserver.Port = intPtr(d.Get("port").(int))
 		hasChange = true
 	}
 	if d.HasChange("probeport") {
 		log.Printf("[DEBUG] netscaler-provider:  probeport has changed for lbvserver %s, starting update", lbvserverName)
-		lbvserver.Probeport = d.Get("probeport").(int)
+		lbvserver.Probeport = intPtr(d.Get("probeport").(int))
 		hasChange = true
 	}
 	if d.HasChange("probeprotocol") {
@@ -1275,7 +1435,7 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("range") {
 		log.Printf("[DEBUG] netscaler-provider:  Range has changed for lbvserver %s, starting update", lbvserverName)
-		lbvserver.Range = d.Get("range").(int)
+		lbvserver.Range = intPtr(d.Get("range").(int))
 		hasChange = true
 	}
 	if d.HasChange("recursionavailable") {
@@ -1285,7 +1445,7 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("redirectfromport") {
 		log.Printf("[DEBUG]  netscaler-provider: Redirectfromport has changed for lbvserver %s, starting update", lbvserverName)
-		lbvserver.Redirectfromport = d.Get("redirectfromport").(int)
+		lbvserver.Redirectfromport = intPtr(d.Get("redirectfromport").(int))
 		hasChange = true
 	}
 	if d.HasChange("redirectportrewrite") {
@@ -1365,12 +1525,12 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("sopersistencetimeout") {
 		log.Printf("[DEBUG] netscaler-provider:  Sopersistencetimeout has changed for lbvserver %s, starting update", lbvserverName)
-		lbvserver.Sopersistencetimeout = d.Get("sopersistencetimeout").(int)
+		lbvserver.Sopersistencetimeout = intPtr(d.Get("sopersistencetimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("sothreshold") {
 		log.Printf("[DEBUG] netscaler-provider:  Sothreshold has changed for lbvserver %s, starting update", lbvserverName)
-		lbvserver.Sothreshold = d.Get("sothreshold").(int)
+		lbvserver.Sothreshold = intPtr(d.Get("sothreshold").(int))
 		hasChange = true
 	}
 	if d.HasChange("state") {
@@ -1384,17 +1544,17 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("td") {
 		log.Printf("[DEBUG] netscaler-provider:  Td has changed for lbvserver %s, starting update", lbvserverName)
-		lbvserver.Td = d.Get("td").(int)
+		lbvserver.Td = intPtr(d.Get("td").(int))
 		hasChange = true
 	}
 	if d.HasChange("timeout") {
 		log.Printf("[DEBUG] netscaler-provider:  Timeout has changed for lbvserver %s, starting update", lbvserverName)
-		lbvserver.Timeout = d.Get("timeout").(int)
+		lbvserver.Timeout = intPtr(d.Get("timeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("tosid") {
 		log.Printf("[DEBUG] netscaler-provider:  Tosid has changed for lbvserver %s, starting update", lbvserverName)
-		lbvserver.Tosid = d.Get("tosid").(int)
+		lbvserver.Tosid = intPtr(d.Get("tosid").(int))
 		hasChange = true
 	}
 	if d.HasChange("trofspersistence") {
@@ -1404,12 +1564,12 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("v6netmasklen") {
 		log.Printf("[DEBUG] netscaler-provider:  V6netmasklen has changed for lbvserver %s, starting update", lbvserverName)
-		lbvserver.V6netmasklen = d.Get("v6netmasklen").(int)
+		lbvserver.V6netmasklen = intPtr(d.Get("v6netmasklen").(int))
 		hasChange = true
 	}
 	if d.HasChange("v6persistmasklen") {
 		log.Printf("[DEBUG] netscaler-provider:  V6persistmasklen has changed for lbvserver %s, starting update", lbvserverName)
-		lbvserver.V6persistmasklen = d.Get("v6persistmasklen").(int)
+		lbvserver.V6persistmasklen = intPtr(d.Get("v6persistmasklen").(int))
 		hasChange = true
 	}
 	if d.HasChange("vipheader") {
@@ -1424,7 +1584,7 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("weight") {
 		log.Printf("[DEBUG] netscaler-provider:  Weight has changed for lbvserver %s, starting update", lbvserverName)
-		lbvserver.Weight = d.Get("weight").(int)
+		lbvserver.Weight = intPtr(d.Get("weight").(int))
 		hasChange = true
 	}
 	if d.HasChange("sslcertkey") {
@@ -1571,7 +1731,10 @@ func doLbvserverStateChange(d *schema.ResourceData, client *service.NitroClient)
 
 	// We need a new instance of the struct since
 	// ActOnResource will fail if we put in superfluous attributes
-	lbvserver := lb.Lbvserver{
+	type lbvserverStateChange struct {
+		Name string `json:"name,omitempty"`
+	}
+	lbvserver := lbvserverStateChange{
 		Name: d.Get("name").(string),
 	}
 

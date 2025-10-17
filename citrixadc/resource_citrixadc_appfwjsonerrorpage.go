@@ -39,8 +39,8 @@ func resourceCitrixAdcAppfwjsonerrorpage() *schema.Resource {
 			},
 			"src": {
 				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Required: true,
+				Computed: false,
 				ForceNew: true,
 			},
 		},

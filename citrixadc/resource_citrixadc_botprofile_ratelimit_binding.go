@@ -110,8 +110,13 @@ func createBotprofile_ratelimit_bindingFunc(ctx context.Context, d *schema.Resou
 		Cookiename:          d.Get("cookiename").(string),
 		Logmessage:          d.Get("logmessage").(string),
 		Name:                d.Get("name").(string),
-		Rate:                d.Get("rate").(int),
-		Timeslice:           d.Get("timeslice").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("rate"); !raw.IsNull() {
+		botprofile_ratelimit_binding.Rate = intPtr(d.Get("rate").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("timeslice"); !raw.IsNull() {
+		botprofile_ratelimit_binding.Timeslice = intPtr(d.Get("timeslice").(int))
 	}
 
 	err := client.UpdateUnnamedResource("botprofile_ratelimit_binding", &botprofile_ratelimit_binding)

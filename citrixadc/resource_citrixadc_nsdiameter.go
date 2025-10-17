@@ -54,9 +54,12 @@ func createNsdiameterFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	nsdiameterName = resource.PrefixedUniqueId("tf-nsdiameter-")
 	nsdiameter := ns.Nsdiameter{
 		Identity:               d.Get("identity").(string),
-		Ownernode:              d.Get("ownernode").(int),
 		Realm:                  d.Get("realm").(string),
 		Serverclosepropagation: d.Get("serverclosepropagation").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("ownernode"); !raw.IsNull() {
+		nsdiameter.Ownernode = intPtr(d.Get("ownernode").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Nsdiameter.Type(), &nsdiameter)
@@ -102,7 +105,7 @@ func updateNsdiameterFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	if d.HasChange("ownernode") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ownernode has changed for nsdiameter ,starting update")
-		nsdiameter.Ownernode = d.Get("ownernode").(int)
+		nsdiameter.Ownernode = intPtr(d.Get("ownernode").(int))
 		hasChange = true
 	}
 	if d.HasChange("realm") {

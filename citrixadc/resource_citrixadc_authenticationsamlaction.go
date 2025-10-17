@@ -269,53 +269,62 @@ func createAuthenticationsamlactionFunc(ctx context.Context, d *schema.ResourceD
 	client := meta.(*NetScalerNitroClient).client
 	authenticationsamlactionName := d.Get("name").(string)
 	authenticationsamlaction := authentication.Authenticationsamlaction{
-		Artifactresolutionserviceurl:   d.Get("artifactresolutionserviceurl").(string),
-		Attribute1:                     d.Get("attribute1").(string),
-		Attribute10:                    d.Get("attribute10").(string),
-		Attribute11:                    d.Get("attribute11").(string),
-		Attribute12:                    d.Get("attribute12").(string),
-		Attribute13:                    d.Get("attribute13").(string),
-		Attribute14:                    d.Get("attribute14").(string),
-		Attribute15:                    d.Get("attribute15").(string),
-		Attribute16:                    d.Get("attribute16").(string),
-		Attribute2:                     d.Get("attribute2").(string),
-		Attribute3:                     d.Get("attribute3").(string),
-		Attribute4:                     d.Get("attribute4").(string),
-		Attribute5:                     d.Get("attribute5").(string),
-		Attribute6:                     d.Get("attribute6").(string),
-		Attribute7:                     d.Get("attribute7").(string),
-		Attribute8:                     d.Get("attribute8").(string),
-		Attribute9:                     d.Get("attribute9").(string),
-		Attributeconsumingserviceindex: d.Get("attributeconsumingserviceindex").(int),
-		Attributes:                     d.Get("attributes").(string),
-		Audience:                       d.Get("audience").(string),
-		Authnctxclassref:               toStringList(d.Get("authnctxclassref").([]interface{})),
-		Customauthnctxclassref:         d.Get("customauthnctxclassref").(string),
-		Defaultauthenticationgroup:     d.Get("defaultauthenticationgroup").(string),
-		Digestmethod:                   d.Get("digestmethod").(string),
-		Enforceusername:                d.Get("enforceusername").(string),
-		Forceauthn:                     d.Get("forceauthn").(string),
-		Groupnamefield:                 d.Get("groupnamefield").(string),
-		Logoutbinding:                  d.Get("logoutbinding").(string),
-		Logouturl:                      d.Get("logouturl").(string),
-		Metadatarefreshinterval:        d.Get("metadatarefreshinterval").(int),
-		Metadataurl:                    d.Get("metadataurl").(string),
-		Name:                           d.Get("name").(string),
-		Relaystaterule:                 d.Get("relaystaterule").(string),
-		Requestedauthncontext:          d.Get("requestedauthncontext").(string),
-		Samlacsindex:                   d.Get("samlacsindex").(int),
-		Samlbinding:                    d.Get("samlbinding").(string),
-		Samlidpcertname:                d.Get("samlidpcertname").(string),
-		Samlissuername:                 d.Get("samlissuername").(string),
-		Samlredirecturl:                d.Get("samlredirecturl").(string),
-		Samlrejectunsignedassertion:    d.Get("samlrejectunsignedassertion").(string),
-		Samlsigningcertname:            d.Get("samlsigningcertname").(string),
-		Samltwofactor:                  d.Get("samltwofactor").(string),
-		Samluserfield:                  d.Get("samluserfield").(string),
-		Sendthumbprint:                 d.Get("sendthumbprint").(string),
-		Signaturealg:                   d.Get("signaturealg").(string),
-		Skewtime:                       d.Get("skewtime").(int),
-		Storesamlresponse:              d.Get("storesamlresponse").(string),
+		Artifactresolutionserviceurl: d.Get("artifactresolutionserviceurl").(string),
+		Attribute1:                   d.Get("attribute1").(string),
+		Attribute10:                  d.Get("attribute10").(string),
+		Attribute11:                  d.Get("attribute11").(string),
+		Attribute12:                  d.Get("attribute12").(string),
+		Attribute13:                  d.Get("attribute13").(string),
+		Attribute14:                  d.Get("attribute14").(string),
+		Attribute15:                  d.Get("attribute15").(string),
+		Attribute16:                  d.Get("attribute16").(string),
+		Attribute2:                   d.Get("attribute2").(string),
+		Attribute3:                   d.Get("attribute3").(string),
+		Attribute4:                   d.Get("attribute4").(string),
+		Attribute5:                   d.Get("attribute5").(string),
+		Attribute6:                   d.Get("attribute6").(string),
+		Attribute7:                   d.Get("attribute7").(string),
+		Attribute8:                   d.Get("attribute8").(string),
+		Attribute9:                   d.Get("attribute9").(string),
+		Attributes:                   d.Get("attributes").(string),
+		Audience:                     d.Get("audience").(string),
+		Authnctxclassref:             toStringList(d.Get("authnctxclassref").([]interface{})),
+		Customauthnctxclassref:       d.Get("customauthnctxclassref").(string),
+		Defaultauthenticationgroup:   d.Get("defaultauthenticationgroup").(string),
+		Digestmethod:                 d.Get("digestmethod").(string),
+		Enforceusername:              d.Get("enforceusername").(string),
+		Forceauthn:                   d.Get("forceauthn").(string),
+		Groupnamefield:               d.Get("groupnamefield").(string),
+		Logoutbinding:                d.Get("logoutbinding").(string),
+		Logouturl:                    d.Get("logouturl").(string),
+		Metadataurl:                  d.Get("metadataurl").(string),
+		Name:                         d.Get("name").(string),
+		Relaystaterule:               d.Get("relaystaterule").(string),
+		Requestedauthncontext:        d.Get("requestedauthncontext").(string),
+		Samlbinding:                  d.Get("samlbinding").(string),
+		Samlidpcertname:              d.Get("samlidpcertname").(string),
+		Samlissuername:               d.Get("samlissuername").(string),
+		Samlredirecturl:              d.Get("samlredirecturl").(string),
+		Samlrejectunsignedassertion:  d.Get("samlrejectunsignedassertion").(string),
+		Samlsigningcertname:          d.Get("samlsigningcertname").(string),
+		Samltwofactor:                d.Get("samltwofactor").(string),
+		Samluserfield:                d.Get("samluserfield").(string),
+		Sendthumbprint:               d.Get("sendthumbprint").(string),
+		Signaturealg:                 d.Get("signaturealg").(string),
+		Storesamlresponse:            d.Get("storesamlresponse").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("attributeconsumingserviceindex"); !raw.IsNull() {
+		authenticationsamlaction.Attributeconsumingserviceindex = intPtr(d.Get("attributeconsumingserviceindex").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("metadatarefreshinterval"); !raw.IsNull() {
+		authenticationsamlaction.Metadatarefreshinterval = intPtr(d.Get("metadatarefreshinterval").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("samlacsindex"); !raw.IsNull() {
+		authenticationsamlaction.Samlacsindex = intPtr(d.Get("samlacsindex").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("skewtime"); !raw.IsNull() {
+		authenticationsamlaction.Skewtime = intPtr(d.Get("skewtime").(int))
 	}
 
 	_, err := client.AddResource(service.Authenticationsamlaction.Type(), authenticationsamlactionName, &authenticationsamlaction)
@@ -487,7 +496,7 @@ func updateAuthenticationsamlactionFunc(ctx context.Context, d *schema.ResourceD
 	}
 	if d.HasChange("attributeconsumingserviceindex") {
 		log.Printf("[DEBUG]  citrixadc-provider: Attributeconsumingserviceindex has changed for authenticationsamlaction %s, starting update", authenticationsamlactionName)
-		authenticationsamlaction.Attributeconsumingserviceindex = d.Get("attributeconsumingserviceindex").(int)
+		authenticationsamlaction.Attributeconsumingserviceindex = intPtr(d.Get("attributeconsumingserviceindex").(int))
 		hasChange = true
 	}
 	if d.HasChange("attributes") {
@@ -547,7 +556,7 @@ func updateAuthenticationsamlactionFunc(ctx context.Context, d *schema.ResourceD
 	}
 	if d.HasChange("metadatarefreshinterval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Metadatarefreshinterval has changed for authenticationsamlaction %s, starting update", authenticationsamlactionName)
-		authenticationsamlaction.Metadatarefreshinterval = d.Get("metadatarefreshinterval").(int)
+		authenticationsamlaction.Metadatarefreshinterval = intPtr(d.Get("metadatarefreshinterval").(int))
 		hasChange = true
 	}
 	if d.HasChange("metadataurl") {
@@ -567,7 +576,7 @@ func updateAuthenticationsamlactionFunc(ctx context.Context, d *schema.ResourceD
 	}
 	if d.HasChange("samlacsindex") {
 		log.Printf("[DEBUG]  citrixadc-provider: Samlacsindex has changed for authenticationsamlaction %s, starting update", authenticationsamlactionName)
-		authenticationsamlaction.Samlacsindex = d.Get("samlacsindex").(int)
+		authenticationsamlaction.Samlacsindex = intPtr(d.Get("samlacsindex").(int))
 		hasChange = true
 	}
 	if d.HasChange("samlbinding") {
@@ -622,7 +631,7 @@ func updateAuthenticationsamlactionFunc(ctx context.Context, d *schema.ResourceD
 	}
 	if d.HasChange("skewtime") {
 		log.Printf("[DEBUG]  citrixadc-provider: Skewtime has changed for authenticationsamlaction %s, starting update", authenticationsamlactionName)
-		authenticationsamlaction.Skewtime = d.Get("skewtime").(int)
+		authenticationsamlaction.Skewtime = intPtr(d.Get("skewtime").(int))
 		hasChange = true
 	}
 	if d.HasChange("storesamlresponse") {

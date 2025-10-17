@@ -67,7 +67,7 @@ type Rdpclientprofile struct {
 	/**
 	* RDP cookie validity period. RDP cookie validity time is applicable for new connection and also for any re-connection that might happen, mostly due to network disruption or during fail-over.
 	*/
-	Rdpcookievalidity int `json:"rdpcookievalidity,omitempty"`
+	Rdpcookievalidity *int `json:"rdpcookievalidity,omitempty"`
 	/**
 	* Add username in rdp file.
 	*/

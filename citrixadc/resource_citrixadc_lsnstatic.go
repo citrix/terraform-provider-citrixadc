@@ -84,16 +84,25 @@ func createLsnstaticFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	lsnstaticName := d.Get("name").(string)
 	lsnstatic := lsn.Lsnstatic{
 		Destip:            d.Get("destip").(string),
-		Dsttd:             d.Get("dsttd").(int),
 		Name:              d.Get("name").(string),
 		Natip:             d.Get("natip").(string),
-		Natport:           d.Get("natport").(int),
 		Nattype:           d.Get("nattype").(string),
 		Network6:          d.Get("network6").(string),
 		Subscrip:          d.Get("subscrip").(string),
-		Subscrport:        d.Get("subscrport").(int),
-		Td:                d.Get("td").(int),
 		Transportprotocol: d.Get("transportprotocol").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("dsttd"); !raw.IsNull() {
+		lsnstatic.Dsttd = intPtr(d.Get("dsttd").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("natport"); !raw.IsNull() {
+		lsnstatic.Natport = intPtr(d.Get("natport").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("subscrport"); !raw.IsNull() {
+		lsnstatic.Subscrport = intPtr(d.Get("subscrport").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("td"); !raw.IsNull() {
+		lsnstatic.Td = intPtr(d.Get("td").(int))
 	}
 
 	_, err := client.AddResource("lsnstatic", lsnstaticName, &lsnstatic)

@@ -239,46 +239,59 @@ func createSslvserverFunc(ctx context.Context, d *schema.ResourceData, meta inte
 		return nil
 	}
 	sslvserver := ssl.Sslvserver{
-		Cipherredirect:                    d.Get("cipherredirect").(string),
-		Cipherurl:                         d.Get("cipherurl").(string),
-		Cleartextport:                     d.Get("cleartextport").(int),
-		Clientauth:                        d.Get("clientauth").(string),
-		Clientcert:                        d.Get("clientcert").(string),
-		Dh:                                d.Get("dh").(string),
-		Dhcount:                           d.Get("dhcount").(int),
-		Dhekeyexchangewithpsk:             d.Get("dhekeyexchangewithpsk").(string),
-		Dhfile:                            d.Get("dhfile").(string),
-		Dhkeyexpsizelimit:                 d.Get("dhkeyexpsizelimit").(string),
-		Dtls1:                             d.Get("dtls1").(string),
-		Dtls12:                            d.Get("dtls12").(string),
-		Dtlsprofilename:                   d.Get("dtlsprofilename").(string),
-		Ersa:                              d.Get("ersa").(string),
-		Ersacount:                         d.Get("ersacount").(int),
-		Hsts:                              d.Get("hsts").(string),
-		Includesubdomains:                 d.Get("includesubdomains").(string),
-		Maxage:                            d.Get("maxage").(int),
-		Ocspstapling:                      d.Get("ocspstapling").(string),
-		Preload:                           d.Get("preload").(string),
-		Pushenctrigger:                    d.Get("pushenctrigger").(string),
-		Redirectportrewrite:               d.Get("redirectportrewrite").(string),
-		Sendclosenotify:                   d.Get("sendclosenotify").(string),
-		Sessreuse:                         d.Get("sessreuse").(string),
-		Sesstimeout:                       d.Get("sesstimeout").(int),
-		Snienable:                         d.Get("snienable").(string),
-		Ssl2:                              d.Get("ssl2").(string),
-		Ssl3:                              d.Get("ssl3").(string),
-		Sslprofile:                        d.Get("sslprofile").(string),
-		Sslredirect:                       d.Get("sslredirect").(string),
-		Sslv2redirect:                     d.Get("sslv2redirect").(string),
-		Sslv2url:                          d.Get("sslv2url").(string),
-		Strictsigdigestcheck:              d.Get("strictsigdigestcheck").(string),
-		Tls1:                              d.Get("tls1").(string),
-		Tls11:                             d.Get("tls11").(string),
-		Tls12:                             d.Get("tls12").(string),
-		Tls13:                             d.Get("tls13").(string),
-		Tls13sessionticketsperauthcontext: d.Get("tls13sessionticketsperauthcontext").(int),
-		Vservername:                       d.Get("vservername").(string),
-		Zerorttearlydata:                  d.Get("zerorttearlydata").(string),
+		Cipherredirect:        d.Get("cipherredirect").(string),
+		Cipherurl:             d.Get("cipherurl").(string),
+		Clientauth:            d.Get("clientauth").(string),
+		Clientcert:            d.Get("clientcert").(string),
+		Dh:                    d.Get("dh").(string),
+		Dhekeyexchangewithpsk: d.Get("dhekeyexchangewithpsk").(string),
+		Dhfile:                d.Get("dhfile").(string),
+		Dhkeyexpsizelimit:     d.Get("dhkeyexpsizelimit").(string),
+		Dtls1:                 d.Get("dtls1").(string),
+		Dtls12:                d.Get("dtls12").(string),
+		Dtlsprofilename:       d.Get("dtlsprofilename").(string),
+		Ersa:                  d.Get("ersa").(string),
+		Hsts:                  d.Get("hsts").(string),
+		Includesubdomains:     d.Get("includesubdomains").(string),
+		Ocspstapling:          d.Get("ocspstapling").(string),
+		Preload:               d.Get("preload").(string),
+		Pushenctrigger:        d.Get("pushenctrigger").(string),
+		Redirectportrewrite:   d.Get("redirectportrewrite").(string),
+		Sendclosenotify:       d.Get("sendclosenotify").(string),
+		Sessreuse:             d.Get("sessreuse").(string),
+		Snienable:             d.Get("snienable").(string),
+		Ssl2:                  d.Get("ssl2").(string),
+		Ssl3:                  d.Get("ssl3").(string),
+		Sslprofile:            d.Get("sslprofile").(string),
+		Sslredirect:           d.Get("sslredirect").(string),
+		Sslv2redirect:         d.Get("sslv2redirect").(string),
+		Sslv2url:              d.Get("sslv2url").(string),
+		Strictsigdigestcheck:  d.Get("strictsigdigestcheck").(string),
+		Tls1:                  d.Get("tls1").(string),
+		Tls11:                 d.Get("tls11").(string),
+		Tls12:                 d.Get("tls12").(string),
+		Tls13:                 d.Get("tls13").(string),
+		Vservername:           d.Get("vservername").(string),
+		Zerorttearlydata:      d.Get("zerorttearlydata").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("cleartextport"); !raw.IsNull() {
+		sslvserver.Cleartextport = intPtr(d.Get("cleartextport").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("dhcount"); !raw.IsNull() {
+		sslvserver.Dhcount = intPtr(d.Get("dhcount").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("ersacount"); !raw.IsNull() {
+		sslvserver.Ersacount = intPtr(d.Get("ersacount").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxage"); !raw.IsNull() {
+		sslvserver.Maxage = intPtr(d.Get("maxage").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("sesstimeout"); !raw.IsNull() {
+		sslvserver.Sesstimeout = intPtr(d.Get("sesstimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("tls13sessionticketsperauthcontext"); !raw.IsNull() {
+		sslvserver.Tls13sessionticketsperauthcontext = intPtr(d.Get("tls13sessionticketsperauthcontext").(int))
 	}
 
 	_, err := client.UpdateResource(service.Sslvserver.Type(), sslvserverName, &sslvserver)
@@ -379,7 +392,7 @@ func updateSslvserverFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	if d.HasChange("cleartextport") {
 		log.Printf("[DEBUG]  citrixadc-provider: Cleartextport has changed for sslvserver %s, starting update", sslvserverName)
-		sslvserver.Cleartextport = d.Get("cleartextport").(int)
+		sslvserver.Cleartextport = intPtr(d.Get("cleartextport").(int))
 		hasChange = true
 	}
 	if d.HasChange("clientauth") {
@@ -399,7 +412,7 @@ func updateSslvserverFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	if d.HasChange("dhcount") {
 		log.Printf("[DEBUG]  citrixadc-provider: Dhcount has changed for sslvserver %s, starting update", sslvserverName)
-		sslvserver.Dhcount = d.Get("dhcount").(int)
+		sslvserver.Dhcount = intPtr(d.Get("dhcount").(int))
 		hasChange = true
 	}
 	if d.HasChange("dhekeyexchangewithpsk") {
@@ -439,7 +452,7 @@ func updateSslvserverFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	if d.HasChange("ersacount") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ersacount has changed for sslvserver %s, starting update", sslvserverName)
-		sslvserver.Ersacount = d.Get("ersacount").(int)
+		sslvserver.Ersacount = intPtr(d.Get("ersacount").(int))
 		hasChange = true
 	}
 	if d.HasChange("hsts") {
@@ -454,7 +467,7 @@ func updateSslvserverFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	if d.HasChange("maxage") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxage has changed for sslvserver %s, starting update", sslvserverName)
-		sslvserver.Maxage = d.Get("maxage").(int)
+		sslvserver.Maxage = intPtr(d.Get("maxage").(int))
 		hasChange = true
 	}
 	if d.HasChange("ocspstapling") {
@@ -489,7 +502,7 @@ func updateSslvserverFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	if d.HasChange("sesstimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Sesstimeout has changed for sslvserver %s, starting update", sslvserverName)
-		sslvserver.Sesstimeout = d.Get("sesstimeout").(int)
+		sslvserver.Sesstimeout = intPtr(d.Get("sesstimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("snienable") {
@@ -554,7 +567,7 @@ func updateSslvserverFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	if d.HasChange("tls13sessionticketsperauthcontext") {
 		log.Printf("[DEBUG]  citrixadc-provider: Tls13sessionticketsperauthcontext has changed for sslvserver %s, starting update", sslvserverName)
-		sslvserver.Tls13sessionticketsperauthcontext = d.Get("tls13sessionticketsperauthcontext").(int)
+		sslvserver.Tls13sessionticketsperauthcontext = intPtr(d.Get("tls13sessionticketsperauthcontext").(int))
 		hasChange = true
 	}
 	if d.HasChange("vservername") {

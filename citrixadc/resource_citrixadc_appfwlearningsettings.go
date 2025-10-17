@@ -191,37 +191,98 @@ func createAppfwlearningsettingsFunc(ctx context.Context, d *schema.ResourceData
 	appfwlearningsettingsName := d.Get("profilename").(string)
 
 	appfwlearningsettings := appfw.Appfwlearningsettings{
-		Contenttypeautodeploygraceperiod:        d.Get("contenttypeautodeploygraceperiod").(int),
-		Contenttypeminthreshold:                 d.Get("contenttypeminthreshold").(int),
-		Contenttypepercentthreshold:             d.Get("contenttypepercentthreshold").(int),
-		Cookieconsistencyautodeploygraceperiod:  d.Get("cookieconsistencyautodeploygraceperiod").(int),
-		Cookieconsistencyminthreshold:           d.Get("cookieconsistencyminthreshold").(int),
-		Cookieconsistencypercentthreshold:       d.Get("cookieconsistencypercentthreshold").(int),
-		Creditcardnumberminthreshold:            d.Get("creditcardnumberminthreshold").(int),
-		Creditcardnumberpercentthreshold:        d.Get("creditcardnumberpercentthreshold").(int),
-		Crosssitescriptingautodeploygraceperiod: d.Get("crosssitescriptingautodeploygraceperiod").(int),
-		Crosssitescriptingminthreshold:          d.Get("crosssitescriptingminthreshold").(int),
-		Crosssitescriptingpercentthreshold:      d.Get("crosssitescriptingpercentthreshold").(int),
-		Csrftagautodeploygraceperiod:            d.Get("csrftagautodeploygraceperiod").(int),
-		Csrftagminthreshold:                     d.Get("csrftagminthreshold").(int),
-		Csrftagpercentthreshold:                 d.Get("csrftagpercentthreshold").(int),
-		Fieldconsistencyautodeploygraceperiod:   d.Get("fieldconsistencyautodeploygraceperiod").(int),
-		Fieldconsistencyminthreshold:            d.Get("fieldconsistencyminthreshold").(int),
-		Fieldconsistencypercentthreshold:        d.Get("fieldconsistencypercentthreshold").(int),
-		Fieldformatautodeploygraceperiod:        d.Get("fieldformatautodeploygraceperiod").(int),
-		Fieldformatminthreshold:                 d.Get("fieldformatminthreshold").(int),
-		Fieldformatpercentthreshold:             d.Get("fieldformatpercentthreshold").(int),
-		Profilename:                             d.Get("profilename").(string),
-		Sqlinjectionautodeploygraceperiod:       d.Get("sqlinjectionautodeploygraceperiod").(int),
-		Sqlinjectionminthreshold:                d.Get("sqlinjectionminthreshold").(int),
-		Sqlinjectionpercentthreshold:            d.Get("sqlinjectionpercentthreshold").(int),
-		Starturlautodeploygraceperiod:           d.Get("starturlautodeploygraceperiod").(int),
-		Starturlminthreshold:                    d.Get("starturlminthreshold").(int),
-		Xmlattachmentminthreshold:               d.Get("xmlattachmentminthreshold").(int),
-		Xmlattachmentpercentthreshold:           d.Get("xmlattachmentpercentthreshold").(int),
-		Xmlwsiminthreshold:                      d.Get("xmlwsiminthreshold").(int),
-		Xmlwsipercentthreshold:                  d.Get("xmlwsipercentthreshold").(int),
-		Starturlpercentthreshold:                d.Get("starturlpercentthreshold").(int),
+		Profilename: d.Get("profilename").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("contenttypeautodeploygraceperiod"); !raw.IsNull() {
+		appfwlearningsettings.Contenttypeautodeploygraceperiod = intPtr(d.Get("contenttypeautodeploygraceperiod").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("contenttypeminthreshold"); !raw.IsNull() {
+		appfwlearningsettings.Contenttypeminthreshold = intPtr(d.Get("contenttypeminthreshold").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("contenttypepercentthreshold"); !raw.IsNull() {
+		appfwlearningsettings.Contenttypepercentthreshold = intPtr(d.Get("contenttypepercentthreshold").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("cookieconsistencyautodeploygraceperiod"); !raw.IsNull() {
+		appfwlearningsettings.Cookieconsistencyautodeploygraceperiod = intPtr(d.Get("cookieconsistencyautodeploygraceperiod").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("cookieconsistencyminthreshold"); !raw.IsNull() {
+		appfwlearningsettings.Cookieconsistencyminthreshold = intPtr(d.Get("cookieconsistencyminthreshold").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("cookieconsistencypercentthreshold"); !raw.IsNull() {
+		appfwlearningsettings.Cookieconsistencypercentthreshold = intPtr(d.Get("cookieconsistencypercentthreshold").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("creditcardnumberminthreshold"); !raw.IsNull() {
+		appfwlearningsettings.Creditcardnumberminthreshold = intPtr(d.Get("creditcardnumberminthreshold").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("creditcardnumberpercentthreshold"); !raw.IsNull() {
+		appfwlearningsettings.Creditcardnumberpercentthreshold = intPtr(d.Get("creditcardnumberpercentthreshold").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("crosssitescriptingautodeploygraceperiod"); !raw.IsNull() {
+		appfwlearningsettings.Crosssitescriptingautodeploygraceperiod = intPtr(d.Get("crosssitescriptingautodeploygraceperiod").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("crosssitescriptingminthreshold"); !raw.IsNull() {
+		appfwlearningsettings.Crosssitescriptingminthreshold = intPtr(d.Get("crosssitescriptingminthreshold").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("crosssitescriptingpercentthreshold"); !raw.IsNull() {
+		appfwlearningsettings.Crosssitescriptingpercentthreshold = intPtr(d.Get("crosssitescriptingpercentthreshold").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("csrftagautodeploygraceperiod"); !raw.IsNull() {
+		appfwlearningsettings.Csrftagautodeploygraceperiod = intPtr(d.Get("csrftagautodeploygraceperiod").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("csrftagminthreshold"); !raw.IsNull() {
+		appfwlearningsettings.Csrftagminthreshold = intPtr(d.Get("csrftagminthreshold").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("csrftagpercentthreshold"); !raw.IsNull() {
+		appfwlearningsettings.Csrftagpercentthreshold = intPtr(d.Get("csrftagpercentthreshold").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("fieldconsistencyautodeploygraceperiod"); !raw.IsNull() {
+		appfwlearningsettings.Fieldconsistencyautodeploygraceperiod = intPtr(d.Get("fieldconsistencyautodeploygraceperiod").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("fieldconsistencyminthreshold"); !raw.IsNull() {
+		appfwlearningsettings.Fieldconsistencyminthreshold = intPtr(d.Get("fieldconsistencyminthreshold").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("fieldconsistencypercentthreshold"); !raw.IsNull() {
+		appfwlearningsettings.Fieldconsistencypercentthreshold = intPtr(d.Get("fieldconsistencypercentthreshold").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("fieldformatautodeploygraceperiod"); !raw.IsNull() {
+		appfwlearningsettings.Fieldformatautodeploygraceperiod = intPtr(d.Get("fieldformatautodeploygraceperiod").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("fieldformatminthreshold"); !raw.IsNull() {
+		appfwlearningsettings.Fieldformatminthreshold = intPtr(d.Get("fieldformatminthreshold").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("fieldformatpercentthreshold"); !raw.IsNull() {
+		appfwlearningsettings.Fieldformatpercentthreshold = intPtr(d.Get("fieldformatpercentthreshold").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("sqlinjectionautodeploygraceperiod"); !raw.IsNull() {
+		appfwlearningsettings.Sqlinjectionautodeploygraceperiod = intPtr(d.Get("sqlinjectionautodeploygraceperiod").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("sqlinjectionminthreshold"); !raw.IsNull() {
+		appfwlearningsettings.Sqlinjectionminthreshold = intPtr(d.Get("sqlinjectionminthreshold").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("sqlinjectionpercentthreshold"); !raw.IsNull() {
+		appfwlearningsettings.Sqlinjectionpercentthreshold = intPtr(d.Get("sqlinjectionpercentthreshold").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("starturlautodeploygraceperiod"); !raw.IsNull() {
+		appfwlearningsettings.Starturlautodeploygraceperiod = intPtr(d.Get("starturlautodeploygraceperiod").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("starturlminthreshold"); !raw.IsNull() {
+		appfwlearningsettings.Starturlminthreshold = intPtr(d.Get("starturlminthreshold").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("xmlattachmentminthreshold"); !raw.IsNull() {
+		appfwlearningsettings.Xmlattachmentminthreshold = intPtr(d.Get("xmlattachmentminthreshold").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("xmlattachmentpercentthreshold"); !raw.IsNull() {
+		appfwlearningsettings.Xmlattachmentpercentthreshold = intPtr(d.Get("xmlattachmentpercentthreshold").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("xmlwsiminthreshold"); !raw.IsNull() {
+		appfwlearningsettings.Xmlwsiminthreshold = intPtr(d.Get("xmlwsiminthreshold").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("xmlwsipercentthreshold"); !raw.IsNull() {
+		appfwlearningsettings.Xmlwsipercentthreshold = intPtr(d.Get("xmlwsipercentthreshold").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("starturlpercentthreshold"); !raw.IsNull() {
+		appfwlearningsettings.Starturlpercentthreshold = intPtr(d.Get("starturlpercentthreshold").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Appfwlearningsettings.Type(), &appfwlearningsettings)
@@ -292,152 +353,152 @@ func updateAppfwlearningsettingsFunc(ctx context.Context, d *schema.ResourceData
 	hasChange := false
 	if d.HasChange("contenttypeautodeploygraceperiod") {
 		log.Printf("[DEBUG]  citrixadc-provider: Contenttypeautodeploygraceperiod has changed for appfwlearningsettings %s, starting update", appfwlearningsettingsName)
-		appfwlearningsettings.Contenttypeautodeploygraceperiod = d.Get("contenttypeautodeploygraceperiod").(int)
+		appfwlearningsettings.Contenttypeautodeploygraceperiod = intPtr(d.Get("contenttypeautodeploygraceperiod").(int))
 		hasChange = true
 	}
 	if d.HasChange("contenttypeminthreshold") {
 		log.Printf("[DEBUG]  citrixadc-provider: Contenttypeminthreshold has changed for appfwlearningsettings %s, starting update", appfwlearningsettingsName)
-		appfwlearningsettings.Contenttypeminthreshold = d.Get("contenttypeminthreshold").(int)
+		appfwlearningsettings.Contenttypeminthreshold = intPtr(d.Get("contenttypeminthreshold").(int))
 		hasChange = true
 	}
 	if d.HasChange("contenttypepercentthreshold") {
 		log.Printf("[DEBUG]  citrixadc-provider: Contenttypepercentthreshold has changed for appfwlearningsettings %s, starting update", appfwlearningsettingsName)
-		appfwlearningsettings.Contenttypepercentthreshold = d.Get("contenttypepercentthreshold").(int)
+		appfwlearningsettings.Contenttypepercentthreshold = intPtr(d.Get("contenttypepercentthreshold").(int))
 		hasChange = true
 	}
 	if d.HasChange("cookieconsistencyautodeploygraceperiod") {
 		log.Printf("[DEBUG]  citrixadc-provider: Cookieconsistencyautodeploygraceperiod has changed for appfwlearningsettings %s, starting update", appfwlearningsettingsName)
-		appfwlearningsettings.Cookieconsistencyautodeploygraceperiod = d.Get("cookieconsistencyautodeploygraceperiod").(int)
+		appfwlearningsettings.Cookieconsistencyautodeploygraceperiod = intPtr(d.Get("cookieconsistencyautodeploygraceperiod").(int))
 		hasChange = true
 	}
 	if d.HasChange("cookieconsistencyminthreshold") {
 		log.Printf("[DEBUG]  citrixadc-provider: Cookieconsistencyminthreshold has changed for appfwlearningsettings %s, starting update", appfwlearningsettingsName)
-		appfwlearningsettings.Cookieconsistencyminthreshold = d.Get("cookieconsistencyminthreshold").(int)
+		appfwlearningsettings.Cookieconsistencyminthreshold = intPtr(d.Get("cookieconsistencyminthreshold").(int))
 		hasChange = true
 	}
 	if d.HasChange("cookieconsistencypercentthreshold") {
 		log.Printf("[DEBUG]  citrixadc-provider: Cookieconsistencypercentthreshold has changed for appfwlearningsettings %s, starting update", appfwlearningsettingsName)
-		appfwlearningsettings.Cookieconsistencypercentthreshold = d.Get("cookieconsistencypercentthreshold").(int)
+		appfwlearningsettings.Cookieconsistencypercentthreshold = intPtr(d.Get("cookieconsistencypercentthreshold").(int))
 		hasChange = true
 	}
 	if d.HasChange("creditcardnumberminthreshold") {
 		log.Printf("[DEBUG]  citrixadc-provider: Creditcardnumberminthreshold has changed for appfwlearningsettings %s, starting update", appfwlearningsettingsName)
-		appfwlearningsettings.Creditcardnumberminthreshold = d.Get("creditcardnumberminthreshold").(int)
+		appfwlearningsettings.Creditcardnumberminthreshold = intPtr(d.Get("creditcardnumberminthreshold").(int))
 		hasChange = true
 	}
 	if d.HasChange("creditcardnumberpercentthreshold") {
 		log.Printf("[DEBUG]  citrixadc-provider: Creditcardnumberpercentthreshold has changed for appfwlearningsettings %s, starting update", appfwlearningsettingsName)
-		appfwlearningsettings.Creditcardnumberpercentthreshold = d.Get("creditcardnumberpercentthreshold").(int)
+		appfwlearningsettings.Creditcardnumberpercentthreshold = intPtr(d.Get("creditcardnumberpercentthreshold").(int))
 		hasChange = true
 	}
 	if d.HasChange("crosssitescriptingautodeploygraceperiod") {
 		log.Printf("[DEBUG]  citrixadc-provider: Crosssitescriptingautodeploygraceperiod has changed for appfwlearningsettings %s, starting update", appfwlearningsettingsName)
-		appfwlearningsettings.Crosssitescriptingautodeploygraceperiod = d.Get("crosssitescriptingautodeploygraceperiod").(int)
+		appfwlearningsettings.Crosssitescriptingautodeploygraceperiod = intPtr(d.Get("crosssitescriptingautodeploygraceperiod").(int))
 		hasChange = true
 	}
 	if d.HasChange("crosssitescriptingminthreshold") {
 		log.Printf("[DEBUG]  citrixadc-provider: Crosssitescriptingminthreshold has changed for appfwlearningsettings %s, starting update", appfwlearningsettingsName)
-		appfwlearningsettings.Crosssitescriptingminthreshold = d.Get("crosssitescriptingminthreshold").(int)
+		appfwlearningsettings.Crosssitescriptingminthreshold = intPtr(d.Get("crosssitescriptingminthreshold").(int))
 		hasChange = true
 	}
 	if d.HasChange("crosssitescriptingpercentthreshold") {
 		log.Printf("[DEBUG]  citrixadc-provider: Crosssitescriptingpercentthreshold has changed for appfwlearningsettings %s, starting update", appfwlearningsettingsName)
-		appfwlearningsettings.Crosssitescriptingpercentthreshold = d.Get("crosssitescriptingpercentthreshold").(int)
+		appfwlearningsettings.Crosssitescriptingpercentthreshold = intPtr(d.Get("crosssitescriptingpercentthreshold").(int))
 		hasChange = true
 	}
 	if d.HasChange("csrftagautodeploygraceperiod") {
 		log.Printf("[DEBUG]  citrixadc-provider: Csrftagautodeploygraceperiod has changed for appfwlearningsettings %s, starting update", appfwlearningsettingsName)
-		appfwlearningsettings.Csrftagautodeploygraceperiod = d.Get("csrftagautodeploygraceperiod").(int)
+		appfwlearningsettings.Csrftagautodeploygraceperiod = intPtr(d.Get("csrftagautodeploygraceperiod").(int))
 		hasChange = true
 	}
 	if d.HasChange("csrftagminthreshold") {
 		log.Printf("[DEBUG]  citrixadc-provider: Csrftagminthreshold has changed for appfwlearningsettings %s, starting update", appfwlearningsettingsName)
-		appfwlearningsettings.Csrftagminthreshold = d.Get("csrftagminthreshold").(int)
+		appfwlearningsettings.Csrftagminthreshold = intPtr(d.Get("csrftagminthreshold").(int))
 		hasChange = true
 	}
 	if d.HasChange("csrftagpercentthreshold") {
 		log.Printf("[DEBUG]  citrixadc-provider: Csrftagpercentthreshold has changed for appfwlearningsettings %s, starting update", appfwlearningsettingsName)
-		appfwlearningsettings.Csrftagpercentthreshold = d.Get("csrftagpercentthreshold").(int)
+		appfwlearningsettings.Csrftagpercentthreshold = intPtr(d.Get("csrftagpercentthreshold").(int))
 		hasChange = true
 	}
 	if d.HasChange("fieldconsistencyautodeploygraceperiod") {
 		log.Printf("[DEBUG]  citrixadc-provider: Fieldconsistencyautodeploygraceperiod has changed for appfwlearningsettings %s, starting update", appfwlearningsettingsName)
-		appfwlearningsettings.Fieldconsistencyautodeploygraceperiod = d.Get("fieldconsistencyautodeploygraceperiod").(int)
+		appfwlearningsettings.Fieldconsistencyautodeploygraceperiod = intPtr(d.Get("fieldconsistencyautodeploygraceperiod").(int))
 		hasChange = true
 	}
 	if d.HasChange("fieldconsistencyminthreshold") {
 		log.Printf("[DEBUG]  citrixadc-provider: Fieldconsistencyminthreshold has changed for appfwlearningsettings %s, starting update", appfwlearningsettingsName)
-		appfwlearningsettings.Fieldconsistencyminthreshold = d.Get("fieldconsistencyminthreshold").(int)
+		appfwlearningsettings.Fieldconsistencyminthreshold = intPtr(d.Get("fieldconsistencyminthreshold").(int))
 		hasChange = true
 	}
 	if d.HasChange("fieldconsistencypercentthreshold") {
 		log.Printf("[DEBUG]  citrixadc-provider: Fieldconsistencypercentthreshold has changed for appfwlearningsettings %s, starting update", appfwlearningsettingsName)
-		appfwlearningsettings.Fieldconsistencypercentthreshold = d.Get("fieldconsistencypercentthreshold").(int)
+		appfwlearningsettings.Fieldconsistencypercentthreshold = intPtr(d.Get("fieldconsistencypercentthreshold").(int))
 		hasChange = true
 	}
 	if d.HasChange("fieldformatautodeploygraceperiod") {
 		log.Printf("[DEBUG]  citrixadc-provider: Fieldformatautodeploygraceperiod has changed for appfwlearningsettings %s, starting update", appfwlearningsettingsName)
-		appfwlearningsettings.Fieldformatautodeploygraceperiod = d.Get("fieldformatautodeploygraceperiod").(int)
+		appfwlearningsettings.Fieldformatautodeploygraceperiod = intPtr(d.Get("fieldformatautodeploygraceperiod").(int))
 		hasChange = true
 	}
 	if d.HasChange("fieldformatminthreshold") {
 		log.Printf("[DEBUG]  citrixadc-provider: Fieldformatminthreshold has changed for appfwlearningsettings %s, starting update", appfwlearningsettingsName)
-		appfwlearningsettings.Fieldformatminthreshold = d.Get("fieldformatminthreshold").(int)
+		appfwlearningsettings.Fieldformatminthreshold = intPtr(d.Get("fieldformatminthreshold").(int))
 		hasChange = true
 	}
 	if d.HasChange("fieldformatpercentthreshold") {
 		log.Printf("[DEBUG]  citrixadc-provider: Fieldformatpercentthreshold has changed for appfwlearningsettings %s, starting update", appfwlearningsettingsName)
-		appfwlearningsettings.Fieldformatpercentthreshold = d.Get("fieldformatpercentthreshold").(int)
+		appfwlearningsettings.Fieldformatpercentthreshold = intPtr(d.Get("fieldformatpercentthreshold").(int))
 		hasChange = true
 	}
 	if d.HasChange("sqlinjectionautodeploygraceperiod") {
 		log.Printf("[DEBUG]  citrixadc-provider: Sqlinjectionautodeploygraceperiod has changed for appfwlearningsettings %s, starting update", appfwlearningsettingsName)
-		appfwlearningsettings.Sqlinjectionautodeploygraceperiod = d.Get("sqlinjectionautodeploygraceperiod").(int)
+		appfwlearningsettings.Sqlinjectionautodeploygraceperiod = intPtr(d.Get("sqlinjectionautodeploygraceperiod").(int))
 		hasChange = true
 	}
 	if d.HasChange("sqlinjectionminthreshold") {
 		log.Printf("[DEBUG]  citrixadc-provider: Sqlinjectionminthreshold has changed for appfwlearningsettings %s, starting update", appfwlearningsettingsName)
-		appfwlearningsettings.Sqlinjectionminthreshold = d.Get("sqlinjectionminthreshold").(int)
+		appfwlearningsettings.Sqlinjectionminthreshold = intPtr(d.Get("sqlinjectionminthreshold").(int))
 		hasChange = true
 	}
 	if d.HasChange("sqlinjectionpercentthreshold") {
 		log.Printf("[DEBUG]  citrixadc-provider: Sqlinjectionpercentthreshold has changed for appfwlearningsettings %s, starting update", appfwlearningsettingsName)
-		appfwlearningsettings.Sqlinjectionpercentthreshold = d.Get("sqlinjectionpercentthreshold").(int)
+		appfwlearningsettings.Sqlinjectionpercentthreshold = intPtr(d.Get("sqlinjectionpercentthreshold").(int))
 		hasChange = true
 	}
 	if d.HasChange("starturlautodeploygraceperiod") {
 		log.Printf("[DEBUG]  citrixadc-provider: Starturlautodeploygraceperiod has changed for appfwlearningsettings %s, starting update", appfwlearningsettingsName)
-		appfwlearningsettings.Starturlautodeploygraceperiod = d.Get("starturlautodeploygraceperiod").(int)
+		appfwlearningsettings.Starturlautodeploygraceperiod = intPtr(d.Get("starturlautodeploygraceperiod").(int))
 		hasChange = true
 	}
 	if d.HasChange("starturlminthreshold") {
 		log.Printf("[DEBUG]  citrixadc-provider: Starturlminthreshold has changed for appfwlearningsettings %s, starting update", appfwlearningsettingsName)
-		appfwlearningsettings.Starturlminthreshold = d.Get("starturlminthreshold").(int)
+		appfwlearningsettings.Starturlminthreshold = intPtr(d.Get("starturlminthreshold").(int))
 		hasChange = true
 	}
 	if d.HasChange("starturlpercentthreshold") {
 		log.Printf("[DEBUG]  citrixadc-provider: Starturlpercentthreshold has changed for appfwlearningsettings %s, starting update", appfwlearningsettingsName)
-		appfwlearningsettings.Starturlpercentthreshold = d.Get("starturlpercentthreshold").(int)
+		appfwlearningsettings.Starturlpercentthreshold = intPtr(d.Get("starturlpercentthreshold").(int))
 		hasChange = true
 	}
 	if d.HasChange("xmlattachmentminthreshold") {
 		log.Printf("[DEBUG]  citrixadc-provider: Xmlattachmentminthreshold has changed for appfwlearningsettings %s, starting update", appfwlearningsettingsName)
-		appfwlearningsettings.Xmlattachmentminthreshold = d.Get("xmlattachmentminthreshold").(int)
+		appfwlearningsettings.Xmlattachmentminthreshold = intPtr(d.Get("xmlattachmentminthreshold").(int))
 		hasChange = true
 	}
 	if d.HasChange("xmlattachmentpercentthreshold") {
 		log.Printf("[DEBUG]  citrixadc-provider: Xmlattachmentpercentthreshold has changed for appfwlearningsettings %s, starting update", appfwlearningsettingsName)
-		appfwlearningsettings.Xmlattachmentpercentthreshold = d.Get("xmlattachmentpercentthreshold").(int)
+		appfwlearningsettings.Xmlattachmentpercentthreshold = intPtr(d.Get("xmlattachmentpercentthreshold").(int))
 		hasChange = true
 	}
 	if d.HasChange("xmlwsiminthreshold") {
 		log.Printf("[DEBUG]  citrixadc-provider: Xmlwsiminthreshold has changed for appfwlearningsettings %s, starting update", appfwlearningsettingsName)
-		appfwlearningsettings.Xmlwsiminthreshold = d.Get("xmlwsiminthreshold").(int)
+		appfwlearningsettings.Xmlwsiminthreshold = intPtr(d.Get("xmlwsiminthreshold").(int))
 		hasChange = true
 	}
 	if d.HasChange("xmlwsipercentthreshold") {
 		log.Printf("[DEBUG]  citrixadc-provider: Xmlwsipercentthreshold has changed for appfwlearningsettings %s, starting update", appfwlearningsettingsName)
-		appfwlearningsettings.Xmlwsipercentthreshold = d.Get("xmlwsipercentthreshold").(int)
+		appfwlearningsettings.Xmlwsipercentthreshold = intPtr(d.Get("xmlwsipercentthreshold").(int))
 		hasChange = true
 	}
 

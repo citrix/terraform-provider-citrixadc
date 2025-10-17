@@ -27,7 +27,7 @@ type Systemglobalauditsyslogpolicybinding struct {
 	/**
 	* The priority of the command policy.
 	*/
-	Priority int `json:"priority,omitempty"`
+	Priority *int `json:"priority,omitempty"`
 	/**
 	* Indicates that a variable is a built-in (SYSTEM INTERNAL) type.
 	*/

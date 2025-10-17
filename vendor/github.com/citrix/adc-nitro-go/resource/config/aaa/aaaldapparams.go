@@ -27,11 +27,11 @@ type Aaaldapparams struct {
 	/**
 	* Port number on which the LDAP server listens for connections.
 	*/
-	Serverport int `json:"serverport,omitempty"`
+	Serverport *int `json:"serverport,omitempty"`
 	/**
 	* Maximum number of seconds that the Citrix ADC waits for a response from the LDAP server.
 	*/
-	Authtimeout int `json:"authtimeout,omitempty"`
+	Authtimeout *int `json:"authtimeout,omitempty"`
 	/**
 	* Base (the server and location) from which LDAP search commands should start.
 		If the LDAP server is running locally, the default value of base is dc=netscaler, dc=com.
@@ -90,7 +90,7 @@ type Aaaldapparams struct {
 	/**
 	* Number of levels up to which the system can query nested LDAP groups.
 	*/
-	Maxnestinglevel int `json:"maxnestinglevel,omitempty"`
+	Maxnestinglevel *int `json:"maxnestinglevel,omitempty"`
 	/**
 	* LDAP-group attribute that uniquely identifies the group. No two groups on one LDAP server can have the same group name identifier.
 	*/

@@ -51,10 +51,13 @@ func createVpnpcoipprofileFunc(ctx context.Context, d *schema.ResourceData, meta
 
 	vpnpcoipprofileName := d.Get("name").(string)
 	vpnpcoipprofile := vpn.Vpnpcoipprofile{
-		Conserverurl:       d.Get("conserverurl").(string),
-		Icvverification:    d.Get("icvverification").(string),
-		Name:               d.Get("name").(string),
-		Sessionidletimeout: d.Get("sessionidletimeout").(int),
+		Conserverurl:    d.Get("conserverurl").(string),
+		Icvverification: d.Get("icvverification").(string),
+		Name:            d.Get("name").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("sessionidletimeout"); !raw.IsNull() {
+		vpnpcoipprofile.Sessionidletimeout = intPtr(d.Get("sessionidletimeout").(int))
 	}
 
 	_, err := client.AddResource("vpnpcoipprofile", vpnpcoipprofileName, &vpnpcoipprofile)
@@ -109,7 +112,7 @@ func updateVpnpcoipprofileFunc(ctx context.Context, d *schema.ResourceData, meta
 	}
 	if d.HasChange("sessionidletimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Sessionidletimeout has changed for vpnpcoipprofile %s, starting update", vpnpcoipprofileName)
-		vpnpcoipprofile.Sessionidletimeout = d.Get("sessionidletimeout").(int)
+		vpnpcoipprofile.Sessionidletimeout = intPtr(d.Get("sessionidletimeout").(int))
 		hasChange = true
 	}
 

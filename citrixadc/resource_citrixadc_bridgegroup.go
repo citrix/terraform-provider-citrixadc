@@ -51,8 +51,11 @@ func createBridgegroupFunc(ctx context.Context, d *schema.ResourceData, meta int
 	bridgegroup_Id := d.Get("bridgegroup_id").(int)
 	bridgegroup := network.Bridgegroup{
 		Dynamicrouting:     d.Get("dynamicrouting").(string),
-		Id:                 d.Get("bridgegroup_id").(int),
 		Ipv6dynamicrouting: d.Get("ipv6dynamicrouting").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("bridgegroup_id"); !raw.IsNull() {
+		bridgegroup.Id = intPtr(d.Get("bridgegroup_id").(int))
 	}
 	bridgegroup_IdStr := strconv.Itoa(bridgegroup_Id)
 	_, err := client.AddResource(service.Bridgegroup.Type(), bridgegroup_IdStr, &bridgegroup)
@@ -89,8 +92,10 @@ func updateBridgegroupFunc(ctx context.Context, d *schema.ResourceData, meta int
 	client := meta.(*NetScalerNitroClient).client
 	bridgegroup_Id := d.Get("bridgegroup_id").(int)
 
-	bridgegroup := network.Bridgegroup{
-		Id: d.Get("bridgegroup_id").(int),
+	bridgegroup := network.Bridgegroup{}
+
+	if raw := d.GetRawConfig().GetAttr("bridgegroup_id"); !raw.IsNull() {
+		bridgegroup.Id = intPtr(d.Get("bridgegroup_id").(int))
 	}
 	hasChange := false
 	if d.HasChange("dynamicrouting") {

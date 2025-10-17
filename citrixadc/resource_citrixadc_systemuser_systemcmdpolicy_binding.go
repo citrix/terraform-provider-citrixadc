@@ -52,8 +52,11 @@ func createSystemuser_systemcmdpolicy_bindingFunc(ctx context.Context, d *schema
 
 	systemuser_systemcmdpolicy_binding := system.Systemusersystemcmdpolicybinding{
 		Policyname: d.Get("policyname").(string),
-		Priority:   d.Get("priority").(int),
 		Username:   d.Get("username").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		systemuser_systemcmdpolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	_, err := client.AddResource(service.Systemuser_systemcmdpolicy_binding.Type(), bindingId, &systemuser_systemcmdpolicy_binding)

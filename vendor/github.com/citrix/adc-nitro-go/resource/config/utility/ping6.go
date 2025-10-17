@@ -21,15 +21,15 @@ type Ping6 struct {
 	/**
 	* Set socket buffer size. If used, should be used with roughly +100 then the datalen (-s option). The default value is 8192.
 	*/
-	B int `json:"b,omitempty"`
+	B *int `json:"b,omitempty"`
 	/**
 	* Number of packets to send. The default value is infinite. For Nitro API, defalut value is taken as 5.
 	*/
-	C int `json:"c,omitempty"`
+	C *int `json:"c,omitempty"`
 	/**
 	* Waiting time, in seconds. The default value is 1 second.
 	*/
-	I int `json:"i,omitempty"`
+	I *int `json:"i,omitempty"`
 	/**
 	* Network interface on which to ping, if you have multiple interfaces.
 	*/
@@ -53,11 +53,11 @@ type Ping6 struct {
 	/**
 	* Data size, in bytes. The default value is 32.
 	*/
-	S int `json:"s,omitempty"`
+	S *int `json:"s,omitempty"`
 	/**
 	* VLAN ID for link local address.
 	*/
-	V int `json:"V,omitempty"`
+	V *int `json:"V,omitempty"`
 	/**
 	* Source IP address to be used in the outgoing query packets.
 	*/
@@ -65,11 +65,11 @@ type Ping6 struct {
 	/**
 	* Traffic Domain Id
 	*/
-	T int `json:"T,omitempty"`
+	T *int `json:"T,omitempty"`
 	/**
 	* Timeout in seconds before ping6 exits
 	*/
-	T_ int `json:"t,omitempty"`
+	T_ *int `json:"t,omitempty"`
 	/**
 	* Address of host to ping.
 	*/

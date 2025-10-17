@@ -27,7 +27,7 @@ type Nsservicepathnsservicefunctionbinding struct {
 	/**
 	* The serviceindex of each servicefunction in path.
 	*/
-	Index int `json:"index,omitempty"`
+	Index *int `json:"index,omitempty"`
 	/**
 	* Name for the Service path. Must begin with an ASCII alphanumeric or underscore (_) character, and must
 		contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-)

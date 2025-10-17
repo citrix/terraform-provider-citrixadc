@@ -83,9 +83,12 @@ func createAuthenticationemailactionFunc(ctx context.Context, d *schema.Resource
 		Name:                       d.Get("name").(string),
 		Password:                   d.Get("password").(string),
 		Serverurl:                  d.Get("serverurl").(string),
-		Timeout:                    d.Get("timeout").(int),
 		Type:                       d.Get("type").(string),
 		Username:                   d.Get("username").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("timeout"); !raw.IsNull() {
+		authenticationemailaction.Timeout = intPtr(d.Get("timeout").(int))
 	}
 
 	_, err := client.AddResource("authenticationemailaction", authenticationemailactionName, &authenticationemailaction)
@@ -160,7 +163,7 @@ func updateAuthenticationemailactionFunc(ctx context.Context, d *schema.Resource
 	}
 	if d.HasChange("timeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Timeout has changed for authenticationemailaction %s, starting update", authenticationemailactionName)
-		authenticationemailaction.Timeout = d.Get("timeout").(int)
+		authenticationemailaction.Timeout = intPtr(d.Get("timeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("type") {

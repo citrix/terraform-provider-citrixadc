@@ -150,12 +150,12 @@ func updateIpv6Func(ctx context.Context, d *schema.ResourceData, meta interface{
 	}
 	if d.HasChange("ndbasereachtime") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ndbasereachtime has changed for ipv6, starting update")
-		ipv6["ndbasereachtime"] = d.Get("ndbasereachtime").(int)
+		ipv6["ndbasereachtime"] = intPtr(d.Get("ndbasereachtime").(int))
 		hasChange = true
 	}
 	if d.HasChange("ndretransmissiontime") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ndretransmissiontime has changed for ipv6, starting update")
-		ipv6["ndretransmissiontime"] = d.Get("ndretransmissiontime").(int)
+		ipv6["ndretransmissiontime"] = intPtr(d.Get("ndretransmissiontime").(int))
 		hasChange = true
 	}
 	if d.HasChange("ralearning") {
@@ -170,7 +170,7 @@ func updateIpv6Func(ctx context.Context, d *schema.ResourceData, meta interface{
 	}
 	if d.HasChange("td") {
 		log.Printf("[DEBUG]  citrixadc-provider: Td has changed for ipv6, starting update")
-		ipv6["td"] = d.Get("td").(int)
+		ipv6["td"] = intPtr(d.Get("td").(int))
 		hasChange = true
 	}
 	if d.HasChange("usipnatprefix") {

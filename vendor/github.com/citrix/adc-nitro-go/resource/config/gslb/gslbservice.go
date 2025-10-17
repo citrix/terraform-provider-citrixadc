@@ -44,7 +44,7 @@ type Gslbservice struct {
 	/**
 	* Port on which the load balancing entity represented by this GSLB service listens.
 	*/
-	Port int `json:"port,omitempty"`
+	Port *int `json:"port,omitempty"`
 	/**
 	* The public IP address that a NAT device translates to the GSLB service's private IP address. Optional.
 	*/
@@ -52,11 +52,11 @@ type Gslbservice struct {
 	/**
 	* The public port associated with the GSLB service's public IP address. The port is mapped to the service's private port number. Applicable to the local GSLB service. Optional.
 	*/
-	Publicport int `json:"publicport,omitempty"`
+	Publicport *int `json:"publicport,omitempty"`
 	/**
 	* The maximum number of open connections that the service can support at any given time. A GSLB service whose connection count reaches the maximum is not considered when a GSLB decision is made, until the connection count drops below the maximum.
 	*/
-	Maxclient int `json:"maxclient,omitempty"`
+	Maxclient *int `json:"maxclient,omitempty"`
 	/**
 	* Monitor the health of the GSLB service.
 	*/
@@ -84,7 +84,7 @@ type Gslbservice struct {
 	/**
 	* Timeout value, in minutes, for the cookie, when cookie based site persistence is enabled.
 	*/
-	Cookietimeout int `json:"cookietimeout,omitempty"`
+	Cookietimeout *int `json:"cookietimeout,omitempty"`
 	/**
 	* The site's prefix string. When the service is bound to a GSLB virtual server, a GSLB site domain is generated internally for each bound service-domain pair by concatenating the site prefix of the service and the name of the domain. If the special string NONE is specified, the site-prefix string is unset. When implementing HTTP redirect site persistence, the Citrix ADC redirects GSLB requests to GSLB services by using their site domains.
 	*/
@@ -92,15 +92,15 @@ type Gslbservice struct {
 	/**
 	* Idle time, in seconds, after which a client connection is terminated. Applicable if connection proxy based site persistence is used.
 	*/
-	Clttimeout int `json:"clttimeout,omitempty"`
+	Clttimeout *int `json:"clttimeout,omitempty"`
 	/**
 	* Idle time, in seconds, after which a server connection is terminated. Applicable if connection proxy based site persistence is used.
 	*/
-	Svrtimeout int `json:"svrtimeout,omitempty"`
+	Svrtimeout *int `json:"svrtimeout,omitempty"`
 	/**
 	* Integer specifying the maximum bandwidth allowed for the service. A GSLB service whose bandwidth reaches the maximum is not considered when a GSLB decision is made, until its bandwidth consumption drops below the maximum.
 	*/
-	Maxbandwidth int `json:"maxbandwidth,omitempty"`
+	Maxbandwidth *int `json:"maxbandwidth,omitempty"`
 	/**
 	* Flush all active transactions associated with the GSLB service when its state transitions from UP to DOWN. Do not enable this option for services that must complete their transactions. Applicable if connection proxy based site persistence is used.
 	*/
@@ -108,15 +108,15 @@ type Gslbservice struct {
 	/**
 	* Maximum number of SSL VPN users that can be logged on concurrently to the VPN virtual server that is represented by this GSLB service. A GSLB service whose user count reaches the maximum is not considered when a GSLB decision is made, until the count drops below the maximum.
 	*/
-	Maxaaausers int `json:"maxaaausers,omitempty"`
+	Maxaaausers *int `json:"maxaaausers,omitempty"`
 	/**
 	* Monitoring threshold value for the GSLB service. If the sum of the weights of the monitors that are bound to this GSLB service and are in the UP state is not equal to or greater than this threshold value, the service is marked as DOWN.
 	*/
-	Monthreshold int `json:"monthreshold,omitempty"`
+	Monthreshold *int `json:"monthreshold,omitempty"`
 	/**
 	* Unique hash identifier for the GSLB service, used by hash based load balancing methods.
 	*/
-	Hashid int `json:"hashid,omitempty"`
+	Hashid *int `json:"hashid,omitempty"`
 	/**
 	* Any comments that you might want to associate with the GSLB service.
 	*/
@@ -132,7 +132,7 @@ type Gslbservice struct {
 	/**
 	* An integer specifying the order in which the NAPTR records MUST be processed in order to accurately represent the ordered list of Rules. The ordering is from lowest to highest
 	*/
-	Naptrorder int `json:"naptrorder,omitempty"`
+	Naptrorder *int `json:"naptrorder,omitempty"`
 	/**
 	* Service Parameters applicable to this delegation path.
 	*/
@@ -140,11 +140,11 @@ type Gslbservice struct {
 	/**
 	* Modify the TTL of the internally created naptr domain
 	*/
-	Naptrdomainttl int `json:"naptrdomainttl,omitempty"`
+	Naptrdomainttl *int `json:"naptrdomainttl,omitempty"`
 	/**
 	* An integer specifying the preference of this NAPTR among NAPTR records having same order. lower the number, higher the preference.
 	*/
-	Naptrpreference int `json:"naptrpreference,omitempty"`
+	Naptrpreference *int `json:"naptrpreference,omitempty"`
 	/**
 	* The new IP address of the service.
 	*/
@@ -160,7 +160,7 @@ type Gslbservice struct {
 	/**
 	* Weight to assign to the monitor-service binding. A larger number specifies a greater weight. Contributes to the monitoring threshold, which determines the state of the service.
 	*/
-	Weight int `json:"weight,omitempty"`
+	Weight *int `json:"weight,omitempty"`
 	/**
 	* Name of the monitor to bind to the service.
 	*/

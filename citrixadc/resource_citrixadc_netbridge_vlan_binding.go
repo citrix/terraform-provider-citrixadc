@@ -47,7 +47,10 @@ func createNetbridge_vlan_bindingFunc(ctx context.Context, d *schema.ResourceDat
 	bindingId := fmt.Sprintf("%s,%s", name, vlan)
 	netbridge_vlan_binding := network.Netbridgevlanbinding{
 		Name: d.Get("name").(string),
-		Vlan: d.Get("vlan").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("vlan"); !raw.IsNull() {
+		netbridge_vlan_binding.Vlan = intPtr(d.Get("vlan").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Netbridge_vlan_binding.Type(), &netbridge_vlan_binding)

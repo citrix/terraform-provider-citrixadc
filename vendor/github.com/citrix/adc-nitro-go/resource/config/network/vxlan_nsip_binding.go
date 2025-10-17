@@ -31,7 +31,7 @@ type Vxlannsipbinding struct {
 	/**
 	* A positive integer, which is also called VXLAN Network Identifier (VNI), that uniquely identifies a VXLAN.
 	*/
-	Id int `json:"id,omitempty"`
+	Id *int `json:"id,omitempty"`
 
 
 }

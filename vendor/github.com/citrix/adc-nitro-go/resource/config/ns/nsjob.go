@@ -23,7 +23,7 @@ type Nsjob struct {
 	/**
 	* Running job id
 	*/
-	Id int `json:"id,omitempty"`
+	Id *int `json:"id,omitempty"`
 	/**
 	* Running job Name
 	*/

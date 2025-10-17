@@ -280,7 +280,6 @@ func createCrvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 		Backupvserver:            d.Get("backupvserver").(string),
 		Cachetype:                d.Get("cachetype").(string),
 		Cachevserver:             d.Get("cachevserver").(string),
-		Clttimeout:               d.Get("clttimeout").(int),
 		Comment:                  d.Get("comment").(string),
 		Destinationvserver:       d.Get("destinationvserver").(string),
 		Disableprimaryondown:     d.Get("disableprimaryondown").(string),
@@ -295,33 +294,53 @@ func createCrvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 		Ipv46:                    d.Get("ipv46").(string),
 		L2conn:                   d.Get("l2conn").(string),
 		Listenpolicy:             d.Get("listenpolicy").(string),
-		Listenpriority:           d.Get("listenpriority").(int),
 		Map:                      d.Get("map").(string),
 		Name:                     crvserverName,
 		Netprofile:               d.Get("netprofile").(string),
 		Onpolicymatch:            d.Get("onpolicymatch").(string),
 		Originusip:               d.Get("originusip").(string),
-		Port:                     d.Get("port").(int),
 		Precedence:               d.Get("precedence").(string),
-		Probeport:                d.Get("probeport").(int),
 		Probeprotocol:            d.Get("probeprotocol").(string),
 		Probesuccessresponsecode: d.Get("probesuccessresponsecode").(string),
-		Range:                    d.Get("range").(int),
 		Redirect:                 d.Get("redirect").(string),
 		Redirecturl:              d.Get("redirecturl").(string),
 		Reuse:                    d.Get("reuse").(string),
 		Rhistate:                 d.Get("rhistate").(string),
 		Servicetype:              d.Get("servicetype").(string),
-		Sopersistencetimeout:     d.Get("sopersistencetimeout").(int),
-		Sothreshold:              d.Get("sothreshold").(int),
 		Srcipexpr:                d.Get("srcipexpr").(string),
 		State:                    d.Get("state").(string),
-		Tcpprobeport:             d.Get("tcpprobeport").(int),
 		Tcpprofilename:           d.Get("tcpprofilename").(string),
-		Td:                       d.Get("td").(int),
 		Useoriginipportforcache:  d.Get("useoriginipportforcache").(string),
 		Useportrange:             d.Get("useportrange").(string),
 		Via:                      d.Get("via").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("clttimeout"); !raw.IsNull() {
+		crvserver.Clttimeout = intPtr(d.Get("clttimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("listenpriority"); !raw.IsNull() {
+		crvserver.Listenpriority = intPtr(d.Get("listenpriority").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("port"); !raw.IsNull() {
+		crvserver.Port = intPtr(d.Get("port").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("probeport"); !raw.IsNull() {
+		crvserver.Probeport = intPtr(d.Get("probeport").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("range"); !raw.IsNull() {
+		crvserver.Range = intPtr(d.Get("range").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("sopersistencetimeout"); !raw.IsNull() {
+		crvserver.Sopersistencetimeout = intPtr(d.Get("sopersistencetimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("sothreshold"); !raw.IsNull() {
+		crvserver.Sothreshold = intPtr(d.Get("sothreshold").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("tcpprobeport"); !raw.IsNull() {
+		crvserver.Tcpprobeport = intPtr(d.Get("tcpprobeport").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("td"); !raw.IsNull() {
+		crvserver.Td = intPtr(d.Get("td").(int))
 	}
 
 	_, err := client.AddResource(service.Crvserver.Type(), crvserverName, &crvserver)
@@ -440,7 +459,7 @@ func updateCrvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("clttimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Clttimeout has changed for crvserver %s, starting update", crvserverName)
-		crvserver.Clttimeout = d.Get("clttimeout").(int)
+		crvserver.Clttimeout = intPtr(d.Get("clttimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("comment") {
@@ -515,7 +534,7 @@ func updateCrvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("listenpriority") {
 		log.Printf("[DEBUG]  citrixadc-provider: Listenpriority has changed for crvserver %s, starting update", crvserverName)
-		crvserver.Listenpriority = d.Get("listenpriority").(int)
+		crvserver.Listenpriority = intPtr(d.Get("listenpriority").(int))
 		hasChange = true
 	}
 	if d.HasChange("map") {
@@ -540,7 +559,7 @@ func updateCrvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("port") {
 		log.Printf("[DEBUG]  citrixadc-provider: Port has changed for crvserver %s, starting update", crvserverName)
-		crvserver.Port = d.Get("port").(int)
+		crvserver.Port = intPtr(d.Get("port").(int))
 		hasChange = true
 	}
 	if d.HasChange("precedence") {
@@ -550,7 +569,7 @@ func updateCrvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("probeport") {
 		log.Printf("[DEBUG]  citrixadc-provider: Probeport has changed for crvserver %s, starting update", crvserverName)
-		crvserver.Probeport = d.Get("probeport").(int)
+		crvserver.Probeport = intPtr(d.Get("probeport").(int))
 		hasChange = true
 	}
 	if d.HasChange("probeprotocol") {
@@ -565,7 +584,7 @@ func updateCrvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("range") {
 		log.Printf("[DEBUG]  citrixadc-provider: Range has changed for crvserver %s, starting update", crvserverName)
-		crvserver.Range = d.Get("range").(int)
+		crvserver.Range = intPtr(d.Get("range").(int))
 		hasChange = true
 	}
 	if d.HasChange("redirect") {
@@ -595,12 +614,12 @@ func updateCrvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("sopersistencetimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Sopersistencetimeout has changed for crvserver %s, starting update", crvserverName)
-		crvserver.Sopersistencetimeout = d.Get("sopersistencetimeout").(int)
+		crvserver.Sopersistencetimeout = intPtr(d.Get("sopersistencetimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("sothreshold") {
 		log.Printf("[DEBUG]  citrixadc-provider: Sothreshold has changed for crvserver %s, starting update", crvserverName)
-		crvserver.Sothreshold = d.Get("sothreshold").(int)
+		crvserver.Sothreshold = intPtr(d.Get("sothreshold").(int))
 		hasChange = true
 	}
 	if d.HasChange("srcipexpr") {
@@ -615,7 +634,7 @@ func updateCrvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("tcpprobeport") {
 		log.Printf("[DEBUG]  citrixadc-provider: Tcpprobeport has changed for crvserver %s, starting update", crvserverName)
-		crvserver.Tcpprobeport = d.Get("tcpprobeport").(int)
+		crvserver.Tcpprobeport = intPtr(d.Get("tcpprobeport").(int))
 		hasChange = true
 	}
 	if d.HasChange("tcpprofilename") {
@@ -625,7 +644,7 @@ func updateCrvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("td") {
 		log.Printf("[DEBUG]  citrixadc-provider: Td has changed for crvserver %s, starting update", crvserverName)
-		crvserver.Td = d.Get("td").(int)
+		crvserver.Td = intPtr(d.Get("td").(int))
 		hasChange = true
 	}
 	if d.HasChange("useoriginipportforcache") {

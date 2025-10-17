@@ -148,17 +148,17 @@ func updateCacheparameterFunc(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	if d.HasChange("maxpostlen") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxpostlen has changed for cacheparameter, starting update")
-		cacheparameter.Maxpostlen = d.Get("maxpostlen").(int)
+		cacheparameter.Maxpostlen = intPtr(d.Get("maxpostlen").(int))
 		hasChange = true
 	}
 	if d.HasChange("memlimit") {
 		log.Printf("[DEBUG]  citrixadc-provider: Memlimit has changed for cacheparameter, starting update")
-		cacheparameter.Memlimit = d.Get("memlimit").(int)
+		cacheparameter.Memlimit = intPtr(d.Get("memlimit").(int))
 		hasChange = true
 	}
 	if d.HasChange("prefetchmaxpending") {
 		log.Printf("[DEBUG]  citrixadc-provider: Prefetchmaxpending has changed for cacheparameter, starting update")
-		cacheparameter.Prefetchmaxpending = d.Get("prefetchmaxpending").(int)
+		cacheparameter.Prefetchmaxpending = intPtr(d.Get("prefetchmaxpending").(int))
 		hasChange = true
 	}
 	if d.HasChange("undefaction") {

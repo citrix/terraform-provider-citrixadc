@@ -44,7 +44,7 @@ type Contentinspectionaction struct {
 	/**
 	* Port of remoteService
 	*/
-	Serverport int `json:"serverport,omitempty"`
+	Serverport *int `json:"serverport,omitempty"`
 	/**
 	* Name of the ICAP profile to be attached to the contentInspection action.
 	*/

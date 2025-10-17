@@ -83,9 +83,12 @@ func createContentinspectionglobal_contentinspectionpolicy_bindingFunc(ctx conte
 		Labelname:              d.Get("labelname").(string),
 		Labeltype:              d.Get("labeltype").(string),
 		Policyname:             d.Get("policyname").(string),
-		Priority:               d.Get("priority").(int),
 		Type:                   d.Get("type").(string),
 		Globalbindtype:         d.Get("globalbindtype").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		contentinspectionglobal_contentinspectionpolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	err := client.UpdateUnnamedResource("contentinspectionglobal_contentinspectionpolicy_binding", &contentinspectionglobal_contentinspectionpolicy_binding)

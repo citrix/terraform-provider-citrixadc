@@ -51,7 +51,10 @@ func createLsnclient_nsacl6_bindingFunc(ctx context.Context, d *schema.ResourceD
 	lsnclient_nsacl6_binding := lsn.Lsnclientnsacl6binding{
 		Acl6name:   d.Get("acl6name").(string),
 		Clientname: d.Get("clientname").(string),
-		Td:         d.Get("td").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("td"); !raw.IsNull() {
+		lsnclient_nsacl6_binding.Td = intPtr(d.Get("td").(int))
 	}
 
 	err := client.UpdateUnnamedResource("lsnclient_nsacl6_binding", &lsnclient_nsacl6_binding)

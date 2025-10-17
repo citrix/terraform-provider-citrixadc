@@ -55,6 +55,7 @@ const testAccSslocspresponder_basic_update1 = `
 		resptimeout = 101
 		trustresponder = true
 		usenonce = "YES"
+		cachetimeout = 0
 	}
 `
 

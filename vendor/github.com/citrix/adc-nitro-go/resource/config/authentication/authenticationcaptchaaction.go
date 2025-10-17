@@ -45,7 +45,7 @@ type Authenticationcaptchaaction struct {
 	/**
 	* This is the score threshold value for recaptcha v3.
 	*/
-	Scorethreshold int `json:"scorethreshold,omitempty"`
+	Scorethreshold *int `json:"scorethreshold,omitempty"`
 
 	//------- Read only Parameter ---------;
 

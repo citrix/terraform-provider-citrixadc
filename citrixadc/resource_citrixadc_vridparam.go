@@ -48,9 +48,14 @@ func createVridparamFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	// there is no primary key in vridparam resource. Hence generate one for terraform state maintenance
 	vridparamName = resource.PrefixedUniqueId("tf-vridparam-")
 	vridparam := network.Vridparam{
-		Deadinterval:  d.Get("deadinterval").(int),
-		Hellointerval: d.Get("hellointerval").(int),
-		Sendtomaster:  d.Get("sendtomaster").(string),
+		Sendtomaster: d.Get("sendtomaster").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("deadinterval"); !raw.IsNull() {
+		vridparam.Deadinterval = intPtr(d.Get("deadinterval").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("hellointerval"); !raw.IsNull() {
+		vridparam.Hellointerval = intPtr(d.Get("hellointerval").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Vridparam.Type(), &vridparam)
@@ -88,12 +93,12 @@ func updateVridparamFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	hasChange := false
 	if d.HasChange("deadinterval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Deadinterval has changed for vridparam, starting update")
-		vridparam.Deadinterval = d.Get("deadinterval").(int)
+		vridparam.Deadinterval = intPtr(d.Get("deadinterval").(int))
 		hasChange = true
 	}
 	if d.HasChange("hellointerval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Hellointerval has changed for vridparam, starting update")
-		vridparam.Hellointerval = d.Get("hellointerval").(int)
+		vridparam.Hellointerval = intPtr(d.Get("hellointerval").(int))
 		hasChange = true
 	}
 	if d.HasChange("sendtomaster") {

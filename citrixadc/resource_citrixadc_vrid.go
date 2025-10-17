@@ -78,15 +78,26 @@ func createVridFunc(ctx context.Context, d *schema.ResourceData, meta interface{
 	client := meta.(*NetScalerNitroClient).client
 	vridId := d.Get("vrid_id").(int)
 	vrid := network.Vrid{
-		All:                  d.Get("all").(bool),
-		Id:                   d.Get("vrid_id").(int),
-		Ownernode:            d.Get("ownernode").(int),
-		Preemption:           d.Get("preemption").(string),
-		Preemptiondelaytimer: d.Get("preemptiondelaytimer").(int),
-		Priority:             d.Get("priority").(int),
-		Sharing:              d.Get("sharing").(string),
-		Trackifnumpriority:   d.Get("trackifnumpriority").(int),
-		Tracking:             d.Get("tracking").(string),
+		All:        d.Get("all").(bool),
+		Preemption: d.Get("preemption").(string),
+		Sharing:    d.Get("sharing").(string),
+		Tracking:   d.Get("tracking").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("vrid_id"); !raw.IsNull() {
+		vrid.Id = intPtr(d.Get("vrid_id").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("ownernode"); !raw.IsNull() {
+		vrid.Ownernode = intPtr(d.Get("ownernode").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("preemptiondelaytimer"); !raw.IsNull() {
+		vrid.Preemptiondelaytimer = intPtr(d.Get("preemptiondelaytimer").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		vrid.Priority = intPtr(d.Get("priority").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("trackifnumpriority"); !raw.IsNull() {
+		vrid.Trackifnumpriority = intPtr(d.Get("trackifnumpriority").(int))
 	}
 	vridIdStr := strconv.Itoa(vridId)
 	_, err := client.AddResource(service.Vrid.Type(), vridIdStr, &vrid)
@@ -129,8 +140,10 @@ func updateVridFunc(ctx context.Context, d *schema.ResourceData, meta interface{
 	client := meta.(*NetScalerNitroClient).client
 	vridId := d.Get("vrid_id").(int)
 
-	vrid := network.Vrid{
-		Id: d.Get("vrid_id").(int),
+	vrid := network.Vrid{}
+
+	if raw := d.GetRawConfig().GetAttr("vrid_id"); !raw.IsNull() {
+		vrid.Id = intPtr(d.Get("vrid_id").(int))
 	}
 	hasChange := false
 	if d.HasChange("all") {
@@ -140,7 +153,7 @@ func updateVridFunc(ctx context.Context, d *schema.ResourceData, meta interface{
 	}
 	if d.HasChange("ownernode") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ownernode has changed for vrid %d, starting update", vridId)
-		vrid.Ownernode = d.Get("ownernode").(int)
+		vrid.Ownernode = intPtr(d.Get("ownernode").(int))
 		hasChange = true
 	}
 	if d.HasChange("preemption") {
@@ -150,12 +163,12 @@ func updateVridFunc(ctx context.Context, d *schema.ResourceData, meta interface{
 	}
 	if d.HasChange("preemptiondelaytimer") {
 		log.Printf("[DEBUG]  citrixadc-provider: Preemptiondelaytimer has changed for vrid %d, starting update", vridId)
-		vrid.Preemptiondelaytimer = d.Get("preemptiondelaytimer").(int)
+		vrid.Preemptiondelaytimer = intPtr(d.Get("preemptiondelaytimer").(int))
 		hasChange = true
 	}
 	if d.HasChange("priority") {
 		log.Printf("[DEBUG]  citrixadc-provider: Priority has changed for vrid %d, starting update", vridId)
-		vrid.Priority = d.Get("priority").(int)
+		vrid.Priority = intPtr(d.Get("priority").(int))
 		hasChange = true
 	}
 	if d.HasChange("sharing") {
@@ -165,7 +178,7 @@ func updateVridFunc(ctx context.Context, d *schema.ResourceData, meta interface{
 	}
 	if d.HasChange("trackifnumpriority") {
 		log.Printf("[DEBUG]  citrixadc-provider: Trackifnumpriority has changed for vrid %d, starting update", vridId)
-		vrid.Trackifnumpriority = d.Get("trackifnumpriority").(int)
+		vrid.Trackifnumpriority = intPtr(d.Get("trackifnumpriority").(int))
 		hasChange = true
 	}
 	if d.HasChange("tracking") {

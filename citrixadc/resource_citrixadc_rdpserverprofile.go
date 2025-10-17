@@ -59,8 +59,11 @@ func createRdpserverprofileFunc(ctx context.Context, d *schema.ResourceData, met
 		Name:           d.Get("name").(string),
 		Psk:            d.Get("psk").(string),
 		Rdpip:          d.Get("rdpip").(string),
-		Rdpport:        d.Get("rdpport").(int),
 		Rdpredirection: d.Get("rdpredirection").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("rdpport"); !raw.IsNull() {
+		rdpserverprofile.Rdpport = intPtr(d.Get("rdpport").(int))
 	}
 
 	_, err := client.AddResource("rdpserverprofile", rdpserverprofileName, &rdpserverprofile)
@@ -114,7 +117,7 @@ func updateRdpserverprofileFunc(ctx context.Context, d *schema.ResourceData, met
 	}
 	if d.HasChange("rdpport") {
 		log.Printf("[DEBUG]  citrixadc-provider: Rdpport has changed for rdpserverprofile %s, starting update", rdpserverprofileName)
-		rdpserverprofile.Rdpport = d.Get("rdpport").(int)
+		rdpserverprofile.Rdpport = intPtr(d.Get("rdpport").(int))
 		hasChange = true
 	}
 	if d.HasChange("rdpredirection") {

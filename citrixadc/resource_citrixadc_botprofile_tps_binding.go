@@ -88,8 +88,13 @@ func createBotprofile_tps_bindingFunc(ctx context.Context, d *schema.ResourceDat
 		Bottpstype:     d.Get("bot_tps_type").(string),
 		Logmessage:     d.Get("logmessage").(string),
 		Name:           d.Get("name").(string),
-		Percentage:     d.Get("percentage").(int),
-		Threshold:      d.Get("threshold").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("percentage"); !raw.IsNull() {
+		botprofile_tps_binding.Percentage = intPtr(d.Get("percentage").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("threshold"); !raw.IsNull() {
+		botprofile_tps_binding.Threshold = intPtr(d.Get("threshold").(int))
 	}
 
 	err := client.UpdateUnnamedResource("botprofile_tps_binding", &botprofile_tps_binding)

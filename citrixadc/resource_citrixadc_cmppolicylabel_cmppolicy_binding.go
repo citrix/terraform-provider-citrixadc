@@ -2,14 +2,16 @@ package citrixadc
 
 import (
 	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/cmp"
 	"github.com/citrix/adc-nitro-go/service"
 
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strings"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcCmppolicylabel_cmppolicy_binding() *schema.Resource {
@@ -78,7 +80,10 @@ func createCmppolicylabel_cmppolicy_bindingFunc(ctx context.Context, d *schema.R
 		Labelname:              d.Get("labelname").(string),
 		Labeltype:              d.Get("labeltype").(string),
 		Policyname:             d.Get("policyname").(string),
-		Priority:               d.Get("priority").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		cmppolicylabel_cmppolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Cmppolicylabel_cmppolicy_binding.Type(), &cmppolicylabel_cmppolicy_binding)

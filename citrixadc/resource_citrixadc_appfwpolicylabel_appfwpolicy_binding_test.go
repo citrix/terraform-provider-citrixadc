@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccAppfwpolicylabel_appfwpolicy_binding_basic = `
@@ -31,45 +32,27 @@ const testAccAppfwpolicylabel_appfwpolicy_binding_basic = `
 	}
 	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
 		name                     = "tf_appfwprofile"
-		bufferoverflowaction     = ["none"]
-		contenttypeaction        = ["none"]
-		cookieconsistencyaction  = ["none"]
-		creditcard               = ["none"]
-		creditcardaction         = ["none"]
-		crosssitescriptingaction = ["none"]
-		csrftagaction            = ["none"]
-		denyurlaction            = ["none"]
-		dynamiclearning          = ["none"]
-		fieldconsistencyaction   = ["none"]
-		fieldformataction        = ["none"]
-		fileuploadtypesaction    = ["none"]
-		inspectcontenttypes      = ["none"]
-		jsondosaction            = ["none"]
-		jsonsqlinjectionaction   = ["none"]
-		jsonxssaction            = ["none"]
-		multipleheaderaction     = ["none"]
-		sqlinjectionaction       = ["none"]
-		starturlaction           = ["none"]
 		type                     = ["HTML"]
-		xmlattachmentaction      = ["none"]
-		xmldosaction             = ["none"]
-		xmlformataction          = ["none"]
-		xmlsoapfaultaction       = ["none"]
-		xmlsqlinjectionaction    = ["none"]
-		xmlvalidationaction      = ["none"]
-		xmlwsiaction             = ["none"]
-		xmlxssaction             = ["none"]
 	}
-	
-	resource "citrixadc_appfwpolicy" "tf_appfwpolicy" {
-		name        = "tf_appfwpolicy"
+	resource "citrixadc_appfwpolicy" "tf_appfwpolicy1" {
+		name        = "tf_appfwpolicy1"
 		profilename = citrixadc_appfwprofile.tf_appfwprofile.name
 		rule        = "true"
 	}
-	resource "citrixadc_appfwpolicylabel_appfwpolicy_binding" "tf_binding" {
+	resource "citrixadc_appfwpolicy" "tf_appfwpolicy2" {
+		name        = "tf_appfwpolicy2"
+		profilename = citrixadc_appfwprofile.tf_appfwprofile.name
+		rule        = "true"
+	}
+	resource "citrixadc_appfwpolicylabel_appfwpolicy_binding" "tf_binding1" {
 		labelname  = citrixadc_appfwpolicylabel.tf_appfwpolicylabel.labelname
-		policyname = citrixadc_appfwpolicy.tf_appfwpolicy.name
+		policyname = citrixadc_appfwpolicy.tf_appfwpolicy1.name
 		priority   = 90
+	}
+	resource "citrixadc_appfwpolicylabel_appfwpolicy_binding" "tf_binding2" {
+		labelname  = citrixadc_appfwpolicylabel.tf_appfwpolicylabel.labelname
+		policyname = citrixadc_appfwpolicy.tf_appfwpolicy2.name
+		priority   = 100
 	}
 `
 
@@ -81,34 +64,7 @@ const testAccAppfwpolicylabel_appfwpolicy_binding_basic_step2 = `
 	}
 	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
 		name                     = "tf_appfwprofile"
-		bufferoverflowaction     = ["none"]
-		contenttypeaction        = ["none"]
-		cookieconsistencyaction  = ["none"]
-		creditcard               = ["none"]
-		creditcardaction         = ["none"]
-		crosssitescriptingaction = ["none"]
-		csrftagaction            = ["none"]
-		denyurlaction            = ["none"]
-		dynamiclearning          = ["none"]
-		fieldconsistencyaction   = ["none"]
-		fieldformataction        = ["none"]
-		fileuploadtypesaction    = ["none"]
-		inspectcontenttypes      = ["none"]
-		jsondosaction            = ["none"]
-		jsonsqlinjectionaction   = ["none"]
-		jsonxssaction            = ["none"]
-		multipleheaderaction     = ["none"]
-		sqlinjectionaction       = ["none"]
-		starturlaction           = ["none"]
 		type                     = ["HTML"]
-		xmlattachmentaction      = ["none"]
-		xmldosaction             = ["none"]
-		xmlformataction          = ["none"]
-		xmlsoapfaultaction       = ["none"]
-		xmlsqlinjectionaction    = ["none"]
-		xmlvalidationaction      = ["none"]
-		xmlwsiaction             = ["none"]
-		xmlxssaction             = ["none"]
 	}
 	
 	resource "citrixadc_appfwpolicy" "tf_appfwpolicy" {
@@ -127,13 +83,17 @@ func TestAccAppfwpolicylabel_appfwpolicy_binding_basic(t *testing.T) {
 			{
 				Config: testAccAppfwpolicylabel_appfwpolicy_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppfwpolicylabel_appfwpolicy_bindingExist("citrixadc_appfwpolicylabel_appfwpolicy_binding.tf_binding", nil),
+					testAccCheckAppfwpolicylabel_appfwpolicy_bindingExist("citrixadc_appfwpolicylabel_appfwpolicy_binding.tf_binding1", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwpolicylabel_appfwpolicy_binding.tf_binding1", "priority", "90"),
+					testAccCheckAppfwpolicylabel_appfwpolicy_bindingExist("citrixadc_appfwpolicylabel_appfwpolicy_binding.tf_binding2", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwpolicylabel_appfwpolicy_binding.tf_binding2", "priority", "100"),
 				),
 			},
 			{
 				Config: testAccAppfwpolicylabel_appfwpolicy_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppfwpolicylabel_appfwpolicy_bindingNotExist("citrixadc_appfwpolicylabel_appfwpolicy_binding.tf_binding", "tf_appfwpolicylabel,tf_appfwpolicy"),
+					testAccCheckAppfwpolicylabel_appfwpolicy_bindingNotExist("citrixadc_appfwpolicylabel_appfwpolicy_binding.tf_binding1", "tf_appfwpolicylabel,tf_appfwpolicy1"),
+					testAccCheckAppfwpolicylabel_appfwpolicy_bindingNotExist("citrixadc_appfwpolicylabel_appfwpolicy_binding.tf_binding2", "tf_appfwpolicylabel,tf_appfwpolicy2"),
 				),
 			},
 		},

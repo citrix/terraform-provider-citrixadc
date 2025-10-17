@@ -40,8 +40,11 @@ func createInterfacepairFunc(ctx context.Context, d *schema.ResourceData, meta i
 	interfacepairName := strconv.Itoa(d.Get("interface_id").(int))
 
 	interfacepair := network.Interfacepair{
-		Id:    d.Get("interface_id").(int),
 		Ifnum: toStringList(d.Get("ifnum").([]interface{})),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("interface_id"); !raw.IsNull() {
+		interfacepair.Id = intPtr(d.Get("interface_id").(int))
 	}
 
 	_, err := client.AddResource(service.Interfacepair.Type(), interfacepairName, &interfacepair)

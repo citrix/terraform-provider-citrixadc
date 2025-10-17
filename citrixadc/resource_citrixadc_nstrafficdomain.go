@@ -50,8 +50,11 @@ func createNstrafficdomainFunc(ctx context.Context, d *schema.ResourceData, meta
 	td_Id := d.Get("td").(int)
 	nstrafficdomain := ns.Nstrafficdomain{
 		Aliasname: d.Get("aliasname").(string),
-		Td:        d.Get("td").(int),
 		Vmac:      d.Get("vmac").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("td"); !raw.IsNull() {
+		nstrafficdomain.Td = intPtr(d.Get("td").(int))
 	}
 	td_IdStr := strconv.Itoa(td_Id)
 

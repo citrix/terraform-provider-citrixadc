@@ -123,7 +123,6 @@ func createSslservicegroupFunc(ctx context.Context, d *schema.ResourceData, meta
 		Serverauth:           d.Get("serverauth").(string),
 		Servicegroupname:     d.Get("servicegroupname").(string),
 		Sessreuse:            d.Get("sessreuse").(string),
-		Sesstimeout:          d.Get("sesstimeout").(int),
 		Snienable:            d.Get("snienable").(string),
 		Ssl3:                 d.Get("ssl3").(string),
 		Sslprofile:           d.Get("sslprofile").(string),
@@ -132,6 +131,10 @@ func createSslservicegroupFunc(ctx context.Context, d *schema.ResourceData, meta
 		Tls11:                d.Get("tls11").(string),
 		Tls12:                d.Get("tls12").(string),
 		Tls13:                d.Get("tls13").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("sesstimeout"); !raw.IsNull() {
+		sslservicegroup.Sesstimeout = intPtr(d.Get("sesstimeout").(int))
 	}
 
 	_, err := client.UpdateResource(service.Sslservicegroup.Type(), sslservicegroupName, &sslservicegroup)
@@ -218,7 +221,7 @@ func updateSslservicegroupFunc(ctx context.Context, d *schema.ResourceData, meta
 	}
 	if d.HasChange("sesstimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Sesstimeout has changed for sslservicegroup  %s, starting update", servicegroupname)
-		sslservicegroup.Sesstimeout = d.Get("sesstimeout").(int)
+		sslservicegroup.Sesstimeout = intPtr(d.Get("sesstimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("snienable") {

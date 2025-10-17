@@ -27,11 +27,11 @@ type Vrid6nsipbinding struct {
 	/**
 	* Flags.
 	*/
-	Flags int `json:"flags,omitempty"`
+	Flags *int `json:"flags,omitempty"`
 	/**
 	* Integer value that uniquely identifies a VMAC6 address.
 	*/
-	Id int `json:"id,omitempty"`
+	Id *int `json:"id,omitempty"`
 
 
 }

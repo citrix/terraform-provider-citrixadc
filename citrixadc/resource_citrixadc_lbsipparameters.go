@@ -70,13 +70,26 @@ func createLbsipparametersFunc(ctx context.Context, d *schema.ResourceData, meta
 	lbsipparametersName = resource.PrefixedUniqueId("tf-lbsipparameters-")
 
 	lbsipparameters := lb.Lbsipparameters{
-		Addrportvip:         d.Get("addrportvip").(string),
-		Retrydur:            d.Get("retrydur").(int),
-		Rnatdstport:         d.Get("rnatdstport").(int),
-		Rnatsecuredstport:   d.Get("rnatsecuredstport").(int),
-		Rnatsecuresrcport:   d.Get("rnatsecuresrcport").(int),
-		Rnatsrcport:         d.Get("rnatsrcport").(int),
-		Sip503ratethreshold: d.Get("sip503ratethreshold").(int),
+		Addrportvip: d.Get("addrportvip").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("retrydur"); !raw.IsNull() {
+		lbsipparameters.Retrydur = intPtr(d.Get("retrydur").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("rnatdstport"); !raw.IsNull() {
+		lbsipparameters.Rnatdstport = intPtr(d.Get("rnatdstport").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("rnatsecuredstport"); !raw.IsNull() {
+		lbsipparameters.Rnatsecuredstport = intPtr(d.Get("rnatsecuredstport").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("rnatsecuresrcport"); !raw.IsNull() {
+		lbsipparameters.Rnatsecuresrcport = intPtr(d.Get("rnatsecuresrcport").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("rnatsrcport"); !raw.IsNull() {
+		lbsipparameters.Rnatsrcport = intPtr(d.Get("rnatsrcport").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("sip503ratethreshold"); !raw.IsNull() {
+		lbsipparameters.Sip503ratethreshold = intPtr(d.Get("sip503ratethreshold").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Lbsipparameters.Type(), &lbsipparameters)
@@ -124,32 +137,32 @@ func updateLbsipparametersFunc(ctx context.Context, d *schema.ResourceData, meta
 	}
 	if d.HasChange("retrydur") {
 		log.Printf("[DEBUG]  citrixadc-provider: Retrydur has changed for lbsipparameters, starting update")
-		lbsipparameters.Retrydur = d.Get("retrydur").(int)
+		lbsipparameters.Retrydur = intPtr(d.Get("retrydur").(int))
 		hasChange = true
 	}
 	if d.HasChange("rnatdstport") {
 		log.Printf("[DEBUG]  citrixadc-provider: Rnatdstport has changed for lbsipparameters, starting update")
-		lbsipparameters.Rnatdstport = d.Get("rnatdstport").(int)
+		lbsipparameters.Rnatdstport = intPtr(d.Get("rnatdstport").(int))
 		hasChange = true
 	}
 	if d.HasChange("rnatsecuredstport") {
 		log.Printf("[DEBUG]  citrixadc-provider: Rnatsecuredstport has changed for lbsipparameters, starting update")
-		lbsipparameters.Rnatsecuredstport = d.Get("rnatsecuredstport").(int)
+		lbsipparameters.Rnatsecuredstport = intPtr(d.Get("rnatsecuredstport").(int))
 		hasChange = true
 	}
 	if d.HasChange("rnatsecuresrcport") {
 		log.Printf("[DEBUG]  citrixadc-provider: Rnatsecuresrcport has changed for lbsipparameters, starting update")
-		lbsipparameters.Rnatsecuresrcport = d.Get("rnatsecuresrcport").(int)
+		lbsipparameters.Rnatsecuresrcport = intPtr(d.Get("rnatsecuresrcport").(int))
 		hasChange = true
 	}
 	if d.HasChange("rnatsrcport") {
 		log.Printf("[DEBUG]  citrixadc-provider: Rnatsrcport has changed for lbsipparameters, starting update")
-		lbsipparameters.Rnatsrcport = d.Get("rnatsrcport").(int)
+		lbsipparameters.Rnatsrcport = intPtr(d.Get("rnatsrcport").(int))
 		hasChange = true
 	}
 	if d.HasChange("sip503ratethreshold") {
 		log.Printf("[DEBUG]  citrixadc-provider: Sip503ratethreshold has changed for lbsipparameters, starting update")
-		lbsipparameters.Sip503ratethreshold = d.Get("sip503ratethreshold").(int)
+		lbsipparameters.Sip503ratethreshold = intPtr(d.Get("sip503ratethreshold").(int))
 		hasChange = true
 	}
 

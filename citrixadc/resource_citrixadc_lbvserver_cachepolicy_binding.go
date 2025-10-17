@@ -87,7 +87,10 @@ func createLbvserver_cachepolicy_bindingFunc(ctx context.Context, d *schema.Reso
 		Labeltype:              d.Get("labeltype").(string),
 		Name:                   lbvserverName,
 		Policyname:             policyName,
-		Priority:               d.Get("priority").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		lbvserver_cachepolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	_, err := client.AddResource(service.Lbvserver_cachepolicy_binding.Type(), lbvserverName, &lbvserver_cachepolicy_binding)

@@ -56,8 +56,8 @@ func resourceCitrixAdcAppfwprofile_fileuploadtype_binding() *schema.Resource {
 			"filetype": {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Optional: true,
-				Computed: true,
+				Required: true,
+				Computed: false,
 				ForceNew: true,
 			},
 			"isautodeployed": {
@@ -90,6 +90,12 @@ func resourceCitrixAdcAppfwprofile_fileuploadtype_binding() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
+			"isnameregex": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -100,7 +106,8 @@ func createAppfwprofile_fileuploadtype_bindingFunc(ctx context.Context, d *schem
 	name := d.Get("name")
 	fileuploadtype := d.Get("fileuploadtype")
 	as_fileuploadtypes_url := d.Get("as_fileuploadtypes_url")
-	bindingId := fmt.Sprintf("%s,%s,%s", name, fileuploadtype, as_fileuploadtypes_url)
+	filetype := strings.Join(toStringList(d.Get("filetype").([]interface{})), ";")
+	bindingId := fmt.Sprintf("%s,%s,%s,%s", name, fileuploadtype, as_fileuploadtypes_url, filetype)
 	appfwprofile_fileuploadtype_binding := appfw.Appfwprofilefileuploadtypebinding{
 		Alertonly:                 d.Get("alertonly").(string),
 		Asfileuploadtypesurl:      d.Get("as_fileuploadtypes_url").(string),
@@ -109,6 +116,7 @@ func createAppfwprofile_fileuploadtype_bindingFunc(ctx context.Context, d *schem
 		Fileuploadtype:            d.Get("fileuploadtype").(string),
 		Isautodeployed:            d.Get("isautodeployed").(string),
 		Isregexfileuploadtypesurl: d.Get("isregexfileuploadtypesurl").(string),
+		Isnameregex:               d.Get("isnameregex").(string),
 		Name:                      d.Get("name").(string),
 		Resourceid:                d.Get("resourceid").(string),
 		Ruletype:                  d.Get("ruletype").(string),
@@ -129,13 +137,21 @@ func readAppfwprofile_fileuploadtype_bindingFunc(ctx context.Context, d *schema.
 	log.Printf("[DEBUG] citrixadc-provider:  In readAppfwprofile_fileuploadtype_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
-	idSlice := strings.SplitN(bindingId, ",", 3)
+	idSlice := strings.Split(bindingId, ",")
 
 	name := idSlice[0]
 	fileuploadtype := idSlice[1]
 	as_fileuploadtypes_url := idSlice[2]
+	filetype := ""
+	if len(idSlice) > 3 {
+		filetype = idSlice[3]
+	} else {
+		filetype = strings.Join(toStringList(d.Get("filetype").([]interface{})), ";")
+		bindingId = fmt.Sprintf("%s,%s,%s,%s", name, fileuploadtype, as_fileuploadtypes_url, filetype)
+	}
 
 	log.Printf("[DEBUG] citrixadc-provider: Reading appfwprofile_fileuploadtype_binding state %s", bindingId)
+	d.SetId(bindingId)
 
 	findParams := service.FindParams{
 		ResourceType:             "appfwprofile_fileuploadtype_binding",
@@ -163,8 +179,17 @@ func readAppfwprofile_fileuploadtype_bindingFunc(ctx context.Context, d *schema.
 	for i, v := range dataArr {
 		if v["fileuploadtype"].(string) == fileuploadtype {
 			if v["as_fileuploadtypes_url"].(string) == as_fileuploadtypes_url {
-				foundIndex = i
-				break
+				// Check if filetype matches (convert slice to space-separated string for comparison)
+				dataFiletype := ""
+				if v["filetype"] != nil {
+					if filetypeSlice, ok := v["filetype"].([]interface{}); ok {
+						dataFiletype = strings.Join(toStringList(filetypeSlice), ";")
+					}
+				}
+				if dataFiletype == filetype {
+					foundIndex = i
+					break
+				}
 			}
 		}
 	}
@@ -191,6 +216,7 @@ func readAppfwprofile_fileuploadtype_bindingFunc(ctx context.Context, d *schema.
 	d.Set("resourceid", data["resourceid"])
 	d.Set("ruletype", data["ruletype"])
 	d.Set("state", data["state"])
+	d.Set("isnameregex", data["isnameregex"])
 	return nil
 
 }
@@ -200,7 +226,7 @@ func deleteAppfwprofile_fileuploadtype_bindingFunc(ctx context.Context, d *schem
 	client := meta.(*NetScalerNitroClient).client
 
 	bindingId := d.Id()
-	idSlice := strings.SplitN(bindingId, ",", 3)
+	idSlice := strings.Split(bindingId, ",")
 
 	name := idSlice[0]
 	fileuploadtype := idSlice[1]
@@ -208,12 +234,9 @@ func deleteAppfwprofile_fileuploadtype_bindingFunc(ctx context.Context, d *schem
 
 	args := make([]string, 0)
 	args = append(args, fmt.Sprintf("fileuploadtype:%s", fileuploadtype))
-	args = append(args, fmt.Sprintf("as_fileuploadtypes_url:%s", as_fileuploadtypes_url))
-	if val, ok := d.GetOk("fileuploadtype"); ok {
-		args = append(args, fmt.Sprintf("fileuploadtype:%s", url.QueryEscape(val.(string))))
-	}
-	if val, ok := d.GetOk("filetype"); ok {
-		args = append(args, fmt.Sprintf("filetype:%v", url.QueryEscape(strings.Join((toStringList((val).([]interface{}))), " "))))
+	args = append(args, fmt.Sprintf("as_fileuploadtypes_url:%s", url.QueryEscape(as_fileuploadtypes_url)))
+	if _, ok := d.GetOk("filetype"); ok {
+		args = append(args, fmt.Sprintf("filetype:%s", strings.Join(toStringList(d.Get("filetype").([]interface{})), ";")))
 	}
 	if val, ok := d.GetOk("ruletype"); ok {
 		args = append(args, fmt.Sprintf("ruletype:%s", url.QueryEscape(val.(string))))

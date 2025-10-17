@@ -44,7 +44,7 @@ type Contentinspectioncallout struct {
 	/**
 	* Port of the Content Inspection server.
 	*/
-	Serverport int `json:"serverport,omitempty"`
+	Serverport *int `json:"serverport,omitempty"`
 	/**
 	* Type of data that the target callout agent returns in response to the callout.
 		Available settings function as follows:

@@ -43,11 +43,13 @@ func createLacpFunc(ctx context.Context, d *schema.ResourceData, meta interface{
 	client := meta.(*NetScalerNitroClient).client
 	lacpId := strconv.Itoa(d.Get("ownernode").(int))
 
-	lacp := network.Lacp{
-		Syspriority: d.Get("syspriority").(int),
+	lacp := network.Lacp{}
+
+	if raw := d.GetRawConfig().GetAttr("syspriority"); !raw.IsNull() {
+		lacp.Syspriority = intPtr(d.Get("syspriority").(int))
 	}
 	if _, ok := d.GetOk("ownernode"); ok {
-		lacp.Ownernode = d.Get("ownernode").(int)
+		lacp.Ownernode = intPtr(d.Get("ownernode").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Lacp.Type(), &lacp)
@@ -84,14 +86,16 @@ func updateLacpFunc(ctx context.Context, d *schema.ResourceData, meta interface{
 	client := meta.(*NetScalerNitroClient).client
 	lacpId := d.Id()
 
-	lacp := network.Lacp{
-		Ownernode: d.Get("ownernode").(int),
+	lacp := network.Lacp{}
+
+	if raw := d.GetRawConfig().GetAttr("ownernode"); !raw.IsNull() {
+		lacp.Ownernode = intPtr(d.Get("ownernode").(int))
 	}
 	hasChange := false
 
 	if d.HasChange("syspriority") {
 		log.Printf("[DEBUG]  citrixadc-provider: Syspriority has changed for lacp, starting update %s", lacpId)
-		lacp.Syspriority = d.Get("syspriority").(int)
+		lacp.Syspriority = intPtr(d.Get("syspriority").(int))
 		hasChange = true
 	}
 

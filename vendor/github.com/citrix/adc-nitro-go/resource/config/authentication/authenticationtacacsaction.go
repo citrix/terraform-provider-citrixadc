@@ -34,11 +34,11 @@ type Authenticationtacacsaction struct {
 	/**
 	* Port number on which the TACACS+ server listens for connections.
 	*/
-	Serverport int `json:"serverport,omitempty"`
+	Serverport *int `json:"serverport,omitempty"`
 	/**
 	* Number of seconds the Citrix ADC waits for a response from the TACACS+ server.
 	*/
-	Authtimeout int `json:"authtimeout,omitempty"`
+	Authtimeout *int `json:"authtimeout,omitempty"`
 	/**
 	* Key shared between the TACACS+ server and the Citrix ADC.
 		Required for allowing the Citrix ADC to communicate with the TACACS+ server.

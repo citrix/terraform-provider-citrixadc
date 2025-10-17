@@ -17,13 +17,13 @@ import (
 type nsip struct {
 	Advertiseondefaultpartition string      `json:"advertiseondefaultpartition,omitempty"`
 	Arp                         string      `json:"arp,omitempty"`
-	Arpowner                    int         `json:"arpowner,omitempty"`
+	Arpowner                    *int        `json:"arpowner,omitempty"`
 	Arpresponse                 string      `json:"arpresponse,omitempty"`
 	Bgp                         string      `json:"bgp,omitempty"`
 	Decrementttl                string      `json:"decrementttl,omitempty"`
 	Dynamicrouting              string      `json:"dynamicrouting,omitempty"`
-	Flags                       int         `json:"flags,omitempty"`
-	Freeports                   int         `json:"freeports,omitempty"`
+	Flags                       *int        `json:"flags,omitempty"`
+	Freeports                   *int        `json:"freeports,omitempty"`
 	Ftp                         string      `json:"ftp,omitempty"`
 	Gui                         string      `json:"gui,omitempty"`
 	Hostroute                   string      `json:"hostroute,omitempty"`
@@ -33,33 +33,33 @@ type nsip struct {
 	Icmpresponse                string      `json:"icmpresponse,omitempty"`
 	Ipaddress                   string      `json:"ipaddress,omitempty"`
 	Iptype                      interface{} `json:"iptype,omitempty"`
-	Metric                      int         `json:"metric,omitempty"`
+	Metric                      *int        `json:"metric,omitempty"`
 	Mgmtaccess                  string      `json:"mgmtaccess,omitempty"`
 	Netmask                     string      `json:"netmask,omitempty"`
 	Networkroute                string      `json:"networkroute,omitempty"`
-	Operationalarpowner         int         `json:"operationalarpowner,omitempty"`
+	Operationalarpowner         *int        `json:"operationalarpowner,omitempty"`
 	Ospf                        string      `json:"ospf,omitempty"`
-	Ospfarea                    int         `json:"ospfarea,omitempty"`
-	Ospfareaval                 int         `json:"ospfareaval,omitempty"`
+	Ospfarea                    *int        `json:"ospfarea,omitempty"`
+	Ospfareaval                 *int        `json:"ospfareaval,omitempty"`
 	Ospflsatype                 string      `json:"ospflsatype,omitempty"`
 	Ownerdownresponse           string      `json:"ownerdownresponse,omitempty"`
 	Ownernode                   string      `json:"ownernode,omitempty"`
 	Restrictaccess              string      `json:"restrictaccess,omitempty"`
 	Rip                         string      `json:"rip,omitempty"`
-	Riserhimsgcode              int         `json:"riserhimsgcode,omitempty"`
+	Riserhimsgcode              *int        `json:"riserhimsgcode,omitempty"`
 	Snmp                        string      `json:"snmp,omitempty"`
 	Ssh                         string      `json:"ssh,omitempty"`
 	State                       string      `json:"state,omitempty"`
-	Tag                         int         `json:"tag,omitempty"`
-	Td                          int         `json:"td,omitempty"`
+	Tag                         *int        `json:"tag,omitempty"`
+	Td                          *int        `json:"td,omitempty"`
 	Telnet                      string      `json:"telnet,omitempty"`
 	Type                        string      `json:"type,omitempty"`
 	Viprtadv2bsd                bool        `json:"viprtadv2bsd,omitempty"`
-	Vipvsercount                int         `json:"vipvsercount,omitempty"`
-	Vipvserdowncount            int         `json:"vipvserdowncount,omitempty"`
-	Vipvsrvrrhiactivecount      int         `json:"vipvsrvrrhiactivecount,omitempty"`
-	Vipvsrvrrhiactiveupcount    int         `json:"vipvsrvrrhiactiveupcount,omitempty"`
-	Vrid                        int         `json:"vrid,omitempty"`
+	Vipvsercount                *int        `json:"vipvsercount,omitempty"`
+	Vipvserdowncount            *int        `json:"vipvserdowncount,omitempty"`
+	Vipvsrvrrhiactivecount      *int        `json:"vipvsrvrrhiactivecount,omitempty"`
+	Vipvsrvrrhiactiveupcount    *int        `json:"vipvsrvrrhiactiveupcount,omitempty"`
+	Vrid                        *int        `json:"vrid,omitempty"`
 	Vserver                     string      `json:"vserver,omitempty"`
 	Vserverrhilevel             string      `json:"vserverrhilevel,omitempty"`
 	Vserverrhimode              string      `json:"vserverrhimode,omitempty"`
@@ -285,12 +285,10 @@ func createNsipFunc(ctx context.Context, d *schema.ResourceData, meta interface{
 		Icmp:                        d.Get("icmp").(string),
 		Icmpresponse:                d.Get("icmpresponse").(string),
 		Ipaddress:                   ipaddress,
-		Metric:                      d.Get("metric").(int),
 		Mgmtaccess:                  d.Get("mgmtaccess").(string),
 		Netmask:                     d.Get("netmask").(string),
 		Networkroute:                d.Get("networkroute").(string),
 		Ospf:                        d.Get("ospf").(string),
-		Ospfarea:                    d.Get("ospfarea").(int),
 		Ospflsatype:                 d.Get("ospflsatype").(string),
 		Ownerdownresponse:           d.Get("ownerdownresponse").(string),
 		Ownernode:                   d.Get("ownernode").(string),
@@ -299,15 +297,27 @@ func createNsipFunc(ctx context.Context, d *schema.ResourceData, meta interface{
 		Snmp:                        d.Get("snmp").(string),
 		Ssh:                         d.Get("ssh").(string),
 		State:                       d.Get("state").(string),
-		Tag:                         d.Get("tag").(int),
-		Td:                          d.Get("td").(int),
 		Telnet:                      d.Get("telnet").(string),
 		Type:                        d.Get("type").(string),
-		Vrid:                        d.Get("vrid").(int),
 		Vserver:                     d.Get("vserver").(string),
 		Vserverrhilevel:             d.Get("vserverrhilevel").(string),
 		Vserverrhimode:              d.Get("vserverrhimode").(string),
 		Mptcpadvertise:              d.Get("mptcpadvertise").(string),
+	}
+	if raw := d.GetRawConfig().GetAttr("metric"); !raw.IsNull() {
+		nsip.Metric = intPtr(d.Get("metric").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("ospfarea"); !raw.IsNull() {
+		nsip.Ospfarea = intPtr(d.Get("ospfarea").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("tag"); !raw.IsNull() {
+		nsip.Tag = intPtr(d.Get("tag").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("td"); !raw.IsNull() {
+		nsip.Td = intPtr(d.Get("td").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("vrid"); !raw.IsNull() {
+		nsip.Vrid = intPtr(d.Get("vrid").(int))
 	}
 
 	_, err := client.AddResource(service.Nsip.Type(), ipaddress, &nsip)
@@ -444,7 +454,7 @@ func updateNsipFunc(ctx context.Context, d *schema.ResourceData, meta interface{
 	}
 	if d.HasChange("metric") {
 		log.Printf("[DEBUG]  citrixadc-provider: Metric has changed for nsip %s, starting update", ipaddress)
-		nsip.Metric = d.Get("metric").(int)
+		nsip.Metric = intPtr(d.Get("metric").(int))
 		hasChange = true
 	}
 	if d.HasChange("mgmtaccess") {
@@ -464,7 +474,7 @@ func updateNsipFunc(ctx context.Context, d *schema.ResourceData, meta interface{
 	}
 	if d.HasChange("ospfarea") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ospfarea has changed for nsip %s, starting update", ipaddress)
-		nsip.Ospfarea = d.Get("ospfarea").(int)
+		nsip.Ospfarea = intPtr(d.Get("ospfarea").(int))
 		hasChange = true
 	}
 	if d.HasChange("ospflsatype") {
@@ -509,12 +519,12 @@ func updateNsipFunc(ctx context.Context, d *schema.ResourceData, meta interface{
 	}
 	if d.HasChange("tag") {
 		log.Printf("[DEBUG]  citrixadc-provider: Tag has changed for nsip %s, starting update", ipaddress)
-		nsip.Tag = d.Get("tag").(int)
+		nsip.Tag = intPtr(d.Get("tag").(int))
 		hasChange = true
 	}
 	if d.HasChange("td") {
 		log.Printf("[DEBUG]  citrixadc-provider: Td has changed for nsip %s, starting update", ipaddress)
-		nsip.Td = d.Get("td").(int)
+		nsip.Td = intPtr(d.Get("td").(int))
 		hasChange = true
 	}
 	if d.HasChange("telnet") {
@@ -529,7 +539,7 @@ func updateNsipFunc(ctx context.Context, d *schema.ResourceData, meta interface{
 	}
 	if d.HasChange("vrid") {
 		log.Printf("[DEBUG]  citrixadc-provider: Vrid has changed for nsip %s, starting update", ipaddress)
-		nsip.Vrid = d.Get("vrid").(int)
+		nsip.Vrid = intPtr(d.Get("vrid").(int))
 		hasChange = true
 	}
 	if d.HasChange("vserver") {
@@ -590,7 +600,7 @@ func doNsipStateChange(d *schema.ResourceData, client *service.NitroClient) erro
 	// ActOnResource will fail if we put in superfluous attributes
 	nsip := nsip{
 		Ipaddress: d.Get("ipaddress").(string),
-		Td:        d.Get("td").(int),
+		Td:        intPtr(d.Get("td").(int)),
 	}
 
 	newstate := d.Get("state")

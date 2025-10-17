@@ -17,49 +17,30 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccAppfwprofile_xmlsqlinjection_binding_basic = `
 	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
 		name                     = "tf_appfwprofile"
-		bufferoverflowaction     = ["none"]
-		contenttypeaction        = ["none"]
-		cookieconsistencyaction  = ["none"]
-		creditcard               = ["none"]
-		creditcardaction         = ["none"]
-		crosssitescriptingaction = ["none"]
-		csrftagaction            = ["none"]
-		denyurlaction            = ["none"]
-		dynamiclearning          = ["none"]
-		fieldconsistencyaction   = ["none"]
-		fieldformataction        = ["none"]
-		fileuploadtypesaction    = ["none"]
-		inspectcontenttypes      = ["none"]
-		jsondosaction            = ["none"]
-		jsonsqlinjectionaction   = ["none"]
-		jsonxssaction            = ["none"]
-		multipleheaderaction     = ["none"]
-		sqlinjectionaction       = ["none"]
-		starturlaction           = ["none"]
 		type                     = ["HTML"]
-		xmlattachmentaction      = ["none"]
-		xmldosaction             = ["none"]
-		xmlformataction          = ["none"]
-		xmlsoapfaultaction       = ["none"]
-		xmlsqlinjectionaction    = ["none"]
-		xmlvalidationaction      = ["none"]
-		xmlwsiaction             = ["none"]
-		xmlxssaction             = ["none"]
 	}
-	resource "citrixadc_appfwprofile_xmlsqlinjection_binding" "tf_binding" {
+	resource "citrixadc_appfwprofile_xmlsqlinjection_binding" "tf_binding1" {
 		name                    = citrixadc_appfwprofile.tf_appfwprofile.name
 		xmlsqlinjection         = "hello"
-		as_scan_location_xmlsql = "ELEMENT"
+		alertonly               = "ON"
+		isautodeployed          = "AUTODEPLOYED"
+		state                   = "ENABLED"
+		comment                 = "Testing"
+	}
+	resource "citrixadc_appfwprofile_xmlsqlinjection_binding" "tf_binding2" {
+		name                    = citrixadc_appfwprofile.tf_appfwprofile.name
+		xmlsqlinjection         = "world"
 		alertonly               = "ON"
 		isautodeployed          = "AUTODEPLOYED"
 		state                   = "ENABLED"
@@ -71,34 +52,7 @@ const testAccAppfwprofile_xmlsqlinjection_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
 	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
 		name                     = "tf_appfwprofile"
-		bufferoverflowaction     = ["none"]
-		contenttypeaction        = ["none"]
-		cookieconsistencyaction  = ["none"]
-		creditcard               = ["none"]
-		creditcardaction         = ["none"]
-		crosssitescriptingaction = ["none"]
-		csrftagaction            = ["none"]
-		denyurlaction            = ["none"]
-		dynamiclearning          = ["none"]
-		fieldconsistencyaction   = ["none"]
-		fieldformataction        = ["none"]
-		fileuploadtypesaction    = ["none"]
-		inspectcontenttypes      = ["none"]
-		jsondosaction            = ["none"]
-		jsonsqlinjectionaction   = ["none"]
-		jsonxssaction            = ["none"]
-		multipleheaderaction     = ["none"]
-		sqlinjectionaction       = ["none"]
-		starturlaction           = ["none"]
 		type                     = ["HTML"]
-		xmlattachmentaction      = ["none"]
-		xmldosaction             = ["none"]
-		xmlformataction          = ["none"]
-		xmlsoapfaultaction       = ["none"]
-		xmlsqlinjectionaction    = ["none"]
-		xmlvalidationaction      = ["none"]
-		xmlwsiaction             = ["none"]
-		xmlxssaction             = ["none"]
 	}
 `
 
@@ -111,13 +65,29 @@ func TestAccAppfwprofile_xmlsqlinjection_binding_basic(t *testing.T) {
 			{
 				Config: testAccAppfwprofile_xmlsqlinjection_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppfwprofile_xmlsqlinjection_bindingExist("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding", nil),
+					testAccCheckAppfwprofile_xmlsqlinjection_bindingExist("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding1", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding1", "name", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding1", "xmlsqlinjection", "hello"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding1", "alertonly", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding1", "isautodeployed", "AUTODEPLOYED"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding1", "state", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding1", "comment", "Testing"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding1", "as_scan_location_xmlsql", "ELEMENT"),
+					testAccCheckAppfwprofile_xmlsqlinjection_bindingExist("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding2", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding2", "name", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding2", "xmlsqlinjection", "world"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding2", "alertonly", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding2", "isautodeployed", "AUTODEPLOYED"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding2", "state", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding2", "comment", "Testing"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding2", "as_scan_location_xmlsql", "ELEMENT"),
 				),
 			},
 			{
 				Config: testAccAppfwprofile_xmlsqlinjection_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppfwprofile_xmlsqlinjection_bindingNotExist("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding", "tf_appfwprofile,hello", "ELEMENT"),
+					testAccCheckAppfwprofile_xmlsqlinjection_bindingNotExist("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding1", "tf_appfwprofile,hello", "ELEMENT"),
+					testAccCheckAppfwprofile_xmlsqlinjection_bindingNotExist("citrixadc_appfwprofile_xmlsqlinjection_binding.tf_binding2", "tf_appfwprofile,world", "ELEMENT"),
 				),
 			},
 		},
@@ -151,11 +121,11 @@ func testAccCheckAppfwprofile_xmlsqlinjection_bindingExist(n string, id *string)
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
+		idSlice := strings.Split(bindingId, ",")
 
 		name := idSlice[0]
 		xmlsqlinjection := idSlice[1]
-		locationName := rs.Primary.Attributes["as_scan_location_xmlsql"]
+		locationName := idSlice[2]
 		findParams := service.FindParams{
 			ResourceType:             "appfwprofile_xmlsqlinjection_binding",
 			ResourceName:             name,
@@ -198,7 +168,7 @@ func testAccCheckAppfwprofile_xmlsqlinjection_bindingNotExist(n string, id strin
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
+		idSlice := strings.Split(id, ",")
 
 		name := idSlice[0]
 		xmlsqlinjection := idSlice[1]
@@ -250,9 +220,14 @@ func testAccCheckAppfwprofile_xmlsqlinjection_bindingDestroy(s *terraform.State)
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := client.FindResource(service.Appfwprofile_xmlsqlinjection_binding.Type(), rs.Primary.ID)
+		bindingId := rs.Primary.ID
+
+		idSlice := strings.Split(bindingId, ",")
+
+		name := idSlice[0]
+		_, err := client.FindResource(service.Appfwprofile_xmlsqlinjection_binding.Type(), name)
 		if err == nil {
-			return fmt.Errorf("appfwprofile_xmlsqlinjection_binding %s still exists", rs.Primary.ID)
+			return fmt.Errorf("appfwprofile_xmlsqlinjection_binding %s still exists", name)
 		}
 
 	}

@@ -59,10 +59,13 @@ func createVlan_interface_bindingFunc(ctx context.Context, d *schema.ResourceDat
 	ifnum := d.Get("ifnum").(string)
 	bindingId := fmt.Sprintf("%s,%s", vlanid, ifnum)
 	vlan_interface_binding := network.Vlaninterfacebinding{
-		Id:         d.Get("vlanid").(int),
 		Ifnum:      d.Get("ifnum").(string),
 		Ownergroup: d.Get("ownergroup").(string),
 		Tagged:     d.Get("tagged").(bool),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("vlanid"); !raw.IsNull() {
+		vlan_interface_binding.Id = intPtr(d.Get("vlanid").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Vlan_interface_binding.Type(), &vlan_interface_binding)

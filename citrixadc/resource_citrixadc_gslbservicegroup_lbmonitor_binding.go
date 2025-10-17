@@ -98,17 +98,26 @@ func createGslbservicegroup_lbmonitor_bindingFunc(ctx context.Context, d *schema
 
 	bindingId := fmt.Sprintf("%s,%s", servicegroupname, monitor_name)
 	gslbservicegroup_lbmonitor_binding := gslb.Gslbservicegrouplbmonitorbinding{
-		Hashid:           d.Get("hashid").(int),
 		Monitorname:      d.Get("monitor_name").(string),
 		Monstate:         d.Get("monstate").(string),
 		Passive:          d.Get("passive").(bool),
-		Port:             d.Get("port").(int),
 		Publicip:         d.Get("publicip").(string),
-		Publicport:       d.Get("publicport").(int),
 		Servicegroupname: d.Get("servicegroupname").(string),
 		Siteprefix:       d.Get("siteprefix").(string),
 		State:            d.Get("state").(string),
-		Weight:           d.Get("weight").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("hashid"); !raw.IsNull() {
+		gslbservicegroup_lbmonitor_binding.Hashid = intPtr(d.Get("hashid").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("port"); !raw.IsNull() {
+		gslbservicegroup_lbmonitor_binding.Port = intPtr(d.Get("port").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("publicport"); !raw.IsNull() {
+		gslbservicegroup_lbmonitor_binding.Publicport = intPtr(d.Get("publicport").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("weight"); !raw.IsNull() {
+		gslbservicegroup_lbmonitor_binding.Weight = intPtr(d.Get("weight").(int))
 	}
 
 	err := client.UpdateUnnamedResource("gslbservicegroup_lbmonitor_binding", &gslbservicegroup_lbmonitor_binding)

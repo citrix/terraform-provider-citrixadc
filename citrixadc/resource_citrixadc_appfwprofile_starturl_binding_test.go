@@ -30,34 +30,7 @@ import (
 const testAccAppfwprofile_starturl_binding_basic = `
 	resource citrixadc_appfwprofile demo_appfw {
 		name = "tfAcc_appfwprofile"
-		bufferoverflowaction = ["none"]
-		contenttypeaction = ["none"]
-		cookieconsistencyaction = ["none"]
-		creditcard = ["none"]
-		creditcardaction = ["none"]
-		crosssitescriptingaction = ["none"]
-		csrftagaction = ["none"]
-		denyurlaction = ["none"]
-		dynamiclearning = ["none"]
-		fieldconsistencyaction = ["none"]
-		fieldformataction = ["none"]
-		fileuploadtypesaction = ["none"]
-		inspectcontenttypes = ["none"]
-		jsondosaction = ["none"]
-		jsonsqlinjectionaction = ["none"]
-		jsonxssaction = ["none"]
-		multipleheaderaction = ["none"]
-		sqlinjectionaction = ["none"]
-		starturlaction = ["none"]
 		type = ["HTML"]
-		xmlattachmentaction = ["none"]
-		xmldosaction = ["none"]
-		xmlformataction = ["none"]
-		xmlsoapfaultaction = ["none"]
-		xmlsqlinjectionaction = ["none"]
-		xmlvalidationaction = ["none"]
-		xmlwsiaction = ["none"]
-		xmlxssaction = ["none"]
 	}
 
 	resource citrixadc_appfwprofile_starturl_binding appfwprofile_starturl1 {
@@ -66,6 +39,20 @@ const testAccAppfwprofile_starturl_binding_basic = `
 		alertonly      = "OFF"
 		isautodeployed = "NOTAUTODEPLOYED"
 		state          = "ENABLED"
+	}
+
+	resource citrixadc_appfwprofile_starturl_binding appfwprofile_starturl2 {
+		name = citrixadc_appfwprofile.demo_appfw.name
+		starturl = "^[^?]+[.](html?|shtml|js|gif|jpg|jpeg|png|swf|pdf|css|csv)$"
+		alertonly      = "OFF"
+		isautodeployed = "NOTAUTODEPLOYED"
+		state          = "ENABLED"
+	}
+`
+const testAccAppfwprofile_starturl_binding_basic_step2 = `
+	resource citrixadc_appfwprofile demo_appfw {
+		name = "tfAcc_appfwprofile"
+		type = ["HTML"]
 	}
 `
 
@@ -81,6 +68,22 @@ func TestAccAppfwprofile_starturl_binding_basic(t *testing.T) {
 					testAccCheckAppfwprofile_starturl_bindingExist("citrixadc_appfwprofile_starturl_binding.appfwprofile_starturl1", nil),
 					resource.TestCheckResourceAttr("citrixadc_appfwprofile_starturl_binding.appfwprofile_starturl1", "name", "tfAcc_appfwprofile"),
 					resource.TestCheckResourceAttr("citrixadc_appfwprofile_starturl_binding.appfwprofile_starturl1", "starturl", "^[^?]+[.](html?|shtml|js|gif|jpg|jpeg|png|swf|pif|pdf|css|csv)$"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_starturl_binding.appfwprofile_starturl1", "alertonly", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_starturl_binding.appfwprofile_starturl1", "isautodeployed", "NOTAUTODEPLOYED"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_starturl_binding.appfwprofile_starturl1", "state", "ENABLED"),
+					testAccCheckAppfwprofile_starturl_bindingExist("citrixadc_appfwprofile_starturl_binding.appfwprofile_starturl2", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_starturl_binding.appfwprofile_starturl2", "name", "tfAcc_appfwprofile"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_starturl_binding.appfwprofile_starturl2", "starturl", "^[^?]+[.](html?|shtml|js|gif|jpg|jpeg|png|swf|pdf|css|csv)$"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_starturl_binding.appfwprofile_starturl2", "alertonly", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_starturl_binding.appfwprofile_starturl2", "isautodeployed", "NOTAUTODEPLOYED"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_starturl_binding.appfwprofile_starturl2", "state", "ENABLED"),
+				),
+			},
+			{
+				Config: testAccAppfwprofile_starturl_binding_basic_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwprofile_starturl_bindingNotExist("citrixadc_appfwprofile_starturl_binding.appfwprofile_starturl1", "tfAcc_appfwprofile,^[^?]+[.](html?|shtml|js|gif|jpg|jpeg|png|swf|pif|pdf|css|csv)$"),
+					testAccCheckAppfwprofile_starturl_bindingNotExist("citrixadc_appfwprofile_starturl_binding.appfwprofile_starturl2", "tfAcc_appfwprofile,^[^?]+[.](html?|shtml|js|gif|jpg|jpeg|png|swf|pdf|css|csv)$"),
 				),
 			},
 		},
@@ -136,6 +139,53 @@ func testAccCheckAppfwprofile_starturl_bindingExist(n string, id *string) resour
 
 		if data == nil {
 			return fmt.Errorf("appfwprofile_starturl_binding %s not found", n)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAppfwprofile_starturl_bindingNotExist(n string, id string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		// Use the shared utility function to get a configured client
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+
+		if !strings.Contains(id, ",") {
+			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
+		}
+		idSlice := strings.SplitN(id, ",", 3)
+
+		name := idSlice[0]
+		starturl := idSlice[1]
+
+		findParams := service.FindParams{
+			ResourceType:             "appfwprofile_starturl_binding",
+			ResourceName:             name,
+			ResourceMissingErrorCode: 258,
+		}
+		findParams.FilterMap = make(map[string]string)
+		findParams.FilterMap["starturl"] = url.QueryEscape(starturl)
+		dataArr, err := client.FindResourceArrayWithParams(findParams)
+
+		// Unexpected error
+		if err != nil {
+			return err
+		}
+
+		// Iterate through results to hopefully not find the one with the matching secondIdComponent
+		found := false
+		for _, v := range dataArr {
+			if v["starturl"].(string) == starturl {
+				found = true
+				break
+			}
+		}
+
+		if found {
+			return fmt.Errorf("appfwprofile_starturl_binding %s was found, but it should have been destroyed", n)
 		}
 
 		return nil

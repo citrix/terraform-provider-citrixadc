@@ -36,8 +36,10 @@ func createExtendedmemoryparamFunc(ctx context.Context, d *schema.ResourceData, 
 	client := meta.(*NetScalerNitroClient).client
 	var extendedmemoryparamName string
 	extendedmemoryparamName = resource.PrefixedUniqueId("tf-extendedmemoryparam-")
-	extendedmemoryparam := basic.Extendedmemoryparam{
-		Memlimit: d.Get("memlimit").(int),
+	extendedmemoryparam := basic.Extendedmemoryparam{}
+
+	if raw := d.GetRawConfig().GetAttr("memlimit"); !raw.IsNull() {
+		extendedmemoryparam.Memlimit = intPtr(d.Get("memlimit").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Extendedmemoryparam.Type(), &extendedmemoryparam)
@@ -74,7 +76,7 @@ func updateExtendedmemoryparamFunc(ctx context.Context, d *schema.ResourceData, 
 	hasChange := false
 	if d.HasChange("memlimit") {
 		log.Printf("[DEBUG]  citrixadc-provider: Memlimit has changed for extendedmemoryparam , starting update")
-		extendedmemoryparam.Memlimit = d.Get("memlimit").(int)
+		extendedmemoryparam.Memlimit = intPtr(d.Get("memlimit").(int))
 		hasChange = true
 	}
 

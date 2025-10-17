@@ -93,8 +93,11 @@ func createCsvserver_contentinspectionpolicy_bindingFunc(ctx context.Context, d 
 		Labeltype:              d.Get("labeltype").(string),
 		Name:                   d.Get("name").(string),
 		Policyname:             d.Get("policyname").(string),
-		Priority:               d.Get("priority").(int),
 		Targetlbvserver:        d.Get("targetlbvserver").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		csvserver_contentinspectionpolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	_, err := client.AddResource("csvserver_contentinspectionpolicy_binding", name, &csvserver_contentinspectionpolicy_binding)

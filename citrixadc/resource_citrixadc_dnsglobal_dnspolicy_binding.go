@@ -85,8 +85,11 @@ func createDnsglobal_dnspolicy_bindingFunc(ctx context.Context, d *schema.Resour
 		Labelname:              d.Get("labelname").(string),
 		Labeltype:              d.Get("labeltype").(string),
 		Policyname:             policyname,
-		Priority:               d.Get("priority").(int),
 		Type:                   d.Get("type").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		dnsglobal_dnspolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Dnsglobal_dnspolicy_binding.Type(), &dnsglobal_dnspolicy_binding)

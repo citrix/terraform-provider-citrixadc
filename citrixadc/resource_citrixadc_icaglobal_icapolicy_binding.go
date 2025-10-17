@@ -60,8 +60,11 @@ func createIcaglobal_icapolicy_bindingFunc(ctx context.Context, d *schema.Resour
 		Globalbindtype:         d.Get("globalbindtype").(string),
 		Gotopriorityexpression: d.Get("gotopriorityexpression").(string),
 		Policyname:             d.Get("policyname").(string),
-		Priority:               d.Get("priority").(int),
 		Type:                   d.Get("type").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		icaglobal_icapolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	err := client.UpdateUnnamedResource("icaglobal_icapolicy_binding", &icaglobal_icapolicy_binding)

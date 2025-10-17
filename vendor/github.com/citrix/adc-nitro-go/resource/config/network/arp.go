@@ -27,7 +27,7 @@ type Arp struct {
 	/**
 	* Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.
 	*/
-	Td int `json:"td"` // Zero is a valid value
+	Td *int `json:"td"` // Zero is a valid value
 	/**
 	* MAC address of the network device.
 	*/
@@ -39,7 +39,7 @@ type Arp struct {
 	/**
 	* ID of the VXLAN on which the IP address of this ARP entry is reachable.
 	*/
-	Vxlan int `json:"vxlan,omitempty"`
+	Vxlan *int `json:"vxlan,omitempty"`
 	/**
 	* IP address of the VXLAN tunnel endpoint (VTEP) through which the IP address of this ARP entry is reachable.
 	*/
@@ -47,11 +47,11 @@ type Arp struct {
 	/**
 	* The VLAN ID through which packets are to be sent after matching the ARP entry. This is a numeric value.
 	*/
-	Vlan int `json:"vlan,omitempty"`
+	Vlan *int `json:"vlan,omitempty"`
 	/**
 	* The owner node for the Arp entry.
 	*/
-	Ownernode int `json:"ownernode"` // Zero is a valid value
+	Ownernode *int `json:"ownernode"` // Zero is a valid value
 	/**
 	* Remove all ARP entries from the ARP table of the Citrix ADC.
 	*/
@@ -59,7 +59,7 @@ type Arp struct {
 	/**
 	* Unique number that identifies the cluster node.
 	*/
-	Nodeid int `json:"nodeid"` // Zero is a valid value
+	Nodeid *int `json:"nodeid"` // Zero is a valid value
 
 	//------- Read only Parameter ---------;
 

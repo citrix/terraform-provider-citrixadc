@@ -113,7 +113,10 @@ func createVpnintranetapplicationFunc(ctx context.Context, d *schema.ResourceDat
 		Protocol:            d.Get("protocol").(string),
 		Spoofiip:            d.Get("spoofiip").(string),
 		Srcip:               d.Get("srcip").(string),
-		Srcport:             d.Get("srcport").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("srcport"); !raw.IsNull() {
+		vpnintranetapplication.Srcport = intPtr(d.Get("srcport").(int))
 	}
 
 	_, err := client.AddResource(service.Vpnintranetapplication.Type(), vpnintranetapplicationName, &vpnintranetapplication)

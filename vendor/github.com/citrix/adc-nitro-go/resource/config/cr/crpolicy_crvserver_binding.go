@@ -27,15 +27,15 @@ type Crpolicycrvserverbinding struct {
 	/**
 	* priority of bound policy
 	*/
-	Priority int `json:"priority,omitempty"`
+	Priority *int `json:"priority,omitempty"`
 	/**
 	* Total number of hits.
 	*/
-	Hits int `json:"hits,omitempty"`
+	Hits *int `json:"hits,omitempty"`
 	/**
 	* Total number of hits.
 	*/
-	Bindhits int `json:"bindhits,omitempty"`
+	Bindhits *int `json:"bindhits,omitempty"`
 	/**
 	* The invocation type.
 	*/

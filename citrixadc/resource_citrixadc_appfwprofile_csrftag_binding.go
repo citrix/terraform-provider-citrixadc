@@ -49,8 +49,7 @@ func resourceCitrixAdcAppfwprofile_csrftag_binding() *schema.Resource {
 			},
 			"csrfformactionurl": {
 				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Required: true,
 				ForceNew: true,
 			},
 			"isautodeployed": {
@@ -84,16 +83,17 @@ func resourceCitrixAdcAppfwprofile_csrftag_binding() *schema.Resource {
 func createAppfwprofile_csrftag_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppfwprofile_csrftag_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
-	name := d.Get("name")
-	csrftag := d.Get("csrftag")
-	bindingId := fmt.Sprintf("%s,%s", name, csrftag)
+	appFwName := d.Get("name").(string)
+	csrftag := d.Get("csrftag").(string)
+	csrfformactionurl := d.Get("csrfformactionurl").(string)
+	bindingId := fmt.Sprintf("%s,%s,%s", appFwName, csrftag, csrfformactionurl)
 	appfwprofile_csrftag_binding := appfw.Appfwprofilecsrftagbinding{
 		Alertonly:         d.Get("alertonly").(string),
 		Comment:           d.Get("comment").(string),
 		Csrfformactionurl: d.Get("csrfformactionurl").(string),
 		Csrftag:           d.Get("csrftag").(string),
 		Isautodeployed:    d.Get("isautodeployed").(string),
-		Name:              d.Get("name").(string),
+		Name:              appFwName,
 		Resourceid:        d.Get("resourceid").(string),
 		Ruletype:          d.Get("ruletype").(string),
 		State:             d.Get("state").(string),
@@ -113,16 +113,23 @@ func readAppfwprofile_csrftag_bindingFunc(ctx context.Context, d *schema.Resourc
 	log.Printf("[DEBUG] citrixadc-provider:  In readAppfwprofile_csrftag_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
 	bindingId := d.Id()
-	idSlice := strings.SplitN(bindingId, ",", 2)
-
-	name := idSlice[0]
+	log.Printf("[DEBUG] citrixadc-provider: readAppfwprofile_csrftag_bindingFunc: bindingId: %s", bindingId)
+	idSlice := strings.Split(bindingId, ",")
+	appFwName := idSlice[0]
 	csrftag := idSlice[1]
-
+	csrfformactionurl := ""
+	if len(idSlice) > 2 {
+		csrfformactionurl = idSlice[2]
+	} else {
+		csrfformactionurl = d.Get("csrfformactionurl").(string)
+		bindingId = fmt.Sprintf("%s,%s", bindingId, csrfformactionurl)
+	}
+	d.SetId(bindingId)
 	log.Printf("[DEBUG] citrixadc-provider: Reading appfwprofile_csrftag_binding state %s", bindingId)
 
 	findParams := service.FindParams{
 		ResourceType:             "appfwprofile_csrftag_binding",
-		ResourceName:             name,
+		ResourceName:             appFwName,
 		ResourceMissingErrorCode: 258,
 	}
 	dataArr, err := client.FindResourceArrayWithParams(findParams)
@@ -141,10 +148,10 @@ func readAppfwprofile_csrftag_bindingFunc(ctx context.Context, d *schema.Resourc
 		return nil
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the right binding
 	foundIndex := -1
 	for i, v := range dataArr {
-		if v["csrftag"].(string) == csrftag {
+		if v["csrftag"].(string) == csrftag && v["csrfformactionurl"].(string) == csrfformactionurl {
 			foundIndex = i
 			break
 		}
@@ -152,7 +159,7 @@ func readAppfwprofile_csrftag_bindingFunc(ctx context.Context, d *schema.Resourc
 
 	// Resource is missing
 	if foundIndex == -1 {
-		log.Printf("[DEBUG] citrixadc-provider: FindResourceArrayWithParams secondIdComponent not found in array")
+		log.Printf("[DEBUG] citrixadc-provider: FindResourceArrayWithParams appfwprofile_csrftag_binding not found in array")
 		log.Printf("[WARN] citrixadc-provider: Clearing appfwprofile_csrftag_binding state %s", bindingId)
 		d.SetId("")
 		return nil
@@ -178,11 +185,9 @@ func readAppfwprofile_csrftag_bindingFunc(ctx context.Context, d *schema.Resourc
 func deleteAppfwprofile_csrftag_bindingFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteAppfwprofile_csrftag_bindingFunc")
 	client := meta.(*NetScalerNitroClient).client
-
 	bindingId := d.Id()
-	idSlice := strings.SplitN(bindingId, ",", 2)
-
-	name := idSlice[0]
+	idSlice := strings.Split(bindingId, ",")
+	appFwName := idSlice[0]
 	csrftag := idSlice[1]
 
 	args := make([]string, 0)
@@ -194,7 +199,7 @@ func deleteAppfwprofile_csrftag_bindingFunc(ctx context.Context, d *schema.Resou
 		args = append(args, fmt.Sprintf("ruletype:%s", url.QueryEscape(val.(string))))
 	}
 
-	err := client.DeleteResourceWithArgs(service.Appfwprofile_csrftag_binding.Type(), name, args)
+	err := client.DeleteResourceWithArgs(service.Appfwprofile_csrftag_binding.Type(), appFwName, args)
 	if err != nil {
 		return diag.FromErr(err)
 	}

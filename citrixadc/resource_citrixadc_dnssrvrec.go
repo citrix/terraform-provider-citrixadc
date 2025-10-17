@@ -82,13 +82,24 @@ func createDnssrvrecFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	dnssrvrec := dns.Dnssrvrec{
 		Domain:    d.Get("domain").(string),
 		Ecssubnet: d.Get("ecssubnet").(string),
-		Nodeid:    d.Get("nodeid").(int),
-		Port:      d.Get("port").(int),
-		Priority:  d.Get("priority").(int),
 		Target:    d.Get("target").(string),
-		Ttl:       d.Get("ttl").(int),
 		Type:      d.Get("type").(string),
-		Weight:    d.Get("weight").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("nodeid"); !raw.IsNull() {
+		dnssrvrec.Nodeid = intPtr(d.Get("nodeid").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("port"); !raw.IsNull() {
+		dnssrvrec.Port = intPtr(d.Get("port").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		dnssrvrec.Priority = intPtr(d.Get("priority").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("ttl"); !raw.IsNull() {
+		dnssrvrec.Ttl = intPtr(d.Get("ttl").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("weight"); !raw.IsNull() {
+		dnssrvrec.Weight = intPtr(d.Get("weight").(int))
 	}
 
 	_, err := client.AddResource(service.Dnssrvrec.Type(), dnssrvrecName, &dnssrvrec)
@@ -177,22 +188,22 @@ func updateDnssrvrecFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("nodeid") {
 		log.Printf("[DEBUG]  citrixadc-provider: Nodeid has changed for dnssrvrec %s, starting update", dnssrvrecName)
-		dnssrvrec.Nodeid = d.Get("nodeid").(int)
+		dnssrvrec.Nodeid = intPtr(d.Get("nodeid").(int))
 		hasChange = true
 	}
 	if d.HasChange("port") {
 		log.Printf("[DEBUG]  citrixadc-provider: Port has changed for dnssrvrec %s, starting update", dnssrvrecName)
-		dnssrvrec.Port = d.Get("port").(int)
+		dnssrvrec.Port = intPtr(d.Get("port").(int))
 		hasChange = true
 	}
 	if d.HasChange("priority") {
 		log.Printf("[DEBUG]  citrixadc-provider: Priority has changed for dnssrvrec %s, starting update", dnssrvrecName)
-		dnssrvrec.Priority = d.Get("priority").(int)
+		dnssrvrec.Priority = intPtr(d.Get("priority").(int))
 		hasChange = true
 	}
 	if d.HasChange("ttl") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ttl has changed for dnssrvrec %s, starting update", dnssrvrecName)
-		dnssrvrec.Ttl = d.Get("ttl").(int)
+		dnssrvrec.Ttl = intPtr(d.Get("ttl").(int))
 		hasChange = true
 	}
 	if d.HasChange("type") {
@@ -202,7 +213,7 @@ func updateDnssrvrecFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("weight") {
 		log.Printf("[DEBUG]  citrixadc-provider: Weight has changed for dnssrvrec %s, starting update", dnssrvrecName)
-		dnssrvrec.Weight = d.Get("weight").(int)
+		dnssrvrec.Weight = intPtr(d.Get("weight").(int))
 		hasChange = true
 	}
 

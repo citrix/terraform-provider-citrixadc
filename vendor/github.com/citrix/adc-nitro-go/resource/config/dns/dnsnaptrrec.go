@@ -27,11 +27,11 @@ type Dnsnaptrrec struct {
 	/**
 	* An integer specifying the order in which the NAPTR records MUST be processed in order to accurately represent the ordered list of Rules. The ordering is from lowest to highest
 	*/
-	Order int `json:"order,omitempty"`
+	Order *int `json:"order,omitempty"`
 	/**
 	* An integer specifying the preference of this NAPTR among NAPTR records having same order. lower the number, higher the preference.
 	*/
-	Preference int `json:"preference,omitempty"`
+	Preference *int `json:"preference,omitempty"`
 	/**
 	* flags for this NAPTR.
 	*/
@@ -51,12 +51,12 @@ type Dnsnaptrrec struct {
 	/**
 	* Time to Live (TTL), in seconds, for the record. TTL is the time for which the record must be cached by DNS proxies. The specified TTL is applied to all the resource records that are of the same record type and belong to the specified domain name. For example, if you add an address record, with a TTL of 36000, to the domain name example.com, the TTLs of all the address records of example.com are changed to 36000. If the TTL is not specified, the Citrix ADC uses either the DNS zone's minimum TTL or, if the SOA record is not available on the appliance, the default value of 3600.
 	*/
-	Ttl int `json:"ttl,omitempty"`
+	Ttl *int `json:"ttl,omitempty"`
 	/**
 	* Unique, internally generated record ID. View the details of the naptr record to obtain its record ID. Records can be removed by either specifying the domain name and record id OR by specifying
 		domain name and all other naptr record attributes as was supplied during the add command.
 	*/
-	Recordid int `json:"recordid,omitempty"`
+	Recordid *int `json:"recordid,omitempty"`
 	/**
 	* Subnet for which the cached NAPTR record need to be removed.
 	*/
@@ -71,7 +71,7 @@ type Dnsnaptrrec struct {
 	/**
 	* Unique number that identifies the cluster node.
 	*/
-	Nodeid int `json:"nodeid,omitempty"`
+	Nodeid *int `json:"nodeid,omitempty"`
 
 	//------- Read only Parameter ---------;
 

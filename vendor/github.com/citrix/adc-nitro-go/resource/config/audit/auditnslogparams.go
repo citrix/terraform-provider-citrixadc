@@ -27,7 +27,7 @@ type Auditnslogparams struct {
 	/**
 	* Port on which the nslog server accepts connections.
 	*/
-	Serverport int `json:"serverport,omitempty"`
+	Serverport *int `json:"serverport,omitempty"`
 	/**
 	* Format of dates in the logs.
 		Supported formats are:

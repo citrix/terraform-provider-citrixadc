@@ -82,7 +82,6 @@ func createNsvariableFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	nsvariableName := d.Get("name").(string)
 	nsvariable := ns.Nsvariable{
 		Comment:       d.Get("comment").(string),
-		Expires:       d.Get("expires").(int),
 		Iffull:        d.Get("iffull").(string),
 		Ifnovalue:     d.Get("ifnovalue").(string),
 		Ifvaluetoobig: d.Get("ifvaluetoobig").(string),
@@ -90,6 +89,10 @@ func createNsvariableFunc(ctx context.Context, d *schema.ResourceData, meta inte
 		Name:          d.Get("name").(string),
 		Scope:         d.Get("scope").(string),
 		Type:          d.Get("type").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("expires"); !raw.IsNull() {
+		nsvariable.Expires = intPtr(d.Get("expires").(int))
 	}
 
 	_, err := client.AddResource(service.Nsvariable.Type(), nsvariableName, &nsvariable)
@@ -143,7 +146,7 @@ func updateNsvariableFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	if d.HasChange("expires") {
 		log.Printf("[DEBUG]  citrixadc-provider: Expires has changed for nsvariable %s, starting update", nsvariableName)
-		nsvariable.Expires = d.Get("expires").(int)
+		nsvariable.Expires = intPtr(d.Get("expires").(int))
 		hasChange = true
 	}
 	if d.HasChange("iffull") {

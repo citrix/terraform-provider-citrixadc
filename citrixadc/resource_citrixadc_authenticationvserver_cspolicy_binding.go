@@ -88,8 +88,11 @@ func createAuthenticationvserver_cspolicy_bindingFunc(ctx context.Context, d *sc
 		Name:                   d.Get("name").(string),
 		Nextfactor:             d.Get("nextfactor").(string),
 		Policy:                 d.Get("policy").(string),
-		Priority:               d.Get("priority").(int),
 		Secondary:              d.Get("secondary").(bool),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		authenticationvserver_cspolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Authenticationvserver_cspolicy_binding.Type(), &authenticationvserver_cspolicy_binding)

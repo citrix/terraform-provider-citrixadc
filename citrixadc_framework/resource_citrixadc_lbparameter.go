@@ -59,25 +59,25 @@ type Lbparameter struct {
 	Computedadccookieattribute    string      `json:"computedadccookieattribute,omitempty"`
 	Consolidatedlconn             string      `json:"consolidatedlconn,omitempty"`
 	Cookiepassphrase              string      `json:"cookiepassphrase,omitempty"`
-	Dbsttl                        int         `json:"dbsttl,omitempty"`
+	Dbsttl                        *int        `json:"dbsttl,omitempty"`
 	Dropmqttjumbomessage          string      `json:"dropmqttjumbomessage,omitempty"`
 	Feature                       string      `json:"feature,omitempty"`
 	Httponlycookieflag            string      `json:"httponlycookieflag,omitempty"`
 	Literaladccookieattribute     string      `json:"literaladccookieattribute,omitempty"`
-	Maxpipelinenat                int         `json:"maxpipelinenat,omitempty"`
+	Maxpipelinenat                *int        `json:"maxpipelinenat,omitempty"`
 	Monitorconnectionclose        string      `json:"monitorconnectionclose,omitempty"`
 	Monitorskipmaxclient          string      `json:"monitorskipmaxclient,omitempty"`
 	Preferdirectroute             string      `json:"preferdirectroute,omitempty"`
 	Retainservicestate            string      `json:"retainservicestate,omitempty"`
-	Sessionsthreshold             int         `json:"sessionsthreshold,omitempty"`
-	Startuprrfactor               int         `json:"startuprrfactor,omitempty"`
+	Sessionsthreshold             *int        `json:"sessionsthreshold,omitempty"`
+	Startuprrfactor               *int        `json:"startuprrfactor,omitempty"`
 	Storemqttclientidandusername  string      `json:"storemqttclientidandusername,omitempty"`
 	Useencryptedpersistencecookie string      `json:"useencryptedpersistencecookie,omitempty"`
 	Useportforhashlb              string      `json:"useportforhashlb,omitempty"`
 	Usesecuredpersistencecookie   string      `json:"usesecuredpersistencecookie,omitempty"`
 	Vserverspecificmac            string      `json:"vserverspecificmac,omitempty"`
 	Lbhashalgorithm               string      `json:"lbhashalgorithm,omitempty"`
-	Lbhashfingers                 int         `json:"lbhashfingers,omitempty"`
+	Lbhashfingers                 *int        `json:"lbhashfingers,omitempty"`
 }
 
 func (r *LbParameterResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -230,7 +230,7 @@ func (r *LbParameterResource) Create(ctx context.Context, req resource.CreateReq
 		lbparameter.Cookiepassphrase = data.CookiePassphrase.ValueString()
 	}
 	if !data.DbsTtl.IsNull() {
-		lbparameter.Dbsttl = int(data.DbsTtl.ValueInt64())
+		lbparameter.Dbsttl = intPtr(int(data.DbsTtl.ValueInt64()))
 	}
 	if !data.DropMqttJumboMessage.IsNull() {
 		lbparameter.Dropmqttjumbomessage = data.DropMqttJumboMessage.ValueString()
@@ -242,7 +242,7 @@ func (r *LbParameterResource) Create(ctx context.Context, req resource.CreateReq
 		lbparameter.Literaladccookieattribute = data.LiteralAdcCookieAttribute.ValueString()
 	}
 	if !data.MaxPipelineNat.IsNull() {
-		lbparameter.Maxpipelinenat = int(data.MaxPipelineNat.ValueInt64())
+		lbparameter.Maxpipelinenat = intPtr(int(data.MaxPipelineNat.ValueInt64()))
 	}
 	if !data.MonitorConnectionClose.IsNull() {
 		lbparameter.Monitorconnectionclose = data.MonitorConnectionClose.ValueString()
@@ -257,13 +257,13 @@ func (r *LbParameterResource) Create(ctx context.Context, req resource.CreateReq
 		lbparameter.Retainservicestate = data.RetainServiceState.ValueString()
 	}
 	if !data.StartupRrFactor.IsNull() {
-		lbparameter.Startuprrfactor = int(data.StartupRrFactor.ValueInt64())
+		lbparameter.Startuprrfactor = intPtr(int(data.StartupRrFactor.ValueInt64()))
 	}
 	if !data.StoreMqttClientIdAndUsername.IsNull() {
 		lbparameter.Storemqttclientidandusername = data.StoreMqttClientIdAndUsername.ValueString()
 	}
 	if !data.SessionsThreshold.IsNull() {
-		lbparameter.Sessionsthreshold = int(data.SessionsThreshold.ValueInt64())
+		lbparameter.Sessionsthreshold = intPtr(int(data.SessionsThreshold.ValueInt64()))
 	}
 	if !data.UseEncryptedPersistenceCookie.IsNull() {
 		lbparameter.Useencryptedpersistencecookie = data.UseEncryptedPersistenceCookie.ValueString()
@@ -281,7 +281,7 @@ func (r *LbParameterResource) Create(ctx context.Context, req resource.CreateReq
 		lbparameter.Lbhashalgorithm = data.LbHashAlgorithm.ValueString()
 	}
 	if !data.LbHashFingers.IsNull() {
-		lbparameter.Lbhashfingers = int(data.LbHashFingers.ValueInt64())
+		lbparameter.Lbhashfingers = intPtr(int(data.LbHashFingers.ValueInt64()))
 	}
 
 	// Make API call
@@ -349,7 +349,7 @@ func (r *LbParameterResource) Update(ctx context.Context, req resource.UpdateReq
 		lbparameter.Cookiepassphrase = data.CookiePassphrase.ValueString()
 	}
 	if !data.DbsTtl.IsNull() {
-		lbparameter.Dbsttl = int(data.DbsTtl.ValueInt64())
+		lbparameter.Dbsttl = intPtr(int(data.DbsTtl.ValueInt64()))
 	}
 	if !data.DropMqttJumboMessage.IsNull() {
 		lbparameter.Dropmqttjumbomessage = data.DropMqttJumboMessage.ValueString()
@@ -361,7 +361,7 @@ func (r *LbParameterResource) Update(ctx context.Context, req resource.UpdateReq
 		lbparameter.Literaladccookieattribute = data.LiteralAdcCookieAttribute.ValueString()
 	}
 	if !data.MaxPipelineNat.IsNull() {
-		lbparameter.Maxpipelinenat = int(data.MaxPipelineNat.ValueInt64())
+		lbparameter.Maxpipelinenat = intPtr(int(data.MaxPipelineNat.ValueInt64()))
 	}
 	if !data.MonitorConnectionClose.IsNull() {
 		lbparameter.Monitorconnectionclose = data.MonitorConnectionClose.ValueString()
@@ -376,13 +376,13 @@ func (r *LbParameterResource) Update(ctx context.Context, req resource.UpdateReq
 		lbparameter.Retainservicestate = data.RetainServiceState.ValueString()
 	}
 	if !data.StartupRrFactor.IsNull() {
-		lbparameter.Startuprrfactor = int(data.StartupRrFactor.ValueInt64())
+		lbparameter.Startuprrfactor = intPtr(int(data.StartupRrFactor.ValueInt64()))
 	}
 	if !data.StoreMqttClientIdAndUsername.IsNull() {
 		lbparameter.Storemqttclientidandusername = data.StoreMqttClientIdAndUsername.ValueString()
 	}
 	if !data.SessionsThreshold.IsNull() {
-		lbparameter.Sessionsthreshold = int(data.SessionsThreshold.ValueInt64())
+		lbparameter.Sessionsthreshold = intPtr(int(data.SessionsThreshold.ValueInt64()))
 	}
 	if !data.UseEncryptedPersistenceCookie.IsNull() {
 		lbparameter.Useencryptedpersistencecookie = data.UseEncryptedPersistenceCookie.ValueString()
@@ -400,7 +400,7 @@ func (r *LbParameterResource) Update(ctx context.Context, req resource.UpdateReq
 		lbparameter.Lbhashalgorithm = data.LbHashAlgorithm.ValueString()
 	}
 	if !data.LbHashFingers.IsNull() {
-		lbparameter.Lbhashfingers = int(data.LbHashFingers.ValueInt64())
+		lbparameter.Lbhashfingers = intPtr(int(data.LbHashFingers.ValueInt64()))
 	}
 
 	// Make API call

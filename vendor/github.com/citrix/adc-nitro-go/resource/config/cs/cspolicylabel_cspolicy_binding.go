@@ -27,7 +27,7 @@ type Cspolicylabelcspolicybinding struct {
 	/**
 	* Specifies the priority of the policy.
 	*/
-	Priority int `json:"priority,omitempty"`
+	Priority *int `json:"priority,omitempty"`
 	/**
 	* Name of the virtual server to which to forward requests that match the policy.
 	*/

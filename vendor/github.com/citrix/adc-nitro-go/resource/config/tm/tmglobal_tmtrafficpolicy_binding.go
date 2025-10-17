@@ -27,11 +27,11 @@ type Tmglobaltmtrafficpolicybinding struct {
 	/**
 	* The priority of the policy.
 	*/
-	Priority int `json:"priority,omitempty"`
+	Priority *int `json:"priority,omitempty"`
 	/**
 	* Bound policy type
 	*/
-	Bindpolicytype int `json:"bindpolicytype,omitempty"`
+	Bindpolicytype *int `json:"bindpolicytype,omitempty"`
 	/**
 	* Bindpoint to which the policy is bound
 	*/

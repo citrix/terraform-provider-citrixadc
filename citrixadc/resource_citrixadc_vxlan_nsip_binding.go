@@ -55,9 +55,12 @@ func createVxlan_nsip_bindingFunc(ctx context.Context, d *schema.ResourceData, m
 	ipaddress := d.Get("ipaddress").(string)
 	bindingId := fmt.Sprintf("%s,%s", vxlanid, ipaddress)
 	vxlan_nsip_binding := network.Vxlannsipbinding{
-		Id:        d.Get("vxlanid").(int),
 		Ipaddress: d.Get("ipaddress").(string),
 		Netmask:   d.Get("netmask").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("vxlanid"); !raw.IsNull() {
+		vxlan_nsip_binding.Id = intPtr(d.Get("vxlanid").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Vxlan_nsip_binding.Type(), &vxlan_nsip_binding)

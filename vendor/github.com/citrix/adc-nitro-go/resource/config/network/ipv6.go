@@ -31,11 +31,11 @@ type Ipv6 struct {
 	/**
 	* Base reachable time of the Neighbor Discovery (ND6) protocol. The time, in milliseconds, that the Citrix ADC assumes an adjacent device is reachable after receiving a reachability confirmation.
 	*/
-	Ndbasereachtime int `json:"ndbasereachtime,omitempty"`
+	Ndbasereachtime *int `json:"ndbasereachtime,omitempty"`
 	/**
 	* Retransmission time of the Neighbor Discovery (ND6) protocol. The time, in milliseconds, between retransmitted Neighbor Solicitation (NS) messages, to an adjacent device.
 	*/
-	Ndretransmissiontime int `json:"ndretransmissiontime,omitempty"`
+	Ndretransmissiontime *int `json:"ndretransmissiontime,omitempty"`
 	/**
 	* Prefix used for translating packets from private IPv6 servers to IPv4 packets. This prefix has a length of 96 bits (128-32 = 96). The IPv6 servers embed the destination IP address of the IPv4 servers or hosts in the last 32 bits of the destination IP address field of the IPv6 packets. The first 96 bits of the destination IP address field are set as the IPv6 NAT prefix. IPv6 packets addressed to this prefix have to be routed to the Citrix ADC to ensure that the IPv6-IPv4 translation is done by the appliance.
 	*/
@@ -43,7 +43,7 @@ type Ipv6 struct {
 	/**
 	* Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.
 	*/
-	Td int `json:"td"` // Zero is a valid value
+	Td *int `json:"td"` // Zero is a valid value
 	/**
 	* Enable the Citrix ADC to do Duplicate Address
 		Detection (DAD) for all the Citrix ADC owned IPv6 addresses regardless of whether they are obtained through stateless auto configuration, DHCPv6, or manual configuration.

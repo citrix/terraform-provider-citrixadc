@@ -24,7 +24,7 @@ type Vpnvservervpneulabinding struct {
 	* Name of the EULA bound to VPN vserver
 	*/
 	Eula string `json:"eula,omitempty"`
-	Acttype int `json:"acttype,omitempty"`
+	Acttype *int `json:"acttype,omitempty"`
 	/**
 	* Name of the virtual server.
 	*/

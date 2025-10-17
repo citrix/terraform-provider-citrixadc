@@ -82,7 +82,10 @@ func createAuthorizationpolicylabel_authorizationpolicy_bindingFunc(ctx context.
 		Labelname:              labelname.(string),
 		Labeltype:              d.Get("labeltype").(string),
 		Policyname:             policyname.(string),
-		Priority:               d.Get("priority").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		authorizationpolicylabel_authorizationpolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	_, err := client.AddResource(service.Authorizationpolicylabel_authorizationpolicy_binding.Type(), bindingId, &authorizationpolicylabel_authorizationpolicy_binding)

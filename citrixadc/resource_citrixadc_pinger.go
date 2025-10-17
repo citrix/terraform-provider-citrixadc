@@ -84,14 +84,23 @@ func createPingerFunc(ctx context.Context, d *schema.ResourceData, meta interfac
 	client := meta.(*NetScalerNitroClient).client
 	pingerId := resource.PrefixedUniqueId("tf-pinger-")
 	ping := utility.Ping{
-		C:        d.Get("c").(int),
 		HostName: d.Get("hostname").(string),
-		I:        d.Get("i").(int),
 		N:        d.Get("n").(bool),
 		P:        d.Get("p").(string),
 		Q:        d.Get("q").(bool),
-		S:        d.Get("s").(int),
-		T:        d.Get("t").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("c"); !raw.IsNull() {
+		ping.C = intPtr(d.Get("c").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("i"); !raw.IsNull() {
+		ping.I = intPtr(d.Get("i").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("s"); !raw.IsNull() {
+		ping.S = intPtr(d.Get("s").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("t"); !raw.IsNull() {
+		ping.T = intPtr(d.Get("t").(int))
 	}
 
 	if err := client.ActOnResource("ping", &ping, ""); err != nil {

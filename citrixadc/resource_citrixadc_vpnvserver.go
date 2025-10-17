@@ -258,7 +258,6 @@ func createVpnvserverFunc(ctx context.Context, d *schema.ResourceData, meta inte
 		Doublehop:                d.Get("doublehop").(string),
 		Downstateflush:           d.Get("downstateflush").(string),
 		Dtls:                     d.Get("dtls").(string),
-		Failedlogintimeout:       d.Get("failedlogintimeout").(int),
 		Httpprofilename:          d.Get("httpprofilename").(string),
 		Icaonly:                  d.Get("icaonly").(string),
 		Icaproxysessionmigration: d.Get("icaproxysessionmigration").(string),
@@ -268,18 +267,13 @@ func createVpnvserverFunc(ctx context.Context, d *schema.ResourceData, meta inte
 		L2conn:                   d.Get("l2conn").(string),
 		Linuxepapluginupgrade:    d.Get("linuxepapluginupgrade").(string),
 		Listenpolicy:             d.Get("listenpolicy").(string),
-		Listenpriority:           d.Get("listenpriority").(int),
 		Loginonce:                d.Get("loginonce").(string),
 		Logoutonsmartcardremoval: d.Get("logoutonsmartcardremoval").(string),
 		Macepapluginupgrade:      d.Get("macepapluginupgrade").(string),
-		Maxaaausers:              d.Get("maxaaausers").(int),
-		Maxloginattempts:         d.Get("maxloginattempts").(int),
 		Name:                     vpnvserverName,
 		Netprofile:               d.Get("netprofile").(string),
 		// Newname:                  d.Get("newname").(string),
 		Pcoipvserverprofilename: d.Get("pcoipvserverprofilename").(string),
-		Port:                    d.Get("port").(int),
-		Range:                   d.Get("range").(int),
 		Rdpserverprofilename:    d.Get("rdpserverprofilename").(string),
 		Rhistate:                d.Get("rhistate").(string),
 		Samesite:                d.Get("samesite").(string),
@@ -289,6 +283,25 @@ func createVpnvserverFunc(ctx context.Context, d *schema.ResourceData, meta inte
 		Userdomains:             d.Get("userdomains").(string),
 		Vserverfqdn:             d.Get("vserverfqdn").(string),
 		Windowsepapluginupgrade: d.Get("windowsepapluginupgrade").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("failedlogintimeout"); !raw.IsNull() {
+		vpnvserver.Failedlogintimeout = intPtr(d.Get("failedlogintimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("listenpriority"); !raw.IsNull() {
+		vpnvserver.Listenpriority = intPtr(d.Get("listenpriority").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxaaausers"); !raw.IsNull() {
+		vpnvserver.Maxaaausers = intPtr(d.Get("maxaaausers").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxloginattempts"); !raw.IsNull() {
+		vpnvserver.Maxloginattempts = intPtr(d.Get("maxloginattempts").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("port"); !raw.IsNull() {
+		vpnvserver.Port = intPtr(d.Get("port").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("range"); !raw.IsNull() {
+		vpnvserver.Range = intPtr(d.Get("range").(int))
 	}
 
 	_, err := client.AddResource(service.Vpnvserver.Type(), vpnvserverName, &vpnvserver)
@@ -432,7 +445,7 @@ func updateVpnvserverFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	if d.HasChange("failedlogintimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Failedlogintimeout has changed for vpnvserver %s, starting update", vpnvserverName)
-		vpnvserver.Failedlogintimeout = d.Get("failedlogintimeout").(int)
+		vpnvserver.Failedlogintimeout = intPtr(d.Get("failedlogintimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("httpprofilename") {
@@ -482,7 +495,7 @@ func updateVpnvserverFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	if d.HasChange("listenpriority") {
 		log.Printf("[DEBUG]  citrixadc-provider: Listenpriority has changed for vpnvserver %s, starting update", vpnvserverName)
-		vpnvserver.Listenpriority = d.Get("listenpriority").(int)
+		vpnvserver.Listenpriority = intPtr(d.Get("listenpriority").(int))
 		hasChange = true
 	}
 	if d.HasChange("loginonce") {
@@ -502,12 +515,12 @@ func updateVpnvserverFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	if d.HasChange("maxaaausers") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxaaausers has changed for vpnvserver %s, starting update", vpnvserverName)
-		vpnvserver.Maxaaausers = d.Get("maxaaausers").(int)
+		vpnvserver.Maxaaausers = intPtr(d.Get("maxaaausers").(int))
 		hasChange = true
 	}
 	if d.HasChange("maxloginattempts") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxloginattempts has changed for vpnvserver %s, starting update", vpnvserverName)
-		vpnvserver.Maxloginattempts = d.Get("maxloginattempts").(int)
+		vpnvserver.Maxloginattempts = intPtr(d.Get("maxloginattempts").(int))
 		hasChange = true
 	}
 	// if d.HasChange("name") {
@@ -532,12 +545,12 @@ func updateVpnvserverFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	if d.HasChange("port") {
 		log.Printf("[DEBUG]  citrixadc-provider: Port has changed for vpnvserver %s, starting update", vpnvserverName)
-		vpnvserver.Port = d.Get("port").(int)
+		vpnvserver.Port = intPtr(d.Get("port").(int))
 		hasChange = true
 	}
 	if d.HasChange("range") {
 		log.Printf("[DEBUG]  citrixadc-provider: Range has changed for vpnvserver %s, starting update", vpnvserverName)
-		vpnvserver.Range = d.Get("range").(int)
+		vpnvserver.Range = intPtr(d.Get("range").(int))
 		hasChange = true
 	}
 	if d.HasChange("rdpserverprofilename") {

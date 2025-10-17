@@ -40,7 +40,7 @@ type Nsvpxparam struct {
 	/**
 	* ID of the cluster node for which you are setting the cpuyield and/or KVMVirtioMultiqueue. It can be configured only through the cluster IP address.
 	*/
-	Ownernode int `json:"ownernode"` // Zero is a valid value
+	Ownernode *int `json:"ownernode"` // Zero is a valid value
 	/**
 	* This setting applicable on KVM VPX with virtio NICs, is to configure multiple queues for all virtio interfaces.
 		* There are 2 options for this behavior:

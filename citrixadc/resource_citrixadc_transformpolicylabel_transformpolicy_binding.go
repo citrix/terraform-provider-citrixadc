@@ -82,7 +82,10 @@ func createTransformpolicylabel_transformpolicy_bindingFunc(ctx context.Context,
 		Labelname:              labelname.(string),
 		Labeltype:              d.Get("labeltype").(string),
 		Policyname:             policyname.(string),
-		Priority:               d.Get("priority").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		transformpolicylabel_transformpolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Transformpolicylabel_transformpolicy_binding.Type(), &transformpolicylabel_transformpolicy_binding)

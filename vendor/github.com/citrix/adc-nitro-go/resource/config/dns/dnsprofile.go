@@ -71,11 +71,11 @@ type Dnsprofile struct {
 	/**
 	* The maximum ecs prefix length that will be cached
 	*/
-	Maxcacheableecsprefixlength int `json:"maxcacheableecsprefixlength,omitempty"`
+	Maxcacheableecsprefixlength *int `json:"maxcacheableecsprefixlength,omitempty"`
 	/**
 	* The maximum ecs prefix length that will be cached for IPv6 subnets
 	*/
-	Maxcacheableecsprefixlength6 int `json:"maxcacheableecsprefixlength6,omitempty"`
+	Maxcacheableecsprefixlength6 *int `json:"maxcacheableecsprefixlength6,omitempty"`
 
 	//------- Read only Parameter ---------;
 

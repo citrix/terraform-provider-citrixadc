@@ -207,28 +207,43 @@ func createNsip6Func(ctx context.Context, d *schema.ResourceData, meta interface
 		Ip6hostrtgw:                 d.Get("ip6hostrtgw").(string),
 		Ipv6address:                 d.Get("ipv6address").(string),
 		Map:                         d.Get("map").(string),
-		Metric:                      d.Get("metric").(int),
 		Mgmtaccess:                  d.Get("mgmtaccess").(string),
 		Nd:                          d.Get("nd").(string),
 		Networkroute:                d.Get("networkroute").(string),
 		Ospf6lsatype:                d.Get("ospf6lsatype").(string),
-		Ospfarea:                    d.Get("ospfarea").(int),
 		Ownerdownresponse:           d.Get("ownerdownresponse").(string),
-		Ownernode:                   d.Get("ownernode").(int),
 		Restrictaccess:              d.Get("restrictaccess").(string),
 		Scope:                       d.Get("scope").(string),
 		Snmp:                        d.Get("snmp").(string),
 		Ssh:                         d.Get("ssh").(string),
 		State:                       d.Get("state").(string),
-		Tag:                         d.Get("tag").(int),
-		Td:                          d.Get("td").(int),
 		Telnet:                      d.Get("telnet").(string),
 		Type:                        d.Get("type").(string),
-		Vlan:                        d.Get("vlan").(int),
-		Vrid6:                       d.Get("vrid6").(int),
 		Vserver:                     d.Get("vserver").(string),
 		Vserverrhilevel:             d.Get("vserverrhilevel").(string),
 		Mptcpadvertise:              d.Get("mptcpadvertise").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("metric"); !raw.IsNull() {
+		nsip6.Metric = intPtr(d.Get("metric").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("ospfarea"); !raw.IsNull() {
+		nsip6.Ospfarea = intPtr(d.Get("ospfarea").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("ownernode"); !raw.IsNull() {
+		nsip6.Ownernode = intPtr(d.Get("ownernode").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("tag"); !raw.IsNull() {
+		nsip6.Tag = intPtr(d.Get("tag").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("td"); !raw.IsNull() {
+		nsip6.Td = intPtr(d.Get("td").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("vlan"); !raw.IsNull() {
+		nsip6.Vlan = intPtr(d.Get("vlan").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("vrid6"); !raw.IsNull() {
+		nsip6.Vrid6 = intPtr(d.Get("vrid6").(int))
 	}
 
 	_, err := client.AddResource(service.Nsip6.Type(), ipv6address, &nsip6)
@@ -368,7 +383,7 @@ func updateNsip6Func(ctx context.Context, d *schema.ResourceData, meta interface
 	}
 	if d.HasChange("metric") {
 		log.Printf("[DEBUG]  citrixadc-provider: Metric has changed for nsip6 %s, starting update", ipv6address)
-		nsip6.Metric = d.Get("metric").(int)
+		nsip6.Metric = intPtr(d.Get("metric").(int))
 		hasChange = true
 	}
 	if d.HasChange("mgmtaccess") {
@@ -393,7 +408,7 @@ func updateNsip6Func(ctx context.Context, d *schema.ResourceData, meta interface
 	}
 	if d.HasChange("ospfarea") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ospfarea has changed for nsip6 %s, starting update", ipv6address)
-		nsip6.Ospfarea = d.Get("ospfarea").(int)
+		nsip6.Ospfarea = intPtr(d.Get("ospfarea").(int))
 		hasChange = true
 	}
 	if d.HasChange("ownerdownresponse") {
@@ -403,7 +418,7 @@ func updateNsip6Func(ctx context.Context, d *schema.ResourceData, meta interface
 	}
 	if d.HasChange("ownernode") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ownernode has changed for nsip6 %s, starting update", ipv6address)
-		nsip6.Ownernode = d.Get("ownernode").(int)
+		nsip6.Ownernode = intPtr(d.Get("ownernode").(int))
 		hasChange = true
 	}
 	if d.HasChange("restrictaccess") {
@@ -433,12 +448,12 @@ func updateNsip6Func(ctx context.Context, d *schema.ResourceData, meta interface
 	}
 	if d.HasChange("tag") {
 		log.Printf("[DEBUG]  citrixadc-provider: Tag has changed for nsip6 %s, starting update", ipv6address)
-		nsip6.Tag = d.Get("tag").(int)
+		nsip6.Tag = intPtr(d.Get("tag").(int))
 		hasChange = true
 	}
 	if d.HasChange("td") {
 		log.Printf("[DEBUG]  citrixadc-provider: Td has changed for nsip6 %s, starting update", ipv6address)
-		nsip6.Td = d.Get("td").(int)
+		nsip6.Td = intPtr(d.Get("td").(int))
 		hasChange = true
 	}
 	if d.HasChange("telnet") {
@@ -453,12 +468,12 @@ func updateNsip6Func(ctx context.Context, d *schema.ResourceData, meta interface
 	}
 	if d.HasChange("vlan") {
 		log.Printf("[DEBUG]  citrixadc-provider: Vlan has changed for nsip6 %s, starting update", ipv6address)
-		nsip6.Vlan = d.Get("vlan").(int)
+		nsip6.Vlan = intPtr(d.Get("vlan").(int))
 		hasChange = true
 	}
 	if d.HasChange("vrid6") {
 		log.Printf("[DEBUG]  citrixadc-provider: Vrid6 has changed for nsip6 %s, starting update", ipv6address)
-		nsip6.Vrid6 = d.Get("vrid6").(int)
+		nsip6.Vrid6 = intPtr(d.Get("vrid6").(int))
 		hasChange = true
 	}
 	if d.HasChange("vserver") {

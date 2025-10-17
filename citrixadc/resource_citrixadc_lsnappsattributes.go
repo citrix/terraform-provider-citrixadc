@@ -53,8 +53,11 @@ func createLsnappsattributesFunc(ctx context.Context, d *schema.ResourceData, me
 	lsnappsattributes := lsn.Lsnappsattributes{
 		Name:              d.Get("name").(string),
 		Port:              d.Get("port").(string),
-		Sessiontimeout:    d.Get("sessiontimeout").(int),
 		Transportprotocol: d.Get("transportprotocol").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("sessiontimeout"); !raw.IsNull() {
+		lsnappsattributes.Sessiontimeout = intPtr(d.Get("sessiontimeout").(int))
 	}
 
 	_, err := client.AddResource("lsnappsattributes", lsnappsattributesName, &lsnappsattributes)
@@ -99,7 +102,7 @@ func updateLsnappsattributesFunc(ctx context.Context, d *schema.ResourceData, me
 
 	if d.HasChange("sessiontimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Sessiontimeout has changed for lsnappsattributes %s, starting update", lsnappsattributesName)
-		lsnappsattributes.Sessiontimeout = d.Get("sessiontimeout").(int)
+		lsnappsattributes.Sessiontimeout = intPtr(d.Get("sessiontimeout").(int))
 		hasChange = true
 	}
 

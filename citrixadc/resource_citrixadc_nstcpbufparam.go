@@ -42,9 +42,13 @@ func createNstcpbufparamFunc(ctx context.Context, d *schema.ResourceData, meta i
 	var nstcpbufparamName string
 	// there is no primary key in nstcpbufparam resource. Hence generate one for terraform state maintenance
 	nstcpbufparamName = resource.PrefixedUniqueId("tf-nstcpbufparam-")
-	nstcpbufparam := ns.Nstcpbufparam{
-		Memlimit: d.Get("memlimit").(int),
-		Size:     d.Get("size").(int),
+	nstcpbufparam := ns.Nstcpbufparam{}
+
+	if raw := d.GetRawConfig().GetAttr("memlimit"); !raw.IsNull() {
+		nstcpbufparam.Memlimit = intPtr(d.Get("memlimit").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("size"); !raw.IsNull() {
+		nstcpbufparam.Size = intPtr(d.Get("size").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Nstcpbufparam.Type(), &nstcpbufparam)
@@ -78,8 +82,10 @@ func updateNstcpbufparamFunc(ctx context.Context, d *schema.ResourceData, meta i
 	log.Printf("[DEBUG]  citrixadc-provider: In updateNstcpbufparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 
-	nstcpbufparam := ns.Nstcpbufparam{
-		Memlimit: d.Get("memlimit").(int),
+	nstcpbufparam := ns.Nstcpbufparam{}
+
+	if raw := d.GetRawConfig().GetAttr("memlimit"); !raw.IsNull() {
+		nstcpbufparam.Memlimit = intPtr(d.Get("memlimit").(int))
 	}
 	hasChange := false
 	if d.HasChange("memlimit") {
@@ -88,7 +94,7 @@ func updateNstcpbufparamFunc(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	if d.HasChange("size") {
 		log.Printf("[DEBUG]  citrixadc-provider: Size has changed for nstcpbufparam, starting update")
-		nstcpbufparam.Size = d.Get("size").(int)
+		nstcpbufparam.Size = intPtr(d.Get("size").(int))
 		hasChange = true
 	}
 

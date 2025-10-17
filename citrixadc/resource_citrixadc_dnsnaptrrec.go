@@ -97,15 +97,26 @@ func createDnsnaptrrecFunc(ctx context.Context, d *schema.ResourceData, meta int
 		Domain:      d.Get("domain").(string),
 		Ecssubnet:   d.Get("ecssubnet").(string),
 		Flags:       d.Get("flags").(string),
-		Nodeid:      d.Get("nodeid").(int),
-		Order:       d.Get("order").(int),
-		Preference:  d.Get("preference").(int),
-		Recordid:    d.Get("recordid").(int),
 		Regexp:      d.Get("regexp").(string),
 		Replacement: d.Get("replacement").(string),
 		Services:    d.Get("services").(string),
-		Ttl:         d.Get("ttl").(int),
 		Type:        d.Get("type").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("nodeid"); !raw.IsNull() {
+		dnsnaptrrec.Nodeid = intPtr(d.Get("nodeid").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("order"); !raw.IsNull() {
+		dnsnaptrrec.Order = intPtr(d.Get("order").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("preference"); !raw.IsNull() {
+		dnsnaptrrec.Preference = intPtr(d.Get("preference").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("recordid"); !raw.IsNull() {
+		dnsnaptrrec.Recordid = intPtr(d.Get("recordid").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("ttl"); !raw.IsNull() {
+		dnsnaptrrec.Ttl = intPtr(d.Get("ttl").(int))
 	}
 
 	_, err := client.AddResource(service.Dnsnaptrrec.Type(), dnsnaptrrecName, &dnsnaptrrec)

@@ -122,22 +122,27 @@ func createPolicyhttpcalloutFunc(ctx context.Context, d *schema.ResourceData, me
 		d.Set("name", policyhttpcalloutName)
 	}
 	policyhttpcallout := policy.Policyhttpcallout{
-		Bodyexpr:     d.Get("bodyexpr").(string),
-		Cacheforsecs: d.Get("cacheforsecs").(int),
-		Comment:      d.Get("comment").(string),
-		Fullreqexpr:  d.Get("fullreqexpr").(string),
-		Headers:      toStringList(d.Get("headers").([]interface{})),
-		Hostexpr:     d.Get("hostexpr").(string),
-		Httpmethod:   d.Get("httpmethod").(string),
-		Ipaddress:    d.Get("ipaddress").(string),
-		Name:         d.Get("name").(string),
-		Parameters:   toStringList(d.Get("parameters").([]interface{})),
-		Port:         d.Get("port").(int),
-		Resultexpr:   d.Get("resultexpr").(string),
-		Returntype:   d.Get("returntype").(string),
-		Scheme:       d.Get("scheme").(string),
-		Urlstemexpr:  d.Get("urlstemexpr").(string),
-		Vserver:      d.Get("vserver").(string),
+		Bodyexpr:    d.Get("bodyexpr").(string),
+		Comment:     d.Get("comment").(string),
+		Fullreqexpr: d.Get("fullreqexpr").(string),
+		Headers:     toStringList(d.Get("headers").([]interface{})),
+		Hostexpr:    d.Get("hostexpr").(string),
+		Httpmethod:  d.Get("httpmethod").(string),
+		Ipaddress:   d.Get("ipaddress").(string),
+		Name:        d.Get("name").(string),
+		Parameters:  toStringList(d.Get("parameters").([]interface{})),
+		Resultexpr:  d.Get("resultexpr").(string),
+		Returntype:  d.Get("returntype").(string),
+		Scheme:      d.Get("scheme").(string),
+		Urlstemexpr: d.Get("urlstemexpr").(string),
+		Vserver:     d.Get("vserver").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("cacheforsecs"); !raw.IsNull() {
+		policyhttpcallout.Cacheforsecs = intPtr(d.Get("cacheforsecs").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("port"); !raw.IsNull() {
+		policyhttpcallout.Port = intPtr(d.Get("port").(int))
 	}
 
 	_, err := client.AddResource(service.Policyhttpcallout.Type(), policyhttpcalloutName, &policyhttpcallout)
@@ -199,7 +204,7 @@ func updatePolicyhttpcalloutFunc(ctx context.Context, d *schema.ResourceData, me
 	}
 	if d.HasChange("cacheforsecs") {
 		log.Printf("[DEBUG]  citrixadc-provider: Cacheforsecs has changed for policyhttpcallout %s, starting update", policyhttpcalloutName)
-		policyhttpcallout.Cacheforsecs = d.Get("cacheforsecs").(int)
+		policyhttpcallout.Cacheforsecs = intPtr(d.Get("cacheforsecs").(int))
 		hasChange = true
 	}
 	if d.HasChange("comment") {
@@ -244,7 +249,7 @@ func updatePolicyhttpcalloutFunc(ctx context.Context, d *schema.ResourceData, me
 	}
 	if d.HasChange("port") {
 		log.Printf("[DEBUG]  citrixadc-provider: Port has changed for policyhttpcallout %s, starting update", policyhttpcalloutName)
-		policyhttpcallout.Port = d.Get("port").(int)
+		policyhttpcallout.Port = intPtr(d.Get("port").(int))
 		hasChange = true
 	}
 	if d.HasChange("resultexpr") {

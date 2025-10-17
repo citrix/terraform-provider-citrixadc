@@ -58,9 +58,14 @@ func createIcaparameterFunc(ctx context.Context, d *schema.ResourceData, meta in
 	icaparameter := ica.Icaparameter{
 		Enablesronhafailover: d.Get("enablesronhafailover").(string),
 		Hdxinsightnonnsap:    d.Get("hdxinsightnonnsap").(string),
-		L7latencyfrequency:   d.Get("l7latencyfrequency").(int),
 		Edtpmtuddf:           d.Get("edtpmtuddf").(string),
-		Edtpmtuddftimeout:    d.Get("edtpmtuddftimeout").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("l7latencyfrequency"); !raw.IsNull() {
+		icaparameter.L7latencyfrequency = intPtr(d.Get("l7latencyfrequency").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("edtpmtuddftimeout"); !raw.IsNull() {
+		icaparameter.Edtpmtuddftimeout = intPtr(d.Get("edtpmtuddftimeout").(int))
 	}
 
 	err := client.UpdateUnnamedResource("icaparameter", &icaparameter)
@@ -111,7 +116,7 @@ func updateIcaparameterFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("edtpmtuddftimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Edtpmtuddftimeout has changed for icaparameter, starting update")
-		icaparameter.Edtpmtuddftimeout = d.Get("edtpmtuddftimeout").(int)
+		icaparameter.Edtpmtuddftimeout = intPtr(d.Get("edtpmtuddftimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("hdxinsightnonnsap") {
@@ -121,7 +126,7 @@ func updateIcaparameterFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("l7latencyfrequency") {
 		log.Printf("[DEBUG]  citrixadc-provider: L7latencyfrequency has changed for icaparameter, starting update")
-		icaparameter.L7latencyfrequency = d.Get("l7latencyfrequency").(int)
+		icaparameter.L7latencyfrequency = intPtr(d.Get("l7latencyfrequency").(int))
 		hasChange = true
 	}
 

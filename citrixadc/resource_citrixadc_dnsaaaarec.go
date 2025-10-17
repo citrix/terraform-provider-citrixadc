@@ -64,9 +64,14 @@ func createDnsaaaarecFunc(ctx context.Context, d *schema.ResourceData, meta inte
 		Ecssubnet:   d.Get("ecssubnet").(string),
 		Hostname:    d.Get("hostname").(string),
 		Ipv6address: d.Get("ipv6address").(string),
-		Nodeid:      d.Get("nodeid").(int),
-		Ttl:         d.Get("ttl").(int),
 		Type:        d.Get("type").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("nodeid"); !raw.IsNull() {
+		dnsaaaarec.Nodeid = intPtr(d.Get("nodeid").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("ttl"); !raw.IsNull() {
+		dnsaaaarec.Ttl = intPtr(d.Get("ttl").(int))
 	}
 	var dnsaaaarecName string
 	if Hostname, ok := d.GetOk("hostname"); ok {

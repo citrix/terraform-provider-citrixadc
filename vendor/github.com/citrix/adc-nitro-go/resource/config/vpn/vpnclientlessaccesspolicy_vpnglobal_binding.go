@@ -27,11 +27,11 @@ type Vpnclientlessaccesspolicyvpnglobalbinding struct {
 	/**
 	* Specifies the priority of the policy.
 	*/
-	Priority int `json:"priority,omitempty"`
+	Priority *int `json:"priority,omitempty"`
 	/**
 	* Indicates whether policy is bound or not.
 	*/
-	Activepolicy int `json:"activepolicy,omitempty"`
+	Activepolicy *int `json:"activepolicy,omitempty"`
 	/**
 	* Name of the clientless access policy to display.
 	*/

@@ -27,11 +27,11 @@ type Feopolicylbvserverbinding struct {
 	/**
 	* Priority of the policy.
 	*/
-	Priority int `json:"priority,omitempty"`
+	Priority *int `json:"priority,omitempty"`
 	/**
 	* Indicates whether a policy is bound or not.
 	*/
-	Activepolicy int `json:"activepolicy,omitempty"`
+	Activepolicy *int `json:"activepolicy,omitempty"`
 	/**
 	* Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 	*/

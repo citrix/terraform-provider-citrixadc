@@ -111,12 +111,17 @@ func createSystemuserFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	systemuser := system.Systemuser{
 		Externalauth:               d.Get("externalauth").(string),
 		Logging:                    d.Get("logging").(string),
-		Maxsession:                 d.Get("maxsession").(int),
 		Password:                   d.Get("password").(string),
 		Promptstring:               d.Get("promptstring").(string),
-		Timeout:                    d.Get("timeout").(int),
 		Username:                   username,
 		Allowedmanagementinterface: toStringList(d.Get("allowedmanagementinterface").([]interface{})),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("maxsession"); !raw.IsNull() {
+		systemuser.Maxsession = intPtr(d.Get("maxsession").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("timeout"); !raw.IsNull() {
+		systemuser.Timeout = intPtr(d.Get("timeout").(int))
 	}
 
 	if username == "nsroot" {
@@ -218,7 +223,7 @@ func updateSystemuserFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	if d.HasChange("maxsession") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxsession has changed for systemuser %s, starting update", systemuserName)
-		systemuser.Maxsession = d.Get("maxsession").(int)
+		systemuser.Maxsession = intPtr(d.Get("maxsession").(int))
 		hasChange = true
 	}
 	if d.HasChange("password") {
@@ -233,7 +238,7 @@ func updateSystemuserFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	if d.HasChange("timeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Timeout has changed for systemuser %s, starting update", systemuserName)
-		systemuser.Timeout = d.Get("timeout").(int)
+		systemuser.Timeout = intPtr(d.Get("timeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("allowedmanagementinterface") {

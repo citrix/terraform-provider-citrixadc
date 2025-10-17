@@ -45,8 +45,11 @@ func createRewriteparamFunc(ctx context.Context, d *schema.ResourceData, meta in
 	rewriteparamName = resource.PrefixedUniqueId("tf-rewriteparam-")
 
 	rewriteparam := rewrite.Rewriteparam{
-		Timeout:     d.Get("timeout").(int),
 		Undefaction: d.Get("undefaction").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("timeout"); !raw.IsNull() {
+		rewriteparam.Timeout = intPtr(d.Get("timeout").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Rewriteparam.Type(), &rewriteparam)
@@ -85,7 +88,7 @@ func updateRewriteparamFunc(ctx context.Context, d *schema.ResourceData, meta in
 
 	if d.HasChange("timeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Timeout has changed for rewriteparam, starting update")
-		rewriteparam.Timeout = d.Get("timeout").(int)
+		rewriteparam.Timeout = intPtr(d.Get("timeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("undefaction") {

@@ -39,11 +39,11 @@ type Service struct {
 	/**
 	* Port number of the service.
 	*/
-	Port int `json:"port,omitempty"`
+	Port *int `json:"port,omitempty"`
 	/**
 	* Port to which clear text data must be sent after the appliance decrypts incoming SSL traffic. Applicable to transparent SSL services.
 	*/
-	Cleartextport int `json:"cleartextport,omitempty"`
+	Cleartextport *int `json:"cleartextport,omitempty"`
 	/**
 	* Cache type supported by the cache server.
 	*/
@@ -51,7 +51,7 @@ type Service struct {
 	/**
 	* Maximum number of simultaneous open connections to the service.
 	*/
-	Maxclient int `json:"maxclient,omitempty"`
+	Maxclient *int `json:"maxclient,omitempty"`
 	/**
 	* Monitor the health of this service. Available settings function as follows:
 		YES - Send probes to check the health of the service.
@@ -62,7 +62,7 @@ type Service struct {
 	* Maximum number of requests that can be sent on a persistent connection to the service.
 		Note: Connection requests beyond this value are rejected.
 	*/
-	Maxreq int `json:"maxreq,omitempty"`
+	Maxreq *int `json:"maxreq,omitempty"`
 	/**
 	* Use the transparent cache redirection virtual server to forward requests to the cache server.
 		Note: Do not specify this parameter if you set the Cache Type parameter.
@@ -104,11 +104,11 @@ type Service struct {
 	/**
 	* Time, in seconds, after which to terminate an idle client connection.
 	*/
-	Clttimeout int `json:"clttimeout,omitempty"`
+	Clttimeout *int `json:"clttimeout,omitempty"`
 	/**
 	* Time, in seconds, after which to terminate an idle server connection.
 	*/
-	Svrtimeout int `json:"svrtimeout,omitempty"`
+	Svrtimeout *int `json:"svrtimeout,omitempty"`
 	/**
 	* Unique identifier for the service. Used when the persistency type for the virtual server is set to Custom Server ID.
 	*/
@@ -116,7 +116,7 @@ type Service struct {
 	/**
 	* The  identifier for the service. This is used when the persistency type is set to Custom Server ID.
 	*/
-	Serverid int `json:"serverid,omitempty"`
+	Serverid *int `json:"serverid,omitempty"`
 	/**
 	* Enable client keep-alive for the service.
 	*/
@@ -132,7 +132,7 @@ type Service struct {
 	/**
 	* Maximum bandwidth, in Kbps, allocated to the service.
 	*/
-	Maxbandwidth int `json:"maxbandwidth,omitempty"`
+	Maxbandwidth *int `json:"maxbandwidth,omitempty"`
 	/**
 	* Use Layer 2 mode to bridge the packets sent to this service if it is marked as DOWN. If the service is DOWN, and this parameter is disabled, the packets are dropped.
 	*/
@@ -140,7 +140,7 @@ type Service struct {
 	/**
 	* Minimum sum of weights of the monitors that are bound to this service. Used to determine whether to mark a service as UP or DOWN.
 	*/
-	Monthreshold int `json:"monthreshold,omitempty"`
+	Monthreshold *int `json:"monthreshold,omitempty"`
 	/**
 	* Initial state of the service.
 	*/
@@ -168,7 +168,7 @@ type Service struct {
 	/**
 	* A numerical identifier that can be used by hash based load balancing methods. Must be unique for each service.
 	*/
-	Hashid int `json:"hashid,omitempty"`
+	Hashid *int `json:"hashid,omitempty"`
 	/**
 	* Any information about the service.
 	*/
@@ -184,7 +184,7 @@ type Service struct {
 	/**
 	* Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.
 	*/
-	Td int `json:"td,omitempty"`
+	Td *int `json:"td,omitempty"`
 	/**
 	* By turning on this option packets destined to a service in a cluster will not under go any steering. Turn this option for single packet request response mode or when the upstream device is performing a proper RSS for connection based distribution.
 	*/
@@ -204,7 +204,7 @@ type Service struct {
 	/**
 	* Weight to assign to the monitor-service binding. When a monitor is UP, the weight assigned to its binding with the service determines how much the monitor contributes toward keeping the health of the service above the value configured for the Monitor Threshold parameter.
 	*/
-	Weight int `json:"weight,omitempty"`
+	Weight *int `json:"weight,omitempty"`
 	/**
 	* Name of the monitor bound to the specified service.
 	*/
@@ -212,7 +212,7 @@ type Service struct {
 	/**
 	* Time, in seconds, allocated to the NetScaler for a graceful shutdown of the service. During this period, new requests are sent to the service only for clients who already have persistent sessions on the appliance. Requests from new clients are load balanced among other available services. After the delay time expires, no requests are sent to the service, and the service is marked as unavailable (OUT OF SERVICE).
 	*/
-	Delay int `json:"delay,omitempty"`
+	Delay *int `json:"delay,omitempty"`
 	/**
 	* Shut down gracefully, not accepting any new connections, and disabling the service when all of its connections are closed.
 	*/

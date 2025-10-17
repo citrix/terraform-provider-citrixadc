@@ -179,16 +179,25 @@ func TestAccServicegroup_AssertNonUpdateableAttributes(t *testing.T) {
 	testHelperVerifyImmutabilityFunc(c, t, servicegroupType, servicegroupName, servicegroupInstance, "cachetype")
 	servicegroupInstance.Cachetype = ""
 
+	servicegroupInstance = basic.Servicegroup{
+		Servicegroupname: servicegroupName,
+	}
+
 	//td
-	servicegroupInstance.Td = 2
+	servicegroupInstance.Td = intPtr(2)
 	testHelperVerifyImmutabilityFunc(c, t, servicegroupType, servicegroupName, servicegroupInstance, "td")
-	servicegroupInstance.Td = 0
+
+	servicegroupInstance = basic.Servicegroup{
+		Servicegroupname: servicegroupName,
+	}
 
 	//memberport
-	servicegroupInstance.Memberport = 80
+	servicegroupInstance.Memberport = intPtr(80)
 	testHelperVerifyImmutabilityFunc(c, t, servicegroupType, servicegroupName, servicegroupInstance, "memberport")
-	servicegroupInstance.Memberport = 0
 
+	servicegroupInstance = basic.Servicegroup{
+		Servicegroupname: servicegroupName,
+	}
 	//includemembers
 	servicegroupInstance.Includemembers = true
 	testHelperVerifyImmutabilityFunc(c, t, servicegroupType, servicegroupName, servicegroupInstance, "includemembers")

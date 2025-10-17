@@ -47,7 +47,7 @@ type Systemuser struct {
 	/**
 	* CLI session inactivity timeout, in seconds. If Restrictedtimeout argument of system parameter is enabled, Timeout can have values in the range [300-86400] seconds. If Restrictedtimeout argument of system parameter is disabled, Timeout can have values in the range [0, 10-100000000] seconds. Default value is 900 seconds.
 	*/
-	Timeout int `json:"timeout,omitempty"`
+	Timeout *int `json:"timeout,omitempty"`
 	/**
 	* Users logging privilege
 	*/
@@ -55,7 +55,7 @@ type Systemuser struct {
 	/**
 	* Maximum number of client connection allowed per user
 	*/
-	Maxsession int `json:"maxsession,omitempty"`
+	Maxsession *int `json:"maxsession,omitempty"`
 	/**
 	* Allowed Management interfaces to the system user. By default user is allowed from both API and CLI interfaces. If management interface for a user is set to API, then user is not allowed to access NS through CLI. GUI interface will come under API interface
 	*/

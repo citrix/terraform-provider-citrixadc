@@ -17,48 +17,30 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccAppfwprofile_contenttype_binding_basic = `
 	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
 		name                     = "tf_appfwprofile"
-		bufferoverflowaction     = ["none"]
-		contenttypeaction        = ["none"]
-		cookieconsistencyaction  = ["none"]
-		creditcard               = ["none"]
-		creditcardaction         = ["none"]
-		crosssitescriptingaction = ["none"]
-		csrftagaction            = ["none"]
-		denyurlaction            = ["none"]
-		dynamiclearning          = ["none"]
-		fieldconsistencyaction   = ["none"]
-		fieldformataction        = ["none"]
-		fileuploadtypesaction    = ["none"]
-		inspectcontenttypes      = ["none"]
-		jsondosaction            = ["none"]
-		jsonsqlinjectionaction   = ["none"]
-		jsonxssaction            = ["none"]
-		multipleheaderaction     = ["none"]
-		sqlinjectionaction       = ["none"]
-		starturlaction           = ["none"]
 		type                     = ["HTML"]
-		xmlattachmentaction      = ["none"]
-		xmldosaction             = ["none"]
-		xmlformataction          = ["none"]
-		xmlsoapfaultaction       = ["none"]
-		xmlsqlinjectionaction    = ["none"]
-		xmlvalidationaction      = ["none"]
-		xmlwsiaction             = ["none"]
-		xmlxssaction             = ["none"]
 	}
-	resource "citrixadc_appfwprofile_contenttype_binding" "tf_binding" {
+	resource "citrixadc_appfwprofile_contenttype_binding" "tf_binding1" {
 		name           = citrixadc_appfwprofile.tf_appfwprofile.name
 		contenttype    = "hello"
+		state          = "ENABLED"
+		alertonly      = "ON"
+		isautodeployed = "NOTAUTODEPLOYED"
+		comment        = "Testing"
+	}
+	resource "citrixadc_appfwprofile_contenttype_binding" "tf_binding2" {
+		name           = citrixadc_appfwprofile.tf_appfwprofile.name
+		contenttype    = "world"
 		state          = "ENABLED"
 		alertonly      = "ON"
 		isautodeployed = "NOTAUTODEPLOYED"
@@ -70,34 +52,7 @@ const testAccAppfwprofile_contenttype_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
 	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
 		name                     = "tf_appfwprofile"
-		bufferoverflowaction     = ["none"]
-		contenttypeaction        = ["none"]
-		cookieconsistencyaction  = ["none"]
-		creditcard               = ["none"]
-		creditcardaction         = ["none"]
-		crosssitescriptingaction = ["none"]
-		csrftagaction            = ["none"]
-		denyurlaction            = ["none"]
-		dynamiclearning          = ["none"]
-		fieldconsistencyaction   = ["none"]
-		fieldformataction        = ["none"]
-		fileuploadtypesaction    = ["none"]
-		inspectcontenttypes      = ["none"]
-		jsondosaction            = ["none"]
-		jsonsqlinjectionaction   = ["none"]
-		jsonxssaction            = ["none"]
-		multipleheaderaction     = ["none"]
-		sqlinjectionaction       = ["none"]
-		starturlaction           = ["none"]
 		type                     = ["HTML"]
-		xmlattachmentaction      = ["none"]
-		xmldosaction             = ["none"]
-		xmlformataction          = ["none"]
-		xmlsoapfaultaction       = ["none"]
-		xmlsqlinjectionaction    = ["none"]
-		xmlvalidationaction      = ["none"]
-		xmlwsiaction             = ["none"]
-		xmlxssaction             = ["none"]
 	}
 `
 
@@ -110,13 +65,25 @@ func TestAccAppfwprofile_contenttype_binding_basic(t *testing.T) {
 			{
 				Config: testAccAppfwprofile_contenttype_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppfwprofile_contenttype_bindingExist("citrixadc_appfwprofile_contenttype_binding.tf_binding", nil),
+					testAccCheckAppfwprofile_contenttype_bindingExist("citrixadc_appfwprofile_contenttype_binding.tf_binding1", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_contenttype_binding.tf_binding1", "contenttype", "hello"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_contenttype_binding.tf_binding1", "state", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_contenttype_binding.tf_binding1", "alertonly", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_contenttype_binding.tf_binding1", "isautodeployed", "NOTAUTODEPLOYED"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_contenttype_binding.tf_binding1", "comment", "Testing"),
+					testAccCheckAppfwprofile_contenttype_bindingExist("citrixadc_appfwprofile_contenttype_binding.tf_binding2", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_contenttype_binding.tf_binding2", "contenttype", "world"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_contenttype_binding.tf_binding2", "state", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_contenttype_binding.tf_binding2", "alertonly", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_contenttype_binding.tf_binding2", "isautodeployed", "NOTAUTODEPLOYED"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_contenttype_binding.tf_binding2", "comment", "Testing"),
 				),
 			},
 			{
 				Config: testAccAppfwprofile_contenttype_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppfwprofile_contenttype_bindingNotExist("citrixadc_appfwprofile_contenttype_binding.tf_binding", "tf_appfwprofile,hello"),
+					testAccCheckAppfwprofile_contenttype_bindingNotExist("citrixadc_appfwprofile_contenttype_binding.tf_binding1", "tf_appfwprofile,hello"),
+					testAccCheckAppfwprofile_contenttype_bindingNotExist("citrixadc_appfwprofile_contenttype_binding.tf_binding2", "tf_appfwprofile,world"),
 				),
 			},
 		},

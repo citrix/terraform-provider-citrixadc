@@ -45,8 +45,11 @@ func createResponderparamFunc(ctx context.Context, d *schema.ResourceData, meta 
 	responderparamName = resource.PrefixedUniqueId("tf-responderparam-")
 
 	responderparam := responder.Responderparam{
-		Timeout:     d.Get("timeout").(int),
 		Undefaction: d.Get("undefaction").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("timeout"); !raw.IsNull() {
+		responderparam.Timeout = intPtr(d.Get("timeout").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Responderparam.Type(), &responderparam)
@@ -85,7 +88,7 @@ func updateResponderparamFunc(ctx context.Context, d *schema.ResourceData, meta 
 
 	if d.HasChange("timeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Timeout has changed for responderparam, starting update")
-		responderparam.Timeout = d.Get("timeout").(int)
+		responderparam.Timeout = intPtr(d.Get("timeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("undefaction") {

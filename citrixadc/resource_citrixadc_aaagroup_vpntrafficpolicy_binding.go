@@ -63,8 +63,11 @@ func createAaagroup_vpntrafficpolicy_bindingFunc(ctx context.Context, d *schema.
 		Gotopriorityexpression: d.Get("gotopriorityexpression").(string),
 		Groupname:              d.Get("groupname").(string),
 		Policy:                 d.Get("policy").(string),
-		Priority:               d.Get("priority").(int),
 		Type:                   d.Get("type").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		aaagroup_vpntrafficpolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Aaagroup_vpntrafficpolicy_binding.Type(), &aaagroup_vpntrafficpolicy_binding)

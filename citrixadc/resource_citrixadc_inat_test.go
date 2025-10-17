@@ -166,11 +166,6 @@ func TestAccInat_AssertNonUpdateableAttributes(t *testing.T) {
 	testHelperVerifyImmutabilityFunc(c, t, inatType, inatName, inatInstance, "publicip")
 	inatInstance.Publicip = ""
 
-	// td
-	inatInstance.Td = 1
-	testHelperVerifyImmutabilityFunc(c, t, inatType, inatName, inatInstance, "td")
-	inatInstance.Td = 0
-
 	// name
 	newName := "inat-new-name"
 	inatInstance.Name = newName
@@ -183,4 +178,9 @@ func TestAccInat_AssertNonUpdateableAttributes(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
+
+	// td
+	inatInstance.Td = intPtr(1)
+	testHelperVerifyImmutabilityFunc(c, t, inatType, inatName, inatInstance, "td")
+	inatInstance.Td = intPtr(0)
 }

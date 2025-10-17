@@ -56,6 +56,18 @@ func resourceCitrixAdcAppfwprofileDenyurlBinding() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
+			"resourceid": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"ruletype": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -77,6 +89,8 @@ func createAppfwprofileDenyurlBindingFunc(ctx context.Context, d *schema.Resourc
 		Isautodeployed: d.Get("isautodeployed").(string),
 		Name:           d.Get("name").(string),
 		State:          d.Get("state").(string),
+		Resourceid:     d.Get("resourceid").(string),
+		Ruletype:       d.Get("ruletype").(string),
 	}
 
 	err := client.UpdateUnnamedResource(service.Appfwprofile_denyurl_binding.Type(), &appfwprofileDenyurlBinding)
@@ -136,6 +150,8 @@ func readAppfwprofileDenyurlBindingFunc(ctx context.Context, d *schema.ResourceD
 	d.Set("isautodeployed", data["isautodeployed"])
 	d.Set("name", data["name"])
 	d.Set("state", data["state"])
+	d.Set("resourceid", data["resourceid"])
+	d.Set("ruletype", data["ruletype"])
 
 	return nil
 

@@ -52,9 +52,14 @@ func createNslicenseserverFunc(ctx context.Context, d *schema.ResourceData, meta
 
 	nslicenseserver := ns.Nslicenseserver{
 		Forceupdateip: d.Get("forceupdateip").(bool),
-		Nodeid:        d.Get("nodeid").(int),
-		Port:          d.Get("port").(int),
 		Servername:    d.Get("servername").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("nodeid"); !raw.IsNull() {
+		nslicenseserver.Nodeid = intPtr(d.Get("nodeid").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("port"); !raw.IsNull() {
+		nslicenseserver.Port = intPtr(d.Get("port").(int))
 	}
 
 	_, err := client.AddResource("nslicenseserver", "", &nslicenseserver)

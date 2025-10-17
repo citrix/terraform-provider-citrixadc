@@ -71,12 +71,19 @@ func createNtpserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	ntpserver := ntp.Ntpserver{
 		Autokey:            d.Get("autokey").(bool),
-		Key:                d.Get("key").(int),
-		Maxpoll:            d.Get("maxpoll").(int),
-		Minpoll:            d.Get("minpoll").(int),
 		Preferredntpserver: d.Get("preferredntpserver").(string),
 		Serverip:           d.Get("serverip").(string),
 		Servername:         d.Get("servername").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("key"); !raw.IsNull() {
+		ntpserver.Key = intPtr(d.Get("key").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxpoll"); !raw.IsNull() {
+		ntpserver.Maxpoll = intPtr(d.Get("maxpoll").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("minpoll"); !raw.IsNull() {
+		ntpserver.Minpoll = intPtr(d.Get("minpoll").(int))
 	}
 
 	_, err := client.AddResource(service.Ntpserver.Type(), ntpserverName, &ntpserver)
@@ -149,17 +156,17 @@ func updateNtpserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("key") {
 		log.Printf("[DEBUG]  citrixadc-provider: Key has changed for ntpserver %s, starting update", ntpserverName)
-		ntpserver.Key = d.Get("key").(int)
+		ntpserver.Key = intPtr(d.Get("key").(int))
 		hasChange = true
 	}
 	if d.HasChange("maxpoll") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxpoll has changed for ntpserver %s, starting update", ntpserverName)
-		ntpserver.Maxpoll = d.Get("maxpoll").(int)
+		ntpserver.Maxpoll = intPtr(d.Get("maxpoll").(int))
 		hasChange = true
 	}
 	if d.HasChange("minpoll") {
 		log.Printf("[DEBUG]  citrixadc-provider: Minpoll has changed for ntpserver %s, starting update", ntpserverName)
-		ntpserver.Minpoll = d.Get("minpoll").(int)
+		ntpserver.Minpoll = intPtr(d.Get("minpoll").(int))
 		hasChange = true
 	}
 	if d.HasChange("preferredntpserver") {

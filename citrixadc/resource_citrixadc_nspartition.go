@@ -146,22 +146,22 @@ func updateNspartitionFunc(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	if d.HasChange("maxbandwidth") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxbandwidth has changed for nspartition %s, starting update", nspartitionName)
-		nspartition["maxbandwidth"] = d.Get("maxbandwidth").(int)
+		nspartition["maxbandwidth"] = intPtr(d.Get("maxbandwidth").(int))
 		hasChange = true
 	}
 	if d.HasChange("maxconn") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxconn has changed for nspartition %s, starting update", nspartitionName)
-		nspartition["maxconn"] = d.Get("maxconn").(int)
+		nspartition["maxconn"] = intPtr(d.Get("maxconn").(int))
 		hasChange = true
 	}
 	if d.HasChange("maxmemlimit") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxmemlimit has changed for nspartition %s, starting update", nspartitionName)
-		nspartition["maxmemlimit"] = d.Get("maxmemlimit").(int)
+		nspartition["maxmemlimit"] = intPtr(d.Get("maxmemlimit").(int))
 		hasChange = true
 	}
 	if d.HasChange("minbandwidth") {
 		log.Printf("[DEBUG]  citrixadc-provider: Minbandwidth has changed for nspartition %s, starting update", nspartitionName)
-		nspartition["minbandwidth"] = d.Get("minbandwidth").(int)
+		nspartition["minbandwidth"] = intPtr(d.Get("minbandwidth").(int))
 		hasChange = true
 	}
 	if d.HasChange("partitionmac") {

@@ -43,8 +43,11 @@ func createNsspparamsFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	// there is no primary key in nsspparams resource. Hence generate one for terraform state maintenance
 	nsspparamsName = resource.PrefixedUniqueId("tf-nsspparams-")
 	nsspparams := ns.Nsspparams{
-		Basethreshold: d.Get("basethreshold").(int),
-		Throttle:      d.Get("throttle").(string),
+		Throttle: d.Get("throttle").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("basethreshold"); !raw.IsNull() {
+		nsspparams.Basethreshold = intPtr(d.Get("basethreshold").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Nsspparams.Type(), &nsspparams)
@@ -82,7 +85,7 @@ func updateNsspparamsFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	hasChange := false
 	if d.HasChange("basethreshold") {
 		log.Printf("[DEBUG]  citrixadc-provider: Basethreshold has changed for nsspparams , starting update")
-		nsspparams.Basethreshold = d.Get("basethreshold").(int)
+		nsspparams.Basethreshold = intPtr(d.Get("basethreshold").(int))
 		hasChange = true
 	}
 	if d.HasChange("throttle") {

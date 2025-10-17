@@ -143,7 +143,7 @@ func testAccSaveRaceSetup(t *testing.T) {
 		lbvserver := lb.Lbvserver{
 			Name:        lbvserverName,
 			Ipv46:       "10.3.4.25",
-			Port:        80,
+			Port:        intPtr(80),
 			Servicetype: "HTTP",
 		}
 		_, err := client.AddResource("lbvserver", lbvserverName, &lbvserver)

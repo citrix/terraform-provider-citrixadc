@@ -81,8 +81,11 @@ func createVpnvserver_authenticationsamlpolicy_bindingFunc(ctx context.Context, 
 		Groupextraction:        d.Get("groupextraction").(bool),
 		Name:                   d.Get("name").(string),
 		Policy:                 d.Get("policy").(string),
-		Priority:               d.Get("priority").(int),
 		Secondary:              d.Get("secondary").(bool),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		vpnvserver_authenticationsamlpolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Vpnvserver_authenticationsamlpolicy_binding.Type(), &vpnvserver_authenticationsamlpolicy_binding)

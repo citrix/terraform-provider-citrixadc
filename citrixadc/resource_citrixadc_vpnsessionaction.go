@@ -422,7 +422,6 @@ func createVpnsessionactionFunc(ctx context.Context, d *schema.ResourceData, met
 		Clientcleanupprompt:        d.Get("clientcleanupprompt").(string),
 		Clientconfiguration:        toStringList(d.Get("clientconfiguration").([]interface{})),
 		Clientdebug:                d.Get("clientdebug").(string),
-		Clientidletimeout:          d.Get("clientidletimeout").(int),
 		Clientlessmodeurlencoding:  d.Get("clientlessmodeurlencoding").(string),
 		Clientlesspersistentcookie: d.Get("clientlesspersistentcookie").(string),
 		Clientlessvpnmode:          d.Get("clientlessvpnmode").(string),
@@ -436,8 +435,6 @@ func createVpnsessionactionFunc(ctx context.Context, d *schema.ResourceData, met
 		Emailhome:                  d.Get("emailhome").(string),
 		Epaclienttype:              d.Get("epaclienttype").(string),
 		Forcecleanup:               toStringList(d.Get("forcecleanup").([]interface{})),
-		Forcedtimeout:              d.Get("forcedtimeout").(int),
-		Forcedtimeoutwarning:       d.Get("forcedtimeoutwarning").(int),
 		Fqdnspoofedip:              d.Get("fqdnspoofedip").(string),
 		Ftpproxy:                   d.Get("ftpproxy").(string),
 		Gopherproxy:                d.Get("gopherproxy").(string),
@@ -464,7 +461,6 @@ func createVpnsessionactionFunc(ctx context.Context, d *schema.ResourceData, met
 		Rdpclientprofilename:       d.Get("rdpclientprofilename").(string),
 		Rfc1918:                    d.Get("rfc1918").(string),
 		Securebrowse:               d.Get("securebrowse").(string),
-		Sesstimeout:                d.Get("sesstimeout").(int),
 		Sfgatewayauthtype:          d.Get("sfgatewayauthtype").(string),
 		Smartgroup:                 d.Get("smartgroup").(string),
 		Socksproxy:                 d.Get("socksproxy").(string),
@@ -486,6 +482,19 @@ func createVpnsessionactionFunc(ctx context.Context, d *schema.ResourceData, met
 		Windowspluginupgrade:       d.Get("windowspluginupgrade").(string),
 		Winsip:                     d.Get("winsip").(string),
 		Wiportalmode:               d.Get("wiportalmode").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("clientidletimeout"); !raw.IsNull() {
+		vpnsessionaction.Clientidletimeout = intPtr(d.Get("clientidletimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("forcedtimeout"); !raw.IsNull() {
+		vpnsessionaction.Forcedtimeout = intPtr(d.Get("forcedtimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("forcedtimeoutwarning"); !raw.IsNull() {
+		vpnsessionaction.Forcedtimeoutwarning = intPtr(d.Get("forcedtimeoutwarning").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("sesstimeout"); !raw.IsNull() {
+		vpnsessionaction.Sesstimeout = intPtr(d.Get("sesstimeout").(int))
 	}
 
 	_, err := client.AddResource(service.Vpnsessionaction.Type(), vpnsessionactionName, &vpnsessionaction)
@@ -660,7 +669,7 @@ func updateVpnsessionactionFunc(ctx context.Context, d *schema.ResourceData, met
 	}
 	if d.HasChange("clientidletimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Clientidletimeout has changed for vpnsessionaction %s, starting update", vpnsessionactionName)
-		vpnsessionaction.Clientidletimeout = d.Get("clientidletimeout").(int)
+		vpnsessionaction.Clientidletimeout = intPtr(d.Get("clientidletimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("clientlessmodeurlencoding") {
@@ -730,12 +739,12 @@ func updateVpnsessionactionFunc(ctx context.Context, d *schema.ResourceData, met
 	}
 	if d.HasChange("forcedtimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Forcedtimeout has changed for vpnsessionaction %s, starting update", vpnsessionactionName)
-		vpnsessionaction.Forcedtimeout = d.Get("forcedtimeout").(int)
+		vpnsessionaction.Forcedtimeout = intPtr(d.Get("forcedtimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("forcedtimeoutwarning") {
 		log.Printf("[DEBUG]  citrixadc-provider: Forcedtimeoutwarning has changed for vpnsessionaction %s, starting update", vpnsessionactionName)
-		vpnsessionaction.Forcedtimeoutwarning = d.Get("forcedtimeoutwarning").(int)
+		vpnsessionaction.Forcedtimeoutwarning = intPtr(d.Get("forcedtimeoutwarning").(int))
 		hasChange = true
 	}
 	if d.HasChange("fqdnspoofedip") {
@@ -865,7 +874,7 @@ func updateVpnsessionactionFunc(ctx context.Context, d *schema.ResourceData, met
 	}
 	if d.HasChange("sesstimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Sesstimeout has changed for vpnsessionaction %s, starting update", vpnsessionactionName)
-		vpnsessionaction.Sesstimeout = d.Get("sesstimeout").(int)
+		vpnsessionaction.Sesstimeout = intPtr(d.Get("sesstimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("sfgatewayauthtype") {

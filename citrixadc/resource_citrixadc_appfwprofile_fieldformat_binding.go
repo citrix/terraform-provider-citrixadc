@@ -69,8 +69,8 @@ func resourceCitrixAdcAppfwprofile_fieldformat_binding() *schema.Resource {
 			},
 			"fieldtype": {
 				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Required: true,
+				Computed: false,
 				ForceNew: true,
 			},
 			"isautodeployed": {
@@ -115,19 +115,24 @@ func createAppfwprofile_fieldformat_bindingFunc(ctx context.Context, d *schema.R
 	formactionurl_ff := d.Get("formactionurl_ff")
 	bindingId := fmt.Sprintf("%s,%s,%s", name, fieldformat, formactionurl_ff)
 	appfwprofile_fieldformat_binding := appfw.Appfwprofilefieldformatbinding{
-		Alertonly:            d.Get("alertonly").(string),
-		Comment:              d.Get("comment").(string),
-		Fieldformat:          d.Get("fieldformat").(string),
-		Fieldformatmaxlength: d.Get("fieldformatmaxlength").(int),
-		Fieldformatminlength: d.Get("fieldformatminlength").(int),
-		Fieldtype:            d.Get("fieldtype").(string),
-		Formactionurlff:      d.Get("formactionurl_ff").(string),
-		Isautodeployed:       d.Get("isautodeployed").(string),
-		Isregexff:            d.Get("isregexff").(string),
-		Name:                 d.Get("name").(string),
-		Resourceid:           d.Get("resourceid").(string),
-		Ruletype:             d.Get("ruletype").(string),
-		State:                d.Get("state").(string),
+		Alertonly:       d.Get("alertonly").(string),
+		Comment:         d.Get("comment").(string),
+		Fieldformat:     d.Get("fieldformat").(string),
+		Fieldtype:       d.Get("fieldtype").(string),
+		Formactionurlff: d.Get("formactionurl_ff").(string),
+		Isautodeployed:  d.Get("isautodeployed").(string),
+		Isregexff:       d.Get("isregexff").(string),
+		Name:            d.Get("name").(string),
+		Resourceid:      d.Get("resourceid").(string),
+		Ruletype:        d.Get("ruletype").(string),
+		State:           d.Get("state").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("fieldformatmaxlength"); !raw.IsNull() {
+		appfwprofile_fieldformat_binding.Fieldformatmaxlength = intPtr(d.Get("fieldformatmaxlength").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("fieldformatminlength"); !raw.IsNull() {
+		appfwprofile_fieldformat_binding.Fieldformatminlength = intPtr(d.Get("fieldformatminlength").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Appfwprofile_fieldformat_binding.Type(), &appfwprofile_fieldformat_binding)

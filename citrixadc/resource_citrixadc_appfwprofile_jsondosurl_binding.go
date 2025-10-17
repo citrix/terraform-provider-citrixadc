@@ -158,22 +158,35 @@ func createAppfwprofile_jsondosurl_bindingFunc(ctx context.Context, d *schema.Re
 		Comment:                     d.Get("comment").(string),
 		Isautodeployed:              d.Get("isautodeployed").(string),
 		Jsondosurl:                  d.Get("jsondosurl").(string),
-		Jsonmaxarraylength:          d.Get("jsonmaxarraylength").(int),
 		Jsonmaxarraylengthcheck:     d.Get("jsonmaxarraylengthcheck").(string),
-		Jsonmaxcontainerdepth:       d.Get("jsonmaxcontainerdepth").(int),
 		Jsonmaxcontainerdepthcheck:  d.Get("jsonmaxcontainerdepthcheck").(string),
-		Jsonmaxdocumentlength:       d.Get("jsonmaxdocumentlength").(int),
 		Jsonmaxdocumentlengthcheck:  d.Get("jsonmaxdocumentlengthcheck").(string),
-		Jsonmaxobjectkeycount:       d.Get("jsonmaxobjectkeycount").(int),
 		Jsonmaxobjectkeycountcheck:  d.Get("jsonmaxobjectkeycountcheck").(string),
-		Jsonmaxobjectkeylength:      d.Get("jsonmaxobjectkeylength").(int),
 		Jsonmaxobjectkeylengthcheck: d.Get("jsonmaxobjectkeylengthcheck").(string),
-		Jsonmaxstringlength:         d.Get("jsonmaxstringlength").(int),
 		Jsonmaxstringlengthcheck:    d.Get("jsonmaxstringlengthcheck").(string),
 		Name:                        d.Get("name").(string),
 		Resourceid:                  d.Get("resourceid").(string),
 		Ruletype:                    d.Get("ruletype").(string),
 		State:                       d.Get("state").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("jsonmaxarraylength"); !raw.IsNull() {
+		appfwprofile_jsondosurl_binding.Jsonmaxarraylength = intPtr(d.Get("jsonmaxarraylength").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("jsonmaxcontainerdepth"); !raw.IsNull() {
+		appfwprofile_jsondosurl_binding.Jsonmaxcontainerdepth = intPtr(d.Get("jsonmaxcontainerdepth").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("jsonmaxdocumentlength"); !raw.IsNull() {
+		appfwprofile_jsondosurl_binding.Jsonmaxdocumentlength = intPtr(d.Get("jsonmaxdocumentlength").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("jsonmaxobjectkeycount"); !raw.IsNull() {
+		appfwprofile_jsondosurl_binding.Jsonmaxobjectkeycount = intPtr(d.Get("jsonmaxobjectkeycount").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("jsonmaxobjectkeylength"); !raw.IsNull() {
+		appfwprofile_jsondosurl_binding.Jsonmaxobjectkeylength = intPtr(d.Get("jsonmaxobjectkeylength").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("jsonmaxstringlength"); !raw.IsNull() {
+		appfwprofile_jsondosurl_binding.Jsonmaxstringlength = intPtr(d.Get("jsonmaxstringlength").(int))
 	}
 
 	err := client.UpdateUnnamedResource("appfwprofile_jsondosurl_binding", &appfwprofile_jsondosurl_binding)

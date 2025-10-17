@@ -47,7 +47,7 @@ type Snmpmib struct {
 	/**
 	* ID of the cluster node for which we are setting the mib. This is a mandatory argument to set snmp mib on CLIP.
 	*/
-	Ownernode int `json:"ownernode,omitempty"`
+	Ownernode *int `json:"ownernode,omitempty"`
 
 	//------- Read only Parameter ---------;
 

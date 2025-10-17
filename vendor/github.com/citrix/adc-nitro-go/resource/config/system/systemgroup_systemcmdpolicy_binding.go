@@ -27,7 +27,7 @@ type Systemgroupsystemcmdpolicybinding struct {
 	/**
 	* The priority of the command policy.
 	*/
-	Priority int `json:"priority,omitempty"`
+	Priority *int `json:"priority,omitempty"`
 	/**
 	* Name of the system group.
 	*/

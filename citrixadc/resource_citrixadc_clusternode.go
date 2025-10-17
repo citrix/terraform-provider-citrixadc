@@ -79,13 +79,20 @@ func createClusternodeFunc(ctx context.Context, d *schema.ResourceData, meta int
 
 	clusternode := cluster.Clusternode{
 		Backplane:  d.Get("backplane").(string),
-		Delay:      d.Get("delay").(int),
 		Ipaddress:  d.Get("ipaddress").(string),
 		Nodegroup:  d.Get("nodegroup").(string),
-		Nodeid:     d.Get("nodeid").(int),
-		Priority:   d.Get("priority").(int),
 		State:      d.Get("state").(string),
 		Tunnelmode: d.Get("tunnelmode").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("delay"); !raw.IsNull() {
+		clusternode.Delay = intPtr(d.Get("delay").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("nodeid"); !raw.IsNull() {
+		clusternode.Nodeid = intPtr(d.Get("nodeid").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		clusternode.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	_, err := client.AddResource(service.Clusternode.Type(), clusternodeId, &clusternode)
@@ -127,8 +134,10 @@ func updateClusternodeFunc(ctx context.Context, d *schema.ResourceData, meta int
 	client := meta.(*NetScalerNitroClient).client
 	clusternodeId := strconv.Itoa(d.Get("nodeid").(int))
 
-	clusternode := cluster.Clusternode{
-		Nodeid: d.Get("nodeid").(int),
+	clusternode := cluster.Clusternode{}
+
+	if raw := d.GetRawConfig().GetAttr("nodeid"); !raw.IsNull() {
+		clusternode.Nodeid = intPtr(d.Get("nodeid").(int))
 	}
 	hasChange := false
 	if d.HasChange("backplane") {
@@ -138,7 +147,7 @@ func updateClusternodeFunc(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	if d.HasChange("delay") {
 		log.Printf("[DEBUG]  citrixadc-provider: Delay has changed for clusternode %s, starting update", clusternodeId)
-		clusternode.Delay = d.Get("delay").(int)
+		clusternode.Delay = intPtr(d.Get("delay").(int))
 		hasChange = true
 	}
 	if d.HasChange("nodegroup") {
@@ -148,12 +157,12 @@ func updateClusternodeFunc(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	if d.HasChange("nodeid") {
 		log.Printf("[DEBUG]  citrixadc-provider: Nodeid has changed for clusternode %s, starting update", clusternodeId)
-		clusternode.Nodeid = d.Get("nodeid").(int)
+		clusternode.Nodeid = intPtr(d.Get("nodeid").(int))
 		hasChange = true
 	}
 	if d.HasChange("priority") {
 		log.Printf("[DEBUG]  citrixadc-provider: Priority has changed for clusternode %s, starting update", clusternodeId)
-		clusternode.Priority = d.Get("priority").(int)
+		clusternode.Priority = intPtr(d.Get("priority").(int))
 		hasChange = true
 	}
 	if d.HasChange("state") {

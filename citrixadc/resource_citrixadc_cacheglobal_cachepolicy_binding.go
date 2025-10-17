@@ -2,13 +2,15 @@ package citrixadc
 
 import (
 	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/cache"
 	"github.com/citrix/adc-nitro-go/service"
 
 	"fmt"
+	"log"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"log"
 )
 
 func resourceCitrixAdcCacheglobal_cachepolicy_binding() *schema.Resource {
@@ -81,8 +83,11 @@ func createCacheglobal_cachepolicy_bindingFunc(ctx context.Context, d *schema.Re
 		Labeltype:              d.Get("labeltype").(string),
 		Policy:                 d.Get("policy").(string),
 		Precededefrules:        d.Get("precededefrules").(string),
-		Priority:               d.Get("priority").(int),
 		Type:                   d.Get("type").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		cacheglobal_cachepolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Cacheglobal_cachepolicy_binding.Type(), &cacheglobal_cachepolicy_binding)

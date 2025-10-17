@@ -157,20 +157,25 @@ func createSslcrlFunc(ctx context.Context, d *schema.ResourceData, meta interfac
 		Cakeyfile:  d.Get("cakeyfile").(string),
 		Crlname:    d.Get("crlname").(string),
 		Crlpath:    d.Get("crlpath").(string),
-		Day:        d.Get("day").(int),
 		Gencrl:     d.Get("gencrl").(string),
 		Indexfile:  d.Get("indexfile").(string),
 		Inform:     d.Get("inform").(string),
 		Interval:   d.Get("interval").(string),
 		Method:     d.Get("method").(string),
 		Password:   d.Get("password").(string),
-		Port:       d.Get("port").(int),
 		Refresh:    d.Get("refresh").(string),
 		Revoke:     d.Get("revoke").(string),
 		Scope:      d.Get("scope").(string),
 		Server:     d.Get("server").(string),
 		Time:       d.Get("time").(string),
 		Url:        d.Get("url").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("day"); !raw.IsNull() {
+		sslcrl.Day = intPtr(d.Get("day").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("port"); !raw.IsNull() {
+		sslcrl.Port = intPtr(d.Get("port").(int))
 	}
 
 	_, err := client.AddResource(service.Sslcrl.Type(), sslcrlName, &sslcrl)
@@ -273,7 +278,7 @@ func updateSslcrlFunc(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 	if d.HasChange("day") {
 		log.Printf("[DEBUG]  citrixadc-provider: Day has changed for sslcrl %s, starting update", sslcrlName)
-		sslcrl.Day = d.Get("day").(int)
+		sslcrl.Day = intPtr(d.Get("day").(int))
 		hasChange = true
 	}
 	if d.HasChange("gencrl") {
@@ -308,7 +313,7 @@ func updateSslcrlFunc(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 	if d.HasChange("port") {
 		log.Printf("[DEBUG]  citrixadc-provider: Port has changed for sslcrl %s, starting update", sslcrlName)
-		sslcrl.Port = d.Get("port").(int)
+		sslcrl.Port = intPtr(d.Get("port").(int))
 		hasChange = true
 	}
 	if d.HasChange("refresh") {

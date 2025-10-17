@@ -59,11 +59,14 @@ func createNstimerFunc(ctx context.Context, d *schema.ResourceData, meta interfa
 	client := meta.(*NetScalerNitroClient).client
 	nstimerName := d.Get("name").(string)
 	nstimer := ns.Nstimer{
-		Comment:  d.Get("comment").(string),
-		Interval: d.Get("interval").(int),
-		Name:     d.Get("name").(string),
-		Newname:  d.Get("newname").(string),
-		Unit:     d.Get("unit").(string),
+		Comment: d.Get("comment").(string),
+		Name:    d.Get("name").(string),
+		Newname: d.Get("newname").(string),
+		Unit:    d.Get("unit").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("interval"); !raw.IsNull() {
+		nstimer.Interval = intPtr(d.Get("interval").(int))
 	}
 
 	_, err := client.AddResource(service.Nstimer.Type(), nstimerName, &nstimer)
@@ -113,7 +116,7 @@ func updateNstimerFunc(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 	if d.HasChange("interval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Interval has changed for nstimer %s, starting update", nstimerName)
-		nstimer.Interval = d.Get("interval").(int)
+		nstimer.Interval = intPtr(d.Get("interval").(int))
 		hasChange = true
 	}
 	if d.HasChange("newname") {

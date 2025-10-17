@@ -111,23 +111,55 @@ func createNstimeoutFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	client := meta.(*NetScalerNitroClient).client
 	nstimeoutName := resource.PrefixedUniqueId("tf-nstimeout-")
 
-	nstimeout := ns.Nstimeout{
-		Anyclient:          d.Get("anyclient").(int),
-		Anyserver:          d.Get("anyserver").(int),
-		Anytcpclient:       d.Get("anytcpclient").(int),
-		Anytcpserver:       d.Get("anytcpserver").(int),
-		Client:             d.Get("client").(int),
-		Halfclose:          d.Get("halfclose").(int),
-		Httpclient:         d.Get("httpclient").(int),
-		Httpserver:         d.Get("httpserver").(int),
-		Newconnidletimeout: d.Get("newconnidletimeout").(int),
-		Nontcpzombie:       d.Get("nontcpzombie").(int),
-		Reducedfintimeout:  d.Get("reducedfintimeout").(int),
-		Reducedrsttimeout:  d.Get("reducedrsttimeout").(int),
-		Server:             d.Get("server").(int),
-		Tcpclient:          d.Get("tcpclient").(int),
-		Tcpserver:          d.Get("tcpserver").(int),
-		Zombie:             d.Get("zombie").(int),
+	nstimeout := ns.Nstimeout{}
+
+	if raw := d.GetRawConfig().GetAttr("anyclient"); !raw.IsNull() {
+		nstimeout.Anyclient = intPtr(d.Get("anyclient").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("anyserver"); !raw.IsNull() {
+		nstimeout.Anyserver = intPtr(d.Get("anyserver").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("anytcpclient"); !raw.IsNull() {
+		nstimeout.Anytcpclient = intPtr(d.Get("anytcpclient").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("anytcpserver"); !raw.IsNull() {
+		nstimeout.Anytcpserver = intPtr(d.Get("anytcpserver").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("client"); !raw.IsNull() {
+		nstimeout.Client = intPtr(d.Get("client").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("halfclose"); !raw.IsNull() {
+		nstimeout.Halfclose = intPtr(d.Get("halfclose").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("httpclient"); !raw.IsNull() {
+		nstimeout.Httpclient = intPtr(d.Get("httpclient").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("httpserver"); !raw.IsNull() {
+		nstimeout.Httpserver = intPtr(d.Get("httpserver").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("newconnidletimeout"); !raw.IsNull() {
+		nstimeout.Newconnidletimeout = intPtr(d.Get("newconnidletimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("nontcpzombie"); !raw.IsNull() {
+		nstimeout.Nontcpzombie = intPtr(d.Get("nontcpzombie").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("reducedfintimeout"); !raw.IsNull() {
+		nstimeout.Reducedfintimeout = intPtr(d.Get("reducedfintimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("reducedrsttimeout"); !raw.IsNull() {
+		nstimeout.Reducedrsttimeout = intPtr(d.Get("reducedrsttimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("server"); !raw.IsNull() {
+		nstimeout.Server = intPtr(d.Get("server").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("tcpclient"); !raw.IsNull() {
+		nstimeout.Tcpclient = intPtr(d.Get("tcpclient").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("tcpserver"); !raw.IsNull() {
+		nstimeout.Tcpserver = intPtr(d.Get("tcpserver").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("zombie"); !raw.IsNull() {
+		nstimeout.Zombie = intPtr(d.Get("zombie").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Nstimeout.Type(), &nstimeout)
@@ -180,82 +212,82 @@ func updateNstimeoutFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	hasChange := false
 	if d.HasChange("anyclient") {
 		log.Printf("[DEBUG]  citrixadc-provider: Anyclient has changed for nstimeout, starting update")
-		nstimeout.Anyclient = d.Get("anyclient").(int)
+		nstimeout.Anyclient = intPtr(d.Get("anyclient").(int))
 		hasChange = true
 	}
 	if d.HasChange("anyserver") {
 		log.Printf("[DEBUG]  citrixadc-provider: Anyserver has changed for nstimeout, starting update")
-		nstimeout.Anyserver = d.Get("anyserver").(int)
+		nstimeout.Anyserver = intPtr(d.Get("anyserver").(int))
 		hasChange = true
 	}
 	if d.HasChange("anytcpclient") {
 		log.Printf("[DEBUG]  citrixadc-provider: Anytcpclient has changed for nstimeout, starting update")
-		nstimeout.Anytcpclient = d.Get("anytcpclient").(int)
+		nstimeout.Anytcpclient = intPtr(d.Get("anytcpclient").(int))
 		hasChange = true
 	}
 	if d.HasChange("anytcpserver") {
 		log.Printf("[DEBUG]  citrixadc-provider: Anytcpserver has changed for nstimeout, starting update")
-		nstimeout.Anytcpserver = d.Get("anytcpserver").(int)
+		nstimeout.Anytcpserver = intPtr(d.Get("anytcpserver").(int))
 		hasChange = true
 	}
 	if d.HasChange("client") {
 		log.Printf("[DEBUG]  citrixadc-provider: Client has changed for nstimeout, starting update")
-		nstimeout.Client = d.Get("client").(int)
+		nstimeout.Client = intPtr(d.Get("client").(int))
 		hasChange = true
 	}
 	if d.HasChange("halfclose") {
 		log.Printf("[DEBUG]  citrixadc-provider: Halfclose has changed for nstimeout, starting update")
-		nstimeout.Halfclose = d.Get("halfclose").(int)
+		nstimeout.Halfclose = intPtr(d.Get("halfclose").(int))
 		hasChange = true
 	}
 	if d.HasChange("httpclient") {
 		log.Printf("[DEBUG]  citrixadc-provider: Httpclient has changed for nstimeout, starting update")
-		nstimeout.Httpclient = d.Get("httpclient").(int)
+		nstimeout.Httpclient = intPtr(d.Get("httpclient").(int))
 		hasChange = true
 	}
 	if d.HasChange("httpserver") {
 		log.Printf("[DEBUG]  citrixadc-provider: Httpserver has changed for nstimeout, starting update")
-		nstimeout.Httpserver = d.Get("httpserver").(int)
+		nstimeout.Httpserver = intPtr(d.Get("httpserver").(int))
 		hasChange = true
 	}
 	if d.HasChange("newconnidletimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Newconnidletimeout has changed for nstimeout, starting update")
-		nstimeout.Newconnidletimeout = d.Get("newconnidletimeout").(int)
+		nstimeout.Newconnidletimeout = intPtr(d.Get("newconnidletimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("nontcpzombie") {
 		log.Printf("[DEBUG]  citrixadc-provider: Nontcpzombie has changed for nstimeout, starting update")
-		nstimeout.Nontcpzombie = d.Get("nontcpzombie").(int)
+		nstimeout.Nontcpzombie = intPtr(d.Get("nontcpzombie").(int))
 		hasChange = true
 	}
 	if d.HasChange("reducedfintimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Reducedfintimeout has changed for nstimeout, starting update")
-		nstimeout.Reducedfintimeout = d.Get("reducedfintimeout").(int)
+		nstimeout.Reducedfintimeout = intPtr(d.Get("reducedfintimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("reducedrsttimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Reducedrsttimeout has changed for nstimeout, starting update")
-		nstimeout.Reducedrsttimeout = d.Get("reducedrsttimeout").(int)
+		nstimeout.Reducedrsttimeout = intPtr(d.Get("reducedrsttimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("server") {
 		log.Printf("[DEBUG]  citrixadc-provider: Server has changed for nstimeout, starting update")
-		nstimeout.Server = d.Get("server").(int)
+		nstimeout.Server = intPtr(d.Get("server").(int))
 		hasChange = true
 	}
 	if d.HasChange("tcpclient") {
 		log.Printf("[DEBUG]  citrixadc-provider: Tcpclient has changed for nstimeout, starting update")
-		nstimeout.Tcpclient = d.Get("tcpclient").(int)
+		nstimeout.Tcpclient = intPtr(d.Get("tcpclient").(int))
 		hasChange = true
 	}
 	if d.HasChange("tcpserver") {
 		log.Printf("[DEBUG]  citrixadc-provider: Tcpserver has changed for nstimeout, starting update")
-		nstimeout.Tcpserver = d.Get("tcpserver").(int)
+		nstimeout.Tcpserver = intPtr(d.Get("tcpserver").(int))
 		hasChange = true
 	}
 	if d.HasChange("zombie") {
 		log.Printf("[DEBUG]  citrixadc-provider: Zombie has changed for nstimeout, starting update")
-		nstimeout.Zombie = d.Get("zombie").(int)
+		nstimeout.Zombie = intPtr(d.Get("zombie").(int))
 		hasChange = true
 	}
 

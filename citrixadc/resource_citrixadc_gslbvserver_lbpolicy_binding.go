@@ -71,10 +71,15 @@ func createGslbvserver_lbpolicy_bindingFunc(ctx context.Context, d *schema.Resou
 	gslbvserver_lbpolicy_binding := gslb.Gslbvserverlbpolicybinding{
 		Gotopriorityexpression: d.Get("gotopriorityexpression").(string),
 		Name:                   d.Get("name").(string),
-		Order:                  d.Get("order").(int),
 		Policyname:             d.Get("policyname").(string),
-		Priority:               d.Get("priority").(int),
 		Type:                   d.Get("type").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("order"); !raw.IsNull() {
+		gslbvserver_lbpolicy_binding.Order = intPtr(d.Get("order").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		gslbvserver_lbpolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	_, err := client.AddResource("gslbvserver_lbpolicy_binding", bindingId, &gslbvserver_lbpolicy_binding)

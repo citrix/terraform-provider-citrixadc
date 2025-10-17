@@ -56,11 +56,18 @@ func createIpsecalgprofileFunc(ctx context.Context, d *schema.ResourceData, meta
 	client := meta.(*NetScalerNitroClient).client
 	ipsecalgprofileName := d.Get("name").(string)
 	ipsecalgprofile := ipsecalg.Ipsecalgprofile{
-		Connfailover:      d.Get("connfailover").(string),
-		Espgatetimeout:    d.Get("espgatetimeout").(int),
-		Espsessiontimeout: d.Get("espsessiontimeout").(int),
-		Ikesessiontimeout: d.Get("ikesessiontimeout").(int),
-		Name:              d.Get("name").(string),
+		Connfailover: d.Get("connfailover").(string),
+		Name:         d.Get("name").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("espgatetimeout"); !raw.IsNull() {
+		ipsecalgprofile.Espgatetimeout = intPtr(d.Get("espgatetimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("espsessiontimeout"); !raw.IsNull() {
+		ipsecalgprofile.Espsessiontimeout = intPtr(d.Get("espsessiontimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("ikesessiontimeout"); !raw.IsNull() {
+		ipsecalgprofile.Ikesessiontimeout = intPtr(d.Get("ikesessiontimeout").(int))
 	}
 
 	_, err := client.AddResource("ipsecalgprofile", ipsecalgprofileName, &ipsecalgprofile)
@@ -110,17 +117,17 @@ func updateIpsecalgprofileFunc(ctx context.Context, d *schema.ResourceData, meta
 	}
 	if d.HasChange("espgatetimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Espgatetimeout has changed for ipsecalgprofile %s, starting update", ipsecalgprofileName)
-		ipsecalgprofile.Espgatetimeout = d.Get("espgatetimeout").(int)
+		ipsecalgprofile.Espgatetimeout = intPtr(d.Get("espgatetimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("espsessiontimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Espsessiontimeout has changed for ipsecalgprofile %s, starting update", ipsecalgprofileName)
-		ipsecalgprofile.Espsessiontimeout = d.Get("espsessiontimeout").(int)
+		ipsecalgprofile.Espsessiontimeout = intPtr(d.Get("espsessiontimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("ikesessiontimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ikesessiontimeout has changed for ipsecalgprofile %s, starting update", ipsecalgprofileName)
-		ipsecalgprofile.Ikesessiontimeout = d.Get("ikesessiontimeout").(int)
+		ipsecalgprofile.Ikesessiontimeout = intPtr(d.Get("ikesessiontimeout").(int))
 		hasChange = true
 	}
 

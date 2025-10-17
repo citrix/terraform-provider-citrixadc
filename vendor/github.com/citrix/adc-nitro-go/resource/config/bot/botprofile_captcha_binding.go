@@ -35,23 +35,23 @@ type Botprofilecaptchabinding struct {
 	/**
 	* Wait time in seconds for which ADC needs to wait for the Captcha response. This is to avoid DOS attacks.
 	*/
-	Waittime int `json:"waittime,omitempty"`
+	Waittime *int `json:"waittime,omitempty"`
 	/**
 	* Time (in seconds) duration for which no new captcha challenge is sent after current captcha challenge has been answered successfully.
 	*/
-	Graceperiod int `json:"graceperiod,omitempty"`
+	Graceperiod *int `json:"graceperiod,omitempty"`
 	/**
 	* Time (in seconds) duration for which client which failed captcha need to wait until allowed to try again. The requests from this client are silently dropped during the mute period.
 	*/
-	Muteperiod int `json:"muteperiod,omitempty"`
+	Muteperiod *int `json:"muteperiod,omitempty"`
 	/**
 	* Length of body request (in Bytes) up to (equal or less than) which captcha challenge will be provided to client. Above this length threshold the request will be dropped. This is to avoid DOS and DDOS attacks.
 	*/
-	Requestsizelimit int `json:"requestsizelimit,omitempty"`
+	Requestsizelimit *int `json:"requestsizelimit,omitempty"`
 	/**
 	* Number of times client can retry solving the captcha.
 	*/
-	Retryattempts int `json:"retryattempts,omitempty"`
+	Retryattempts *int `json:"retryattempts,omitempty"`
 	/**
 	* One or more actions to be taken when client fails captcha challenge. Only, log action can be configured with DROP, REDIRECT or RESET action.
 	*/

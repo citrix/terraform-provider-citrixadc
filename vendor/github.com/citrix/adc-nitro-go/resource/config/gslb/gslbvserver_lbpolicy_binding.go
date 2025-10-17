@@ -27,7 +27,7 @@ type Gslbvserverlbpolicybinding struct {
 	/**
 	* Priority.
 	*/
-	Priority int `json:"priority,omitempty"`
+	Priority *int `json:"priority,omitempty"`
 	/**
 	* Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 		o	If gotoPriorityExpression is not present or if it is equal to END then the policy bank evaluation ends here
@@ -53,7 +53,7 @@ type Gslbvserverlbpolicybinding struct {
 	/**
 	* Order number to be assigned to the service when it is bound to the lb vserver.
 	*/
-	Order int `json:"order,omitempty"`
+	Order *int `json:"order,omitempty"`
 
 
 }

@@ -27,7 +27,7 @@ type Sslservicesslcertkeybinding struct {
 	/**
 	* The clearTextPort settings.
 	*/
-	Cleartextport int `json:"cleartextport,omitempty"`
+	Cleartextport *int `json:"cleartextport,omitempty"`
 	/**
 	* The state of the CRL check parameter. (Mandatory/Optional)
 	*/

@@ -137,7 +137,6 @@ func createAaaldapparamsFunc(ctx context.Context, d *schema.ResourceData, meta i
 	aaaldapparamsName := resource.PrefixedUniqueId("tf-aaaldapparams-")
 
 	aaaldapparams := aaa.Aaaldapparams{
-		Authtimeout:                d.Get("authtimeout").(int),
 		Defaultauthenticationgroup: d.Get("defaultauthenticationgroup").(string),
 		Groupattrname:              d.Get("groupattrname").(string),
 		Groupnameidentifier:        d.Get("groupnameidentifier").(string),
@@ -148,16 +147,24 @@ func createAaaldapparamsFunc(ctx context.Context, d *schema.ResourceData, meta i
 		Ldapbinddn:                 d.Get("ldapbinddn").(string),
 		Ldapbinddnpassword:         d.Get("ldapbinddnpassword").(string),
 		Ldaploginname:              d.Get("ldaploginname").(string),
-		Maxnestinglevel:            d.Get("maxnestinglevel").(int),
 		Nestedgroupextraction:      d.Get("nestedgroupextraction").(string),
 		Passwdchange:               d.Get("passwdchange").(string),
 		Searchfilter:               d.Get("searchfilter").(string),
 		Sectype:                    d.Get("sectype").(string),
 		Serverip:                   d.Get("serverip").(string),
-		Serverport:                 d.Get("serverport").(int),
 		Ssonameattribute:           d.Get("ssonameattribute").(string),
 		Subattributename:           d.Get("subattributename").(string),
 		Svrtype:                    d.Get("svrtype").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("authtimeout"); !raw.IsNull() {
+		aaaldapparams.Authtimeout = intPtr(d.Get("authtimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxnestinglevel"); !raw.IsNull() {
+		aaaldapparams.Maxnestinglevel = intPtr(d.Get("maxnestinglevel").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("serverport"); !raw.IsNull() {
+		aaaldapparams.Serverport = intPtr(d.Get("serverport").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Aaaldapparams.Type(), &aaaldapparams)
@@ -214,7 +221,7 @@ func updateAaaldapparamsFunc(ctx context.Context, d *schema.ResourceData, meta i
 	hasChange := false
 	if d.HasChange("authtimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Authtimeout has changed for aaaldapparams, starting update")
-		aaaldapparams.Authtimeout = d.Get("authtimeout").(int)
+		aaaldapparams.Authtimeout = intPtr(d.Get("authtimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("defaultauthenticationgroup") {
@@ -269,7 +276,7 @@ func updateAaaldapparamsFunc(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	if d.HasChange("maxnestinglevel") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxnestinglevel has changed for aaaldapparams, starting update")
-		aaaldapparams.Maxnestinglevel = d.Get("maxnestinglevel").(int)
+		aaaldapparams.Maxnestinglevel = intPtr(d.Get("maxnestinglevel").(int))
 		hasChange = true
 	}
 	if d.HasChange("nestedgroupextraction") {
@@ -299,7 +306,7 @@ func updateAaaldapparamsFunc(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	if d.HasChange("serverport") {
 		log.Printf("[DEBUG]  citrixadc-provider: Serverport has changed for aaaldapparams, starting update")
-		aaaldapparams.Serverport = d.Get("serverport").(int)
+		aaaldapparams.Serverport = intPtr(d.Get("serverport").(int))
 		hasChange = true
 	}
 	if d.HasChange("ssonameattribute") {

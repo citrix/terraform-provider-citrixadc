@@ -27,7 +27,7 @@ type Csvserverfilterpolicybinding struct {
 	/**
 	* Priority for the policy.
 	*/
-	Priority int `json:"priority,omitempty"`
+	Priority *int `json:"priority,omitempty"`
 	/**
 	* The state of SureConnect the specified virtual server.
 	*/

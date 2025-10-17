@@ -61,9 +61,14 @@ func createNat64paramFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	nat64param := network.Nat64param{
 		Nat64fragheader:   d.Get("nat64fragheader").(string),
 		Nat64ignoretos:    d.Get("nat64ignoretos").(string),
-		Nat64v6mtu:        d.Get("nat64v6mtu").(int),
 		Nat64zerochecksum: d.Get("nat64zerochecksum").(string),
-		Td:                d.Get("td").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("nat64v6mtu"); !raw.IsNull() {
+		nat64param.Nat64v6mtu = intPtr(d.Get("nat64v6mtu").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("td"); !raw.IsNull() {
+		nat64param.Td = intPtr(d.Get("td").(int))
 	}
 
 	err := client.UpdateUnnamedResource("nat64param", &nat64param)
@@ -116,7 +121,7 @@ func updateNat64paramFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	if d.HasChange("nat64v6mtu") {
 		log.Printf("[DEBUG]  citrixadc-provider: Nat64v6mtu has changed for nat64param, starting update")
-		nat64param.Nat64v6mtu = d.Get("nat64v6mtu").(int)
+		nat64param.Nat64v6mtu = intPtr(d.Get("nat64v6mtu").(int))
 		hasChange = true
 	}
 	if d.HasChange("nat64zerochecksum") {
@@ -126,7 +131,7 @@ func updateNat64paramFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	if d.HasChange("td") {
 		log.Printf("[DEBUG]  citrixadc-provider: Td has changed for nat64param, starting update")
-		nat64param.Td = d.Get("td").(int)
+		nat64param.Td = intPtr(d.Get("td").(int))
 		hasChange = true
 	}
 

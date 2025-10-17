@@ -78,9 +78,12 @@ func createUservserverFunc(ctx context.Context, d *schema.ResourceData, meta int
 		Ipaddress:    d.Get("ipaddress").(string),
 		Name:         d.Get("name").(string),
 		Params:       d.Get("params").(string),
-		Port:         d.Get("port").(int),
 		State:        d.Get("state").(string),
 		Userprotocol: d.Get("userprotocol").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("port"); !raw.IsNull() {
+		uservserver.Port = intPtr(d.Get("port").(int))
 	}
 
 	_, err := client.AddResource("uservserver", uservserverName, &uservserver)

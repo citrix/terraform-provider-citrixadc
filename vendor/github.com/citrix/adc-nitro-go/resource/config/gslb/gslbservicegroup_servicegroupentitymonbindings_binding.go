@@ -36,15 +36,15 @@ type Gslbservicegroupservicegroupentitymonbindingsbinding struct {
 	/**
 	* Total number of probes sent to monitor this service.
 	*/
-	Monitortotalprobes int `json:"monitortotalprobes,omitempty"`
+	Monitortotalprobes *int `json:"monitortotalprobes,omitempty"`
 	/**
 	* Total number of failed probes
 	*/
-	Monitortotalfailedprobes int `json:"monitortotalfailedprobes,omitempty"`
+	Monitortotalfailedprobes *int `json:"monitortotalfailedprobes,omitempty"`
 	/**
 	* Total number of currently failed probes
 	*/
-	Monitorcurrentfailedprobes int `json:"monitorcurrentfailedprobes,omitempty"`
+	Monitorcurrentfailedprobes *int `json:"monitorcurrentfailedprobes,omitempty"`
 	/**
 	* The string form of monstatcode.
 	*/
@@ -56,11 +56,11 @@ type Gslbservicegroupservicegroupentitymonbindingsbinding struct {
 	/**
 	* Port number of the GSLB service. Each service must have a unique port number.
 	*/
-	Port int `json:"port,omitempty"`
+	Port *int `json:"port,omitempty"`
 	/**
 	* When used along with monitor name, it specifies the weight of the monitor binding. When used along with servername & port pair, it specifies the weight of this GSLB service .
 	*/
-	Weight int `json:"weight,omitempty"`
+	Weight *int `json:"weight,omitempty"`
 	/**
 	* Initial state of the service after binding.
 	*/
@@ -68,7 +68,7 @@ type Gslbservicegroupservicegroupentitymonbindingsbinding struct {
 	/**
 	* Unique numerical identifier used by hash based load balancing methods to identify a service.
 	*/
-	Hashid int `json:"hashid,omitempty"`
+	Hashid *int `json:"hashid,omitempty"`
 	/**
 	* The public IP address that a NAT device translates to the GSLB service's private IP address. Optional.
 	*/
@@ -76,7 +76,7 @@ type Gslbservicegroupservicegroupentitymonbindingsbinding struct {
 	/**
 	* The public port associated with the GSLB service's public IP address. The port is mapped to the service's private port number. Applicable to the local GSLB service. Optional.
 	*/
-	Publicport int `json:"publicport,omitempty"`
+	Publicport *int `json:"publicport,omitempty"`
 	/**
 	* The site's prefix string. When the GSLB service group is bound to a GSLB virtual server, a GSLB site domain is generated internally for each bound serviceitem-domain pair by concatenating the site prefix of the service item and the name of the domain. If the special string NONE is specified, the site-prefix string is unset. When implementing HTTP redirect site persistence, the Citrix ADC redirects GSLB requests to GSLB services by using their site domains.
 	*/
@@ -84,7 +84,7 @@ type Gslbservicegroupservicegroupentitymonbindingsbinding struct {
 	/**
 	* Order number to be assigned to the gslb servicegroup member
 	*/
-	Order int `json:"order,omitempty"`
+	Order *int `json:"order,omitempty"`
 
 
 }

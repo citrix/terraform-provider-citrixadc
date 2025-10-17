@@ -37,23 +37,23 @@ type Sslocspresponder struct {
 	/**
 	* Timeout for caching the OCSP response. After the timeout, the Citrix ADC sends a fresh request to the OCSP responder for the certificate status. If a timeout is not specified, the timeout provided in the OCSP response applies.
 	*/
-	Cachetimeout int `json:"cachetimeout,omitempty"`
+	Cachetimeout *int `json:"cachetimeout,omitempty"`
 	/**
 	* Number of client certificates to batch together into one OCSP request. Batching avoids overloading the OCSP responder. A value of 1 signifies that each request is queried independently. For a value greater than 1, specify a timeout (batching delay) to avoid inordinately delaying the processing of a single certificate.
 	*/
-	Batchingdepth int `json:"batchingdepth,omitempty"`
+	Batchingdepth *int `json:"batchingdepth,omitempty"`
 	/**
 	* Maximum time, in milliseconds, to wait to accumulate OCSP requests to batch.  Does not apply if the Batching Depth is 1.
 	*/
-	Batchingdelay int `json:"batchingdelay,omitempty"`
+	Batchingdelay *int `json:"batchingdelay,omitempty"`
 	/**
 	* Time, in milliseconds, to wait for an OCSP response. When this time elapses, an error message appears or the transaction is forwarded, depending on the settings on the virtual server. Includes Batching Delay time.
 	*/
-	Resptimeout int `json:"resptimeout,omitempty"`
+	Resptimeout *int `json:"resptimeout,omitempty"`
 	/**
 	* Time, in milliseconds, to wait for an OCSP URL Resolution. When this time elapses, an error message appears or the transaction is forwarded, depending on the settings on the virtual server.
 	*/
-	Ocspurlresolvetimeout int `json:"ocspurlresolvetimeout,omitempty"`
+	Ocspurlresolvetimeout *int `json:"ocspurlresolvetimeout,omitempty"`
 	Respondercert string `json:"respondercert,omitempty"`
 	/**
 	* A certificate to use to validate OCSP responses.  Alternatively, if -trustResponder is specified, no verification will be done on the reponse.  If both are omitted, only the response times (producedAt, lastUpdate, nextUpdate) will be verified.
@@ -62,7 +62,7 @@ type Sslocspresponder struct {
 	/**
 	* Time, in seconds, for which the Citrix ADC waits before considering the response as invalid. The response is considered invalid if the Produced At time stamp in the OCSP response exceeds or precedes the current Citrix ADC clock time by the amount of time specified.
 	*/
-	Producedattimeskew int `json:"producedattimeskew,omitempty"`
+	Producedattimeskew *int `json:"producedattimeskew,omitempty"`
 	/**
 	* Certificate-key pair that is used to sign OCSP requests. If this parameter is not set, the requests are not signed.
 	*/

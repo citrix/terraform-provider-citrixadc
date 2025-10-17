@@ -62,9 +62,12 @@ func createAaauser_vpnsessionpolicy_bindingFunc(ctx context.Context, d *schema.R
 	aaauser_vpnsessionpolicy_binding := aaa.Aaauservpnsessionpolicybinding{
 		Gotopriorityexpression: d.Get("gotopriorityexpression").(string),
 		Policy:                 d.Get("policy").(string),
-		Priority:               d.Get("priority").(int),
 		Type:                   d.Get("type").(string),
 		Username:               d.Get("username").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		aaauser_vpnsessionpolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Aaauser_vpnsessionpolicy_binding.Type(), &aaauser_vpnsessionpolicy_binding)

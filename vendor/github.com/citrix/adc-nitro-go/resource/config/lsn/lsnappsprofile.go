@@ -62,7 +62,7 @@ type Lsnappsprofile struct {
 	* ID of the traffic domain through which the Citrix ADC sends the outbound traffic after performing LSN. 
 		If you do not specify an ID, the ADC sends the outbound traffic through the default traffic domain, which has an ID of 0.
 	*/
-	Td int `json:"td,omitempty"`
+	Td *int `json:"td,omitempty"`
 	/**
 	* Enable l2info by creating natpcbs for LSN, which enables the Citrix ADC to use L2CONN/MBF with LSN.
 	*/

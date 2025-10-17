@@ -27,8 +27,8 @@ type Aaagroupvpnsessionpolicybinding struct {
 	/**
 	* Integer specifying the priority of the policy. A lower number indicates a higher priority. Policies are evaluated in the order of their priority numbers. Maximum value for default syntax policies is 2147483647 and for classic policies is 64000.
 	*/
-	Priority int `json:"priority,omitempty"`
-	Acttype int `json:"acttype,omitempty"`
+	Priority *int `json:"priority,omitempty"`
+	Acttype *int `json:"acttype,omitempty"`
 	/**
 	* Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 	*/

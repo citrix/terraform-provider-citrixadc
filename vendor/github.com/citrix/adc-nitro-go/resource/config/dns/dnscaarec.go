@@ -39,11 +39,11 @@ type Dnscaarec struct {
 	/**
 	* Time to Live (TTL), in seconds, for the record. TTL is the time for which the record must be cached by DNS proxies. The specified TTL is applied to all the resource records that are of the same record type and belong to the specified domain name. For example, if you add an address record, with a TTL of 36000, to the domain name example.com, the TTLs of all the address records of example.com are changed to 36000. If the TTL is not specified, the Citrix ADC uses either the DNS zone's minimum TTL or, if the SOA record is not available on the appliance, the default value of 3600.
 	*/
-	Ttl int `json:"ttl,omitempty"`
+	Ttl *int `json:"ttl,omitempty"`
 	/**
 	* Unique, internally generated record ID. View the details of the CAA record to obtain its record ID. Records can be removedby either specifying the domain name and record id OR by specifying domain name and all other CAA record attributes as was supplied during the add command.
 	*/
-	Recordid int `json:"recordid,omitempty"`
+	Recordid *int `json:"recordid,omitempty"`
 	/**
 	* Subnet for which the cached CAA record need to be removed.
 	*/
@@ -58,7 +58,7 @@ type Dnscaarec struct {
 	/**
 	* Unique number that identifies the cluster node.
 	*/
-	Nodeid int `json:"nodeid,omitempty"`
+	Nodeid *int `json:"nodeid,omitempty"`
 
 	//------- Read only Parameter ---------;
 

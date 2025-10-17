@@ -2,14 +2,16 @@ package citrixadc
 
 import (
 	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/contentinspection"
 	"github.com/citrix/adc-nitro-go/service"
 
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strings"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcContentinspectionpolicylabel_contentinspectionpolicy_binding() *schema.Resource {
@@ -78,7 +80,10 @@ func createContentinspectionpolicylabel_contentinspectionpolicy_bindingFunc(ctx 
 		Labelname:              d.Get("labelname").(string),
 		Labeltype:              d.Get("labeltype").(string),
 		Policyname:             d.Get("policyname").(string),
-		Priority:               d.Get("priority").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		contentinspectionpolicylabel_contentinspectionpolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	err := client.UpdateUnnamedResource("contentinspectionpolicylabel_contentinspectionpolicy_binding", &contentinspectionpolicylabel_contentinspectionpolicy_binding)

@@ -386,69 +386,100 @@ func createSslprofileFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	sslprofileName := d.Get("name").(string)
 
 	sslprofile := ssl.Sslprofile{
-		Ciphername:                        d.Get("ciphername").(string),
-		Cipherpriority:                    d.Get("cipherpriority").(int),
-		Cipherredirect:                    d.Get("cipherredirect").(string),
-		Cipherurl:                         d.Get("cipherurl").(string),
-		Cleartextport:                     d.Get("cleartextport").(int),
-		Clientauth:                        d.Get("clientauth").(string),
-		Clientauthuseboundcachain:         d.Get("clientauthuseboundcachain").(string),
-		Clientcert:                        d.Get("clientcert").(string),
-		Commonname:                        d.Get("commonname").(string),
-		Denysslreneg:                      d.Get("denysslreneg").(string),
-		Dh:                                d.Get("dh").(string),
-		Dhcount:                           d.Get("dhcount").(int),
-		Dhekeyexchangewithpsk:             d.Get("dhekeyexchangewithpsk").(string),
-		Dhfile:                            d.Get("dhfile").(string),
-		Dhkeyexpsizelimit:                 d.Get("dhkeyexpsizelimit").(string),
-		Dropreqwithnohostheader:           d.Get("dropreqwithnohostheader").(string),
-		Encrypttriggerpktcount:            d.Get("encrypttriggerpktcount").(int),
-		Ersa:                              d.Get("ersa").(string),
-		Ersacount:                         d.Get("ersacount").(int),
-		Hsts:                              d.Get("hsts").(string),
-		Includesubdomains:                 d.Get("includesubdomains").(string),
-		Insertionencoding:                 d.Get("insertionencoding").(string),
-		Maxage:                            d.Get("maxage").(int),
-		Name:                              d.Get("name").(string),
-		Ocspstapling:                      d.Get("ocspstapling").(string),
-		Preload:                           d.Get("preload").(string),
-		Prevsessionkeylifetime:            d.Get("prevsessionkeylifetime").(int),
-		Pushenctrigger:                    d.Get("pushenctrigger").(string),
-		Pushenctriggertimeout:             d.Get("pushenctriggertimeout").(int),
-		Pushflag:                          d.Get("pushflag").(int),
-		Quantumsize:                       d.Get("quantumsize").(string),
-		Redirectportrewrite:               d.Get("redirectportrewrite").(string),
-		Sendclosenotify:                   d.Get("sendclosenotify").(string),
-		Serverauth:                        d.Get("serverauth").(string),
-		Sessionkeylifetime:                d.Get("sessionkeylifetime").(int),
-		Sessionticket:                     d.Get("sessionticket").(string),
-		Sessionticketkeydata:              d.Get("sessionticketkeydata").(string),
-		Sessionticketkeyrefresh:           d.Get("sessionticketkeyrefresh").(string),
-		Sessionticketlifetime:             d.Get("sessionticketlifetime").(int),
-		Sessreuse:                         d.Get("sessreuse").(string),
-		Sesstimeout:                       d.Get("sesstimeout").(int),
-		Skipclientcertpolicycheck:         d.Get("skipclientcertpolicycheck").(string),
-		Snienable:                         d.Get("snienable").(string),
-		Snihttphostmatch:                  d.Get("snihttphostmatch").(string),
-		Ssl3:                              d.Get("ssl3").(string),
-		Sslimaxsessperserver:              d.Get("sslimaxsessperserver").(int),
-		Sslinterception:                   d.Get("sslinterception").(string),
-		Ssliocspcheck:                     d.Get("ssliocspcheck").(string),
-		Sslireneg:                         d.Get("sslireneg").(string),
-		Ssllogprofile:                     d.Get("ssllogprofile").(string),
-		Sslprofiletype:                    d.Get("sslprofiletype").(string),
-		Sslredirect:                       d.Get("sslredirect").(string),
-		Ssltriggertimeout:                 d.Get("ssltriggertimeout").(int),
-		Strictcachecks:                    d.Get("strictcachecks").(string),
-		Strictsigdigestcheck:              d.Get("strictsigdigestcheck").(string),
-		Tls1:                              d.Get("tls1").(string),
-		Tls11:                             d.Get("tls11").(string),
-		Tls12:                             d.Get("tls12").(string),
-		Tls13:                             d.Get("tls13").(string),
-		Tls13sessionticketsperauthcontext: d.Get("tls13sessionticketsperauthcontext").(int),
-		Zerorttearlydata:                  d.Get("zerorttearlydata").(string),
-		Alpnprotocol:                      d.Get("alpnprotocol").(string),
-		Nodefaultbindings:                 d.Get("nodefaultbindings").(string),
+		Ciphername:                d.Get("ciphername").(string),
+		Cipherredirect:            d.Get("cipherredirect").(string),
+		Cipherurl:                 d.Get("cipherurl").(string),
+		Clientauth:                d.Get("clientauth").(string),
+		Clientauthuseboundcachain: d.Get("clientauthuseboundcachain").(string),
+		Clientcert:                d.Get("clientcert").(string),
+		Commonname:                d.Get("commonname").(string),
+		Denysslreneg:              d.Get("denysslreneg").(string),
+		Dh:                        d.Get("dh").(string),
+		Dhekeyexchangewithpsk:     d.Get("dhekeyexchangewithpsk").(string),
+		Dhfile:                    d.Get("dhfile").(string),
+		Dhkeyexpsizelimit:         d.Get("dhkeyexpsizelimit").(string),
+		Dropreqwithnohostheader:   d.Get("dropreqwithnohostheader").(string),
+		Ersa:                      d.Get("ersa").(string),
+		Hsts:                      d.Get("hsts").(string),
+		Includesubdomains:         d.Get("includesubdomains").(string),
+		Insertionencoding:         d.Get("insertionencoding").(string),
+		Name:                      d.Get("name").(string),
+		Ocspstapling:              d.Get("ocspstapling").(string),
+		Preload:                   d.Get("preload").(string),
+		Pushenctrigger:            d.Get("pushenctrigger").(string),
+		Quantumsize:               d.Get("quantumsize").(string),
+		Redirectportrewrite:       d.Get("redirectportrewrite").(string),
+		Sendclosenotify:           d.Get("sendclosenotify").(string),
+		Serverauth:                d.Get("serverauth").(string),
+		Sessionticket:             d.Get("sessionticket").(string),
+		Sessionticketkeydata:      d.Get("sessionticketkeydata").(string),
+		Sessionticketkeyrefresh:   d.Get("sessionticketkeyrefresh").(string),
+		Sessreuse:                 d.Get("sessreuse").(string),
+		Skipclientcertpolicycheck: d.Get("skipclientcertpolicycheck").(string),
+		Snienable:                 d.Get("snienable").(string),
+		Snihttphostmatch:          d.Get("snihttphostmatch").(string),
+		Ssl3:                      d.Get("ssl3").(string),
+		Sslinterception:           d.Get("sslinterception").(string),
+		Ssliocspcheck:             d.Get("ssliocspcheck").(string),
+		Sslireneg:                 d.Get("sslireneg").(string),
+		Ssllogprofile:             d.Get("ssllogprofile").(string),
+		Sslprofiletype:            d.Get("sslprofiletype").(string),
+		Sslredirect:               d.Get("sslredirect").(string),
+		Strictcachecks:            d.Get("strictcachecks").(string),
+		Strictsigdigestcheck:      d.Get("strictsigdigestcheck").(string),
+		Tls1:                      d.Get("tls1").(string),
+		Tls11:                     d.Get("tls11").(string),
+		Tls12:                     d.Get("tls12").(string),
+		Tls13:                     d.Get("tls13").(string),
+		Zerorttearlydata:          d.Get("zerorttearlydata").(string),
+		Alpnprotocol:              d.Get("alpnprotocol").(string),
+		Nodefaultbindings:         d.Get("nodefaultbindings").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("cipherpriority"); !raw.IsNull() {
+		sslprofile.Cipherpriority = intPtr(d.Get("cipherpriority").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("cleartextport"); !raw.IsNull() {
+		sslprofile.Cleartextport = intPtr(d.Get("cleartextport").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("dhcount"); !raw.IsNull() {
+		sslprofile.Dhcount = intPtr(d.Get("dhcount").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("encrypttriggerpktcount"); !raw.IsNull() {
+		sslprofile.Encrypttriggerpktcount = intPtr(d.Get("encrypttriggerpktcount").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("ersacount"); !raw.IsNull() {
+		sslprofile.Ersacount = intPtr(d.Get("ersacount").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxage"); !raw.IsNull() {
+		sslprofile.Maxage = intPtr(d.Get("maxage").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("prevsessionkeylifetime"); !raw.IsNull() {
+		sslprofile.Prevsessionkeylifetime = intPtr(d.Get("prevsessionkeylifetime").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("pushenctriggertimeout"); !raw.IsNull() {
+		sslprofile.Pushenctriggertimeout = intPtr(d.Get("pushenctriggertimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("pushflag"); !raw.IsNull() {
+		sslprofile.Pushflag = intPtr(d.Get("pushflag").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("sessionkeylifetime"); !raw.IsNull() {
+		sslprofile.Sessionkeylifetime = intPtr(d.Get("sessionkeylifetime").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("sessionticketlifetime"); !raw.IsNull() {
+		sslprofile.Sessionticketlifetime = intPtr(d.Get("sessionticketlifetime").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("sesstimeout"); !raw.IsNull() {
+		sslprofile.Sesstimeout = intPtr(d.Get("sesstimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("sslimaxsessperserver"); !raw.IsNull() {
+		sslprofile.Sslimaxsessperserver = intPtr(d.Get("sslimaxsessperserver").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("ssltriggertimeout"); !raw.IsNull() {
+		sslprofile.Ssltriggertimeout = intPtr(d.Get("ssltriggertimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("tls13sessionticketsperauthcontext"); !raw.IsNull() {
+		sslprofile.Tls13sessionticketsperauthcontext = intPtr(d.Get("tls13sessionticketsperauthcontext").(int))
 	}
 
 	_, err := client.AddResource(service.Sslprofile.Type(), sslprofileName, &sslprofile)
@@ -598,7 +629,7 @@ func updateSslprofileFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	if d.HasChange("cipherpriority") {
 		log.Printf("[DEBUG]  citrixadc-provider: Cipherpriority has changed for sslprofile %s, starting update", sslprofileName)
-		sslprofile.Cipherpriority = d.Get("cipherpriority").(int)
+		sslprofile.Cipherpriority = intPtr(d.Get("cipherpriority").(int))
 		hasChange = true
 	}
 	if d.HasChange("cipherredirect") {
@@ -613,7 +644,7 @@ func updateSslprofileFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	if d.HasChange("cleartextport") {
 		log.Printf("[DEBUG]  citrixadc-provider: Cleartextport has changed for sslprofile %s, starting update", sslprofileName)
-		sslprofile.Cleartextport = d.Get("cleartextport").(int)
+		sslprofile.Cleartextport = intPtr(d.Get("cleartextport").(int))
 		hasChange = true
 	}
 	if d.HasChange("clientauth") {
@@ -648,7 +679,7 @@ func updateSslprofileFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	if d.HasChange("dhcount") {
 		log.Printf("[DEBUG]  citrixadc-provider: Dhcount has changed for sslprofile %s, starting update", sslprofileName)
-		sslprofile.Dhcount = d.Get("dhcount").(int)
+		sslprofile.Dhcount = intPtr(d.Get("dhcount").(int))
 		hasChange = true
 	}
 	if d.HasChange("dhekeyexchangewithpsk") {
@@ -673,7 +704,7 @@ func updateSslprofileFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	if d.HasChange("encrypttriggerpktcount") {
 		log.Printf("[DEBUG]  citrixadc-provider: Encrypttriggerpktcount has changed for sslprofile %s, starting update", sslprofileName)
-		sslprofile.Encrypttriggerpktcount = d.Get("encrypttriggerpktcount").(int)
+		sslprofile.Encrypttriggerpktcount = intPtr(d.Get("encrypttriggerpktcount").(int))
 		hasChange = true
 	}
 	if d.HasChange("ersa") {
@@ -683,7 +714,7 @@ func updateSslprofileFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	if d.HasChange("ersacount") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ersacount has changed for sslprofile %s, starting update", sslprofileName)
-		sslprofile.Ersacount = d.Get("ersacount").(int)
+		sslprofile.Ersacount = intPtr(d.Get("ersacount").(int))
 		hasChange = true
 	}
 	if d.HasChange("hsts") {
@@ -703,7 +734,7 @@ func updateSslprofileFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	if d.HasChange("maxage") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxage has changed for sslprofile %s, starting update", sslprofileName)
-		sslprofile.Maxage = d.Get("maxage").(int)
+		sslprofile.Maxage = intPtr(d.Get("maxage").(int))
 		hasChange = true
 	}
 	if d.HasChange("name") {
@@ -723,7 +754,7 @@ func updateSslprofileFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	if d.HasChange("prevsessionkeylifetime") {
 		log.Printf("[DEBUG]  citrixadc-provider: Prevsessionkeylifetime has changed for sslprofile %s, starting update", sslprofileName)
-		sslprofile.Prevsessionkeylifetime = d.Get("prevsessionkeylifetime").(int)
+		sslprofile.Prevsessionkeylifetime = intPtr(d.Get("prevsessionkeylifetime").(int))
 		hasChange = true
 	}
 	if d.HasChange("pushenctrigger") {
@@ -733,12 +764,12 @@ func updateSslprofileFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	if d.HasChange("pushenctriggertimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Pushenctriggertimeout has changed for sslprofile %s, starting update", sslprofileName)
-		sslprofile.Pushenctriggertimeout = d.Get("pushenctriggertimeout").(int)
+		sslprofile.Pushenctriggertimeout = intPtr(d.Get("pushenctriggertimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("pushflag") {
 		log.Printf("[DEBUG]  citrixadc-provider: Pushflag has changed for sslprofile %s, starting update", sslprofileName)
-		sslprofile.Pushflag = d.Get("pushflag").(int)
+		sslprofile.Pushflag = intPtr(d.Get("pushflag").(int))
 		hasChange = true
 	}
 	if d.HasChange("quantumsize") {
@@ -763,7 +794,7 @@ func updateSslprofileFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	if d.HasChange("sessionkeylifetime") {
 		log.Printf("[DEBUG]  citrixadc-provider: Sessionkeylifetime has changed for sslprofile %s, starting update", sslprofileName)
-		sslprofile.Sessionkeylifetime = d.Get("sessionkeylifetime").(int)
+		sslprofile.Sessionkeylifetime = intPtr(d.Get("sessionkeylifetime").(int))
 		hasChange = true
 	}
 	if d.HasChange("sessionticket") {
@@ -783,7 +814,7 @@ func updateSslprofileFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	if d.HasChange("sessionticketlifetime") {
 		log.Printf("[DEBUG]  citrixadc-provider: Sessionticketlifetime has changed for sslprofile %s, starting update", sslprofileName)
-		sslprofile.Sessionticketlifetime = d.Get("sessionticketlifetime").(int)
+		sslprofile.Sessionticketlifetime = intPtr(d.Get("sessionticketlifetime").(int))
 		hasChange = true
 	}
 	if d.HasChange("sessreuse") {
@@ -793,7 +824,7 @@ func updateSslprofileFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	if d.HasChange("sesstimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Sesstimeout has changed for sslprofile %s, starting update", sslprofileName)
-		sslprofile.Sesstimeout = d.Get("sesstimeout").(int)
+		sslprofile.Sesstimeout = intPtr(d.Get("sesstimeout").(int))
 		sslprofile.Sessreuse = d.Get("sessreuse").(string)
 		hasChange = true
 	}
@@ -819,7 +850,7 @@ func updateSslprofileFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	if d.HasChange("sslimaxsessperserver") {
 		log.Printf("[DEBUG]  citrixadc-provider: Sslimaxsessperserver has changed for sslprofile %s, starting update", sslprofileName)
-		sslprofile.Sslimaxsessperserver = d.Get("sslimaxsessperserver").(int)
+		sslprofile.Sslimaxsessperserver = intPtr(d.Get("sslimaxsessperserver").(int))
 		hasChange = true
 	}
 	if d.HasChange("sslinterception") {
@@ -854,7 +885,7 @@ func updateSslprofileFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	if d.HasChange("ssltriggertimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ssltriggertimeout has changed for sslprofile %s, starting update", sslprofileName)
-		sslprofile.Ssltriggertimeout = d.Get("ssltriggertimeout").(int)
+		sslprofile.Ssltriggertimeout = intPtr(d.Get("ssltriggertimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("strictcachecks") {
@@ -889,7 +920,7 @@ func updateSslprofileFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	if d.HasChange("tls13sessionticketsperauthcontext") {
 		log.Printf("[DEBUG]  citrixadc-provider: Tls13sessionticketsperauthcontext has changed for sslprofile %s, starting update", sslprofileName)
-		sslprofile.Tls13sessionticketsperauthcontext = d.Get("tls13sessionticketsperauthcontext").(int)
+		sslprofile.Tls13sessionticketsperauthcontext = intPtr(d.Get("tls13sessionticketsperauthcontext").(int))
 		hasChange = true
 	}
 	if d.HasChange("zerorttearlydata") {

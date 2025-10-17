@@ -2,12 +2,14 @@ package citrixadc
 
 import (
 	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/appfw"
 	"github.com/citrix/adc-nitro-go/service"
 
+	"log"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"log"
 )
 
 func resourceCitrixAdcAppfwpolicylabel() *schema.Resource {
@@ -15,6 +17,7 @@ func resourceCitrixAdcAppfwpolicylabel() *schema.Resource {
 		SchemaVersion: 1,
 		CreateContext: createAppfwpolicylabelFunc,
 		ReadContext:   readAppfwpolicylabelFunc,
+		UpdateContext: updateAppfwpolicyLabelFunc,
 		DeleteContext: deleteAppfwpolicylabelFunc,
 		Schema: map[string]*schema.Schema{
 			"labelname": {
@@ -23,6 +26,11 @@ func resourceCitrixAdcAppfwpolicylabel() *schema.Resource {
 				ForceNew: true,
 			},
 			"policylabeltype": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"newname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -66,6 +74,31 @@ func readAppfwpolicylabelFunc(ctx context.Context, d *schema.ResourceData, meta 
 
 	return nil
 
+}
+
+func updateAppfwpolicyLabelFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	log.Printf("[DEBUG]  citrixadc-provider: In updateAppfwpolicyLabelFunc")
+	client := meta.(*NetScalerNitroClient).client
+	appfwpolicylabelName := d.Get("labelname").(string)
+
+	appfwpolicylabel := appfw.Appfwpolicylabel{
+		Labelname: appfwpolicylabelName,
+	}
+	hasRename := false
+	if d.HasChange("newname") {
+		log.Printf("[DEBUG]  citrixadc-provider: Newname has changed for appfwpolicylabel %s, starting rename", appfwpolicylabelName)
+		appfwpolicylabel.Newname = d.Get("newname").(string)
+		hasRename = true
+	}
+
+	if hasRename {
+		err := client.ActOnResource(service.Appfwpolicylabel.Type(), &appfwpolicylabel, "rename")
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		d.SetId(appfwpolicylabel.Newname)
+	}
+	return readAppfwpolicylabelFunc(ctx, d, meta)
 }
 
 func deleteAppfwpolicylabelFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

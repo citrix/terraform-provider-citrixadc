@@ -82,15 +82,26 @@ func createSsldtlsprofileFunc(ctx context.Context, d *schema.ResourceData, meta 
 		d.Set("name", ssldtlsprofileName)
 	}
 	ssldtlsprofile := ssl.Ssldtlsprofile{
-		Helloverifyrequest:   d.Get("helloverifyrequest").(string),
-		Maxbadmacignorecount: d.Get("maxbadmacignorecount").(int),
-		Maxholdqlen:          d.Get("maxholdqlen").(int),
-		Maxpacketsize:        d.Get("maxpacketsize").(int),
-		Maxrecordsize:        d.Get("maxrecordsize").(int),
-		Maxretrytime:         d.Get("maxretrytime").(int),
-		Name:                 ssldtlsprofileName,
-		Pmtudiscovery:        d.Get("pmtudiscovery").(string),
-		Terminatesession:     d.Get("terminatesession").(string),
+		Helloverifyrequest: d.Get("helloverifyrequest").(string),
+		Name:               ssldtlsprofileName,
+		Pmtudiscovery:      d.Get("pmtudiscovery").(string),
+		Terminatesession:   d.Get("terminatesession").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("maxbadmacignorecount"); !raw.IsNull() {
+		ssldtlsprofile.Maxbadmacignorecount = intPtr(d.Get("maxbadmacignorecount").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxholdqlen"); !raw.IsNull() {
+		ssldtlsprofile.Maxholdqlen = intPtr(d.Get("maxholdqlen").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxpacketsize"); !raw.IsNull() {
+		ssldtlsprofile.Maxpacketsize = intPtr(d.Get("maxpacketsize").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxrecordsize"); !raw.IsNull() {
+		ssldtlsprofile.Maxrecordsize = intPtr(d.Get("maxrecordsize").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxretrytime"); !raw.IsNull() {
+		ssldtlsprofile.Maxretrytime = intPtr(d.Get("maxretrytime").(int))
 	}
 
 	_, err := client.AddResource(service.Ssldtlsprofile.Type(), ssldtlsprofileName, &ssldtlsprofile)
@@ -145,27 +156,27 @@ func updateSsldtlsprofileFunc(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	if d.HasChange("maxbadmacignorecount") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxbadmacignorecount has changed for ssldtlsprofile %s, starting update", ssldtlsprofileName)
-		ssldtlsprofile.Maxbadmacignorecount = d.Get("maxbadmacignorecount").(int)
+		ssldtlsprofile.Maxbadmacignorecount = intPtr(d.Get("maxbadmacignorecount").(int))
 		hasChange = true
 	}
 	if d.HasChange("maxholdqlen") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxholdqlen has changed for ssldtlsprofile %s, starting update", ssldtlsprofileName)
-		ssldtlsprofile.Maxholdqlen = d.Get("maxholdqlen").(int)
+		ssldtlsprofile.Maxholdqlen = intPtr(d.Get("maxholdqlen").(int))
 		hasChange = true
 	}
 	if d.HasChange("maxpacketsize") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxpacketsize has changed for ssldtlsprofile %s, starting update", ssldtlsprofileName)
-		ssldtlsprofile.Maxpacketsize = d.Get("maxpacketsize").(int)
+		ssldtlsprofile.Maxpacketsize = intPtr(d.Get("maxpacketsize").(int))
 		hasChange = true
 	}
 	if d.HasChange("maxrecordsize") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxrecordsize has changed for ssldtlsprofile %s, starting update", ssldtlsprofileName)
-		ssldtlsprofile.Maxrecordsize = d.Get("maxrecordsize").(int)
+		ssldtlsprofile.Maxrecordsize = intPtr(d.Get("maxrecordsize").(int))
 		hasChange = true
 	}
 	if d.HasChange("maxretrytime") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxretrytime has changed for ssldtlsprofile %s, starting update", ssldtlsprofileName)
-		ssldtlsprofile.Maxretrytime = d.Get("maxretrytime").(int)
+		ssldtlsprofile.Maxretrytime = intPtr(d.Get("maxretrytime").(int))
 		hasChange = true
 	}
 	if d.HasChange("name") {

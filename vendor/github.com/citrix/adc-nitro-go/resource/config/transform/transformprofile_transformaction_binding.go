@@ -27,7 +27,7 @@ type Transformprofiletransformactionbinding struct {
 	/**
 	* Priority of the Action within the Profile.
 	*/
-	Priority int `json:"priority,omitempty"`
+	Priority *int `json:"priority,omitempty"`
 	/**
 	* Enabled flag.
 	*/

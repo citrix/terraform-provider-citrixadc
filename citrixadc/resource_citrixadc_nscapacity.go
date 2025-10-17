@@ -64,12 +64,17 @@ func createNscapacityFunc(ctx context.Context, d *schema.ResourceData, meta inte
 
 	nscapacityId := resource.PrefixedUniqueId("tf-nscapacity-")
 	nscapacity := ns.Nscapacity{
-		Bandwidth: d.Get("bandwidth").(int),
-		Edition:   d.Get("edition").(string),
-		Nodeid:    d.Get("nodeid").(int),
-		Platform:  d.Get("platform").(string),
-		Unit:      d.Get("unit").(string),
-		Vcpu:      d.Get("vcpu").(bool),
+		Edition:  d.Get("edition").(string),
+		Platform: d.Get("platform").(string),
+		Unit:     d.Get("unit").(string),
+		Vcpu:     d.Get("vcpu").(bool),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("bandwidth"); !raw.IsNull() {
+		nscapacity.Bandwidth = intPtr(d.Get("bandwidth").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("nodeid"); !raw.IsNull() {
+		nscapacity.Nodeid = intPtr(d.Get("nodeid").(int))
 	}
 
 	err := client.UpdateUnnamedResource("nscapacity", &nscapacity)

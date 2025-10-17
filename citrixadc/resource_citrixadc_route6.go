@@ -105,19 +105,32 @@ func createRoute6Func(ctx context.Context, d *schema.ResourceData, meta interfac
 	route6Network := d.Get("network").(string)
 	route6 := network.Route6{
 		Advertise:  d.Get("advertise").(string),
-		Cost:       d.Get("cost").(int),
 		Detail:     d.Get("detail").(bool),
-		Distance:   d.Get("distance").(int),
 		Gateway:    d.Get("gateway").(string),
 		Monitor:    d.Get("monitor").(string),
 		Msr:        d.Get("msr").(string),
 		Network:    d.Get("network").(string),
 		Ownergroup: d.Get("ownergroup").(string),
 		Routetype:  d.Get("routetype").(string),
-		Td:         d.Get("td").(int),
-		Vlan:       d.Get("vlan").(int),
-		Vxlan:      d.Get("vxlan").(int),
-		Weight:     d.Get("weight").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("cost"); !raw.IsNull() {
+		route6.Cost = intPtr(d.Get("cost").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("distance"); !raw.IsNull() {
+		route6.Distance = intPtr(d.Get("distance").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("td"); !raw.IsNull() {
+		route6.Td = intPtr(d.Get("td").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("vlan"); !raw.IsNull() {
+		route6.Vlan = intPtr(d.Get("vlan").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("vxlan"); !raw.IsNull() {
+		route6.Vxlan = intPtr(d.Get("vxlan").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("weight"); !raw.IsNull() {
+		route6.Weight = intPtr(d.Get("weight").(int))
 	}
 
 	_, err := client.AddResource(service.Route6.Type(), route6Network, &route6)
@@ -149,7 +162,7 @@ func readRoute6Func(ctx context.Context, d *schema.ResourceData, meta interface{
 	}
 	if foundIndex == -1 {
 		log.Printf("[DEBUG] citrixadc-provider: FindAllresources network and vlan not found in array")
-		log.Printf("network:%s value:%v ", route6Network, d.Get("vlan").(int))
+		log.Printf("network:%s value:%v ", route6Network, intPtr(d.Get("vlan").(int)))
 		log.Printf("[WARN] citrixadc-provider: Clearing route6 %s", route6Network)
 		d.SetId("")
 		return nil
@@ -190,7 +203,7 @@ func updateRoute6Func(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 	if d.HasChange("cost") {
 		log.Printf("[DEBUG]  citrixadc-provider: Cost has changed for route6 %s, starting update", route6Network)
-		route6.Cost = d.Get("cost").(int)
+		route6.Cost = intPtr(d.Get("cost").(int))
 		hasChange = true
 	}
 	if d.HasChange("detail") {
@@ -200,7 +213,7 @@ func updateRoute6Func(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 	if d.HasChange("distance") {
 		log.Printf("[DEBUG]  citrixadc-provider: Distance has changed for route6 %s, starting update", route6Network)
-		route6.Distance = d.Get("distance").(int)
+		route6.Distance = intPtr(d.Get("distance").(int))
 		hasChange = true
 	}
 	if d.HasChange("gateway") {
@@ -230,22 +243,22 @@ func updateRoute6Func(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 	if d.HasChange("td") {
 		log.Printf("[DEBUG]  citrixadc-provider: Td has changed for route6 %s, starting update", route6Network)
-		route6.Td = d.Get("td").(int)
+		route6.Td = intPtr(d.Get("td").(int))
 		hasChange = true
 	}
 	if d.HasChange("vlan") {
 		log.Printf("[DEBUG]  citrixadc-provider: Vlan has changed for route6 %s, starting update", route6Network)
-		route6.Vlan = d.Get("vlan").(int)
+		route6.Vlan = intPtr(d.Get("vlan").(int))
 		hasChange = true
 	}
 	if d.HasChange("vxlan") {
 		log.Printf("[DEBUG]  citrixadc-provider: Vxlan has changed for route6 %s, starting update", route6Network)
-		route6.Vxlan = d.Get("vxlan").(int)
+		route6.Vxlan = intPtr(d.Get("vxlan").(int))
 		hasChange = true
 	}
 	if d.HasChange("weight") {
 		log.Printf("[DEBUG]  citrixadc-provider: Weight has changed for route6 %s, starting update", route6Network)
-		route6.Weight = d.Get("weight").(int)
+		route6.Weight = intPtr(d.Get("weight").(int))
 		hasChange = true
 	}
 

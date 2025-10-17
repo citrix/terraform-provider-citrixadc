@@ -27,11 +27,11 @@ type Tmglobaltmsessionpolicybinding struct {
 	/**
 	* The priority of the policy.
 	*/
-	Priority int `json:"priority,omitempty"`
+	Priority *int `json:"priority,omitempty"`
 	/**
 	* Bound policy type
 	*/
-	Bindpolicytype int `json:"bindpolicytype,omitempty"`
+	Bindpolicytype *int `json:"bindpolicytype,omitempty"`
 	/**
 	* Indicates that a variable is a built-in (SYSTEM INTERNAL) type.
 	*/

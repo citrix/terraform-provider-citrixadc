@@ -27,7 +27,7 @@ type Hanodepartialfailureinterfacesbinding struct {
 	/**
 	* Number that uniquely identifies the local node. The ID of the local node is always 0.
 	*/
-	Id int `json:"id,omitempty"`
+	Id *int `json:"id,omitempty"`
 	/**
 	* A route that you want the Citrix ADC to monitor in its internal routing table. You can specify an IPv4 address or network, or an IPv6 address or network prefix. If you specify an IPv4 network address or IPv6 network prefix, the appliance monitors any route that matches the network or prefix.
 	*/

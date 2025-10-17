@@ -68,9 +68,14 @@ func createDnsaddrecFunc(ctx context.Context, d *schema.ResourceData, meta inter
 		Ecssubnet: d.Get("ecssubnet").(string),
 		Hostname:  d.Get("hostname").(string),
 		Ipaddress: d.Get("ipaddress").(string),
-		Nodeid:    d.Get("nodeid").(int),
-		Ttl:       d.Get("ttl").(int),
 		Type:      d.Get("type").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("nodeid"); !raw.IsNull() {
+		dnsaddrec.Nodeid = intPtr(d.Get("nodeid").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("ttl"); !raw.IsNull() {
+		dnsaddrec.Ttl = intPtr(d.Get("ttl").(int))
 	}
 
 	_, err := client.AddResource(service.Dnsaddrec.Type(), dnsaddrecId, &dnsaddrec)

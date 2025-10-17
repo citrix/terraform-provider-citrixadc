@@ -97,19 +97,30 @@ func createCmpparameterFunc(ctx context.Context, d *schema.ResourceData, meta in
 	cmpparameterName := resource.PrefixedUniqueId("tf-cmpparameter-")
 
 	cmpparameter := cmp.Cmpparameter{
-		Addvaryheader:    d.Get("addvaryheader").(string),
-		Cmpbypasspct:     d.Get("cmpbypasspct").(int),
-		Cmplevel:         d.Get("cmplevel").(string),
-		Cmponpush:        d.Get("cmponpush").(string),
-		Externalcache:    d.Get("externalcache").(string),
-		Heurexpiry:       d.Get("heurexpiry").(string),
-		Heurexpiryhistwt: d.Get("heurexpiryhistwt").(int),
-		Heurexpirythres:  d.Get("heurexpirythres").(int),
-		Minressize:       d.Get("minressize").(int),
-		Policytype:       d.Get("policytype").(string),
-		Quantumsize:      d.Get("quantumsize").(int),
-		Servercmp:        d.Get("servercmp").(string),
-		Varyheadervalue:  d.Get("varyheadervalue").(string),
+		Addvaryheader:   d.Get("addvaryheader").(string),
+		Cmplevel:        d.Get("cmplevel").(string),
+		Cmponpush:       d.Get("cmponpush").(string),
+		Externalcache:   d.Get("externalcache").(string),
+		Heurexpiry:      d.Get("heurexpiry").(string),
+		Policytype:      d.Get("policytype").(string),
+		Servercmp:       d.Get("servercmp").(string),
+		Varyheadervalue: d.Get("varyheadervalue").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("cmpbypasspct"); !raw.IsNull() {
+		cmpparameter.Cmpbypasspct = intPtr(d.Get("cmpbypasspct").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("heurexpiryhistwt"); !raw.IsNull() {
+		cmpparameter.Heurexpiryhistwt = intPtr(d.Get("heurexpiryhistwt").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("heurexpirythres"); !raw.IsNull() {
+		cmpparameter.Heurexpirythres = intPtr(d.Get("heurexpirythres").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("minressize"); !raw.IsNull() {
+		cmpparameter.Minressize = intPtr(d.Get("minressize").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("quantumsize"); !raw.IsNull() {
+		cmpparameter.Quantumsize = intPtr(d.Get("quantumsize").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Cmpparameter.Type(), &cmpparameter)
@@ -163,7 +174,7 @@ func updateCmpparameterFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("cmpbypasspct") {
 		log.Printf("[DEBUG]  citrixadc-provider: Cmpbypasspct has changed for cmpparameter, starting update")
-		cmpparameter.Cmpbypasspct = d.Get("cmpbypasspct").(int)
+		cmpparameter.Cmpbypasspct = intPtr(d.Get("cmpbypasspct").(int))
 		hasChange = true
 	}
 	if d.HasChange("cmplevel") {
@@ -188,17 +199,17 @@ func updateCmpparameterFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("heurexpiryhistwt") {
 		log.Printf("[DEBUG]  citrixadc-provider: Heurexpiryhistwt has changed for cmpparameter, starting update")
-		cmpparameter.Heurexpiryhistwt = d.Get("heurexpiryhistwt").(int)
+		cmpparameter.Heurexpiryhistwt = intPtr(d.Get("heurexpiryhistwt").(int))
 		hasChange = true
 	}
 	if d.HasChange("heurexpirythres") {
 		log.Printf("[DEBUG]  citrixadc-provider: Heurexpirythres has changed for cmpparameter, starting update")
-		cmpparameter.Heurexpirythres = d.Get("heurexpirythres").(int)
+		cmpparameter.Heurexpirythres = intPtr(d.Get("heurexpirythres").(int))
 		hasChange = true
 	}
 	if d.HasChange("minressize") {
 		log.Printf("[DEBUG]  citrixadc-provider: Minressize has changed for cmpparameter, starting update")
-		cmpparameter.Minressize = d.Get("minressize").(int)
+		cmpparameter.Minressize = intPtr(d.Get("minressize").(int))
 		hasChange = true
 	}
 	if d.HasChange("policytype") {
@@ -208,7 +219,7 @@ func updateCmpparameterFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("quantumsize") {
 		log.Printf("[DEBUG]  citrixadc-provider: Quantumsize has changed for cmpparameter, starting update")
-		cmpparameter.Quantumsize = d.Get("quantumsize").(int)
+		cmpparameter.Quantumsize = intPtr(d.Get("quantumsize").(int))
 		hasChange = true
 	}
 	if d.HasChange("servercmp") {

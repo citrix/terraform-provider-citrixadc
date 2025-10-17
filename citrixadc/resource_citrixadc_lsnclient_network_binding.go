@@ -58,7 +58,10 @@ func createLsnclient_network_bindingFunc(ctx context.Context, d *schema.Resource
 		Clientname: d.Get("clientname").(string),
 		Netmask:    d.Get("netmask").(string),
 		Network:    d.Get("network").(string),
-		Td:         d.Get("td").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("td"); !raw.IsNull() {
+		lsnclient_network_binding.Td = intPtr(d.Get("td").(int))
 	}
 
 	err := client.UpdateUnnamedResource("lsnclient_network_binding", &lsnclient_network_binding)

@@ -382,7 +382,7 @@ func createCachecontentgroupFunc(ctx context.Context, d *schema.ResourceData, me
 	// 	Cachecontrol:           d.Get("cachecontrol").(string),
 	// 	Expireatlastbyte:       d.Get("expireatlastbyte").(string),
 	// 	Flashcache:             d.Get("flashcache").(string),
-	// 	Heurexpiryparam:        d.Get("heurexpiryparam").(int),
+	// 	Heurexpiryparam:        intPtr(d.Get("heurexpiryparam").(int)),
 	// 	Hitparams:              toStringList(d.Get("hitparams").([]interface{})),
 	// 	Hitselector:            d.Get("hitselector").(string),
 	// 	Host:                   d.Get("host").(string),
@@ -397,28 +397,28 @@ func createCachecontentgroupFunc(ctx context.Context, d *schema.ResourceData, me
 	// 	Invalselector:          d.Get("invalselector").(string),
 	// 	Lazydnsresolve:         d.Get("lazydnsresolve").(string),
 	// 	Matchcookies:           d.Get("matchcookies").(string),
-	// 	Maxressize:             d.Get("maxressize").(int),
-	// 	Memlimit:               d.Get("memlimit").(int),
-	// 	Minhits:                d.Get("minhits").(int),
-	// 	Minressize:             d.Get("minressize").(int),
+	// 	Maxressize:             intPtr(d.Get("maxressize").(int)),
+	// 	Memlimit:               intPtr(d.Get("memlimit").(int)),
+	// 	Minhits:                intPtr(d.Get("minhits").(int)),
+	// 	Minressize:             intPtr(d.Get("minressize").(int)),
 	// 	Name:                   d.Get("name").(string),
 	// 	Persistha:              d.Get("persistha").(string),
 	// 	Pinned:                 d.Get("pinned").(string),
 	// 	Polleverytime:          d.Get("polleverytime").(string),
 	// 	Prefetch:               d.Get("prefetch").(string),
-	// 	Prefetchmaxpending:     d.Get("prefetchmaxpending").(int),
-	// 	Prefetchperiod:         d.Get("prefetchperiod").(int),
-	// 	Prefetchperiodmillisec: d.Get("prefetchperiodmillisec").(int),
+	// 	Prefetchmaxpending:     intPtr(d.Get("prefetchmaxpending").(int)),
+	// 	Prefetchperiod:         intPtr(d.Get("prefetchperiod").(int)),
+	// 	Prefetchperiodmillisec: intPtr(d.Get("prefetchperiodmillisec").(int)),
 	// 	Query:                  d.Get("query").(string),
-	// 	Quickabortsize:         d.Get("quickabortsize").(int),
-	// 	Relexpiry:              d.Get("relexpiry").(int),
-	// 	Relexpirymillisec:      d.Get("relexpirymillisec").(int),
+	// 	Quickabortsize:         intPtr(d.Get("quickabortsize").(int)),
+	// 	Relexpiry:              intPtr(d.Get("relexpiry").(int)),
+	// 	Relexpirymillisec:      intPtr(d.Get("relexpirymillisec").(int)),
 	// 	Removecookies:          d.Get("removecookies").(string),
 	// 	Selectorvalue:          d.Get("selectorvalue").(string),
 	// 	Tosecondary:            d.Get("tosecondary").(string),
 	// 	Type:                   d.Get("type").(string),
-	// 	Weaknegrelexpiry:       d.Get("weaknegrelexpiry").(int),
-	// 	Weakposrelexpiry:       d.Get("weakposrelexpiry").(int),
+	// 	Weaknegrelexpiry:       intPtr(d.Get("weaknegrelexpiry").(int)),
+	// 	Weakposrelexpiry:       intPtr(d.Get("weakposrelexpiry").(int)),
 	// }
 
 	_, err := client.AddResource(service.Cachecontentgroup.Type(), cachecontentgroupName, &cachecontentgroup)
@@ -531,7 +531,7 @@ func updateCachecontentgroupFunc(ctx context.Context, d *schema.ResourceData, me
 	}
 	if d.HasChange("heurexpiryparam") {
 		log.Printf("[DEBUG]  citrixadc-provider: Heurexpiryparam has changed for cachecontentgroup %s, starting update", cachecontentgroupName)
-		cachecontentgroup["heurexpiryparam"] = d.Get("heurexpiryparam").(int)
+		cachecontentgroup["heurexpiryparam"] = intPtr(d.Get("heurexpiryparam").(int))
 		hasChange = true
 	}
 	if d.HasChange("hitparams") {
@@ -606,22 +606,22 @@ func updateCachecontentgroupFunc(ctx context.Context, d *schema.ResourceData, me
 	}
 	if d.HasChange("maxressize") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxressize has changed for cachecontentgroup %s, starting update", cachecontentgroupName)
-		cachecontentgroup["maxressize"] = d.Get("maxressize").(int)
+		cachecontentgroup["maxressize"] = intPtr(d.Get("maxressize").(int))
 		hasChange = true
 	}
 	if d.HasChange("memlimit") {
 		log.Printf("[DEBUG]  citrixadc-provider: Memlimit has changed for cachecontentgroup %s, starting update", cachecontentgroupName)
-		cachecontentgroup["memlimit"] = d.Get("memlimit").(int)
+		cachecontentgroup["memlimit"] = intPtr(d.Get("memlimit").(int))
 		hasChange = true
 	}
 	if d.HasChange("minhits") {
 		log.Printf("[DEBUG]  citrixadc-provider: Minhits has changed for cachecontentgroup %s, starting update", cachecontentgroupName)
-		cachecontentgroup["minhits"] = d.Get("minhits").(int)
+		cachecontentgroup["minhits"] = intPtr(d.Get("minhits").(int))
 		hasChange = true
 	}
 	if d.HasChange("minressize") {
 		log.Printf("[DEBUG]  citrixadc-provider: Minressize has changed for cachecontentgroup %s, starting update", cachecontentgroupName)
-		cachecontentgroup["minressize"] = d.Get("minressize").(int)
+		cachecontentgroup["minressize"] = intPtr(d.Get("minressize").(int))
 		hasChange = true
 	}
 	if d.HasChange("persistha") {
@@ -646,17 +646,17 @@ func updateCachecontentgroupFunc(ctx context.Context, d *schema.ResourceData, me
 	}
 	if d.HasChange("prefetchmaxpending") {
 		log.Printf("[DEBUG]  citrixadc-provider: Prefetchmaxpending has changed for cachecontentgroup %s, starting update", cachecontentgroupName)
-		cachecontentgroup["prefetchmaxpending"] = d.Get("prefetchmaxpending").(int)
+		cachecontentgroup["prefetchmaxpending"] = intPtr(d.Get("prefetchmaxpending").(int))
 		hasChange = true
 	}
 	if d.HasChange("prefetchperiod") {
 		log.Printf("[DEBUG]  citrixadc-provider: Prefetchperiod has changed for cachecontentgroup %s, starting update", cachecontentgroupName)
-		cachecontentgroup["prefetchperiod"] = d.Get("prefetchperiod").(int)
+		cachecontentgroup["prefetchperiod"] = intPtr(d.Get("prefetchperiod").(int))
 		hasChange = true
 	}
 	if d.HasChange("prefetchperiodmillisec") {
 		log.Printf("[DEBUG]  citrixadc-provider: Prefetchperiodmillisec has changed for cachecontentgroup %s, starting update", cachecontentgroupName)
-		cachecontentgroup["prefetchperiodmillisec"] = d.Get("prefetchperiodmillisec").(int)
+		cachecontentgroup["prefetchperiodmillisec"] = intPtr(d.Get("prefetchperiodmillisec").(int))
 		hasChange = true
 	}
 	if d.HasChange("query") {
@@ -666,17 +666,17 @@ func updateCachecontentgroupFunc(ctx context.Context, d *schema.ResourceData, me
 	}
 	if d.HasChange("quickabortsize") {
 		log.Printf("[DEBUG]  citrixadc-provider: Quickabortsize has changed for cachecontentgroup %s, starting update", cachecontentgroupName)
-		cachecontentgroup["quickabortsize"] = d.Get("quickabortsize").(int)
+		cachecontentgroup["quickabortsize"] = intPtr(d.Get("quickabortsize").(int))
 		hasChange = true
 	}
 	if d.HasChange("relexpiry") {
 		log.Printf("[DEBUG]  citrixadc-provider: Relexpiry has changed for cachecontentgroup %s, starting update", cachecontentgroupName)
-		cachecontentgroup["relexpiry"] = d.Get("relexpiry").(int)
+		cachecontentgroup["relexpiry"] = intPtr(d.Get("relexpiry").(int))
 		hasChange = true
 	}
 	if d.HasChange("relexpirymillisec") {
 		log.Printf("[DEBUG]  citrixadc-provider: Relexpirymillisec has changed for cachecontentgroup %s, starting update", cachecontentgroupName)
-		cachecontentgroup["relexpirymillisec"] = d.Get("relexpirymillisec").(int)
+		cachecontentgroup["relexpirymillisec"] = intPtr(d.Get("relexpirymillisec").(int))
 		hasChange = true
 	}
 	if d.HasChange("removecookies") {
@@ -701,12 +701,12 @@ func updateCachecontentgroupFunc(ctx context.Context, d *schema.ResourceData, me
 	}
 	if d.HasChange("weaknegrelexpiry") {
 		log.Printf("[DEBUG]  citrixadc-provider: Weaknegrelexpiry has changed for cachecontentgroup %s, starting update", cachecontentgroupName)
-		cachecontentgroup["weaknegrelexpiry"] = d.Get("weaknegrelexpiry").(int)
+		cachecontentgroup["weaknegrelexpiry"] = intPtr(d.Get("weaknegrelexpiry").(int))
 		hasChange = true
 	}
 	if d.HasChange("weakposrelexpiry") {
 		log.Printf("[DEBUG]  citrixadc-provider: Weakposrelexpiry has changed for cachecontentgroup %s, starting update", cachecontentgroupName)
-		cachecontentgroup["weakposrelexpiry"] = d.Get("weakposrelexpiry").(int)
+		cachecontentgroup["weakposrelexpiry"] = intPtr(d.Get("weakposrelexpiry").(int))
 		hasChange = true
 	}
 

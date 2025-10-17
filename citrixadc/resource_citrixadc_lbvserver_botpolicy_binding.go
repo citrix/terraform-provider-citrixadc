@@ -86,7 +86,10 @@ func createLbvserver_botpolicy_bindingFunc(ctx context.Context, d *schema.Resour
 		Labeltype:              d.Get("labeltype").(string),
 		Name:                   d.Get("name").(string),
 		Policyname:             d.Get("policyname").(string),
-		Priority:               d.Get("priority").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		lbvserver_botpolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	_, err := client.AddResource("lbvserver_botpolicy_binding", bindingId, &lbvserver_botpolicy_binding)

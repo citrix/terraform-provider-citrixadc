@@ -51,7 +51,10 @@ func createLsnclient_nsacl_bindingFunc(ctx context.Context, d *schema.ResourceDa
 	lsnclient_nsacl_binding := lsn.Lsnclientnsaclbinding{
 		Aclname:    d.Get("aclname").(string),
 		Clientname: d.Get("clientname").(string),
-		Td:         d.Get("td").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("td"); !raw.IsNull() {
+		lsnclient_nsacl_binding.Td = intPtr(d.Get("td").(int))
 	}
 
 	err := client.UpdateUnnamedResource("lsnclient_nsacl_binding", &lsnclient_nsacl_binding)

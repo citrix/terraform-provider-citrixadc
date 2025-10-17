@@ -95,8 +95,11 @@ func createCrvserver_filterpolicy_bindingFunc(ctx context.Context, d *schema.Res
 		Labeltype:              d.Get("labeltype").(string),
 		Name:                   name.(string),
 		Policyname:             policyname.(string),
-		Priority:               d.Get("priority").(int),
 		Targetvserver:          d.Get("targetvserver").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		crvserver_filterpolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Crvserver_filterpolicy_binding.Type(), &crvserver_filterpolicy_binding)

@@ -62,6 +62,18 @@ func resourceCitrixAdcAppfwprofile_cookieconsistency_binding() *schema.Resource 
 				Computed: true,
 				ForceNew: true,
 			},
+			"resourceid": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"ruletype": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -80,6 +92,8 @@ func createAppfwprofile_cookieconsistency_bindingFunc(ctx context.Context, d *sc
 		Isregex:           d.Get("isregex").(string),
 		Name:              appFwName,
 		State:             d.Get("state").(string),
+		Resourceid:        d.Get("resourceid").(string),
+		Ruletype:          d.Get("ruletype").(string),
 	}
 
 	_, err := client.AddResource(service.Appfwprofile_cookieconsistency_binding.Type(), appFwName, &appfwprofile_cookieconsistency_binding)
@@ -149,6 +163,8 @@ func readAppfwprofile_cookieconsistency_bindingFunc(ctx context.Context, d *sche
 	d.Set("isregex", data["isregex"])
 	d.Set("name", data["name"])
 	d.Set("state", data["state"])
+	d.Set("resourceid", data["resourceid"])
+	d.Set("ruletype", data["ruletype"])
 
 	return nil
 

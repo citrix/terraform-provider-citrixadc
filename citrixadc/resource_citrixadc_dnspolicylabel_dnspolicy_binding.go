@@ -82,7 +82,10 @@ func createDnspolicylabel_dnspolicy_bindingFunc(ctx context.Context, d *schema.R
 		Labelname:              labelname.(string),
 		Labeltype:              d.Get("labeltype").(string),
 		Policyname:             policyname.(string),
-		Priority:               d.Get("priority").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		dnspolicylabel_dnspolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Dnspolicylabel_dnspolicy_binding.Type(), &dnspolicylabel_dnspolicy_binding)

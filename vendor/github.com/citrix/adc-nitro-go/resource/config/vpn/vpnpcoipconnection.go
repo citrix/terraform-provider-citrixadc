@@ -27,7 +27,7 @@ type Vpnpcoipconnection struct {
 	/**
 	* Unique number that identifies the cluster node.
 	*/
-	Nodeid int `json:"nodeid,omitempty"`
+	Nodeid *int `json:"nodeid,omitempty"`
 	/**
 	* All active pcoip connections.
 	*/

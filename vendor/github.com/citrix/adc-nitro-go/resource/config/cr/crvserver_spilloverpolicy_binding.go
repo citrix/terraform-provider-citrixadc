@@ -35,7 +35,7 @@ type Crvserverspilloverpolicybinding struct {
 	/**
 	* The priority for the policy.
 	*/
-	Priority int `json:"priority,omitempty"`
+	Priority *int `json:"priority,omitempty"`
 	/**
 	* Name of the cache redirection virtual server to which to bind the cache redirection policy.
 	*/

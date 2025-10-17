@@ -2,11 +2,13 @@ package citrixadc
 
 import (
 	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/analytics"
+
+	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"log"
 )
 
 func resourceCitrixAdcAnalyticsprofile() *schema.Resource {
@@ -270,10 +272,12 @@ func createAnalyticsprofileFunc(ctx context.Context, d *schema.ResourceData, met
 		Analyticsauthtoken:           d.Get("analyticsauthtoken").(string),
 		Analyticsendpointurl:         d.Get("analyticsendpointurl").(string),
 		Analyticsendpointcontenttype: d.Get("analyticsendpointcontenttype").(string),
-		Metricsexportfrequency:       d.Get("metricsexportfrequency").(int),
 		Analyticsendpointmetadata:    d.Get("analyticsendpointmetadata").(string),
 		Dataformatfile:               d.Get("dataformatfile").(string),
 		Topn:                         d.Get("topn").(string),
+	}
+	if raw := d.GetRawConfig().GetAttr("metricsexportfrequency"); !raw.IsNull() {
+		analyticsprofile.Metricsexportfrequency = intPtr(d.Get("metricsexportfrequency").(int))
 	}
 	if listVal, ok := d.Get("httpcustomheaders").([]interface{}); ok {
 		analyticsprofile.Httpcustomheaders = toStringList(listVal)
@@ -569,7 +573,7 @@ func updateAnalyticsprofileFunc(ctx context.Context, d *schema.ResourceData, met
 	}
 	if d.HasChange("metricsexportfrequency") {
 		log.Printf("[DEBUG]  citrixadc-provider: Metricsexportfrequency has changed for analyticsprofile %s, starting update", analyticsprofileName)
-		analyticsprofile.Metricsexportfrequency = d.Get("metricsexportfrequency").(int)
+		analyticsprofile.Metricsexportfrequency = intPtr(d.Get("metricsexportfrequency").(int))
 		hasChange = true
 	}
 	if d.HasChange("analyticsendpointmetadata") {

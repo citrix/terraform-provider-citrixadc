@@ -102,22 +102,22 @@ func updateFeoparameterFunc(ctx context.Context, d *schema.ResourceData, meta in
 	hasChange := false
 	if d.HasChange("cssinlinethressize") {
 		log.Printf("[DEBUG]  citrixadc-provider: Cssinlinethressize has changed for feoparameter, starting update")
-		feoparameter.Cssinlinethressize = d.Get("cssinlinethressize").(int)
+		feoparameter.Cssinlinethressize = intPtr(d.Get("cssinlinethressize").(int))
 		hasChange = true
 	}
 	if d.HasChange("imginlinethressize") {
 		log.Printf("[DEBUG]  citrixadc-provider: Imginlinethressize has changed for feoparameter, starting update")
-		feoparameter.Imginlinethressize = d.Get("imginlinethressize").(int)
+		feoparameter.Imginlinethressize = intPtr(d.Get("imginlinethressize").(int))
 		hasChange = true
 	}
 	if d.HasChange("jpegqualitypercent") {
 		log.Printf("[DEBUG]  citrixadc-provider: Jpegqualitypercent has changed for feoparameter, starting update")
-		feoparameter.Jpegqualitypercent = d.Get("jpegqualitypercent").(int)
+		feoparameter.Jpegqualitypercent = intPtr(d.Get("jpegqualitypercent").(int))
 		hasChange = true
 	}
 	if d.HasChange("jsinlinethressize") {
 		log.Printf("[DEBUG]  citrixadc-provider: Jsinlinethressize has changed for feoparameter, starting update")
-		feoparameter.Jsinlinethressize = d.Get("jsinlinethressize").(int)
+		feoparameter.Jsinlinethressize = intPtr(d.Get("jsinlinethressize").(int))
 		hasChange = true
 	}
 

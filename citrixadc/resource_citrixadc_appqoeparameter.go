@@ -102,22 +102,22 @@ func updateAppqoeparameterFunc(ctx context.Context, d *schema.ResourceData, meta
 	hasChange := false
 	if d.HasChange("avgwaitingclient") {
 		log.Printf("[DEBUG]  citrixadc-provider: Avgwaitingclient has changed for appqoeparameter, starting update")
-		appqoeparameter.Avgwaitingclient = d.Get("avgwaitingclient").(int)
+		appqoeparameter.Avgwaitingclient = intPtr(d.Get("avgwaitingclient").(int))
 		hasChange = true
 	}
 	if d.HasChange("dosattackthresh") {
 		log.Printf("[DEBUG]  citrixadc-provider: Dosattackthresh has changed for appqoeparameter, starting update")
-		appqoeparameter.Dosattackthresh = d.Get("dosattackthresh").(int)
+		appqoeparameter.Dosattackthresh = intPtr(d.Get("dosattackthresh").(int))
 		hasChange = true
 	}
 	if d.HasChange("maxaltrespbandwidth") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxaltrespbandwidth has changed for appqoeparameter, starting update")
-		appqoeparameter.Maxaltrespbandwidth = d.Get("maxaltrespbandwidth").(int)
+		appqoeparameter.Maxaltrespbandwidth = intPtr(d.Get("maxaltrespbandwidth").(int))
 		hasChange = true
 	}
 	if d.HasChange("sessionlife") {
 		log.Printf("[DEBUG]  citrixadc-provider: Sessionlife has changed for appqoeparameter, starting update")
-		appqoeparameter.Sessionlife = d.Get("sessionlife").(int)
+		appqoeparameter.Sessionlife = intPtr(d.Get("sessionlife").(int))
 		hasChange = true
 	}
 

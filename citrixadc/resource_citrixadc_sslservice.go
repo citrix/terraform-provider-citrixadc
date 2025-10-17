@@ -210,14 +210,12 @@ func createSslserviceFunc(ctx context.Context, d *schema.ResourceData, meta inte
 		Clientcert:           d.Get("clientcert").(string),
 		Commonname:           d.Get("commonname").(string),
 		Dh:                   d.Get("dh").(string),
-		Dhcount:              d.Get("dhcount").(int),
 		Dhfile:               d.Get("dhfile").(string),
 		Dhkeyexpsizelimit:    d.Get("dhkeyexpsizelimit").(string),
 		Dtls1:                d.Get("dtls1").(string),
 		Dtls12:               d.Get("dtls12").(string),
 		Dtlsprofilename:      d.Get("dtlsprofilename").(string),
 		Ersa:                 d.Get("ersa").(string),
-		Ersacount:            d.Get("ersacount").(int),
 		Ocspstapling:         d.Get("ocspstapling").(string),
 		Pushenctrigger:       d.Get("pushenctrigger").(string),
 		Redirectportrewrite:  d.Get("redirectportrewrite").(string),
@@ -225,7 +223,6 @@ func createSslserviceFunc(ctx context.Context, d *schema.ResourceData, meta inte
 		Serverauth:           d.Get("serverauth").(string),
 		Servicename:          sslserviceName,
 		Sessreuse:            d.Get("sessreuse").(string),
-		Sesstimeout:          d.Get("sesstimeout").(int),
 		Snienable:            d.Get("snienable").(string),
 		Ssl2:                 d.Get("ssl2").(string),
 		Ssl3:                 d.Get("ssl3").(string),
@@ -238,6 +235,16 @@ func createSslserviceFunc(ctx context.Context, d *schema.ResourceData, meta inte
 		Tls11:                d.Get("tls11").(string),
 		Tls12:                d.Get("tls12").(string),
 		Tls13:                d.Get("tls13").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("dhcount"); !raw.IsNull() {
+		sslservice.Dhcount = intPtr(d.Get("dhcount").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("ersacount"); !raw.IsNull() {
+		sslservice.Ersacount = intPtr(d.Get("ersacount").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("sesstimeout"); !raw.IsNull() {
+		sslservice.Sesstimeout = intPtr(d.Get("sesstimeout").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Sslservice.Type(), &sslservice)
@@ -352,7 +359,7 @@ func updateSslserviceFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	if d.HasChange("dhcount") {
 		log.Printf("[DEBUG]  citrixadc-provider: Dhcount has changed for sslservice %s, starting update", sslserviceName)
-		sslservice.Dhcount = d.Get("dhcount").(int)
+		sslservice.Dhcount = intPtr(d.Get("dhcount").(int))
 		hasChange = true
 	}
 	if d.HasChange("dhfile") {
@@ -387,7 +394,7 @@ func updateSslserviceFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	if d.HasChange("ersacount") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ersacount has changed for sslservice %s, starting update", sslserviceName)
-		sslservice.Ersacount = d.Get("ersacount").(int)
+		sslservice.Ersacount = intPtr(d.Get("ersacount").(int))
 		hasChange = true
 	}
 	if d.HasChange("ocspstapling") {
@@ -428,7 +435,7 @@ func updateSslserviceFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	//sessreuse pre-requisite for sesstimeout
 	if d.HasChange("sesstimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Sesstimeout has changed for sslservice %s, starting update", sslserviceName)
-		sslservice.Sesstimeout = d.Get("sesstimeout").(int)
+		sslservice.Sesstimeout = intPtr(d.Get("sesstimeout").(int))
 		sslservice.Sessreuse = d.Get("sessreuse").(string)
 		hasChange = true
 	}

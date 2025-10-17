@@ -27,7 +27,7 @@ type Dnspolicy64lbvserverbinding struct {
 	/**
 	* Specifies the priority of the policy.
 	*/
-	Priority int `json:"priority,omitempty"`
+	Priority *int `json:"priority,omitempty"`
 	/**
 	* Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 	*/

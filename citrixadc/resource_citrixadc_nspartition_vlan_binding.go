@@ -47,7 +47,10 @@ func createNspartition_vlan_bindingFunc(ctx context.Context, d *schema.ResourceD
 	bindingId := fmt.Sprintf("%s,%s", partitionname, vlan)
 	nspartition_vlan_binding := ns.Nspartitionvlanbinding{
 		Partitionname: d.Get("partitionname").(string),
-		Vlan:          d.Get("vlan").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("vlan"); !raw.IsNull() {
+		nspartition_vlan_binding.Vlan = intPtr(d.Get("vlan").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Nspartition_vlan_binding.Type(), &nspartition_vlan_binding)

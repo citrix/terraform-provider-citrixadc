@@ -81,8 +81,11 @@ func createContentinspectioncalloutFunc(ctx context.Context, d *schema.ResourceD
 		Returntype:  d.Get("returntype").(string),
 		Serverip:    d.Get("serverip").(string),
 		Servername:  d.Get("servername").(string),
-		Serverport:  d.Get("serverport").(int),
 		Type:        d.Get("type").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("serverport"); !raw.IsNull() {
+		contentinspectioncallout.Serverport = intPtr(d.Get("serverport").(int))
 	}
 
 	_, err := client.AddResource("contentinspectioncallout", contentinspectioncalloutName, &contentinspectioncallout)
@@ -161,7 +164,7 @@ func updateContentinspectioncalloutFunc(ctx context.Context, d *schema.ResourceD
 	}
 	if d.HasChange("serverport") {
 		log.Printf("[DEBUG]  citrixadc-provider: Serverport has changed for contentinspectioncallout %s, starting update", contentinspectioncalloutName)
-		contentinspectioncallout.Serverport = d.Get("serverport").(int)
+		contentinspectioncallout.Serverport = intPtr(d.Get("serverport").(int))
 		hasChange = true
 	}
 

@@ -51,9 +51,12 @@ func createNsservicepath_nsservicefunction_bindingFunc(ctx context.Context, d *s
 	servicefunction := d.Get("servicefunction")
 	bindingId := fmt.Sprintf("%s,%s", servicepathname, servicefunction)
 	nsservicepath_nsservicefunction_binding := ns.Nsservicepathnsservicefunctionbinding{
-		Index:           d.Get("index").(int),
 		Servicefunction: d.Get("servicefunction").(string),
 		Servicepathname: d.Get("servicepathname").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("index"); !raw.IsNull() {
+		nsservicepath_nsservicefunction_binding.Index = intPtr(d.Get("index").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Nsservicepath_nsservicefunction_binding.Type(), &nsservicepath_nsservicefunction_binding)

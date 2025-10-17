@@ -90,7 +90,10 @@ func createForwardingsessionFunc(ctx context.Context, d *schema.ResourceData, me
 		Network:          d.Get("network").(string),
 		Processlocal:     d.Get("processlocal").(string),
 		Sourceroutecache: d.Get("sourceroutecache").(string),
-		Td:               d.Get("td").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("td"); !raw.IsNull() {
+		forwardingsession.Td = intPtr(d.Get("td").(int))
 	}
 
 	_, err := client.AddResource(service.Forwardingsession.Type(), forwardingsessionName, &forwardingsession)
@@ -164,7 +167,7 @@ func updateForwardingsessionFunc(ctx context.Context, d *schema.ResourceData, me
 	}
 	if d.HasChange("td") {
 		log.Printf("[DEBUG]  citrixadc-provider: Td has changed for forwardingsession %s, starting update", forwardingsessionName)
-		forwardingsession.Td = d.Get("td").(int)
+		forwardingsession.Td = intPtr(d.Get("td").(int))
 		hasChange = true
 	}
 

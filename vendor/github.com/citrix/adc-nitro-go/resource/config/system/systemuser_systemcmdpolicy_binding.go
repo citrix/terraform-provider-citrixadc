@@ -27,7 +27,7 @@ type Systemusersystemcmdpolicybinding struct {
 	/**
 	* The priority of the policy.
 	*/
-	Priority int `json:"priority,omitempty"`
+	Priority *int `json:"priority,omitempty"`
 	/**
 	* Name of the system-user entry to which to bind the command policy.
 	*/

@@ -116,12 +116,17 @@ func createNsicapprofileFunc(ctx context.Context, d *schema.ResourceData, meta i
 		Mode:                d.Get("mode").(string),
 		Name:                d.Get("name").(string),
 		Preview:             d.Get("preview").(string),
-		Previewlength:       d.Get("previewlength").(int),
 		Queryparams:         d.Get("queryparams").(string),
-		Reqtimeout:          d.Get("reqtimeout").(int),
 		Reqtimeoutaction:    d.Get("reqtimeoutaction").(string),
 		Uri:                 d.Get("uri").(string),
 		Useragent:           d.Get("useragent").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("previewlength"); !raw.IsNull() {
+		nsicapprofile.Previewlength = intPtr(d.Get("previewlength").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("reqtimeout"); !raw.IsNull() {
+		nsicapprofile.Reqtimeout = intPtr(d.Get("reqtimeout").(int))
 	}
 
 	_, err := client.AddResource("nsicapprofile", nsicapprofileName, &nsicapprofile)
@@ -216,7 +221,7 @@ func updateNsicapprofileFunc(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	if d.HasChange("previewlength") {
 		log.Printf("[DEBUG]  citrixadc-provider: Previewlength has changed for nsicapprofile %s, starting update", nsicapprofileName)
-		nsicapprofile.Previewlength = d.Get("previewlength").(int)
+		nsicapprofile.Previewlength = intPtr(d.Get("previewlength").(int))
 		hasChange = true
 	}
 	if d.HasChange("queryparams") {
@@ -226,7 +231,7 @@ func updateNsicapprofileFunc(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	if d.HasChange("reqtimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Reqtimeout has changed for nsicapprofile %s, starting update", nsicapprofileName)
-		nsicapprofile.Reqtimeout = d.Get("reqtimeout").(int)
+		nsicapprofile.Reqtimeout = intPtr(d.Get("reqtimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("reqtimeoutaction") {

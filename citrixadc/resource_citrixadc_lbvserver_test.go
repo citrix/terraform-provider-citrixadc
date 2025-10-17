@@ -29,6 +29,33 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
+const testAccLbvserver_basic = `
+
+	resource "citrixadc_lbvserver" "foo" {
+
+	ipv46 = "10.202.11.11"
+	lbmethod = "ROUNDROBIN"
+	name = "terraform-lb"
+	persistencetype = "COOKIEINSERT"
+	port = 80
+	servicetype = "HTTP"
+	}
+`
+
+const testAccLbvserver_basic_step2 = `
+
+	resource "citrixadc_lbvserver" "foo" {
+
+	ipv46 = "10.202.11.11"
+	lbmethod = "ROUNDROBIN"
+	name = "terraform-lb"
+	persistencetype = "COOKIEINSERT"
+	timeout = 0
+	port = 80
+	servicetype = "HTTP"
+	}
+`
+
 func TestAccLbvserver_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -52,6 +79,29 @@ func TestAccLbvserver_basic(t *testing.T) {
 						"citrixadc_lbvserver.foo", "port", "80"),
 					resource.TestCheckResourceAttr(
 						"citrixadc_lbvserver.foo", "servicetype", "HTTP"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_lbvserver.foo", "timeout", "2"),
+				),
+			},
+			{
+				Config: testAccLbvserver_basic_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserverExist("citrixadc_lbvserver.foo", nil),
+
+					resource.TestCheckResourceAttr(
+						"citrixadc_lbvserver.foo", "ipv46", "10.202.11.11"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_lbvserver.foo", "lbmethod", "ROUNDROBIN"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_lbvserver.foo", "name", "terraform-lb"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_lbvserver.foo", "persistencetype", "COOKIEINSERT"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_lbvserver.foo", "port", "80"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_lbvserver.foo", "servicetype", "HTTP"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_lbvserver.foo", "timeout", "0"),
 				),
 			},
 		},
@@ -97,6 +147,34 @@ func TestAccLbvserver_quicbridgeprofile(t *testing.T) {
 	})
 }
 
+const sniCertsTemplateConfig = `
+	resource "citrixadc_sslcertkey" "cert2" {
+	  certkey = "cert2"
+	  cert = "/var/tmp/certificate2.crt"
+	  key = "/var/tmp/key2.pem"
+	  expirymonitor = "DISABLED"
+	}
+
+	resource "citrixadc_sslcertkey" "cert3" {
+	  certkey = "cert3"
+	  cert = "/var/tmp/certificate3.crt"
+	  key = "/var/tmp/key3.pem"
+	  expirymonitor = "DISABLED"
+	}
+
+	resource "citrixadc_lbvserver" "lbsni" {
+	  ipv46 = "10.202.11.11"
+	  lbmethod = "ROUNDROBIN"
+	  name = "terraform-lb"
+	  persistencetype = "COOKIEINSERT"
+	  port = 443
+	  servicetype = "SSL"
+	  ciphers = ["DEFAULT"]
+	  %v
+	  %v
+	}
+`
+
 func TestAccLbvserver_snicerts(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { doPreChecks(t) },
@@ -136,6 +214,21 @@ func TestAccLbvserver_snicerts(t *testing.T) {
 		},
 	})
 }
+
+const templateCiphersConfig = `
+
+	resource "citrixadc_lbvserver" "ciphers" {
+
+	ipv46 = "10.202.11.11"
+	lbmethod = "ROUNDROBIN"
+	name = "tf-acc-ciphers-test"
+	persistencetype = "COOKIEINSERT"
+	port = 443
+	servicetype = "SSL"
+	%v
+	}
+
+`
 
 func TestAccLbvserver_standalone_ciphersuites_mixed(t *testing.T) {
 	// if isCluster {
@@ -336,62 +429,6 @@ func doPreChecks(t *testing.T) {
 
 }
 
-const templateCiphersConfig = `
-
-resource "citrixadc_lbvserver" "ciphers" {
-
-  ipv46 = "10.202.11.11"
-  lbmethod = "ROUNDROBIN"
-  name = "tf-acc-ciphers-test"
-  persistencetype = "COOKIEINSERT"
-  port = 443
-  servicetype = "SSL"
-  %v
-}
-
-`
-
-const testAccLbvserver_basic = `
-
-resource "citrixadc_lbvserver" "foo" {
-
-  ipv46 = "10.202.11.11"
-  lbmethod = "ROUNDROBIN"
-  name = "terraform-lb"
-  persistencetype = "COOKIEINSERT"
-  port = 80
-  servicetype = "HTTP"
-}
-`
-
-const sniCertsTemplateConfig = `
-	resource "citrixadc_sslcertkey" "cert2" {
-	  certkey = "cert2"
-	  cert = "/var/tmp/certificate2.crt"
-	  key = "/var/tmp/key2.pem"
-	  expirymonitor = "DISABLED"
-	}
-
-	resource "citrixadc_sslcertkey" "cert3" {
-	  certkey = "cert3"
-	  cert = "/var/tmp/certificate3.crt"
-	  key = "/var/tmp/key3.pem"
-	  expirymonitor = "DISABLED"
-	}
-
-	resource "citrixadc_lbvserver" "lbsni" {
-	  ipv46 = "10.202.11.11"
-	  lbmethod = "ROUNDROBIN"
-	  name = "terraform-lb"
-	  persistencetype = "COOKIEINSERT"
-	  port = 443
-	  servicetype = "SSL"
-	  ciphers = ["DEFAULT"]
-	  %v
-	  %v
-	}
-`
-
 func testSslcertificateBindingsConfig(template string, sslcertkey string, snicertskeys string) string {
 	sslcertkeyReplacement := ""
 	snisslcertkeysReplacement := "snisslcertkeys = []"
@@ -438,7 +475,7 @@ func TestAccLbvserver_AssertNonUpdateableAttributes(t *testing.T) {
 		Ipv46:       "192.23.23.23",
 		Name:        vserverName,
 		Servicetype: "HTTP",
-		Port:        80,
+		Port:        intPtr(80),
 	}
 
 	if _, err := c.client.AddResource(vserverType, vserverName, vserverInstance); err != nil {
@@ -450,25 +487,44 @@ func TestAccLbvserver_AssertNonUpdateableAttributes(t *testing.T) {
 	vserverInstance.Servicetype = ""
 
 	//port
-	vserverInstance.Port = 80
+	vserverInstance.Port = intPtr(80)
 	testHelperVerifyImmutabilityFunc(c, t, vserverType, vserverName, vserverInstance, "port")
-	vserverInstance.Port = 0
+
+	vserverInstance = lb.Lbvserver{
+		Ipv46: "192.23.23.23",
+		Name:  vserverName,
+	}
 
 	//servicetype
 	vserverInstance.Servicetype = "TCP"
 	testHelperVerifyImmutabilityFunc(c, t, vserverType, vserverName, vserverInstance, "servicetype")
 	vserverInstance.Servicetype = ""
 
+	vserverInstance = lb.Lbvserver{
+		Ipv46: "192.23.23.23",
+		Name:  vserverName,
+	}
+
 	//range
-	vserverInstance.Range = 10
+	vserverInstance.Range = intPtr(10)
 	testHelperVerifyImmutabilityFunc(c, t, vserverType, vserverName, vserverInstance, "range")
-	vserverInstance.Range = 0
+	vserverInstance.Range = intPtr(0)
+
+	vserverInstance = lb.Lbvserver{
+		Ipv46: "192.23.23.23",
+		Name:  vserverName,
+	}
 
 	//td
-	vserverInstance.Td = 1
+	vserverInstance.Td = intPtr(1)
 	vserverInstance.Servicetype = ""
 	testHelperVerifyImmutabilityFunc(c, t, vserverType, vserverName, vserverInstance, "td")
-	vserverInstance.Td = 0
+	vserverInstance.Td = intPtr(0)
+
+	vserverInstance = lb.Lbvserver{
+		Ipv46: "192.23.23.23",
+		Name:  vserverName,
+	}
 
 	//redirurlflags
 	vserverInstance.Redirurlflags = true
@@ -526,6 +582,36 @@ func TestAccLbvserver_enable_disable(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLbvserverExist("citrixadc_lbvserver.tf_acc_lb_vserver", nil),
 					resource.TestCheckResourceAttr("citrixadc_lbvserver.tf_acc_lb_vserver", "state", "ENABLED"),
+				),
+			},
+		},
+	})
+}
+
+const testAccLbvserverNonAddressable = `
+resource "citrixadc_lbvserver" "test_non_addressable_lb_vserver" {
+	name = "test-na-lb"
+	ipv46 = "0.0.0.0"
+	port = 0
+	servicetype = "HTTP"
+}
+`
+
+func TestAccLbvserver_nonAddressable(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckLbvserverDestroy,
+		Steps: []resource.TestStep{
+			// Create enabled
+			{
+				Config: testAccLbvserverNonAddressable,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserverExist("citrixadc_lbvserver.test_non_addressable_lb_vserver", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbvserver.test_non_addressable_lb_vserver", "state", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_lbvserver.test_non_addressable_lb_vserver", "ipv46", "0.0.0.0"),
+					resource.TestCheckResourceAttr("citrixadc_lbvserver.test_non_addressable_lb_vserver", "port", "0"),
+					resource.TestCheckResourceAttr("citrixadc_lbvserver.test_non_addressable_lb_vserver", "servicetype", "HTTP"),
 				),
 			},
 		},

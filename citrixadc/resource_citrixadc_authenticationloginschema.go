@@ -73,14 +73,21 @@ func createAuthenticationloginschemaFunc(ctx context.Context, d *schema.Resource
 	client := meta.(*NetScalerNitroClient).client
 	authenticationloginschemaName := d.Get("name").(string)
 	authenticationloginschema := authentication.Authenticationloginschema{
-		Authenticationschema:    d.Get("authenticationschema").(string),
-		Authenticationstrength:  d.Get("authenticationstrength").(int),
-		Name:                    d.Get("name").(string),
-		Passwdexpression:        d.Get("passwdexpression").(string),
-		Passwordcredentialindex: d.Get("passwordcredentialindex").(int),
-		Ssocredentials:          d.Get("ssocredentials").(string),
-		Usercredentialindex:     d.Get("usercredentialindex").(int),
-		Userexpression:          d.Get("userexpression").(string),
+		Authenticationschema: d.Get("authenticationschema").(string),
+		Name:                 d.Get("name").(string),
+		Passwdexpression:     d.Get("passwdexpression").(string),
+		Ssocredentials:       d.Get("ssocredentials").(string),
+		Userexpression:       d.Get("userexpression").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("authenticationstrength"); !raw.IsNull() {
+		authenticationloginschema.Authenticationstrength = intPtr(d.Get("authenticationstrength").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("passwordcredentialindex"); !raw.IsNull() {
+		authenticationloginschema.Passwordcredentialindex = intPtr(d.Get("passwordcredentialindex").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("usercredentialindex"); !raw.IsNull() {
+		authenticationloginschema.Usercredentialindex = intPtr(d.Get("usercredentialindex").(int))
 	}
 
 	_, err := client.AddResource(service.Authenticationloginschema.Type(), authenticationloginschemaName, &authenticationloginschema)
@@ -133,7 +140,7 @@ func updateAuthenticationloginschemaFunc(ctx context.Context, d *schema.Resource
 	}
 	if d.HasChange("authenticationstrength") {
 		log.Printf("[DEBUG]  citrixadc-provider: Authenticationstrength has changed for authenticationloginschema %s, starting update", authenticationloginschemaName)
-		authenticationloginschema.Authenticationstrength = d.Get("authenticationstrength").(int)
+		authenticationloginschema.Authenticationstrength = intPtr(d.Get("authenticationstrength").(int))
 		hasChange = true
 	}
 	if d.HasChange("passwdexpression") {
@@ -143,7 +150,7 @@ func updateAuthenticationloginschemaFunc(ctx context.Context, d *schema.Resource
 	}
 	if d.HasChange("passwordcredentialindex") {
 		log.Printf("[DEBUG]  citrixadc-provider: Passwordcredentialindex has changed for authenticationloginschema %s, starting update", authenticationloginschemaName)
-		authenticationloginschema.Passwordcredentialindex = d.Get("passwordcredentialindex").(int)
+		authenticationloginschema.Passwordcredentialindex = intPtr(d.Get("passwordcredentialindex").(int))
 		hasChange = true
 	}
 	if d.HasChange("ssocredentials") {
@@ -153,7 +160,7 @@ func updateAuthenticationloginschemaFunc(ctx context.Context, d *schema.Resource
 	}
 	if d.HasChange("usercredentialindex") {
 		log.Printf("[DEBUG]  citrixadc-provider: Usercredentialindex has changed for authenticationloginschema %s, starting update", authenticationloginschemaName)
-		authenticationloginschema.Usercredentialindex = d.Get("usercredentialindex").(int)
+		authenticationloginschema.Usercredentialindex = intPtr(d.Get("usercredentialindex").(int))
 		hasChange = true
 	}
 	if d.HasChange("userexpression") {

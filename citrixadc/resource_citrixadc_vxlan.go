@@ -76,13 +76,20 @@ func createVxlanFunc(ctx context.Context, d *schema.ResourceData, meta interface
 	vxlanId := d.Get("vxlanid").(int)
 	vxlan := network.Vxlan{
 		Dynamicrouting:     d.Get("dynamicrouting").(string),
-		Id:                 d.Get("vxlanid").(int),
 		Innervlantagging:   d.Get("innervlantagging").(string),
 		Ipv6dynamicrouting: d.Get("ipv6dynamicrouting").(string),
-		Port:               d.Get("port").(int),
 		Protocol:           d.Get("protocol").(string),
 		Type:               d.Get("type").(string),
-		Vlan:               d.Get("vlan").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("vxlanid"); !raw.IsNull() {
+		vxlan.Id = intPtr(d.Get("vxlanid").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("port"); !raw.IsNull() {
+		vxlan.Port = intPtr(d.Get("port").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("vlan"); !raw.IsNull() {
+		vxlan.Vlan = intPtr(d.Get("vlan").(int))
 	}
 	vxlanIdStr := strconv.Itoa(vxlanId)
 	_, err := client.AddResource(service.Vxlan.Type(), vxlanIdStr, &vxlan)
@@ -124,8 +131,10 @@ func updateVxlanFunc(ctx context.Context, d *schema.ResourceData, meta interface
 	client := meta.(*NetScalerNitroClient).client
 	vxlanId := d.Get("vxlanid").(int)
 
-	vxlan := network.Vxlan{
-		Id: d.Get("vxlanid").(int),
+	vxlan := network.Vxlan{}
+
+	if raw := d.GetRawConfig().GetAttr("vxlanid"); !raw.IsNull() {
+		vxlan.Id = intPtr(d.Get("vxlanid").(int))
 	}
 	hasChange := false
 	if d.HasChange("dynamicrouting") {
@@ -145,7 +154,7 @@ func updateVxlanFunc(ctx context.Context, d *schema.ResourceData, meta interface
 	}
 	if d.HasChange("port") {
 		log.Printf("[DEBUG]  citrixadc-provider: Port has changed for vxlan %d, starting update", vxlanId)
-		vxlan.Port = d.Get("port").(int)
+		vxlan.Port = intPtr(d.Get("port").(int))
 		hasChange = true
 	}
 	if d.HasChange("protocol") {
@@ -160,7 +169,7 @@ func updateVxlanFunc(ctx context.Context, d *schema.ResourceData, meta interface
 	}
 	if d.HasChange("vlan") {
 		log.Printf("[DEBUG]  citrixadc-provider: Vlan has changed for vxlan %d, starting update", vxlanId)
-		vxlan.Vlan = d.Get("vlan").(int)
+		vxlan.Vlan = intPtr(d.Get("vlan").(int))
 		hasChange = true
 	}
 	vxlanIdStr := strconv.Itoa(vxlanId)

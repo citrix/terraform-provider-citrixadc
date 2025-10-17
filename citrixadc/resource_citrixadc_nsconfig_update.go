@@ -56,7 +56,7 @@ func createNsconfigUpdateFunc(ctx context.Context, d *schema.ResourceData, meta 
 	nsconfig := ns.Nsconfig{}
 	nsconfig.Ipaddress = d.Get("ipaddress").(string)
 	nsconfig.Netmask = d.Get("netmask").(string)
-	nsconfig.Nsvlan = d.Get("nsvlan").(int)
+	nsconfig.Nsvlan = intPtr(d.Get("nsvlan").(int))
 	nsconfig.Ifnum = toStringList(getIfnumValue(d))
 	nsconfig.Tagged = d.Get("tagged").(string)
 
@@ -130,7 +130,7 @@ func updateNsconfigUpdateFunc(ctx context.Context, d *schema.ResourceData, meta 
 		nsconfig.Netmask = d.Get("netmask").(string)
 	}
 	if hasNsvlanChanged || hasIfnumChanged || hasTaggedChanged {
-		nsconfig.Nsvlan = d.Get("nsvlan").(int)
+		nsconfig.Nsvlan = intPtr(d.Get("nsvlan").(int))
 		nsconfig.Ifnum = toStringList(getIfnumValue(d))
 		nsconfig.Tagged = d.Get("tagged").(string)
 	}

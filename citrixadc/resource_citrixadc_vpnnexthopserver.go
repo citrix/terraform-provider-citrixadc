@@ -68,9 +68,12 @@ func createVpnnexthopserverFunc(ctx context.Context, d *schema.ResourceData, met
 		Name:           d.Get("name").(string),
 		Nexthopfqdn:    d.Get("nexthopfqdn").(string),
 		Nexthopip:      d.Get("nexthopip").(string),
-		Nexthopport:    d.Get("nexthopport").(int),
 		Resaddresstype: d.Get("resaddresstype").(string),
 		Secure:         d.Get("secure").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("nexthopport"); !raw.IsNull() {
+		vpnnexthopserver.Nexthopport = intPtr(d.Get("nexthopport").(int))
 	}
 
 	_, err := client.AddResource("vpnnexthopserver", vpnnexthopserverName, &vpnnexthopserver)

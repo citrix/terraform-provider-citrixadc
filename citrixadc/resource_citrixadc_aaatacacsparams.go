@@ -80,12 +80,17 @@ func createAaatacacsparamsFunc(ctx context.Context, d *schema.ResourceData, meta
 		Accounting:                 d.Get("accounting").(string),
 		Auditfailedcmds:            d.Get("auditfailedcmds").(string),
 		Authorization:              d.Get("authorization").(string),
-		Authtimeout:                d.Get("authtimeout").(int),
 		Defaultauthenticationgroup: d.Get("defaultauthenticationgroup").(string),
 		Groupattrname:              d.Get("groupattrname").(string),
 		Serverip:                   d.Get("serverip").(string),
-		Serverport:                 d.Get("serverport").(int),
 		Tacacssecret:               d.Get("tacacssecret").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("authtimeout"); !raw.IsNull() {
+		aaatacacsparams.Authtimeout = intPtr(d.Get("authtimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("serverport"); !raw.IsNull() {
+		aaatacacsparams.Serverport = intPtr(d.Get("serverport").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Aaatacacsparams.Type(), &aaatacacsparams)
@@ -145,7 +150,7 @@ func updateAaatacacsparamsFunc(ctx context.Context, d *schema.ResourceData, meta
 	}
 	if d.HasChange("authtimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Authtimeout has changed for aaatacacsparams, starting update")
-		aaatacacsparams.Authtimeout = d.Get("authtimeout").(int)
+		aaatacacsparams.Authtimeout = intPtr(d.Get("authtimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("defaultauthenticationgroup") {
@@ -165,7 +170,7 @@ func updateAaatacacsparamsFunc(ctx context.Context, d *schema.ResourceData, meta
 	}
 	if d.HasChange("serverport") {
 		log.Printf("[DEBUG]  citrixadc-provider: Serverport has changed for aaatacacsparams, starting update")
-		aaatacacsparams.Serverport = d.Get("serverport").(int)
+		aaatacacsparams.Serverport = intPtr(d.Get("serverport").(int))
 		hasChange = true
 	}
 	if d.HasChange("tacacssecret") {

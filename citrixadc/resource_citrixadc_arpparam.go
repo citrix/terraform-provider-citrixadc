@@ -45,7 +45,10 @@ func createArpparamFunc(ctx context.Context, d *schema.ResourceData, meta interf
 	arpparamName = resource.PrefixedUniqueId("tf-arpparam-")
 	arpparam := network.Arpparam{
 		Spoofvalidation: d.Get("spoofvalidation").(string),
-		Timeout:         d.Get("timeout").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("timeout"); !raw.IsNull() {
+		arpparam.Timeout = intPtr(d.Get("timeout").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Arpparam.Type(), &arpparam)
@@ -89,7 +92,7 @@ func updateArpparamFunc(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 	if d.HasChange("timeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Timeout has changed for arpparam, starting update")
-		arpparam.Timeout = d.Get("timeout").(int)
+		arpparam.Timeout = intPtr(d.Get("timeout").(int))
 		hasChange = true
 	}
 

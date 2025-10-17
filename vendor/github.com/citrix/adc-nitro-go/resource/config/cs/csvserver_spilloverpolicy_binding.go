@@ -35,7 +35,7 @@ type Csvserverspilloverpolicybinding struct {
 	/**
 	* Priority for the policy.
 	*/
-	Priority int `json:"priority,omitempty"`
+	Priority *int `json:"priority,omitempty"`
 	/**
 	* Name of the content switching virtual server to which the content switching policy applies.
 	*/

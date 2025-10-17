@@ -136,7 +136,7 @@ func updatePcpprofileFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	if d.HasChange("announcemulticount") {
 		log.Printf("[DEBUG]  citrixadc-provider: Announcemulticount has changed for pcpprofile %s, starting update", pcpprofileName)
 		val, _ := strconv.Atoi(d.Get("announcemulticount").(string))
-		pcpprofile.Announcemulticount = val
+		pcpprofile.Announcemulticount = intPtr(val)
 		hasChange = true
 	}
 	if d.HasChange("mapping") {
@@ -146,12 +146,12 @@ func updatePcpprofileFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	if d.HasChange("maxmaplife") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxmaplife has changed for pcpprofile %s, starting update", pcpprofileName)
-		pcpprofile.Maxmaplife = d.Get("maxmaplife").(int)
+		pcpprofile.Maxmaplife = intPtr(d.Get("maxmaplife").(int))
 		hasChange = true
 	}
 	if d.HasChange("minmaplife") {
 		log.Printf("[DEBUG]  citrixadc-provider: Minmaplife has changed for pcpprofile %s, starting update", pcpprofileName)
-		pcpprofile.Minmaplife = d.Get("minmaplife").(int)
+		pcpprofile.Minmaplife = intPtr(d.Get("minmaplife").(int))
 		hasChange = true
 	}
 	if d.HasChange("peer") {

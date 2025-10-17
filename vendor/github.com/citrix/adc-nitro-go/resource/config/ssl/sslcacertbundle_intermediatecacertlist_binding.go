@@ -39,7 +39,7 @@ type Sslcacertbundleintermediatecacertlistbinding struct {
 	/**
 	* Size of the public key.
 	*/
-	Publickeysize int `json:"publickeysize,omitempty"`
+	Publickeysize *int `json:"publickeysize,omitempty"`
 	/**
 	* Subject Alternative Name (SAN) is an extension to X.509 that allows various values to be associated with a security certificate using a subjectAltName field. These values are called "Subject Alternative Names" (SAN). This field is for DNS names
 	*/
@@ -59,7 +59,7 @@ type Sslcacertbundleintermediatecacertlistbinding struct {
 	/**
 	* Days remaining for the certificate to expire.
 	*/
-	Daystoexpiration int `json:"daystoexpiration,omitempty"`
+	Daystoexpiration *int `json:"daystoexpiration,omitempty"`
 	/**
 	* Signature algorithm.
 	*/

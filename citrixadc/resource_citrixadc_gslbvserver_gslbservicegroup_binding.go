@@ -52,7 +52,10 @@ func createGslbvserver_gslbservicegroup_bindingFunc(ctx context.Context, d *sche
 	gslbvserver_gslbservicegroup_binding := gslb.Gslbvservergslbservicegroupbinding{
 		Name:             d.Get("name").(string),
 		Servicegroupname: d.Get("servicegroupname").(string),
-		Order:            d.Get("order").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("order"); !raw.IsNull() {
+		gslbvserver_gslbservicegroup_binding.Order = intPtr(d.Get("order").(int))
 	}
 
 	err := client.UpdateUnnamedResource("gslbvserver_gslbservicegroup_binding", &gslbvserver_gslbservicegroup_binding)

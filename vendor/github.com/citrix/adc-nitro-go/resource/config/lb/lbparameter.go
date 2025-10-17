@@ -59,7 +59,7 @@ type Lbparameter struct {
 		* For an existing virtual server, if one or more services are newly bound or newly enabled, or if the load balancing method is changed, the appliance dynamically computes the number of requests for which to implement startup round robin. It obtains this number by multiplying the request rate by the number of bound services (it includes services that are marked as DOWN). For example, if the current request rate is 20 requests/s and ten services are bound to the virtual server, the appliance performs startup round robin for 200 requests.
 		Not applicable to a virtual server for which a hash based load balancing method is configured.
 	*/
-	Startuprrfactor int `json:"startuprrfactor,omitempty"`
+	Startuprrfactor *int `json:"startuprrfactor,omitempty"`
 	/**
 	* When a monitor initiates a connection to a service, do not check to determine whether the number of connections to the service has reached the limit specified by the service's Max Clients setting. Enables monitoring to continue even if the service has reached its connection limit.
 	*/
@@ -84,11 +84,11 @@ type Lbparameter struct {
 	/**
 	* Specify the TTL for DNS record for domain based service. The default value of ttl is 0 which indicates to use the TTL received in DNS response for monitors
 	*/
-	Dbsttl int `json:"dbsttl,omitempty"`
+	Dbsttl *int `json:"dbsttl,omitempty"`
 	/**
 	* Maximum number of concurrent requests to allow on a single client connection, which is identified by the <clientip:port>-<vserver ip:port> tuple. This parameter is applicable to ANY service type and all UDP service types (except DNS) and only when "svrTimeout" is set to zero. A value of 0 (zero) applies no limit to the number of concurrent requests allowed on a single client connection
 	*/
-	Maxpipelinenat int `json:"maxpipelinenat,omitempty"`
+	Maxpipelinenat *int `json:"maxpipelinenat,omitempty"`
 	/**
 	* String configured as LiteralADCCookieAttribute will be appended as attribute for Citrix ADC cookie (for example: LB cookie persistence , GSLB site persistence, CS cookie persistence, LB group cookie persistence).
 		Sample usage -
@@ -121,7 +121,7 @@ type Lbparameter struct {
 	/**
 	* This option is used to specify the number of fingers to be used in PRAC and JARH algorithms for hash based LB methods. Increasing the number of fingers might give better distribution of traffic at the expense of additional memory
 	*/
-	Lbhashfingers int `json:"lbhashfingers,omitempty"`
+	Lbhashfingers *int `json:"lbhashfingers,omitempty"`
 	/**
 	* Action to perform when policy evaluation creates an UNDEF condition. Available settings function as follows:
 		* NOLBACTION - Does not consider LB action in making LB decision.

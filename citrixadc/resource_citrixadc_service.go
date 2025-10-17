@@ -373,44 +373,69 @@ func createServiceFunc(ctx context.Context, d *schema.ResourceData, meta interfa
 		Cip:                          d.Get("cip").(string),
 		Cipheader:                    d.Get("cipheader").(string),
 		Cka:                          d.Get("cka").(string),
-		Cleartextport:                d.Get("cleartextport").(int),
-		Clttimeout:                   d.Get("clttimeout").(int),
 		Cmp:                          d.Get("cmp").(string),
 		Comment:                      d.Get("comment").(string),
 		Contentinspectionprofilename: d.Get("contentinspectionprofilename").(string),
 		Customserverid:               d.Get("customserverid").(string),
 		Dnsprofilename:               d.Get("dnsprofilename").(string),
 		Downstateflush:               d.Get("downstateflush").(string),
-		Hashid:                       d.Get("hashid").(int),
 		Healthmonitor:                d.Get("healthmonitor").(string),
 		Httpprofilename:              d.Get("httpprofilename").(string),
 		Internal:                     d.Get("internal").(bool),
 		Ip:                           d.Get("ip").(string),
 		Ipaddress:                    d.Get("ipaddress").(string),
-		Maxbandwidth:                 d.Get("maxbandwidth").(int),
-		Maxclient:                    d.Get("maxclient").(int),
-		Maxreq:                       d.Get("maxreq").(int),
 		Monconnectionclose:           d.Get("monconnectionclose").(string),
 		Monitornamesvc:               d.Get("monitornamesvc").(string),
-		Monthreshold:                 d.Get("monthreshold").(int),
 		Netprofile:                   d.Get("netprofile").(string),
 		Pathmonitor:                  d.Get("pathmonitor").(string),
 		Pathmonitorindv:              d.Get("pathmonitorindv").(string),
-		Port:                         d.Get("port").(int),
 		Processlocal:                 d.Get("processlocal").(string),
 		Rtspsessionidremap:           d.Get("rtspsessionidremap").(string),
-		Serverid:                     d.Get("serverid").(int),
 		Servername:                   d.Get("servername").(string),
 		Servicetype:                  d.Get("servicetype").(string),
 		Sp:                           d.Get("sp").(string),
 		State:                        d.Get("state").(string),
-		Svrtimeout:                   d.Get("svrtimeout").(int),
 		Tcpb:                         d.Get("tcpb").(string),
 		Tcpprofilename:               d.Get("tcpprofilename").(string),
-		Td:                           d.Get("td").(int),
 		Useproxyport:                 d.Get("useproxyport").(string),
 		Usip:                         d.Get("usip").(string),
-		Weight:                       d.Get("weight").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("cleartextport"); !raw.IsNull() {
+		svc.Cleartextport = intPtr(d.Get("cleartextport").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("clttimeout"); !raw.IsNull() {
+		svc.Clttimeout = intPtr(d.Get("clttimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("hashid"); !raw.IsNull() {
+		svc.Hashid = intPtr(d.Get("hashid").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxbandwidth"); !raw.IsNull() {
+		svc.Maxbandwidth = intPtr(d.Get("maxbandwidth").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxclient"); !raw.IsNull() {
+		svc.Maxclient = intPtr(d.Get("maxclient").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxreq"); !raw.IsNull() {
+		svc.Maxreq = intPtr(d.Get("maxreq").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("monthreshold"); !raw.IsNull() {
+		svc.Monthreshold = intPtr(d.Get("monthreshold").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("port"); !raw.IsNull() {
+		svc.Port = intPtr(d.Get("port").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("serverid"); !raw.IsNull() {
+		svc.Serverid = intPtr(d.Get("serverid").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("svrtimeout"); !raw.IsNull() {
+		svc.Svrtimeout = intPtr(d.Get("svrtimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("td"); !raw.IsNull() {
+		svc.Td = intPtr(d.Get("td").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("weight"); !raw.IsNull() {
+		svc.Weight = intPtr(d.Get("weight").(int))
 	}
 
 	_, err := client.AddResource(service.Service.Type(), serviceName, &svc)
@@ -652,12 +677,12 @@ func updateServiceFunc(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 	if d.HasChange("cleartextport") {
 		log.Printf("[DEBUG] netscaler-provider:  Cleartextport has changed for service %s, starting update", serviceName)
-		svc.Cleartextport = d.Get("cleartextport").(int)
+		svc.Cleartextport = intPtr(d.Get("cleartextport").(int))
 		hasChange = true
 	}
 	if d.HasChange("clttimeout") {
 		log.Printf("[DEBUG] netscaler-provider:  Clttimeout has changed for service %s, starting update", serviceName)
-		svc.Clttimeout = d.Get("clttimeout").(int)
+		svc.Clttimeout = intPtr(d.Get("clttimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("cmp") {
@@ -692,7 +717,7 @@ func updateServiceFunc(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 	if d.HasChange("hashid") {
 		log.Printf("[DEBUG] netscaler-provider:  Hashid has changed for service %s, starting update", serviceName)
-		svc.Hashid = d.Get("hashid").(int)
+		svc.Hashid = intPtr(d.Get("hashid").(int))
 		hasChange = true
 	}
 	if d.HasChange("healthmonitor") {
@@ -722,17 +747,17 @@ func updateServiceFunc(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 	if d.HasChange("maxbandwidth") {
 		log.Printf("[DEBUG] netscaler-provider:  Maxbandwidth has changed for service %s, starting update", serviceName)
-		svc.Maxbandwidth = d.Get("maxbandwidth").(int)
+		svc.Maxbandwidth = intPtr(d.Get("maxbandwidth").(int))
 		hasChange = true
 	}
 	if d.HasChange("maxclient") {
 		log.Printf("[DEBUG] netscaler-provider:  Maxclient has changed for service %s, starting update", serviceName)
-		svc.Maxclient = d.Get("maxclient").(int)
+		svc.Maxclient = intPtr(d.Get("maxclient").(int))
 		hasChange = true
 	}
 	if d.HasChange("maxreq") {
 		log.Printf("[DEBUG] netscaler-provider:  Maxreq has changed for service %s, starting update", serviceName)
-		svc.Maxreq = d.Get("maxreq").(int)
+		svc.Maxreq = intPtr(d.Get("maxreq").(int))
 		hasChange = true
 	}
 	if d.HasChange("monconnectionclose") {
@@ -747,7 +772,7 @@ func updateServiceFunc(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 	if d.HasChange("monthreshold") {
 		log.Printf("[DEBUG] netscaler-provider:  Monthreshold has changed for service %s, starting update", serviceName)
-		svc.Monthreshold = d.Get("monthreshold").(int)
+		svc.Monthreshold = intPtr(d.Get("monthreshold").(int))
 		hasChange = true
 	}
 	if d.HasChange("name") {
@@ -772,7 +797,7 @@ func updateServiceFunc(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 	if d.HasChange("port") {
 		log.Printf("[DEBUG] netscaler-provider:  Port has changed for service %s, starting update", serviceName)
-		svc.Port = d.Get("port").(int)
+		svc.Port = intPtr(d.Get("port").(int))
 		hasChange = true
 	}
 	if d.HasChange("processlocal") {
@@ -787,7 +812,7 @@ func updateServiceFunc(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 	if d.HasChange("serverid") {
 		log.Printf("[DEBUG] netscaler-provider:  Serverid has changed for service %s, starting update", serviceName)
-		svc.Serverid = d.Get("serverid").(int)
+		svc.Serverid = intPtr(d.Get("serverid").(int))
 		hasChange = true
 	}
 	if d.HasChange("servername") {
@@ -811,7 +836,7 @@ func updateServiceFunc(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 	if d.HasChange("svrtimeout") {
 		log.Printf("[DEBUG] netscaler-provider:  Svrtimeout has changed for service %s, starting update", serviceName)
-		svc.Svrtimeout = d.Get("svrtimeout").(int)
+		svc.Svrtimeout = intPtr(d.Get("svrtimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("tcpb") {
@@ -826,7 +851,7 @@ func updateServiceFunc(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 	if d.HasChange("td") {
 		log.Printf("[DEBUG] netscaler-provider:  Td has changed for service %s, starting update", serviceName)
-		svc.Td = d.Get("td").(int)
+		svc.Td = intPtr(d.Get("td").(int))
 		hasChange = true
 	}
 	if d.HasChange("useproxyport") {
@@ -841,7 +866,7 @@ func updateServiceFunc(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 	if d.HasChange("weight") {
 		log.Printf("[DEBUG] netscaler-provider:  Weight has changed for service %s, starting update", serviceName)
-		svc.Weight = d.Get("weight").(int)
+		svc.Weight = intPtr(d.Get("weight").(int))
 		hasChange = true
 	}
 	if d.HasChange("lbmonitor") {
@@ -986,7 +1011,7 @@ func doServiceStateChange(d *schema.ResourceData, client *service.NitroClient) e
 		}
 	} else if newstate == "DISABLED" {
 		// Add attributes relevant to the disable operation
-		svc.Delay = d.Get("delay").(int)
+		svc.Delay = intPtr(d.Get("delay").(int))
 		svc.Graceful = d.Get("graceful").(string)
 		err := client.ActOnResource(service.Service.Type(), svc, "disable")
 		if err != nil {

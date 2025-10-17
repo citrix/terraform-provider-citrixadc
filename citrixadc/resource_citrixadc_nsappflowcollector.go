@@ -50,7 +50,10 @@ func createNsappflowcollectorFunc(ctx context.Context, d *schema.ResourceData, m
 	nsappflowcollector := ns.Nsappflowcollector{
 		Ipaddress: d.Get("ipaddress").(string),
 		Name:      d.Get("name").(string),
-		Port:      d.Get("port").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("port"); !raw.IsNull() {
+		nsappflowcollector.Port = intPtr(d.Get("port").(int))
 	}
 
 	_, err := client.AddResource(service.Nsappflowcollector.Type(), nsappflowcollectorName, &nsappflowcollector)

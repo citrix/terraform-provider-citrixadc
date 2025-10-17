@@ -79,7 +79,10 @@ func createResponderpolicylabel_responderpolicy_bindingFunc(ctx context.Context,
 		Labelname:              d.Get("labelname").(string),
 		Labeltype:              d.Get("labeltype").(string),
 		Policyname:             d.Get("policyname").(string),
-		Priority:               d.Get("priority").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		responderpolicylabel_responderpolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	_, err := client.AddResource(service.Responderpolicylabel_responderpolicy_binding.Type(), labelname, &responderpolicylabel_responderpolicy_binding)

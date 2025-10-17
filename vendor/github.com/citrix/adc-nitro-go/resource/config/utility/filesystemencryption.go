@@ -23,11 +23,11 @@ type Filesystemencryption struct {
 	/**
 	* Number of times /flash directory has to be written with 0s.
 	*/
-	Ntimes0flash int `json:"ntimes0flash,omitempty"`
+	Ntimes0flash *int `json:"ntimes0flash,omitempty"`
 	/**
 	* Number of times /var directory has to be written with 0s.
 	*/
-	Ntimes0var int `json:"ntimes0var,omitempty"`
+	Ntimes0var *int `json:"ntimes0var,omitempty"`
 	/**
 	* Encryption Passphrase.
 	*/
@@ -35,7 +35,7 @@ type Filesystemencryption struct {
 	/**
 	* Unique number that identifies the cluster node.
 	*/
-	Nodeid int `json:"nodeid,omitempty"`
+	Nodeid *int `json:"nodeid,omitempty"`
 
 	//------- Read only Parameter ---------;
 

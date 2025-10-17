@@ -113,21 +113,34 @@ func createSslocspresponderFunc(ctx context.Context, d *schema.ResourceData, met
 		d.Set("name", sslocspresponderName)
 	}
 	sslocspresponder := ssl.Sslocspresponder{
-		Batchingdelay:         d.Get("batchingdelay").(int),
-		Batchingdepth:         d.Get("batchingdepth").(int),
-		Cache:                 d.Get("cache").(string),
-		Cachetimeout:          d.Get("cachetimeout").(int),
-		Httpmethod:            d.Get("httpmethod").(string),
-		Insertclientcert:      d.Get("insertclientcert").(string),
-		Name:                  d.Get("name").(string),
-		Ocspurlresolvetimeout: d.Get("ocspurlresolvetimeout").(int),
-		Producedattimeskew:    d.Get("producedattimeskew").(int),
-		Respondercert:         d.Get("respondercert").(string),
-		Resptimeout:           d.Get("resptimeout").(int),
-		Signingcert:           d.Get("signingcert").(string),
-		Trustresponder:        d.Get("trustresponder").(bool),
-		Url:                   d.Get("url").(string),
-		Usenonce:              d.Get("usenonce").(string),
+		Cache:            d.Get("cache").(string),
+		Httpmethod:       d.Get("httpmethod").(string),
+		Insertclientcert: d.Get("insertclientcert").(string),
+		Name:             d.Get("name").(string),
+		Respondercert:    d.Get("respondercert").(string),
+		Signingcert:      d.Get("signingcert").(string),
+		Trustresponder:   d.Get("trustresponder").(bool),
+		Url:              d.Get("url").(string),
+		Usenonce:         d.Get("usenonce").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("batchingdelay"); !raw.IsNull() {
+		sslocspresponder.Batchingdelay = intPtr(d.Get("batchingdelay").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("batchingdepth"); !raw.IsNull() {
+		sslocspresponder.Batchingdepth = intPtr(d.Get("batchingdepth").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("cachetimeout"); !raw.IsNull() {
+		sslocspresponder.Cachetimeout = intPtr(d.Get("cachetimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("ocspurlresolvetimeout"); !raw.IsNull() {
+		sslocspresponder.Ocspurlresolvetimeout = intPtr(d.Get("ocspurlresolvetimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("producedattimeskew"); !raw.IsNull() {
+		sslocspresponder.Producedattimeskew = intPtr(d.Get("producedattimeskew").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("resptimeout"); !raw.IsNull() {
+		sslocspresponder.Resptimeout = intPtr(d.Get("resptimeout").(int))
 	}
 
 	_, err := client.AddResource(service.Sslocspresponder.Type(), sslocspresponderName, &sslocspresponder)
@@ -183,12 +196,12 @@ func updateSslocspresponderFunc(ctx context.Context, d *schema.ResourceData, met
 	hasChange := false
 	if d.HasChange("batchingdelay") {
 		log.Printf("[DEBUG]  citrixadc-provider: Batchingdelay has changed for sslocspresponder %s, starting update", sslocspresponderName)
-		sslocspresponder.Batchingdelay = d.Get("batchingdelay").(int)
+		sslocspresponder.Batchingdelay = intPtr(d.Get("batchingdelay").(int))
 		hasChange = true
 	}
 	if d.HasChange("batchingdepth") {
 		log.Printf("[DEBUG]  citrixadc-provider: Batchingdepth has changed for sslocspresponder %s, starting update", sslocspresponderName)
-		sslocspresponder.Batchingdepth = d.Get("batchingdepth").(int)
+		sslocspresponder.Batchingdepth = intPtr(d.Get("batchingdepth").(int))
 		hasChange = true
 	}
 	if d.HasChange("cache") {
@@ -198,7 +211,7 @@ func updateSslocspresponderFunc(ctx context.Context, d *schema.ResourceData, met
 	}
 	if d.HasChange("cachetimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Cachetimeout has changed for sslocspresponder %s, starting update", sslocspresponderName)
-		sslocspresponder.Cachetimeout = d.Get("cachetimeout").(int)
+		sslocspresponder.Cachetimeout = intPtr(d.Get("cachetimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("httpmethod") {
@@ -218,12 +231,12 @@ func updateSslocspresponderFunc(ctx context.Context, d *schema.ResourceData, met
 	}
 	if d.HasChange("ocspurlresolvetimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ocspurlresolvetimeout has changed for sslocspresponder %s, starting update", sslocspresponderName)
-		sslocspresponder.Ocspurlresolvetimeout = d.Get("ocspurlresolvetimeout").(int)
+		sslocspresponder.Ocspurlresolvetimeout = intPtr(d.Get("ocspurlresolvetimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("producedattimeskew") {
 		log.Printf("[DEBUG]  citrixadc-provider: Producedattimeskew has changed for sslocspresponder %s, starting update", sslocspresponderName)
-		sslocspresponder.Producedattimeskew = d.Get("producedattimeskew").(int)
+		sslocspresponder.Producedattimeskew = intPtr(d.Get("producedattimeskew").(int))
 		hasChange = true
 	}
 	if d.HasChange("respondercert") {
@@ -233,7 +246,7 @@ func updateSslocspresponderFunc(ctx context.Context, d *schema.ResourceData, met
 	}
 	if d.HasChange("resptimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Resptimeout has changed for sslocspresponder %s, starting update", sslocspresponderName)
-		sslocspresponder.Resptimeout = d.Get("resptimeout").(int)
+		sslocspresponder.Resptimeout = intPtr(d.Get("resptimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("signingcert") {

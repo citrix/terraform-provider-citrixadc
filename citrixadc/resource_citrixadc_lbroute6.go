@@ -47,7 +47,10 @@ func createLbroute6Func(ctx context.Context, d *schema.ResourceData, meta interf
 	lbroute6 := lb.Lbroute6{
 		Gatewayname: d.Get("gatewayname").(string),
 		Network:     d.Get("network").(string),
-		Td:          d.Get("td").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("td"); !raw.IsNull() {
+		lbroute6.Td = intPtr(d.Get("td").(int))
 	}
 
 	_, err := client.AddResource(service.Lbroute6.Type(), "", &lbroute6)

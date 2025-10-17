@@ -43,7 +43,7 @@ type Vpnparameter struct {
 	/**
 	* Number of minutes after which the session times out.
 	*/
-	Sesstimeout int `json:"sesstimeout,omitempty"`
+	Sesstimeout *int `json:"sesstimeout,omitempty"`
 	/**
 	* Specify the client security check for the user device to permit a Citrix Gateway session. The web address or IP address is not included in the expression for the client security check.
 	*/
@@ -108,7 +108,7 @@ type Vpnparameter struct {
 	/**
 	* Time, in minutes, after which to time out the user session if Citrix Gateway does not detect mouse or keyboard activity.
 	*/
-	Clientidletimeout int `json:"clientidletimeout,omitempty"`
+	Clientidletimeout *int `json:"clientidletimeout,omitempty"`
 	/**
 	* Set options to apply proxy for accessing the internal resources. Available settings function as follows:
 		* BROWSER - Proxy settings are configured only in Internet Explorer and Firefox browsers.
@@ -247,11 +247,11 @@ type Vpnparameter struct {
 	/**
 	* Force a disconnection from the Citrix Gateway Plug-in with Citrix Gateway after a specified number of minutes. If the session closes, the user must log on again.
 	*/
-	Forcedtimeout int `json:"forcedtimeout,omitempty"`
+	Forcedtimeout *int `json:"forcedtimeout,omitempty"`
 	/**
 	* Number of minutes to warn a user before the user session is disconnected.
 	*/
-	Forcedtimeoutwarning int `json:"forcedtimeoutwarning,omitempty"`
+	Forcedtimeoutwarning *int `json:"forcedtimeoutwarning,omitempty"`
 	/**
 	* Single sign-on domain to use for single sign-on to applications in the internal network. This setting can be overwritten by the domain that users specify at the time of logon or by the domain that the authentication server returns.
 	*/
@@ -292,11 +292,11 @@ type Vpnparameter struct {
 	/**
 	* The timeout value in seconds for tokens to access XenMobile applications
 	*/
-	Apptokentimeout int `json:"apptokentimeout,omitempty"`
+	Apptokentimeout *int `json:"apptokentimeout,omitempty"`
 	/**
 	* Validity of MDX Token in minutes. This token is used for mdx services to access backend and valid  HEAD and GET request.
 	*/
-	Mdxtokentimeout int `json:"mdxtokentimeout,omitempty"`
+	Mdxtokentimeout *int `json:"mdxtokentimeout,omitempty"`
 	/**
 	* Set VPN UI Theme to Green-Bubble, Caxton or Custom; default is Caxton.
 	*/
@@ -396,7 +396,7 @@ type Vpnparameter struct {
 	/**
 	* Maximum number of Intranet IP that can be assigned to a user from AAA group, VPN vserver or VPN global pool. This setting is not applicable for AAA user level Intranet IP configuration
 	*/
-	Maxiipperuser int `json:"maxiipperuser,omitempty"`
+	Maxiipperuser *int `json:"maxiipperuser,omitempty"`
 	/**
 	* Enable device posture
 	*/

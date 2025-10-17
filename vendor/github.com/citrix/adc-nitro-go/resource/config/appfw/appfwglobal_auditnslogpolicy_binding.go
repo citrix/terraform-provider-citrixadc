@@ -27,7 +27,7 @@ type Appfwglobalauditnslogpolicybinding struct {
 	/**
 	* The priority of the policy.
 	*/
-	Priority int `json:"priority,omitempty"`
+	Priority *int `json:"priority,omitempty"`
 	/**
 	* Enable or disable the binding to activate or deactivate the policy. This is applicable to classic policies only.
 	*/

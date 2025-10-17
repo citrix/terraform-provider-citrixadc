@@ -91,8 +91,11 @@ func createNshttpparamFunc(ctx context.Context, d *schema.ResourceData, meta int
 		Logerrresp:                d.Get("logerrresp").(string),
 		Markconnreqinval:          d.Get("markconnreqinval").(string),
 		Markhttp09inval:           d.Get("markhttp09inval").(string),
-		Maxreusepool:              d.Get("maxreusepool").(int),
 		Nssrvrhdr:                 d.Get("nssrvrhdr").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("maxreusepool"); !raw.IsNull() {
+		nshttpparam.Maxreusepool = intPtr(d.Get("maxreusepool").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Nshttpparam.Type(), &nshttpparam)
@@ -135,8 +138,10 @@ func updateNshttpparamFunc(ctx context.Context, d *schema.ResourceData, meta int
 	log.Printf("[DEBUG]  citrixadc-provider: In updateNshttpparamFunc")
 	client := meta.(*NetScalerNitroClient).client
 
-	nshttpparam := ns.Nshttpparam{
-		Maxreusepool: d.Get("maxreusepool").(int),
+	nshttpparam := ns.Nshttpparam{}
+
+	if raw := d.GetRawConfig().GetAttr("maxreusepool"); !raw.IsNull() {
+		nshttpparam.Maxreusepool = intPtr(d.Get("maxreusepool").(int))
 	}
 	hasChange := false
 	if d.HasChange("conmultiplex") {

@@ -517,7 +517,10 @@ func createVpnsamlssoprofileFunc(ctx context.Context, d *schema.ResourceData, me
 		Signassertion:               d.Get("signassertion").(string),
 		Signaturealg:                d.Get("signaturealg").(string),
 		Signatureservice:            d.Get("signatureservice").(string),
-		Skewtime:                    d.Get("skewtime").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("skewtime"); !raw.IsNull() {
+		vpnsamlssoprofile.Skewtime = intPtr(d.Get("skewtime").(int))
 	}
 
 	_, err := client.AddResource(service.Vpnsamlssoprofile.Type(), vpnsamlssoprofileName, &vpnsamlssoprofile)
@@ -1033,7 +1036,7 @@ func updateVpnsamlssoprofileFunc(ctx context.Context, d *schema.ResourceData, me
 	}
 	if d.HasChange("skewtime") {
 		log.Printf("[DEBUG]  citrixadc-provider: Skewtime has changed for vpnsamlssoprofile %s, starting update", vpnsamlssoprofileName)
-		vpnsamlssoprofile.Skewtime = d.Get("skewtime").(int)
+		vpnsamlssoprofile.Skewtime = intPtr(d.Get("skewtime").(int))
 		hasChange = true
 	}
 

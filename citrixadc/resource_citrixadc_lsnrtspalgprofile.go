@@ -52,9 +52,12 @@ func createLsnrtspalgprofileFunc(ctx context.Context, d *schema.ResourceData, me
 	lsnrtspalgprofileName := d.Get("rtspalgprofilename").(string)
 	lsnrtspalgprofile := lsn.Lsnrtspalgprofile{
 		Rtspalgprofilename:    d.Get("rtspalgprofilename").(string),
-		Rtspidletimeout:       d.Get("rtspidletimeout").(int),
 		Rtspportrange:         d.Get("rtspportrange").(string),
 		Rtsptransportprotocol: d.Get("rtsptransportprotocol").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("rtspidletimeout"); !raw.IsNull() {
+		lsnrtspalgprofile.Rtspidletimeout = intPtr(d.Get("rtspidletimeout").(int))
 	}
 
 	_, err := client.AddResource("lsnrtspalgprofile", lsnrtspalgprofileName, &lsnrtspalgprofile)
@@ -98,7 +101,7 @@ func updateLsnrtspalgprofileFunc(ctx context.Context, d *schema.ResourceData, me
 	hasChange := false
 	if d.HasChange("rtspidletimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Rtspidletimeout has changed for lsnrtspalgprofile %s, starting update", lsnrtspalgprofileName)
-		lsnrtspalgprofile.Rtspidletimeout = d.Get("rtspidletimeout").(int)
+		lsnrtspalgprofile.Rtspidletimeout = intPtr(d.Get("rtspidletimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("rtspportrange") {

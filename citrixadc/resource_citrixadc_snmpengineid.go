@@ -39,8 +39,11 @@ func createSnmpengineidFunc(ctx context.Context, d *schema.ResourceData, meta in
 	snmpengineidName := resource.PrefixedUniqueId("tf-snmpengineid-")
 
 	snmpengineid := snmp.Snmpengineid{
-		Engineid:  d.Get("engineid").(string),
-		Ownernode: d.Get("ownernode").(int),
+		Engineid: d.Get("engineid").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("ownernode"); !raw.IsNull() {
+		snmpengineid.Ownernode = intPtr(d.Get("ownernode").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Snmpengineid.Type(), &snmpengineid)
@@ -83,7 +86,7 @@ func updateSnmpengineidFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("ownernode") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ownernode has changed for snmpengineid, starting update")
-		snmpengineid.Ownernode = d.Get("ownernode").(int)
+		snmpengineid.Ownernode = intPtr(d.Get("ownernode").(int))
 		hasChange = true
 	}
 

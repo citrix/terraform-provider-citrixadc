@@ -63,9 +63,14 @@ func createLocationFunc(ctx context.Context, d *schema.ResourceData, meta interf
 	location := basic.Location{
 		Ipfrom:            d.Get("ipfrom").(string),
 		Ipto:              d.Get("ipto").(string),
-		Latitude:          d.Get("latitude").(int),
-		Longitude:         d.Get("longitude").(int),
 		Preferredlocation: d.Get("preferredlocation").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("latitude"); !raw.IsNull() {
+		location.Latitude = intPtr(d.Get("latitude").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("longitude"); !raw.IsNull() {
+		location.Longitude = intPtr(d.Get("longitude").(int))
 	}
 
 	_, err := client.AddResource(service.Location.Type(), locationName, &location)

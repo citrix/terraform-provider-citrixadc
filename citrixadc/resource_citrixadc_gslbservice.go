@@ -265,28 +265,16 @@ func createGslbserviceFunc(ctx context.Context, d *schema.ResourceData, meta int
 		Appflowlog:       d.Get("appflowlog").(string),
 		Cip:              d.Get("cip").(string),
 		Cipheader:        d.Get("cipheader").(string),
-		Clttimeout:       d.Get("clttimeout").(int),
 		Cnameentry:       d.Get("cnameentry").(string),
 		Comment:          d.Get("comment").(string),
-		Cookietimeout:    d.Get("cookietimeout").(int),
 		Downstateflush:   d.Get("downstateflush").(string),
-		Hashid:           d.Get("hashid").(int),
 		Healthmonitor:    d.Get("healthmonitor").(string),
 		Ip:               d.Get("ip").(string),
 		Ipaddress:        d.Get("ipaddress").(string),
-		Maxaaausers:      d.Get("maxaaausers").(int),
-		Maxbandwidth:     d.Get("maxbandwidth").(int),
-		Maxclient:        d.Get("maxclient").(int),
 		Monitornamesvc:   d.Get("monitornamesvc").(string),
-		Monthreshold:     d.Get("monthreshold").(int),
-		Naptrdomainttl:   d.Get("naptrdomainttl").(int),
-		Naptrorder:       d.Get("naptrorder").(int),
-		Naptrpreference:  d.Get("naptrpreference").(int),
 		Naptrreplacement: d.Get("naptrreplacement").(string),
 		Naptrservices:    d.Get("naptrservices").(string),
-		Port:             d.Get("port").(int),
 		Publicip:         d.Get("publicip").(string),
-		Publicport:       d.Get("publicport").(int),
 		Servername:       d.Get("servername").(string),
 		Servicename:      d.Get("servicename").(string),
 		Servicetype:      d.Get("servicetype").(string),
@@ -294,10 +282,51 @@ func createGslbserviceFunc(ctx context.Context, d *schema.ResourceData, meta int
 		Sitepersistence:  d.Get("sitepersistence").(string),
 		Siteprefix:       d.Get("siteprefix").(string),
 		State:            d.Get("state").(string),
-		Svrtimeout:       d.Get("svrtimeout").(int),
 		Viewip:           d.Get("viewip").(string),
 		Viewname:         d.Get("viewname").(string),
-		Weight:           d.Get("weight").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("clttimeout"); !raw.IsNull() {
+		gslbservice.Clttimeout = intPtr(d.Get("clttimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("cookietimeout"); !raw.IsNull() {
+		gslbservice.Cookietimeout = intPtr(d.Get("cookietimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("hashid"); !raw.IsNull() {
+		gslbservice.Hashid = intPtr(d.Get("hashid").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxaaausers"); !raw.IsNull() {
+		gslbservice.Maxaaausers = intPtr(d.Get("maxaaausers").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxbandwidth"); !raw.IsNull() {
+		gslbservice.Maxbandwidth = intPtr(d.Get("maxbandwidth").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxclient"); !raw.IsNull() {
+		gslbservice.Maxclient = intPtr(d.Get("maxclient").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("monthreshold"); !raw.IsNull() {
+		gslbservice.Monthreshold = intPtr(d.Get("monthreshold").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("naptrdomainttl"); !raw.IsNull() {
+		gslbservice.Naptrdomainttl = intPtr(d.Get("naptrdomainttl").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("naptrorder"); !raw.IsNull() {
+		gslbservice.Naptrorder = intPtr(d.Get("naptrorder").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("naptrpreference"); !raw.IsNull() {
+		gslbservice.Naptrpreference = intPtr(d.Get("naptrpreference").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("port"); !raw.IsNull() {
+		gslbservice.Port = intPtr(d.Get("port").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("publicport"); !raw.IsNull() {
+		gslbservice.Publicport = intPtr(d.Get("publicport").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("svrtimeout"); !raw.IsNull() {
+		gslbservice.Svrtimeout = intPtr(d.Get("svrtimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("weight"); !raw.IsNull() {
+		gslbservice.Weight = intPtr(d.Get("weight").(int))
 	}
 
 	_, err := client.AddResource(service.Gslbservice.Type(), gslbserviceName, &gslbservice)
@@ -398,7 +427,7 @@ func updateGslbserviceFunc(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	if d.HasChange("clttimeout") {
 		log.Printf("[DEBUG]  netscaler-provider: Clttimeout has changed for gslbservice %s, starting update", gslbserviceName)
-		gslbservice.Clttimeout = d.Get("clttimeout").(int)
+		gslbservice.Clttimeout = intPtr(d.Get("clttimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("cnameentry") {
@@ -413,7 +442,7 @@ func updateGslbserviceFunc(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	if d.HasChange("cookietimeout") {
 		log.Printf("[DEBUG]  netscaler-provider: Cookietimeout has changed for gslbservice %s, starting update", gslbserviceName)
-		gslbservice.Cookietimeout = d.Get("cookietimeout").(int)
+		gslbservice.Cookietimeout = intPtr(d.Get("cookietimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("downstateflush") {
@@ -423,7 +452,7 @@ func updateGslbserviceFunc(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	if d.HasChange("hashid") {
 		log.Printf("[DEBUG]  netscaler-provider: Hashid has changed for gslbservice %s, starting update", gslbserviceName)
-		gslbservice.Hashid = d.Get("hashid").(int)
+		gslbservice.Hashid = intPtr(d.Get("hashid").(int))
 		hasChange = true
 	}
 	if d.HasChange("healthmonitor") {
@@ -443,17 +472,17 @@ func updateGslbserviceFunc(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	if d.HasChange("maxaaausers") {
 		log.Printf("[DEBUG]  netscaler-provider: Maxaaausers has changed for gslbservice %s, starting update", gslbserviceName)
-		gslbservice.Maxaaausers = d.Get("maxaaausers").(int)
+		gslbservice.Maxaaausers = intPtr(d.Get("maxaaausers").(int))
 		hasChange = true
 	}
 	if d.HasChange("maxbandwidth") {
 		log.Printf("[DEBUG]  netscaler-provider: Maxbandwidth has changed for gslbservice %s, starting update", gslbserviceName)
-		gslbservice.Maxbandwidth = d.Get("maxbandwidth").(int)
+		gslbservice.Maxbandwidth = intPtr(d.Get("maxbandwidth").(int))
 		hasChange = true
 	}
 	if d.HasChange("maxclient") {
 		log.Printf("[DEBUG]  netscaler-provider: Maxclient has changed for gslbservice %s, starting update", gslbserviceName)
-		gslbservice.Maxclient = d.Get("maxclient").(int)
+		gslbservice.Maxclient = intPtr(d.Get("maxclient").(int))
 		hasChange = true
 	}
 	if d.HasChange("monitornamesvc") {
@@ -463,22 +492,22 @@ func updateGslbserviceFunc(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	if d.HasChange("monthreshold") {
 		log.Printf("[DEBUG]  netscaler-provider: Monthreshold has changed for gslbservice %s, starting update", gslbserviceName)
-		gslbservice.Monthreshold = d.Get("monthreshold").(int)
+		gslbservice.Monthreshold = intPtr(d.Get("monthreshold").(int))
 		hasChange = true
 	}
 	if d.HasChange("naptrdomainttl") {
 		log.Printf("[DEBUG]  netscaler-provider: Naptrdomainttl has changed for gslbservice %s, starting update", gslbserviceName)
-		gslbservice.Naptrdomainttl = d.Get("naptrdomainttl").(int)
+		gslbservice.Naptrdomainttl = intPtr(d.Get("naptrdomainttl").(int))
 		hasChange = true
 	}
 	if d.HasChange("naptrorder") {
 		log.Printf("[DEBUG]  netscaler-provider: Naptrorder has changed for gslbservice %s, starting update", gslbserviceName)
-		gslbservice.Naptrorder = d.Get("naptrorder").(int)
+		gslbservice.Naptrorder = intPtr(d.Get("naptrorder").(int))
 		hasChange = true
 	}
 	if d.HasChange("naptrpreference") {
 		log.Printf("[DEBUG]  netscaler-provider: Naptrpreference has changed for gslbservice %s, starting update", gslbserviceName)
-		gslbservice.Naptrpreference = d.Get("naptrpreference").(int)
+		gslbservice.Naptrpreference = intPtr(d.Get("naptrpreference").(int))
 		hasChange = true
 	}
 	if d.HasChange("naptrreplacement") {
@@ -493,7 +522,7 @@ func updateGslbserviceFunc(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	if d.HasChange("port") {
 		log.Printf("[DEBUG]  netscaler-provider: Port has changed for gslbservice %s, starting update", gslbserviceName)
-		gslbservice.Port = d.Get("port").(int)
+		gslbservice.Port = intPtr(d.Get("port").(int))
 		hasChange = true
 	}
 	if d.HasChange("publicip") {
@@ -503,7 +532,7 @@ func updateGslbserviceFunc(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	if d.HasChange("publicport") {
 		log.Printf("[DEBUG]  netscaler-provider: Publicport has changed for gslbservice %s, starting update", gslbserviceName)
-		gslbservice.Publicport = d.Get("publicport").(int)
+		gslbservice.Publicport = intPtr(d.Get("publicport").(int))
 		hasChange = true
 	}
 	if d.HasChange("servername") {
@@ -542,7 +571,7 @@ func updateGslbserviceFunc(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	if d.HasChange("svrtimeout") {
 		log.Printf("[DEBUG]  netscaler-provider: Svrtimeout has changed for gslbservice %s, starting update", gslbserviceName)
-		gslbservice.Svrtimeout = d.Get("svrtimeout").(int)
+		gslbservice.Svrtimeout = intPtr(d.Get("svrtimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("viewip") {
@@ -557,7 +586,7 @@ func updateGslbserviceFunc(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	if d.HasChange("weight") {
 		log.Printf("[DEBUG]  netscaler-provider: Weight has changed for gslbservice %s, starting update", gslbserviceName)
-		gslbservice.Weight = d.Get("weight").(int)
+		gslbservice.Weight = intPtr(d.Get("weight").(int))
 		hasChange = true
 	}
 
@@ -622,7 +651,7 @@ func doGslbServiceStateChange(d *schema.ResourceData, client *service.NitroClien
 		}
 	} else if newstate == "DISABLED" {
 		// Add attributes relevant to the disable operation
-		gslbService.Delay = d.Get("delay").(int)
+		gslbService.Delay = intPtr(d.Get("delay").(int))
 		err := client.ActOnResource(service.Service.Type(), gslbService, "disable")
 		if err != nil {
 			return err

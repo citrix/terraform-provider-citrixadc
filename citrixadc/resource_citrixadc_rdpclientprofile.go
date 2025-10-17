@@ -138,7 +138,6 @@ func createRdpclientprofileFunc(ctx context.Context, d *schema.ResourceData, met
 		Name:                 d.Get("name").(string),
 		Psk:                  d.Get("psk").(string),
 		Randomizerdpfilename: d.Get("randomizerdpfilename").(string),
-		Rdpcookievalidity:    d.Get("rdpcookievalidity").(int),
 		Rdpcustomparams:      d.Get("rdpcustomparams").(string),
 		Rdpfilename:          d.Get("rdpfilename").(string),
 		Rdphost:              d.Get("rdphost").(string),
@@ -151,6 +150,10 @@ func createRdpclientprofileFunc(ctx context.Context, d *schema.ResourceData, met
 		Redirectpnpdevices:   d.Get("redirectpnpdevices").(string),
 		Redirectprinters:     d.Get("redirectprinters").(string),
 		Videoplaybackmode:    d.Get("videoplaybackmode").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("rdpcookievalidity"); !raw.IsNull() {
+		rdpclientprofile.Rdpcookievalidity = intPtr(d.Get("rdpcookievalidity").(int))
 	}
 
 	_, err := client.AddResource("rdpclientprofile", rdpclientprofileName, &rdpclientprofile)
@@ -240,7 +243,7 @@ func updateRdpclientprofileFunc(ctx context.Context, d *schema.ResourceData, met
 	}
 	if d.HasChange("rdpcookievalidity") {
 		log.Printf("[DEBUG]  citrixadc-provider: Rdpcookievalidity has changed for rdpclientprofile %s, starting update", rdpclientprofileName)
-		rdpclientprofile.Rdpcookievalidity = d.Get("rdpcookievalidity").(int)
+		rdpclientprofile.Rdpcookievalidity = intPtr(d.Get("rdpcookievalidity").(int))
 		hasChange = true
 	}
 	if d.HasChange("rdpcustomparams") {

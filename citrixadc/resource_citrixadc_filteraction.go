@@ -67,9 +67,12 @@ func createFilteractionFunc(ctx context.Context, d *schema.ResourceData, meta in
 		Name:        d.Get("name").(string),
 		Page:        d.Get("page").(string),
 		Qual:        d.Get("qual").(string),
-		Respcode:    d.Get("respcode").(int),
 		Servicename: d.Get("servicename").(string),
 		Value:       d.Get("value").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("respcode"); !raw.IsNull() {
+		filteraction.Respcode = intPtr(d.Get("respcode").(int))
 	}
 
 	_, err := client.AddResource(service.Filteraction.Type(), filteractionName, &filteraction)
@@ -125,7 +128,7 @@ func updateFilteractionFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("respcode") {
 		log.Printf("[DEBUG]  citrixadc-provider: Respcode has changed for filteraction %s, starting update", filteractionName)
-		filteraction.Respcode = d.Get("respcode").(int)
+		filteraction.Respcode = intPtr(d.Get("respcode").(int))
 		hasChange = true
 	}
 	if d.HasChange("servicename") {

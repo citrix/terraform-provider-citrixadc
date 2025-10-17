@@ -57,11 +57,14 @@ func createClusternodegroupFunc(ctx context.Context, d *schema.ResourceData, met
 	clusternodegroupName := d.Get("name").(string)
 
 	clusternodegroup := cluster.Clusternodegroup{
-		Name:     d.Get("name").(string),
-		Priority: d.Get("priority").(int),
-		State:    d.Get("state").(string),
-		Sticky:   d.Get("sticky").(string),
-		Strict:   d.Get("strict").(string),
+		Name:   d.Get("name").(string),
+		State:  d.Get("state").(string),
+		Sticky: d.Get("sticky").(string),
+		Strict: d.Get("strict").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		clusternodegroup.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	_, err := client.AddResource(service.Clusternodegroup.Type(), clusternodegroupName, &clusternodegroup)
@@ -106,7 +109,7 @@ func updateClusternodegroupFunc(ctx context.Context, d *schema.ResourceData, met
 	hasChange := false
 	if d.HasChange("priority") {
 		log.Printf("[DEBUG]  citrixadc-provider: Priority has changed for clusternodegroup %s, starting update", clusternodegroupName)
-		clusternodegroup.Priority = d.Get("priority").(int)
+		clusternodegroup.Priority = intPtr(d.Get("priority").(int))
 		hasChange = true
 	}
 	if d.HasChange("state") {

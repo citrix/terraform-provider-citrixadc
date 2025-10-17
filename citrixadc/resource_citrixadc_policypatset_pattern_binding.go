@@ -72,9 +72,12 @@ func createPolicypatset_pattern_bindingFunc(ctx context.Context, d *schema.Resou
 		Charset: d.Get("charset").(string),
 		Comment: d.Get("comment").(string),
 		Feature: d.Get("feature").(string),
-		Index:   d.Get("index").(int),
 		Name:    d.Get("name").(string),
 		String:  d.Get("string").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("index"); !raw.IsNull() {
+		policypatset_pattern_binding.Index = intPtr(d.Get("index").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Policypatset_pattern_binding.Type(), &policypatset_pattern_binding)

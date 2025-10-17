@@ -35,47 +35,47 @@ type Gslbservicelbmonitorbinding struct {
 	/**
 	* Weight to assign to the monitor-service binding. A larger number specifies a greater weight. Contributes to the monitoring threshold, which determines the state of the service.
 	*/
-	Weight int `json:"weight,omitempty"`
+	Weight *int `json:"weight,omitempty"`
 	/**
 	* The total number of failed probs.
 	*/
-	Totalfailedprobes int `json:"totalfailedprobes,omitempty"`
+	Totalfailedprobes *int `json:"totalfailedprobes,omitempty"`
 	/**
 	* Number of the current failed monitoring probes.
 	*/
-	Failedprobes int `json:"failedprobes,omitempty"`
+	Failedprobes *int `json:"failedprobes,omitempty"`
 	/**
 	* The code indicating the monitor response.
 	*/
-	Monstatcode int `json:"monstatcode,omitempty"`
+	Monstatcode *int `json:"monstatcode,omitempty"`
 	/**
 	* First parameter for use with message code.
 	*/
-	Monstatparam1 int `json:"monstatparam1,omitempty"`
+	Monstatparam1 *int `json:"monstatparam1,omitempty"`
 	/**
 	* Second parameter for use with message code.
 	*/
-	Monstatparam2 int `json:"monstatparam2,omitempty"`
+	Monstatparam2 *int `json:"monstatparam2,omitempty"`
 	/**
 	* Third parameter for use with message code.
 	*/
-	Monstatparam3 int `json:"monstatparam3,omitempty"`
+	Monstatparam3 *int `json:"monstatparam3,omitempty"`
 	/**
 	* Response time of this monitor.
 	*/
-	Responsetime int `json:"responsetime,omitempty"`
+	Responsetime *int `json:"responsetime,omitempty"`
 	/**
 	* Total number of probes sent to monitor this service.
 	*/
-	Monitortotalprobes int `json:"monitortotalprobes,omitempty"`
+	Monitortotalprobes *int `json:"monitortotalprobes,omitempty"`
 	/**
 	* Total number of failed probes
 	*/
-	Monitortotalfailedprobes int `json:"monitortotalfailedprobes,omitempty"`
+	Monitortotalfailedprobes *int `json:"monitortotalfailedprobes,omitempty"`
 	/**
 	* Total number of currently failed probes
 	*/
-	Monitorcurrentfailedprobes int `json:"monitorcurrentfailedprobes,omitempty"`
+	Monitorcurrentfailedprobes *int `json:"monitorcurrentfailedprobes,omitempty"`
 	/**
 	* Displays the gslb monitor status in string format.
 	*/

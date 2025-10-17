@@ -27,11 +27,11 @@ type Tmglobalauditnslogpolicybinding struct {
 	/**
 	* The priority of the policy.
 	*/
-	Priority int `json:"priority,omitempty"`
+	Priority *int `json:"priority,omitempty"`
 	/**
 	* Bound policy type
 	*/
-	Bindpolicytype int `json:"bindpolicytype,omitempty"`
+	Bindpolicytype *int `json:"bindpolicytype,omitempty"`
 	/**
 	* Applicable only to advance tmsession policy. Expression or other value specifying the next policy to be evaluated if the current policy evaluates to TRUE.  Specify one of the following values:
 		* NEXT - Evaluate the policy with the next higher priority number.

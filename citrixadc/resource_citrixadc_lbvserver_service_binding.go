@@ -60,8 +60,13 @@ func createLbvserver_service_bindingFunc(ctx context.Context, d *schema.Resource
 	lbvserver_service_binding := lb.Lbvserverservicebinding{
 		Name:        d.Get("name").(string),
 		Servicename: d.Get("servicename").(string),
-		Weight:      d.Get("weight").(int),
-		Order:       d.Get("order").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("weight"); !raw.IsNull() {
+		lbvserver_service_binding.Weight = intPtr(d.Get("weight").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("order"); !raw.IsNull() {
+		lbvserver_service_binding.Order = intPtr(d.Get("order").(int))
 	}
 
 	_, err := client.AddResource(service.Lbvserver_service_binding.Type(), name, &lbvserver_service_binding)

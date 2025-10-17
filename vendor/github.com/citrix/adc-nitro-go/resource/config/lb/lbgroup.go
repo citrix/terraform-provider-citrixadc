@@ -39,7 +39,7 @@ type Lbgroup struct {
 	/**
 	* Time period, in minutes, for which backup persistence is in effect.
 	*/
-	Backuppersistencetimeout int `json:"backuppersistencetimeout,omitempty"`
+	Backuppersistencetimeout *int `json:"backuppersistencetimeout,omitempty"`
 	/**
 	* Persistence mask to apply to source IPv4 addresses when creating source IP based persistence sessions.
 	*/
@@ -51,7 +51,7 @@ type Lbgroup struct {
 	/**
 	* Persistence mask to apply to source IPv6 addresses when creating source IP based persistence sessions.
 	*/
-	V6persistmasklen int `json:"v6persistmasklen,omitempty"`
+	V6persistmasklen *int `json:"v6persistmasklen,omitempty"`
 	/**
 	* Domain attribute for the HTTP cookie.
 	*/
@@ -59,7 +59,7 @@ type Lbgroup struct {
 	/**
 	* Time period for which a persistence session is in effect.
 	*/
-	Timeout int `json:"timeout,omitempty"`
+	Timeout *int `json:"timeout,omitempty"`
 	/**
 	* Expression, or name of a named expression, against which traffic is evaluated.
 		The following requirements apply only to the Citrix ADC CLI:

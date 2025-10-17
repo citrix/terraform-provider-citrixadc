@@ -302,7 +302,7 @@ func addSystemglobalAuditsyslogpolicyBinding(d *schema.ResourceData, meta interf
 		bindingStruct.Gotopriorityexpression = d.(string)
 	}
 	if d, ok := binding["priority"]; ok {
-		bindingStruct.Priority = d.(int)
+		bindingStruct.Priority = intPtr(d.(int))
 	}
 
 	if err := client.UpdateUnnamedResource("systemglobal_auditsyslogpolicy_binding", bindingStruct); err != nil {

@@ -23,7 +23,7 @@ type Vlanbinding struct {
 	/**
 	* Integer that uniquely identifies the VLAN for which the details are to be displayed.<br/>Minimum value =  1<br/>Maximum value =  4094
 	*/
-	Id int `json:"id,omitempty"`
+	Id *int `json:"id,omitempty"`
 
 
 }

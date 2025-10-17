@@ -51,8 +51,11 @@ func createClusternode_routemonitor_bindingFunc(ctx context.Context, d *schema.R
 	bindingId := fmt.Sprintf("%s,%s", nodeid, routemonitor)
 	clusternode_routemonitor_binding := cluster.Clusternoderoutemonitorbinding{
 		Netmask:      d.Get("netmask").(string),
-		Nodeid:       d.Get("nodeid").(int),
 		Routemonitor: d.Get("routemonitor").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("nodeid"); !raw.IsNull() {
+		clusternode_routemonitor_binding.Nodeid = intPtr(d.Get("nodeid").(int))
 	}
 
 	err := client.UpdateUnnamedResource("clusternode_routemonitor_binding", &clusternode_routemonitor_binding)

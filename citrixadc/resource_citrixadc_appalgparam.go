@@ -39,7 +39,7 @@ func createAppalgparamFunc(ctx context.Context, d *schema.ResourceData, meta int
 	// there is no primary key in appalgparam resource. Hence generate one for terraform state maintenance
 	appalgparamName = resource.PrefixedUniqueId("tf-appalgparam-")
 	appalgparam := network.Appalgparam{
-		Pptpgreidletimeout: d.Get("pptpgreidletimeout").(int),
+		Pptpgreidletimeout: intPtr(d.Get("pptpgreidletimeout").(int)),
 	}
 
 	err := client.UpdateUnnamedResource(service.Appalgparam.Type(), &appalgparam)
@@ -77,7 +77,7 @@ func updateAppalgparamFunc(ctx context.Context, d *schema.ResourceData, meta int
 	hasChange := false
 	if d.HasChange("pptpgreidletimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Pptpgreidletimeout has changed for appalgparam, starting update")
-		appalgparam.Pptpgreidletimeout = d.Get("pptpgreidletimeout").(int)
+		appalgparam.Pptpgreidletimeout = intPtr(d.Get("pptpgreidletimeout").(int))
 		hasChange = true
 	}
 

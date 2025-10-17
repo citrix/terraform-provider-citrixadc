@@ -36,11 +36,11 @@ type Authenticationradiusaction struct {
 	/**
 	* Port number on which the RADIUS server listens for connections.
 	*/
-	Serverport int `json:"serverport,omitempty"`
+	Serverport *int `json:"serverport,omitempty"`
 	/**
 	* Number of seconds the Citrix ADC waits for a response from the RADIUS server.
 	*/
-	Authtimeout int `json:"authtimeout,omitempty"`
+	Authtimeout *int `json:"authtimeout,omitempty"`
 	/**
 	* Key shared between the RADIUS server and the Citrix ADC.
 		Required to allow the Citrix ADC to communicate with the RADIUS server.
@@ -58,11 +58,11 @@ type Authenticationradiusaction struct {
 	/**
 	* RADIUS vendor ID attribute, used for RADIUS group extraction.
 	*/
-	Radvendorid int `json:"radvendorid,omitempty"`
+	Radvendorid *int `json:"radvendorid,omitempty"`
 	/**
 	* RADIUS attribute type, used for RADIUS group extraction.
 	*/
-	Radattributetype int `json:"radattributetype,omitempty"`
+	Radattributetype *int `json:"radattributetype,omitempty"`
 	/**
 	* RADIUS groups prefix string.
 		This groups prefix precedes the group names within a RADIUS attribute for RADIUS group extraction.
@@ -81,11 +81,11 @@ type Authenticationradiusaction struct {
 	* Vendor ID of the intranet IP attribute in the RADIUS response.
 		NOTE: A value of 0 indicates that the attribute is not vendor encoded.
 	*/
-	Ipvendorid int `json:"ipvendorid,omitempty"`
+	Ipvendorid *int `json:"ipvendorid,omitempty"`
 	/**
 	* Remote IP address attribute type in a RADIUS response.
 	*/
-	Ipattributetype int `json:"ipattributetype,omitempty"`
+	Ipattributetype *int `json:"ipattributetype,omitempty"`
 	/**
 	* Whether the RADIUS server is currently accepting accounting messages.
 	*/
@@ -93,11 +93,11 @@ type Authenticationradiusaction struct {
 	/**
 	* Vendor ID of the attribute, in the RADIUS response, used to extract the user password.
 	*/
-	Pwdvendorid int `json:"pwdvendorid,omitempty"`
+	Pwdvendorid *int `json:"pwdvendorid,omitempty"`
 	/**
 	* Vendor-specific password attribute type in a RADIUS response.
 	*/
-	Pwdattributetype int `json:"pwdattributetype,omitempty"`
+	Pwdattributetype *int `json:"pwdattributetype,omitempty"`
 	/**
 	* This is the default group that is chosen when the authentication succeeds in addition to extracted groups.
 	*/
@@ -109,7 +109,7 @@ type Authenticationradiusaction struct {
 	/**
 	* Number of retry by the Citrix ADC before getting response from the RADIUS server.
 	*/
-	Authservretry int `json:"authservretry,omitempty"`
+	Authservretry *int `json:"authservretry,omitempty"`
 	/**
 	* Configure the RADIUS server state to accept or refuse authentication messages.
 	*/

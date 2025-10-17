@@ -93,8 +93,11 @@ func createCsvserver_auditnslogpolicy_bindingFunc(ctx context.Context, d *schema
 		Labeltype:              d.Get("labeltype").(string),
 		Name:                   d.Get("name").(string),
 		Policyname:             d.Get("policyname").(string),
-		Priority:               d.Get("priority").(int),
 		Targetlbvserver:        d.Get("targetlbvserver").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		csvserver_auditnslogpolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	_, err := client.AddResource(service.Csvserver_auditnslogpolicy_binding.Type(), name, &csvserver_auditnslogpolicy_binding)

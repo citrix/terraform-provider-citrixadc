@@ -80,12 +80,19 @@ func createNssimpleacl6Func(ctx context.Context, d *schema.ResourceData, meta in
 	nssimpleacl6 := ns.Nssimpleacl6{
 		Aclaction:   d.Get("aclaction").(string),
 		Aclname:     d.Get("aclname").(string),
-		Destport:    d.Get("destport").(int),
 		Estsessions: d.Get("estsessions").(bool),
 		Protocol:    d.Get("protocol").(string),
 		Srcipv6:     d.Get("srcipv6").(string),
-		Td:          d.Get("td").(int),
-		Ttl:         d.Get("ttl").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("destport"); !raw.IsNull() {
+		nssimpleacl6.Destport = intPtr(d.Get("destport").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("td"); !raw.IsNull() {
+		nssimpleacl6.Td = intPtr(d.Get("td").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("ttl"); !raw.IsNull() {
+		nssimpleacl6.Ttl = intPtr(d.Get("ttl").(int))
 	}
 
 	_, err := client.AddResource(service.Nssimpleacl6.Type(), nssimpleacl6Name, &nssimpleacl6)

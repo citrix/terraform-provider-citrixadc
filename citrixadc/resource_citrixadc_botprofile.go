@@ -154,7 +154,6 @@ func createBotprofileFunc(ctx context.Context, d *schema.ResourceData, meta inte
 		Devicefingerprintmobile:                toStringList(d.Get("devicefingerprintmobile").([]interface{})),
 		Errorurl:                               d.Get("errorurl").(string),
 		Kmdetection:                            d.Get("kmdetection").(string),
-		Kmeventspostbodylimit:                  d.Get("kmeventspostbodylimit").(int),
 		Kmjavascriptname:                       d.Get("kmjavascriptname").(string),
 		Name:                                   d.Get("name").(string),
 		Signature:                              d.Get("signature").(string),
@@ -163,6 +162,10 @@ func createBotprofileFunc(ctx context.Context, d *schema.ResourceData, meta inte
 		Trap:                                   d.Get("trap").(string),
 		Trapaction:                             toStringList(d.Get("trapaction").([]interface{})),
 		Trapurl:                                d.Get("trapurl").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("kmeventspostbodylimit"); !raw.IsNull() {
+		botprofile.Kmeventspostbodylimit = intPtr(d.Get("kmeventspostbodylimit").(int))
 	}
 
 	_, err := client.AddResource("botprofile", botprofileName, &botprofile)
@@ -283,7 +286,7 @@ func updateBotprofileFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	if d.HasChange("kmeventspostbodylimit") {
 		log.Printf("[DEBUG]  citrixadc-provider: Kmeventspostbodylimit has changed for botprofile %s, starting update", botprofileName)
-		botprofile.Kmeventspostbodylimit = d.Get("kmeventspostbodylimit").(int)
+		botprofile.Kmeventspostbodylimit = intPtr(d.Get("kmeventspostbodylimit").(int))
 		hasChange = true
 	}
 	if d.HasChange("kmjavascriptname") {

@@ -90,11 +90,18 @@ func createGslbvserver_domain_bindingFunc(ctx context.Context, d *schema.Resourc
 		Backupipflag:     d.Get("backupipflag").(bool),
 		Cookiedomain:     d.Get("cookiedomain").(string),
 		Cookiedomainflag: d.Get("cookiedomainflag").(bool),
-		Cookietimeout:    d.Get("cookietimeout").(int),
 		Domainname:       d.Get("domainname").(string),
 		Name:             d.Get("name").(string),
-		Sitedomainttl:    d.Get("sitedomainttl").(int),
-		Ttl:              d.Get("ttl").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("cookietimeout"); !raw.IsNull() {
+		gslbvserver_domain_binding.Cookietimeout = intPtr(d.Get("cookietimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("sitedomainttl"); !raw.IsNull() {
+		gslbvserver_domain_binding.Sitedomainttl = intPtr(d.Get("sitedomainttl").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("ttl"); !raw.IsNull() {
+		gslbvserver_domain_binding.Ttl = intPtr(d.Get("ttl").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Gslbvserver_domain_binding.Type(), &gslbvserver_domain_binding)

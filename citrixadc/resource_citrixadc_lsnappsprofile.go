@@ -77,8 +77,11 @@ func createLsnappsprofileFunc(ctx context.Context, d *schema.ResourceData, meta 
 		L2info:            d.Get("l2info").(string),
 		Mapping:           d.Get("mapping").(string),
 		Tcpproxy:          d.Get("tcpproxy").(string),
-		Td:                d.Get("td").(int),
 		Transportprotocol: d.Get("transportprotocol").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("td"); !raw.IsNull() {
+		lsnappsprofile.Td = intPtr(d.Get("td").(int))
 	}
 
 	_, err := client.AddResource("lsnappsprofile", lsnappsprofileName, &lsnappsprofile)
@@ -151,7 +154,7 @@ func updateLsnappsprofileFunc(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	if d.HasChange("td") {
 		log.Printf("[DEBUG]  citrixadc-provider: Td has changed for lsnappsprofile %s, starting update", lsnappsprofileName)
-		lsnappsprofile.Td = d.Get("td").(int)
+		lsnappsprofile.Td = intPtr(d.Get("td").(int))
 		hasChange = true
 	}
 

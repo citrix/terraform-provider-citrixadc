@@ -27,7 +27,7 @@ type Reputationsettings struct {
 	/**
 	* Proxy server port.
 	*/
-	Proxyport int `json:"proxyport,omitempty"`
+	Proxyport *int `json:"proxyport,omitempty"`
 	/**
 	* Proxy Username
 	*/

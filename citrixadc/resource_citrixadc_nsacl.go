@@ -231,38 +231,57 @@ func createNsaclFunc(ctx context.Context, d *schema.ResourceData, meta interface
 	}
 
 	nsacl := ns.Nsacl{
-		Aclaction:      d.Get("aclaction").(string),
-		Aclname:        d.Get("aclname").(string),
-		Destip:         destip,
-		Destipop:       d.Get("destipop").(string),
-		Destipval:      d.Get("destipval").(string),
-		Destport:       destport,
-		Destportop:     d.Get("destportop").(string),
-		Destportval:    d.Get("destportval").(string),
-		Dfdhash:        d.Get("dfdhash").(string),
-		Established:    d.Get("established").(bool),
-		Icmpcode:       d.Get("icmpcode").(int),
-		Icmptype:       d.Get("icmptype").(int),
-		Interface:      d.Get("interface").(string),
-		Logstate:       d.Get("logstate").(string),
-		Priority:       d.Get("priority").(int),
-		Protocol:       d.Get("protocol").(string),
-		Protocolnumber: d.Get("protocolnumber").(int),
-		Ratelimit:      d.Get("ratelimit").(int),
-		Srcip:          srcip,
-		Srcipop:        d.Get("srcipop").(string),
-		Srcipval:       d.Get("srcipval").(string),
-		Srcmac:         d.Get("srcmac").(string),
-		Srcmacmask:     d.Get("srcmacmask").(string),
-		Srcport:        srcport,
-		Srcportop:      d.Get("srcportop").(string),
-		Srcportval:     d.Get("srcportval").(string),
-		State:          d.Get("state").(string),
-		Stateful:       d.Get("stateful").(string),
-		Td:             d.Get("td").(int),
-		Ttl:            d.Get("ttl").(int),
-		Vlan:           d.Get("vlan").(int),
-		Vxlan:          d.Get("vxlan").(int),
+		Aclaction:   d.Get("aclaction").(string),
+		Aclname:     d.Get("aclname").(string),
+		Destip:      destip,
+		Destipop:    d.Get("destipop").(string),
+		Destipval:   d.Get("destipval").(string),
+		Destport:    destport,
+		Destportop:  d.Get("destportop").(string),
+		Destportval: d.Get("destportval").(string),
+		Dfdhash:     d.Get("dfdhash").(string),
+		Established: d.Get("established").(bool),
+		Interface:   d.Get("interface").(string),
+		Logstate:    d.Get("logstate").(string),
+		Protocol:    d.Get("protocol").(string),
+		Srcip:       srcip,
+		Srcipop:     d.Get("srcipop").(string),
+		Srcipval:    d.Get("srcipval").(string),
+		Srcmac:      d.Get("srcmac").(string),
+		Srcmacmask:  d.Get("srcmacmask").(string),
+		Srcport:     srcport,
+		Srcportop:   d.Get("srcportop").(string),
+		Srcportval:  d.Get("srcportval").(string),
+		State:       d.Get("state").(string),
+		Stateful:    d.Get("stateful").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("icmpcode"); !raw.IsNull() {
+		nsacl.Icmpcode = intPtr(d.Get("icmpcode").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("icmptype"); !raw.IsNull() {
+		nsacl.Icmptype = intPtr(d.Get("icmptype").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		nsacl.Priority = intPtr(d.Get("priority").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("protocolnumber"); !raw.IsNull() {
+		nsacl.Protocolnumber = intPtr(d.Get("protocolnumber").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("ratelimit"); !raw.IsNull() {
+		nsacl.Ratelimit = intPtr(d.Get("ratelimit").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("td"); !raw.IsNull() {
+		nsacl.Td = intPtr(d.Get("td").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("ttl"); !raw.IsNull() {
+		nsacl.Ttl = intPtr(d.Get("ttl").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("vlan"); !raw.IsNull() {
+		nsacl.Vlan = intPtr(d.Get("vlan").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("vxlan"); !raw.IsNull() {
+		nsacl.Vxlan = intPtr(d.Get("vxlan").(int))
 	}
 
 	_, err := client.AddResource(service.Nsacl.Type(), nsaclName, &nsacl)
@@ -380,12 +399,12 @@ func updateNsaclFunc(ctx context.Context, d *schema.ResourceData, meta interface
 	}
 	if d.HasChange("icmpcode") {
 		log.Printf("[DEBUG]  netscaler-provider: Icmpcode has changed for nsacl %s, starting update", nsaclName)
-		nsacl.Icmpcode = d.Get("icmpcode").(int)
+		nsacl.Icmpcode = intPtr(d.Get("icmpcode").(int))
 		hasChange = true
 	}
 	if d.HasChange("icmptype") {
 		log.Printf("[DEBUG]  netscaler-provider: Icmptype has changed for nsacl %s, starting update", nsaclName)
-		nsacl.Icmptype = d.Get("icmptype").(int)
+		nsacl.Icmptype = intPtr(d.Get("icmptype").(int))
 		hasChange = true
 	}
 	if d.HasChange("interface") {
@@ -400,7 +419,7 @@ func updateNsaclFunc(ctx context.Context, d *schema.ResourceData, meta interface
 	}
 	if d.HasChange("priority") {
 		log.Printf("[DEBUG]  netscaler-provider: Priority has changed for nsacl %s, starting update", nsaclName)
-		nsacl.Priority = d.Get("priority").(int)
+		nsacl.Priority = intPtr(d.Get("priority").(int))
 		hasChange = true
 	}
 	if d.HasChange("protocol") {
@@ -410,12 +429,12 @@ func updateNsaclFunc(ctx context.Context, d *schema.ResourceData, meta interface
 	}
 	if d.HasChange("protocolnumber") {
 		log.Printf("[DEBUG]  netscaler-provider: Protocolnumber has changed for nsacl %s, starting update", nsaclName)
-		nsacl.Protocolnumber = d.Get("protocolnumber").(int)
+		nsacl.Protocolnumber = intPtr(d.Get("protocolnumber").(int))
 		hasChange = true
 	}
 	if d.HasChange("ratelimit") {
 		log.Printf("[DEBUG]  netscaler-provider: Ratelimit has changed for nsacl %s, starting update", nsaclName)
-		nsacl.Ratelimit = d.Get("ratelimit").(int)
+		nsacl.Ratelimit = intPtr(d.Get("ratelimit").(int))
 		hasChange = true
 	}
 	if d.HasChange("srcipop") {
@@ -463,22 +482,22 @@ func updateNsaclFunc(ctx context.Context, d *schema.ResourceData, meta interface
 	}
 	if d.HasChange("td") {
 		log.Printf("[DEBUG]  netscaler-provider: Td has changed for nsacl %s, starting update", nsaclName)
-		nsacl.Td = d.Get("td").(int)
+		nsacl.Td = intPtr(d.Get("td").(int))
 		hasChange = true
 	}
 	if d.HasChange("ttl") {
 		log.Printf("[DEBUG]  netscaler-provider: Ttl has changed for nsacl %s, starting update", nsaclName)
-		nsacl.Ttl = d.Get("ttl").(int)
+		nsacl.Ttl = intPtr(d.Get("ttl").(int))
 		hasChange = true
 	}
 	if d.HasChange("vlan") {
 		log.Printf("[DEBUG]  netscaler-provider: Vlan has changed for nsacl %s, starting update", nsaclName)
-		nsacl.Vlan = d.Get("vlan").(int)
+		nsacl.Vlan = intPtr(d.Get("vlan").(int))
 		hasChange = true
 	}
 	if d.HasChange("vxlan") {
 		log.Printf("[DEBUG]  netscaler-provider: Vxlan has changed for nsacl %s, starting update", nsaclName)
-		nsacl.Vxlan = d.Get("vxlan").(int)
+		nsacl.Vxlan = intPtr(d.Get("vxlan").(int))
 		hasChange = true
 	}
 

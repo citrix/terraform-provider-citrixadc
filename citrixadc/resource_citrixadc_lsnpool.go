@@ -118,12 +118,12 @@ func updateLsnpoolFunc(ctx context.Context, d *schema.ResourceData, meta interfa
 	if d.HasChange("maxportrealloctmq") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxportrealloctmq has changed for lsnpool %s, starting update", lsnpoolName)
 		val, _ := strconv.Atoi(d.Get("maxportrealloctmq").(string))
-		lsnpool.Maxportrealloctmq = val
+		lsnpool.Maxportrealloctmq = intPtr(val)
 		hasChange = true
 	}
 	if d.HasChange("portrealloctimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Portrealloctimeout has changed for lsnpool %s, starting update", lsnpoolName)
-		lsnpool.Portrealloctimeout = d.Get("portrealloctimeout").(int)
+		lsnpool.Portrealloctimeout = intPtr(d.Get("portrealloctimeout").(int))
 		hasChange = true
 	}
 

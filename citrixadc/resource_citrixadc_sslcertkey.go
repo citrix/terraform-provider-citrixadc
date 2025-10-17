@@ -125,11 +125,14 @@ func createSslcertkeyFunc(ctx context.Context, d *schema.ResourceData, meta inte
 		// This is always set to false on creation which effectively excludes it from the request JSON
 		// Nodomaincheck is not an object attribute but a flag for the change operation
 		// of the resource
-		Nodomaincheck:      false,
-		Notificationperiod: d.Get("notificationperiod").(int),
-		Ocspstaplingcache:  d.Get("ocspstaplingcache").(bool),
-		Passplain:          d.Get("passplain").(string),
-		Password:           d.Get("password").(bool),
+		Nodomaincheck:     false,
+		Ocspstaplingcache: d.Get("ocspstaplingcache").(bool),
+		Passplain:         d.Get("passplain").(string),
+		Password:          d.Get("password").(bool),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("notificationperiod"); !raw.IsNull() {
+		sslcertkey.Notificationperiod = intPtr(d.Get("notificationperiod").(int))
 	}
 
 	_, err := client.AddResource(service.Sslcertkey.Type(), sslcertkeyName, &sslcertkey)
@@ -215,7 +218,7 @@ func updateSslcertkeyFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	if d.HasChange("notificationperiod") {
 		log.Printf("[DEBUG] netscaler-provider:  Notificationperiod has changed for sslcertkey %s, starting update", sslcertkeyName)
-		sslcertkeyUpdate.Notificationperiod = d.Get("notificationperiod").(int)
+		sslcertkeyUpdate.Notificationperiod = intPtr(d.Get("notificationperiod").(int))
 		hasUpdate = true
 	}
 	if d.HasChange("cert") {

@@ -27,7 +27,7 @@ type Lbvserverfilterpolicybinding struct {
 	/**
 	* Priority.
 	*/
-	Priority int `json:"priority,omitempty"`
+	Priority *int `json:"priority,omitempty"`
 	/**
 	* Use SureConnect on the virtual server.
 	*/

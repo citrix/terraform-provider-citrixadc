@@ -119,17 +119,28 @@ func createAuthenticationvserverFunc(ctx context.Context, d *schema.ResourceData
 		Authenticationdomain: d.Get("authenticationdomain").(string),
 		Certkeynames:         d.Get("certkeynames").(string),
 		Comment:              d.Get("comment").(string),
-		Failedlogintimeout:   d.Get("failedlogintimeout").(int),
 		Ipv46:                d.Get("ipv46").(string),
-		Maxloginattempts:     d.Get("maxloginattempts").(int),
 		Name:                 d.Get("name").(string),
 		Newname:              d.Get("newname").(string),
-		Port:                 d.Get("port").(int),
-		Range:                d.Get("range").(int),
 		Samesite:             d.Get("samesite").(string),
 		Servicetype:          d.Get("servicetype").(string),
 		State:                d.Get("state").(string),
-		Td:                   d.Get("td").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("failedlogintimeout"); !raw.IsNull() {
+		authenticationvserver.Failedlogintimeout = intPtr(d.Get("failedlogintimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxloginattempts"); !raw.IsNull() {
+		authenticationvserver.Maxloginattempts = intPtr(d.Get("maxloginattempts").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("port"); !raw.IsNull() {
+		authenticationvserver.Port = intPtr(d.Get("port").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("range"); !raw.IsNull() {
+		authenticationvserver.Range = intPtr(d.Get("range").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("td"); !raw.IsNull() {
+		authenticationvserver.Td = intPtr(d.Get("td").(int))
 	}
 
 	_, err := client.AddResource(service.Authenticationvserver.Type(), authenticationvserverName, &authenticationvserver)
@@ -212,7 +223,7 @@ func updateAuthenticationvserverFunc(ctx context.Context, d *schema.ResourceData
 	}
 	if d.HasChange("failedlogintimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Failedlogintimeout has changed for authenticationvserver %s, starting update", authenticationvserverName)
-		authenticationvserver.Failedlogintimeout = d.Get("failedlogintimeout").(int)
+		authenticationvserver.Failedlogintimeout = intPtr(d.Get("failedlogintimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("ipv46") {
@@ -222,7 +233,7 @@ func updateAuthenticationvserverFunc(ctx context.Context, d *schema.ResourceData
 	}
 	if d.HasChange("maxloginattempts") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxloginattempts has changed for authenticationvserver %s, starting update", authenticationvserverName)
-		authenticationvserver.Maxloginattempts = d.Get("maxloginattempts").(int)
+		authenticationvserver.Maxloginattempts = intPtr(d.Get("maxloginattempts").(int))
 		hasChange = true
 	}
 	if d.HasChange("newname") {
@@ -232,12 +243,12 @@ func updateAuthenticationvserverFunc(ctx context.Context, d *schema.ResourceData
 	}
 	if d.HasChange("port") {
 		log.Printf("[DEBUG]  citrixadc-provider: Port has changed for authenticationvserver %s, starting update", authenticationvserverName)
-		authenticationvserver.Port = d.Get("port").(int)
+		authenticationvserver.Port = intPtr(d.Get("port").(int))
 		hasChange = true
 	}
 	if d.HasChange("range") {
 		log.Printf("[DEBUG]  citrixadc-provider: Range has changed for authenticationvserver %s, starting update", authenticationvserverName)
-		authenticationvserver.Range = d.Get("range").(int)
+		authenticationvserver.Range = intPtr(d.Get("range").(int))
 		hasChange = true
 	}
 	if d.HasChange("samesite") {
@@ -256,7 +267,7 @@ func updateAuthenticationvserverFunc(ctx context.Context, d *schema.ResourceData
 	}
 	if d.HasChange("td") {
 		log.Printf("[DEBUG]  citrixadc-provider: Td has changed for authenticationvserver %s, starting update", authenticationvserverName)
-		authenticationvserver.Td = d.Get("td").(int)
+		authenticationvserver.Td = intPtr(d.Get("td").(int))
 		hasChange = true
 	}
 	if stateChange {

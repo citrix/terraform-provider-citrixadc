@@ -170,8 +170,11 @@ func createAuthenticationwebauthactionFunc(ctx context.Context, d *schema.Resour
 		Name:                       d.Get("name").(string),
 		Scheme:                     d.Get("scheme").(string),
 		Serverip:                   d.Get("serverip").(string),
-		Serverport:                 d.Get("serverport").(int),
 		Successrule:                d.Get("successrule").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("serverport"); !raw.IsNull() {
+		authenticationwebauthaction.Serverport = intPtr(d.Get("serverport").(int))
 	}
 
 	_, err := client.AddResource(service.Authenticationwebauthaction.Type(), authenticationwebauthactionName, &authenticationwebauthaction)
@@ -333,7 +336,7 @@ func updateAuthenticationwebauthactionFunc(ctx context.Context, d *schema.Resour
 	}
 	if d.HasChange("serverport") {
 		log.Printf("[DEBUG]  citrixadc-provider: Serverport has changed for authenticationwebauthaction %s, starting update", authenticationwebauthactionName)
-		authenticationwebauthaction.Serverport = d.Get("serverport").(int)
+		authenticationwebauthaction.Serverport = intPtr(d.Get("serverport").(int))
 		hasChange = true
 	}
 	if d.HasChange("successrule") {

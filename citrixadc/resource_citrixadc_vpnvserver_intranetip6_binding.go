@@ -53,7 +53,10 @@ func createVpnvserver_intranetip6_bindingFunc(ctx context.Context, d *schema.Res
 	vpnvserver_intranetip6_binding := vpn.Vpnvserverintranetip6binding{
 		Intranetip6: d.Get("intranetip6").(string),
 		Name:        d.Get("name").(string),
-		Numaddr:     d.Get("numaddr").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("numaddr"); !raw.IsNull() {
+		vpnvserver_intranetip6_binding.Numaddr = intPtr(d.Get("numaddr").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Vpnvserver_intranetip6_binding.Type(), &vpnvserver_intranetip6_binding)

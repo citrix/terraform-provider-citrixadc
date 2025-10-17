@@ -119,17 +119,28 @@ func createGslbservicegroup_gslbservicegroupmember_bindingFunc(ctx context.Conte
 	bindingId := strings.Join(bindingIdSlice, ",")
 
 	gslbservicegroup_gslbservicegroupmember_binding := gslb.Gslbservicegroupgslbservicegroupmemberbinding{
-		Hashid:           d.Get("hashid").(int),
 		Ip:               d.Get("ip").(string),
-		Port:             d.Get("port").(int),
 		Publicip:         d.Get("publicip").(string),
-		Publicport:       d.Get("publicport").(int),
 		Servername:       d.Get("servername").(string),
 		Servicegroupname: d.Get("servicegroupname").(string),
 		Siteprefix:       d.Get("siteprefix").(string),
 		State:            d.Get("state").(string),
-		Weight:           d.Get("weight").(int),
-		Order:            d.Get("order").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("hashid"); !raw.IsNull() {
+		gslbservicegroup_gslbservicegroupmember_binding.Hashid = intPtr(d.Get("hashid").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("port"); !raw.IsNull() {
+		gslbservicegroup_gslbservicegroupmember_binding.Port = intPtr(d.Get("port").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("publicport"); !raw.IsNull() {
+		gslbservicegroup_gslbservicegroupmember_binding.Publicport = intPtr(d.Get("publicport").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("weight"); !raw.IsNull() {
+		gslbservicegroup_gslbservicegroupmember_binding.Weight = intPtr(d.Get("weight").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("order"); !raw.IsNull() {
+		gslbservicegroup_gslbservicegroupmember_binding.Order = intPtr(d.Get("order").(int))
 	}
 
 	_, err := client.AddResource("gslbservicegroup_gslbservicegroupmember_binding", bindingId, &gslbservicegroup_gslbservicegroupmember_binding)

@@ -53,9 +53,12 @@ func createVxlanvlanmap_vxlan_bindingFunc(ctx context.Context, d *schema.Resourc
 	vxlan := strconv.Itoa(d.Get("vxlan").(int))
 	bindingId := fmt.Sprintf("%s,%s", name, vxlan)
 	vxlanvlanmap_vxlan_binding := network.Vxlanvlanmapvxlanbinding{
-		Name:  d.Get("name").(string),
-		Vlan:  toStringList(d.Get("vlan").([]interface{})),
-		Vxlan: d.Get("vxlan").(int),
+		Name: d.Get("name").(string),
+		Vlan: toStringList(d.Get("vlan").([]interface{})),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("vxlan"); !raw.IsNull() {
+		vxlanvlanmap_vxlan_binding.Vxlan = intPtr(d.Get("vxlan").(int))
 	}
 
 	err := client.UpdateUnnamedResource("vxlanvlanmap_vxlan_binding", &vxlanvlanmap_vxlan_binding)

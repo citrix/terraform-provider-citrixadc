@@ -110,11 +110,14 @@ func createInatFunc(ctx context.Context, d *schema.ResourceData, meta interface{
 		Proxyip:      d.Get("proxyip").(string),
 		Publicip:     d.Get("publicip").(string),
 		Tcpproxy:     d.Get("tcpproxy").(string),
-		Td:           d.Get("td").(int),
 		Tftp:         d.Get("tftp").(string),
 		Useproxyport: d.Get("useproxyport").(string),
 		Usip:         d.Get("usip").(string),
 		Usnip:        d.Get("usnip").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("td"); !raw.IsNull() {
+		inat.Td = intPtr(d.Get("td").(int))
 	}
 
 	_, err := client.AddResource(service.Inat.Type(), inatName, &inat)
@@ -198,7 +201,7 @@ func updateInatFunc(ctx context.Context, d *schema.ResourceData, meta interface{
 	}
 	if d.HasChange("td") {
 		log.Printf("[DEBUG]  netscaler-provider: Td has changed for inat %s, starting update", inatName)
-		inat.Td = d.Get("td").(int)
+		inat.Td = intPtr(d.Get("td").(int))
 		hasChange = true
 	}
 	if d.HasChange("tftp") {

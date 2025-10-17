@@ -59,11 +59,14 @@ func createSnmpmibFunc(ctx context.Context, d *schema.ResourceData, meta interfa
 	snmpmibName := resource.PrefixedUniqueId("tf-snmpmib-")
 
 	snmpmib := snmp.Snmpmib{
-		Contact:   d.Get("contact").(string),
-		Customid:  d.Get("customid").(string),
-		Location:  d.Get("location").(string),
-		Name:      d.Get("name").(string),
-		Ownernode: d.Get("ownernode").(int),
+		Contact:  d.Get("contact").(string),
+		Customid: d.Get("customid").(string),
+		Location: d.Get("location").(string),
+		Name:     d.Get("name").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("ownernode"); !raw.IsNull() {
+		snmpmib.Ownernode = intPtr(d.Get("ownernode").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Snmpmib.Type(), &snmpmib)
@@ -124,7 +127,7 @@ func updateSnmpmibFunc(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 	if d.HasChange("ownernode") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ownernode has changed for snmpmib, starting update")
-		snmpmib.Ownernode = d.Get("ownernode").(int)
+		snmpmib.Ownernode = intPtr(d.Get("ownernode").(int))
 		hasChange = true
 	}
 

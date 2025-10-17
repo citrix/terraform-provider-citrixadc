@@ -52,11 +52,11 @@ type Botprofileratelimitbinding struct {
 	/**
 	* Maximum number of requests that are allowed in this session in the given period time.
 	*/
-	Rate int `json:"rate,omitempty"`
+	Rate *int `json:"rate,omitempty"`
 	/**
 	* Time interval during which requests are tracked to check if they cross the given rate.
 	*/
-	Timeslice int `json:"timeslice,omitempty"`
+	Timeslice *int `json:"timeslice,omitempty"`
 	/**
 	* Rate-Limiting traffic Type
 	*/

@@ -87,7 +87,10 @@ func createLbvserver_videooptimizationpacingpolicy_bindingFunc(ctx context.Conte
 		Labeltype:              d.Get("labeltype").(string),
 		Name:                   lbvserverName,
 		Policyname:             policyName,
-		Priority:               d.Get("priority").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		lbvserver_videooptimizationpacingpolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	_, err := client.AddResource("lbvserver_videooptimizationpacingpolicy_binding", lbvserverName, &lbvserver_videooptimizationpacingpolicy_binding)

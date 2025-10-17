@@ -59,7 +59,10 @@ func createGslbservice_lbmonitor_bindingFunc(ctx context.Context, d *schema.Reso
 		Monitorname: d.Get("monitor_name").(string),
 		Monstate:    d.Get("monstate").(string),
 		Servicename: d.Get("servicename").(string),
-		Weight:      d.Get("weight").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("weight"); !raw.IsNull() {
+		gslbservice_lbmonitor_binding.Weight = intPtr(d.Get("weight").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Gslbservice_lbmonitor_binding.Type(), &gslbservice_lbmonitor_binding)

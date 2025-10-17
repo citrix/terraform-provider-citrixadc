@@ -74,8 +74,11 @@ func createAaauser_intranetip6_bindingFunc(ctx context.Context, d *schema.Resour
 	aaauser_intranetip6_binding := aaa.Aaauserintranetip6binding{
 		Gotopriorityexpression: d.Get("gotopriorityexpression").(string),
 		Intranetip6:            d.Get("intranetip6").(string),
-		Numaddr:                d.Get("numaddr").(int),
 		Username:               d.Get("username").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("numaddr"); !raw.IsNull() {
+		aaauser_intranetip6_binding.Numaddr = intPtr(d.Get("numaddr").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Aaauser_intranetip6_binding.Type(), &aaauser_intranetip6_binding)

@@ -98,19 +98,30 @@ func createStreamidentifierFunc(ctx context.Context, d *schema.ResourceData, met
 	client := meta.(*NetScalerNitroClient).client
 	streamidentifierName := d.Get("name").(string)
 	streamidentifier := stream.Streamidentifier{
-		Acceptancethreshold:     d.Get("acceptancethreshold").(string),
-		Appflowlog:              d.Get("appflowlog").(string),
-		Breachthreshold:         d.Get("breachthreshold").(int),
-		Interval:                d.Get("interval").(int),
-		Maxtransactionthreshold: d.Get("maxtransactionthreshold").(int),
-		Mintransactionthreshold: d.Get("mintransactionthreshold").(int),
-		Name:                    d.Get("name").(string),
-		Samplecount:             d.Get("samplecount").(int),
-		Selectorname:            d.Get("selectorname").(string),
-		Snmptrap:                d.Get("snmptrap").(string),
-		Sort:                    d.Get("sort").(string),
-		Trackackonlypackets:     d.Get("trackackonlypackets").(string),
-		Tracktransactions:       d.Get("tracktransactions").(string),
+		Acceptancethreshold: d.Get("acceptancethreshold").(string),
+		Appflowlog:          d.Get("appflowlog").(string),
+		Name:                d.Get("name").(string),
+		Selectorname:        d.Get("selectorname").(string),
+		Snmptrap:            d.Get("snmptrap").(string),
+		Sort:                d.Get("sort").(string),
+		Trackackonlypackets: d.Get("trackackonlypackets").(string),
+		Tracktransactions:   d.Get("tracktransactions").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("breachthreshold"); !raw.IsNull() {
+		streamidentifier.Breachthreshold = intPtr(d.Get("breachthreshold").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("interval"); !raw.IsNull() {
+		streamidentifier.Interval = intPtr(d.Get("interval").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxtransactionthreshold"); !raw.IsNull() {
+		streamidentifier.Maxtransactionthreshold = intPtr(d.Get("maxtransactionthreshold").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("mintransactionthreshold"); !raw.IsNull() {
+		streamidentifier.Mintransactionthreshold = intPtr(d.Get("mintransactionthreshold").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("samplecount"); !raw.IsNull() {
+		streamidentifier.Samplecount = intPtr(d.Get("samplecount").(int))
 	}
 
 	_, err := client.AddResource(service.Streamidentifier.Type(), streamidentifierName, &streamidentifier)
@@ -173,27 +184,27 @@ func updateStreamidentifierFunc(ctx context.Context, d *schema.ResourceData, met
 	}
 	if d.HasChange("breachthreshold") {
 		log.Printf("[DEBUG]  citrixadc-provider: Breachthreshold has changed for streamidentifier %s, starting update", streamidentifierName)
-		streamidentifier.Breachthreshold = d.Get("breachthreshold").(int)
+		streamidentifier.Breachthreshold = intPtr(d.Get("breachthreshold").(int))
 		hasChange = true
 	}
 	if d.HasChange("interval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Interval has changed for streamidentifier %s, starting update", streamidentifierName)
-		streamidentifier.Interval = d.Get("interval").(int)
+		streamidentifier.Interval = intPtr(d.Get("interval").(int))
 		hasChange = true
 	}
 	if d.HasChange("maxtransactionthreshold") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxtransactionthreshold has changed for streamidentifier %s, starting update", streamidentifierName)
-		streamidentifier.Maxtransactionthreshold = d.Get("maxtransactionthreshold").(int)
+		streamidentifier.Maxtransactionthreshold = intPtr(d.Get("maxtransactionthreshold").(int))
 		hasChange = true
 	}
 	if d.HasChange("mintransactionthreshold") {
 		log.Printf("[DEBUG]  citrixadc-provider: Mintransactionthreshold has changed for streamidentifier %s, starting update", streamidentifierName)
-		streamidentifier.Mintransactionthreshold = d.Get("mintransactionthreshold").(int)
+		streamidentifier.Mintransactionthreshold = intPtr(d.Get("mintransactionthreshold").(int))
 		hasChange = true
 	}
 	if d.HasChange("samplecount") {
 		log.Printf("[DEBUG]  citrixadc-provider: Samplecount has changed for streamidentifier %s, starting update", streamidentifierName)
-		streamidentifier.Samplecount = d.Get("samplecount").(int)
+		streamidentifier.Samplecount = intPtr(d.Get("samplecount").(int))
 		hasChange = true
 	}
 	if d.HasChange("selectorname") {

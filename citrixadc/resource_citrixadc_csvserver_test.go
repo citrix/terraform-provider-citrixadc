@@ -273,7 +273,7 @@ func TestAccCsvserver_AssertNonUpdateableAttributes(t *testing.T) {
 		Ipv46:       "192.23.23.23",
 		Name:        vserverName,
 		Servicetype: "HTTP",
-		Port:        80,
+		Port:        intPtr(80),
 	}
 
 	if _, err := c.client.AddResource(vserverType, vserverName, vserverInstance); err != nil {
@@ -282,18 +282,13 @@ func TestAccCsvserver_AssertNonUpdateableAttributes(t *testing.T) {
 	}
 
 	// Set to zero values all immutables already defined
-	vserverInstance.Port = 0
+	vserverInstance.Port = intPtr(0)
 	vserverInstance.Servicetype = ""
 
 	//port
-	vserverInstance.Port = 88
+	vserverInstance.Port = intPtr(88)
 	testHelperVerifyImmutabilityFunc(c, t, vserverType, vserverName, vserverInstance, "port")
-	vserverInstance.Port = 0
-
-	//td
-	vserverInstance.Td = 1
-	testHelperVerifyImmutabilityFunc(c, t, vserverType, vserverName, vserverInstance, "td")
-	vserverInstance.Td = 0
+	vserverInstance.Port = intPtr(0)
 
 	//servicetype
 	vserverInstance.Servicetype = "TCP"
@@ -306,9 +301,14 @@ func TestAccCsvserver_AssertNonUpdateableAttributes(t *testing.T) {
 	vserverInstance.Targettype = ""
 
 	//range
-	vserverInstance.Range = 1
+	vserverInstance.Range = intPtr(1)
 	testHelperVerifyImmutabilityFunc(c, t, vserverType, vserverName, vserverInstance, "range")
-	vserverInstance.Range = 0
+	vserverInstance.Range = intPtr(0)
+
+	//td
+	vserverInstance.Td = intPtr(1)
+	testHelperVerifyImmutabilityFunc(c, t, vserverType, vserverName, vserverInstance, "td")
+	vserverInstance.Td = intPtr(0)
 }
 
 const testAccCsvserverEnableDisable_enabled = `

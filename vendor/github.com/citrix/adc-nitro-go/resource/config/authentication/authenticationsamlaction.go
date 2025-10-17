@@ -46,7 +46,7 @@ type Authenticationsamlaction struct {
 	/**
 	* Index/ID of the metadata entry corresponding to this configuration.
 	*/
-	Samlacsindex int `json:"samlacsindex,omitempty"`
+	Samlacsindex *int `json:"samlacsindex,omitempty"`
 	/**
 	* SAML user ID, as given in the SAML assertion.
 	*/
@@ -206,7 +206,7 @@ type Authenticationsamlaction struct {
 	/**
 	* Index/ID of the attribute specification at Identity Provider (IdP). IdP will locate attributes requested by SP using this index and send those attributes in Assertion
 	*/
-	Attributeconsumingserviceindex int `json:"attributeconsumingserviceindex,omitempty"`
+	Attributeconsumingserviceindex *int `json:"attributeconsumingserviceindex,omitempty"`
 	/**
 	* Option to send thumbprint instead of x509 certificate in SAML request
 	*/
@@ -226,7 +226,7 @@ type Authenticationsamlaction struct {
 	/**
 	* This option specifies the allowed clock skew in number of minutes that Citrix ADC ServiceProvider allows on an incoming assertion. For example, if skewTime is 10, then assertion would be valid from (current time - 10) min to (current time + 10) min, ie 20min in all.
 	*/
-	Skewtime int `json:"skewtime,omitempty"`
+	Skewtime *int `json:"skewtime,omitempty"`
 	/**
 	* This element specifies the transport mechanism of saml logout messages.
 	*/
@@ -246,7 +246,7 @@ type Authenticationsamlaction struct {
 	/**
 	* Interval in minutes for fetching metadata from specified metadata URL
 	*/
-	Metadatarefreshinterval int `json:"metadatarefreshinterval,omitempty"`
+	Metadatarefreshinterval *int `json:"metadatarefreshinterval,omitempty"`
 	/**
 	* Option to store entire SAML Response through the life of user session.
 	*/

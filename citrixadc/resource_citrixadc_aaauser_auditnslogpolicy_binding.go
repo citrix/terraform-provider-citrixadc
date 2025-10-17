@@ -62,9 +62,12 @@ func createAaauser_auditnslogpolicy_bindingFunc(ctx context.Context, d *schema.R
 	aaauser_auditnslogpolicy_binding := aaa.Aaauserauditnslogpolicybinding{
 		Gotopriorityexpression: d.Get("gotopriorityexpression").(string),
 		Policy:                 d.Get("policy").(string),
-		Priority:               d.Get("priority").(int),
 		Type:                   d.Get("type").(string),
 		Username:               d.Get("username").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		aaauser_auditnslogpolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Aaauser_auditnslogpolicy_binding.Type(), &aaauser_auditnslogpolicy_binding)

@@ -17,60 +17,12 @@ package citrixadc_framework
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-framework/providerserver"
-	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
-
-// testAccProtoV6ProviderFactories are used to instantiate a provider during
-// acceptance testing. The factory function will be invoked for every Terraform
-// CLI command executed to create a provider server to which the CLI can
-// reattach.
-var testAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
-	"citrixadc": providerserver.NewProtocol6WithError(New("test")()),
-}
-
-func testAccPreCheck(t *testing.T) {
-	// You can add any setup code here
-	if v := os.Getenv("NS_URL"); v == "" {
-		t.Fatal("NS_URL must be set for acceptance tests")
-	}
-}
-
-func testAccGetFrameworkClient() (*service.NitroClient, error) {
-	username := os.Getenv("NS_LOGIN")
-	if username == "" {
-		username = "nsroot"
-	}
-
-	password := os.Getenv("NS_PASSWORD")
-	if password == "" {
-		password = "nsroot"
-	}
-
-	endpoint := os.Getenv("NS_URL")
-	if endpoint == "" {
-		return nil, fmt.Errorf("NS_URL environment variable must be set")
-	}
-
-	params := service.NitroParams{
-		Url:      endpoint,
-		Username: username,
-		Password: password,
-	}
-
-	client, err := service.NewNitroClientFromParams(params)
-	if err != nil {
-		return nil, err
-	}
-
-	return client, nil
-}
 
 const testAccLbparameter_basic_step1 = `
 
@@ -131,12 +83,46 @@ func TestAccLbparameter_basic(t *testing.T) {
 				Config: testAccLbparameter_basic_step1,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLbparameterExist("citrixadc_lbparameter.tf_lbparameter", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbparameter.tf_lbparameter", "httponlycookieflag", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_lbparameter.tf_lbparameter", "useencryptedpersistencecookie", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_lbparameter.tf_lbparameter", "consolidatedlconn", "NO"),
+					resource.TestCheckResourceAttr("citrixadc_lbparameter.tf_lbparameter", "useportforhashlb", "NO"),
+					resource.TestCheckResourceAttr("citrixadc_lbparameter.tf_lbparameter", "preferdirectroute", "NO"),
+					resource.TestCheckResourceAttr("citrixadc_lbparameter.tf_lbparameter", "startuprrfactor", "10"),
+					resource.TestCheckResourceAttr("citrixadc_lbparameter.tf_lbparameter", "monitorskipmaxclient", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_lbparameter.tf_lbparameter", "monitorconnectionclose", "FIN"),
+					resource.TestCheckResourceAttr("citrixadc_lbparameter.tf_lbparameter", "vserverspecificmac", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_lbparameter.tf_lbparameter", "allowboundsvcremoval", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_lbparameter.tf_lbparameter", "retainservicestate", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_lbparameter.tf_lbparameter", "dbsttl", "0"),
+					resource.TestCheckResourceAttr("citrixadc_lbparameter.tf_lbparameter", "maxpipelinenat", "240"),
+					resource.TestCheckResourceAttr("citrixadc_lbparameter.tf_lbparameter", "storemqttclientidandusername", "NO"),
+					resource.TestCheckResourceAttr("citrixadc_lbparameter.tf_lbparameter", "dropmqttjumbomessage", "YES"),
+					resource.TestCheckResourceAttr("citrixadc_lbparameter.tf_lbparameter", "lbhashalgorithm", "JARH"),
+					resource.TestCheckResourceAttr("citrixadc_lbparameter.tf_lbparameter", "lbhashfingers", "512"),
 				),
 			},
 			{
 				Config: testAccLbparameter_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLbparameterExist("citrixadc_lbparameter.tf_lbparameter", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbparameter.tf_lbparameter", "httponlycookieflag", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_lbparameter.tf_lbparameter", "useencryptedpersistencecookie", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_lbparameter.tf_lbparameter", "consolidatedlconn", "YES"),
+					resource.TestCheckResourceAttr("citrixadc_lbparameter.tf_lbparameter", "useportforhashlb", "YES"),
+					resource.TestCheckResourceAttr("citrixadc_lbparameter.tf_lbparameter", "preferdirectroute", "YES"),
+					resource.TestCheckResourceAttr("citrixadc_lbparameter.tf_lbparameter", "startuprrfactor", "0"),
+					resource.TestCheckResourceAttr("citrixadc_lbparameter.tf_lbparameter", "monitorskipmaxclient", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_lbparameter.tf_lbparameter", "monitorconnectionclose", "FIN"),
+					resource.TestCheckResourceAttr("citrixadc_lbparameter.tf_lbparameter", "vserverspecificmac", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_lbparameter.tf_lbparameter", "allowboundsvcremoval", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_lbparameter.tf_lbparameter", "retainservicestate", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_lbparameter.tf_lbparameter", "dbsttl", "0"),
+					resource.TestCheckResourceAttr("citrixadc_lbparameter.tf_lbparameter", "maxpipelinenat", "255"),
+					resource.TestCheckResourceAttr("citrixadc_lbparameter.tf_lbparameter", "storemqttclientidandusername", "NO"),
+					resource.TestCheckResourceAttr("citrixadc_lbparameter.tf_lbparameter", "dropmqttjumbomessage", "YES"),
+					resource.TestCheckResourceAttr("citrixadc_lbparameter.tf_lbparameter", "lbhashalgorithm", "DEFAULT"),
+					resource.TestCheckResourceAttr("citrixadc_lbparameter.tf_lbparameter", "lbhashfingers", "256"),
 				),
 			},
 		},

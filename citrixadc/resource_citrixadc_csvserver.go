@@ -472,73 +472,104 @@ func createCsvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	csvserver := cs.Csvserver{
-		Name:                    csvserverName,
-		Appflowlog:              d.Get("appflowlog").(string),
-		Authentication:          d.Get("authentication").(string),
-		Authenticationhost:      d.Get("authenticationhost").(string),
-		Authn401:                d.Get("authn401").(string),
-		Authnprofile:            d.Get("authnprofile").(string),
-		Authnvsname:             d.Get("authnvsname").(string),
-		Backupip:                d.Get("backupip").(string),
-		Backupvserver:           d.Get("backupvserver").(string),
-		Cacheable:               d.Get("cacheable").(string),
-		Casesensitive:           d.Get("casesensitive").(string),
-		Clttimeout:              d.Get("clttimeout").(int),
-		Comment:                 d.Get("comment").(string),
-		Cookiedomain:            d.Get("cookiedomain").(string),
-		Cookietimeout:           d.Get("cookietimeout").(int),
-		Dbprofilename:           d.Get("dbprofilename").(string),
-		Disableprimaryondown:    d.Get("disableprimaryondown").(string),
-		Dnsprofilename:          d.Get("dnsprofilename").(string),
-		Dnsrecordtype:           d.Get("dnsrecordtype").(string),
-		Domainname:              d.Get("domainname").(string),
-		Downstateflush:          d.Get("downstateflush").(string),
-		Httpprofilename:         d.Get("httpprofilename").(string),
-		Httpsredirecturl:        d.Get("httpsredirecturl").(string),
-		Icmpvsrresponse:         d.Get("icmpvsrresponse").(string),
-		Insertvserveripport:     d.Get("insertvserveripport").(string),
-		Ipmask:                  d.Get("ipmask").(string),
-		Ippattern:               d.Get("ippattern").(string),
-		Ipset:                   d.Get("ipset").(string),
-		Ipv46:                   d.Get("ipv46").(string),
-		L2conn:                  d.Get("l2conn").(string),
-		Listenpolicy:            d.Get("listenpolicy").(string),
-		Listenpriority:          d.Get("listenpriority").(int),
-		Mssqlserverversion:      d.Get("mssqlserverversion").(string),
-		Mysqlcharacterset:       d.Get("mysqlcharacterset").(int),
-		Mysqlprotocolversion:    d.Get("mysqlprotocolversion").(int),
-		Mysqlservercapabilities: d.Get("mysqlservercapabilities").(int),
-		Mysqlserverversion:      d.Get("mysqlserverversion").(string),
-		Netprofile:              d.Get("netprofile").(string),
-		Oracleserverversion:     d.Get("oracleserverversion").(string),
-		Persistenceid:           d.Get("persistenceid").(int),
-		Persistencetype:         d.Get("persistencetype").(string),
-		Port:                    d.Get("port").(int),
-		Precedence:              d.Get("precedence").(string),
-		Push:                    d.Get("push").(string),
-		Pushlabel:               d.Get("pushlabel").(string),
-		Pushmulticlients:        d.Get("pushmulticlients").(string),
-		Pushvserver:             d.Get("pushvserver").(string),
-		Range:                   d.Get("range").(int),
-		Redirectportrewrite:     d.Get("redirectportrewrite").(string),
-		Redirectfromport:        d.Get("redirectfromport").(int),
-		Redirecturl:             d.Get("redirecturl").(string),
-		Rhistate:                d.Get("rhistate").(string),
-		Rtspnat:                 d.Get("rtspnat").(string),
-		Servicetype:             d.Get("servicetype").(string),
-		Sitedomainttl:           d.Get("sitedomainttl").(int),
-		Sobackupaction:          d.Get("sobackupaction").(string),
-		Somethod:                d.Get("somethod").(string),
-		Sopersistence:           d.Get("sopersistence").(string),
-		Sopersistencetimeout:    d.Get("sopersistencetimeout").(int),
-		Sothreshold:             d.Get("sothreshold").(int),
-		State:                   d.Get("state").(string),
-		Stateupdate:             d.Get("stateupdate").(string),
-		Targettype:              d.Get("targettype").(string),
-		Tcpprofilename:          d.Get("tcpprofilename").(string),
-		Td:                      d.Get("td").(int),
-		Ttl:                     d.Get("ttl").(int),
-		Vipheader:               d.Get("vipheader").(string),
+		Name:                 csvserverName,
+		Appflowlog:           d.Get("appflowlog").(string),
+		Authentication:       d.Get("authentication").(string),
+		Authenticationhost:   d.Get("authenticationhost").(string),
+		Authn401:             d.Get("authn401").(string),
+		Authnprofile:         d.Get("authnprofile").(string),
+		Authnvsname:          d.Get("authnvsname").(string),
+		Backupip:             d.Get("backupip").(string),
+		Backupvserver:        d.Get("backupvserver").(string),
+		Cacheable:            d.Get("cacheable").(string),
+		Casesensitive:        d.Get("casesensitive").(string),
+		Comment:              d.Get("comment").(string),
+		Cookiedomain:         d.Get("cookiedomain").(string),
+		Dbprofilename:        d.Get("dbprofilename").(string),
+		Disableprimaryondown: d.Get("disableprimaryondown").(string),
+		Dnsprofilename:       d.Get("dnsprofilename").(string),
+		Dnsrecordtype:        d.Get("dnsrecordtype").(string),
+		Domainname:           d.Get("domainname").(string),
+		Downstateflush:       d.Get("downstateflush").(string),
+		Httpprofilename:      d.Get("httpprofilename").(string),
+		Httpsredirecturl:     d.Get("httpsredirecturl").(string),
+		Icmpvsrresponse:      d.Get("icmpvsrresponse").(string),
+		Insertvserveripport:  d.Get("insertvserveripport").(string),
+		Ipmask:               d.Get("ipmask").(string),
+		Ippattern:            d.Get("ippattern").(string),
+		Ipset:                d.Get("ipset").(string),
+		Ipv46:                d.Get("ipv46").(string),
+		L2conn:               d.Get("l2conn").(string),
+		Listenpolicy:         d.Get("listenpolicy").(string),
+		Mssqlserverversion:   d.Get("mssqlserverversion").(string),
+		Mysqlserverversion:   d.Get("mysqlserverversion").(string),
+		Netprofile:           d.Get("netprofile").(string),
+		Oracleserverversion:  d.Get("oracleserverversion").(string),
+		Persistencetype:      d.Get("persistencetype").(string),
+		Precedence:           d.Get("precedence").(string),
+		Push:                 d.Get("push").(string),
+		Pushlabel:            d.Get("pushlabel").(string),
+		Pushmulticlients:     d.Get("pushmulticlients").(string),
+		Pushvserver:          d.Get("pushvserver").(string),
+		Redirectportrewrite:  d.Get("redirectportrewrite").(string),
+		Redirecturl:          d.Get("redirecturl").(string),
+		Rhistate:             d.Get("rhistate").(string),
+		Rtspnat:              d.Get("rtspnat").(string),
+		Servicetype:          d.Get("servicetype").(string),
+		Sobackupaction:       d.Get("sobackupaction").(string),
+		Somethod:             d.Get("somethod").(string),
+		Sopersistence:        d.Get("sopersistence").(string),
+		State:                d.Get("state").(string),
+		Stateupdate:          d.Get("stateupdate").(string),
+		Targettype:           d.Get("targettype").(string),
+		Tcpprofilename:       d.Get("tcpprofilename").(string),
+		Vipheader:            d.Get("vipheader").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("clttimeout"); !raw.IsNull() {
+		csvserver.Clttimeout = intPtr(d.Get("clttimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("cookietimeout"); !raw.IsNull() {
+		csvserver.Cookietimeout = intPtr(d.Get("cookietimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("listenpriority"); !raw.IsNull() {
+		csvserver.Listenpriority = intPtr(d.Get("listenpriority").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("mysqlcharacterset"); !raw.IsNull() {
+		csvserver.Mysqlcharacterset = intPtr(d.Get("mysqlcharacterset").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("mysqlprotocolversion"); !raw.IsNull() {
+		csvserver.Mysqlprotocolversion = intPtr(d.Get("mysqlprotocolversion").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("mysqlservercapabilities"); !raw.IsNull() {
+		csvserver.Mysqlservercapabilities = intPtr(d.Get("mysqlservercapabilities").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("persistenceid"); !raw.IsNull() {
+		csvserver.Persistenceid = intPtr(d.Get("persistenceid").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("port"); !raw.IsNull() {
+		csvserver.Port = intPtr(d.Get("port").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("range"); !raw.IsNull() {
+		csvserver.Range = intPtr(d.Get("range").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("redirectfromport"); !raw.IsNull() {
+		csvserver.Redirectfromport = intPtr(d.Get("redirectfromport").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("sitedomainttl"); !raw.IsNull() {
+		csvserver.Sitedomainttl = intPtr(d.Get("sitedomainttl").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("sopersistencetimeout"); !raw.IsNull() {
+		csvserver.Sopersistencetimeout = intPtr(d.Get("sopersistencetimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("sothreshold"); !raw.IsNull() {
+		csvserver.Sothreshold = intPtr(d.Get("sothreshold").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("td"); !raw.IsNull() {
+		csvserver.Td = intPtr(d.Get("td").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("ttl"); !raw.IsNull() {
+		csvserver.Ttl = intPtr(d.Get("ttl").(int))
 	}
 
 	_, err := client.AddResource(service.Csvserver.Type(), csvserverName, &csvserver)
@@ -809,7 +840,7 @@ func updateCsvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("clttimeout") {
 		log.Printf("[DEBUG] netscaler-provider:  Clttimeout has changed for csvserver %s, starting update", csvserverName)
-		csvserver.Clttimeout = d.Get("clttimeout").(int)
+		csvserver.Clttimeout = intPtr(d.Get("clttimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("comment") {
@@ -824,7 +855,7 @@ func updateCsvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("cookietimeout") {
 		log.Printf("[DEBUG]  netscaler-provider: Cookietimeout has changed for csvserver %s, starting update", csvserverName)
-		csvserver.Cookietimeout = d.Get("cookietimeout").(int)
+		csvserver.Cookietimeout = intPtr(d.Get("cookietimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("dbprofilename") {
@@ -909,7 +940,7 @@ func updateCsvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("listenpriority") {
 		log.Printf("[DEBUG] netscaler-provider:  Listenpriority has changed for csvserver %s, starting update", csvserverName)
-		csvserver.Listenpriority = d.Get("listenpriority").(int)
+		csvserver.Listenpriority = intPtr(d.Get("listenpriority").(int))
 		hasChange = true
 	}
 	if d.HasChange("mssqlserverversion") {
@@ -919,17 +950,17 @@ func updateCsvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("mysqlcharacterset") {
 		log.Printf("[DEBUG] netscaler-provider:  Mysqlcharacterset has changed for csvserver %s, starting update", csvserverName)
-		csvserver.Mysqlcharacterset = d.Get("mysqlcharacterset").(int)
+		csvserver.Mysqlcharacterset = intPtr(d.Get("mysqlcharacterset").(int))
 		hasChange = true
 	}
 	if d.HasChange("mysqlprotocolversion") {
 		log.Printf("[DEBUG] netscaler-provider:  Mysqlprotocolversion has changed for csvserver %s, starting update", csvserverName)
-		csvserver.Mysqlprotocolversion = d.Get("mysqlprotocolversion").(int)
+		csvserver.Mysqlprotocolversion = intPtr(d.Get("mysqlprotocolversion").(int))
 		hasChange = true
 	}
 	if d.HasChange("mysqlservercapabilities") {
 		log.Printf("[DEBUG] netscaler-provider:  Mysqlservercapabilities has changed for csvserver %s, starting update", csvserverName)
-		csvserver.Mysqlservercapabilities = d.Get("mysqlservercapabilities").(int)
+		csvserver.Mysqlservercapabilities = intPtr(d.Get("mysqlservercapabilities").(int))
 		hasChange = true
 	}
 	if d.HasChange("mysqlserverversion") {
@@ -954,7 +985,7 @@ func updateCsvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("persistenceid") {
 		log.Printf("[DEBUG]  netscaler-provider: Persistenceid has changed for csvserver %s, starting update", csvserverName)
-		csvserver.Persistenceid = d.Get("persistenceid").(int)
+		csvserver.Persistenceid = intPtr(d.Get("persistenceid").(int))
 		hasChange = true
 	}
 	if d.HasChange("persistencetype") {
@@ -964,7 +995,7 @@ func updateCsvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("port") {
 		log.Printf("[DEBUG] netscaler-provider:  Port has changed for csvserver %s, starting update", csvserverName)
-		csvserver.Port = d.Get("port").(int)
+		csvserver.Port = intPtr(d.Get("port").(int))
 		hasChange = true
 	}
 	if d.HasChange("precedence") {
@@ -994,7 +1025,7 @@ func updateCsvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("range") {
 		log.Printf("[DEBUG] netscaler-provider:  Range has changed for csvserver %s, starting update", csvserverName)
-		csvserver.Range = d.Get("range").(int)
+		csvserver.Range = intPtr(d.Get("range").(int))
 		hasChange = true
 	}
 	if d.HasChange("redirectportrewrite") {
@@ -1004,7 +1035,7 @@ func updateCsvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("redirectfromport") {
 		log.Printf("[DEBUG] netscaler-provider:  redirectfromport has changed for csvserver %s, starting update", csvserverName)
-		csvserver.Redirectfromport = d.Get("redirectfromport").(int)
+		csvserver.Redirectfromport = intPtr(d.Get("redirectfromport").(int))
 		hasChange = true
 	}
 	if d.HasChange("redirecturl") {
@@ -1029,7 +1060,7 @@ func updateCsvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("sitedomainttl") {
 		log.Printf("[DEBUG]  netscaler-provider: Sitedomainttl has changed for csvserver %s, starting update", csvserverName)
-		csvserver.Sitedomainttl = d.Get("sitedomainttl").(int)
+		csvserver.Sitedomainttl = intPtr(d.Get("sitedomainttl").(int))
 		hasChange = true
 	}
 	if d.HasChange("sobackupaction") {
@@ -1049,12 +1080,12 @@ func updateCsvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("sopersistencetimeout") {
 		log.Printf("[DEBUG] netscaler-provider:  Sopersistencetimeout has changed for csvserver %s, starting update", csvserverName)
-		csvserver.Sopersistencetimeout = d.Get("sopersistencetimeout").(int)
+		csvserver.Sopersistencetimeout = intPtr(d.Get("sopersistencetimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("sothreshold") {
 		log.Printf("[DEBUG] netscaler-provider:  Sothreshold has changed for csvserver %s, starting update", csvserverName)
-		csvserver.Sothreshold = d.Get("sothreshold").(int)
+		csvserver.Sothreshold = intPtr(d.Get("sothreshold").(int))
 		hasChange = true
 	}
 	if d.HasChange("state") {
@@ -1078,12 +1109,12 @@ func updateCsvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("td") {
 		log.Printf("[DEBUG] netscaler-provider:  Td has changed for csvserver %s, starting update", csvserverName)
-		csvserver.Td = d.Get("td").(int)
+		csvserver.Td = intPtr(d.Get("td").(int))
 		hasChange = true
 	}
 	if d.HasChange("ttl") {
 		log.Printf("[DEBUG]  netscaler-provider: Ttl has changed for csvserver %s, starting update", csvserverName)
-		csvserver.Ttl = d.Get("ttl").(int)
+		csvserver.Ttl = intPtr(d.Get("ttl").(int))
 		hasChange = true
 	}
 	if d.HasChange("vipheader") {

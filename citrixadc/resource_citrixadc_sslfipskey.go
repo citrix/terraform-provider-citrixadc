@@ -90,8 +90,11 @@ func createSslfipskeyFunc(ctx context.Context, d *schema.ResourceData, meta inte
 		Iv:          d.Get("iv").(string),
 		Key:         d.Get("key").(string),
 		Keytype:     d.Get("keytype").(string),
-		Modulus:     d.Get("modulus").(int),
 		Wrapkeyname: d.Get("wrapkeyname").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("modulus"); !raw.IsNull() {
+		sslfipskey.Modulus = intPtr(d.Get("modulus").(int))
 	}
 
 	err := client.ActOnResource(service.Sslfipskey.Type(), &sslfipskey, "create")

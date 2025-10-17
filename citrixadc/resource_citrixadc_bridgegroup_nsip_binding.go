@@ -67,11 +67,16 @@ func createBridgegroup_nsip_bindingFunc(ctx context.Context, d *schema.ResourceD
 	ipaddress := d.Get("ipaddress")
 	bindingId := fmt.Sprintf("%s,%s", bridgegroup_id, ipaddress)
 	bridgegroup_nsip_binding := network.Bridgegroupnsipbinding{
-		Id:         d.Get("bridgegroup_id").(int),
 		Ipaddress:  d.Get("ipaddress").(string),
 		Netmask:    d.Get("netmask").(string),
 		Ownergroup: d.Get("ownergroup").(string),
-		Td:         d.Get("td").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("bridgegroup_id"); !raw.IsNull() {
+		bridgegroup_nsip_binding.Id = intPtr(d.Get("bridgegroup_id").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("td"); !raw.IsNull() {
+		bridgegroup_nsip_binding.Td = intPtr(d.Get("td").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Bridgegroup_nsip_binding.Type(), &bridgegroup_nsip_binding)

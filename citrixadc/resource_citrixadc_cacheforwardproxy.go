@@ -2,15 +2,17 @@ package citrixadc
 
 import (
 	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/cache"
 
 	"github.com/citrix/adc-nitro-go/service"
 
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strconv"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcCacheforwardproxy() *schema.Resource {
@@ -44,7 +46,10 @@ func createCacheforwardproxyFunc(ctx context.Context, d *schema.ResourceData, me
 	cacheforwardproxyid := fmt.Sprintf("%s,%s", cacheforwardproxyName, strconv.Itoa(d.Get("port").(int)))
 	cacheforwardproxy := cache.Cacheforwardproxy{
 		Ipaddress: d.Get("ipaddress").(string),
-		Port:      d.Get("port").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("port"); !raw.IsNull() {
+		cacheforwardproxy.Port = intPtr(d.Get("port").(int))
 	}
 
 	_, err := client.AddResource(service.Cacheforwardproxy.Type(), cacheforwardproxyName, &cacheforwardproxy)

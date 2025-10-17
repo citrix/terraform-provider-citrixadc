@@ -82,13 +82,18 @@ func createSnmptrapFunc(ctx context.Context, d *schema.ResourceData, meta interf
 	snmptrap := snmp.Snmptrap{
 		Allpartitions:   d.Get("allpartitions").(string),
 		Communityname:   d.Get("communityname").(string),
-		Destport:        d.Get("destport").(int),
 		Severity:        d.Get("severity").(string),
 		Srcip:           d.Get("srcip").(string),
-		Td:              d.Get("td").(int),
 		Trapclass:       d.Get("trapclass").(string),
 		Trapdestination: d.Get("trapdestination").(string),
 		Version:         d.Get("version").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("destport"); !raw.IsNull() {
+		snmptrap.Destport = intPtr(d.Get("destport").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("td"); !raw.IsNull() {
+		snmptrap.Td = intPtr(d.Get("td").(int))
 	}
 
 	_, err := client.AddResource(service.Snmptrap.Type(), snmptrapId, &snmptrap)
@@ -200,7 +205,7 @@ func updateSnmptrapFunc(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 	if d.HasChange("destport") {
 		log.Printf("[DEBUG]  citrixadc-provider: Destport has changed for snmptrap %s, starting update", snmptrapId)
-		snmptrap.Destport = d.Get("destport").(int)
+		snmptrap.Destport = intPtr(d.Get("destport").(int))
 		hasChange = true
 	}
 	if d.HasChange("severity") {
@@ -215,7 +220,7 @@ func updateSnmptrapFunc(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 	if d.HasChange("td") {
 		log.Printf("[DEBUG]  citrixadc-provider: Td has changed for snmptrap %s, starting update", snmptrapId)
-		snmptrap.Td = d.Get("td").(int)
+		snmptrap.Td = intPtr(d.Get("td").(int))
 		hasChange = true
 	}
 

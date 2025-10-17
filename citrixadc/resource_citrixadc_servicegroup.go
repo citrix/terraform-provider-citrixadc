@@ -353,7 +353,6 @@ func createServicegroupFunc(ctx context.Context, d *schema.ResourceData, meta in
 
 	servicegroup := basic.Servicegroup{
 		Appflowlog:          d.Get("appflowlog").(string),
-		Autodisabledelay:    d.Get("autodisabledelay").(int),
 		Autodisablegraceful: d.Get("autodisablegraceful").(string),
 		Autoscale:           d.Get("autoscale").(string),
 		Cacheable:           d.Get("cacheable").(string),
@@ -361,43 +360,75 @@ func createServicegroupFunc(ctx context.Context, d *schema.ResourceData, meta in
 		Cip:                 d.Get("cip").(string),
 		Cipheader:           d.Get("cipheader").(string),
 		Cka:                 d.Get("cka").(string),
-		Clttimeout:          d.Get("clttimeout").(int),
 		Cmp:                 d.Get("cmp").(string),
 		Comment:             d.Get("comment").(string),
 		Customserverid:      d.Get("customserverid").(string),
-		Dbsttl:              d.Get("dbsttl").(int),
 		Downstateflush:      d.Get("downstateflush").(string),
-		Dupweight:           d.Get("dupweight").(int),
-		Hashid:              d.Get("hashid").(int),
 		Healthmonitor:       d.Get("healthmonitor").(string),
 		Httpprofilename:     d.Get("httpprofilename").(string),
 		Includemembers:      d.Get("includemembers").(bool),
-		Maxbandwidth:        d.Get("maxbandwidth").(int),
-		Maxclient:           d.Get("maxclient").(int),
-		Maxreq:              d.Get("maxreq").(int),
-		Memberport:          d.Get("memberport").(int),
 		Monconnectionclose:  d.Get("monconnectionclose").(string),
 		Monitornamesvc:      d.Get("monitornamesvc").(string),
-		Monthreshold:        d.Get("monthreshold").(int),
 		Nameserver:          d.Get("nameserver").(string),
 		Netprofile:          d.Get("netprofile").(string),
 		Pathmonitor:         d.Get("pathmonitor").(string),
 		Pathmonitorindv:     d.Get("pathmonitorindv").(string),
-		Port:                d.Get("port").(int),
 		Rtspsessionidremap:  d.Get("rtspsessionidremap").(string),
-		Serverid:            d.Get("serverid").(int),
 		Servername:          d.Get("servername").(string),
 		Servicegroupname:    d.Get("servicegroupname").(string),
 		Servicetype:         d.Get("servicetype").(string),
 		Sp:                  d.Get("sp").(string),
 		State:               d.Get("state").(string),
-		Svrtimeout:          d.Get("svrtimeout").(int),
 		Tcpb:                d.Get("tcpb").(string),
 		Tcpprofilename:      d.Get("tcpprofilename").(string),
-		Td:                  d.Get("td").(int),
 		Useproxyport:        d.Get("useproxyport").(string),
 		Usip:                d.Get("usip").(string),
-		Weight:              d.Get("weight").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("autodisabledelay"); !raw.IsNull() {
+		servicegroup.Autodisabledelay = intPtr(d.Get("autodisabledelay").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("clttimeout"); !raw.IsNull() {
+		servicegroup.Clttimeout = intPtr(d.Get("clttimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("dbsttl"); !raw.IsNull() {
+		servicegroup.Dbsttl = intPtr(d.Get("dbsttl").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("dupweight"); !raw.IsNull() {
+		servicegroup.Dupweight = intPtr(d.Get("dupweight").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("hashid"); !raw.IsNull() {
+		servicegroup.Hashid = intPtr(d.Get("hashid").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxbandwidth"); !raw.IsNull() {
+		servicegroup.Maxbandwidth = intPtr(d.Get("maxbandwidth").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxclient"); !raw.IsNull() {
+		servicegroup.Maxclient = intPtr(d.Get("maxclient").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxreq"); !raw.IsNull() {
+		servicegroup.Maxreq = intPtr(d.Get("maxreq").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("memberport"); !raw.IsNull() {
+		servicegroup.Memberport = intPtr(d.Get("memberport").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("monthreshold"); !raw.IsNull() {
+		servicegroup.Monthreshold = intPtr(d.Get("monthreshold").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("port"); !raw.IsNull() {
+		servicegroup.Port = intPtr(d.Get("port").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("serverid"); !raw.IsNull() {
+		servicegroup.Serverid = intPtr(d.Get("serverid").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("svrtimeout"); !raw.IsNull() {
+		servicegroup.Svrtimeout = intPtr(d.Get("svrtimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("td"); !raw.IsNull() {
+		servicegroup.Td = intPtr(d.Get("td").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("weight"); !raw.IsNull() {
+		servicegroup.Weight = intPtr(d.Get("weight").(int))
 	}
 
 	_, err := client.AddResource(service.Servicegroup.Type(), servicegroupName, &servicegroup)
@@ -478,18 +509,18 @@ func createServicegroupMemberBindings(client *service.NitroClient, servicegroupN
 			binding = basic.Servicegroupservicegroupmemberbinding{
 				Servicegroupname: servicegroupName,
 				Ip:               ip,
-				Port:             port,
+				Port:             intPtr(port),
 			}
 		} else {
 			binding = basic.Servicegroupservicegroupmemberbinding{
 				Servicegroupname: servicegroupName,
 				Servername:       servername,
-				Port:             port,
+				Port:             intPtr(port),
 			}
 		}
 
 		if weightFound {
-			binding.Weight = weight
+			binding.Weight = intPtr(weight)
 		}
 		log.Printf("[INFO] netscaler-provider:  Binding servicegroup %s to ip %s", servicegroupName, ip)
 		_, err = client.AddResource(service.Servicegroup_servicegroupmember_binding.Type(), servicegroupName, &binding)
@@ -729,7 +760,7 @@ func updateServicegroupFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("autodisabledelay") {
 		log.Printf("[DEBUG]  netscaler-provider: Autodisabledelay has changed for servicegroup %s, starting update", servicegroupName)
-		servicegroup.Autodisabledelay = d.Get("autodisabledelay").(int)
+		servicegroup.Autodisabledelay = intPtr(d.Get("autodisabledelay").(int))
 		hasChange = true
 	}
 	if d.HasChange("autodisablegraceful") {
@@ -770,7 +801,7 @@ func updateServicegroupFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("clttimeout") {
 		log.Printf("[DEBUG]  netscaler-provider: Clttimeout has changed for servicegroup %s, starting update", servicegroupName)
-		servicegroup.Clttimeout = d.Get("clttimeout").(int)
+		servicegroup.Clttimeout = intPtr(d.Get("clttimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("cmp") {
@@ -790,7 +821,7 @@ func updateServicegroupFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("dbsttl") {
 		log.Printf("[DEBUG]  netscaler-provider: Dbsttl has changed for servicegroup %s, starting update", servicegroupName)
-		servicegroup.Dbsttl = d.Get("dbsttl").(int)
+		servicegroup.Dbsttl = intPtr(d.Get("dbsttl").(int))
 		hasChange = true
 	}
 	if d.HasChange("downstateflush") {
@@ -800,12 +831,12 @@ func updateServicegroupFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("dupweight") {
 		log.Printf("[DEBUG]  netscaler-provider: Dupweight has changed for servicegroup %s, starting update", servicegroupName)
-		servicegroup.Dupweight = d.Get("dupweight").(int)
+		servicegroup.Dupweight = intPtr(d.Get("dupweight").(int))
 		hasChange = true
 	}
 	if d.HasChange("hashid") {
 		log.Printf("[DEBUG]  netscaler-provider: Hashid has changed for servicegroup %s, starting update", servicegroupName)
-		servicegroup.Hashid = d.Get("hashid").(int)
+		servicegroup.Hashid = intPtr(d.Get("hashid").(int))
 		hasChange = true
 	}
 	if d.HasChange("healthmonitor") {
@@ -825,22 +856,22 @@ func updateServicegroupFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("maxbandwidth") {
 		log.Printf("[DEBUG]  netscaler-provider: Maxbandwidth has changed for servicegroup %s, starting update", servicegroupName)
-		servicegroup.Maxbandwidth = d.Get("maxbandwidth").(int)
+		servicegroup.Maxbandwidth = intPtr(d.Get("maxbandwidth").(int))
 		hasChange = true
 	}
 	if d.HasChange("maxclient") {
 		log.Printf("[DEBUG]  netscaler-provider: Maxclient has changed for servicegroup %s, starting update", servicegroupName)
-		servicegroup.Maxclient = d.Get("maxclient").(int)
+		servicegroup.Maxclient = intPtr(d.Get("maxclient").(int))
 		hasChange = true
 	}
 	if d.HasChange("maxreq") {
 		log.Printf("[DEBUG]  netscaler-provider: Maxreq has changed for servicegroup %s, starting update", servicegroupName)
-		servicegroup.Maxreq = d.Get("maxreq").(int)
+		servicegroup.Maxreq = intPtr(d.Get("maxreq").(int))
 		hasChange = true
 	}
 	if d.HasChange("memberport") {
 		log.Printf("[DEBUG]  netscaler-provider: Memberport has changed for servicegroup %s, starting update", servicegroupName)
-		servicegroup.Memberport = d.Get("memberport").(int)
+		servicegroup.Memberport = intPtr(d.Get("memberport").(int))
 		hasChange = true
 	}
 	if d.HasChange("monconnectionclose") {
@@ -855,7 +886,7 @@ func updateServicegroupFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("monthreshold") {
 		log.Printf("[DEBUG]  netscaler-provider: Monthreshold has changed for servicegroup %s, starting update", servicegroupName)
-		servicegroup.Monthreshold = d.Get("monthreshold").(int)
+		servicegroup.Monthreshold = intPtr(d.Get("monthreshold").(int))
 		hasChange = true
 	}
 	if d.HasChange("nameserver") {
@@ -880,7 +911,7 @@ func updateServicegroupFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("port") {
 		log.Printf("[DEBUG]  netscaler-provider: Port has changed for servicegroup %s, starting update", servicegroupName)
-		servicegroup.Port = d.Get("port").(int)
+		servicegroup.Port = intPtr(d.Get("port").(int))
 		hasChange = true
 	}
 	if d.HasChange("rtspsessionidremap") {
@@ -890,7 +921,7 @@ func updateServicegroupFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("serverid") {
 		log.Printf("[DEBUG]  netscaler-provider: Serverid has changed for servicegroup %s, starting update", servicegroupName)
-		servicegroup.Serverid = d.Get("serverid").(int)
+		servicegroup.Serverid = intPtr(d.Get("serverid").(int))
 		hasChange = true
 	}
 	if d.HasChange("servername") {
@@ -919,7 +950,7 @@ func updateServicegroupFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("svrtimeout") {
 		log.Printf("[DEBUG]  netscaler-provider: Svrtimeout has changed for servicegroup %s, starting update", servicegroupName)
-		servicegroup.Svrtimeout = d.Get("svrtimeout").(int)
+		servicegroup.Svrtimeout = intPtr(d.Get("svrtimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("tcpb") {
@@ -934,7 +965,7 @@ func updateServicegroupFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("td") {
 		log.Printf("[DEBUG]  netscaler-provider: Td has changed for servicegroup %s, starting update", servicegroupName)
-		servicegroup.Td = d.Get("td").(int)
+		servicegroup.Td = intPtr(d.Get("td").(int))
 		hasChange = true
 	}
 	if d.HasChange("useproxyport") {
@@ -949,7 +980,7 @@ func updateServicegroupFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("weight") {
 		log.Printf("[DEBUG]  netscaler-provider: Weight has changed for servicegroup %s, starting update", servicegroupName)
-		servicegroup.Weight = d.Get("weight").(int)
+		servicegroup.Weight = intPtr(d.Get("weight").(int))
 		hasChange = true
 	}
 	if d.HasChange("lbvservers") {
@@ -1109,7 +1140,10 @@ func doServicegroupStateChange(d *schema.ResourceData, client *service.NitroClie
 	serviceGroup := basic.Servicegroup{
 		Servicegroupname: d.Get("servicegroupname").(string),
 		Servername:       d.Get("servername").(string),
-		Port:             d.Get("port").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("port"); !raw.IsNull() {
+		serviceGroup.Port = intPtr(d.Get("port").(int))
 	}
 
 	newstate := d.Get("state")
@@ -1122,7 +1156,7 @@ func doServicegroupStateChange(d *schema.ResourceData, client *service.NitroClie
 		}
 	} else if newstate == "DISABLED" {
 		// Add attributes relevant to the disable operation
-		serviceGroup.Delay = d.Get("delay").(int)
+		serviceGroup.Delay = intPtr(d.Get("delay").(int))
 		serviceGroup.Graceful = d.Get("graceful").(string)
 		err := client.ActOnResource(service.Servicegroup.Type(), serviceGroup, "disable")
 		if err != nil {

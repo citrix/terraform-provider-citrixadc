@@ -24,7 +24,7 @@ type Aaauservpnurlbinding struct {
 	* The intranet url.
 	*/
 	Urlname string `json:"urlname,omitempty"`
-	Acttype int `json:"acttype,omitempty"`
+	Acttype *int `json:"acttype,omitempty"`
 	/**
 	* User account to which to bind the policy.
 	*/

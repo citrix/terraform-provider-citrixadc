@@ -24,7 +24,7 @@ type Authorizationpolicyaaauserbinding struct {
 	* The entity name to which policy is bound
 	*/
 	Boundto string `json:"boundto,omitempty"`
-	Priority int `json:"priority,omitempty"`
+	Priority *int `json:"priority,omitempty"`
 	/**
 	* Name of the authorization policy.
 	*/

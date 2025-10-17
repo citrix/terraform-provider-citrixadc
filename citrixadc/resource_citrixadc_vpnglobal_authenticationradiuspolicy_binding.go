@@ -65,8 +65,11 @@ func createVpnglobal_authenticationradiuspolicy_bindingFunc(ctx context.Context,
 		Gotopriorityexpression: d.Get("gotopriorityexpression").(string),
 		Groupextraction:        d.Get("groupextraction").(bool),
 		Policyname:             d.Get("policyname").(string),
-		Priority:               d.Get("priority").(int),
 		Secondary:              d.Get("secondary").(bool),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		vpnglobal_authenticationradiuspolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Vpnglobal_authenticationradiuspolicy_binding.Type(), &vpnglobal_authenticationradiuspolicy_binding)

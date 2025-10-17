@@ -131,7 +131,7 @@ func updateInatparamFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("nat46v6mtu") {
 		log.Printf("[DEBUG]  citrixadc-provider: nat46v6mtu has changed for inatparam, starting update")
-		inatparam["nat46v6mtu"] = d.Get("nat46v6mtu").(int)
+		inatparam["nat46v6mtu"] = intPtr(d.Get("nat46v6mtu").(int))
 		hasChange = true
 	}
 	if d.HasChange("nat46v6prefix") {
@@ -146,7 +146,7 @@ func updateInatparamFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("td") {
 		log.Printf("[DEBUG]  citrixadc-provider: Td has changed for inatparam, starting update")
-		inatparam["td"] = d.Get("td").(int)
+		inatparam["td"] = intPtr(d.Get("td").(int))
 		hasChange = true
 	}
 

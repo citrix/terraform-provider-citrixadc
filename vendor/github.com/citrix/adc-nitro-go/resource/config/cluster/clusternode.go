@@ -23,7 +23,7 @@ type Clusternode struct {
 	/**
 	* Unique number that identifies the cluster node.
 	*/
-	Nodeid int `json:"nodeid"` // Zero is a valid value
+	Nodeid *int `json:"nodeid"` // Zero is a valid value
 	/**
 	* Citrix ADC IP (NSIP) address of the appliance to add to the cluster. Must be an IPv4 address.
 	*/
@@ -44,7 +44,7 @@ type Clusternode struct {
 		When the current configuration coordinator goes down, the node with the next lowest priority is made the new configuration coordinator. When the original node comes back up, it will preempt the new configuration coordinator and take over as the configuration coordinator.
 		Note: When priority is not configured for any of the nodes or if multiple nodes have the same priority, the cluster elects one of the nodes as the configuration coordinator.
 	*/
-	Priority int `json:"priority,omitempty"`
+	Priority *int `json:"priority,omitempty"`
 	/**
 	* The default node group in a Cluster system.
 	*/
@@ -52,7 +52,7 @@ type Clusternode struct {
 	/**
 	* Applicable for Passive node and node becomes passive after this timeout (in minutes)
 	*/
-	Delay int `json:"delay,omitempty"`
+	Delay *int `json:"delay,omitempty"`
 	/**
 	* To set the tunnel mode
 	*/

@@ -34,15 +34,15 @@ type Smppparam struct {
 	/**
 	* Maximum number of SMPP messages that can be queued. After the limit is reached, the Citrix ADC sends a deliver_sm_resp PDU, with an appropriate error message, to the message center.
 	*/
-	Msgqueuesize int `json:"msgqueuesize,omitempty"`
+	Msgqueuesize *int `json:"msgqueuesize,omitempty"`
 	/**
 	* Type of Number, such as an international number or a national number, used in the ESME address sent in the bind request.
 	*/
-	Addrton int `json:"addrton"` // Zero is a valid value
+	Addrton *int `json:"addrton"` // Zero is a valid value
 	/**
 	* Numbering Plan Indicator, such as landline, data, or WAP client, used in the ESME address sent in the bind request.
 	*/
-	Addrnpi int `json:"addrnpi"` // Zero is a valid value
+	Addrnpi *int `json:"addrnpi"` // Zero is a valid value
 	/**
 	* Set of SME addresses, sent in the bind request, serviced by the ESME.
 	*/

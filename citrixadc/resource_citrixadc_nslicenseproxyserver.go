@@ -53,9 +53,12 @@ func createNslicenseproxyserverFunc(ctx context.Context, d *schema.ResourceData,
 		nslicenseproxyserverName = v.(string)
 	}
 	nslicenseproxyserver := ns.Nslicenseproxyserver{
-		Port:       d.Get("port").(int),
 		Serverip:   d.Get("serverip").(string),
 		Servername: d.Get("servername").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("port"); !raw.IsNull() {
+		nslicenseproxyserver.Port = intPtr(d.Get("port").(int))
 	}
 
 	_, err := client.AddResource(service.Nslicenseproxyserver.Type(), nslicenseproxyserverName, &nslicenseproxyserver)
@@ -101,7 +104,7 @@ func updateNslicenseproxyserverFunc(ctx context.Context, d *schema.ResourceData,
 	hasChange := false
 	if d.HasChange("port") {
 		log.Printf("[DEBUG]  citrixadc-provider: Port has changed for nslicenseproxyserver %s, starting update", nslicenseproxyserverName)
-		nslicenseproxyserver.Port = d.Get("port").(int)
+		nslicenseproxyserver.Port = intPtr(d.Get("port").(int))
 		hasChange = true
 	}
 

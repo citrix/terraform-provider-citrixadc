@@ -17,27 +17,35 @@ package citrixadc
 
 import (
 	"fmt"
-	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"log"
 	"net/url"
 	"testing"
+
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccAppfwconfidfield_add = `
-	resource "citrixadc_appfwconfidfield" "tf_confidfield" {
+	resource "citrixadc_appfwconfidfield" "tf_confidfield1" {
 		fieldname = "tf_confidfield"
-		url       = "www.example.com/"
+		url       = "^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/document/content$"
+		isregex   = "REGEX"
+		comment   = "Testing"
+		state     = "DISABLED"
+	}
+	resource "citrixadc_appfwconfidfield" "tf_confidfield2" {
+		fieldname = "tf_confidfield"
+		url       = "^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/v1/resource/temp$"
 		isregex   = "REGEX"
 		comment   = "Testing"
 		state     = "DISABLED"
 	}
 `
 const testAccAppfwconfidfield_update = `
-	resource "citrixadc_appfwconfidfield" "tf_confidfield" {
+	resource "citrixadc_appfwconfidfield" "tf_confidfield1" {
 		fieldname = "tf_confidfield"
-		url       = "www.example.com/"
+		url       = "^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/document/content$"
 		isregex   = "REGEX"
 		comment   = "updated_Testing"
 		state     = "DISABLED"
@@ -53,17 +61,26 @@ func TestAccAppfwconfidfield_basic(t *testing.T) {
 			{
 				Config: testAccAppfwconfidfield_add,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppfwconfidfieldExist("citrixadc_appfwconfidfield.tf_confidfield", nil),
-					resource.TestCheckResourceAttr("citrixadc_appfwconfidfield.tf_confidfield", "fieldname", "tf_confidfield"),
-					resource.TestCheckResourceAttr("citrixadc_appfwconfidfield.tf_confidfield", "comment", "Testing"),
+					testAccCheckAppfwconfidfieldExist("citrixadc_appfwconfidfield.tf_confidfield1", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwconfidfield.tf_confidfield1", "fieldname", "tf_confidfield"),
+					resource.TestCheckResourceAttr("citrixadc_appfwconfidfield.tf_confidfield1", "comment", "Testing"),
+					resource.TestCheckResourceAttr("citrixadc_appfwconfidfield.tf_confidfield1", "url", "^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/document/content$"),
+					resource.TestCheckResourceAttr("citrixadc_appfwconfidfield.tf_confidfield1", "isregex", "REGEX"),
+					resource.TestCheckResourceAttr("citrixadc_appfwconfidfield.tf_confidfield1", "state", "DISABLED"),
+					testAccCheckAppfwconfidfieldExist("citrixadc_appfwconfidfield.tf_confidfield2", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwconfidfield.tf_confidfield2", "fieldname", "tf_confidfield"),
+					resource.TestCheckResourceAttr("citrixadc_appfwconfidfield.tf_confidfield2", "comment", "Testing"),
+					resource.TestCheckResourceAttr("citrixadc_appfwconfidfield.tf_confidfield2", "url", "^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/v1/resource/temp$"),
+					resource.TestCheckResourceAttr("citrixadc_appfwconfidfield.tf_confidfield2", "isregex", "REGEX"),
+					resource.TestCheckResourceAttr("citrixadc_appfwconfidfield.tf_confidfield2", "state", "DISABLED"),
 				),
 			},
 			{
 				Config: testAccAppfwconfidfield_update,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppfwconfidfieldExist("citrixadc_appfwconfidfield.tf_confidfield", nil),
-					resource.TestCheckResourceAttr("citrixadc_appfwconfidfield.tf_confidfield", "fieldname", "tf_confidfield"),
-					resource.TestCheckResourceAttr("citrixadc_appfwconfidfield.tf_confidfield", "comment", "updated_Testing"),
+					testAccCheckAppfwconfidfieldExist("citrixadc_appfwconfidfield.tf_confidfield1", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwconfidfield.tf_confidfield1", "fieldname", "tf_confidfield"),
+					resource.TestCheckResourceAttr("citrixadc_appfwconfidfield.tf_confidfield1", "comment", "updated_Testing"),
 				),
 			},
 		},

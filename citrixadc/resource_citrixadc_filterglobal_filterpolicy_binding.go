@@ -50,8 +50,11 @@ func createFilterglobal_filterpolicy_bindingFunc(ctx context.Context, d *schema.
 	policyname := d.Get("policyname").(string)
 	filterglobal_filterpolicy_binding := filter.Filterglobalfilterpolicybinding{
 		Policyname: d.Get("policyname").(string),
-		Priority:   d.Get("priority").(int),
 		State:      d.Get("state").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		filterglobal_filterpolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Filterglobal_filterpolicy_binding.Type(), &filterglobal_filterpolicy_binding)

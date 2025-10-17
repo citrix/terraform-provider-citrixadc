@@ -163,31 +163,48 @@ func createInterfaceFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	interfaceId := d.Get("interface_id").(string)
 
 	Interface := network.Interface{
-		Autoneg:         d.Get("autoneg").(string),
-		Bandwidthhigh:   d.Get("bandwidthhigh").(int),
-		Bandwidthnormal: d.Get("bandwidthnormal").(int),
-		Duplex:          d.Get("duplex").(string),
-		Flowctl:         d.Get("flowctl").(string),
-		Haheartbeat:     d.Get("haheartbeat").(string),
-		Hamonitor:       d.Get("hamonitor").(string),
-		Id:              d.Get("interface_id").(string),
-		Ifalias:         d.Get("ifalias").(string),
-		Lacpkey:         d.Get("lacpkey").(int),
-		Lacpmode:        d.Get("lacpmode").(string),
-		Lacppriority:    d.Get("lacppriority").(int),
-		Lacptimeout:     d.Get("lacptimeout").(string),
-		Lagtype:         d.Get("lagtype").(string),
-		Linkredundancy:  d.Get("linkredundancy").(string),
-		Lldpmode:        d.Get("lldpmode").(string),
-		Lrsetpriority:   d.Get("lrsetpriority").(int),
-		Mtu:             d.Get("mtu").(int),
-		Ringsize:        d.Get("ringsize").(int),
-		Ringtype:        d.Get("ringtype").(string),
-		Speed:           d.Get("speed").(string),
-		Tagall:          d.Get("tagall").(string),
-		Throughput:      d.Get("throughput").(int),
-		Trunk:           d.Get("trunk").(string),
-		Trunkmode:       d.Get("trunkmode").(string),
+		Autoneg:        d.Get("autoneg").(string),
+		Duplex:         d.Get("duplex").(string),
+		Flowctl:        d.Get("flowctl").(string),
+		Haheartbeat:    d.Get("haheartbeat").(string),
+		Hamonitor:      d.Get("hamonitor").(string),
+		Id:             d.Get("interface_id").(string),
+		Ifalias:        d.Get("ifalias").(string),
+		Lacpmode:       d.Get("lacpmode").(string),
+		Lacptimeout:    d.Get("lacptimeout").(string),
+		Lagtype:        d.Get("lagtype").(string),
+		Linkredundancy: d.Get("linkredundancy").(string),
+		Lldpmode:       d.Get("lldpmode").(string),
+		Ringtype:       d.Get("ringtype").(string),
+		Speed:          d.Get("speed").(string),
+		Tagall:         d.Get("tagall").(string),
+		Trunk:          d.Get("trunk").(string),
+		Trunkmode:      d.Get("trunkmode").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("bandwidthhigh"); !raw.IsNull() {
+		Interface.Bandwidthhigh = intPtr(d.Get("bandwidthhigh").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("bandwidthnormal"); !raw.IsNull() {
+		Interface.Bandwidthnormal = intPtr(d.Get("bandwidthnormal").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("lacpkey"); !raw.IsNull() {
+		Interface.Lacpkey = intPtr(d.Get("lacpkey").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("lacppriority"); !raw.IsNull() {
+		Interface.Lacppriority = intPtr(d.Get("lacppriority").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("lrsetpriority"); !raw.IsNull() {
+		Interface.Lrsetpriority = intPtr(d.Get("lrsetpriority").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("mtu"); !raw.IsNull() {
+		Interface.Mtu = intPtr(d.Get("mtu").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("ringsize"); !raw.IsNull() {
+		Interface.Ringsize = intPtr(d.Get("ringsize").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("throughput"); !raw.IsNull() {
+		Interface.Throughput = intPtr(d.Get("throughput").(int))
 	}
 
 	_, err := client.UpdateResource(service.Interface.Type(), "", &Interface)
@@ -274,12 +291,12 @@ func updateInterfaceFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("bandwidthhigh") {
 		log.Printf("[DEBUG]  citrixadc-provider: Bandwidthhigh has changed for Interface %s, starting update", interfaceId)
-		Interface.Bandwidthhigh = d.Get("bandwidthhigh").(int)
+		Interface.Bandwidthhigh = intPtr(d.Get("bandwidthhigh").(int))
 		hasChange = true
 	}
 	if d.HasChange("bandwidthnormal") {
 		log.Printf("[DEBUG]  citrixadc-provider: Bandwidthnormal has changed for Interface %s, starting update", interfaceId)
-		Interface.Bandwidthnormal = d.Get("bandwidthnormal").(int)
+		Interface.Bandwidthnormal = intPtr(d.Get("bandwidthnormal").(int))
 		hasChange = true
 	}
 	if d.HasChange("duplex") {
@@ -314,7 +331,7 @@ func updateInterfaceFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("lacpkey") {
 		log.Printf("[DEBUG]  citrixadc-provider: Lacpkey has changed for Interface %s, starting update", interfaceId)
-		Interface.Lacpkey = d.Get("lacpkey").(int)
+		Interface.Lacpkey = intPtr(d.Get("lacpkey").(int))
 		hasChange = true
 	}
 	if d.HasChange("lacpmode") {
@@ -324,7 +341,7 @@ func updateInterfaceFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("lacppriority") {
 		log.Printf("[DEBUG]  citrixadc-provider: Lacppriority has changed for Interface %s, starting update", interfaceId)
-		Interface.Lacppriority = d.Get("lacppriority").(int)
+		Interface.Lacppriority = intPtr(d.Get("lacppriority").(int))
 		hasChange = true
 	}
 	if d.HasChange("lacptimeout") {
@@ -349,17 +366,17 @@ func updateInterfaceFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("lrsetpriority") {
 		log.Printf("[DEBUG]  citrixadc-provider: Lrsetpriority has changed for Interface %s, starting update", interfaceId)
-		Interface.Lrsetpriority = d.Get("lrsetpriority").(int)
+		Interface.Lrsetpriority = intPtr(d.Get("lrsetpriority").(int))
 		hasChange = true
 	}
 	if d.HasChange("mtu") {
 		log.Printf("[DEBUG]  citrixadc-provider: Mtu has changed for Interface %s, starting update", interfaceId)
-		Interface.Mtu = d.Get("mtu").(int)
+		Interface.Mtu = intPtr(d.Get("mtu").(int))
 		hasChange = true
 	}
 	if d.HasChange("ringsize") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ringsize has changed for Interface %s, starting update", interfaceId)
-		Interface.Ringsize = d.Get("ringsize").(int)
+		Interface.Ringsize = intPtr(d.Get("ringsize").(int))
 		hasChange = true
 	}
 	if d.HasChange("ringtype") {
@@ -379,7 +396,7 @@ func updateInterfaceFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("throughput") {
 		log.Printf("[DEBUG]  citrixadc-provider: Throughput has changed for Interface %s, starting update", interfaceId)
-		Interface.Throughput = d.Get("throughput").(int)
+		Interface.Throughput = intPtr(d.Get("throughput").(int))
 		hasChange = true
 	}
 	if d.HasChange("trunk") {

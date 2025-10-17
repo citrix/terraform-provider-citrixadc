@@ -47,7 +47,10 @@ func createNspartition_vxlan_bindingFunc(ctx context.Context, d *schema.Resource
 	bindingId := fmt.Sprintf("%s,%s", partitionname, vxlan)
 	nspartition_vxlan_binding := ns.Nspartitionvxlanbinding{
 		Partitionname: d.Get("partitionname").(string),
-		Vxlan:         d.Get("vxlan").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("vxlan"); !raw.IsNull() {
+		nspartition_vxlan_binding.Vxlan = intPtr(d.Get("vxlan").(int))
 	}
 
 	err := client.UpdateUnnamedResource("nspartition_vxlan_binding", &nspartition_vxlan_binding)

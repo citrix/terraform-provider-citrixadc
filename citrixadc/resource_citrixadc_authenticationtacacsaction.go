@@ -188,13 +188,18 @@ func createAuthenticationtacacsactionFunc(ctx context.Context, d *schema.Resourc
 		Attributes:                 d.Get("attributes").(string),
 		Auditfailedcmds:            d.Get("auditfailedcmds").(string),
 		Authorization:              d.Get("authorization").(string),
-		Authtimeout:                d.Get("authtimeout").(int),
 		Defaultauthenticationgroup: d.Get("defaultauthenticationgroup").(string),
 		Groupattrname:              d.Get("groupattrname").(string),
 		Name:                       d.Get("name").(string),
 		Serverip:                   d.Get("serverip").(string),
-		Serverport:                 d.Get("serverport").(int),
 		Tacacssecret:               d.Get("tacacssecret").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("authtimeout"); !raw.IsNull() {
+		authenticationtacacsaction.Authtimeout = intPtr(d.Get("authtimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("serverport"); !raw.IsNull() {
+		authenticationtacacsaction.Serverport = intPtr(d.Get("serverport").(int))
 	}
 
 	_, err := client.AddResource(service.Authenticationtacacsaction.Type(), authenticationtacacsactionName, &authenticationtacacsaction)
@@ -361,7 +366,7 @@ func updateAuthenticationtacacsactionFunc(ctx context.Context, d *schema.Resourc
 	}
 	if d.HasChange("authtimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Authtimeout has changed for authenticationtacacsaction %s, starting update", authenticationtacacsactionName)
-		authenticationtacacsaction.Authtimeout = d.Get("authtimeout").(int)
+		authenticationtacacsaction.Authtimeout = intPtr(d.Get("authtimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("defaultauthenticationgroup") {
@@ -381,7 +386,7 @@ func updateAuthenticationtacacsactionFunc(ctx context.Context, d *schema.Resourc
 	}
 	if d.HasChange("serverport") {
 		log.Printf("[DEBUG]  citrixadc-provider: Serverport has changed for authenticationtacacsaction %s, starting update", authenticationtacacsactionName)
-		authenticationtacacsaction.Serverport = d.Get("serverport").(int)
+		authenticationtacacsaction.Serverport = intPtr(d.Get("serverport").(int))
 		hasChange = true
 	}
 	if d.HasChange("tacacssecret") {

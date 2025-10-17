@@ -87,7 +87,10 @@ func createLbvserver_videooptimizationdetectionpolicy_bindingFunc(ctx context.Co
 		Labeltype:              d.Get("labeltype").(string),
 		Name:                   lbvserverName,
 		Policyname:             policyName,
-		Priority:               d.Get("priority").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		lbvserver_videooptimizationdetectionpolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	_, err := client.AddResource("lbvserver_videooptimizationdetectionpolicy_binding", lbvserverName, &lbvserver_videooptimizationdetectionpolicy_binding)

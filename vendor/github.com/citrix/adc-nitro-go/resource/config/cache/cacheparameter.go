@@ -23,7 +23,7 @@ type Cacheparameter struct {
 	/**
 	* Amount of memory available for storing the cache objects. In practice, the amount of memory available for caching can be less than half the total memory of the Citrix ADC.
 	*/
-	Memlimit int `json:"memlimit,omitempty"`
+	Memlimit *int `json:"memlimit,omitempty"`
 	/**
 	* String to include in the Via header. A Via header is inserted into all responses served from a content group if its Insert Via flag is set.
 	*/
@@ -39,11 +39,11 @@ type Cacheparameter struct {
 	/**
 	* Maximum number of POST body bytes to consider when evaluating parameters for a content group for which you have configured hit parameters and invalidation parameters.
 	*/
-	Maxpostlen int `json:"maxpostlen"` // Zero is a valid value
+	Maxpostlen *int `json:"maxpostlen"` // Zero is a valid value
 	/**
 	* Maximum number of outstanding prefetches in the Integrated Cache.
 	*/
-	Prefetchmaxpending int `json:"prefetchmaxpending,omitempty"`
+	Prefetchmaxpending *int `json:"prefetchmaxpending,omitempty"`
 	/**
 	* Evaluate the request-time policies before attempting hit selection. If set to NO, an incoming request for which a matching object is found in cache storage results in a response regardless of the policy configuration.
 		If the request matches a policy with a NOCACHE action, the request bypasses all cache processing.

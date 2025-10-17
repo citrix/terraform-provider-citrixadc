@@ -39,11 +39,11 @@ type Authenticationvserver struct {
 	* If you are creating a series of virtual servers with a range of IP addresses assigned to them, the length of the range.
 		The new range of authentication virtual servers will have IP addresses consecutively numbered, starting with the primary address specified with the IP Address parameter.
 	*/
-	Range int `json:"range,omitempty"`
+	Range *int `json:"range,omitempty"`
 	/**
 	* TCP port on which the virtual server accepts connections.
 	*/
-	Port int `json:"port,omitempty"`
+	Port *int `json:"port,omitempty"`
 	/**
 	* Initial state of the new virtual server.
 	*/
@@ -63,7 +63,7 @@ type Authenticationvserver struct {
 	/**
 	* Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.
 	*/
-	Td int `json:"td,omitempty"`
+	Td *int `json:"td,omitempty"`
 	/**
 	* Log AppFlow flow information.
 	*/
@@ -71,11 +71,11 @@ type Authenticationvserver struct {
 	/**
 	* Maximum Number of login Attempts
 	*/
-	Maxloginattempts int `json:"maxloginattempts,omitempty"`
+	Maxloginattempts *int `json:"maxloginattempts,omitempty"`
 	/**
 	* Number of minutes an account will be locked if user exceeds maximum permissible attempts
 	*/
-	Failedlogintimeout int `json:"failedlogintimeout,omitempty"`
+	Failedlogintimeout *int `json:"failedlogintimeout,omitempty"`
 	/**
 	* Name of the certificate key that was bound to the corresponding SSL virtual server as the Certificate Authority for the device certificate
 	*/

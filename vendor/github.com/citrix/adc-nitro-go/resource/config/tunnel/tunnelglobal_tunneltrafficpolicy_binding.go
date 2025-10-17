@@ -27,7 +27,7 @@ type Tunnelglobaltunneltrafficpolicybinding struct {
 	/**
 	* Priority.
 	*/
-	Priority int `json:"priority,omitempty"`
+	Priority *int `json:"priority,omitempty"`
 	/**
 	* Current state of the binding. If the binding is enabled, the policy is active.
 	*/
@@ -47,7 +47,7 @@ type Tunnelglobaltunneltrafficpolicybinding struct {
 	/**
 	* The number of policies bound to the bindpoint.
 	*/
-	Numpol int `json:"numpol,omitempty"`
+	Numpol *int `json:"numpol,omitempty"`
 	/**
 	* Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 	*/

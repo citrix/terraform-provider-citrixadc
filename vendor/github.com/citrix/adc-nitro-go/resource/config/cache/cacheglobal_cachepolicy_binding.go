@@ -31,7 +31,7 @@ type Cacheglobalcachepolicybinding struct {
 	/**
 	* Specifies the priority of the policy.
 	*/
-	Priority int `json:"priority,omitempty"`
+	Priority *int `json:"priority,omitempty"`
 	/**
 	* Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 	*/
@@ -51,11 +51,11 @@ type Cacheglobalcachepolicybinding struct {
 	/**
 	* The number of policies bound to the bindpoint.
 	*/
-	Numpol int `json:"numpol,omitempty"`
+	Numpol *int `json:"numpol,omitempty"`
 	/**
 	* flowtype of the bound cache policy.
 	*/
-	Flowtype int `json:"flowtype,omitempty"`
+	Flowtype *int `json:"flowtype,omitempty"`
 	Globalbindtype string `json:"globalbindtype,omitempty"`
 	/**
 	* Specify whether this policy should be evaluated.

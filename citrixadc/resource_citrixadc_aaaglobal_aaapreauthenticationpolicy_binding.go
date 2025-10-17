@@ -2,13 +2,15 @@ package citrixadc
 
 import (
 	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/aaa"
 	"github.com/citrix/adc-nitro-go/service"
 
 	"fmt"
+	"log"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"log"
 )
 
 func resourceCitrixAdcAaaglobal_aaapreauthenticationpolicy_binding() *schema.Resource {
@@ -47,9 +49,12 @@ func createAaaglobal_aaapreauthenticationpolicy_bindingFunc(ctx context.Context,
 	client := meta.(*NetScalerNitroClient).client
 	policy := d.Get("policy").(string)
 	aaaglobal_aaapreauthenticationpolicy_binding := aaa.Aaaglobalaaapreauthenticationpolicybinding{
-		Builtin:  toStringList(d.Get("builtin").([]interface{})),
-		Policy:   d.Get("policy").(string),
-		Priority: d.Get("priority").(int),
+		Builtin: toStringList(d.Get("builtin").([]interface{})),
+		Policy:  d.Get("policy").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		aaaglobal_aaapreauthenticationpolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Aaaglobal_aaapreauthenticationpolicy_binding.Type(), &aaaglobal_aaapreauthenticationpolicy_binding)

@@ -45,7 +45,7 @@ type Appfwprofilejsondosurlbinding struct {
 	/**
 	* Maximum document length of JSON document, in bytes.
 	*/
-	Jsonmaxdocumentlength int `json:"jsonmaxdocumentlength,omitempty"`
+	Jsonmaxdocumentlength *int `json:"jsonmaxdocumentlength,omitempty"`
 	/**
 	* State if JSON Max depth check is ON or OFF.
 	*/
@@ -53,7 +53,7 @@ type Appfwprofilejsondosurlbinding struct {
 	/**
 	* Maximum allowed nesting depth  of JSON document. JSON allows one to nest the containers (object and array) in any order to any depth. This check protects against documents that have excessive depth of hierarchy.
 	*/
-	Jsonmaxcontainerdepth int `json:"jsonmaxcontainerdepth,omitempty"`
+	Jsonmaxcontainerdepth *int `json:"jsonmaxcontainerdepth,omitempty"`
 	/**
 	* State if JSON Max object key count check is ON or OFF.
 	*/
@@ -61,7 +61,7 @@ type Appfwprofilejsondosurlbinding struct {
 	/**
 	* Maximum key count in the any of JSON object. This check protects against objects that have large number of keys.
 	*/
-	Jsonmaxobjectkeycount int `json:"jsonmaxobjectkeycount,omitempty"`
+	Jsonmaxobjectkeycount *int `json:"jsonmaxobjectkeycount,omitempty"`
 	/**
 	* State if JSON Max object key length check is ON or OFF.
 	*/
@@ -69,7 +69,7 @@ type Appfwprofilejsondosurlbinding struct {
 	/**
 	* Maximum key length in the any of JSON object. This check protects against objects that have large keys.
 	*/
-	Jsonmaxobjectkeylength int `json:"jsonmaxobjectkeylength,omitempty"`
+	Jsonmaxobjectkeylength *int `json:"jsonmaxobjectkeylength,omitempty"`
 	/**
 	* State if JSON Max array value count check is ON or OFF.
 	*/
@@ -77,7 +77,7 @@ type Appfwprofilejsondosurlbinding struct {
 	/**
 	* Maximum array length in the any of JSON object. This check protects against arrays having large lengths.
 	*/
-	Jsonmaxarraylength int `json:"jsonmaxarraylength,omitempty"`
+	Jsonmaxarraylength *int `json:"jsonmaxarraylength,omitempty"`
 	/**
 	* State if JSON Max string value count check is ON or OFF.
 	*/
@@ -85,7 +85,7 @@ type Appfwprofilejsondosurlbinding struct {
 	/**
 	* Maximum string length in the JSON. This check protects against strings that have large length.
 	*/
-	Jsonmaxstringlength int `json:"jsonmaxstringlength,omitempty"`
+	Jsonmaxstringlength *int `json:"jsonmaxstringlength,omitempty"`
 	/**
 	* Enabled.
 	*/

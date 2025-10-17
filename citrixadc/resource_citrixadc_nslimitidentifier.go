@@ -75,14 +75,23 @@ func createNslimitidentifierFunc(ctx context.Context, d *schema.ResourceData, me
 	nslimitidentifierName := d.Get("limitidentifier").(string)
 
 	nslimitidentifier := ns.Nslimitidentifier{
-		Limitidentifier:  d.Get("limitidentifier").(string),
-		Limittype:        d.Get("limittype").(string),
-		Maxbandwidth:     d.Get("maxbandwidth").(int),
-		Mode:             d.Get("mode").(string),
-		Selectorname:     d.Get("selectorname").(string),
-		Threshold:        d.Get("threshold").(int),
-		Timeslice:        d.Get("timeslice").(int),
-		Trapsintimeslice: d.Get("trapsintimeslice").(int),
+		Limitidentifier: d.Get("limitidentifier").(string),
+		Limittype:       d.Get("limittype").(string),
+		Mode:            d.Get("mode").(string),
+		Selectorname:    d.Get("selectorname").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("maxbandwidth"); !raw.IsNull() {
+		nslimitidentifier.Maxbandwidth = intPtr(d.Get("maxbandwidth").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("threshold"); !raw.IsNull() {
+		nslimitidentifier.Threshold = intPtr(d.Get("threshold").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("timeslice"); !raw.IsNull() {
+		nslimitidentifier.Timeslice = intPtr(d.Get("timeslice").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("trapsintimeslice"); !raw.IsNull() {
+		nslimitidentifier.Trapsintimeslice = intPtr(d.Get("trapsintimeslice").(int))
 	}
 
 	_, err := client.AddResource(service.Nslimitidentifier.Type(), nslimitidentifierName, &nslimitidentifier)
@@ -135,7 +144,7 @@ func updateNslimitidentifierFunc(ctx context.Context, d *schema.ResourceData, me
 	}
 	if d.HasChange("maxbandwidth") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxbandwidth has changed for nslimitidentifier %s, starting update", nslimitidentifierName)
-		nslimitidentifier.Maxbandwidth = d.Get("maxbandwidth").(int)
+		nslimitidentifier.Maxbandwidth = intPtr(d.Get("maxbandwidth").(int))
 		hasChange = true
 	}
 	if d.HasChange("mode") {
@@ -150,17 +159,17 @@ func updateNslimitidentifierFunc(ctx context.Context, d *schema.ResourceData, me
 	}
 	if d.HasChange("threshold") {
 		log.Printf("[DEBUG]  citrixadc-provider: Threshold has changed for nslimitidentifier %s, starting update", nslimitidentifierName)
-		nslimitidentifier.Threshold = d.Get("threshold").(int)
+		nslimitidentifier.Threshold = intPtr(d.Get("threshold").(int))
 		hasChange = true
 	}
 	if d.HasChange("timeslice") {
 		log.Printf("[DEBUG]  citrixadc-provider: Timeslice has changed for nslimitidentifier %s, starting update", nslimitidentifierName)
-		nslimitidentifier.Timeslice = d.Get("timeslice").(int)
+		nslimitidentifier.Timeslice = intPtr(d.Get("timeslice").(int))
 		hasChange = true
 	}
 	if d.HasChange("trapsintimeslice") {
 		log.Printf("[DEBUG]  citrixadc-provider: Trapsintimeslice has changed for nslimitidentifier %s, starting update", nslimitidentifierName)
-		nslimitidentifier.Trapsintimeslice = d.Get("trapsintimeslice").(int)
+		nslimitidentifier.Trapsintimeslice = intPtr(d.Get("trapsintimeslice").(int))
 		hasChange = true
 	}
 

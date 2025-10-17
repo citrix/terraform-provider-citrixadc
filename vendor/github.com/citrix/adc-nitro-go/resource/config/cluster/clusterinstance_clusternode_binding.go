@@ -23,7 +23,7 @@ type Clusterinstanceclusternodebinding struct {
 	/**
 	* The unique number that identiies a cluster.
 	*/
-	Nodeid int `json:"nodeid,omitempty"`
+	Nodeid *int `json:"nodeid,omitempty"`
 	/**
 	* The IP Address of the node.
 	*/
@@ -71,7 +71,7 @@ type Clusterinstanceclusternodebinding struct {
 	/**
 	* Unique number that identifies the cluster.
 	*/
-	Clid int `json:"clid,omitempty"`
+	Clid *int `json:"clid,omitempty"`
 
 
 }

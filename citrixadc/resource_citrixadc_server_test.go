@@ -151,7 +151,7 @@ func TestAccServer_AssertNonUpdateableAttributes(t *testing.T) {
 		Domain:      "tfacc.domain.com",
 		Ipv6address: "YES",
 		Name:        serverName,
-		Td:          0,
+		Td:          intPtr(0),
 	}
 
 	if _, err := c.client.AddResource(serverType, serverName, serverInstance); err != nil {
@@ -162,9 +162,9 @@ func TestAccServer_AssertNonUpdateableAttributes(t *testing.T) {
 	// Verify immutability of argument td
 	serverInstance.Domain = ""
 	serverInstance.Ipv6address = ""
-	serverInstance.Td = 10
+	serverInstance.Td = intPtr(10)
 	testHelperVerifyImmutabilityFunc(c, t, serverType, serverName, serverInstance, "td")
-	serverInstance.Td = 0
+	serverInstance.Td = intPtr(0)
 
 	// Verify immutability of argument domain
 	serverInstance.Domain = "newdomain.com"
@@ -174,7 +174,7 @@ func TestAccServer_AssertNonUpdateableAttributes(t *testing.T) {
 
 	// Verify immutability of argument ipv6address
 	serverInstance.Ipv6address = "YES"
-	serverInstance.Td = 0
+	serverInstance.Td = intPtr(0)
 	testHelperVerifyImmutabilityFunc(c, t, serverType, serverName, serverInstance, "ipv6address")
 	serverInstance.Ipv6address = ""
 }

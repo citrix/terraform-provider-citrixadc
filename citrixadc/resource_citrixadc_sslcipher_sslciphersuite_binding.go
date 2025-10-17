@@ -70,9 +70,12 @@ func createSslcipher_sslciphersuite_bindingFunc(ctx context.Context, d *schema.R
 		Ciphergroupname: d.Get("ciphergroupname").(string),
 		Ciphername:      d.Get("ciphername").(string),
 		Cipheroperation: d.Get("cipheroperation").(string),
-		Cipherpriority:  d.Get("cipherpriority").(int),
 		Ciphgrpals:      d.Get("ciphgrpals").(string),
 		Description:     d.Get("description").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("cipherpriority"); !raw.IsNull() {
+		sslcipher_sslciphersuite_binding.Cipherpriority = intPtr(d.Get("cipherpriority").(int))
 	}
 
 	_, err := client.AddResource(service.Sslcipher_sslciphersuite_binding.Type(), bindingId, &sslcipher_sslciphersuite_binding)

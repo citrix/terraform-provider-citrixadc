@@ -86,7 +86,10 @@ func createLbvserver_auditsyslogpolicy_bindingFunc(ctx context.Context, d *schem
 		Labeltype:              d.Get("labeltype").(string),
 		Name:                   d.Get("name").(string),
 		Policyname:             d.Get("policyname").(string),
-		Priority:               d.Get("priority").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		lbvserver_auditsyslogpolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	_, err := client.AddResource(service.Lbvserver_auditsyslogpolicy_binding.Type(), bindingId, &lbvserver_auditsyslogpolicy_binding)

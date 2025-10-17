@@ -134,9 +134,7 @@ func createSystemparameterFunc(ctx context.Context, d *schema.ResourceData, meta
 		Forcepasswordchange:     d.Get("forcepasswordchange").(string),
 		Googleanalytics:         d.Get("googleanalytics").(string),
 		Localauth:               d.Get("localauth").(string),
-		Minpasswordlen:          d.Get("minpasswordlen").(int),
 		Maxclient:               d.Get("maxclient").(string),
-		Natpcbforceflushlimit:   d.Get("natpcbforceflushlimit").(int),
 		Natpcbrstontimeout:      d.Get("natpcbrstontimeout").(string),
 		Promptstring:            d.Get("promptstring").(string),
 		Rbaonresponse:           d.Get("rbaonresponse").(string),
@@ -144,8 +142,19 @@ func createSystemparameterFunc(ctx context.Context, d *schema.ResourceData, meta
 		Removesensitivefiles:    d.Get("removesensitivefiles").(string),
 		Restrictedtimeout:       d.Get("restrictedtimeout").(string),
 		Strongpassword:          d.Get("strongpassword").(string),
-		Timeout:                 d.Get("timeout").(int),
-		Totalauthtimeout:        d.Get("totalauthtimeout").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("minpasswordlen"); !raw.IsNull() {
+		systemparameter.Minpasswordlen = intPtr(d.Get("minpasswordlen").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("natpcbforceflushlimit"); !raw.IsNull() {
+		systemparameter.Natpcbforceflushlimit = intPtr(d.Get("natpcbforceflushlimit").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("timeout"); !raw.IsNull() {
+		systemparameter.Timeout = intPtr(d.Get("timeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("totalauthtimeout"); !raw.IsNull() {
+		systemparameter.Totalauthtimeout = intPtr(d.Get("totalauthtimeout").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Systemparameter.Type(), &systemparameter)
@@ -235,7 +244,7 @@ func updateSystemparameterFunc(ctx context.Context, d *schema.ResourceData, meta
 	}
 	if d.HasChange("minpasswordlen") {
 		log.Printf("[DEBUG]  citrixadc-provider: Minpasswordlen has changed for systemparameter, starting update")
-		systemparameter.Minpasswordlen = d.Get("minpasswordlen").(int)
+		systemparameter.Minpasswordlen = intPtr(d.Get("minpasswordlen").(int))
 		hasChange = true
 	}
 	if d.HasChange("maxclient") {
@@ -245,7 +254,7 @@ func updateSystemparameterFunc(ctx context.Context, d *schema.ResourceData, meta
 	}
 	if d.HasChange("natpcbforceflushlimit") {
 		log.Printf("[DEBUG]  citrixadc-provider: Natpcbforceflushlimit has changed for systemparameter, starting update")
-		systemparameter.Natpcbforceflushlimit = d.Get("natpcbforceflushlimit").(int)
+		systemparameter.Natpcbforceflushlimit = intPtr(d.Get("natpcbforceflushlimit").(int))
 		hasChange = true
 	}
 	if d.HasChange("natpcbrstontimeout") {
@@ -285,12 +294,12 @@ func updateSystemparameterFunc(ctx context.Context, d *schema.ResourceData, meta
 	}
 	if d.HasChange("timeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Timeout has changed for systemparameter, starting update")
-		systemparameter.Timeout = d.Get("timeout").(int)
+		systemparameter.Timeout = intPtr(d.Get("timeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("totalauthtimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Totalauthtimeout has changed for systemparameter, starting update")
-		systemparameter.Totalauthtimeout = d.Get("totalauthtimeout").(int)
+		systemparameter.Totalauthtimeout = intPtr(d.Get("totalauthtimeout").(int))
 		hasChange = true
 	}
 

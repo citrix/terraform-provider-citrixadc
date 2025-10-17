@@ -77,7 +77,10 @@ func createSystemglobal_authenticationtacacspolicy_bindingFunc(ctx context.Conte
 		Gotopriorityexpression: d.Get("gotopriorityexpression").(string),
 		Nextfactor:             d.Get("nextfactor").(string),
 		Policyname:             d.Get("policyname").(string),
-		Priority:               d.Get("priority").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		systemglobal_authenticationtacacspolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Systemglobal_authenticationtacacspolicy_binding.Type(), &systemglobal_authenticationtacacspolicy_binding)

@@ -58,10 +58,13 @@ func createSubscriberparamFunc(ctx context.Context, d *schema.ResourceData, meta
 
 	subscriberparam := subscriber.Subscriberparam{
 		Idleaction:           d.Get("idleaction").(string),
-		Idlettl:              d.Get("idlettl").(int),
 		Interfacetype:        d.Get("interfacetype").(string),
 		Ipv6prefixlookuplist: toIntegerList(d.Get("ipv6prefixlookuplist").([]interface{})),
 		Keytype:              d.Get("keytype").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("idlettl"); !raw.IsNull() {
+		subscriberparam.Idlettl = intPtr(d.Get("idlettl").(int))
 	}
 
 	err := client.UpdateUnnamedResource("subscriberparam", &subscriberparam)
@@ -107,7 +110,7 @@ func updateSubscriberparamFunc(ctx context.Context, d *schema.ResourceData, meta
 	}
 	if d.HasChange("idlettl") {
 		log.Printf("[DEBUG]  citrixadc-provider: Idlettl has changed for subscriberparam, starting update")
-		subscriberparam.Idlettl = d.Get("idlettl").(int)
+		subscriberparam.Idlettl = intPtr(d.Get("idlettl").(int))
 		hasChange = true
 	}
 	if d.HasChange("interfacetype") {

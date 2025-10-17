@@ -284,14 +284,19 @@ func createAuthenticationoauthactionFunc(ctx context.Context, d *schema.Resource
 		Name:                       d.Get("name").(string),
 		Oauthtype:                  d.Get("oauthtype").(string),
 		Pkce:                       d.Get("pkce").(string),
-		Refreshinterval:            d.Get("refreshinterval").(int),
 		Resourceuri:                d.Get("resourceuri").(string),
-		Skewtime:                   d.Get("skewtime").(int),
 		Tenantid:                   d.Get("tenantid").(string),
 		Tokenendpoint:              d.Get("tokenendpoint").(string),
 		Tokenendpointauthmethod:    d.Get("tokenendpointauthmethod").(string),
 		Userinfourl:                d.Get("userinfourl").(string),
 		Usernamefield:              d.Get("usernamefield").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("refreshinterval"); !raw.IsNull() {
+		authenticationoauthaction.Refreshinterval = intPtr(d.Get("refreshinterval").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("skewtime"); !raw.IsNull() {
+		authenticationoauthaction.Skewtime = intPtr(d.Get("skewtime").(int))
 	}
 
 	_, err := client.AddResource(service.Authenticationoauthaction.Type(), authenticationoauthactionName, &authenticationoauthaction)
@@ -545,7 +550,7 @@ func updateAuthenticationoauthactionFunc(ctx context.Context, d *schema.Resource
 	}
 	if d.HasChange("refreshinterval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Refreshinterval has changed for authenticationoauthaction %s, starting update", authenticationoauthactionName)
-		authenticationoauthaction.Refreshinterval = d.Get("refreshinterval").(int)
+		authenticationoauthaction.Refreshinterval = intPtr(d.Get("refreshinterval").(int))
 		hasChange = true
 	}
 	if d.HasChange("resourceuri") {
@@ -555,7 +560,7 @@ func updateAuthenticationoauthactionFunc(ctx context.Context, d *schema.Resource
 	}
 	if d.HasChange("skewtime") {
 		log.Printf("[DEBUG]  citrixadc-provider: Skewtime has changed for authenticationoauthaction %s, starting update", authenticationoauthactionName)
-		authenticationoauthaction.Skewtime = d.Get("skewtime").(int)
+		authenticationoauthaction.Skewtime = intPtr(d.Get("skewtime").(int))
 		hasChange = true
 	}
 	if d.HasChange("tenantid") {

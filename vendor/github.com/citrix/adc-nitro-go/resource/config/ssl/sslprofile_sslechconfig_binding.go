@@ -31,7 +31,7 @@ type Sslprofilesslechconfigbinding struct {
 	/**
 	* Priority of the cipher binding
 	*/
-	Cipherpriority int `json:"cipherpriority,omitempty"`
+	Cipherpriority *int `json:"cipherpriority,omitempty"`
 
 
 }

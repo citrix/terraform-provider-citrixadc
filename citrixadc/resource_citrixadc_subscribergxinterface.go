@@ -116,23 +116,42 @@ func createSubscribergxinterfaceFunc(ctx context.Context, d *schema.ResourceData
 	subscribergxinterfaceName := resource.PrefixedUniqueId("tf-subscribergxinterface-")
 
 	subscribergxinterface := subscriber.Subscribergxinterface{
-		Cerrequesttimeout:         d.Get("cerrequesttimeout").(int),
 		Healthcheck:               d.Get("healthcheck").(string),
-		Healthcheckttl:            d.Get("healthcheckttl").(int),
 		Holdonsubscriberabsence:   d.Get("holdonsubscriberabsence").(string),
-		Idlettl:                   d.Get("idlettl").(int),
-		Negativettl:               d.Get("negativettl").(int),
 		Negativettllimitedsuccess: d.Get("negativettllimitedsuccess").(string),
-		Nodeid:                    d.Get("nodeid").(int),
 		Pcrfrealm:                 d.Get("pcrfrealm").(string),
 		Purgesdbongxfailure:       d.Get("purgesdbongxfailure").(string),
-		Requestretryattempts:      d.Get("requestretryattempts").(int),
-		Requesttimeout:            d.Get("requesttimeout").(int),
-		Revalidationtimeout:       d.Get("revalidationtimeout").(int),
 		Service:                   d.Get("service").(string),
 		Servicepathavp:            toIntegerList(d.Get("servicepathavp").([]interface{})),
-		Servicepathvendorid:       d.Get("servicepathvendorid").(int),
 		Vserver:                   d.Get("vserver").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("cerrequesttimeout"); !raw.IsNull() {
+		subscribergxinterface.Cerrequesttimeout = intPtr(d.Get("cerrequesttimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("healthcheckttl"); !raw.IsNull() {
+		subscribergxinterface.Healthcheckttl = intPtr(d.Get("healthcheckttl").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("idlettl"); !raw.IsNull() {
+		subscribergxinterface.Idlettl = intPtr(d.Get("idlettl").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("negativettl"); !raw.IsNull() {
+		subscribergxinterface.Negativettl = intPtr(d.Get("negativettl").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("nodeid"); !raw.IsNull() {
+		subscribergxinterface.Nodeid = intPtr(d.Get("nodeid").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("requestretryattempts"); !raw.IsNull() {
+		subscribergxinterface.Requestretryattempts = intPtr(d.Get("requestretryattempts").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("requesttimeout"); !raw.IsNull() {
+		subscribergxinterface.Requesttimeout = intPtr(d.Get("requesttimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("revalidationtimeout"); !raw.IsNull() {
+		subscribergxinterface.Revalidationtimeout = intPtr(d.Get("revalidationtimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("servicepathvendorid"); !raw.IsNull() {
+		subscribergxinterface.Servicepathvendorid = intPtr(d.Get("servicepathvendorid").(int))
 	}
 
 	err := client.UpdateUnnamedResource("subscribergxinterface", &subscribergxinterface)
@@ -185,7 +204,7 @@ func updateSubscribergxinterfaceFunc(ctx context.Context, d *schema.ResourceData
 	hasChange := false
 	if d.HasChange("cerrequesttimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Cerrequesttimeout has changed for subscribergxinterface, starting update")
-		subscribergxinterface.Cerrequesttimeout = d.Get("cerrequesttimeout").(int)
+		subscribergxinterface.Cerrequesttimeout = intPtr(d.Get("cerrequesttimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("healthcheck") {
@@ -195,7 +214,7 @@ func updateSubscribergxinterfaceFunc(ctx context.Context, d *schema.ResourceData
 	}
 	if d.HasChange("healthcheckttl") {
 		log.Printf("[DEBUG]  citrixadc-provider: Healthcheckttl has changed for subscribergxinterface, starting update")
-		subscribergxinterface.Healthcheckttl = d.Get("healthcheckttl").(int)
+		subscribergxinterface.Healthcheckttl = intPtr(d.Get("healthcheckttl").(int))
 		hasChange = true
 	}
 	if d.HasChange("holdonsubscriberabsence") {
@@ -205,12 +224,12 @@ func updateSubscribergxinterfaceFunc(ctx context.Context, d *schema.ResourceData
 	}
 	if d.HasChange("idlettl") {
 		log.Printf("[DEBUG]  citrixadc-provider: Idlettl has changed for subscribergxinterface, starting update")
-		subscribergxinterface.Idlettl = d.Get("idlettl").(int)
+		subscribergxinterface.Idlettl = intPtr(d.Get("idlettl").(int))
 		hasChange = true
 	}
 	if d.HasChange("negativettl") {
 		log.Printf("[DEBUG]  citrixadc-provider: Negativettl has changed for subscribergxinterface, starting update")
-		subscribergxinterface.Negativettl = d.Get("negativettl").(int)
+		subscribergxinterface.Negativettl = intPtr(d.Get("negativettl").(int))
 		hasChange = true
 	}
 	if d.HasChange("negativettllimitedsuccess") {
@@ -220,7 +239,7 @@ func updateSubscribergxinterfaceFunc(ctx context.Context, d *schema.ResourceData
 	}
 	if d.HasChange("nodeid") {
 		log.Printf("[DEBUG]  citrixadc-provider: Nodeid has changed for subscribergxinterface, starting update")
-		subscribergxinterface.Nodeid = d.Get("nodeid").(int)
+		subscribergxinterface.Nodeid = intPtr(d.Get("nodeid").(int))
 		hasChange = true
 	}
 	if d.HasChange("pcrfrealm") {
@@ -235,17 +254,17 @@ func updateSubscribergxinterfaceFunc(ctx context.Context, d *schema.ResourceData
 	}
 	if d.HasChange("requestretryattempts") {
 		log.Printf("[DEBUG]  citrixadc-provider: Requestretryattempts has changed for subscribergxinterface, starting update")
-		subscribergxinterface.Requestretryattempts = d.Get("requestretryattempts").(int)
+		subscribergxinterface.Requestretryattempts = intPtr(d.Get("requestretryattempts").(int))
 		hasChange = true
 	}
 	if d.HasChange("requesttimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Requesttimeout has changed for subscribergxinterface, starting update")
-		subscribergxinterface.Requesttimeout = d.Get("requesttimeout").(int)
+		subscribergxinterface.Requesttimeout = intPtr(d.Get("requesttimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("revalidationtimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Revalidationtimeout has changed for subscribergxinterface, starting update")
-		subscribergxinterface.Revalidationtimeout = d.Get("revalidationtimeout").(int)
+		subscribergxinterface.Revalidationtimeout = intPtr(d.Get("revalidationtimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("service") {
@@ -260,7 +279,7 @@ func updateSubscribergxinterfaceFunc(ctx context.Context, d *schema.ResourceData
 	}
 	if d.HasChange("servicepathvendorid") {
 		log.Printf("[DEBUG]  citrixadc-provider: Servicepathvendorid has changed for subscribergxinterface, starting update")
-		subscribergxinterface.Servicepathvendorid = d.Get("servicepathvendorid").(int)
+		subscribergxinterface.Servicepathvendorid = intPtr(d.Get("servicepathvendorid").(int))
 		hasChange = true
 	}
 	if d.HasChange("vserver") {

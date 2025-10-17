@@ -31,7 +31,7 @@ type Authenticationprotecteduseraction struct {
 	/**
 	* Max number of concurrent users allowed.
 	*/
-	Maxconcurrentusers int `json:"maxconcurrentusers,omitempty"`
+	Maxconcurrentusers *int `json:"maxconcurrentusers,omitempty"`
 
 	//------- Read only Parameter ---------;
 

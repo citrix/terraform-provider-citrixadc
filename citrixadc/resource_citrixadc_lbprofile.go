@@ -103,7 +103,10 @@ func createLbprofileFunc(ctx context.Context, d *schema.ResourceData, meta inter
 		Computedadccookieattribute:    d.Get("computedadccookieattribute").(string),
 		Storemqttclientidandusername:  d.Get("storemqttclientidandusername").(string),
 		Lbhashalgorithm:               d.Get("lbhashalgorithm").(string),
-		Lbhashfingers:                 d.Get("lbhashfingers").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("lbhashfingers"); !raw.IsNull() {
+		lbprofile.Lbhashfingers = intPtr(d.Get("lbhashfingers").(int))
 	}
 
 	_, err := client.AddResource("lbprofile", lbprofileName, &lbprofile)
@@ -211,7 +214,7 @@ func updateLbprofileFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("lbhashfingers") {
 		log.Printf("[DEBUG]  citrixadc-provider: Lbhashfingers has changed for lbprofile %s, starting update", lbprofileName)
-		lbprofile.Lbhashfingers = d.Get("lbhashfingers").(int)
+		lbprofile.Lbhashfingers = intPtr(d.Get("lbhashfingers").(int))
 		hasChange = true
 	}
 

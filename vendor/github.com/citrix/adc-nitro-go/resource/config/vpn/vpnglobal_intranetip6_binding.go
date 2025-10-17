@@ -27,7 +27,7 @@ type Vpnglobalintranetip6binding struct {
 	/**
 	* The intranet ip address or range's netmask.
 	*/
-	Numaddr int `json:"numaddr,omitempty"`
+	Numaddr *int `json:"numaddr,omitempty"`
 	/**
 	* Applicable only to advance vpn session policy. An expression or other value specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 	*/

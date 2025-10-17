@@ -112,10 +112,7 @@ func createRouteFunc(ctx context.Context, d *schema.ResourceData, meta interface
 
 	route := network.Route{
 		Advertise:  d.Get("advertise").(string),
-		Cost:       d.Get("cost").(int),
-		Cost1:      d.Get("cost1").(int),
 		Detail:     d.Get("detail").(bool),
-		Distance:   d.Get("distance").(int),
 		Gateway:    d.Get("gateway").(string),
 		Monitor:    d.Get("monitor").(string),
 		Msr:        d.Get("msr").(string),
@@ -123,9 +120,25 @@ func createRouteFunc(ctx context.Context, d *schema.ResourceData, meta interface
 		Network:    d.Get("network").(string),
 		Ownergroup: d.Get("ownergroup").(string),
 		Routetype:  d.Get("routetype").(string),
-		Td:         d.Get("td").(int),
-		Vlan:       d.Get("vlan").(int),
-		Weight:     d.Get("weight").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("cost"); !raw.IsNull() {
+		route.Cost = intPtr(d.Get("cost").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("cost1"); !raw.IsNull() {
+		route.Cost1 = intPtr(d.Get("cost1").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("distance"); !raw.IsNull() {
+		route.Distance = intPtr(d.Get("distance").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("td"); !raw.IsNull() {
+		route.Td = intPtr(d.Get("td").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("vlan"); !raw.IsNull() {
+		route.Vlan = intPtr(d.Get("vlan").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("weight"); !raw.IsNull() {
+		route.Weight = intPtr(d.Get("weight").(int))
 	}
 
 	_, err := client.AddResource(service.Route.Type(), route.Network, &route)
@@ -230,12 +243,12 @@ func updateRouteFunc(ctx context.Context, d *schema.ResourceData, meta interface
 	}
 	if d.HasChange("cost") {
 		log.Printf("[DEBUG]  citrixadc-provider: Cost has changed for route %s, starting update", routeName)
-		route.Cost = d.Get("cost").(int)
+		route.Cost = intPtr(d.Get("cost").(int))
 		hasChange = true
 	}
 	if d.HasChange("cost1") {
 		log.Printf("[DEBUG]  citrixadc-provider: Cost1 has changed for route %s, starting update", routeName)
-		route.Cost1 = d.Get("cost1").(int)
+		route.Cost1 = intPtr(d.Get("cost1").(int))
 		hasChange = true
 	}
 	if d.HasChange("detail") {
@@ -245,7 +258,7 @@ func updateRouteFunc(ctx context.Context, d *schema.ResourceData, meta interface
 	}
 	if d.HasChange("distance") {
 		log.Printf("[DEBUG]  citrixadc-provider: Distance has changed for route %s, starting update", routeName)
-		route.Distance = d.Get("distance").(int)
+		route.Distance = intPtr(d.Get("distance").(int))
 		hasChange = true
 	}
 	if d.HasChange("gateway") {
@@ -285,17 +298,17 @@ func updateRouteFunc(ctx context.Context, d *schema.ResourceData, meta interface
 	}
 	if d.HasChange("td") {
 		log.Printf("[DEBUG]  citrixadc-provider: Td has changed for route %s, starting update", routeName)
-		route.Td = d.Get("td").(int)
+		route.Td = intPtr(d.Get("td").(int))
 		hasChange = true
 	}
 	if d.HasChange("vlan") {
 		log.Printf("[DEBUG]  citrixadc-provider: Vlan has changed for route %s, starting update", routeName)
-		route.Vlan = d.Get("vlan").(int)
+		route.Vlan = intPtr(d.Get("vlan").(int))
 		hasChange = true
 	}
 	if d.HasChange("weight") {
 		log.Printf("[DEBUG]  citrixadc-provider: Weight has changed for route %s, starting update", routeName)
-		route.Weight = d.Get("weight").(int)
+		route.Weight = intPtr(d.Get("weight").(int))
 		hasChange = true
 	}
 

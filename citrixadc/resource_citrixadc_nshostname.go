@@ -40,8 +40,11 @@ func createNshostnameFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	client := meta.(*NetScalerNitroClient).client
 	nshostnameName := resource.PrefixedUniqueId("tf-nshostname-")
 	nshostname := ns.Nshostname{
-		Hostname:  d.Get("hostname").(string),
-		Ownernode: d.Get("ownernode").(int),
+		Hostname: d.Get("hostname").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("ownernode"); !raw.IsNull() {
+		nshostname.Ownernode = intPtr(d.Get("ownernode").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Nshostname.Type(), &nshostname)
@@ -87,7 +90,7 @@ func updateNshostnameFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	if d.HasChange("ownernode") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ownernode has changed for nshostname, starting update")
-		nshostname.Ownernode = d.Get("ownernode").(int)
+		nshostname.Ownernode = intPtr(d.Get("ownernode").(int))
 		hasChange = true
 	}
 

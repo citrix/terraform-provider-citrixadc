@@ -45,8 +45,11 @@ func createAaagroupFunc(ctx context.Context, d *schema.ResourceData, meta interf
 	aaagroupName := d.Get("groupname").(string)
 	aaagroup := aaa.Aaagroup{
 		Groupname: d.Get("groupname").(string),
-		Weight:    d.Get("weight").(int),
 		Loggedin:  d.Get("loggedin").(bool),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("weight"); !raw.IsNull() {
+		aaagroup.Weight = intPtr(d.Get("weight").(int))
 	}
 
 	_, err := client.AddResource(service.Aaagroup.Type(), aaagroupName, &aaagroup)

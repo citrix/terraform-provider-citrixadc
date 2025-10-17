@@ -81,8 +81,11 @@ func createVpnvserver_authenticationnegotiatepolicy_bindingFunc(ctx context.Cont
 		Groupextraction:        d.Get("groupextraction").(bool),
 		Name:                   d.Get("name").(string),
 		Policy:                 d.Get("policy").(string),
-		Priority:               d.Get("priority").(int),
 		Secondary:              d.Get("secondary").(bool),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		vpnvserver_authenticationnegotiatepolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Vpnvserver_authenticationnegotiatepolicy_binding.Type(), &vpnvserver_authenticationnegotiatepolicy_binding)

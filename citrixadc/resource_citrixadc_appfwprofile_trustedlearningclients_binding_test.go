@@ -27,38 +27,19 @@ import (
 const testAccAppfwprofile_trustedlearningclients_binding_basic = `
 	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
 		name                     = "tf_appfwprofile"
-		bufferoverflowaction     = ["none"]
-		contenttypeaction        = ["none"]
-		cookieconsistencyaction  = ["none"]
-		creditcard               = ["none"]
-		creditcardaction         = ["none"]
-		crosssitescriptingaction = ["none"]
-		csrftagaction            = ["none"]
-		denyurlaction            = ["none"]
-		dynamiclearning          = ["none"]
-		fieldconsistencyaction   = ["none"]
-		fieldformataction        = ["none"]
-		fileuploadtypesaction    = ["none"]
-		inspectcontenttypes      = ["none"]
-		jsondosaction            = ["none"]
-		jsonsqlinjectionaction   = ["none"]
-		jsonxssaction            = ["none"]
-		multipleheaderaction     = ["none"]
-		sqlinjectionaction       = ["none"]
-		starturlaction           = ["none"]
 		type                     = ["HTML"]
-		xmlattachmentaction      = ["none"]
-		xmldosaction             = ["none"]
-		xmlformataction          = ["none"]
-		xmlsoapfaultaction       = ["none"]
-		xmlsqlinjectionaction    = ["none"]
-		xmlvalidationaction      = ["none"]
-		xmlwsiaction             = ["none"]
-		xmlxssaction             = ["none"]
 	}
-	resource "citrixadc_appfwprofile_trustedlearningclients_binding" "tf_binding" {
+	resource "citrixadc_appfwprofile_trustedlearningclients_binding" "tf_binding1" {
 		name                   = citrixadc_appfwprofile.tf_appfwprofile.name
 		trustedlearningclients = "1.2.31.1/32"
+		state                  = "ENABLED"
+		alertonly              = "ON"
+		isautodeployed         = "AUTODEPLOYED"
+		comment                = "Testing"
+	}
+	resource "citrixadc_appfwprofile_trustedlearningclients_binding" "tf_binding2" {
+		name                   = citrixadc_appfwprofile.tf_appfwprofile.name
+		trustedlearningclients = "1.2.31.2/32"
 		state                  = "ENABLED"
 		alertonly              = "ON"
 		isautodeployed         = "AUTODEPLOYED"
@@ -70,34 +51,7 @@ const testAccAppfwprofile_trustedlearningclients_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
 	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
 		name                     = "tf_appfwprofile"
-		bufferoverflowaction     = ["none"]
-		contenttypeaction        = ["none"]
-		cookieconsistencyaction  = ["none"]
-		creditcard               = ["none"]
-		creditcardaction         = ["none"]
-		crosssitescriptingaction = ["none"]
-		csrftagaction            = ["none"]
-		denyurlaction            = ["none"]
-		dynamiclearning          = ["none"]
-		fieldconsistencyaction   = ["none"]
-		fieldformataction        = ["none"]
-		fileuploadtypesaction    = ["none"]
-		inspectcontenttypes      = ["none"]
-		jsondosaction            = ["none"]
-		jsonsqlinjectionaction   = ["none"]
-		jsonxssaction            = ["none"]
-		multipleheaderaction     = ["none"]
-		sqlinjectionaction       = ["none"]
-		starturlaction           = ["none"]
 		type                     = ["HTML"]
-		xmlattachmentaction      = ["none"]
-		xmldosaction             = ["none"]
-		xmlformataction          = ["none"]
-		xmlsoapfaultaction       = ["none"]
-		xmlsqlinjectionaction    = ["none"]
-		xmlvalidationaction      = ["none"]
-		xmlwsiaction             = ["none"]
-		xmlxssaction             = ["none"]
 	}
 `
 
@@ -110,13 +64,27 @@ func TestAccAppfwprofile_trustedlearningclients_binding_basic(t *testing.T) {
 			{
 				Config: testAccAppfwprofile_trustedlearningclients_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppfwprofile_trustedlearningclients_bindingExist("citrixadc_appfwprofile_trustedlearningclients_binding.tf_binding", nil),
+					testAccCheckAppfwprofile_trustedlearningclients_bindingExist("citrixadc_appfwprofile_trustedlearningclients_binding.tf_binding1", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_trustedlearningclients_binding.tf_binding1", "name", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_trustedlearningclients_binding.tf_binding1", "trustedlearningclients", "1.2.31.1/32"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_trustedlearningclients_binding.tf_binding1", "state", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_trustedlearningclients_binding.tf_binding1", "alertonly", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_trustedlearningclients_binding.tf_binding1", "isautodeployed", "AUTODEPLOYED"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_trustedlearningclients_binding.tf_binding1", "comment", "Testing"),
+					testAccCheckAppfwprofile_trustedlearningclients_bindingExist("citrixadc_appfwprofile_trustedlearningclients_binding.tf_binding2", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_trustedlearningclients_binding.tf_binding2", "name", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_trustedlearningclients_binding.tf_binding2", "trustedlearningclients", "1.2.31.2/32"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_trustedlearningclients_binding.tf_binding2", "state", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_trustedlearningclients_binding.tf_binding2", "alertonly", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_trustedlearningclients_binding.tf_binding2", "isautodeployed", "AUTODEPLOYED"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_trustedlearningclients_binding.tf_binding2", "comment", "Testing"),
 				),
 			},
 			{
 				Config: testAccAppfwprofile_trustedlearningclients_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppfwprofile_trustedlearningclients_bindingNotExist("citrixadc_appfwprofile_trustedlearningclients_binding.tf_binding", "tf_appfwprofile,1.2.31.1/32"),
+					testAccCheckAppfwprofile_trustedlearningclients_bindingNotExist("citrixadc_appfwprofile_trustedlearningclients_binding.tf_binding1", "tf_appfwprofile,1.2.31.1/32"),
+					testAccCheckAppfwprofile_trustedlearningclients_bindingNotExist("citrixadc_appfwprofile_trustedlearningclients_binding.tf_binding2", "tf_appfwprofile,1.2.31.2/32"),
 				),
 			},
 		},

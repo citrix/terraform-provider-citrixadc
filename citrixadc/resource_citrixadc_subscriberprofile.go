@@ -69,7 +69,10 @@ func createSubscriberprofileFunc(ctx context.Context, d *schema.ResourceData, me
 		Subscriberrules:     toStringList(d.Get("subscriberrules").([]interface{})),
 		Subscriptionidtype:  d.Get("subscriptionidtype").(string),
 		Subscriptionidvalue: d.Get("subscriptionidvalue").(string),
-		Vlan:                d.Get("vlan").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("vlan"); !raw.IsNull() {
+		subscriberprofile.Vlan = intPtr(d.Get("vlan").(int))
 	}
 
 	_, err := client.AddResource("subscriberprofile", subscriberprofileName, &subscriberprofile)
@@ -164,7 +167,7 @@ func updateSubscriberprofileFunc(ctx context.Context, d *schema.ResourceData, me
 	}
 	if d.HasChange("vlan") {
 		log.Printf("[DEBUG]  citrixadc-provider: Vlan has changed for subscriberprofile %s, starting update", subscriberprofileName)
-		subscriberprofile.Vlan = d.Get("vlan").(int)
+		subscriberprofile.Vlan = intPtr(d.Get("vlan").(int))
 		hasChange = true
 	}
 

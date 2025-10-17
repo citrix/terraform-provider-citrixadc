@@ -199,7 +199,7 @@ func TestAccGslbservice_AssertNonUpdateableAttributes(t *testing.T) {
 		Sitename:    siteName,
 		Servername:  serverName,
 		Servicetype: "HTTP",
-		Port:        8080,
+		Port:        intPtr(8080),
 	}
 
 	if _, err := c.client.AddResource(serviceType, serviceName, serviceInstance); err != nil {
@@ -210,7 +210,7 @@ func TestAccGslbservice_AssertNonUpdateableAttributes(t *testing.T) {
 	// Zero out fields in present service instance
 	serviceInstance.Servername = ""
 	serviceInstance.Servicetype = ""
-	serviceInstance.Port = 0
+	serviceInstance.Port = intPtr(0)
 	serviceInstance.Sitename = ""
 
 	//cnameentry
@@ -234,9 +234,9 @@ func TestAccGslbservice_AssertNonUpdateableAttributes(t *testing.T) {
 	serviceInstance.Servicetype = ""
 
 	//port
-	serviceInstance.Port = 9999
+	serviceInstance.Port = intPtr(9999)
 	testHelperVerifyImmutabilityFunc(c, t, serviceType, serviceName, serviceInstance, "port")
-	serviceInstance.Port = 0
+	serviceInstance.Port = intPtr(0)
 
 	//sitename
 	serviceInstance.Sitename = "other_site_name"
@@ -244,19 +244,19 @@ func TestAccGslbservice_AssertNonUpdateableAttributes(t *testing.T) {
 	serviceInstance.Sitename = ""
 
 	//cookietimeout
-	serviceInstance.Cookietimeout = 10
+	serviceInstance.Cookietimeout = intPtr(10)
 	testHelperVerifyImmutabilityFunc(c, t, serviceType, serviceName, serviceInstance, "cookietimeout")
-	serviceInstance.Cookietimeout = 0
+	serviceInstance.Cookietimeout = intPtr(0)
 
 	//clttimeout
-	serviceInstance.Clttimeout = 10
+	serviceInstance.Clttimeout = intPtr(10)
 	testHelperVerifyImmutabilityFunc(c, t, serviceType, serviceName, serviceInstance, "clttimeout")
-	serviceInstance.Clttimeout = 0
+	serviceInstance.Clttimeout = intPtr(0)
 
 	//svrtimeout
-	serviceInstance.Svrtimeout = 10
+	serviceInstance.Svrtimeout = intPtr(10)
 	testHelperVerifyImmutabilityFunc(c, t, serviceType, serviceName, serviceInstance, "svrtimeout")
-	serviceInstance.Svrtimeout = 0
+	serviceInstance.Svrtimeout = intPtr(0)
 }
 
 const testAccGslbserviceEnableDisable_enabled = `

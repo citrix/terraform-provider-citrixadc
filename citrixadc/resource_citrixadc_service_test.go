@@ -155,7 +155,7 @@ func TestAccService_AssertNonUpdateableAttributes(t *testing.T) {
 
 	serviceInstance := basic.Service{
 		Name:        serviceName,
-		Port:        80,
+		Port:        intPtr(80),
 		Ip:          "10.202.22.12",
 		Servicetype: "HTTP",
 	}
@@ -166,7 +166,7 @@ func TestAccService_AssertNonUpdateableAttributes(t *testing.T) {
 	}
 
 	// Zero out immutable members
-	serviceInstance.Port = 0
+	serviceInstance.Port = intPtr(0)
 	serviceInstance.Ip = ""
 	serviceInstance.Servicetype = ""
 
@@ -185,15 +185,26 @@ func TestAccService_AssertNonUpdateableAttributes(t *testing.T) {
 	testHelperVerifyImmutabilityFunc(c, t, serviceType, serviceName, serviceInstance, "servicetype")
 	serviceInstance.Servicetype = ""
 
+	serviceInstance = basic.Service{
+		Name: serviceName,
+	}
+
 	//port
-	serviceInstance.Port = 88
+	serviceInstance.Port = intPtr(88)
 	testHelperVerifyImmutabilityFunc(c, t, serviceType, serviceName, serviceInstance, "port")
-	serviceInstance.Port = 0
+
+	serviceInstance = basic.Service{
+		Name: serviceName,
+	}
 
 	//cleartextport
-	serviceInstance.Cleartextport = 98
+	serviceInstance.Cleartextport = intPtr(98)
 	testHelperVerifyImmutabilityFunc(c, t, serviceType, serviceName, serviceInstance, "cleartextport")
-	serviceInstance.Cleartextport = 0
+	serviceInstance.Cleartextport = intPtr(0)
+
+	serviceInstance = basic.Service{
+		Name: serviceName,
+	}
 
 	//cachetype
 	serviceInstance.Cachetype = "TRANSPARENT"
@@ -201,9 +212,9 @@ func TestAccService_AssertNonUpdateableAttributes(t *testing.T) {
 	serviceInstance.Cachetype = ""
 
 	//td
-	serviceInstance.Td = 2
+	serviceInstance.Td = intPtr(2)
 	testHelperVerifyImmutabilityFunc(c, t, serviceType, serviceName, serviceInstance, "td")
-	serviceInstance.Td = 0
+	serviceInstance.Td = intPtr(0)
 
 }
 

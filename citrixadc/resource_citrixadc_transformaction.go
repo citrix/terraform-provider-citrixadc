@@ -91,9 +91,12 @@ func createTransformactionFunc(ctx context.Context, d *schema.ResourceData, meta
 	// Create does not support all attributes
 	transformactionNew := transform.Transformaction{
 		Name:        d.Get("name").(string),
-		Priority:    d.Get("priority").(int),
 		Profilename: d.Get("profilename").(string),
 		State:       d.Get("state").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		transformactionNew.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	_, err := client.AddResource(service.Transformaction.Type(), transformactionName, &transformactionNew)
@@ -107,12 +110,15 @@ func createTransformactionFunc(ctx context.Context, d *schema.ResourceData, meta
 		Cookiedomainfrom: d.Get("cookiedomainfrom").(string),
 		Cookiedomaininto: d.Get("cookiedomaininto").(string),
 		Name:             d.Get("name").(string),
-		Priority:         d.Get("priority").(int),
 		Requrlfrom:       d.Get("requrlfrom").(string),
 		Requrlinto:       d.Get("requrlinto").(string),
 		Resurlfrom:       d.Get("resurlfrom").(string),
 		Resurlinto:       d.Get("resurlinto").(string),
 		State:            d.Get("state").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		transformaction.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	_, err = client.UpdateResource(service.Transformaction.Type(), transformactionName, &transformaction)
@@ -184,7 +190,7 @@ func updateTransformactionFunc(ctx context.Context, d *schema.ResourceData, meta
 	}
 	if d.HasChange("priority") {
 		log.Printf("[DEBUG]  citrixadc-provider: Priority has changed for transformaction %s, starting update", transformactionName)
-		transformaction.Priority = d.Get("priority").(int)
+		transformaction.Priority = intPtr(d.Get("priority").(int))
 		hasChange = true
 	}
 	if d.HasChange("profilename") {

@@ -23,7 +23,7 @@ type Tmsessionparameter struct {
 	/**
 	* Session timeout, in minutes. If there is no traffic during the timeout period, the user is disconnected and must reauthenticate to access the intranet resources.
 	*/
-	Sesstimeout int `json:"sesstimeout,omitempty"`
+	Sesstimeout *int `json:"sesstimeout,omitempty"`
 	/**
 	* Allow or deny access to content for which there is no specific authorization policy.
 	*/
@@ -55,7 +55,7 @@ type Tmsessionparameter struct {
 	/**
 	* Integer specifying the number of minutes for which the persistent cookie remains valid. Can be set only if the persistence cookie setting is enabled.
 	*/
-	Persistentcookievalidity int `json:"persistentcookievalidity,omitempty"`
+	Persistentcookievalidity *int `json:"persistentcookievalidity,omitempty"`
 	/**
 	* Web address of the home page that a user is displayed when authentication vserver is bookmarked and used to login.
 	*/

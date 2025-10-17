@@ -95,8 +95,11 @@ func createCrvserver_appqoepolicy_bindingFunc(ctx context.Context, d *schema.Res
 		Labeltype:              d.Get("labeltype").(string),
 		Name:                   name.(string),
 		Policyname:             policyname.(string),
-		Priority:               d.Get("priority").(int),
 		Targetvserver:          d.Get("targetvserver").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		crvserver_appqoepolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	_, err := client.AddResource("crvserver_appqoepolicy_binding", bindingId, &crvserver_appqoepolicy_binding)

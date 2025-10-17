@@ -43,7 +43,7 @@ type Lsnsession struct {
 	/**
 	* Traffic domain ID of the LSN client entity.
 	*/
-	Td int `json:"td,omitempty"`
+	Td *int `json:"td,omitempty"`
 	/**
 	* Mapped NAT IP address used in LSN sessions.
 	*/
@@ -51,11 +51,11 @@ type Lsnsession struct {
 	/**
 	* Unique number that identifies the cluster node.
 	*/
-	Nodeid int `json:"nodeid,omitempty"`
+	Nodeid *int `json:"nodeid,omitempty"`
 	/**
 	* Mapped NAT port used in the LSN sessions.
 	*/
-	Natport2 int `json:"natport2,omitempty"`
+	Natport2 *int `json:"natport2,omitempty"`
 
 	//------- Read only Parameter ---------;
 

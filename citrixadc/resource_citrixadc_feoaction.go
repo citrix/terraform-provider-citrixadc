@@ -280,7 +280,7 @@ func updateFeoactionFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("cachemaxage") {
 		log.Printf("[DEBUG]  citrixadc-provider: Cachemaxage has changed for feoaction %s, starting update", feoactionName)
 		val, _ := strconv.Atoi(d.Get("cachemaxage").(string))
-		feoaction.Cachemaxage = val
+		feoaction.Cachemaxage = intPtr(val)
 		hasChange = true
 	}
 	if d.HasChange("clientsidemeasurements") {

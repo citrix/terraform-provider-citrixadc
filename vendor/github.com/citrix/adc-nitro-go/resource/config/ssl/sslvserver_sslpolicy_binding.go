@@ -27,7 +27,7 @@ type Sslvserversslpolicybinding struct {
 	/**
 	* The priority of the policies bound to this SSL service
 	*/
-	Priority int `json:"priority,omitempty"`
+	Priority *int `json:"priority,omitempty"`
 	/**
 	* Bind point to which to bind the policy. Possible Values: REQUEST, INTERCEPT_REQ and CLIENTHELLO_REQ. These bindpoints mean:
 		1. REQUEST: Policy evaluation will be done at appplication above SSL. This bindpoint is default and is used for actions based on clientauth and client cert.
@@ -38,7 +38,7 @@ type Sslvserversslpolicybinding struct {
 	/**
 	* Whether the bound policy is a inherited policy or not
 	*/
-	Polinherit int `json:"polinherit,omitempty"`
+	Polinherit *int `json:"polinherit,omitempty"`
 	/**
 	* Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 	*/

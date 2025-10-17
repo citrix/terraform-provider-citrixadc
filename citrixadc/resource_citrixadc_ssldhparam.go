@@ -43,9 +43,12 @@ func createSsldhparamFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	ssldhparamName := d.Get("dhfile").(string)
 
 	ssldhparam := ssl.Ssldhparam{
-		Bits:   d.Get("bits").(int),
 		Dhfile: ssldhparamName,
 		Gen:    d.Get("gen").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("bits"); !raw.IsNull() {
+		ssldhparam.Bits = intPtr(d.Get("bits").(int))
 	}
 
 	err := client.ActOnResource(service.Ssldhparam.Type(), &ssldhparam, "create")

@@ -23,7 +23,7 @@ type Nstrafficdomainbinding struct {
 	/**
 	* Integer value that uniquely identifies a traffic domain.<br/>Minimum value =  1<br/>Maximum value =  4094
 	*/
-	Td int `json:"td,omitempty"`
+	Td *int `json:"td,omitempty"`
 
 
 }

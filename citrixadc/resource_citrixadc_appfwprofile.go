@@ -565,6 +565,223 @@ func resourceCitrixAdcAppfwprofile() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"apispec": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"as_prof_bypass_list_enable": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"as_prof_deny_list_enable": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"augment": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
+			"blockkeywordaction": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"ceflogging": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"clientipexpression": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"cmdinjectiongrammar": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"cookiesamesiteattribute": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"defaultfieldformatmaxoccurrences": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"fakeaccountdetection": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"fieldscan": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"fieldscanlimit": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"geolocationlogging": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"grpcaction": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"importprofilename": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"insertcookiesamesiteattribute": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"inspectquerycontenttypes": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"jsonblockkeywordaction": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"jsoncmdinjectionaction": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"jsoncmdinjectiongrammar": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"jsoncmdinjectiontype": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"jsonerrorstatuscode": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"jsonerrorstatusmessage": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"jsonfieldscan": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"jsonfieldscanlimit": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"jsonmessagescan": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"jsonmessagescanlimit": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"jsonsqlinjectiongrammar": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"matchurlstring": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"messagescan": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"messagescanlimit": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"messagescanlimitcontenttypes": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"overwrite": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
+			"protofileobject": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"relaxationrules": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
+			"replaceurlstring": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"restaction": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"sessioncookiename": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"sqlinjectionruletype": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"xmlerrorstatuscode": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"xmlerrorstatusmessage": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -577,29 +794,22 @@ func createAppfwprofileFunc(ctx context.Context, d *schema.ResourceData, meta in
 	appfwprofile := appfw.Appfwprofile{
 		Name:                                       appfwprofileName,
 		Postbodylimitaction:                        toStringList(d.Get("postbodylimitaction").([]interface{})),
-		Bufferoverflowmaxquerylength:               d.Get("bufferoverflowmaxquerylength").(int),
 		Cookiehijackingaction:                      toStringList(d.Get("cookiehijackingaction").([]interface{})),
 		Infercontenttypexmlpayloadaction:           toStringList(d.Get("infercontenttypexmlpayloadaction").([]interface{})),
 		Cmdinjectionaction:                         toStringList(d.Get("cmdinjectionaction").([]interface{})),
 		Addcookieflags:                             d.Get("addcookieflags").(string),
 		Archivename:                                d.Get("archivename").(string),
-		Bufferoverflowmaxcookielength:              d.Get("bufferoverflowmaxcookielength").(int),
-		Bufferoverflowmaxheaderlength:              d.Get("bufferoverflowmaxheaderlength").(int),
-		Bufferoverflowmaxurllength:                 d.Get("bufferoverflowmaxurllength").(int),
 		Canonicalizehtmlresponse:                   d.Get("canonicalizehtmlresponse").(string),
 		Checkrequestheaders:                        d.Get("checkrequestheaders").(string),
 		Comment:                                    d.Get("comment").(string),
 		Cookieencryption:                           d.Get("cookieencryption").(string),
 		Cookieproxying:                             d.Get("cookieproxying").(string),
 		Cookietransforms:                           d.Get("cookietransforms").(string),
-		Creditcardmaxallowed:                       d.Get("creditcardmaxallowed").(int),
 		Creditcardxout:                             d.Get("creditcardxout").(string),
 		Crosssitescriptingcheckcompleteurls:        d.Get("crosssitescriptingcheckcompleteurls").(string),
 		Crosssitescriptingtransformunsafehtml:      d.Get("crosssitescriptingtransformunsafehtml").(string),
 		Customsettings:                             d.Get("customsettings").(string),
 		Defaultcharset:                             d.Get("defaultcharset").(string),
-		Defaultfieldformatmaxlength:                d.Get("defaultfieldformatmaxlength").(int),
-		Defaultfieldformatminlength:                d.Get("defaultfieldformatminlength").(int),
 		Defaultfieldformattype:                     d.Get("defaultfieldformattype").(string),
 		Defaults:                                   d.Get("defaults").(string),
 		Dosecurecreditcardlogging:                  d.Get("dosecurecreditcardlogging").(string),
@@ -607,7 +817,6 @@ func createAppfwprofileFunc(ctx context.Context, d *schema.ResourceData, meta in
 		Errorurl:                                   d.Get("errorurl").(string),
 		Excludefileuploadfromchecks:                d.Get("excludefileuploadfromchecks").(string),
 		Exemptclosureurlsfromsecuritychecks:        d.Get("exemptclosureurlsfromsecuritychecks").(string),
-		Fileuploadmaxnum:                           d.Get("fileuploadmaxnum").(int),
 		Htmlerrorobject:                            d.Get("htmlerrorobject").(string),
 		Invalidpercenthandling:                     d.Get("invalidpercenthandling").(string),
 		Jsonerrorobject:                            d.Get("jsonerrorobject").(string),
@@ -615,8 +824,6 @@ func createAppfwprofileFunc(ctx context.Context, d *schema.ResourceData, meta in
 		Logeverypolicyhit:                          d.Get("logeverypolicyhit").(string),
 		Optimizepartialreqs:                        d.Get("optimizepartialreqs").(string),
 		Percentdecoderecursively:                   d.Get("percentdecoderecursively").(string),
-		Postbodylimit:                              d.Get("postbodylimit").(int),
-		Postbodylimitsignature:                     d.Get("postbodylimitsignature").(int),
 		Refererheadercheck:                         d.Get("refererheadercheck").(string),
 		Requestcontenttype:                         d.Get("requestcontenttype").(string),
 		Responsecontenttype:                        d.Get("responsecontenttype").(string),
@@ -644,11 +851,95 @@ func createAppfwprofileFunc(ctx context.Context, d *schema.ResourceData, meta in
 		Xmlsqlinjectiononlycheckfieldswithsqlchars: d.Get("xmlsqlinjectiononlycheckfieldswithsqlchars").(string),
 		Xmlsqlinjectionparsecomments:               d.Get("xmlsqlinjectionparsecomments").(string),
 		Xmlsqlinjectiontype:                        d.Get("xmlsqlinjectiontype").(string),
-		Bufferoverflowmaxtotalheaderlength:         d.Get("bufferoverflowmaxtotalheaderlength").(int),
 		Cmdinjectiontype:                           d.Get("cmdinjectiontype").(string),
-		Htmlerrorstatuscode:                        d.Get("htmlerrorstatuscode").(int),
 		Htmlerrorstatusmessage:                     d.Get("htmlerrorstatusmessage").(string),
 		Sqlinjectiongrammar:                        d.Get("sqlinjectiongrammar").(string),
+		Apispec:                                    d.Get("apispec").(string),
+		Asprofbypasslistenable:                     d.Get("as_prof_bypass_list_enable").(string),
+		Asprofdenylistenable:                       d.Get("as_prof_deny_list_enable").(string),
+		Augment:                                    d.Get("augment").(bool),
+		Ceflogging:                                 d.Get("ceflogging").(string),
+		Clientipexpression:                         d.Get("clientipexpression").(string),
+		Cmdinjectiongrammar:                        d.Get("cmdinjectiongrammar").(string),
+		Cookiesamesiteattribute:                    d.Get("cookiesamesiteattribute").(string),
+		Fakeaccountdetection:                       d.Get("fakeaccountdetection").(string),
+		Fieldscan:                                  d.Get("fieldscan").(string),
+		Geolocationlogging:                         d.Get("geolocationlogging").(string),
+		Importprofilename:                          d.Get("importprofilename").(string),
+		Insertcookiesamesiteattribute:              d.Get("insertcookiesamesiteattribute").(string),
+		Jsoncmdinjectiongrammar:                    d.Get("jsoncmdinjectiongrammar").(string),
+		Jsoncmdinjectiontype:                       d.Get("jsoncmdinjectiontype").(string),
+		Jsonerrorstatusmessage:                     d.Get("jsonerrorstatusmessage").(string),
+		Jsonfieldscan:                              d.Get("jsonfieldscan").(string),
+		Jsonmessagescan:                            d.Get("jsonmessagescan").(string),
+		Jsonsqlinjectiongrammar:                    d.Get("jsonsqlinjectiongrammar").(string),
+		Matchurlstring:                             d.Get("matchurlstring").(string),
+		Messagescan:                                d.Get("messagescan").(string),
+		Overwrite:                                  d.Get("overwrite").(bool),
+		Protofileobject:                            d.Get("protofileobject").(string),
+		Relaxationrules:                            d.Get("relaxationrules").(bool),
+		Replaceurlstring:                           d.Get("replaceurlstring").(string),
+		Sessioncookiename:                          d.Get("sessioncookiename").(string),
+		Sqlinjectionruletype:                       d.Get("sqlinjectionruletype").(string),
+		Xmlerrorstatusmessage:                      d.Get("xmlerrorstatusmessage").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("bufferoverflowmaxquerylength"); !raw.IsNull() {
+		appfwprofile.Bufferoverflowmaxquerylength = intPtr(d.Get("bufferoverflowmaxquerylength").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("bufferoverflowmaxcookielength"); !raw.IsNull() {
+		appfwprofile.Bufferoverflowmaxcookielength = intPtr(d.Get("bufferoverflowmaxcookielength").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("bufferoverflowmaxheaderlength"); !raw.IsNull() {
+		appfwprofile.Bufferoverflowmaxheaderlength = intPtr(d.Get("bufferoverflowmaxheaderlength").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("bufferoverflowmaxurllength"); !raw.IsNull() {
+		appfwprofile.Bufferoverflowmaxurllength = intPtr(d.Get("bufferoverflowmaxurllength").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("creditcardmaxallowed"); !raw.IsNull() {
+		appfwprofile.Creditcardmaxallowed = intPtr(d.Get("creditcardmaxallowed").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("defaultfieldformatmaxlength"); !raw.IsNull() {
+		appfwprofile.Defaultfieldformatmaxlength = intPtr(d.Get("defaultfieldformatmaxlength").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("defaultfieldformatminlength"); !raw.IsNull() {
+		appfwprofile.Defaultfieldformatminlength = intPtr(d.Get("defaultfieldformatminlength").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("fileuploadmaxnum"); !raw.IsNull() {
+		appfwprofile.Fileuploadmaxnum = intPtr(d.Get("fileuploadmaxnum").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("postbodylimit"); !raw.IsNull() {
+		appfwprofile.Postbodylimit = intPtr(d.Get("postbodylimit").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("postbodylimitsignature"); !raw.IsNull() {
+		appfwprofile.Postbodylimitsignature = intPtr(d.Get("postbodylimitsignature").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("bufferoverflowmaxtotalheaderlength"); !raw.IsNull() {
+		appfwprofile.Bufferoverflowmaxtotalheaderlength = intPtr(d.Get("bufferoverflowmaxtotalheaderlength").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("htmlerrorstatuscode"); !raw.IsNull() {
+		appfwprofile.Htmlerrorstatuscode = intPtr(d.Get("htmlerrorstatuscode").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("defaultfieldformatmaxoccurrences"); !raw.IsNull() {
+		appfwprofile.Defaultfieldformatmaxoccurrences = intPtr(d.Get("defaultfieldformatmaxoccurrences").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("fieldscanlimit"); !raw.IsNull() {
+		appfwprofile.Fieldscanlimit = intPtr(d.Get("fieldscanlimit").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("jsonerrorstatuscode"); !raw.IsNull() {
+		appfwprofile.Jsonerrorstatuscode = intPtr(d.Get("jsonerrorstatuscode").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("jsonfieldscanlimit"); !raw.IsNull() {
+		appfwprofile.Jsonfieldscanlimit = intPtr(d.Get("jsonfieldscanlimit").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("jsonmessagescanlimit"); !raw.IsNull() {
+		appfwprofile.Jsonmessagescanlimit = intPtr(d.Get("jsonmessagescanlimit").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("messagescanlimit"); !raw.IsNull() {
+		appfwprofile.Messagescanlimit = intPtr(d.Get("messagescanlimit").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("xmlerrorstatuscode"); !raw.IsNull() {
+		appfwprofile.Xmlerrorstatuscode = intPtr(d.Get("xmlerrorstatuscode").(int))
 	}
 
 	appfwprofile.Bufferoverflowaction = toStringList(d.Get("bufferoverflowaction").(*schema.Set).List())
@@ -679,6 +970,13 @@ func createAppfwprofileFunc(ctx context.Context, d *schema.ResourceData, meta in
 	appfwprofile.Xmlvalidationaction = toStringList(d.Get("xmlvalidationaction").(*schema.Set).List())
 	appfwprofile.Xmlwsiaction = toStringList(d.Get("xmlwsiaction").(*schema.Set).List())
 	appfwprofile.Xmlxssaction = toStringList(d.Get("xmlxssaction").(*schema.Set).List())
+	appfwprofile.Blockkeywordaction = toStringList(d.Get("blockkeywordaction").(*schema.Set).List())
+	appfwprofile.Grpcaction = toStringList(d.Get("grpcaction").(*schema.Set).List())
+	appfwprofile.Inspectquerycontenttypes = toStringList(d.Get("inspectquerycontenttypes").(*schema.Set).List())
+	appfwprofile.Jsonblockkeywordaction = toStringList(d.Get("jsonblockkeywordaction").(*schema.Set).List())
+	appfwprofile.Jsoncmdinjectionaction = toStringList(d.Get("jsoncmdinjectionaction").(*schema.Set).List())
+	appfwprofile.Messagescanlimitcontenttypes = toStringList(d.Get("messagescanlimitcontenttypes").(*schema.Set).List())
+	appfwprofile.Restaction = toStringList(d.Get("restaction").(*schema.Set).List())
 
 	_, err := client.AddResource(service.Appfwprofile.Type(), appfwprofileName, &appfwprofile)
 	if err != nil {
@@ -805,6 +1103,52 @@ func readAppfwprofileFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	setToInt("htmlerrorstatuscode", d, data["htmlerrorstatuscode"])
 	d.Set("sqlinjectiongrammar", data["sqlinjectiongrammar"])
 
+	// Add new attributes
+	d.Set("apispec", data["apispec"])
+	d.Set("as_prof_bypass_list_enable", data["asprofbypasslistenable"])
+	d.Set("as_prof_deny_list_enable", data["asprofdenylistenable"])
+	d.Set("augment", data["augment"])
+	d.Set("ceflogging", data["ceflogging"])
+	d.Set("clientipexpression", data["clientipexpression"])
+	d.Set("cmdinjectiongrammar", data["cmdinjectiongrammar"])
+	d.Set("cookiesamesiteattribute", data["cookiesamesiteattribute"])
+	setToInt("defaultfieldformatmaxoccurrences", d, data["defaultfieldformatmaxoccurrences"])
+	d.Set("fakeaccountdetection", data["fakeaccountdetection"])
+	d.Set("fieldscan", data["fieldscan"])
+	setToInt("fieldscanlimit", d, data["fieldscanlimit"])
+	d.Set("geolocationlogging", data["geolocationlogging"])
+	d.Set("importprofilename", data["importprofilename"])
+	d.Set("insertcookiesamesiteattribute", data["insertcookiesamesiteattribute"])
+	d.Set("jsoncmdinjectiongrammar", data["jsoncmdinjectiongrammar"])
+	d.Set("jsoncmdinjectiontype", data["jsoncmdinjectiontype"])
+	setToInt("jsonerrorstatuscode", d, data["jsonerrorstatuscode"])
+	d.Set("jsonerrorstatusmessage", data["jsonerrorstatusmessage"])
+	d.Set("jsonfieldscan", data["jsonfieldscan"])
+	setToInt("jsonfieldscanlimit", d, data["jsonfieldscanlimit"])
+	d.Set("jsonmessagescan", data["jsonmessagescan"])
+	setToInt("jsonmessagescanlimit", d, data["jsonmessagescanlimit"])
+	d.Set("jsonsqlinjectiongrammar", data["jsonsqlinjectiongrammar"])
+	d.Set("matchurlstring", data["matchurlstring"])
+	d.Set("messagescan", data["messagescan"])
+	setToInt("messagescanlimit", d, data["messagescanlimit"])
+	d.Set("overwrite", data["overwrite"])
+	d.Set("protofileobject", data["protofileobject"])
+	d.Set("relaxationrules", data["relaxationrules"])
+	d.Set("replaceurlstring", data["replaceurlstring"])
+	d.Set("sessioncookiename", data["sessioncookiename"])
+	d.Set("sqlinjectionruletype", data["sqlinjectionruletype"])
+	setToInt("xmlerrorstatuscode", d, data["xmlerrorstatuscode"])
+	d.Set("xmlerrorstatusmessage", data["xmlerrorstatusmessage"])
+
+	// Add new array/set type attributes
+	d.Set("blockkeywordaction", data["blockkeywordaction"])
+	d.Set("grpcaction", data["grpcaction"])
+	d.Set("inspectquerycontenttypes", data["inspectquerycontenttypes"])
+	d.Set("jsonblockkeywordaction", data["jsonblockkeywordaction"])
+	d.Set("jsoncmdinjectionaction", data["jsoncmdinjectionaction"])
+	d.Set("messagescanlimitcontenttypes", data["messagescanlimitcontenttypes"])
+	d.Set("restaction", data["restaction"])
+
 	return nil
 
 }
@@ -825,7 +1169,7 @@ func updateAppfwprofileFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("bufferoverflowmaxquerylength") {
 		log.Printf("[DEBUG]  citrixadc-provider: bufferoverflowmaxquerylength has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Bufferoverflowmaxquerylength = d.Get("bufferoverflowmaxquerylength").(int)
+		appfwprofile.Bufferoverflowmaxquerylength = intPtr(d.Get("bufferoverflowmaxquerylength").(int))
 		hasChange = true
 	}
 	if d.HasChange("cookiehijackingaction") {
@@ -855,17 +1199,17 @@ func updateAppfwprofileFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("bufferoverflowmaxcookielength") {
 		log.Printf("[DEBUG]  citrixadc-provider: Bufferoverflowmaxcookielength has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Bufferoverflowmaxcookielength = d.Get("bufferoverflowmaxcookielength").(int)
+		appfwprofile.Bufferoverflowmaxcookielength = intPtr(d.Get("bufferoverflowmaxcookielength").(int))
 		hasChange = true
 	}
 	if d.HasChange("bufferoverflowmaxheaderlength") {
 		log.Printf("[DEBUG]  citrixadc-provider: Bufferoverflowmaxheaderlength has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Bufferoverflowmaxheaderlength = d.Get("bufferoverflowmaxheaderlength").(int)
+		appfwprofile.Bufferoverflowmaxheaderlength = intPtr(d.Get("bufferoverflowmaxheaderlength").(int))
 		hasChange = true
 	}
 	if d.HasChange("bufferoverflowmaxurllength") {
 		log.Printf("[DEBUG]  citrixadc-provider: Bufferoverflowmaxurllength has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Bufferoverflowmaxurllength = d.Get("bufferoverflowmaxurllength").(int)
+		appfwprofile.Bufferoverflowmaxurllength = intPtr(d.Get("bufferoverflowmaxurllength").(int))
 		hasChange = true
 	}
 	if d.HasChange("canonicalizehtmlresponse") {
@@ -900,7 +1244,7 @@ func updateAppfwprofileFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("creditcardmaxallowed") {
 		log.Printf("[DEBUG]  citrixadc-provider: Creditcardmaxallowed has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Creditcardmaxallowed = d.Get("creditcardmaxallowed").(int)
+		appfwprofile.Creditcardmaxallowed = intPtr(d.Get("creditcardmaxallowed").(int))
 		hasChange = true
 	}
 	if d.HasChange("creditcardxout") {
@@ -930,12 +1274,12 @@ func updateAppfwprofileFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("defaultfieldformatmaxlength") {
 		log.Printf("[DEBUG]  citrixadc-provider: Defaultfieldformatmaxlength has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Defaultfieldformatmaxlength = d.Get("defaultfieldformatmaxlength").(int)
+		appfwprofile.Defaultfieldformatmaxlength = intPtr(d.Get("defaultfieldformatmaxlength").(int))
 		hasChange = true
 	}
 	if d.HasChange("defaultfieldformatminlength") {
 		log.Printf("[DEBUG]  citrixadc-provider: Defaultfieldformatminlength has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Defaultfieldformatminlength = d.Get("defaultfieldformatminlength").(int)
+		appfwprofile.Defaultfieldformatminlength = intPtr(d.Get("defaultfieldformatminlength").(int))
 		hasChange = true
 	}
 	if d.HasChange("defaultfieldformattype") {
@@ -975,7 +1319,7 @@ func updateAppfwprofileFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("fileuploadmaxnum") {
 		log.Printf("[DEBUG]  citrixadc-provider: Fileuploadmaxnum has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Fileuploadmaxnum = d.Get("fileuploadmaxnum").(int)
+		appfwprofile.Fileuploadmaxnum = intPtr(d.Get("fileuploadmaxnum").(int))
 		hasChange = true
 	}
 	if d.HasChange("htmlerrorobject") {
@@ -1020,12 +1364,12 @@ func updateAppfwprofileFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("postbodylimit") {
 		log.Printf("[DEBUG]  citrixadc-provider: Postbodylimit has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Postbodylimit = d.Get("postbodylimit").(int)
+		appfwprofile.Postbodylimit = intPtr(d.Get("postbodylimit").(int))
 		hasChange = true
 	}
 	if d.HasChange("postbodylimitsignature") {
 		log.Printf("[DEBUG]  citrixadc-provider: Postbodylimitsignature has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Postbodylimitsignature = d.Get("postbodylimitsignature").(int)
+		appfwprofile.Postbodylimitsignature = intPtr(d.Get("postbodylimitsignature").(int))
 		hasChange = true
 	}
 	if d.HasChange("refererheadercheck") {
@@ -1333,7 +1677,7 @@ func updateAppfwprofileFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("bufferoverflowmaxtotalheaderlength") {
 		log.Printf("[DEBUG]  citrixadc-provider: bufferoverflowmaxtotalheaderlength has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Bufferoverflowmaxtotalheaderlength = d.Get("bufferoverflowmaxtotalheaderlength").(int)
+		appfwprofile.Bufferoverflowmaxtotalheaderlength = intPtr(d.Get("bufferoverflowmaxtotalheaderlength").(int))
 		hasChange = true
 	}
 	if d.HasChange("cmdinjectiontype") {
@@ -1343,7 +1687,7 @@ func updateAppfwprofileFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("htmlerrorstatuscode") {
 		log.Printf("[DEBUG]  citrixadc-provider: Htmlerrorstatuscode has changed for appfwprofile %s, starting update", appfwprofileName)
-		appfwprofile.Htmlerrorstatuscode = d.Get("htmlerrorstatuscode").(int)
+		appfwprofile.Htmlerrorstatuscode = intPtr(d.Get("htmlerrorstatuscode").(int))
 		hasChange = true
 	}
 	if d.HasChange("htmlerrorstatusmessage") {
@@ -1354,6 +1698,220 @@ func updateAppfwprofileFunc(ctx context.Context, d *schema.ResourceData, meta in
 	if d.HasChange("sqlinjectiongrammar") {
 		log.Printf("[DEBUG]  citrixadc-provider: sqlinjectiongrammar has changed for appfwprofile %s, starting update", appfwprofileName)
 		appfwprofile.Sqlinjectiongrammar = d.Get("sqlinjectiongrammar").(string)
+		hasChange = true
+	}
+
+	// Add new attributes to update function
+	if d.HasChange("apispec") {
+		log.Printf("[DEBUG]  citrixadc-provider: apispec has changed for appfwprofile %s, starting update", appfwprofileName)
+		appfwprofile.Apispec = d.Get("apispec").(string)
+		hasChange = true
+	}
+	if d.HasChange("as_prof_bypass_list_enable") {
+		log.Printf("[DEBUG]  citrixadc-provider: as_prof_bypass_list_enable has changed for appfwprofile %s, starting update", appfwprofileName)
+		appfwprofile.Asprofbypasslistenable = d.Get("as_prof_bypass_list_enable").(string)
+		hasChange = true
+	}
+	if d.HasChange("as_prof_deny_list_enable") {
+		log.Printf("[DEBUG]  citrixadc-provider: as_prof_deny_list_enable has changed for appfwprofile %s, starting update", appfwprofileName)
+		appfwprofile.Asprofdenylistenable = d.Get("as_prof_deny_list_enable").(string)
+		hasChange = true
+	}
+	if d.HasChange("augment") {
+		log.Printf("[DEBUG]  citrixadc-provider: augment has changed for appfwprofile %s, starting update", appfwprofileName)
+		appfwprofile.Augment = d.Get("augment").(bool)
+		hasChange = true
+	}
+	if d.HasChange("ceflogging") {
+		log.Printf("[DEBUG]  citrixadc-provider: ceflogging has changed for appfwprofile %s, starting update", appfwprofileName)
+		appfwprofile.Ceflogging = d.Get("ceflogging").(string)
+		hasChange = true
+	}
+	if d.HasChange("clientipexpression") {
+		log.Printf("[DEBUG]  citrixadc-provider: clientipexpression has changed for appfwprofile %s, starting update", appfwprofileName)
+		appfwprofile.Clientipexpression = d.Get("clientipexpression").(string)
+		hasChange = true
+	}
+	if d.HasChange("cmdinjectiongrammar") {
+		log.Printf("[DEBUG]  citrixadc-provider: cmdinjectiongrammar has changed for appfwprofile %s, starting update", appfwprofileName)
+		appfwprofile.Cmdinjectiongrammar = d.Get("cmdinjectiongrammar").(string)
+		hasChange = true
+	}
+	if d.HasChange("cookiesamesiteattribute") {
+		log.Printf("[DEBUG]  citrixadc-provider: cookiesamesiteattribute has changed for appfwprofile %s, starting update", appfwprofileName)
+		appfwprofile.Cookiesamesiteattribute = d.Get("cookiesamesiteattribute").(string)
+		hasChange = true
+	}
+	if d.HasChange("defaultfieldformatmaxoccurrences") {
+		log.Printf("[DEBUG]  citrixadc-provider: defaultfieldformatmaxoccurrences has changed for appfwprofile %s, starting update", appfwprofileName)
+		appfwprofile.Defaultfieldformatmaxoccurrences = intPtr(d.Get("defaultfieldformatmaxoccurrences").(int))
+		hasChange = true
+	}
+	if d.HasChange("fakeaccountdetection") {
+		log.Printf("[DEBUG]  citrixadc-provider: fakeaccountdetection has changed for appfwprofile %s, starting update", appfwprofileName)
+		appfwprofile.Fakeaccountdetection = d.Get("fakeaccountdetection").(string)
+		hasChange = true
+	}
+	if d.HasChange("fieldscan") {
+		log.Printf("[DEBUG]  citrixadc-provider: fieldscan has changed for appfwprofile %s, starting update", appfwprofileName)
+		appfwprofile.Fieldscan = d.Get("fieldscan").(string)
+		hasChange = true
+	}
+	if d.HasChange("fieldscanlimit") {
+		log.Printf("[DEBUG]  citrixadc-provider: fieldscanlimit has changed for appfwprofile %s, starting update", appfwprofileName)
+		appfwprofile.Fieldscanlimit = intPtr(d.Get("fieldscanlimit").(int))
+		hasChange = true
+	}
+	if d.HasChange("geolocationlogging") {
+		log.Printf("[DEBUG]  citrixadc-provider: geolocationlogging has changed for appfwprofile %s, starting update", appfwprofileName)
+		appfwprofile.Geolocationlogging = d.Get("geolocationlogging").(string)
+		hasChange = true
+	}
+	if d.HasChange("importprofilename") {
+		log.Printf("[DEBUG]  citrixadc-provider: importprofilename has changed for appfwprofile %s, starting update", appfwprofileName)
+		appfwprofile.Importprofilename = d.Get("importprofilename").(string)
+		hasChange = true
+	}
+	if d.HasChange("insertcookiesamesiteattribute") {
+		log.Printf("[DEBUG]  citrixadc-provider: insertcookiesamesiteattribute has changed for appfwprofile %s, starting update", appfwprofileName)
+		appfwprofile.Insertcookiesamesiteattribute = d.Get("insertcookiesamesiteattribute").(string)
+		hasChange = true
+	}
+	if d.HasChange("jsoncmdinjectiongrammar") {
+		log.Printf("[DEBUG]  citrixadc-provider: jsoncmdinjectiongrammar has changed for appfwprofile %s, starting update", appfwprofileName)
+		appfwprofile.Jsoncmdinjectiongrammar = d.Get("jsoncmdinjectiongrammar").(string)
+		hasChange = true
+	}
+	if d.HasChange("jsoncmdinjectiontype") {
+		log.Printf("[DEBUG]  citrixadc-provider: jsoncmdinjectiontype has changed for appfwprofile %s, starting update", appfwprofileName)
+		appfwprofile.Jsoncmdinjectiontype = d.Get("jsoncmdinjectiontype").(string)
+		hasChange = true
+	}
+	if d.HasChange("jsonerrorstatuscode") {
+		log.Printf("[DEBUG]  citrixadc-provider: jsonerrorstatuscode has changed for appfwprofile %s, starting update", appfwprofileName)
+		appfwprofile.Jsonerrorstatuscode = intPtr(d.Get("jsonerrorstatuscode").(int))
+		hasChange = true
+	}
+	if d.HasChange("jsonerrorstatusmessage") {
+		log.Printf("[DEBUG]  citrixadc-provider: jsonerrorstatusmessage has changed for appfwprofile %s, starting update", appfwprofileName)
+		appfwprofile.Jsonerrorstatusmessage = d.Get("jsonerrorstatusmessage").(string)
+		hasChange = true
+	}
+	if d.HasChange("jsonfieldscan") {
+		log.Printf("[DEBUG]  citrixadc-provider: jsonfieldscan has changed for appfwprofile %s, starting update", appfwprofileName)
+		appfwprofile.Jsonfieldscan = d.Get("jsonfieldscan").(string)
+		hasChange = true
+	}
+	if d.HasChange("jsonfieldscanlimit") {
+		log.Printf("[DEBUG]  citrixadc-provider: jsonfieldscanlimit has changed for appfwprofile %s, starting update", appfwprofileName)
+		appfwprofile.Jsonfieldscanlimit = intPtr(d.Get("jsonfieldscanlimit").(int))
+		hasChange = true
+	}
+	if d.HasChange("jsonmessagescan") {
+		log.Printf("[DEBUG]  citrixadc-provider: jsonmessagescan has changed for appfwprofile %s, starting update", appfwprofileName)
+		appfwprofile.Jsonmessagescan = d.Get("jsonmessagescan").(string)
+		hasChange = true
+	}
+	if d.HasChange("jsonmessagescanlimit") {
+		log.Printf("[DEBUG]  citrixadc-provider: jsonmessagescanlimit has changed for appfwprofile %s, starting update", appfwprofileName)
+		appfwprofile.Jsonmessagescanlimit = intPtr(d.Get("jsonmessagescanlimit").(int))
+		hasChange = true
+	}
+	if d.HasChange("jsonsqlinjectiongrammar") {
+		log.Printf("[DEBUG]  citrixadc-provider: jsonsqlinjectiongrammar has changed for appfwprofile %s, starting update", appfwprofileName)
+		appfwprofile.Jsonsqlinjectiongrammar = d.Get("jsonsqlinjectiongrammar").(string)
+		hasChange = true
+	}
+	if d.HasChange("matchurlstring") {
+		log.Printf("[DEBUG]  citrixadc-provider: matchurlstring has changed for appfwprofile %s, starting update", appfwprofileName)
+		appfwprofile.Matchurlstring = d.Get("matchurlstring").(string)
+		hasChange = true
+	}
+	if d.HasChange("messagescan") {
+		log.Printf("[DEBUG]  citrixadc-provider: messagescan has changed for appfwprofile %s, starting update", appfwprofileName)
+		appfwprofile.Messagescan = d.Get("messagescan").(string)
+		hasChange = true
+	}
+	if d.HasChange("messagescanlimit") {
+		log.Printf("[DEBUG]  citrixadc-provider: messagescanlimit has changed for appfwprofile %s, starting update", appfwprofileName)
+		appfwprofile.Messagescanlimit = intPtr(d.Get("messagescanlimit").(int))
+		hasChange = true
+	}
+	if d.HasChange("overwrite") {
+		log.Printf("[DEBUG]  citrixadc-provider: overwrite has changed for appfwprofile %s, starting update", appfwprofileName)
+		appfwprofile.Overwrite = d.Get("overwrite").(bool)
+		hasChange = true
+	}
+	if d.HasChange("protofileobject") {
+		log.Printf("[DEBUG]  citrixadc-provider: protofileobject has changed for appfwprofile %s, starting update", appfwprofileName)
+		appfwprofile.Protofileobject = d.Get("protofileobject").(string)
+		hasChange = true
+	}
+	if d.HasChange("relaxationrules") {
+		log.Printf("[DEBUG]  citrixadc-provider: relaxationrules has changed for appfwprofile %s, starting update", appfwprofileName)
+		appfwprofile.Relaxationrules = d.Get("relaxationrules").(bool)
+		hasChange = true
+	}
+	if d.HasChange("replaceurlstring") {
+		log.Printf("[DEBUG]  citrixadc-provider: replaceurlstring has changed for appfwprofile %s, starting update", appfwprofileName)
+		appfwprofile.Replaceurlstring = d.Get("replaceurlstring").(string)
+		hasChange = true
+	}
+	if d.HasChange("sessioncookiename") {
+		log.Printf("[DEBUG]  citrixadc-provider: sessioncookiename has changed for appfwprofile %s, starting update", appfwprofileName)
+		appfwprofile.Sessioncookiename = d.Get("sessioncookiename").(string)
+		hasChange = true
+	}
+	if d.HasChange("sqlinjectionruletype") {
+		log.Printf("[DEBUG]  citrixadc-provider: sqlinjectionruletype has changed for appfwprofile %s, starting update", appfwprofileName)
+		appfwprofile.Sqlinjectionruletype = d.Get("sqlinjectionruletype").(string)
+		hasChange = true
+	}
+	if d.HasChange("xmlerrorstatuscode") {
+		log.Printf("[DEBUG]  citrixadc-provider: xmlerrorstatuscode has changed for appfwprofile %s, starting update", appfwprofileName)
+		appfwprofile.Xmlerrorstatuscode = intPtr(d.Get("xmlerrorstatuscode").(int))
+		hasChange = true
+	}
+	if d.HasChange("xmlerrorstatusmessage") {
+		log.Printf("[DEBUG]  citrixadc-provider: xmlerrorstatusmessage has changed for appfwprofile %s, starting update", appfwprofileName)
+		appfwprofile.Xmlerrorstatusmessage = d.Get("xmlerrorstatusmessage").(string)
+		hasChange = true
+	}
+
+	// Add new array/set type attributes to update function
+	if d.HasChange("blockkeywordaction") {
+		log.Printf("[DEBUG]  citrixadc-provider: blockkeywordaction has changed for appfwprofile %s, starting update", appfwprofileName)
+		appfwprofile.Blockkeywordaction = toStringList(d.Get("blockkeywordaction").(*schema.Set).List())
+		hasChange = true
+	}
+	if d.HasChange("grpcaction") {
+		log.Printf("[DEBUG]  citrixadc-provider: grpcaction has changed for appfwprofile %s, starting update", appfwprofileName)
+		appfwprofile.Grpcaction = toStringList(d.Get("grpcaction").(*schema.Set).List())
+		hasChange = true
+	}
+	if d.HasChange("inspectquerycontenttypes") {
+		log.Printf("[DEBUG]  citrixadc-provider: inspectquerycontenttypes has changed for appfwprofile %s, starting update", appfwprofileName)
+		appfwprofile.Inspectquerycontenttypes = toStringList(d.Get("inspectquerycontenttypes").(*schema.Set).List())
+		hasChange = true
+	}
+	if d.HasChange("jsonblockkeywordaction") {
+		log.Printf("[DEBUG]  citrixadc-provider: jsonblockkeywordaction has changed for appfwprofile %s, starting update", appfwprofileName)
+		appfwprofile.Jsonblockkeywordaction = toStringList(d.Get("jsonblockkeywordaction").(*schema.Set).List())
+		hasChange = true
+	}
+	if d.HasChange("jsoncmdinjectionaction") {
+		log.Printf("[DEBUG]  citrixadc-provider: jsoncmdinjectionaction has changed for appfwprofile %s, starting update", appfwprofileName)
+		appfwprofile.Jsoncmdinjectionaction = toStringList(d.Get("jsoncmdinjectionaction").(*schema.Set).List())
+		hasChange = true
+	}
+	if d.HasChange("messagescanlimitcontenttypes") {
+		log.Printf("[DEBUG]  citrixadc-provider: messagescanlimitcontenttypes has changed for appfwprofile %s, starting update", appfwprofileName)
+		appfwprofile.Messagescanlimitcontenttypes = toStringList(d.Get("messagescanlimitcontenttypes").(*schema.Set).List())
+		hasChange = true
+	}
+	if d.HasChange("restaction") {
+		log.Printf("[DEBUG]  citrixadc-provider: restaction has changed for appfwprofile %s, starting update", appfwprofileName)
+		appfwprofile.Restaction = toStringList(d.Get("restaction").(*schema.Set).List())
 		hasChange = true
 	}
 

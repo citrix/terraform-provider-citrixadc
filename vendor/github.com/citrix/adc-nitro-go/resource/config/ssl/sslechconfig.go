@@ -39,11 +39,11 @@ type Sslechconfig struct {
 	/**
 	* The config id of the ech config.
 	*/
-	Echconfigid int `json:"echconfigid,omitempty"`
+	Echconfigid *int `json:"echconfigid,omitempty"`
 	/**
 	* The version of ECH for which this configuration is used.
 	*/
-	Version int `json:"version,omitempty"`
+	Version *int `json:"version,omitempty"`
 
 	//------- Read only Parameter ---------;
 

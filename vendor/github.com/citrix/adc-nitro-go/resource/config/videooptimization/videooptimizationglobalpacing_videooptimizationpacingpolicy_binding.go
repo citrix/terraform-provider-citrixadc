@@ -31,7 +31,7 @@ type Videooptimizationglobalpacingvideooptimizationpacingpolicybinding struct {
 	/**
 	* Specifies the priority of the policy.
 	*/
-	Priority int `json:"priority,omitempty"`
+	Priority *int `json:"priority,omitempty"`
 	/**
 	* Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 	*/
@@ -39,7 +39,7 @@ type Videooptimizationglobalpacingvideooptimizationpacingpolicybinding struct {
 	/**
 	* number of polices bound.
 	*/
-	Numpol int `json:"numpol,omitempty"`
+	Numpol *int `json:"numpol,omitempty"`
 	Globalbindtype string `json:"globalbindtype,omitempty"`
 	/**
 	* If the current policy evaluates to TRUE, terminate evaluation of policies bound to the current policy label, and then forward the request to the specified virtual server or

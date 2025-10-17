@@ -87,10 +87,13 @@ func createVpnformssoactionFunc(ctx context.Context, d *schema.ResourceData, met
 		Namevaluepair:  d.Get("namevaluepair").(string),
 		Nvtype:         d.Get("nvtype").(string),
 		Passwdfield:    d.Get("passwdfield").(string),
-		Responsesize:   d.Get("responsesize").(int),
 		Ssosuccessrule: d.Get("ssosuccessrule").(string),
 		Submitmethod:   d.Get("submitmethod").(string),
 		Userfield:      d.Get("userfield").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("responsesize"); !raw.IsNull() {
+		vpnformssoaction.Responsesize = intPtr(d.Get("responsesize").(int))
 	}
 
 	_, err := client.AddResource(service.Vpnformssoaction.Type(), vpnformssoactionName, &vpnformssoaction)
@@ -165,7 +168,7 @@ func updateVpnformssoactionFunc(ctx context.Context, d *schema.ResourceData, met
 	}
 	if d.HasChange("responsesize") {
 		log.Printf("[DEBUG]  citrixadc-provider: Responsesize has changed for vpnformssoaction %s, starting update", vpnformssoactionName)
-		vpnformssoaction.Responsesize = d.Get("responsesize").(int)
+		vpnformssoaction.Responsesize = intPtr(d.Get("responsesize").(int))
 		hasChange = true
 	}
 	if d.HasChange("ssosuccessrule") {

@@ -49,9 +49,12 @@ func createRnatglobal_auditsyslogpolicy_bindingFunc(ctx context.Context, d *sche
 	client := meta.(*NetScalerNitroClient).client
 	policy := d.Get("policy").(string)
 	rnatglobal_auditsyslogpolicy_binding := network.Rnatglobalauditsyslogpolicybinding{
-		All:      d.Get("all").(bool),
-		Policy:   d.Get("policy").(string),
-		Priority: d.Get("priority").(int),
+		All:    d.Get("all").(bool),
+		Policy: d.Get("policy").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		rnatglobal_auditsyslogpolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Rnatglobal_auditsyslogpolicy_binding.Type(), &rnatglobal_auditsyslogpolicy_binding)

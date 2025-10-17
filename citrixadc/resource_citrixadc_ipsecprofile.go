@@ -118,18 +118,29 @@ func createIpsecprofileFunc(ctx context.Context, d *schema.ResourceData, meta in
 	ipsecprofile := ipsec.Ipsecprofile{
 		Encalgo:               toStringList(d.Get("encalgo").([]interface{})),
 		Hashalgo:              toStringList(d.Get("hashalgo").([]interface{})),
-		Ikeretryinterval:      d.Get("ikeretryinterval").(int),
 		Ikeversion:            d.Get("ikeversion").(string),
-		Lifetime:              d.Get("lifetime").(int),
-		Livenesscheckinterval: d.Get("livenesscheckinterval").(int),
 		Name:                  d.Get("name").(string),
 		Peerpublickey:         d.Get("peerpublickey").(string),
 		Perfectforwardsecrecy: d.Get("perfectforwardsecrecy").(string),
 		Privatekey:            d.Get("privatekey").(string),
 		Psk:                   d.Get("psk").(string),
 		Publickey:             d.Get("publickey").(string),
-		Replaywindowsize:      d.Get("replaywindowsize").(int),
-		Retransmissiontime:    d.Get("retransmissiontime").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("ikeretryinterval"); !raw.IsNull() {
+		ipsecprofile.Ikeretryinterval = intPtr(d.Get("ikeretryinterval").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("lifetime"); !raw.IsNull() {
+		ipsecprofile.Lifetime = intPtr(d.Get("lifetime").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("livenesscheckinterval"); !raw.IsNull() {
+		ipsecprofile.Livenesscheckinterval = intPtr(d.Get("livenesscheckinterval").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("replaywindowsize"); !raw.IsNull() {
+		ipsecprofile.Replaywindowsize = intPtr(d.Get("replaywindowsize").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("retransmissiontime"); !raw.IsNull() {
+		ipsecprofile.Retransmissiontime = intPtr(d.Get("retransmissiontime").(int))
 	}
 
 	_, err := client.AddResource(service.Ipsecprofile.Type(), ipsecprofileName, &ipsecprofile)

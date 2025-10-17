@@ -88,8 +88,11 @@ func createAuthenticationvserver_authenticationradiuspolicy_bindingFunc(ctx cont
 		Name:                   d.Get("name").(string),
 		Nextfactor:             d.Get("nextfactor").(string),
 		Policy:                 d.Get("policy").(string),
-		Priority:               d.Get("priority").(int),
 		Secondary:              d.Get("secondary").(bool),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		authenticationvserver_authenticationradiuspolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Authenticationvserver_authenticationradiuspolicy_binding.Type(), &authenticationvserver_authenticationradiuspolicy_binding)

@@ -31,7 +31,7 @@ github.com/apparentlymart/go-textseg/v15/textseg
 # github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d
 ## explicit
 github.com/bgentry/go-netrc/netrc
-# github.com/citrix/adc-nitro-go v0.0.0-20250915211247-deb279797e53
+# github.com/citrix/adc-nitro-go v0.0.0-20251008034940-cd0116a91763
 ## explicit; go 1.14
 github.com/citrix/adc-nitro-go/resource/config/aaa
 github.com/citrix/adc-nitro-go/resource/config/adm
@@ -250,7 +250,6 @@ github.com/hashicorp/terraform-plugin-framework/resource
 github.com/hashicorp/terraform-plugin-framework/resource/identityschema
 github.com/hashicorp/terraform-plugin-framework/resource/schema
 github.com/hashicorp/terraform-plugin-framework/resource/schema/defaults
-github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier
 github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier
 github.com/hashicorp/terraform-plugin-framework/schema/validator
 github.com/hashicorp/terraform-plugin-framework/tfsdk

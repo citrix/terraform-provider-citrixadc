@@ -53,7 +53,7 @@ func applyRouterdynamicroutingFunc(ctx context.Context, d *schema.ResourceData, 
 
 	routerdynamicrouting := router.Routerdynamicrouting{
 		Commandstring: cmdString,
-		Nodeid:        d.Get("nodeid").(int),
+		Nodeid:        intPtr(d.Get("nodeid").(int)),
 	}
 
 	err := client.ActOnResource("routerdynamicrouting", &routerdynamicrouting, "apply")

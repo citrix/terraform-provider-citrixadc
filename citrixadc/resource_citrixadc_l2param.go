@@ -114,13 +114,10 @@ func createL2paramFunc(ctx context.Context, d *schema.ResourceData, meta interfa
 	l2param := network.L2param{
 		Bdggrpproxyarp:          d.Get("bdggrpproxyarp").(string),
 		Bdgsetting:              d.Get("bdgsetting").(string),
-		Bridgeagetimeout:        d.Get("bridgeagetimeout").(int),
 		Garponvridintf:          d.Get("garponvridintf").(string),
 		Garpreply:               d.Get("garpreply").(string),
 		Macmodefwdmypkt:         d.Get("macmodefwdmypkt").(string),
-		Maxbridgecollision:      d.Get("maxbridgecollision").(int),
 		Mbfinstlearning:         d.Get("mbfinstlearning").(string),
-		Mbfpeermacupdate:        d.Get("mbfpeermacupdate").(int),
 		Proxyarp:                d.Get("proxyarp").(string),
 		Returntoethernetsender:  d.Get("returntoethernetsender").(string),
 		Rstintfonhafo:           d.Get("rstintfonhafo").(string),
@@ -128,6 +125,16 @@ func createL2paramFunc(ctx context.Context, d *schema.ResourceData, meta interfa
 		Stopmacmoveupdate:       d.Get("stopmacmoveupdate").(string),
 		Usemymac:                d.Get("usemymac").(string),
 		Usenetprofilebsdtraffic: d.Get("usenetprofilebsdtraffic").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("bridgeagetimeout"); !raw.IsNull() {
+		l2param.Bridgeagetimeout = intPtr(d.Get("bridgeagetimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxbridgecollision"); !raw.IsNull() {
+		l2param.Maxbridgecollision = intPtr(d.Get("maxbridgecollision").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("mbfpeermacupdate"); !raw.IsNull() {
+		l2param.Mbfpeermacupdate = intPtr(d.Get("mbfpeermacupdate").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.L2param.Type(), &l2param)
@@ -189,7 +196,7 @@ func updateL2paramFunc(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 	if d.HasChange("bridgeagetimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Bridgeagetimeout has changed for l2param, starting update")
-		l2param.Bridgeagetimeout = d.Get("bridgeagetimeout").(int)
+		l2param.Bridgeagetimeout = intPtr(d.Get("bridgeagetimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("garponvridintf") {
@@ -209,7 +216,7 @@ func updateL2paramFunc(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 	if d.HasChange("maxbridgecollision") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxbridgecollision has changed for l2param, starting update")
-		l2param.Maxbridgecollision = d.Get("maxbridgecollision").(int)
+		l2param.Maxbridgecollision = intPtr(d.Get("maxbridgecollision").(int))
 		hasChange = true
 	}
 	if d.HasChange("mbfinstlearning") {
@@ -219,7 +226,7 @@ func updateL2paramFunc(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 	if d.HasChange("mbfpeermacupdate") {
 		log.Printf("[DEBUG]  citrixadc-provider: Mbfpeermacupdate has changed for l2param, starting update")
-		l2param.Mbfpeermacupdate = d.Get("mbfpeermacupdate").(int)
+		l2param.Mbfpeermacupdate = intPtr(d.Get("mbfpeermacupdate").(int))
 		hasChange = true
 	}
 	if d.HasChange("proxyarp") {

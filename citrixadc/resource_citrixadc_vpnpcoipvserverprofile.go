@@ -44,7 +44,10 @@ func createVpnpcoipvserverprofileFunc(ctx context.Context, d *schema.ResourceDat
 	vpnpcoipvserverprofile := vpn.Vpnpcoipvserverprofile{
 		Logindomain: d.Get("logindomain").(string),
 		Name:        d.Get("name").(string),
-		Udpport:     d.Get("udpport").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("udpport"); !raw.IsNull() {
+		vpnpcoipvserverprofile.Udpport = intPtr(d.Get("udpport").(int))
 	}
 
 	_, err := client.AddResource("vpnpcoipvserverprofile", vpnpcoipvserverprofileName, &vpnpcoipvserverprofile)
@@ -93,7 +96,7 @@ func updateVpnpcoipvserverprofileFunc(ctx context.Context, d *schema.ResourceDat
 	}
 	if d.HasChange("udpport") {
 		log.Printf("[DEBUG]  citrixadc-provider: Udpport has changed for vpnpcoipvserverprofile %s, starting update", vpnpcoipvserverprofileName)
-		vpnpcoipvserverprofile.Udpport = d.Get("udpport").(int)
+		vpnpcoipvserverprofile.Udpport = intPtr(d.Get("udpport").(int))
 		hasChange = true
 	}
 

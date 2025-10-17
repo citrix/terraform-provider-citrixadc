@@ -107,14 +107,12 @@ func createL3paramFunc(ctx context.Context, d *schema.ResourceData, meta interfa
 	l3paramName := resource.PrefixedUniqueId("tf-l3param-")
 
 	l3param := network.L3param{
-		Acllogtime:           d.Get("acllogtime").(int),
 		Allowclasseipv4:      d.Get("allowclasseipv4").(string),
 		Dropdfflag:           d.Get("dropdfflag").(string),
 		Dropipfragments:      d.Get("dropipfragments").(string),
 		Dynamicrouting:       d.Get("dynamicrouting").(string),
 		Externalloopback:     d.Get("externalloopback").(string),
 		Forwardicmpfragments: d.Get("forwardicmpfragments").(string),
-		Icmpgenratethreshold: d.Get("icmpgenratethreshold").(int),
 		Implicitaclallow:     d.Get("implicitaclallow").(string),
 		Ipv6dynamicrouting:   d.Get("ipv6dynamicrouting").(string),
 		Miproundrobin:        d.Get("miproundrobin").(string),
@@ -122,6 +120,13 @@ func createL3paramFunc(ctx context.Context, d *schema.ResourceData, meta interfa
 		Srcnat:               d.Get("srcnat").(string),
 		Tnlpmtuwoconn:        d.Get("tnlpmtuwoconn").(string),
 		Usipserverstraypkt:   d.Get("usipserverstraypkt").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("acllogtime"); !raw.IsNull() {
+		l3param.Acllogtime = intPtr(d.Get("acllogtime").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("icmpgenratethreshold"); !raw.IsNull() {
+		l3param.Icmpgenratethreshold = intPtr(d.Get("icmpgenratethreshold").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.L3param.Type(), &l3param)
@@ -172,7 +177,7 @@ func updateL3paramFunc(ctx context.Context, d *schema.ResourceData, meta interfa
 	hasChange := false
 	if d.HasChange("acllogtime") {
 		log.Printf("[DEBUG]  citrixadc-provider: Acllogtime has changed for l3param, starting update")
-		l3param.Acllogtime = d.Get("acllogtime").(int)
+		l3param.Acllogtime = intPtr(d.Get("acllogtime").(int))
 		hasChange = true
 	}
 	if d.HasChange("allowclasseipv4") {
@@ -207,7 +212,7 @@ func updateL3paramFunc(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 	if d.HasChange("icmpgenratethreshold") {
 		log.Printf("[DEBUG]  citrixadc-provider: Icmpgenratethreshold has changed for l3param, starting update")
-		l3param.Icmpgenratethreshold = d.Get("icmpgenratethreshold").(int)
+		l3param.Icmpgenratethreshold = intPtr(d.Get("icmpgenratethreshold").(int))
 		hasChange = true
 	}
 	if d.HasChange("implicitaclallow") {

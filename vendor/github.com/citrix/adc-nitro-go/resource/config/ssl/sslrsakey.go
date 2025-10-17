@@ -27,7 +27,7 @@ type Sslrsakey struct {
 	/**
 	* Size, in bits, of the RSA key.
 	*/
-	Bits int `json:"bits,omitempty"`
+	Bits *int `json:"bits,omitempty"`
 	/**
 	* Public exponent for the RSA key. The exponent is part of the cipher algorithm and is required for creating the RSA key.
 	*/

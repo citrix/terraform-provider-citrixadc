@@ -91,18 +91,33 @@ func createLsntransportprofileFunc(ctx context.Context, d *schema.ResourceData, 
 	client := meta.(*NetScalerNitroClient).client
 	lsntransportprofileName := d.Get("transportprofilename").(string)
 	lsntransportprofile := lsn.Lsntransportprofile{
-		Finrsttimeout:        d.Get("finrsttimeout").(int),
-		Groupsessionlimit:    d.Get("groupsessionlimit").(int),
 		Portpreserveparity:   d.Get("portpreserveparity").(string),
 		Portpreserverange:    d.Get("portpreserverange").(string),
-		Portquota:            d.Get("portquota").(int),
-		Sessionquota:         d.Get("sessionquota").(int),
-		Sessiontimeout:       d.Get("sessiontimeout").(int),
-		Stuntimeout:          d.Get("stuntimeout").(int),
 		Syncheck:             d.Get("syncheck").(string),
-		Synidletimeout:       d.Get("synidletimeout").(int),
 		Transportprofilename: d.Get("transportprofilename").(string),
 		Transportprotocol:    d.Get("transportprotocol").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("finrsttimeout"); !raw.IsNull() {
+		lsntransportprofile.Finrsttimeout = intPtr(d.Get("finrsttimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("groupsessionlimit"); !raw.IsNull() {
+		lsntransportprofile.Groupsessionlimit = intPtr(d.Get("groupsessionlimit").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("portquota"); !raw.IsNull() {
+		lsntransportprofile.Portquota = intPtr(d.Get("portquota").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("sessionquota"); !raw.IsNull() {
+		lsntransportprofile.Sessionquota = intPtr(d.Get("sessionquota").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("sessiontimeout"); !raw.IsNull() {
+		lsntransportprofile.Sessiontimeout = intPtr(d.Get("sessiontimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("stuntimeout"); !raw.IsNull() {
+		lsntransportprofile.Stuntimeout = intPtr(d.Get("stuntimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("synidletimeout"); !raw.IsNull() {
+		lsntransportprofile.Synidletimeout = intPtr(d.Get("synidletimeout").(int))
 	}
 
 	_, err := client.AddResource("lsntransportprofile", lsntransportprofileName, &lsntransportprofile)
@@ -155,12 +170,12 @@ func updateLsntransportprofileFunc(ctx context.Context, d *schema.ResourceData, 
 	hasChange := false
 	if d.HasChange("finrsttimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Finrsttimeout has changed for lsntransportprofile %s, starting update", lsntransportprofileName)
-		lsntransportprofile.Finrsttimeout = d.Get("finrsttimeout").(int)
+		lsntransportprofile.Finrsttimeout = intPtr(d.Get("finrsttimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("groupsessionlimit") {
 		log.Printf("[DEBUG]  citrixadc-provider: Groupsessionlimit has changed for lsntransportprofile %s, starting update", lsntransportprofileName)
-		lsntransportprofile.Groupsessionlimit = d.Get("groupsessionlimit").(int)
+		lsntransportprofile.Groupsessionlimit = intPtr(d.Get("groupsessionlimit").(int))
 		hasChange = true
 	}
 	if d.HasChange("portpreserveparity") {
@@ -175,22 +190,22 @@ func updateLsntransportprofileFunc(ctx context.Context, d *schema.ResourceData, 
 	}
 	if d.HasChange("portquota") {
 		log.Printf("[DEBUG]  citrixadc-provider: Portquota has changed for lsntransportprofile %s, starting update", lsntransportprofileName)
-		lsntransportprofile.Portquota = d.Get("portquota").(int)
+		lsntransportprofile.Portquota = intPtr(d.Get("portquota").(int))
 		hasChange = true
 	}
 	if d.HasChange("sessionquota") {
 		log.Printf("[DEBUG]  citrixadc-provider: Sessionquota has changed for lsntransportprofile %s, starting update", lsntransportprofileName)
-		lsntransportprofile.Sessionquota = d.Get("sessionquota").(int)
+		lsntransportprofile.Sessionquota = intPtr(d.Get("sessionquota").(int))
 		hasChange = true
 	}
 	if d.HasChange("sessiontimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Sessiontimeout has changed for lsntransportprofile %s, starting update", lsntransportprofileName)
-		lsntransportprofile.Sessiontimeout = d.Get("sessiontimeout").(int)
+		lsntransportprofile.Sessiontimeout = intPtr(d.Get("sessiontimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("stuntimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Stuntimeout has changed for lsntransportprofile %s, starting update", lsntransportprofileName)
-		lsntransportprofile.Stuntimeout = d.Get("stuntimeout").(int)
+		lsntransportprofile.Stuntimeout = intPtr(d.Get("stuntimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("syncheck") {
@@ -200,7 +215,7 @@ func updateLsntransportprofileFunc(ctx context.Context, d *schema.ResourceData, 
 	}
 	if d.HasChange("synidletimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Synidletimeout has changed for lsntransportprofile %s, starting update", lsntransportprofileName)
-		lsntransportprofile.Synidletimeout = d.Get("synidletimeout").(int)
+		lsntransportprofile.Synidletimeout = intPtr(d.Get("synidletimeout").(int))
 		hasChange = true
 	}
 

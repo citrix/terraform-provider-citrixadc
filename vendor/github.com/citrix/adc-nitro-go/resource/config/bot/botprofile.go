@@ -112,7 +112,7 @@ type Botprofile struct {
 	/**
 	* Size of the KM data send by the browser, needs to be processed on ADC
 	*/
-	Kmeventspostbodylimit int `json:"kmeventspostbodylimit,omitempty"`
+	Kmeventspostbodylimit *int `json:"kmeventspostbodylimit,omitempty"`
 	/**
 	* Bot verbose Logging. Based on the log level, ADC will log additional information whenever client is detected as a bot.
 	*/
@@ -124,7 +124,7 @@ type Botprofile struct {
 	/**
 	* Number of requests to allow without bot session cookie if device fingerprint is enabled
 	*/
-	Dfprequestlimit int `json:"dfprequestlimit,omitempty"`
+	Dfprequestlimit *int `json:"dfprequestlimit,omitempty"`
 	/**
 	* Name of the SessionCookie that the Bot Management feature uses for tracking.
 		Must begin with a letter or number, and can consist of from 1 to 31 letters, numbers, and the hyphen (-) and underscore (_) symbols.
@@ -135,7 +135,7 @@ type Botprofile struct {
 	/**
 	* Timeout, in seconds, after which a user session is terminated.
 	*/
-	Sessiontimeout int `json:"sessiontimeout,omitempty"`
+	Sessiontimeout *int `json:"sessiontimeout,omitempty"`
 	/**
 	* Add the specified flags to bot session cookies. Available settings function as follows:
 		* None - Do not add flags to cookies.

@@ -24,8 +24,8 @@ type Cmppolicycrvserverbinding struct {
 	* The name of the entity to which the policy is bound.
 	*/
 	Boundto string `json:"boundto,omitempty"`
-	Priority int `json:"priority,omitempty"`
-	Activepolicy int `json:"activepolicy,omitempty"`
+	Priority *int `json:"priority,omitempty"`
+	Activepolicy *int `json:"activepolicy,omitempty"`
 	/**
 	* Name of the HTTP compression policy for which to display details.
 	*/

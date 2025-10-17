@@ -95,8 +95,11 @@ func createCrvserver_crpolicy_bindingFunc(ctx context.Context, d *schema.Resourc
 		Labeltype:              d.Get("labeltype").(string),
 		Name:                   name.(string),
 		Policyname:             policyname.(string),
-		Priority:               d.Get("priority").(int),
 		Targetvserver:          d.Get("targetvserver").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		crvserver_crpolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	_, err := client.AddResource(service.Crvserver_crpolicy_binding.Type(), bindingId, &crvserver_crpolicy_binding)

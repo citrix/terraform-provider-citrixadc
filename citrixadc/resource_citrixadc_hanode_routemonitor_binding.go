@@ -49,9 +49,12 @@ func createHanode_routemonitor_bindingFunc(ctx context.Context, d *schema.Resour
 	routemonitor := d.Get("routemonitor").(string)
 	bindingId := fmt.Sprintf("%s,%s", id, routemonitor)
 	hanode_routemonitor_binding := ha.Hanoderoutemonitorbinding{
-		Id:           d.Get("hanode_id").(int),
 		Netmask:      d.Get("netmask").(string),
 		Routemonitor: d.Get("routemonitor").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("hanode_id"); !raw.IsNull() {
+		hanode_routemonitor_binding.Id = intPtr(d.Get("hanode_id").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Hanode_routemonitor_binding.Type(), &hanode_routemonitor_binding)

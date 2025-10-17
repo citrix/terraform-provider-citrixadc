@@ -62,7 +62,10 @@ func createAuditsyslogglobal_auditsyslogpolicy_bindingFunc(ctx context.Context, 
 	auditsyslogglobal_auditsyslogpolicy_binding := audit.Auditsyslogglobalauditsyslogpolicybinding{
 		Globalbindtype: d.Get("globalbindtype").(string),
 		Policyname:     d.Get("policyname").(string),
-		Priority:       d.Get("priority").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		auditsyslogglobal_auditsyslogpolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	err := client.UpdateUnnamedResource("auditsyslogglobal_auditsyslogpolicy_binding", &auditsyslogglobal_auditsyslogpolicy_binding)

@@ -53,7 +53,7 @@ type Authenticationoauthidpprofile struct {
 	/**
 	* This option specifies the duration for which the token sent by Citrix ADC IdP is valid. For example, if skewTime is 10, then token would be valid from (current time - 10) min to (current time + 10) min, ie 20min in all.
 	*/
-	Skewtime int `json:"skewtime,omitempty"`
+	Skewtime *int `json:"skewtime,omitempty"`
 	/**
 	* This group will be part of AAA session's internal group list. This will be helpful to admin in Nfactor flow to decide right AAA configuration for Relaying Party. In authentication policy AAA.USER.IS_MEMBER_OF("<default_auth_group>")  is way to use this feature.
 	*/
@@ -65,7 +65,7 @@ type Authenticationoauthidpprofile struct {
 	/**
 	* Interval at which Relying Party metadata is refreshed.
 	*/
-	Refreshinterval int `json:"refreshinterval,omitempty"`
+	Refreshinterval *int `json:"refreshinterval,omitempty"`
 	/**
 	* Option to encrypt token when Citrix ADC IDP sends one.
 	*/

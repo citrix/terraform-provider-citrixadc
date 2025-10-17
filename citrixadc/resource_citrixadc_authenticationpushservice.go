@@ -57,11 +57,14 @@ func createAuthenticationpushserviceFunc(ctx context.Context, d *schema.Resource
 	client := meta.(*NetScalerNitroClient).client
 	authenticationpushserviceName := d.Get("name").(string)
 	authenticationpushservice := authentication.Authenticationpushservice{
-		Clientid:        d.Get("clientid").(string),
-		Clientsecret:    d.Get("clientsecret").(string),
-		Customerid:      d.Get("customerid").(string),
-		Name:            d.Get("name").(string),
-		Refreshinterval: d.Get("refreshinterval").(int),
+		Clientid:     d.Get("clientid").(string),
+		Clientsecret: d.Get("clientsecret").(string),
+		Customerid:   d.Get("customerid").(string),
+		Name:         d.Get("name").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("refreshinterval"); !raw.IsNull() {
+		authenticationpushservice.Refreshinterval = intPtr(d.Get("refreshinterval").(int))
 	}
 
 	_, err := client.AddResource("authenticationpushservice", authenticationpushserviceName, &authenticationpushservice)
@@ -126,7 +129,7 @@ func updateAuthenticationpushserviceFunc(ctx context.Context, d *schema.Resource
 	}
 	if d.HasChange("refreshinterval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Refreshinterval has changed for authenticationpushservice %s, starting update", authenticationpushserviceName)
-		authenticationpushservice.Refreshinterval = d.Get("refreshinterval").(int)
+		authenticationpushservice.Refreshinterval = intPtr(d.Get("refreshinterval").(int))
 		hasChange = true
 	}
 

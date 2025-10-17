@@ -27,38 +27,22 @@ import (
 const testAccAppfwprofile_safeobject_binding_basic = `
 	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
 		name                     = "tf_appfwprofile"
-		bufferoverflowaction     = ["none"]
-		contenttypeaction        = ["none"]
-		cookieconsistencyaction  = ["none"]
-		creditcard               = ["none"]
-		creditcardaction         = ["none"]
-		crosssitescriptingaction = ["none"]
-		csrftagaction            = ["none"]
-		denyurlaction            = ["none"]
-		dynamiclearning          = ["none"]
-		fieldconsistencyaction   = ["none"]
-		fieldformataction        = ["none"]
-		fileuploadtypesaction    = ["none"]
-		inspectcontenttypes      = ["none"]
-		jsondosaction            = ["none"]
-		jsonsqlinjectionaction   = ["none"]
-		jsonxssaction            = ["none"]
-		multipleheaderaction     = ["none"]
-		sqlinjectionaction       = ["none"]
-		starturlaction           = ["none"]
 		type                     = ["HTML"]
-		xmlattachmentaction      = ["none"]
-		xmldosaction             = ["none"]
-		xmlformataction          = ["none"]
-		xmlsoapfaultaction       = ["none"]
-		xmlsqlinjectionaction    = ["none"]
-		xmlvalidationaction      = ["none"]
-		xmlwsiaction             = ["none"]
-		xmlxssaction             = ["none"]
 	}
-	resource "citrixadc_appfwprofile_safeobject_binding" "tf_binding" {
+	resource "citrixadc_appfwprofile_safeobject_binding" "tf_binding1" {
 		name           = citrixadc_appfwprofile.tf_appfwprofile.name
 		safeobject     = "tf_safeobject"
+		as_expression  = "regularexpression"
+		maxmatchlength = 10
+		state          = "DISABLED"
+		alertonly      = "OFF"
+		isautodeployed = "AUTODEPLOYED"
+		comment        = "Example"
+		action         = ["block", "log"]
+	}
+	resource "citrixadc_appfwprofile_safeobject_binding" "tf_binding2" {
+		name           = citrixadc_appfwprofile.tf_appfwprofile.name
+		safeobject     = "new_tf_safeobject"
 		as_expression  = "regularexpression"
 		maxmatchlength = 10
 		state          = "DISABLED"
@@ -73,34 +57,7 @@ const testAccAppfwprofile_safeobject_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
 	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
 		name                     = "tf_appfwprofile"
-		bufferoverflowaction     = ["none"]
-		contenttypeaction        = ["none"]
-		cookieconsistencyaction  = ["none"]
-		creditcard               = ["none"]
-		creditcardaction         = ["none"]
-		crosssitescriptingaction = ["none"]
-		csrftagaction            = ["none"]
-		denyurlaction            = ["none"]
-		dynamiclearning          = ["none"]
-		fieldconsistencyaction   = ["none"]
-		fieldformataction        = ["none"]
-		fileuploadtypesaction    = ["none"]
-		inspectcontenttypes      = ["none"]
-		jsondosaction            = ["none"]
-		jsonsqlinjectionaction   = ["none"]
-		jsonxssaction            = ["none"]
-		multipleheaderaction     = ["none"]
-		sqlinjectionaction       = ["none"]
-		starturlaction           = ["none"]
 		type                     = ["HTML"]
-		xmlattachmentaction      = ["none"]
-		xmldosaction             = ["none"]
-		xmlformataction          = ["none"]
-		xmlsoapfaultaction       = ["none"]
-		xmlsqlinjectionaction    = ["none"]
-		xmlvalidationaction      = ["none"]
-		xmlwsiaction             = ["none"]
-		xmlxssaction             = ["none"]
 	}
 `
 
@@ -113,13 +70,33 @@ func TestAccAppfwprofile_safeobject_binding_basic(t *testing.T) {
 			{
 				Config: testAccAppfwprofile_safeobject_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppfwprofile_safeobject_bindingExist("citrixadc_appfwprofile_safeobject_binding.tf_binding", nil),
+					testAccCheckAppfwprofile_safeobject_bindingExist("citrixadc_appfwprofile_safeobject_binding.tf_binding1", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_safeobject_binding.tf_binding1", "name", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_safeobject_binding.tf_binding1", "safeobject", "tf_safeobject"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_safeobject_binding.tf_binding1", "as_expression", "regularexpression"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_safeobject_binding.tf_binding1", "maxmatchlength", "10"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_safeobject_binding.tf_binding1", "state", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_safeobject_binding.tf_binding1", "alertonly", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_safeobject_binding.tf_binding1", "isautodeployed", "AUTODEPLOYED"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_safeobject_binding.tf_binding1", "comment", "Example"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_safeobject_binding.tf_binding1", "action.#", "2"),
+					testAccCheckAppfwprofile_safeobject_bindingExist("citrixadc_appfwprofile_safeobject_binding.tf_binding2", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_safeobject_binding.tf_binding2", "name", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_safeobject_binding.tf_binding2", "safeobject", "new_tf_safeobject"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_safeobject_binding.tf_binding2", "as_expression", "regularexpression"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_safeobject_binding.tf_binding2", "maxmatchlength", "10"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_safeobject_binding.tf_binding2", "state", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_safeobject_binding.tf_binding2", "alertonly", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_safeobject_binding.tf_binding2", "isautodeployed", "AUTODEPLOYED"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_safeobject_binding.tf_binding2", "comment", "Example"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_safeobject_binding.tf_binding2", "action.#", "2"),
 				),
 			},
 			{
 				Config: testAccAppfwprofile_safeobject_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppfwprofile_safeobject_bindingNotExist("citrixadc_appfwprofile_safeobject_binding.tf_binding", "tf_appfwprofile,tf_safeobject"),
+					testAccCheckAppfwprofile_safeobject_bindingNotExist("citrixadc_appfwprofile_safeobject_binding.tf_binding1", "tf_appfwprofile,tf_safeobject"),
+					testAccCheckAppfwprofile_safeobject_bindingNotExist("citrixadc_appfwprofile_safeobject_binding.tf_binding2", "tf_appfwprofile,new_tf_safeobject"),
 				),
 			},
 		},

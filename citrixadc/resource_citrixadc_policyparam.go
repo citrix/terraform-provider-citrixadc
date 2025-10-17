@@ -38,8 +38,10 @@ func createPolicyparamFunc(ctx context.Context, d *schema.ResourceData, meta int
 	// there is no primary key in policyparam resource. Hence generate one for terraform state maintenance
 	policyparamName = resource.PrefixedUniqueId("tf-policyparam-")
 
-	policyparam := policy.Policyparam{
-		Timeout: d.Get("timeout").(int),
+	policyparam := policy.Policyparam{}
+
+	if raw := d.GetRawConfig().GetAttr("timeout"); !raw.IsNull() {
+		policyparam.Timeout = intPtr(d.Get("timeout").(int))
 	}
 
 	err := client.UpdateUnnamedResource("policyparam", &policyparam)
@@ -77,7 +79,7 @@ func updatePolicyparamFunc(ctx context.Context, d *schema.ResourceData, meta int
 
 	if d.HasChange("timeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Timeout has changed for policyparam, starting update")
-		policyparam.Timeout = d.Get("timeout").(int)
+		policyparam.Timeout = intPtr(d.Get("timeout").(int))
 		hasChange = true
 	}
 

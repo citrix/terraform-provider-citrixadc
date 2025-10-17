@@ -51,7 +51,10 @@ func createSslcertkey_sslocspresponder_bindingFunc(ctx context.Context, d *schem
 	sslcertkey_sslocspresponder_binding := ssl.Sslcertkeysslocspresponderbinding{
 		Certkey:       d.Get("certkey").(string),
 		Ocspresponder: d.Get("ocspresponder").(string),
-		Priority:      d.Get("priority").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		sslcertkey_sslocspresponder_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	_, err := client.AddResource(service.Sslcertkey_sslocspresponder_binding.Type(), bindingId, &sslcertkey_sslocspresponder_binding)

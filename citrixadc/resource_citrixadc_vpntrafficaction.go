@@ -95,7 +95,6 @@ func createVpntrafficactionFunc(ctx context.Context, d *schema.ResourceData, met
 	client := meta.(*NetScalerNitroClient).client
 	vpntrafficactionName := d.Get("name").(string)
 	vpntrafficaction := vpn.Vpntrafficaction{
-		Apptimeout:       d.Get("apptimeout").(int),
 		Formssoaction:    d.Get("formssoaction").(string),
 		Fta:              d.Get("fta").(string),
 		Hdx:              d.Get("hdx").(string),
@@ -108,6 +107,10 @@ func createVpntrafficactionFunc(ctx context.Context, d *schema.ResourceData, met
 		Sso:              d.Get("sso").(string),
 		Userexpression:   d.Get("userexpression").(string),
 		Wanscaler:        d.Get("wanscaler").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("apptimeout"); !raw.IsNull() {
+		vpntrafficaction.Apptimeout = intPtr(d.Get("apptimeout").(int))
 	}
 
 	_, err := client.AddResource(service.Vpntrafficaction.Type(), vpntrafficactionName, &vpntrafficaction)
@@ -161,7 +164,7 @@ func updateVpntrafficactionFunc(ctx context.Context, d *schema.ResourceData, met
 	hasChange := false
 	if d.HasChange("apptimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Apptimeout has changed for vpntrafficaction %s, starting update", vpntrafficactionName)
-		vpntrafficaction.Apptimeout = d.Get("apptimeout").(int)
+		vpntrafficaction.Apptimeout = intPtr(d.Get("apptimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("formssoaction") {

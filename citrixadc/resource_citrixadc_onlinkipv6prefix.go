@@ -74,8 +74,13 @@ func createOnlinkipv6prefixFunc(ctx context.Context, d *schema.ResourceData, met
 		Depricateprefix:          d.Get("depricateprefix").(string),
 		Ipv6prefix:               d.Get("ipv6prefix").(string),
 		Onlinkprefix:             d.Get("onlinkprefix").(string),
-		Prefixpreferredlifetime:  d.Get("prefixpreferredlifetime").(int),
-		Prefixvalidelifetime:     d.Get("prefixvalidelifetime").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("prefixpreferredlifetime"); !raw.IsNull() {
+		onlinkipv6prefix.Prefixpreferredlifetime = intPtr(d.Get("prefixpreferredlifetime").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("prefixvalidelifetime"); !raw.IsNull() {
+		onlinkipv6prefix.Prefixvalidelifetime = intPtr(d.Get("prefixvalidelifetime").(int))
 	}
 
 	_, err := client.AddResource(service.Onlinkipv6prefix.Type(), onlinkipv6prefixName, &onlinkipv6prefix)
@@ -143,12 +148,12 @@ func updateOnlinkipv6prefixFunc(ctx context.Context, d *schema.ResourceData, met
 	}
 	if d.HasChange("prefixpreferredlifetime") {
 		log.Printf("[DEBUG]  citrixadc-provider: Prefixpreferredlifetime has changed for onlinkipv6prefix %s, starting update", onlinkipv6prefixName)
-		onlinkipv6prefix.Prefixpreferredlifetime = d.Get("prefixpreferredlifetime").(int)
+		onlinkipv6prefix.Prefixpreferredlifetime = intPtr(d.Get("prefixpreferredlifetime").(int))
 		hasChange = true
 	}
 	if d.HasChange("prefixvalidelifetime") {
 		log.Printf("[DEBUG]  citrixadc-provider: Prefixvalidelifetime has changed for onlinkipv6prefix %s, starting update", onlinkipv6prefixName)
-		onlinkipv6prefix.Prefixvalidelifetime = d.Get("prefixvalidelifetime").(int)
+		onlinkipv6prefix.Prefixvalidelifetime = intPtr(d.Get("prefixvalidelifetime").(int))
 		hasChange = true
 	}
 

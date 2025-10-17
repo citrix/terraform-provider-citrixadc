@@ -67,12 +67,17 @@ func createContentinspectionprofileFunc(ctx context.Context, d *schema.ResourceD
 	contentinspectionprofileName := d.Get("name").(string)
 	contentinspectionprofile := contentinspection.Contentinspectionprofile{
 		Egressinterface:  d.Get("egressinterface").(string),
-		Egressvlan:       d.Get("egressvlan").(int),
 		Ingressinterface: d.Get("ingressinterface").(string),
-		Ingressvlan:      d.Get("ingressvlan").(int),
 		Iptunnel:         d.Get("iptunnel").(string),
 		Name:             d.Get("name").(string),
 		Type:             d.Get("type").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("egressvlan"); !raw.IsNull() {
+		contentinspectionprofile.Egressvlan = intPtr(d.Get("egressvlan").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("ingressvlan"); !raw.IsNull() {
+		contentinspectionprofile.Ingressvlan = intPtr(d.Get("ingressvlan").(int))
 	}
 
 	_, err := client.AddResource("contentinspectionprofile", contentinspectionprofileName, &contentinspectionprofile)
@@ -124,7 +129,7 @@ func updateContentinspectionprofileFunc(ctx context.Context, d *schema.ResourceD
 	}
 	if d.HasChange("egressvlan") {
 		log.Printf("[DEBUG]  citrixadc-provider: Egressvlan has changed for contentinspectionprofile %s, starting update", contentinspectionprofileName)
-		contentinspectionprofile.Egressvlan = d.Get("egressvlan").(int)
+		contentinspectionprofile.Egressvlan = intPtr(d.Get("egressvlan").(int))
 		hasChange = true
 	}
 	if d.HasChange("ingressinterface") {
@@ -134,7 +139,7 @@ func updateContentinspectionprofileFunc(ctx context.Context, d *schema.ResourceD
 	}
 	if d.HasChange("ingressvlan") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ingressvlan has changed for contentinspectionprofile %s, starting update", contentinspectionprofileName)
-		contentinspectionprofile.Ingressvlan = d.Get("ingressvlan").(int)
+		contentinspectionprofile.Ingressvlan = intPtr(d.Get("ingressvlan").(int))
 		hasChange = true
 	}
 	if d.HasChange("iptunnel") {

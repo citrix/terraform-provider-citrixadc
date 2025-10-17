@@ -141,8 +141,8 @@ func updateSnmpalarmFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("normalvalue") {
 		log.Printf("[DEBUG]  citrixadc-provider: Normalvalue has changed for snmpalarm, starting update")
-		snmpalarm["normalvalue"] = d.Get("normalvalue").(int)
-		snmpalarm["thresholdvalue"] = d.Get("thresholdvalue").(int)
+		snmpalarm["normalvalue"] = intPtr(d.Get("normalvalue").(int))
+		snmpalarm["thresholdvalue"] = intPtr(d.Get("thresholdvalue").(int))
 		hasChange = true
 	}
 	if d.HasChange("severity") {
@@ -157,12 +157,12 @@ func updateSnmpalarmFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("thresholdvalue") {
 		log.Printf("[DEBUG]  citrixadc-provider: Thresholdvalue has changed for snmpalarm, starting update")
-		snmpalarm["thresholdvalue"] = d.Get("thresholdvalue").(int)
+		snmpalarm["thresholdvalue"] = intPtr(d.Get("thresholdvalue").(int))
 		hasChange = true
 	}
 	if d.HasChange("time") {
 		log.Printf("[DEBUG]  citrixadc-provider: Time has changed for snmpalarm, starting update")
-		snmpalarm["time"] = d.Get("time").(int)
+		snmpalarm["time"] = intPtr(d.Get("time").(int))
 		hasChange = true
 	}
 	if stateChange {

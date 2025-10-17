@@ -59,9 +59,12 @@ func createAuthenticationauthnprofileFunc(ctx context.Context, d *schema.Resourc
 	authenticationauthnprofile := authentication.Authenticationauthnprofile{
 		Authenticationdomain: d.Get("authenticationdomain").(string),
 		Authenticationhost:   d.Get("authenticationhost").(string),
-		Authenticationlevel:  d.Get("authenticationlevel").(int),
 		Authnvsname:          d.Get("authnvsname").(string),
 		Name:                 d.Get("name").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("authenticationlevel"); !raw.IsNull() {
+		authenticationauthnprofile.Authenticationlevel = intPtr(d.Get("authenticationlevel").(int))
 	}
 
 	_, err := client.AddResource(service.Authenticationauthnprofile.Type(), authenticationauthnprofileName, &authenticationauthnprofile)
@@ -117,7 +120,7 @@ func updateAuthenticationauthnprofileFunc(ctx context.Context, d *schema.Resourc
 	}
 	if d.HasChange("authenticationlevel") {
 		log.Printf("[DEBUG]  citrixadc-provider: Authenticationlevel has changed for authenticationauthnprofile %s, starting update", authenticationauthnprofileName)
-		authenticationauthnprofile.Authenticationlevel = d.Get("authenticationlevel").(int)
+		authenticationauthnprofile.Authenticationlevel = intPtr(d.Get("authenticationlevel").(int))
 		hasChange = true
 	}
 

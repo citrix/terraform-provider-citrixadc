@@ -103,10 +103,15 @@ func createRnatFunc(ctx context.Context, d *schema.ResourceData, meta interface{
 		Network:          d.Get("network").(string),
 		Newname:          d.Get("newname").(string),
 		Ownergroup:       d.Get("ownergroup").(string),
-		Redirectport:     d.Get("redirectport").(int),
 		Srcippersistency: d.Get("srcippersistency").(string),
-		Td:               d.Get("td").(int),
 		Useproxyport:     d.Get("useproxyport").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("redirectport"); !raw.IsNull() {
+		rnat.Redirectport = intPtr(d.Get("redirectport").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("td"); !raw.IsNull() {
+		rnat.Td = intPtr(d.Get("td").(int))
 	}
 
 	_, err := client.AddResource(service.Rnat.Type(), rnatName, &rnat)
@@ -178,7 +183,7 @@ func updateRnatFunc(ctx context.Context, d *schema.ResourceData, meta interface{
 	}
 	if d.HasChange("redirectport") {
 		log.Printf("[DEBUG]  citrixadc-provider: Redirectport has changed for rnat %s, starting update", rnatName)
-		rnat.Redirectport = d.Get("redirectport").(int)
+		rnat.Redirectport = intPtr(d.Get("redirectport").(int))
 		hasChange = true
 	}
 	if d.HasChange("srcippersistency") {
@@ -188,7 +193,7 @@ func updateRnatFunc(ctx context.Context, d *schema.ResourceData, meta interface{
 	}
 	if d.HasChange("td") {
 		log.Printf("[DEBUG]  citrixadc-provider: Td has changed for rnat %s, starting update", rnatName)
-		rnat.Td = d.Get("td").(int)
+		rnat.Td = intPtr(d.Get("td").(int))
 		hasChange = true
 	}
 	if d.HasChange("useproxyport") {

@@ -126,16 +126,27 @@ func createServicegroup_servicegroupmember_bindingFunc(ctx context.Context, d *s
 
 	servicegroup_servicegroupmember_binding := basic.Servicegroupservicegroupmemberbinding{
 		Customserverid:   d.Get("customserverid").(string),
-		Dbsttl:           d.Get("dbsttl").(int),
-		Hashid:           d.Get("hashid").(int),
 		Ip:               d.Get("ip").(string),
 		Nameserver:       d.Get("nameserver").(string),
-		Port:             d.Get("port").(int),
-		Serverid:         d.Get("serverid").(int),
 		Servername:       d.Get("servername").(string),
 		Servicegroupname: d.Get("servicegroupname").(string),
 		State:            d.Get("state").(string),
-		Weight:           d.Get("weight").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("dbsttl"); !raw.IsNull() {
+		servicegroup_servicegroupmember_binding.Dbsttl = intPtr(d.Get("dbsttl").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("hashid"); !raw.IsNull() {
+		servicegroup_servicegroupmember_binding.Hashid = intPtr(d.Get("hashid").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("port"); !raw.IsNull() {
+		servicegroup_servicegroupmember_binding.Port = intPtr(d.Get("port").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("serverid"); !raw.IsNull() {
+		servicegroup_servicegroupmember_binding.Serverid = intPtr(d.Get("serverid").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("weight"); !raw.IsNull() {
+		servicegroup_servicegroupmember_binding.Weight = intPtr(d.Get("weight").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Servicegroup_servicegroupmember_binding.Type(), &servicegroup_servicegroupmember_binding)

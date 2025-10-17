@@ -60,12 +60,19 @@ func createSmppparamFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	smppparamName := resource.PrefixedUniqueId("tf-smppparam-")
 
 	smppparam := smpp.Smppparam{
-		Addrnpi:      d.Get("addrnpi").(int),
-		Addrrange:    d.Get("addrrange").(string),
-		Addrton:      d.Get("addrton").(int),
-		Clientmode:   d.Get("clientmode").(string),
-		Msgqueue:     d.Get("msgqueue").(string),
-		Msgqueuesize: d.Get("msgqueuesize").(int),
+		Addrrange:  d.Get("addrrange").(string),
+		Clientmode: d.Get("clientmode").(string),
+		Msgqueue:   d.Get("msgqueue").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("addrnpi"); !raw.IsNull() {
+		smppparam.Addrnpi = intPtr(d.Get("addrnpi").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("addrton"); !raw.IsNull() {
+		smppparam.Addrton = intPtr(d.Get("addrton").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("msgqueuesize"); !raw.IsNull() {
+		smppparam.Msgqueuesize = intPtr(d.Get("msgqueuesize").(int))
 	}
 
 	err := client.UpdateUnnamedResource("smppparam", &smppparam)
@@ -107,7 +114,7 @@ func updateSmppparamFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	hasChange := false
 	if d.HasChange("addrnpi") {
 		log.Printf("[DEBUG]  citrixadc-provider: Addrnpi has changed for smppparam, starting update")
-		smppparam.Addrnpi = d.Get("addrnpi").(int)
+		smppparam.Addrnpi = intPtr(d.Get("addrnpi").(int))
 		hasChange = true
 	}
 	if d.HasChange("addrrange") {
@@ -117,7 +124,7 @@ func updateSmppparamFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("addrton") {
 		log.Printf("[DEBUG]  citrixadc-provider: Addrton has changed for smppparam, starting update")
-		smppparam.Addrton = d.Get("addrton").(int)
+		smppparam.Addrton = intPtr(d.Get("addrton").(int))
 		hasChange = true
 	}
 	if d.HasChange("clientmode") {
@@ -132,7 +139,7 @@ func updateSmppparamFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("msgqueuesize") {
 		log.Printf("[DEBUG]  citrixadc-provider: Msgqueuesize has changed for smppparam, starting update")
-		smppparam.Msgqueuesize = d.Get("msgqueuesize").(int)
+		smppparam.Msgqueuesize = intPtr(d.Get("msgqueuesize").(int))
 		hasChange = true
 	}
 

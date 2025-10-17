@@ -43,7 +43,7 @@ type Clusternodegroup struct {
 	/**
 	* Priority of Nodegroup. This priority is used for all the nodes bound to the nodegroup for Nodegroup selection
 	*/
-	Priority int `json:"priority,omitempty"`
+	Priority *int `json:"priority,omitempty"`
 
 	//------- Read only Parameter ---------;
 

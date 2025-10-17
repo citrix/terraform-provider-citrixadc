@@ -27,7 +27,7 @@ type Snmpengineid struct {
 	/**
 	* ID of the cluster node for which you are setting the engineid
 	*/
-	Ownernode int `json:"ownernode,omitempty"`
+	Ownernode *int `json:"ownernode,omitempty"`
 
 	//------- Read only Parameter ---------;
 

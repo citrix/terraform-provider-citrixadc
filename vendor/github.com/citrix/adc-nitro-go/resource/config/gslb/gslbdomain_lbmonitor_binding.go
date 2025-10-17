@@ -52,23 +52,23 @@ type Gslbdomainlbmonitorbinding struct {
 	/**
 	* Total monitor probes
 	*/
-	Monitortotalprobes int `json:"monitortotalprobes,omitempty"`
+	Monitortotalprobes *int `json:"monitortotalprobes,omitempty"`
 	/**
 	* Total probes failed
 	*/
-	Monitortotalfailedprobes int `json:"monitortotalfailedprobes,omitempty"`
+	Monitortotalfailedprobes *int `json:"monitortotalfailedprobes,omitempty"`
 	/**
 	* Total number of current failed probes
 	*/
-	Monitorcurrentfailedprobes int `json:"monitorcurrentfailedprobes,omitempty"`
+	Monitorcurrentfailedprobes *int `json:"monitorcurrentfailedprobes,omitempty"`
 	/**
 	* Response time of this monitor.
 	*/
-	Responsetime int `json:"responsetime,omitempty"`
+	Responsetime *int `json:"responsetime,omitempty"`
 	/**
 	* The code indicating the monitor response.
 	*/
-	Monstatcode int `json:"monstatcode,omitempty"`
+	Monstatcode *int `json:"monstatcode,omitempty"`
 	/**
 	* The string form of monstatcode.
 	*/
@@ -80,7 +80,7 @@ type Gslbdomainlbmonitorbinding struct {
 	/**
 	* The gRPC status codes.
 	*/
-	Grpcstatuscode int `json:"grpcstatuscode,omitempty"`
+	Grpcstatuscode *int `json:"grpcstatuscode,omitempty"`
 	/**
 	* The gRPC service name.
 	*/

@@ -216,42 +216,63 @@ func createNsacl6Func(ctx context.Context, d *schema.ResourceData, meta interfac
 	client := meta.(*NetScalerNitroClient).client
 	nsacl6Name := d.Get("acl6name").(string)
 	nsacl6 := ns.Nsacl6{
-		Acl6action:     d.Get("acl6action").(string),
-		Acl6name:       d.Get("acl6name").(string),
-		Aclaction:      d.Get("aclaction").(string),
-		Destipop:       d.Get("destipop").(string),
-		Destipv6:       d.Get("destipv6").(bool),
-		Destipv6val:    d.Get("destipv6val").(string),
-		Destport:       d.Get("destport").(bool),
-		Destportop:     d.Get("destportop").(string),
-		Destportval:    d.Get("destportval").(string),
-		Dfdhash:        d.Get("dfdhash").(string),
-		Dfdprefix:      d.Get("dfdprefix").(int),
-		Established:    d.Get("established").(bool),
-		Icmpcode:       d.Get("icmpcode").(int),
-		Icmptype:       d.Get("icmptype").(int),
-		Interface:      d.Get("interface").(string),
-		Logstate:       d.Get("logstate").(string),
-		Newname:        d.Get("newname").(string),
-		Priority:       d.Get("priority").(int),
-		Protocol:       d.Get("protocol").(string),
-		Protocolnumber: d.Get("protocolnumber").(int),
-		Ratelimit:      d.Get("ratelimit").(int),
-		Srcipop:        d.Get("srcipop").(string),
-		Srcipv6:        d.Get("srcipv6").(bool),
-		Srcipv6val:     d.Get("srcipv6val").(string),
-		Srcmac:         d.Get("srcmac").(string),
-		Srcmacmask:     d.Get("srcmacmask").(string),
-		Srcport:        d.Get("srcport").(bool),
-		Srcportop:      d.Get("srcportop").(string),
-		Srcportval:     d.Get("srcportval").(string),
-		State:          d.Get("state").(string),
-		Stateful:       d.Get("stateful").(string),
-		Td:             d.Get("td").(int),
-		Ttl:            d.Get("ttl").(int),
-		Type:           d.Get("type").(string),
-		Vlan:           d.Get("vlan").(int),
-		Vxlan:          d.Get("vxlan").(int),
+		Acl6action:  d.Get("acl6action").(string),
+		Acl6name:    d.Get("acl6name").(string),
+		Aclaction:   d.Get("aclaction").(string),
+		Destipop:    d.Get("destipop").(string),
+		Destipv6:    d.Get("destipv6").(bool),
+		Destipv6val: d.Get("destipv6val").(string),
+		Destport:    d.Get("destport").(bool),
+		Destportop:  d.Get("destportop").(string),
+		Destportval: d.Get("destportval").(string),
+		Dfdhash:     d.Get("dfdhash").(string),
+		Established: d.Get("established").(bool),
+		Interface:   d.Get("interface").(string),
+		Logstate:    d.Get("logstate").(string),
+		Newname:     d.Get("newname").(string),
+		Protocol:    d.Get("protocol").(string),
+		Srcipop:     d.Get("srcipop").(string),
+		Srcipv6:     d.Get("srcipv6").(bool),
+		Srcipv6val:  d.Get("srcipv6val").(string),
+		Srcmac:      d.Get("srcmac").(string),
+		Srcmacmask:  d.Get("srcmacmask").(string),
+		Srcport:     d.Get("srcport").(bool),
+		Srcportop:   d.Get("srcportop").(string),
+		Srcportval:  d.Get("srcportval").(string),
+		State:       d.Get("state").(string),
+		Stateful:    d.Get("stateful").(string),
+		Type:        d.Get("type").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("dfdprefix"); !raw.IsNull() {
+		nsacl6.Dfdprefix = intPtr(d.Get("dfdprefix").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("icmpcode"); !raw.IsNull() {
+		nsacl6.Icmpcode = intPtr(d.Get("icmpcode").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("icmptype"); !raw.IsNull() {
+		nsacl6.Icmptype = intPtr(d.Get("icmptype").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		nsacl6.Priority = intPtr(d.Get("priority").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("protocolnumber"); !raw.IsNull() {
+		nsacl6.Protocolnumber = intPtr(d.Get("protocolnumber").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("ratelimit"); !raw.IsNull() {
+		nsacl6.Ratelimit = intPtr(d.Get("ratelimit").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("td"); !raw.IsNull() {
+		nsacl6.Td = intPtr(d.Get("td").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("ttl"); !raw.IsNull() {
+		nsacl6.Ttl = intPtr(d.Get("ttl").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("vlan"); !raw.IsNull() {
+		nsacl6.Vlan = intPtr(d.Get("vlan").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("vxlan"); !raw.IsNull() {
+		nsacl6.Vxlan = intPtr(d.Get("vxlan").(int))
 	}
 
 	_, err := client.AddResource(service.Nsacl6.Type(), nsacl6Name, &nsacl6)
@@ -373,7 +394,7 @@ func updateNsacl6Func(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 	if d.HasChange("dfdprefix") {
 		log.Printf("[DEBUG]  citrixadc-provider: Dfdprefix has changed for nsacl6 %s, starting update", nsacl6Name)
-		nsacl6.Dfdprefix = d.Get("dfdprefix").(int)
+		nsacl6.Dfdprefix = intPtr(d.Get("dfdprefix").(int))
 		hasChange = true
 	}
 	if d.HasChange("established") {
@@ -383,12 +404,12 @@ func updateNsacl6Func(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 	if d.HasChange("icmpcode") {
 		log.Printf("[DEBUG]  citrixadc-provider: Icmpcode has changed for nsacl6 %s, starting update", nsacl6Name)
-		nsacl6.Icmpcode = d.Get("icmpcode").(int)
+		nsacl6.Icmpcode = intPtr(d.Get("icmpcode").(int))
 		hasChange = true
 	}
 	if d.HasChange("icmptype") {
 		log.Printf("[DEBUG]  citrixadc-provider: Icmptype has changed for nsacl6 %s, starting update", nsacl6Name)
-		nsacl6.Icmptype = d.Get("icmptype").(int)
+		nsacl6.Icmptype = intPtr(d.Get("icmptype").(int))
 		hasChange = true
 	}
 	if d.HasChange("interface") {
@@ -408,7 +429,7 @@ func updateNsacl6Func(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 	if d.HasChange("priority") {
 		log.Printf("[DEBUG]  citrixadc-provider: Priority has changed for nsacl6 %s, starting update", nsacl6Name)
-		nsacl6.Priority = d.Get("priority").(int)
+		nsacl6.Priority = intPtr(d.Get("priority").(int))
 		hasChange = true
 	}
 	if d.HasChange("protocol") {
@@ -418,12 +439,12 @@ func updateNsacl6Func(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 	if d.HasChange("protocolnumber") {
 		log.Printf("[DEBUG]  citrixadc-provider: Protocolnumber has changed for nsacl6 %s, starting update", nsacl6Name)
-		nsacl6.Protocolnumber = d.Get("protocolnumber").(int)
+		nsacl6.Protocolnumber = intPtr(d.Get("protocolnumber").(int))
 		hasChange = true
 	}
 	if d.HasChange("ratelimit") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ratelimit has changed for nsacl6 %s, starting update", nsacl6Name)
-		nsacl6.Ratelimit = d.Get("ratelimit").(int)
+		nsacl6.Ratelimit = intPtr(d.Get("ratelimit").(int))
 		hasChange = true
 	}
 	if d.HasChange("srcipop") {
@@ -477,22 +498,22 @@ func updateNsacl6Func(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 	if d.HasChange("td") {
 		log.Printf("[DEBUG]  citrixadc-provider: Td has changed for nsacl6 %s, starting update", nsacl6Name)
-		nsacl6.Td = d.Get("td").(int)
+		nsacl6.Td = intPtr(d.Get("td").(int))
 		hasChange = true
 	}
 	if d.HasChange("ttl") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ttl has changed for nsacl6 %s, starting update", nsacl6Name)
-		nsacl6.Ttl = d.Get("ttl").(int)
+		nsacl6.Ttl = intPtr(d.Get("ttl").(int))
 		hasChange = true
 	}
 	if d.HasChange("vlan") {
 		log.Printf("[DEBUG]  citrixadc-provider: Vlan has changed for nsacl6 %s, starting update", nsacl6Name)
-		nsacl6.Vlan = d.Get("vlan").(int)
+		nsacl6.Vlan = intPtr(d.Get("vlan").(int))
 		hasChange = true
 	}
 	if d.HasChange("vxlan") {
 		log.Printf("[DEBUG]  citrixadc-provider: Vxlan has changed for nsacl6 %s, starting update", nsacl6Name)
-		nsacl6.Vxlan = d.Get("vxlan").(int)
+		nsacl6.Vxlan = intPtr(d.Get("vxlan").(int))
 		hasChange = true
 	}
 

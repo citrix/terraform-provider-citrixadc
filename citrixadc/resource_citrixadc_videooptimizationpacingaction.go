@@ -50,7 +50,10 @@ func createVideooptimizationpacingactionFunc(ctx context.Context, d *schema.Reso
 		Comment: d.Get("comment").(string),
 		Name:    d.Get("name").(string),
 		Newname: d.Get("newname").(string),
-		Rate:    d.Get("rate").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("rate"); !raw.IsNull() {
+		videooptimizationpacingaction.Rate = intPtr(d.Get("rate").(int))
 	}
 
 	_, err := client.AddResource("videooptimizationpacingaction", videooptimizationpacingactionName, &videooptimizationpacingaction)
@@ -104,7 +107,7 @@ func updateVideooptimizationpacingactionFunc(ctx context.Context, d *schema.Reso
 	}
 	if d.HasChange("rate") {
 		log.Printf("[DEBUG]  citrixadc-provider: Rate has changed for videooptimizationpacingaction %s, starting update", videooptimizationpacingactionName)
-		videooptimizationpacingaction.Rate = d.Get("rate").(int)
+		videooptimizationpacingaction.Rate = intPtr(d.Get("rate").(int))
 		hasChange = true
 	}
 

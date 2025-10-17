@@ -64,8 +64,11 @@ func createVpnglobal_authenticationnegotiatepolicy_bindingFunc(ctx context.Conte
 		Gotopriorityexpression: d.Get("gotopriorityexpression").(string),
 		Groupextraction:        d.Get("groupextraction").(bool),
 		Policyname:             d.Get("policyname").(string),
-		Priority:               d.Get("priority").(int),
 		Secondary:              d.Get("secondary").(bool),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		vpnglobal_authenticationnegotiatepolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Vpnglobal_authenticationnegotiatepolicy_binding.Type(), &vpnglobal_authenticationnegotiatepolicy_binding)

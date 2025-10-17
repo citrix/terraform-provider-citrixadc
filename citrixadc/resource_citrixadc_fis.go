@@ -41,8 +41,11 @@ func createFisFunc(ctx context.Context, d *schema.ResourceData, meta interface{}
 	client := meta.(*NetScalerNitroClient).client
 	fisName := d.Get("name").(string)
 	fis := network.Fis{
-		Name:      d.Get("name").(string),
-		Ownernode: d.Get("ownernode").(int),
+		Name: d.Get("name").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("ownernode"); !raw.IsNull() {
+		fis.Ownernode = intPtr(d.Get("ownernode").(int))
 	}
 
 	_, err := client.AddResource(service.Fis.Type(), fisName, &fis)

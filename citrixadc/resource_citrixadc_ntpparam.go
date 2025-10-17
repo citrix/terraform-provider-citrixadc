@@ -110,12 +110,12 @@ func updateNtpparamFunc(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 	if d.HasChange("autokeylogsec") {
 		log.Printf("[DEBUG]  citrixadc-provider: Autokeylogsec has changed for ntpparam, starting update")
-		ntpparam["autokeylogsec"] = d.Get("autokeylogsec").(int)
+		ntpparam["autokeylogsec"] = intPtr(d.Get("autokeylogsec").(int))
 		hasChange = true
 	}
 	if d.HasChange("revokelogsec") {
 		log.Printf("[DEBUG]  citrixadc-provider: Revokelogsec has changed for ntpparam, starting update")
-		ntpparam["revokelogsec"] = d.Get("revokelogsec").(int)
+		ntpparam["revokelogsec"] = intPtr(d.Get("revokelogsec").(int))
 		hasChange = true
 	}
 	if d.HasChange("trustedkey") {

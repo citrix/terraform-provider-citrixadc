@@ -332,15 +332,11 @@ func createNstcpprofileFunc(ctx context.Context, d *schema.ResourceData, meta in
 		Ackaggregation:              d.Get("ackaggregation").(string),
 		Ackonpush:                   d.Get("ackonpush").(string),
 		Applyadaptivetcp:            d.Get("applyadaptivetcp").(string),
-		Buffersize:                  d.Get("buffersize").(int),
 		Burstratecontrol:            d.Get("burstratecontrol").(string),
 		Clientiptcpoption:           d.Get("clientiptcpoption").(string),
-		Clientiptcpoptionnumber:     d.Get("clientiptcpoptionnumber").(int),
-		Delayedack:                  d.Get("delayedack").(int),
 		Dropestconnontimeout:        d.Get("dropestconnontimeout").(string),
 		Drophalfclosedconnontimeout: d.Get("drophalfclosedconnontimeout").(string),
 		Dsack:                       d.Get("dsack").(string),
-		Dupackthresh:                d.Get("dupackthresh").(int),
 		Dynamicreceivebuffering:     d.Get("dynamicreceivebuffering").(string),
 		Ecn:                         d.Get("ecn").(string),
 		Establishclientconn:         d.Get("establishclientconn").(string),
@@ -348,45 +344,96 @@ func createNstcpprofileFunc(ctx context.Context, d *schema.ResourceData, meta in
 		Flavor:                      d.Get("flavor").(string),
 		Frto:                        d.Get("frto").(string),
 		Hystart:                     d.Get("hystart").(string),
-		Initialcwnd:                 d.Get("initialcwnd").(int),
 		Ka:                          d.Get("ka").(string),
-		Kaconnidletime:              d.Get("kaconnidletime").(int),
-		Kamaxprobes:                 d.Get("kamaxprobes").(int),
-		Kaprobeinterval:             d.Get("kaprobeinterval").(int),
 		Kaprobeupdatelastactivity:   d.Get("kaprobeupdatelastactivity").(string),
-		Maxburst:                    d.Get("maxburst").(int),
-		Maxcwnd:                     d.Get("maxcwnd").(int),
-		Maxpktpermss:                d.Get("maxpktpermss").(int),
-		Minrto:                      d.Get("minrto").(int),
 		Mptcp:                       d.Get("mptcp").(string),
 		Mptcpdropdataonpreestsf:     d.Get("mptcpdropdataonpreestsf").(string),
 		Mptcpfastopen:               d.Get("mptcpfastopen").(string),
-		Mptcpsessiontimeout:         d.Get("mptcpsessiontimeout").(int),
-		Mss:                         d.Get("mss").(int),
 		Nagle:                       d.Get("nagle").(string),
 		Name:                        d.Get("name").(string),
-		Oooqsize:                    d.Get("oooqsize").(int),
-		Pktperretx:                  d.Get("pktperretx").(int),
-		Rateqmax:                    d.Get("rateqmax").(int),
 		Rstmaxack:                   d.Get("rstmaxack").(string),
 		Rstwindowattenuate:          d.Get("rstwindowattenuate").(string),
 		Sack:                        d.Get("sack").(string),
-		Sendbuffsize:                d.Get("sendbuffsize").(int),
-		Slowstartincr:               d.Get("slowstartincr").(int),
 		Spoofsyndrop:                d.Get("spoofsyndrop").(string),
 		Syncookie:                   d.Get("syncookie").(string),
 		Taillossprobe:               d.Get("taillossprobe").(string),
 		Tcpfastopen:                 d.Get("tcpfastopen").(string),
-		Tcpfastopencookiesize:       d.Get("tcpfastopencookiesize").(int),
 		Tcpmode:                     d.Get("tcpmode").(string),
-		Tcprate:                     d.Get("tcprate").(int),
 		Tcpsegoffload:               d.Get("tcpsegoffload").(string),
 		Timestamp:                   d.Get("timestamp").(string),
 		Ws:                          d.Get("ws").(string),
-		Wsval:                       d.Get("wsval").(int),
 		Mpcapablecbit:               d.Get("mpcapablecbit").(string),
 		Sendclientportintcpoption:   d.Get("sendclientportintcpoption").(string),
-		Slowstartthreshold:          d.Get("slowstartthreshold").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("buffersize"); !raw.IsNull() {
+		nstcpprofile.Buffersize = intPtr(d.Get("buffersize").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("clientiptcpoptionnumber"); !raw.IsNull() {
+		nstcpprofile.Clientiptcpoptionnumber = intPtr(d.Get("clientiptcpoptionnumber").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("delayedack"); !raw.IsNull() {
+		nstcpprofile.Delayedack = intPtr(d.Get("delayedack").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("dupackthresh"); !raw.IsNull() {
+		nstcpprofile.Dupackthresh = intPtr(d.Get("dupackthresh").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("initialcwnd"); !raw.IsNull() {
+		nstcpprofile.Initialcwnd = intPtr(d.Get("initialcwnd").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("kaconnidletime"); !raw.IsNull() {
+		nstcpprofile.Kaconnidletime = intPtr(d.Get("kaconnidletime").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("kamaxprobes"); !raw.IsNull() {
+		nstcpprofile.Kamaxprobes = intPtr(d.Get("kamaxprobes").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("kaprobeinterval"); !raw.IsNull() {
+		nstcpprofile.Kaprobeinterval = intPtr(d.Get("kaprobeinterval").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxburst"); !raw.IsNull() {
+		nstcpprofile.Maxburst = intPtr(d.Get("maxburst").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxcwnd"); !raw.IsNull() {
+		nstcpprofile.Maxcwnd = intPtr(d.Get("maxcwnd").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxpktpermss"); !raw.IsNull() {
+		nstcpprofile.Maxpktpermss = intPtr(d.Get("maxpktpermss").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("minrto"); !raw.IsNull() {
+		nstcpprofile.Minrto = intPtr(d.Get("minrto").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("mptcpsessiontimeout"); !raw.IsNull() {
+		nstcpprofile.Mptcpsessiontimeout = intPtr(d.Get("mptcpsessiontimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("mss"); !raw.IsNull() {
+		nstcpprofile.Mss = intPtr(d.Get("mss").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("oooqsize"); !raw.IsNull() {
+		nstcpprofile.Oooqsize = intPtr(d.Get("oooqsize").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("pktperretx"); !raw.IsNull() {
+		nstcpprofile.Pktperretx = intPtr(d.Get("pktperretx").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("rateqmax"); !raw.IsNull() {
+		nstcpprofile.Rateqmax = intPtr(d.Get("rateqmax").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("sendbuffsize"); !raw.IsNull() {
+		nstcpprofile.Sendbuffsize = intPtr(d.Get("sendbuffsize").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("slowstartincr"); !raw.IsNull() {
+		nstcpprofile.Slowstartincr = intPtr(d.Get("slowstartincr").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("tcpfastopencookiesize"); !raw.IsNull() {
+		nstcpprofile.Tcpfastopencookiesize = intPtr(d.Get("tcpfastopencookiesize").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("tcprate"); !raw.IsNull() {
+		nstcpprofile.Tcprate = intPtr(d.Get("tcprate").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("wsval"); !raw.IsNull() {
+		nstcpprofile.Wsval = intPtr(d.Get("wsval").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("slowstartthreshold"); !raw.IsNull() {
+		nstcpprofile.Slowstartthreshold = intPtr(d.Get("slowstartthreshold").(int))
 	}
 
 	_, err := client.AddResource(service.Nstcpprofile.Type(), nstcpprofileName, &nstcpprofile)
@@ -500,7 +547,7 @@ func updateNstcpprofileFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("buffersize") {
 		log.Printf("[DEBUG]  citrixadc-provider: Buffersize has changed for nstcpprofile %s, starting update", nstcpprofileName)
-		nstcpprofile.Buffersize = d.Get("buffersize").(int)
+		nstcpprofile.Buffersize = intPtr(d.Get("buffersize").(int))
 		hasChange = true
 	}
 	if d.HasChange("burstratecontrol") {
@@ -515,12 +562,12 @@ func updateNstcpprofileFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("clientiptcpoptionnumber") {
 		log.Printf("[DEBUG]  citrixadc-provider: Clientiptcpoptionnumber has changed for nstcpprofile %s, starting update", nstcpprofileName)
-		nstcpprofile.Clientiptcpoptionnumber = d.Get("clientiptcpoptionnumber").(int)
+		nstcpprofile.Clientiptcpoptionnumber = intPtr(d.Get("clientiptcpoptionnumber").(int))
 		hasChange = true
 	}
 	if d.HasChange("delayedack") {
 		log.Printf("[DEBUG]  citrixadc-provider: Delayedack has changed for nstcpprofile %s, starting update", nstcpprofileName)
-		nstcpprofile.Delayedack = d.Get("delayedack").(int)
+		nstcpprofile.Delayedack = intPtr(d.Get("delayedack").(int))
 		hasChange = true
 	}
 	if d.HasChange("dropestconnontimeout") {
@@ -540,7 +587,7 @@ func updateNstcpprofileFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("dupackthresh") {
 		log.Printf("[DEBUG]  citrixadc-provider: Dupackthresh has changed for nstcpprofile %s, starting update", nstcpprofileName)
-		nstcpprofile.Dupackthresh = d.Get("dupackthresh").(int)
+		nstcpprofile.Dupackthresh = intPtr(d.Get("dupackthresh").(int))
 		hasChange = true
 	}
 	if d.HasChange("dynamicreceivebuffering") {
@@ -580,7 +627,7 @@ func updateNstcpprofileFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("initialcwnd") {
 		log.Printf("[DEBUG]  citrixadc-provider: Initialcwnd has changed for nstcpprofile %s, starting update", nstcpprofileName)
-		nstcpprofile.Initialcwnd = d.Get("initialcwnd").(int)
+		nstcpprofile.Initialcwnd = intPtr(d.Get("initialcwnd").(int))
 		hasChange = true
 	}
 	if d.HasChange("ka") {
@@ -590,17 +637,17 @@ func updateNstcpprofileFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("kaconnidletime") {
 		log.Printf("[DEBUG]  citrixadc-provider: Kaconnidletime has changed for nstcpprofile %s, starting update", nstcpprofileName)
-		nstcpprofile.Kaconnidletime = d.Get("kaconnidletime").(int)
+		nstcpprofile.Kaconnidletime = intPtr(d.Get("kaconnidletime").(int))
 		hasChange = true
 	}
 	if d.HasChange("kamaxprobes") {
 		log.Printf("[DEBUG]  citrixadc-provider: Kamaxprobes has changed for nstcpprofile %s, starting update", nstcpprofileName)
-		nstcpprofile.Kamaxprobes = d.Get("kamaxprobes").(int)
+		nstcpprofile.Kamaxprobes = intPtr(d.Get("kamaxprobes").(int))
 		hasChange = true
 	}
 	if d.HasChange("kaprobeinterval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Kaprobeinterval has changed for nstcpprofile %s, starting update", nstcpprofileName)
-		nstcpprofile.Kaprobeinterval = d.Get("kaprobeinterval").(int)
+		nstcpprofile.Kaprobeinterval = intPtr(d.Get("kaprobeinterval").(int))
 		hasChange = true
 	}
 	if d.HasChange("kaprobeupdatelastactivity") {
@@ -610,22 +657,22 @@ func updateNstcpprofileFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("maxburst") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxburst has changed for nstcpprofile %s, starting update", nstcpprofileName)
-		nstcpprofile.Maxburst = d.Get("maxburst").(int)
+		nstcpprofile.Maxburst = intPtr(d.Get("maxburst").(int))
 		hasChange = true
 	}
 	if d.HasChange("maxcwnd") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxcwnd has changed for nstcpprofile %s, starting update", nstcpprofileName)
-		nstcpprofile.Maxcwnd = d.Get("maxcwnd").(int)
+		nstcpprofile.Maxcwnd = intPtr(d.Get("maxcwnd").(int))
 		hasChange = true
 	}
 	if d.HasChange("maxpktpermss") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxpktpermss has changed for nstcpprofile %s, starting update", nstcpprofileName)
-		nstcpprofile.Maxpktpermss = d.Get("maxpktpermss").(int)
+		nstcpprofile.Maxpktpermss = intPtr(d.Get("maxpktpermss").(int))
 		hasChange = true
 	}
 	if d.HasChange("minrto") {
 		log.Printf("[DEBUG]  citrixadc-provider: Minrto has changed for nstcpprofile %s, starting update", nstcpprofileName)
-		nstcpprofile.Minrto = d.Get("minrto").(int)
+		nstcpprofile.Minrto = intPtr(d.Get("minrto").(int))
 		hasChange = true
 	}
 	if d.HasChange("mptcp") {
@@ -645,12 +692,12 @@ func updateNstcpprofileFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("mptcpsessiontimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Mptcpsessiontimeout has changed for nstcpprofile %s, starting update", nstcpprofileName)
-		nstcpprofile.Mptcpsessiontimeout = d.Get("mptcpsessiontimeout").(int)
+		nstcpprofile.Mptcpsessiontimeout = intPtr(d.Get("mptcpsessiontimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("mss") {
 		log.Printf("[DEBUG]  citrixadc-provider: Mss has changed for nstcpprofile %s, starting update", nstcpprofileName)
-		nstcpprofile.Mss = d.Get("mss").(int)
+		nstcpprofile.Mss = intPtr(d.Get("mss").(int))
 		hasChange = true
 	}
 	if d.HasChange("nagle") {
@@ -665,17 +712,17 @@ func updateNstcpprofileFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("oooqsize") {
 		log.Printf("[DEBUG]  citrixadc-provider: Oooqsize has changed for nstcpprofile %s, starting update", nstcpprofileName)
-		nstcpprofile.Oooqsize = d.Get("oooqsize").(int)
+		nstcpprofile.Oooqsize = intPtr(d.Get("oooqsize").(int))
 		hasChange = true
 	}
 	if d.HasChange("pktperretx") {
 		log.Printf("[DEBUG]  citrixadc-provider: Pktperretx has changed for nstcpprofile %s, starting update", nstcpprofileName)
-		nstcpprofile.Pktperretx = d.Get("pktperretx").(int)
+		nstcpprofile.Pktperretx = intPtr(d.Get("pktperretx").(int))
 		hasChange = true
 	}
 	if d.HasChange("rateqmax") {
 		log.Printf("[DEBUG]  citrixadc-provider: Rateqmax has changed for nstcpprofile %s, starting update", nstcpprofileName)
-		nstcpprofile.Rateqmax = d.Get("rateqmax").(int)
+		nstcpprofile.Rateqmax = intPtr(d.Get("rateqmax").(int))
 		hasChange = true
 	}
 	if d.HasChange("rstmaxack") {
@@ -695,12 +742,12 @@ func updateNstcpprofileFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("sendbuffsize") {
 		log.Printf("[DEBUG]  citrixadc-provider: Sendbuffsize has changed for nstcpprofile %s, starting update", nstcpprofileName)
-		nstcpprofile.Sendbuffsize = d.Get("sendbuffsize").(int)
+		nstcpprofile.Sendbuffsize = intPtr(d.Get("sendbuffsize").(int))
 		hasChange = true
 	}
 	if d.HasChange("slowstartincr") {
 		log.Printf("[DEBUG]  citrixadc-provider: Slowstartincr has changed for nstcpprofile %s, starting update", nstcpprofileName)
-		nstcpprofile.Slowstartincr = d.Get("slowstartincr").(int)
+		nstcpprofile.Slowstartincr = intPtr(d.Get("slowstartincr").(int))
 		hasChange = true
 	}
 	if d.HasChange("spoofsyndrop") {
@@ -725,7 +772,7 @@ func updateNstcpprofileFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("tcpfastopencookiesize") {
 		log.Printf("[DEBUG]  citrixadc-provider: Tcpfastopencookiesize has changed for nstcpprofile %s, starting update", nstcpprofileName)
-		nstcpprofile.Tcpfastopencookiesize = d.Get("tcpfastopencookiesize").(int)
+		nstcpprofile.Tcpfastopencookiesize = intPtr(d.Get("tcpfastopencookiesize").(int))
 		hasChange = true
 	}
 	if d.HasChange("tcpmode") {
@@ -735,7 +782,7 @@ func updateNstcpprofileFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("tcprate") {
 		log.Printf("[DEBUG]  citrixadc-provider: Tcprate has changed for nstcpprofile %s, starting update", nstcpprofileName)
-		nstcpprofile.Tcprate = d.Get("tcprate").(int)
+		nstcpprofile.Tcprate = intPtr(d.Get("tcprate").(int))
 		hasChange = true
 	}
 	if d.HasChange("tcpsegoffload") {
@@ -755,7 +802,7 @@ func updateNstcpprofileFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("wsval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Wsval has changed for nstcpprofile %s, starting update", nstcpprofileName)
-		nstcpprofile.Wsval = d.Get("wsval").(int)
+		nstcpprofile.Wsval = intPtr(d.Get("wsval").(int))
 		hasChange = true
 	}
 	if d.HasChange("mpcapablecbit") {
@@ -770,7 +817,7 @@ func updateNstcpprofileFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("slowstartthreshold") {
 		log.Printf("[DEBUG]  citrixadc-provider: Slowstartthreshold has changed for nstcpprofile %s, starting update", nstcpprofileName)
-		nstcpprofile.Slowstartthreshold = d.Get("slowstartthreshold").(int)
+		nstcpprofile.Slowstartthreshold = intPtr(d.Get("slowstartthreshold").(int))
 		hasChange = true
 	}
 

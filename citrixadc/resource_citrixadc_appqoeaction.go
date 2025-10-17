@@ -2,14 +2,16 @@ package citrixadc
 
 import (
 	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/appqoe"
 
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strconv"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcAppqoeaction() *schema.Resource {
@@ -233,7 +235,7 @@ func updateAppqoeactionFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("delay") {
 		log.Printf("[DEBUG]  citrixadc-provider: Delay has changed for appqoeaction %s, starting update", appqoeactionName)
-		appqoeaction.Delay = d.Get("delay").(int)
+		appqoeaction.Delay = intPtr(d.Get("delay").(int))
 		hasChange = true
 	}
 	if d.HasChange("dosaction") {
@@ -248,18 +250,18 @@ func updateAppqoeactionFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("maxconn") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxconn has changed for appqoeaction %s, starting update", appqoeactionName)
-		appqoeaction.Maxconn = d.Get("maxconn").(int)
+		appqoeaction.Maxconn = intPtr(d.Get("maxconn").(int))
 		hasChange = true
 	}
 	if d.HasChange("numretries") {
 		log.Printf("[DEBUG]  citrixadc-provider: Numretries has changed for appqoeaction %s, starting update", appqoeactionName)
 		val, _ := strconv.Atoi(d.Get("numretries").(string))
-		appqoeaction.Numretries = val
+		appqoeaction.Numretries = intPtr(val)
 		hasChange = true
 	}
 	if d.HasChange("polqdepth") {
 		log.Printf("[DEBUG]  citrixadc-provider: Polqdepth has changed for appqoeaction %s, starting update", appqoeactionName)
-		appqoeaction.Polqdepth = d.Get("polqdepth").(int)
+		appqoeaction.Polqdepth = intPtr(d.Get("polqdepth").(int))
 		hasChange = true
 	}
 	if d.HasChange("priority") {
@@ -269,7 +271,7 @@ func updateAppqoeactionFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("priqdepth") {
 		log.Printf("[DEBUG]  citrixadc-provider: Priqdepth has changed for appqoeaction %s, starting update", appqoeactionName)
-		appqoeaction.Priqdepth = d.Get("priqdepth").(int)
+		appqoeaction.Priqdepth = intPtr(d.Get("priqdepth").(int))
 		hasChange = true
 	}
 	if d.HasChange("respondwith") {
@@ -284,7 +286,7 @@ func updateAppqoeactionFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("retryontimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Retryontimeout has changed for appqoeaction %s, starting update", appqoeactionName)
-		appqoeaction.Retryontimeout = d.Get("retryontimeout").(int)
+		appqoeaction.Retryontimeout = intPtr(d.Get("retryontimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("tcpprofile") {

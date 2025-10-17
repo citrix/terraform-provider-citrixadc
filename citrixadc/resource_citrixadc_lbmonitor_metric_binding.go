@@ -54,10 +54,15 @@ func createLbmonitor_metric_bindingFunc(ctx context.Context, d *schema.ResourceD
 	bindingId := fmt.Sprintf("%s,%s", lbmonitorName, metricName)
 
 	lbmonitor_metric_binding := lb.Lbmonitormetricbinding{
-		Metric:          metricName,
-		Metricthreshold: d.Get("metricthreshold").(int),
-		Monitorname:     lbmonitorName,
-		Metricweight:    d.Get("metricweight").(int),
+		Metric:      metricName,
+		Monitorname: lbmonitorName,
+	}
+
+	if raw := d.GetRawConfig().GetAttr("metricthreshold"); !raw.IsNull() {
+		lbmonitor_metric_binding.Metricthreshold = intPtr(d.Get("metricthreshold").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("metricweight"); !raw.IsNull() {
+		lbmonitor_metric_binding.Metricweight = intPtr(d.Get("metricweight").(int))
 	}
 
 	err := client.UpdateUnnamedResource("lbmonitor_metric_binding", &lbmonitor_metric_binding)

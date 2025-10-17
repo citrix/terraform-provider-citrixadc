@@ -93,8 +93,11 @@ func createCsvserver_cachepolicy_bindingFunc(ctx context.Context, d *schema.Reso
 		Labeltype:              d.Get("labeltype").(string),
 		Name:                   d.Get("name").(string),
 		Policyname:             d.Get("policyname").(string),
-		Priority:               d.Get("priority").(int),
 		Targetlbvserver:        d.Get("targetlbvserver").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		csvserver_cachepolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	_, err := client.AddResource(service.Csvserver_cachepolicy_binding.Type(), name, &csvserver_cachepolicy_binding)

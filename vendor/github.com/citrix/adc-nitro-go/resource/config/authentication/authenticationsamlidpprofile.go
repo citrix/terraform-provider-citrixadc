@@ -341,7 +341,7 @@ type Authenticationsamlidpprofile struct {
 	/**
 	* This option specifies the number of minutes on either side of current time that the assertion would be valid. For example, if skewTime is 10, then assertion would be valid from (current time - 10) min to (current time + 10) min, ie 20min in all.
 	*/
-	Skewtime int `json:"skewtime,omitempty"`
+	Skewtime *int `json:"skewtime,omitempty"`
 	/**
 	* Unique identifier of the Service Provider that sends SAML Request. Citrix ADC will ensure that the Issuer of the SAML Request matches this URI. In case of SP initiated sign-in scenarios, this value must be same as samlIssuerName configured in samlAction.
 	*/
@@ -373,7 +373,7 @@ type Authenticationsamlidpprofile struct {
 	/**
 	* Interval in minute for fetching metadata from specified metadata URL
 	*/
-	Metadatarefreshinterval int `json:"metadatarefreshinterval,omitempty"`
+	Metadatarefreshinterval *int `json:"metadatarefreshinterval,omitempty"`
 	/**
 	* Name of the service in cloud used to sign the data
 	*/

@@ -31,7 +31,7 @@ type Sslservicesslciphersuitebinding struct {
 	/**
 	* Flag indicating whether the bound cipher was the DEFAULT cipher, bound at boot time, or any other cipher from the CLI
 	*/
-	Cipherdefaulton int `json:"cipherdefaulton,omitempty"`
+	Cipherdefaulton *int `json:"cipherdefaulton,omitempty"`
 	/**
 	* Name of the SSL service for which to set advanced configuration.
 	*/

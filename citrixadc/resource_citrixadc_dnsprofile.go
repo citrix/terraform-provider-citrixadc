@@ -102,20 +102,25 @@ func createDnsprofileFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	client := meta.(*NetScalerNitroClient).client
 	dnsprofileName := d.Get("dnsprofilename").(string)
 	dnsprofile := dns.Dnsprofile{
-		Cacheecsresponses:            d.Get("cacheecsresponses").(string),
-		Cachenegativeresponses:       d.Get("cachenegativeresponses").(string),
-		Cacherecords:                 d.Get("cacherecords").(string),
-		Dnsanswerseclogging:          d.Get("dnsanswerseclogging").(string),
-		Dnserrorlogging:              d.Get("dnserrorlogging").(string),
-		Dnsextendedlogging:           d.Get("dnsextendedlogging").(string),
-		Dnsprofilename:               d.Get("dnsprofilename").(string),
-		Dnsquerylogging:              d.Get("dnsquerylogging").(string),
-		Dropmultiqueryrequest:        d.Get("dropmultiqueryrequest").(string),
-		Recursiveresolution:          d.Get("recursiveresolution").(string),
-		Insertecs:                    d.Get("insertecs").(string),
-		Replaceecs:                   d.Get("replaceecs").(string),
-		Maxcacheableecsprefixlength:  d.Get("maxcacheableecsprefixlength").(int),
-		Maxcacheableecsprefixlength6: d.Get("maxcacheableecsprefixlength6").(int),
+		Cacheecsresponses:      d.Get("cacheecsresponses").(string),
+		Cachenegativeresponses: d.Get("cachenegativeresponses").(string),
+		Cacherecords:           d.Get("cacherecords").(string),
+		Dnsanswerseclogging:    d.Get("dnsanswerseclogging").(string),
+		Dnserrorlogging:        d.Get("dnserrorlogging").(string),
+		Dnsextendedlogging:     d.Get("dnsextendedlogging").(string),
+		Dnsprofilename:         d.Get("dnsprofilename").(string),
+		Dnsquerylogging:        d.Get("dnsquerylogging").(string),
+		Dropmultiqueryrequest:  d.Get("dropmultiqueryrequest").(string),
+		Recursiveresolution:    d.Get("recursiveresolution").(string),
+		Insertecs:              d.Get("insertecs").(string),
+		Replaceecs:             d.Get("replaceecs").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("maxcacheableecsprefixlength"); !raw.IsNull() {
+		dnsprofile.Maxcacheableecsprefixlength = intPtr(d.Get("maxcacheableecsprefixlength").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxcacheableecsprefixlength6"); !raw.IsNull() {
+		dnsprofile.Maxcacheableecsprefixlength6 = intPtr(d.Get("maxcacheableecsprefixlength6").(int))
 	}
 
 	_, err := client.AddResource(service.Dnsprofile.Type(), dnsprofileName, &dnsprofile)
@@ -225,12 +230,12 @@ func updateDnsprofileFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	if d.HasChange("maxcacheableecsprefixlength") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxcacheableecsprefixlength has changed for dnsprofile %s, starting update", dnsprofileName)
-		dnsprofile.Maxcacheableecsprefixlength = d.Get("maxcacheableecsprefixlength").(int)
+		dnsprofile.Maxcacheableecsprefixlength = intPtr(d.Get("maxcacheableecsprefixlength").(int))
 		hasChange = true
 	}
 	if d.HasChange("maxcacheableecsprefixlength6") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxcacheableecsprefixlength6 has changed for dnsprofile %s, starting update", dnsprofileName)
-		dnsprofile.Maxcacheableecsprefixlength6 = d.Get("maxcacheableecsprefixlength6").(int)
+		dnsprofile.Maxcacheableecsprefixlength6 = intPtr(d.Get("maxcacheableecsprefixlength6").(int))
 		hasChange = true
 	}
 

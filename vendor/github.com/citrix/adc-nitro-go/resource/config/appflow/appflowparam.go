@@ -23,23 +23,23 @@ type Appflowparam struct {
 	/**
 	* Refresh interval, in seconds, at which to export the template data. Because data transmission is in UDP, the templates must be resent at regular intervals.
 	*/
-	Templaterefresh int `json:"templaterefresh,omitempty"`
+	Templaterefresh *int `json:"templaterefresh,omitempty"`
 	/**
 	* Interval, in seconds, at which to send Appnames to the configured collectors. Appname refers to the name of an entity (virtual server, service, or service group) in the Citrix ADC.
 	*/
-	Appnamerefresh int `json:"appnamerefresh,omitempty"`
+	Appnamerefresh *int `json:"appnamerefresh,omitempty"`
 	/**
 	* Interval, in seconds, at which to send flow records to the configured collectors.
 	*/
-	Flowrecordinterval int `json:"flowrecordinterval,omitempty"`
+	Flowrecordinterval *int `json:"flowrecordinterval,omitempty"`
 	/**
 	* Interval, in seconds, at which to send security insight flow records to the configured collectors.
 	*/
-	Securityinsightrecordinterval int `json:"securityinsightrecordinterval,omitempty"`
+	Securityinsightrecordinterval *int `json:"securityinsightrecordinterval,omitempty"`
 	/**
 	* MTU, in bytes, for IPFIX UDP packets.
 	*/
-	Udppmtu int `json:"udppmtu,omitempty"`
+	Udppmtu *int `json:"udppmtu,omitempty"`
 	/**
 	* Include the http URL that the Citrix ADC received from the client.
 	*/
@@ -123,7 +123,7 @@ type Appflowparam struct {
 	/**
 	* An observation domain groups a set of Citrix ADCs based on deployment: cluster, HA etc. A unique Observation Domain ID is required to be assigned to each such group.
 	*/
-	Observationdomainid int `json:"observationdomainid,omitempty"`
+	Observationdomainid *int `json:"observationdomainid,omitempty"`
 	/**
 	* Name of the Observation Domain defined by the observation domain ID.
 	*/
@@ -179,7 +179,7 @@ type Appflowparam struct {
 	/**
 	* On enabling this option, the NGS will send bandwidth usage record to configured collectors.
 	*/
-	Usagerecordinterval int `json:"usagerecordinterval,omitempty"`
+	Usagerecordinterval *int `json:"usagerecordinterval,omitempty"`
 	/**
 	* On enabling this option, NGS will send data used by Web/saas app at the end of every HTTP transaction to configured collectors.
 	*/
@@ -199,7 +199,7 @@ type Appflowparam struct {
 	/**
 	* An observation point ID is identifier for the NetScaler from which appflow records are being exported. By default, the NetScaler IP is the observation point ID.
 	*/
-	Observationpointid int `json:"observationpointid,omitempty"`
+	Observationpointid *int `json:"observationpointid,omitempty"`
 	/**
 	* Enable generation of the distributed tracing templates in the Appflow records
 	*/
@@ -207,11 +207,11 @@ type Appflowparam struct {
 	/**
 	* Sampling rate for Distributed Tracing
 	*/
-	Disttracingsamplingrate int `json:"disttracingsamplingrate,omitempty"`
+	Disttracingsamplingrate *int `json:"disttracingsamplingrate,omitempty"`
 	/**
 	* Interval, in seconds, at which to send tcp attack counters to the configured collectors. If 0 is configured, the record is not sent.
 	*/
-	Tcpattackcounterinterval int `json:"tcpattackcounterinterval,omitempty"`
+	Tcpattackcounterinterval *int `json:"tcpattackcounterinterval,omitempty"`
 	/**
 	* To use the Citrix ADC IP to send Logstream records instead of the SNIP
 	*/

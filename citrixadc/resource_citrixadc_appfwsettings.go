@@ -128,6 +128,22 @@ func resourceCitrixAdcAppfwsettings() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"proxyusername": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"proxypassword": {
+				Type:      schema.TypeString,
+				Optional:  true,
+				Computed:  true,
+				Sensitive: true,
+			},
+			"cookieflags": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -146,20 +162,36 @@ func createAppfwsettingsFunc(ctx context.Context, d *schema.ResourceData, meta i
 		Defaultprofile:           d.Get("defaultprofile").(string),
 		Entitydecoding:           d.Get("entitydecoding").(string),
 		Geolocationlogging:       d.Get("geolocationlogging").(string),
-		Importsizelimit:          d.Get("importsizelimit").(int),
-		Learnratelimit:           d.Get("learnratelimit").(int),
 		Logmalformedreq:          d.Get("logmalformedreq").(string),
 		Malformedreqaction:       toStringList(d.Get("malformedreqaction").([]interface{})),
-		Proxyport:                d.Get("proxyport").(int),
 		Proxyserver:              d.Get("proxyserver").(string),
+		Proxyusername:            d.Get("proxyusername").(string),
+		Proxypassword:            d.Get("proxypassword").(string),
+		Cookieflags:              d.Get("cookieflags").(string),
 		Sessioncookiename:        d.Get("sessioncookiename").(string),
-		Sessionlifetime:          d.Get("sessionlifetime").(int),
-		Sessionlimit:             d.Get("sessionlimit").(int),
-		Sessiontimeout:           d.Get("sessiontimeout").(int),
 		Signatureautoupdate:      d.Get("signatureautoupdate").(string),
 		Signatureurl:             d.Get("signatureurl").(string),
 		Undefaction:              d.Get("undefaction").(string),
 		Useconfigurablesecretkey: d.Get("useconfigurablesecretkey").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("importsizelimit"); !raw.IsNull() {
+		appfwsettings.Importsizelimit = intPtr(d.Get("importsizelimit").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("learnratelimit"); !raw.IsNull() {
+		appfwsettings.Learnratelimit = intPtr(d.Get("learnratelimit").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("proxyport"); !raw.IsNull() {
+		appfwsettings.Proxyport = intPtr(d.Get("proxyport").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("sessionlifetime"); !raw.IsNull() {
+		appfwsettings.Sessionlifetime = intPtr(d.Get("sessionlifetime").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("sessionlimit"); !raw.IsNull() {
+		appfwsettings.Sessionlimit = intPtr(d.Get("sessionlimit").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("sessiontimeout"); !raw.IsNull() {
+		appfwsettings.Sessiontimeout = intPtr(d.Get("sessiontimeout").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Appfwsettings.Type(), &appfwsettings)
@@ -204,6 +236,9 @@ func readAppfwsettingsFunc(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("signatureurl", data["signatureurl"])
 	d.Set("undefaction", data["undefaction"])
 	d.Set("useconfigurablesecretkey", data["useconfigurablesecretkey"])
+	d.Set("proxyusername", data["proxyusername"])
+	d.Set("proxypassword", data["proxypassword"])
+	d.Set("cookieflags", data["cookieflags"])
 
 	return nil
 
@@ -253,12 +288,12 @@ func updateAppfwsettingsFunc(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	if d.HasChange("importsizelimit") {
 		log.Printf("[DEBUG]  citrixadc-provider: Importsizelimit has changed for appfwsettings, starting update")
-		appfwsettings.Importsizelimit = d.Get("importsizelimit").(int)
+		appfwsettings.Importsizelimit = intPtr(d.Get("importsizelimit").(int))
 		hasChange = true
 	}
 	if d.HasChange("learnratelimit") {
 		log.Printf("[DEBUG]  citrixadc-provider: Learnratelimit has changed for appfwsettings, starting update")
-		appfwsettings.Learnratelimit = d.Get("learnratelimit").(int)
+		appfwsettings.Learnratelimit = intPtr(d.Get("learnratelimit").(int))
 		hasChange = true
 	}
 	if d.HasChange("logmalformedreq") {
@@ -273,7 +308,7 @@ func updateAppfwsettingsFunc(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	if d.HasChange("proxyport") {
 		log.Printf("[DEBUG]  citrixadc-provider: Proxyport has changed for appfwsettings, starting update")
-		appfwsettings.Proxyport = d.Get("proxyport").(int)
+		appfwsettings.Proxyport = intPtr(d.Get("proxyport").(int))
 		hasChange = true
 	}
 	if d.HasChange("proxyserver") {
@@ -288,17 +323,17 @@ func updateAppfwsettingsFunc(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	if d.HasChange("sessionlifetime") {
 		log.Printf("[DEBUG]  citrixadc-provider: Sessionlifetime has changed for appfwsettings, starting update")
-		appfwsettings.Sessionlifetime = d.Get("sessionlifetime").(int)
+		appfwsettings.Sessionlifetime = intPtr(d.Get("sessionlifetime").(int))
 		hasChange = true
 	}
 	if d.HasChange("sessionlimit") {
 		log.Printf("[DEBUG]  citrixadc-provider: Sessionlimit has changed for appfwsettings, starting update")
-		appfwsettings.Sessionlimit = d.Get("sessionlimit").(int)
+		appfwsettings.Sessionlimit = intPtr(d.Get("sessionlimit").(int))
 		hasChange = true
 	}
 	if d.HasChange("sessiontimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Sessiontimeout has changed for appfwsettings, starting update")
-		appfwsettings.Sessiontimeout = d.Get("sessiontimeout").(int)
+		appfwsettings.Sessiontimeout = intPtr(d.Get("sessiontimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("signatureautoupdate") {
@@ -319,6 +354,21 @@ func updateAppfwsettingsFunc(ctx context.Context, d *schema.ResourceData, meta i
 	if d.HasChange("useconfigurablesecretkey") {
 		log.Printf("[DEBUG]  citrixadc-provider: Useconfigurablesecretkey has changed for appfwsettings, starting update")
 		appfwsettings.Useconfigurablesecretkey = d.Get("useconfigurablesecretkey").(string)
+		hasChange = true
+	}
+	if d.HasChange("proxyusername") {
+		log.Printf("[DEBUG]  citrixadc-provider: Proxyusername has changed for appfwsettings, starting update")
+		appfwsettings.Proxyusername = d.Get("proxyusername").(string)
+		hasChange = true
+	}
+	if d.HasChange("proxypassword") {
+		log.Printf("[DEBUG]  citrixadc-provider: Proxypassword has changed for appfwsettings, starting update")
+		appfwsettings.Proxypassword = d.Get("proxypassword").(string)
+		hasChange = true
+	}
+	if d.HasChange("cookieflags") {
+		log.Printf("[DEBUG]  citrixadc-provider: Cookieflags has changed for appfwsettings, starting update")
+		appfwsettings.Cookieflags = d.Get("cookieflags").(string)
 		hasChange = true
 	}
 

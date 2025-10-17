@@ -46,7 +46,10 @@ func createNd6ravariables_onlinkipv6prefix_bindingFunc(ctx context.Context, d *s
 	bindingId := fmt.Sprintf("%s,%s", vlan, ipv6prefix)
 	nd6ravariables_onlinkipv6prefix_binding := network.Nd6ravariablesonlinkipv6prefixbinding{
 		Ipv6prefix: d.Get("ipv6prefix").(string),
-		Vlan:       d.Get("vlan").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("vlan"); !raw.IsNull() {
+		nd6ravariables_onlinkipv6prefix_binding.Vlan = intPtr(d.Get("vlan").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Nd6ravariables_onlinkipv6prefix_binding.Type(), &nd6ravariables_onlinkipv6prefix_binding)

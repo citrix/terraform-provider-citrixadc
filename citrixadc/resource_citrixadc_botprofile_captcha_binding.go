@@ -112,13 +112,24 @@ func createBotprofile_captcha_bindingFunc(ctx context.Context, d *schema.Resourc
 		Botcaptchaenabled: d.Get("bot_captcha_enabled").(string),
 		Botcaptchaurl:     d.Get("bot_captcha_url").(string),
 		Captcharesource:   d.Get("captcharesource").(bool),
-		Graceperiod:       d.Get("graceperiod").(int),
 		Logmessage:        d.Get("logmessage").(string),
-		Muteperiod:        d.Get("muteperiod").(int),
 		Name:              d.Get("name").(string),
-		Requestsizelimit:  d.Get("requestsizelimit").(int),
-		Retryattempts:     d.Get("retryattempts").(int),
-		Waittime:          d.Get("waittime").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("graceperiod"); !raw.IsNull() {
+		botprofile_captcha_binding.Graceperiod = intPtr(d.Get("graceperiod").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("muteperiod"); !raw.IsNull() {
+		botprofile_captcha_binding.Muteperiod = intPtr(d.Get("muteperiod").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("requestsizelimit"); !raw.IsNull() {
+		botprofile_captcha_binding.Requestsizelimit = intPtr(d.Get("requestsizelimit").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("retryattempts"); !raw.IsNull() {
+		botprofile_captcha_binding.Retryattempts = intPtr(d.Get("retryattempts").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("waittime"); !raw.IsNull() {
+		botprofile_captcha_binding.Waittime = intPtr(d.Get("waittime").(int))
 	}
 
 	err := client.UpdateUnnamedResource("botprofile_captcha_binding", &botprofile_captcha_binding)

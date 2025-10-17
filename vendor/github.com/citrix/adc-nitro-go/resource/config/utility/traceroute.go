@@ -37,11 +37,11 @@ type Traceroute struct {
 	/**
 	* Minimum TTL value used in outgoing probe packets.
 	*/
-	M int `json:"M,omitempty"`
+	M *int `json:"M,omitempty"`
 	/**
 	* Maximum TTL value used in outgoing probe packets. For Nitro API, default value is taken as 10.
 	*/
-	M_ int `json:"m,omitempty"`
+	M_ *int `json:"m,omitempty"`
 	/**
 	* Send packets of specified IP protocol. The currently supported protocols are UDP and ICMP.
 	*/
@@ -49,11 +49,11 @@ type Traceroute struct {
 	/**
 	* Base port number used in probes.
 	*/
-	P_ int `json:"p,omitempty"`
+	P_ *int `json:"p,omitempty"`
 	/**
 	* Number of queries per hop. For Nitro API, defalut value is taken as 1.
 	*/
-	Q int `json:"q,omitempty"`
+	Q *int `json:"q,omitempty"`
 	/**
 	* Source IP address to use in the outgoing query packets. If the IP address does not belong to this appliance,  an error is returned and nothing is sent.
 	*/
@@ -61,15 +61,15 @@ type Traceroute struct {
 	/**
 	* Traffic Domain Id
 	*/
-	T int `json:"T,omitempty"`
+	T *int `json:"T,omitempty"`
 	/**
 	* Type-of-service in query packets.
 	*/
-	T_ int `json:"t,omitempty"`
+	T_ *int `json:"t,omitempty"`
 	/**
 	* Time (in seconds) to wait for a response to a query. For Nitro API, defalut value is set to 3.
 	*/
-	W int `json:"w,omitempty"`
+	W *int `json:"w,omitempty"`
 	/**
 	* Destination host IP address or name.
 	*/
@@ -77,7 +77,7 @@ type Traceroute struct {
 	/**
 	* Length (in bytes) of the query packets.
 	*/
-	Packetlen int `json:"packetlen,omitempty"`
+	Packetlen *int `json:"packetlen,omitempty"`
 
 	//------- Read only Parameter ---------;
 

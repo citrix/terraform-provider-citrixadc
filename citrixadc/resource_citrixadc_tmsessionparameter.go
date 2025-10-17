@@ -87,11 +87,16 @@ func createTmsessionparameterFunc(ctx context.Context, d *schema.ResourceData, m
 		Httponlycookie:             d.Get("httponlycookie").(string),
 		Kcdaccount:                 d.Get("kcdaccount").(string),
 		Persistentcookie:           d.Get("persistentcookie").(string),
-		Persistentcookievalidity:   d.Get("persistentcookievalidity").(int),
-		Sesstimeout:                d.Get("sesstimeout").(int),
 		Sso:                        d.Get("sso").(string),
 		Ssocredential:              d.Get("ssocredential").(string),
 		Ssodomain:                  d.Get("ssodomain").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("persistentcookievalidity"); !raw.IsNull() {
+		tmsessionparameter.Persistentcookievalidity = intPtr(d.Get("persistentcookievalidity").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("sesstimeout"); !raw.IsNull() {
+		tmsessionparameter.Sesstimeout = intPtr(d.Get("sesstimeout").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Tmsessionparameter.Type(), &tmsessionparameter)
@@ -162,12 +167,12 @@ func updateTmsessionparameterFunc(ctx context.Context, d *schema.ResourceData, m
 	}
 	if d.HasChange("persistentcookievalidity") {
 		log.Printf("[DEBUG]  citrixadc-provider: Persistentcookievalidity has changed for tmsessionparameter, starting update")
-		tmsessionparameter.Persistentcookievalidity = d.Get("persistentcookievalidity").(int)
+		tmsessionparameter.Persistentcookievalidity = intPtr(d.Get("persistentcookievalidity").(int))
 		hasChange = true
 	}
 	if d.HasChange("sesstimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Sesstimeout has changed for tmsessionparameter, starting update")
-		tmsessionparameter.Sesstimeout = d.Get("sesstimeout").(int)
+		tmsessionparameter.Sesstimeout = intPtr(d.Get("sesstimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("sso") {

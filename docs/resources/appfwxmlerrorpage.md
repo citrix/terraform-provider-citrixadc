@@ -29,7 +29,7 @@ resource "citrixadc_appfwxmlerrorpage" "tf_appfwxmlerrorpage" {
 * `name` - (Required) Indicates name of the imported xml error page to be removed.
 * `comment` - (Optional) Any comments to preserve information about the XML error object.
 * `overwrite` - (Optional) Overwrite any existing XML error object of the same name.
-* `src` - (Optional) URL (protocol, host, path, and name) for the location at which to store the imported XML error object. NOTE: The import fails if the object to be imported is on an HTTPS server that requires client certificate authentication for access.
+* `src` - (Required) URL (protocol, host, path, and name) for the location at which to store the imported XML error object. NOTE: The import fails if the object to be imported is on an HTTPS server that requires client certificate authentication for access.
 
 
 ## Attribute Reference

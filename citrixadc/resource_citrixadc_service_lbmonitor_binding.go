@@ -67,7 +67,10 @@ func createService_lbmonitor_bindingFunc(ctx context.Context, d *schema.Resource
 		Monstate:    d.Get("monstate").(string),
 		Name:        d.Get("name").(string),
 		Passive:     d.Get("passive").(bool),
-		Weight:      d.Get("weight").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("weight"); !raw.IsNull() {
+		service_lbmonitor_binding.Weight = intPtr(d.Get("weight").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Service_lbmonitor_binding.Type(), &service_lbmonitor_binding)

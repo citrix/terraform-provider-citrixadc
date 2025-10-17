@@ -81,8 +81,11 @@ func createVpnvserver_vpnurlpolicy_bindingFunc(ctx context.Context, d *schema.Re
 		Groupextraction:        d.Get("groupextraction").(bool),
 		Name:                   d.Get("name").(string),
 		Policy:                 d.Get("policy").(string),
-		Priority:               d.Get("priority").(int),
 		Secondary:              d.Get("secondary").(bool),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		vpnvserver_vpnurlpolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	err := client.UpdateUnnamedResource("vpnvserver_vpnurlpolicy_binding", &vpnvserver_vpnurlpolicy_binding)

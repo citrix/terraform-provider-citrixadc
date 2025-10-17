@@ -28,50 +28,34 @@ import (
 
 const testAccAppfwprofile_crosssitescripting_binding_basic = `
 
-resource citrixadc_appfwprofile_crosssitescripting_binding demo_binding {
-	name                 = citrixadc_appfwprofile.demo_appfw.name
-	crosssitescripting   = "demoxss"
-	formactionurl_xss    = "http://www.example.com"
-	as_scan_location_xss = "HEADER"
-	isregex_xss          = "NOTREGEX"
-	comment              = "democomment"
-	state                = "ENABLED"
-	as_value_type_xss    = "Attribute"
-	as_value_expr_xss    = "value"
-	isvalueregex_xss     = "NOTREGEX"
-	}
+resource "citrixadc_appfwprofile_crosssitescripting_binding" "demo_binding1" {
+  name                 = citrixadc_appfwprofile.demo_appfw.name
+  crosssitescripting   = "file"
+  isregex_xss          = "NOTREGEX"
+  formactionurl_xss    = "^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/document/content$"
+  as_scan_location_xss = "FORMFIELD"
+  as_value_type_xss    = "Tag"
+  isvalueregex_xss     = "REGEX"
+  as_value_expr_xss    = ".*"
+  state                = "ENABLED"
+}
 
-  resource citrixadc_appfwprofile demo_appfw {
+resource "citrixadc_appfwprofile_crosssitescripting_binding" "demo_binding2" {
+  name                 = citrixadc_appfwprofile.demo_appfw.name
+  crosssitescripting   = "file"
+  isregex_xss          = "NOTREGEX"
+  formactionurl_xss    = "^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/v1/resource/temp$"
+  as_scan_location_xss = "FORMFIELD"
+  as_value_type_xss    = "Tag"
+  isvalueregex_xss     = "REGEX"
+  as_value_expr_xss    = ".*"
+  state                = "ENABLED"
+}
+
+resource "citrixadc_appfwprofile" "demo_appfw" {
 	name                     = "demo_appfwprofile"
-	bufferoverflowaction     = ["none"]
-	contenttypeaction        = ["none"]
-	cookieconsistencyaction  = ["none"]
-	creditcard               = ["none"]
-	creditcardaction         = ["none"]
-	crosssitescriptingaction = ["none"]
-	csrftagaction            = ["none"]
-	denyurlaction            = ["none"]
-	dynamiclearning          = ["none"]
-	fieldconsistencyaction   = ["none"]
-	fieldformataction        = ["none"]
-	fileuploadtypesaction    = ["none"]
-	inspectcontenttypes      = ["none"]
-	jsondosaction            = ["none"]
-	jsonsqlinjectionaction   = ["none"]
-	jsonxssaction            = ["none"]
-	multipleheaderaction     = ["none"]
-	sqlinjectionaction       = ["none"]
-	starturlaction           = ["none"]
 	type                     = ["HTML"]
-	xmlattachmentaction      = ["none"]
-	xmldosaction             = ["none"]
-	xmlformataction          = ["none"]
-	xmlsoapfaultaction       = ["none"]
-	xmlsqlinjectionaction    = ["none"]
-	xmlvalidationaction      = ["none"]
-	xmlwsiaction             = ["none"]
-	xmlxssaction             = ["none"]
-	}
+  }
 `
 
 func TestAccAppfwprofile_crosssitescripting_binding_basic(t *testing.T) {
@@ -83,14 +67,28 @@ func TestAccAppfwprofile_crosssitescripting_binding_basic(t *testing.T) {
 			{
 				Config: testAccAppfwprofile_crosssitescripting_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppfwprofile_crosssitescripting_bindingExist("citrixadc_appfwprofile_crosssitescripting_binding.demo_binding", nil),
-					resource.TestCheckResourceAttr("citrixadc_appfwprofile_crosssitescripting_binding.demo_binding", "name", "demo_appfwprofile"),
-					resource.TestCheckResourceAttr("citrixadc_appfwprofile_crosssitescripting_binding.demo_binding", "crosssitescripting", "demoxss"),
-					resource.TestCheckResourceAttr("citrixadc_appfwprofile_crosssitescripting_binding.demo_binding", "formactionurl_xss", "http://www.example.com"),
-					resource.TestCheckResourceAttr("citrixadc_appfwprofile_crosssitescripting_binding.demo_binding", "as_scan_location_xss", "HEADER"),
-					resource.TestCheckResourceAttr("citrixadc_appfwprofile_crosssitescripting_binding.demo_binding", "isregex_xss", "NOTREGEX"),
-					resource.TestCheckResourceAttr("citrixadc_appfwprofile_crosssitescripting_binding.demo_binding", "comment", "democomment"),
-					resource.TestCheckResourceAttr("citrixadc_appfwprofile_crosssitescripting_binding.demo_binding", "state", "ENABLED"),
+					testAccCheckAppfwprofile_crosssitescripting_bindingExist("citrixadc_appfwprofile_crosssitescripting_binding.demo_binding1", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_crosssitescripting_binding.demo_binding1", "name", "demo_appfwprofile"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_crosssitescripting_binding.demo_binding1", "crosssitescripting", "file"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_crosssitescripting_binding.demo_binding1", "formactionurl_xss", "^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/document/content$"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_crosssitescripting_binding.demo_binding1", "as_scan_location_xss", "FORMFIELD"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_crosssitescripting_binding.demo_binding1", "isregex_xss", "NOTREGEX"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_crosssitescripting_binding.demo_binding1", "state", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_crosssitescripting_binding.demo_binding1", "as_value_type_xss", "Tag"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_crosssitescripting_binding.demo_binding1", "isvalueregex_xss", "REGEX"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_crosssitescripting_binding.demo_binding1", "as_value_expr_xss", ".*"),
+
+					// Check second binding
+					testAccCheckAppfwprofile_crosssitescripting_bindingExist("citrixadc_appfwprofile_crosssitescripting_binding.demo_binding2", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_crosssitescripting_binding.demo_binding2", "name", "demo_appfwprofile"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_crosssitescripting_binding.demo_binding2", "crosssitescripting", "file"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_crosssitescripting_binding.demo_binding2", "formactionurl_xss", "^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/v1/resource/temp$"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_crosssitescripting_binding.demo_binding2", "as_scan_location_xss", "FORMFIELD"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_crosssitescripting_binding.demo_binding2", "isregex_xss", "NOTREGEX"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_crosssitescripting_binding.demo_binding2", "state", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_crosssitescripting_binding.demo_binding2", "as_value_type_xss", "Tag"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_crosssitescripting_binding.demo_binding2", "isvalueregex_xss", "REGEX"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_crosssitescripting_binding.demo_binding2", "as_value_expr_xss", ".*"),
 				),
 			},
 		},
@@ -147,11 +145,7 @@ func testAccCheckAppfwprofile_crosssitescripting_bindingExist(n string, id *stri
 		foundIndex := -1
 		for i, v := range dataArr {
 			if v["crosssitescripting"].(string) == crosssitescripting {
-				unescapedURL, err := unescapeStringURL(v["formactionurl_xss"].(string))
-				if err != nil {
-					return err
-				}
-				if v["formactionurl_xss"] != nil && v["as_scan_location_xss"] != nil && v["as_value_type_xss"] != nil && v["as_value_expr_xss"] != nil && v["as_value_type_xss"].(string) == as_value_type_xss && v["as_value_expr_xss"].(string) == as_value_expr_xss && v["as_scan_location_xss"].(string) == as_scan_location_xss && unescapedURL == formactionurl_xss {
+				if v["formactionurl_xss"] != nil && v["as_scan_location_xss"] != nil && v["as_value_type_xss"] != nil && v["as_value_expr_xss"] != nil && v["as_value_type_xss"].(string) == as_value_type_xss && v["as_value_expr_xss"].(string) == as_value_expr_xss && v["as_scan_location_xss"].(string) == as_scan_location_xss && v["formactionurl_xss"].(string) == formactionurl_xss {
 					foundIndex = i
 					break
 				}

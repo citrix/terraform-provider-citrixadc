@@ -40,21 +40,21 @@ type Subscribergxinterface struct {
 	* q!Time, in seconds, within which the Gx CCR request must complete. If the request does not complete within this time, the request is retransmitted for requestRetryAttempts time. If still reuqest is not complete then default subscriber profile will be applied to this subscriber if configured. If default subscriber profile is also not configured an undef would be raised to expressions which use Subscriber attributes.
 		Zero disables the timeout. !
 	*/
-	Requesttimeout int `json:"requesttimeout,omitempty"`
+	Requesttimeout *int `json:"requesttimeout,omitempty"`
 	/**
 	* If the request does not complete within requestTimeout time, the request is retransmitted for requestRetryAttempts time.
 	*/
-	Requestretryattempts int `json:"requestretryattempts,omitempty"`
+	Requestretryattempts *int `json:"requestretryattempts,omitempty"`
 	/**
 	* q!Idle Time, in seconds, after which the Gx CCR-U request will be sent after any PCRF activity on a session. Any RAR or CCA message resets the timer.
 		Zero value disables the idle timeout. !
 	*/
-	Idlettl int `json:"idlettl,omitempty"`
+	Idlettl *int `json:"idlettl,omitempty"`
 	/**
 	* q!Revalidation Timeout, in seconds, after which the Gx CCR-U request will be sent after any PCRF activity on a session. Any RAR or CCA message resets the timer.
 		Zero value disables the idle timeout. !
 	*/
-	Revalidationtimeout int `json:"revalidationtimeout,omitempty"`
+	Revalidationtimeout *int `json:"revalidationtimeout,omitempty"`
 	/**
 	* q!Set this setting to yes if Citrix ADC should send DWR packets to PCRF server. When the session is idle, healthcheck timer expires and DWR packets are initiated in order to check that PCRF server is active. By default set to No. !
 	*/
@@ -62,17 +62,17 @@ type Subscribergxinterface struct {
 	/**
 	* q!Healthcheck timeout, in seconds, after which the DWR will be sent in order to ensure the state of the PCRF server. Any CCR, CCA, RAR or RRA message resets the timer. !
 	*/
-	Healthcheckttl int `json:"healthcheckttl,omitempty"`
+	Healthcheckttl *int `json:"healthcheckttl,omitempty"`
 	/**
 	* q!Healthcheck request timeout, in seconds, after which the Citrix ADC considers that no CCA packet received to the initiated CCR. After this time Citrix ADC should send again CCR to PCRF server. !
 	*/
-	Cerrequesttimeout int `json:"cerrequesttimeout,omitempty"`
+	Cerrequesttimeout *int `json:"cerrequesttimeout,omitempty"`
 	/**
 	* q!Negative TTL, in seconds, after which the Gx CCR-I request will be resent for sessions that have not been resolved by PCRF due to server being down or no response or failed response. Instead of polling the PCRF server constantly, negative-TTL makes Citrix ADC stick to un-resolved session. Meanwhile Citrix ADC installs a negative session to avoid going to PCRF.
 		For Negative Sessions, Netcaler inherits the attributes from default subscriber profile if default subscriber is configured. A default subscriber could be configured as 'add subscriber profile *'. Or these attributes can be inherited from Radius as well if Radius is configued.
 		Zero value disables the Negative Sessions. And Citrix ADC does not install Negative sessions even if subscriber session could not be fetched. !
 	*/
-	Negativettl int `json:"negativettl,omitempty"`
+	Negativettl *int `json:"negativettl,omitempty"`
 	/**
 	* Set this to YES if Citrix ADC should create negative session for Result-Code DIAMETER_LIMITED_SUCCESS (2002) received in CCA-I. If set to NO, regular session is created.
 	*/
@@ -88,11 +88,11 @@ type Subscribergxinterface struct {
 	/**
 	*  The vendorid of the AVP in which PCRF sends service path for subscriber.
 	*/
-	Servicepathvendorid int `json:"servicepathvendorid,omitempty"`
+	Servicepathvendorid *int `json:"servicepathvendorid,omitempty"`
 	/**
 	* Unique number that identifies the cluster node.
 	*/
-	Nodeid int `json:"nodeid,omitempty"`
+	Nodeid *int `json:"nodeid,omitempty"`
 
 	//------- Read only Parameter ---------;
 

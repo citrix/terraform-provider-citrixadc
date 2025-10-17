@@ -45,8 +45,11 @@ func createNsservicefunctionFunc(ctx context.Context, d *schema.ResourceData, me
 	nsservicefunctionName := d.Get("servicefunctionname").(string)
 
 	nsservicefunction := ns.Nsservicefunction{
-		Ingressvlan:         d.Get("ingressvlan").(int),
 		Servicefunctionname: d.Get("servicefunctionname").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("ingressvlan"); !raw.IsNull() {
+		nsservicefunction.Ingressvlan = intPtr(d.Get("ingressvlan").(int))
 	}
 
 	_, err := client.AddResource(service.Nsservicefunction.Type(), nsservicefunctionName, &nsservicefunction)
@@ -88,7 +91,7 @@ func updateNsservicefunctionFunc(ctx context.Context, d *schema.ResourceData, me
 	hasChange := false
 	if d.HasChange("ingressvlan") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ingressvlan has changed for nsservicefunction %s, starting update", nsservicefunctionName)
-		nsservicefunction.Ingressvlan = d.Get("ingressvlan").(int)
+		nsservicefunction.Ingressvlan = intPtr(d.Get("ingressvlan").(int))
 		hasChange = true
 	}
 

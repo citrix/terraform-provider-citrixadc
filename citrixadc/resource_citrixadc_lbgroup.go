@@ -87,17 +87,24 @@ func createLbgroupFunc(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	LbgroupName := d.Get("name").(string)
 	Lbgroup := lb.Lbgroup{
-		Name:                     d.Get("name").(string),
-		Persistencetype:          d.Get("persistencetype").(string),
-		Persistencebackup:        d.Get("persistencebackup").(string),
-		Backuppersistencetimeout: d.Get("backuppersistencetimeout").(int),
-		Persistmask:              d.Get("persistmask").(string),
-		Cookiename:               d.Get("cookiename").(string),
-		V6persistmasklen:         d.Get("v6persistmasklen").(int),
-		Cookiedomain:             d.Get("cookiedomain").(string),
-		Timeout:                  d.Get("timeout").(int),
-		Rule:                     d.Get("rule").(string),
-		Usevserverpersistency:    d.Get("usevserverpersistency").(string),
+		Name:                  d.Get("name").(string),
+		Persistencetype:       d.Get("persistencetype").(string),
+		Persistencebackup:     d.Get("persistencebackup").(string),
+		Persistmask:           d.Get("persistmask").(string),
+		Cookiename:            d.Get("cookiename").(string),
+		Cookiedomain:          d.Get("cookiedomain").(string),
+		Rule:                  d.Get("rule").(string),
+		Usevserverpersistency: d.Get("usevserverpersistency").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("backuppersistencetimeout"); !raw.IsNull() {
+		Lbgroup.Backuppersistencetimeout = intPtr(d.Get("backuppersistencetimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("v6persistmasklen"); !raw.IsNull() {
+		Lbgroup.V6persistmasklen = intPtr(d.Get("v6persistmasklen").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("timeout"); !raw.IsNull() {
+		Lbgroup.Timeout = intPtr(d.Get("timeout").(int))
 	}
 
 	_, err := client.AddResource("lbgroup", LbgroupName, &Lbgroup)
@@ -159,7 +166,7 @@ func updateLbgroupFunc(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 	if d.HasChange("backuppersistencetimeout") {
 		log.Printf("[DEBUG]  netscaler-provider: Backuppersistencetimeout has changed for Lbgroup %s, starting update", LbgroupName)
-		Lbgroup.Backuppersistencetimeout = d.Get("backuppersistencetimeout").(int)
+		Lbgroup.Backuppersistencetimeout = intPtr(d.Get("backuppersistencetimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("persistmask") {
@@ -174,7 +181,7 @@ func updateLbgroupFunc(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 	if d.HasChange("v6persistmasklen") {
 		log.Printf("[DEBUG]  netscaler-provider: V6persistmasklen has changed for Lbgroup %s, starting update", LbgroupName)
-		Lbgroup.V6persistmasklen = d.Get("v6persistmasklen").(int)
+		Lbgroup.V6persistmasklen = intPtr(d.Get("v6persistmasklen").(int))
 		hasChange = true
 	}
 	if d.HasChange("cookiedomain") {
@@ -184,7 +191,7 @@ func updateLbgroupFunc(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 	if d.HasChange("timeout") {
 		log.Printf("[DEBUG]  netscaler-provider: Timeout has changed for Lbgroup %s, starting update", LbgroupName)
-		Lbgroup.Timeout = d.Get("timeout").(int)
+		Lbgroup.Timeout = intPtr(d.Get("timeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("rule") {

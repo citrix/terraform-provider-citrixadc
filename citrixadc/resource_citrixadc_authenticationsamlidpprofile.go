@@ -566,7 +566,6 @@ func createAuthenticationsamlidpprofileFunc(ctx context.Context, d *schema.Resou
 		Encryptionalgorithm:         d.Get("encryptionalgorithm").(string),
 		Keytransportalg:             d.Get("keytransportalg").(string),
 		Logoutbinding:               d.Get("logoutbinding").(string),
-		Metadatarefreshinterval:     d.Get("metadatarefreshinterval").(int),
 		Metadataurl:                 d.Get("metadataurl").(string),
 		Name:                        d.Get("name").(string),
 		Nameidexpr:                  d.Get("nameidexpr").(string),
@@ -583,8 +582,14 @@ func createAuthenticationsamlidpprofileFunc(ctx context.Context, d *schema.Resou
 		Signassertion:               d.Get("signassertion").(string),
 		Signaturealg:                d.Get("signaturealg").(string),
 		Signatureservice:            d.Get("signatureservice").(string),
-		Skewtime:                    d.Get("skewtime").(int),
 		Splogouturl:                 d.Get("splogouturl").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("metadatarefreshinterval"); !raw.IsNull() {
+		authenticationsamlidpprofile.Metadatarefreshinterval = intPtr(d.Get("metadatarefreshinterval").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("skewtime"); !raw.IsNull() {
+		authenticationsamlidpprofile.Skewtime = intPtr(d.Get("skewtime").(int))
 	}
 
 	_, err := client.AddResource(service.Authenticationsamlidpprofile.Type(), authenticationsamlidpprofileName, &authenticationsamlidpprofile)
@@ -1081,7 +1086,7 @@ func updateAuthenticationsamlidpprofileFunc(ctx context.Context, d *schema.Resou
 	}
 	if d.HasChange("metadatarefreshinterval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Metadatarefreshinterval has changed for authenticationsamlidpprofile %s, starting update", authenticationsamlidpprofileName)
-		authenticationsamlidpprofile.Metadatarefreshinterval = d.Get("metadatarefreshinterval").(int)
+		authenticationsamlidpprofile.Metadatarefreshinterval = intPtr(d.Get("metadatarefreshinterval").(int))
 		hasChange = true
 	}
 	if d.HasChange("metadataurl") {
@@ -1161,7 +1166,7 @@ func updateAuthenticationsamlidpprofileFunc(ctx context.Context, d *schema.Resou
 	}
 	if d.HasChange("skewtime") {
 		log.Printf("[DEBUG]  citrixadc-provider: Skewtime has changed for authenticationsamlidpprofile %s, starting update", authenticationsamlidpprofileName)
-		authenticationsamlidpprofile.Skewtime = d.Get("skewtime").(int)
+		authenticationsamlidpprofile.Skewtime = intPtr(d.Get("skewtime").(int))
 		hasChange = true
 	}
 	if d.HasChange("splogouturl") {

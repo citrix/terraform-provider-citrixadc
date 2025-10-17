@@ -24,7 +24,7 @@ type Aaagroupvpnurlbinding struct {
 	* The intranet url
 	*/
 	Urlname string `json:"urlname,omitempty"`
-	Acttype int `json:"acttype,omitempty"`
+	Acttype *int `json:"acttype,omitempty"`
 	/**
 	* Name of the group that you are binding.
 	*/

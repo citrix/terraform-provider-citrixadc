@@ -27,15 +27,15 @@ type Lsnsipalgprofile struct {
 	/**
 	* Idle timeout for the data channel sessions in seconds.
 	*/
-	Datasessionidletimeout int `json:"datasessionidletimeout,omitempty"`
+	Datasessionidletimeout *int `json:"datasessionidletimeout,omitempty"`
 	/**
 	* SIP control channel session timeout in seconds.
 	*/
-	Sipsessiontimeout int `json:"sipsessiontimeout,omitempty"`
+	Sipsessiontimeout *int `json:"sipsessiontimeout,omitempty"`
 	/**
 	* SIP registration timeout in seconds.
 	*/
-	Registrationtimeout int `json:"registrationtimeout,omitempty"`
+	Registrationtimeout *int `json:"registrationtimeout,omitempty"`
 	/**
 	* Source port range for SIP_UDP and SIP_TCP.
 	*/

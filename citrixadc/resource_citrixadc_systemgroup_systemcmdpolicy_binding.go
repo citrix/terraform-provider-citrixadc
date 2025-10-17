@@ -52,7 +52,10 @@ func createSystemgroup_systemcmdpolicy_bindingFunc(ctx context.Context, d *schem
 	systemgroup_systemcmdpolicy_binding := system.Systemgroupsystemcmdpolicybinding{
 		Groupname:  d.Get("groupname").(string),
 		Policyname: d.Get("policyname").(string),
-		Priority:   d.Get("priority").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		systemgroup_systemcmdpolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	_, err := client.AddResource(service.Systemgroup_systemcmdpolicy_binding.Type(), bindingId, &systemgroup_systemcmdpolicy_binding)

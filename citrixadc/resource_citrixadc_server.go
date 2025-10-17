@@ -120,19 +120,24 @@ func createServerFunc(ctx context.Context, d *schema.ResourceData, meta interfac
 		d.Set("name", serverName)
 	}
 	server := basic.Server{
-		Comment:            d.Get("comment").(string),
-		Domain:             d.Get("domain").(string),
-		Domainresolvenow:   d.Get("domainresolvenow").(bool),
-		Domainresolveretry: d.Get("domainresolveretry").(int),
-		Internal:           d.Get("internal").(bool),
-		Ipaddress:          d.Get("ipaddress").(string),
-		Ipv6address:        d.Get("ipv6address").(string),
-		Name:               d.Get("name").(string),
-		Querytype:          d.Get("querytype").(string),
-		State:              d.Get("state").(string),
-		Td:                 d.Get("td").(int),
-		Translationip:      d.Get("translationip").(string),
-		Translationmask:    d.Get("translationmask").(string),
+		Comment:          d.Get("comment").(string),
+		Domain:           d.Get("domain").(string),
+		Domainresolvenow: d.Get("domainresolvenow").(bool),
+		Internal:         d.Get("internal").(bool),
+		Ipaddress:        d.Get("ipaddress").(string),
+		Ipv6address:      d.Get("ipv6address").(string),
+		Name:             d.Get("name").(string),
+		Querytype:        d.Get("querytype").(string),
+		State:            d.Get("state").(string),
+		Translationip:    d.Get("translationip").(string),
+		Translationmask:  d.Get("translationmask").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("domainresolveretry"); !raw.IsNull() {
+		server.Domainresolveretry = intPtr(d.Get("domainresolveretry").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("td"); !raw.IsNull() {
+		server.Td = intPtr(d.Get("td").(int))
 	}
 
 	_, err := client.AddResource(service.Server.Type(), serverName, &server)
@@ -205,7 +210,7 @@ func updateServerFunc(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 	if d.HasChange("domainresolveretry") {
 		log.Printf("[DEBUG]  netscaler-provider: Domainresolveretry has changed for server %s, starting update", serverName)
-		server.Domainresolveretry = d.Get("domainresolveretry").(int)
+		server.Domainresolveretry = intPtr(d.Get("domainresolveretry").(int))
 		hasChange = true
 	}
 	if d.HasChange("internal") {
@@ -239,7 +244,7 @@ func updateServerFunc(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 	if d.HasChange("td") {
 		log.Printf("[DEBUG]  netscaler-provider: Td has changed for server %s, starting update", serverName)
-		server.Td = d.Get("td").(int)
+		server.Td = intPtr(d.Get("td").(int))
 		hasChange = true
 	}
 	if d.HasChange("translationip") {
@@ -301,7 +306,7 @@ func doServerStateChange(d *schema.ResourceData, client *service.NitroClient) er
 		}
 	} else if newstate == "DISABLED" {
 		// Add attributes relevant to the disable operation
-		server.Delay = d.Get("delay").(int)
+		server.Delay = intPtr(d.Get("delay").(int))
 		server.Graceful = d.Get("graceful").(string)
 		err := client.ActOnResource(service.Server.Type(), server, "disable")
 		if err != nil {

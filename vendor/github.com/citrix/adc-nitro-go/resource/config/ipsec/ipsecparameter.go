@@ -35,19 +35,19 @@ type Ipsecparameter struct {
 	/**
 	* Lifetime of IKE SA in seconds. Lifetime of IPSec SA will be (lifetime of IKE SA/8)
 	*/
-	Lifetime int `json:"lifetime,omitempty"`
+	Lifetime *int `json:"lifetime,omitempty"`
 	/**
 	* Number of seconds after which a notify payload is sent to check the liveliness of the peer. Additional retries are done as per retransmit interval setting. Zero value disables liveliness checks.
 	*/
-	Livenesscheckinterval int `json:"livenesscheckinterval,omitempty"`
+	Livenesscheckinterval *int `json:"livenesscheckinterval,omitempty"`
 	/**
 	* IPSec Replay window size for the data traffic
 	*/
-	Replaywindowsize int `json:"replaywindowsize,omitempty"`
+	Replaywindowsize *int `json:"replaywindowsize,omitempty"`
 	/**
 	* IKE retry interval for bringing up the connection
 	*/
-	Ikeretryinterval int `json:"ikeretryinterval,omitempty"`
+	Ikeretryinterval *int `json:"ikeretryinterval,omitempty"`
 	/**
 	* Enable/Disable PFS.
 	*/
@@ -56,7 +56,7 @@ type Ipsecparameter struct {
 	* The interval in seconds to retry sending the IKE messages to peer, three consecutive attempts are done with doubled interval after every failure,
 		increases for every retransmit till 6 retransmits.
 	*/
-	Retransmissiontime int `json:"retransmissiontime,omitempty"`
+	Retransmissiontime *int `json:"retransmissiontime,omitempty"`
 
 	//------- Read only Parameter ---------;
 

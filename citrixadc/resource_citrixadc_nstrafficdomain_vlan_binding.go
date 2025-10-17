@@ -45,9 +45,13 @@ func createNstrafficdomain_vlan_bindingFunc(ctx context.Context, d *schema.Resou
 	td := strconv.Itoa(d.Get("td").(int))
 	vlan := strconv.Itoa(d.Get("vlan").(int))
 	bindingId := fmt.Sprintf("%s,%s", td, vlan)
-	nstrafficdomain_vlan_binding := ns.Nstrafficdomainvlanbinding{
-		Td:   d.Get("td").(int),
-		Vlan: d.Get("vlan").(int),
+	nstrafficdomain_vlan_binding := ns.Nstrafficdomainvlanbinding{}
+
+	if raw := d.GetRawConfig().GetAttr("td"); !raw.IsNull() {
+		nstrafficdomain_vlan_binding.Td = intPtr(d.Get("td").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("vlan"); !raw.IsNull() {
+		nstrafficdomain_vlan_binding.Vlan = intPtr(d.Get("vlan").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Nstrafficdomain_vlan_binding.Type(), &nstrafficdomain_vlan_binding)

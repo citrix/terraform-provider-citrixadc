@@ -128,3 +128,9 @@ func hashString(input string) int {
 	h.Write([]byte(input))
 	return int(h.Sum32() & 0x7fffffff) // Ensure positive int
 }
+
+// intPtr returns a pointer to the provided int value
+// This is useful for optional fields in structs that require *int
+func intPtr(i int) *int {
+	return &i
+}

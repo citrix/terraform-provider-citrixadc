@@ -40,8 +40,11 @@ func createReputationsettingsFunc(ctx context.Context, d *schema.ResourceData, m
 	reputationsettingsName := resource.PrefixedUniqueId("tf-reputationsettings-")
 
 	reputationsettings := reputation.Reputationsettings{
-		Proxyport:   d.Get("proxyport").(int),
 		Proxyserver: d.Get("proxyserver").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("proxyport"); !raw.IsNull() {
+		reputationsettings.Proxyport = intPtr(d.Get("proxyport").(int))
 	}
 
 	err := client.UpdateUnnamedResource("reputationsettings", &reputationsettings)
@@ -79,7 +82,7 @@ func updateReputationsettingsFunc(ctx context.Context, d *schema.ResourceData, m
 	hasChange := false
 	if d.HasChange("proxyport") {
 		log.Printf("[DEBUG]  citrixadc-provider: Proxyport has changed for reputationsettings, starting update")
-		reputationsettings.Proxyport = d.Get("proxyport").(int)
+		reputationsettings.Proxyport = intPtr(d.Get("proxyport").(int))
 		hasChange = true
 	}
 	if d.HasChange("proxyserver") {

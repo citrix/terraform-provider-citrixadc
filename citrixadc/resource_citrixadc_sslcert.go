@@ -125,12 +125,15 @@ func createSslcertFunc(ctx context.Context, d *schema.ResourceData, meta interfa
 		Certfile:       d.Get("certfile").(string),
 		Certform:       d.Get("certform").(string),
 		Certtype:       d.Get("certtype").(string),
-		Days:           d.Get("days").(int),
 		Keyfile:        d.Get("keyfile").(string),
 		Keyform:        d.Get("keyform").(string),
 		Pempassphrase:  d.Get("pempassphrase").(string),
 		Reqfile:        d.Get("reqfile").(string),
 		Subjectaltname: d.Get("subjectaltname").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("days"); !raw.IsNull() {
+		sslcert.Days = intPtr(d.Get("days").(int))
 	}
 
 	err := client.ActOnResource(service.Sslcert.Type(), &sslcert, "create")

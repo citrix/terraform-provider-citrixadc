@@ -106,12 +106,15 @@ func createAppfwprofile_safeobject_bindingFunc(ctx context.Context, d *schema.Re
 		Asexpression:   d.Get("as_expression").(string),
 		Comment:        d.Get("comment").(string),
 		Isautodeployed: d.Get("isautodeployed").(string),
-		Maxmatchlength: d.Get("maxmatchlength").(int),
 		Name:           d.Get("name").(string),
 		Resourceid:     d.Get("resourceid").(string),
 		Ruletype:       d.Get("ruletype").(string),
 		Safeobject:     d.Get("safeobject").(string),
 		State:          d.Get("state").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("maxmatchlength"); !raw.IsNull() {
+		appfwprofile_safeobject_binding.Maxmatchlength = intPtr(d.Get("maxmatchlength").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Appfwprofile_safeobject_binding.Type(), &appfwprofile_safeobject_binding)

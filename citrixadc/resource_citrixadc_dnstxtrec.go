@@ -50,7 +50,10 @@ func createDnstxtrecFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	dnstxtrec := dns.Dnstxtrec{
 		Domain: dnstxtrecName,
 		String: toStringList(d.Get("string").([]interface{})),
-		Ttl:    d.Get("ttl").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("ttl"); !raw.IsNull() {
+		dnstxtrec.Ttl = intPtr(d.Get("ttl").(int))
 	}
 
 	_, err := client.AddResource(service.Dnstxtrec.Type(), dnstxtrecName, &dnstxtrec)

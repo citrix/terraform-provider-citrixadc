@@ -54,7 +54,10 @@ func createPcpserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 		Ipaddress:  d.Get("ipaddress").(string),
 		Name:       d.Get("name").(string),
 		Pcpprofile: d.Get("pcpprofile").(string),
-		Port:       d.Get("port").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("port"); !raw.IsNull() {
+		pcpserver.Port = intPtr(d.Get("port").(int))
 	}
 
 	_, err := client.AddResource("pcpserver", pcpserverName, &pcpserver)
@@ -103,7 +106,7 @@ func updatePcpserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("port") {
 		log.Printf("[DEBUG]  citrixadc-provider: Port has changed for pcpserver %s, starting update", pcpserverName)
-		pcpserver.Port = d.Get("port").(int)
+		pcpserver.Port = intPtr(d.Get("port").(int))
 		hasChange = true
 	}
 

@@ -92,8 +92,11 @@ func createNetprofileFunc(ctx context.Context, d *schema.ResourceData, meta inte
 		Proxyprotocoltxversion:         d.Get("proxyprotocoltxversion").(string),
 		Srcip:                          d.Get("srcip").(string),
 		Srcippersistency:               d.Get("srcippersistency").(string),
-		Td:                             d.Get("td").(int),
 		Proxyprotocolaftertlshandshake: d.Get("proxyprotocolaftertlshandshake").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("td"); !raw.IsNull() {
+		netprofile.Td = intPtr(d.Get("td").(int))
 	}
 
 	_, err := client.AddResource(service.Netprofile.Type(), netprofileName, &netprofile)
@@ -178,7 +181,7 @@ func updateNetprofileFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	if d.HasChange("td") {
 		log.Printf("[DEBUG]  citrixadc-provider: Td has changed for netprofile %s, starting update", netprofileName)
-		netprofile.Td = d.Get("td").(int)
+		netprofile.Td = intPtr(d.Get("td").(int))
 		hasChange = true
 	}
 	if d.HasChange("proxyprotocolaftertlshandshake") {

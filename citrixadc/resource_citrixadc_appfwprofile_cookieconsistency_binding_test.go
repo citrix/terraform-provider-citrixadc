@@ -26,42 +26,26 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-const testAccAppfwprofile_cookieconsistency_binding_basic = `
-	resource citrixadc_appfwprofile_cookieconsistency_binding demo_binding {
+const testAccAppfwprofile_cookieconsistency_binding_basic_step1 = `
+	resource citrixadc_appfwprofile_cookieconsistency_binding demo_binding1 {
 		name              = citrixadc_appfwprofile.demo_appfw.name
 		cookieconsistency = "^logon_[0-9A-Za-z]{2,15}$"
+	}
+	resource citrixadc_appfwprofile_cookieconsistency_binding demo_binding2 {
+		name              = citrixadc_appfwprofile.demo_appfw.name
+		cookieconsistency = "^logout_[0-9A-Za-z]{2,15}$"
 	}
 
 	resource citrixadc_appfwprofile demo_appfw {
 		name                     = "demo_appfwprofile"
-		bufferoverflowaction     = ["none"]
-		contenttypeaction        = ["none"]
-		cookieconsistencyaction  = ["none"]
-		creditcard               = ["none"]
-		creditcardaction         = ["none"]
-		crosssitescriptingaction = ["none"]
-		csrftagaction            = ["none"]
-		denyurlaction            = ["none"]
-		dynamiclearning          = ["none"]
-		fieldconsistencyaction   = ["none"]
-		fieldformataction        = ["none"]
-		fileuploadtypesaction    = ["none"]
-		inspectcontenttypes      = ["none"]
-		jsondosaction            = ["none"]
-		jsonsqlinjectionaction   = ["none"]
-		jsonxssaction            = ["none"]
-		multipleheaderaction     = ["none"]
-		sqlinjectionaction       = ["none"]
-		starturlaction           = ["none"]
 		type                     = ["HTML"]
-		xmlattachmentaction      = ["none"]
-		xmldosaction             = ["none"]
-		xmlformataction          = ["none"]
-		xmlsoapfaultaction       = ["none"]
-		xmlsqlinjectionaction    = ["none"]
-		xmlvalidationaction      = ["none"]
-		xmlwsiaction             = ["none"]
-		xmlxssaction             = ["none"]
+	}
+`
+
+const testAccAppfwprofile_cookieconsistency_binding_basic_step2 = `
+	resource citrixadc_appfwprofile demo_appfw {
+		name                     = "demo_appfwprofile"
+		type                     = ["HTML"]
 	}
 `
 
@@ -72,11 +56,21 @@ func TestAccAppfwprofile_cookieconsistency_binding_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckAppfwprofile_cookieconsistency_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppfwprofile_cookieconsistency_binding_basic,
+				Config: testAccAppfwprofile_cookieconsistency_binding_basic_step1,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppfwprofile_cookieconsistency_bindingExist("citrixadc_appfwprofile_cookieconsistency_binding.demo_binding", nil),
-					resource.TestCheckResourceAttr("citrixadc_appfwprofile_cookieconsistency_binding.demo_binding", "name", "demo_appfwprofile"),
-					resource.TestCheckResourceAttr("citrixadc_appfwprofile_cookieconsistency_binding.demo_binding", "cookieconsistency", "^logon_[0-9A-Za-z]{2,15}$"),
+					testAccCheckAppfwprofile_cookieconsistency_bindingExist("citrixadc_appfwprofile_cookieconsistency_binding.demo_binding1", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_cookieconsistency_binding.demo_binding1", "name", "demo_appfwprofile"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_cookieconsistency_binding.demo_binding1", "cookieconsistency", "^logon_[0-9A-Za-z]{2,15}$"),
+					testAccCheckAppfwprofile_cookieconsistency_bindingExist("citrixadc_appfwprofile_cookieconsistency_binding.demo_binding2", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_cookieconsistency_binding.demo_binding2", "name", "demo_appfwprofile"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_cookieconsistency_binding.demo_binding2", "cookieconsistency", "^logout_[0-9A-Za-z]{2,15}$"),
+				),
+			},
+			{
+				Config: testAccAppfwprofile_cookieconsistency_binding_basic_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwprofile_cookieconsistency_bindingNotExist("citrixadc_appfwprofile_cookieconsistency_binding.demo_binding1", "demo_appfwprofile,^logon_[0-9A-Za-z]{2,15}$"),
+					testAccCheckAppfwprofile_cookieconsistency_bindingNotExist("citrixadc_appfwprofile_cookieconsistency_binding.demo_binding2", "demo_appfwprofile,^logout_[0-9A-Za-z]{2,15}$"),
 				),
 			},
 		},
@@ -141,6 +135,50 @@ func testAccCheckAppfwprofile_cookieconsistency_bindingExist(n string, id *strin
 		return nil
 	}
 
+}
+
+func testAccCheckAppfwprofile_cookieconsistency_bindingNotExist(n string, id string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+
+		if !strings.Contains(id, ",") {
+			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
+		}
+		idSlice := strings.SplitN(id, ",", 3)
+
+		name := idSlice[0]
+		cookieconsistency := idSlice[1]
+
+		findParams := service.FindParams{
+			ResourceType:             "appfwprofile_cookieconsistency_binding",
+			ResourceName:             name,
+			ResourceMissingErrorCode: 258,
+		}
+		dataArr, err := client.FindResourceArrayWithParams(findParams)
+
+		// Unexpected error
+		if err != nil {
+			return err
+		}
+
+		// Iterate through results to hopefully not find the one with the matching secondIdComponent
+		found := false
+		for _, v := range dataArr {
+			if v["cookieconsistency"].(string) == cookieconsistency {
+				found = true
+				break
+			}
+		}
+
+		if found {
+			return fmt.Errorf("appfwprofile_cookieconsistency_binding %s was found, but it should have been destroyed", n)
+		}
+
+		return nil
+	}
 }
 
 func testAccCheckAppfwprofile_cookieconsistency_bindingDestroy(s *terraform.State) error {

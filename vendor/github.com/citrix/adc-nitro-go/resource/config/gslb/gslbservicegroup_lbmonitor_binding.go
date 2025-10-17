@@ -27,7 +27,7 @@ type Gslbservicegrouplbmonitorbinding struct {
 	/**
 	* weight of the monitor that is bound to GSLB servicegroup.
 	*/
-	Monweight int `json:"monweight,omitempty"`
+	Monweight *int `json:"monweight,omitempty"`
 	/**
 	* Monitor state.
 	*/
@@ -35,7 +35,7 @@ type Gslbservicegrouplbmonitorbinding struct {
 	/**
 	* Weight to assign to the servers in the service group. Specifies the capacity of the servers relative to the other servers in the load balancing configuration. The higher the weight, the higher the percentage of requests sent to the service.
 	*/
-	Weight int `json:"weight,omitempty"`
+	Weight *int `json:"weight,omitempty"`
 	/**
 	* Indicates if load monitor is passive. A passive load monitor does not remove service from LB decision when threshold is breached.
 	*/
@@ -47,7 +47,7 @@ type Gslbservicegrouplbmonitorbinding struct {
 	/**
 	* Port number of the GSLB service. Each service must have a unique port number.
 	*/
-	Port int `json:"port,omitempty"`
+	Port *int `json:"port,omitempty"`
 	/**
 	* Initial state of the service after binding.
 	*/
@@ -55,7 +55,7 @@ type Gslbservicegrouplbmonitorbinding struct {
 	/**
 	* Unique numerical identifier used by hash based load balancing methods to identify a service.
 	*/
-	Hashid int `json:"hashid,omitempty"`
+	Hashid *int `json:"hashid,omitempty"`
 	/**
 	* The public IP address that a NAT device translates to the GSLB service's private IP address. Optional.
 	*/
@@ -63,7 +63,7 @@ type Gslbservicegrouplbmonitorbinding struct {
 	/**
 	* The public port associated with the GSLB service's public IP address. The port is mapped to the service's private port number. Applicable to the local GSLB service. Optional.
 	*/
-	Publicport int `json:"publicport,omitempty"`
+	Publicport *int `json:"publicport,omitempty"`
 	/**
 	* The site's prefix string. When the GSLB service group is bound to a GSLB virtual server, a GSLB site domain is generated internally for each bound serviceitem-domain pair by concatenating the site prefix of the service item and the name of the domain. If the special string NONE is specified, the site-prefix string is unset. When implementing HTTP redirect site persistence, the Citrix ADC redirects GSLB requests to GSLB services by using their site domains.
 	*/
@@ -71,7 +71,7 @@ type Gslbservicegrouplbmonitorbinding struct {
 	/**
 	* Order number to be assigned to the gslb servicegroup member
 	*/
-	Order int `json:"order,omitempty"`
+	Order *int `json:"order,omitempty"`
 
 
 }

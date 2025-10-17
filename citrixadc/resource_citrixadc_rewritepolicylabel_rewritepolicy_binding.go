@@ -79,7 +79,10 @@ func createRewritepolicylabel_rewritepolicy_bindingFunc(ctx context.Context, d *
 		Labelname:              d.Get("labelname").(string),
 		Labeltype:              d.Get("labeltype").(string),
 		Policyname:             d.Get("policyname").(string),
-		Priority:               d.Get("priority").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		rewritepolicylabel_rewritepolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	_, err := client.AddResource(service.Rewritepolicylabel_rewritepolicy_binding.Type(), labelname, &rewritepolicylabel_rewritepolicy_binding)

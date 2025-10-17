@@ -45,9 +45,13 @@ func createNstrafficdomain_bridgegroup_bindingFunc(ctx context.Context, d *schem
 	td := strconv.Itoa(d.Get("td").(int))
 	bridgegroup := strconv.Itoa(d.Get("bridgegroup").(int))
 	bindingId := fmt.Sprintf("%s,%s", td, bridgegroup)
-	nstrafficdomain_bridgegroup_binding := ns.Nstrafficdomainbridgegroupbinding{
-		Bridgegroup: d.Get("bridgegroup").(int),
-		Td:          d.Get("td").(int),
+	nstrafficdomain_bridgegroup_binding := ns.Nstrafficdomainbridgegroupbinding{}
+
+	if raw := d.GetRawConfig().GetAttr("bridgegroup"); !raw.IsNull() {
+		nstrafficdomain_bridgegroup_binding.Bridgegroup = intPtr(d.Get("bridgegroup").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("td"); !raw.IsNull() {
+		nstrafficdomain_bridgegroup_binding.Td = intPtr(d.Get("td").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Nstrafficdomain_bridgegroup_binding.Type(), &nstrafficdomain_bridgegroup_binding)

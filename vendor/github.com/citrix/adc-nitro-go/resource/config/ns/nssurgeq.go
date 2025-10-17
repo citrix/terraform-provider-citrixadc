@@ -31,6 +31,6 @@ type Nssurgeq struct {
 	/**
 	* port on which server is bound to the entity(Servicegroup).
 	*/
-	Port int `json:"port,omitempty"`
+	Port *int `json:"port,omitempty"`
 
 }

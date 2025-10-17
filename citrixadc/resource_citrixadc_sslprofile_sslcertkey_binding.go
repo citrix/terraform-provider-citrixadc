@@ -49,9 +49,12 @@ func createSslprofile_sslcertkey_bindingFunc(ctx context.Context, d *schema.Reso
 	sslicacertkey := d.Get("sslicacertkey")
 	bindingId := fmt.Sprintf("%s,%s", name, sslicacertkey)
 	sslprofile_sslcertkey_binding := ssl.Sslprofilesslcertkeybinding{
-		Cipherpriority: d.Get("cipherpriority").(int),
-		Name:           d.Get("name").(string),
-		Sslicacertkey:  d.Get("sslicacertkey").(string),
+		Name:          d.Get("name").(string),
+		Sslicacertkey: d.Get("sslicacertkey").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("cipherpriority"); !raw.IsNull() {
+		sslprofile_sslcertkey_binding.Cipherpriority = intPtr(d.Get("cipherpriority").(int))
 	}
 
 	err := client.UpdateUnnamedResource("sslprofile_sslcertkey_binding", &sslprofile_sslcertkey_binding)

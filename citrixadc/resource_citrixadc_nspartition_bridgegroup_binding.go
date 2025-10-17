@@ -46,8 +46,11 @@ func createNspartition_bridgegroup_bindingFunc(ctx context.Context, d *schema.Re
 	bridgegroup := strconv.Itoa(d.Get("bridgegroup").(int))
 	bindingId := fmt.Sprintf("%s,%s", partitionname, bridgegroup)
 	nspartition_bridgegroup_binding := ns.Nspartitionbridgegroupbinding{
-		Bridgegroup:   d.Get("bridgegroup").(int),
 		Partitionname: d.Get("partitionname").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("bridgegroup"); !raw.IsNull() {
+		nspartition_bridgegroup_binding.Bridgegroup = intPtr(d.Get("bridgegroup").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Nspartition_bridgegroup_binding.Type(), &nspartition_bridgegroup_binding)

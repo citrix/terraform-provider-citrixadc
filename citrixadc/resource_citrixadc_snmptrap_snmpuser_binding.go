@@ -75,11 +75,14 @@ func createSnmptrap_snmpuser_bindingFunc(ctx context.Context, d *schema.Resource
 	bindingId := fmt.Sprintf("%s,%s", snmptrapId, username)
 	snmptrap_snmpuser_binding := snmp.Snmptrapsnmpuserbinding{
 		Securitylevel:   d.Get("securitylevel").(string),
-		Td:              d.Get("td").(int),
 		Trapclass:       d.Get("trapclass").(string),
 		Trapdestination: d.Get("trapdestination").(string),
 		Username:        d.Get("username").(string),
 		Version:         d.Get("version").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("td"); !raw.IsNull() {
+		snmptrap_snmpuser_binding.Td = intPtr(d.Get("td").(int))
 	}
 	log.Printf("%v", username)
 	_, err := client.AddResource(service.Snmptrap_snmpuser_binding.Type(), bindingId, &snmptrap_snmpuser_binding)

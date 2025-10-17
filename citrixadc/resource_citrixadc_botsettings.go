@@ -107,16 +107,27 @@ func createBotsettingsFunc(ctx context.Context, d *schema.ResourceData, meta int
 		Defaultprofile:             d.Get("defaultprofile").(string),
 		Defaultnonintrusiveprofile: d.Get("defaultnonintrusiveprofile").(string),
 		Javascriptname:             d.Get("javascriptname").(string),
-		Sessiontimeout:             d.Get("sessiontimeout").(int),
 		Sessioncookiename:          d.Get("sessioncookiename").(string),
-		Dfprequestlimit:            d.Get("dfprequestlimit").(int),
 		Signatureautoupdate:        d.Get("signatureautoupdate").(string),
 		Signatureurl:               d.Get("signatureurl").(string),
 		Proxyserver:                d.Get("proxyserver").(string),
-		Proxyport:                  d.Get("proxyport").(int),
 		Trapurlautogenerate:        d.Get("trapurlautogenerate").(string),
-		Trapurlinterval:            d.Get("trapurlinterval").(int),
-		Trapurllength:              d.Get("trapurllength").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("sessiontimeout"); !raw.IsNull() {
+		botsettings.Sessiontimeout = intPtr(d.Get("sessiontimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("dfprequestlimit"); !raw.IsNull() {
+		botsettings.Dfprequestlimit = intPtr(d.Get("dfprequestlimit").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("proxyport"); !raw.IsNull() {
+		botsettings.Proxyport = intPtr(d.Get("proxyport").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("trapurlinterval"); !raw.IsNull() {
+		botsettings.Trapurlinterval = intPtr(d.Get("trapurlinterval").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("trapurllength"); !raw.IsNull() {
+		botsettings.Trapurllength = intPtr(d.Get("trapurllength").(int))
 	}
 
 	err := client.UpdateUnnamedResource("botsettings", &botsettings)
@@ -180,7 +191,7 @@ func updateBotsettingsFunc(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	if d.HasChange("sessiontimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Sessiontimeout has changed for botsettings, starting update")
-		botsettings.Sessiontimeout = d.Get("sessiontimeout").(int)
+		botsettings.Sessiontimeout = intPtr(d.Get("sessiontimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("sessioncookiename") {
@@ -190,7 +201,7 @@ func updateBotsettingsFunc(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	if d.HasChange("dfprequestlimit") {
 		log.Printf("[DEBUG]  citrixadc-provider: Dfprequestlimit has changed for botsettings, starting update")
-		botsettings.Dfprequestlimit = d.Get("dfprequestlimit").(int)
+		botsettings.Dfprequestlimit = intPtr(d.Get("dfprequestlimit").(int))
 		hasChange = true
 	}
 	if d.HasChange("signatureautoupdate") {
@@ -210,7 +221,7 @@ func updateBotsettingsFunc(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	if d.HasChange("proxyport") {
 		log.Printf("[DEBUG]  citrixadc-provider: Proxyport has changed for botsettings, starting update")
-		botsettings.Proxyport = d.Get("proxyport").(int)
+		botsettings.Proxyport = intPtr(d.Get("proxyport").(int))
 		hasChange = true
 	}
 	if d.HasChange("trapurlautogenerate") {
@@ -220,12 +231,12 @@ func updateBotsettingsFunc(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	if d.HasChange("trapurlinterval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Trapurlinterval has changed for botsettings, starting update")
-		botsettings.Trapurlinterval = d.Get("trapurlinterval").(int)
+		botsettings.Trapurlinterval = intPtr(d.Get("trapurlinterval").(int))
 		hasChange = true
 	}
 	if d.HasChange("trapurllength") {
 		log.Printf("[DEBUG]  citrixadc-provider: Trapurllength has changed for botsettings, starting update")
-		botsettings.Trapurllength = d.Get("trapurllength").(int)
+		botsettings.Trapurllength = intPtr(d.Get("trapurllength").(int))
 		hasChange = true
 	}
 

@@ -47,9 +47,13 @@ func createBridgegroup_vlan_bindingFunc(ctx context.Context, d *schema.ResourceD
 	bridgegroup_id := strconv.Itoa(d.Get("bridgegroup_id").(int))
 	vlan := strconv.Itoa(d.Get("vlan").(int))
 	bindingId := fmt.Sprintf("%s,%s", bridgegroup_id, vlan)
-	bridgegroup_vlan_binding := network.Bridgegroupvlanbinding{
-		Id:   d.Get("bridgegroup_id").(int),
-		Vlan: d.Get("vlan").(int),
+	bridgegroup_vlan_binding := network.Bridgegroupvlanbinding{}
+
+	if raw := d.GetRawConfig().GetAttr("bridgegroup_id"); !raw.IsNull() {
+		bridgegroup_vlan_binding.Id = intPtr(d.Get("bridgegroup_id").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("vlan"); !raw.IsNull() {
+		bridgegroup_vlan_binding.Vlan = intPtr(d.Get("vlan").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Bridgegroup_vlan_binding.Type(), &bridgegroup_vlan_binding)

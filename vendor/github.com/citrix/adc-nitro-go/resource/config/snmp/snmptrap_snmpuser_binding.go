@@ -39,7 +39,7 @@ type Snmptrapsnmpuserbinding struct {
 	/**
 	* Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.
 	*/
-	Td int `json:"td,omitempty"`
+	Td *int `json:"td,omitempty"`
 	/**
 	* SNMP version, which determines the format of trap messages sent to the trap listener. 
 		This setting must match the setting on the trap listener. Otherwise, the listener drops the trap messages.

@@ -23,7 +23,7 @@ type Nsweblogparam struct {
 	/**
 	* Buffer size, in MB, allocated for log transaction data on the system. The maximum value is limited to the memory available on the system.
 	*/
-	Buffersizemb int `json:"buffersizemb,omitempty"`
+	Buffersizemb *int `json:"buffersizemb,omitempty"`
 	/**
 	* Name(s) of HTTP request headers whose values should be exported by the Web Logging feature.
 	*/

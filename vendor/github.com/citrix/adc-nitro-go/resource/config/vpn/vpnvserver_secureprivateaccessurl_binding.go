@@ -24,7 +24,7 @@ type Vpnvserversecureprivateaccessurlbinding struct {
 	* Configured Secure Private Access URL
 	*/
 	Secureprivateaccessurl string `json:"secureprivateaccessurl,omitempty"`
-	Acttype int `json:"acttype,omitempty"`
+	Acttype *int `json:"acttype,omitempty"`
 	/**
 	* Name of the virtual server.
 	*/

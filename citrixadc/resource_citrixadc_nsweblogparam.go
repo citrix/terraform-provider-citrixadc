@@ -51,9 +51,12 @@ func createNsweblogparamFunc(ctx context.Context, d *schema.ResourceData, meta i
 	// there is no primary key in nsweblogparam resource. Hence generate one for terraform state maintenance
 	nsweblogparamName = resource.PrefixedUniqueId("tf-nsweblogparam-")
 	nsweblogparam := ns.Nsweblogparam{
-		Buffersizemb:  d.Get("buffersizemb").(int),
 		Customreqhdrs: toStringList(d.Get("customreqhdrs").([]interface{})),
 		Customrsphdrs: toStringList(d.Get("customrsphdrs").([]interface{})),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("buffersizemb"); !raw.IsNull() {
+		nsweblogparam.Buffersizemb = intPtr(d.Get("buffersizemb").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Nsweblogparam.Type(), &nsweblogparam)
@@ -93,7 +96,7 @@ func updateNsweblogparamFunc(ctx context.Context, d *schema.ResourceData, meta i
 	hasChange := false
 	if d.HasChange("buffersizemb") {
 		log.Printf("[DEBUG]  citrixadc-provider: Buffersizemb has changed for nsweblogparam , starting update")
-		nsweblogparam.Buffersizemb = d.Get("buffersizemb").(int)
+		nsweblogparam.Buffersizemb = intPtr(d.Get("buffersizemb").(int))
 		hasChange = true
 	}
 	if d.HasChange("customreqhdrs") {

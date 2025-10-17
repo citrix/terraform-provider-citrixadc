@@ -311,11 +311,9 @@ func createGslbvserverFunc(ctx context.Context, d *schema.ResourceData, meta int
 		Appflowlog:             d.Get("appflowlog").(string),
 		Backupip:               d.Get("backupip").(string),
 		Backuplbmethod:         d.Get("backuplbmethod").(string),
-		Backupsessiontimeout:   d.Get("backupsessiontimeout").(int),
 		Comment:                d.Get("comment").(string),
 		Considereffectivestate: d.Get("considereffectivestate").(string),
 		Cookiedomain:           d.Get("cookiedomain").(string),
-		Cookietimeout:          d.Get("cookietimeout").(int),
 		Disableprimaryondown:   d.Get("disableprimaryondown").(string),
 		Dnsrecordtype:          d.Get("dnsrecordtype").(string),
 		Domainname:             d.Get("domainname").(string),
@@ -328,24 +326,51 @@ func createGslbvserverFunc(ctx context.Context, d *schema.ResourceData, meta int
 		Mir:                    d.Get("mir").(string),
 		Name:                   d.Get("name").(string),
 		Netmask:                d.Get("netmask").(string),
-		Persistenceid:          d.Get("persistenceid").(int),
 		Persistencetype:        d.Get("persistencetype").(string),
 		Persistmask:            d.Get("persistmask").(string),
 		Servicename:            d.Get("servicename").(string),
 		Servicetype:            d.Get("servicetype").(string),
-		Sitedomainttl:          d.Get("sitedomainttl").(int),
 		Sobackupaction:         d.Get("sobackupaction").(string),
 		Somethod:               d.Get("somethod").(string),
 		Sopersistence:          d.Get("sopersistence").(string),
-		Sopersistencetimeout:   d.Get("sopersistencetimeout").(int),
-		Sothreshold:            d.Get("sothreshold").(int),
 		State:                  d.Get("state").(string),
-		Timeout:                d.Get("timeout").(int),
-		Tolerance:              d.Get("tolerance").(int),
-		Ttl:                    d.Get("ttl").(int),
-		V6netmasklen:           d.Get("v6netmasklen").(int),
-		V6persistmasklen:       d.Get("v6persistmasklen").(int),
-		Weight:                 d.Get("weight").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("backupsessiontimeout"); !raw.IsNull() {
+		gslbvserver.Backupsessiontimeout = intPtr(d.Get("backupsessiontimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("cookietimeout"); !raw.IsNull() {
+		gslbvserver.Cookietimeout = intPtr(d.Get("cookietimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("persistenceid"); !raw.IsNull() {
+		gslbvserver.Persistenceid = intPtr(d.Get("persistenceid").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("sitedomainttl"); !raw.IsNull() {
+		gslbvserver.Sitedomainttl = intPtr(d.Get("sitedomainttl").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("sopersistencetimeout"); !raw.IsNull() {
+		gslbvserver.Sopersistencetimeout = intPtr(d.Get("sopersistencetimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("sothreshold"); !raw.IsNull() {
+		gslbvserver.Sothreshold = intPtr(d.Get("sothreshold").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("timeout"); !raw.IsNull() {
+		gslbvserver.Timeout = intPtr(d.Get("timeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("tolerance"); !raw.IsNull() {
+		gslbvserver.Tolerance = intPtr(d.Get("tolerance").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("ttl"); !raw.IsNull() {
+		gslbvserver.Ttl = intPtr(d.Get("ttl").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("v6netmasklen"); !raw.IsNull() {
+		gslbvserver.V6netmasklen = intPtr(d.Get("v6netmasklen").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("v6persistmasklen"); !raw.IsNull() {
+		gslbvserver.V6persistmasklen = intPtr(d.Get("v6persistmasklen").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("weight"); !raw.IsNull() {
+		gslbvserver.Weight = intPtr(d.Get("weight").(int))
 	}
 
 	_, err := client.AddResource(service.Gslbvserver.Type(), gslbvserverName, &gslbvserver)
@@ -572,7 +597,7 @@ func updateGslbvserverFunc(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	if d.HasChange("backupsessiontimeout") {
 		log.Printf("[DEBUG]  netscaler-provider: Backupsessiontimeout has changed for gslbvserver %s, starting update", gslbvserverName)
-		gslbvserver.Backupsessiontimeout = d.Get("backupsessiontimeout").(int)
+		gslbvserver.Backupsessiontimeout = intPtr(d.Get("backupsessiontimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("backupvserver") {
@@ -597,7 +622,7 @@ func updateGslbvserverFunc(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	if d.HasChange("cookietimeout") {
 		log.Printf("[DEBUG]  netscaler-provider: Cookietimeout has changed for gslbvserver %s, starting update", gslbvserverName)
-		gslbvserver.Cookietimeout = d.Get("cookietimeout").(int)
+		gslbvserver.Cookietimeout = intPtr(d.Get("cookietimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("disableprimaryondown") {
@@ -662,7 +687,7 @@ func updateGslbvserverFunc(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	if d.HasChange("persistenceid") {
 		log.Printf("[DEBUG]  netscaler-provider: Persistenceid has changed for gslbvserver %s, starting update", gslbvserverName)
-		gslbvserver.Persistenceid = d.Get("persistenceid").(int)
+		gslbvserver.Persistenceid = intPtr(d.Get("persistenceid").(int))
 		hasChange = true
 	}
 	if d.HasChange("persistencetype") {
@@ -687,7 +712,7 @@ func updateGslbvserverFunc(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	if d.HasChange("sitedomainttl") {
 		log.Printf("[DEBUG]  netscaler-provider: Sitedomainttl has changed for gslbvserver %s, starting update", gslbvserverName)
-		gslbvserver.Sitedomainttl = d.Get("sitedomainttl").(int)
+		gslbvserver.Sitedomainttl = intPtr(d.Get("sitedomainttl").(int))
 		hasChange = true
 	}
 	if d.HasChange("sobackupaction") {
@@ -707,12 +732,12 @@ func updateGslbvserverFunc(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	if d.HasChange("sopersistencetimeout") {
 		log.Printf("[DEBUG]  netscaler-provider: Sopersistencetimeout has changed for gslbvserver %s, starting update", gslbvserverName)
-		gslbvserver.Sopersistencetimeout = d.Get("sopersistencetimeout").(int)
+		gslbvserver.Sopersistencetimeout = intPtr(d.Get("sopersistencetimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("sothreshold") {
 		log.Printf("[DEBUG]  netscaler-provider: Sothreshold has changed for gslbvserver %s, starting update", gslbvserverName)
-		gslbvserver.Sothreshold = d.Get("sothreshold").(int)
+		gslbvserver.Sothreshold = intPtr(d.Get("sothreshold").(int))
 		hasChange = true
 	}
 	if d.HasChange("state") {
@@ -721,32 +746,32 @@ func updateGslbvserverFunc(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	if d.HasChange("timeout") {
 		log.Printf("[DEBUG]  netscaler-provider: Timeout has changed for gslbvserver %s, starting update", gslbvserverName)
-		gslbvserver.Timeout = d.Get("timeout").(int)
+		gslbvserver.Timeout = intPtr(d.Get("timeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("tolerance") {
 		log.Printf("[DEBUG]  netscaler-provider: Tolerance has changed for gslbvserver %s, starting update", gslbvserverName)
-		gslbvserver.Tolerance = d.Get("tolerance").(int)
+		gslbvserver.Tolerance = intPtr(d.Get("tolerance").(int))
 		hasChange = true
 	}
 	if d.HasChange("ttl") {
 		log.Printf("[DEBUG]  netscaler-provider: Ttl has changed for gslbvserver %s, starting update", gslbvserverName)
-		gslbvserver.Ttl = d.Get("ttl").(int)
+		gslbvserver.Ttl = intPtr(d.Get("ttl").(int))
 		hasChange = true
 	}
 	if d.HasChange("v6netmasklen") {
 		log.Printf("[DEBUG]  netscaler-provider: V6netmasklen has changed for gslbvserver %s, starting update", gslbvserverName)
-		gslbvserver.V6netmasklen = d.Get("v6netmasklen").(int)
+		gslbvserver.V6netmasklen = intPtr(d.Get("v6netmasklen").(int))
 		hasChange = true
 	}
 	if d.HasChange("v6persistmasklen") {
 		log.Printf("[DEBUG]  netscaler-provider: V6persistmasklen has changed for gslbvserver %s, starting update", gslbvserverName)
-		gslbvserver.V6persistmasklen = d.Get("v6persistmasklen").(int)
+		gslbvserver.V6persistmasklen = intPtr(d.Get("v6persistmasklen").(int))
 		hasChange = true
 	}
 	if d.HasChange("weight") {
 		log.Printf("[DEBUG]  netscaler-provider: Weight has changed for gslbvserver %s, starting update", gslbvserverName)
-		gslbvserver.Weight = d.Get("weight").(int)
+		gslbvserver.Weight = intPtr(d.Get("weight").(int))
 		hasChange = true
 	}
 

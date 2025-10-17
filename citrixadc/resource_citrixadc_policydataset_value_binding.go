@@ -65,10 +65,13 @@ func createPolicydataset_value_bindingFunc(ctx context.Context, d *schema.Resour
 
 	policydataset_value_binding := policy.Policydatasetvaluebinding{
 		Comment:  d.Get("comment").(string),
-		Index:    d.Get("index").(int),
 		Name:     d.Get("name").(string),
 		Value:    d.Get("value").(string),
 		Endrange: d.Get("endrange").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("index"); !raw.IsNull() {
+		policydataset_value_binding.Index = intPtr(d.Get("index").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Policydataset_value_binding.Type(), &policydataset_value_binding)

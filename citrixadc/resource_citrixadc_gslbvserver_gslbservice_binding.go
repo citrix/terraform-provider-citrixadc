@@ -65,8 +65,13 @@ func createGslbvserver_gslbservice_bindingFunc(ctx context.Context, d *schema.Re
 		Domainname:  d.Get("domainname").(string),
 		Name:        d.Get("name").(string),
 		Servicename: d.Get("servicename").(string),
-		Weight:      d.Get("weight").(int),
-		Order:       d.Get("order").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("weight"); !raw.IsNull() {
+		gslbvserver_gslbservice_binding.Weight = intPtr(d.Get("weight").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("order"); !raw.IsNull() {
+		gslbvserver_gslbservice_binding.Order = intPtr(d.Get("order").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Gslbvserver_gslbservice_binding.Type(), &gslbvserver_gslbservice_binding)

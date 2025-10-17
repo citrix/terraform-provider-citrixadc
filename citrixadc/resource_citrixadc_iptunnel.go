@@ -91,7 +91,10 @@ func createIptunnelFunc(ctx context.Context, d *schema.ResourceData, meta interf
 		Protocol:         d.Get("protocol").(string),
 		Remote:           d.Get("remote").(string),
 		Remotesubnetmask: d.Get("remotesubnetmask").(string),
-		Vlan:             d.Get("vlan").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("vlan"); !raw.IsNull() {
+		iptunnel.Vlan = intPtr(d.Get("vlan").(int))
 	}
 
 	_, err := client.AddResource(service.Iptunnel.Type(), iptunnelName, &iptunnel)

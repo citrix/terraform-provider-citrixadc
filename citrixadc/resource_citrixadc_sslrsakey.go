@@ -86,7 +86,6 @@ func createSslrsakeyFunc(ctx context.Context, d *schema.ResourceData, meta inter
 
 	sslrsakeyName := resource.PrefixedUniqueId("tf-sslrsakey-")
 	sslrsakey := ssl.Sslrsakey{
-		Bits:     d.Get("bits").(int),
 		Des:      d.Get("des").(bool),
 		Des3:     d.Get("des3").(bool),
 		Aes256:   d.Get("aes256").(bool),
@@ -95,6 +94,10 @@ func createSslrsakeyFunc(ctx context.Context, d *schema.ResourceData, meta inter
 		Exponent: d.Get("exponent").(string),
 		Keyfile:  d.Get("keyfile").(string),
 		Keyform:  d.Get("keyform").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("bits"); !raw.IsNull() {
+		sslrsakey.Bits = intPtr(d.Get("bits").(int))
 	}
 
 	err := client.ActOnResource(service.Sslrsakey.Type(), &sslrsakey, "create")

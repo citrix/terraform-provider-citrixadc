@@ -16,48 +16,48 @@ import (
 // We need to convert fields that are int and accept zero values to string for correct operation
 type Nstcpparam struct {
 	Ackonpush                           string `json:"ackonpush,omitempty"`
-	Autosyncookietimeout                int    `json:"autosyncookietimeout,omitempty"`
+	Autosyncookietimeout                *int   `json:"autosyncookietimeout,omitempty"`
 	Connflushifnomem                    string `json:"connflushifnomem,omitempty"`
-	Connflushthres                      int    `json:"connflushthres,omitempty"`
-	Delayedack                          int    `json:"delayedack,omitempty"`
+	Connflushthres                      *int   `json:"connflushthres,omitempty"`
+	Delayedack                          *int   `json:"delayedack,omitempty"`
 	Downstaterst                        string `json:"downstaterst,omitempty"`
 	Feature                             string `json:"feature,omitempty"`
-	Initialcwnd                         int    `json:"initialcwnd,omitempty"`
+	Initialcwnd                         *int   `json:"initialcwnd,omitempty"`
 	Kaprobeupdatelastactivity           string `json:"kaprobeupdatelastactivity,omitempty"`
 	Learnvsvrmss                        string `json:"learnvsvrmss,omitempty"`
 	Limitedpersist                      string `json:"limitedpersist,omitempty"`
-	Maxburst                            int    `json:"maxburst,omitempty"`
-	Maxdynserverprobes                  int    `json:"maxdynserverprobes,omitempty"`
+	Maxburst                            *int   `json:"maxburst,omitempty"`
+	Maxdynserverprobes                  *int   `json:"maxdynserverprobes,omitempty"`
 	Maxpktpermss                        string `json:"maxpktpermss,omitempty"` // was int
-	Maxsynackretx                       int    `json:"maxsynackretx,omitempty"`
-	Maxsynhold                          int    `json:"maxsynhold,omitempty"`
-	Maxsynholdperprobe                  int    `json:"maxsynholdperprobe,omitempty"`
-	Maxtimewaitconn                     int    `json:"maxtimewaitconn,omitempty"`
-	Minrto                              int    `json:"minrto,omitempty"`
+	Maxsynackretx                       *int   `json:"maxsynackretx,omitempty"`
+	Maxsynhold                          *int   `json:"maxsynhold,omitempty"`
+	Maxsynholdperprobe                  *int   `json:"maxsynholdperprobe,omitempty"`
+	Maxtimewaitconn                     *int   `json:"maxtimewaitconn,omitempty"`
+	Minrto                              *int   `json:"minrto,omitempty"`
 	Mptcpchecksum                       string `json:"mptcpchecksum,omitempty"`
 	Mptcpclosemptcpsessiononlastsfclose string `json:"mptcpclosemptcpsessiononlastsfclose,omitempty"`
 	Mptcpconcloseonpassivesf            string `json:"mptcpconcloseonpassivesf,omitempty"`
 	Mptcpimmediatesfcloseonfin          string `json:"mptcpimmediatesfcloseonfin,omitempty"`
 	Mptcpmaxpendingsf                   string `json:"mptcpmaxpendingsf,omitempty"` // was int
-	Mptcpmaxsf                          int    `json:"mptcpmaxsf,omitempty"`
+	Mptcpmaxsf                          *int   `json:"mptcpmaxsf,omitempty"`
 	Mptcppendingjointhreshold           string `json:"mptcppendingjointhreshold,omitempty"` // was int
-	Mptcprtostoswitchsf                 int    `json:"mptcprtostoswitchsf,omitempty"`
+	Mptcprtostoswitchsf                 *int   `json:"mptcprtostoswitchsf,omitempty"`
 	Mptcpsfreplacetimeout               string `json:"mptcpsfreplacetimeout,omitempty"` // was int
 	Mptcpsftimeout                      string `json:"mptcpsftimeout,omitempty"`        // was int
 	Mptcpusebackupondss                 string `json:"mptcpusebackupondss,omitempty"`
-	Msslearndelay                       int    `json:"msslearndelay,omitempty"`
-	Msslearninterval                    int    `json:"msslearninterval,omitempty"`
+	Msslearndelay                       *int   `json:"msslearndelay,omitempty"`
+	Msslearninterval                    *int   `json:"msslearninterval,omitempty"`
 	Nagle                               string `json:"nagle,omitempty"`
 	Oooqsize                            string `json:"oooqsize,omitempty"` // was int
-	Pktperretx                          int    `json:"pktperretx,omitempty"`
-	Recvbuffsize                        int    `json:"recvbuffsize,omitempty"`
+	Pktperretx                          *int   `json:"pktperretx,omitempty"`
+	Recvbuffsize                        *int   `json:"recvbuffsize,omitempty"`
 	Sack                                string `json:"sack,omitempty"`
-	Slowstartincr                       int    `json:"slowstartincr,omitempty"`
+	Slowstartincr                       *int   `json:"slowstartincr,omitempty"`
 	Synattackdetection                  string `json:"synattackdetection,omitempty"`
-	Synholdfastgiveup                   int    `json:"synholdfastgiveup,omitempty"`
+	Synholdfastgiveup                   *int   `json:"synholdfastgiveup,omitempty"`
 	Tcpfastopencookietimeout            string `json:"tcpfastopencookietimeout,omitempty"` // was int
-	Tcpfintimeout                       int    `json:"tcpfintimeout,omitempty"`
-	Tcpmaxretries                       int    `json:"tcpmaxretries,omitempty"`
+	Tcpfintimeout                       *int   `json:"tcpfintimeout,omitempty"`
+	Tcpmaxretries                       *int   `json:"tcpmaxretries,omitempty"`
 	Ws                                  string `json:"ws,omitempty"`
 	Wsval                               string `json:"wsval,omitempty"` // was int
 }
@@ -344,47 +344,47 @@ func createNstcpparamFunc(ctx context.Context, d *schema.ResourceData, meta inte
 
 	nstcpparam := Nstcpparam{
 		Ackonpush:                           d.Get("ackonpush").(string),
-		Autosyncookietimeout:                d.Get("autosyncookietimeout").(int),
+		Autosyncookietimeout:                intPtr(d.Get("autosyncookietimeout").(int)),
 		Connflushifnomem:                    d.Get("connflushifnomem").(string),
-		Connflushthres:                      d.Get("connflushthres").(int),
-		Delayedack:                          d.Get("delayedack").(int),
+		Connflushthres:                      intPtr(d.Get("connflushthres").(int)),
+		Delayedack:                          intPtr(d.Get("delayedack").(int)),
 		Downstaterst:                        d.Get("downstaterst").(string),
-		Initialcwnd:                         d.Get("initialcwnd").(int),
+		Initialcwnd:                         intPtr(d.Get("initialcwnd").(int)),
 		Kaprobeupdatelastactivity:           d.Get("kaprobeupdatelastactivity").(string),
 		Learnvsvrmss:                        d.Get("learnvsvrmss").(string),
 		Limitedpersist:                      d.Get("limitedpersist").(string),
-		Maxburst:                            d.Get("maxburst").(int),
-		Maxdynserverprobes:                  d.Get("maxdynserverprobes").(int),
+		Maxburst:                            intPtr(d.Get("maxburst").(int)),
+		Maxdynserverprobes:                  intPtr(d.Get("maxdynserverprobes").(int)),
 		Maxpktpermss:                        d.Get("maxpktpermss").(string),
-		Maxsynackretx:                       d.Get("maxsynackretx").(int),
-		Maxsynhold:                          d.Get("maxsynhold").(int),
-		Maxsynholdperprobe:                  d.Get("maxsynholdperprobe").(int),
-		Maxtimewaitconn:                     d.Get("maxtimewaitconn").(int),
-		Minrto:                              d.Get("minrto").(int),
+		Maxsynackretx:                       intPtr(d.Get("maxsynackretx").(int)),
+		Maxsynhold:                          intPtr(d.Get("maxsynhold").(int)),
+		Maxsynholdperprobe:                  intPtr(d.Get("maxsynholdperprobe").(int)),
+		Maxtimewaitconn:                     intPtr(d.Get("maxtimewaitconn").(int)),
+		Minrto:                              intPtr(d.Get("minrto").(int)),
 		Mptcpchecksum:                       d.Get("mptcpchecksum").(string),
 		Mptcpclosemptcpsessiononlastsfclose: d.Get("mptcpclosemptcpsessiononlastsfclose").(string),
 		Mptcpconcloseonpassivesf:            d.Get("mptcpconcloseonpassivesf").(string),
 		Mptcpimmediatesfcloseonfin:          d.Get("mptcpimmediatesfcloseonfin").(string),
 		Mptcpmaxpendingsf:                   d.Get("mptcpmaxpendingsf").(string),
-		Mptcpmaxsf:                          d.Get("mptcpmaxsf").(int),
+		Mptcpmaxsf:                          intPtr(d.Get("mptcpmaxsf").(int)),
 		Mptcppendingjointhreshold:           d.Get("mptcppendingjointhreshold").(string),
-		Mptcprtostoswitchsf:                 d.Get("mptcprtostoswitchsf").(int),
+		Mptcprtostoswitchsf:                 intPtr(d.Get("mptcprtostoswitchsf").(int)),
 		Mptcpsfreplacetimeout:               d.Get("mptcpsfreplacetimeout").(string),
 		Mptcpsftimeout:                      d.Get("mptcpsftimeout").(string),
 		Mptcpusebackupondss:                 d.Get("mptcpusebackupondss").(string),
-		Msslearndelay:                       d.Get("msslearndelay").(int),
-		Msslearninterval:                    d.Get("msslearninterval").(int),
+		Msslearndelay:                       intPtr(d.Get("msslearndelay").(int)),
+		Msslearninterval:                    intPtr(d.Get("msslearninterval").(int)),
 		Nagle:                               d.Get("nagle").(string),
 		Oooqsize:                            d.Get("oooqsize").(string),
-		Pktperretx:                          d.Get("pktperretx").(int),
-		Recvbuffsize:                        d.Get("recvbuffsize").(int),
+		Pktperretx:                          intPtr(d.Get("pktperretx").(int)),
+		Recvbuffsize:                        intPtr(d.Get("recvbuffsize").(int)),
 		Sack:                                d.Get("sack").(string),
-		Slowstartincr:                       d.Get("slowstartincr").(int),
+		Slowstartincr:                       intPtr(d.Get("slowstartincr").(int)),
 		Synattackdetection:                  d.Get("synattackdetection").(string),
-		Synholdfastgiveup:                   d.Get("synholdfastgiveup").(int),
+		Synholdfastgiveup:                   intPtr(d.Get("synholdfastgiveup").(int)),
 		Tcpfastopencookietimeout:            d.Get("tcpfastopencookietimeout").(string),
-		Tcpfintimeout:                       d.Get("tcpfintimeout").(int),
-		Tcpmaxretries:                       d.Get("tcpmaxretries").(int),
+		Tcpfintimeout:                       intPtr(d.Get("tcpfintimeout").(int)),
+		Tcpmaxretries:                       intPtr(d.Get("tcpmaxretries").(int)),
 		Ws:                                  d.Get("ws").(string),
 		Wsval:                               d.Get("wsval").(string),
 	}

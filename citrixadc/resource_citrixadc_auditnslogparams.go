@@ -122,13 +122,16 @@ func createAuditnslogparamsFunc(ctx context.Context, d *schema.ResourceData, met
 		Loglevel:             toStringList(d.Get("loglevel").([]interface{})),
 		Lsn:                  d.Get("lsn").(string),
 		Serverip:             d.Get("serverip").(string),
-		Serverport:           d.Get("serverport").(int),
 		Sslinterception:      d.Get("sslinterception").(string),
 		Subscriberlog:        d.Get("subscriberlog").(string),
 		Tcp:                  d.Get("tcp").(string),
 		Timezone:             d.Get("timezone").(string),
 		Urlfiltering:         d.Get("urlfiltering").(string),
 		Userdefinedauditlog:  d.Get("userdefinedauditlog").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("serverport"); !raw.IsNull() {
+		auditnslogparams.Serverport = intPtr(d.Get("serverport").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Auditnslogparams.Type(), &auditnslogparams)
@@ -225,7 +228,7 @@ func updateAuditnslogparamsFunc(ctx context.Context, d *schema.ResourceData, met
 	}
 	if d.HasChange("serverport") {
 		log.Printf("[DEBUG]  citrixadc-provider: Serverport has changed for auditnslogparams, starting update")
-		auditnslogparams.Serverport = d.Get("serverport").(int)
+		auditnslogparams.Serverport = intPtr(d.Get("serverport").(int))
 		hasChange = true
 	}
 	if d.HasChange("sslinterception") {

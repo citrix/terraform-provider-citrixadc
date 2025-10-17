@@ -96,19 +96,26 @@ func createLsnsipalgprofileFunc(ctx context.Context, d *schema.ResourceData, met
 	client := meta.(*NetScalerNitroClient).client
 	lsnsipalgprofileName := d.Get("sipalgprofilename").(string)
 	lsnsipalgprofile := lsn.Lsnsipalgprofile{
-		Datasessionidletimeout: d.Get("datasessionidletimeout").(int),
 		Opencontactpinhole:     d.Get("opencontactpinhole").(string),
 		Openrecordroutepinhole: d.Get("openrecordroutepinhole").(string),
 		Openregisterpinhole:    d.Get("openregisterpinhole").(string),
 		Openroutepinhole:       d.Get("openroutepinhole").(string),
 		Openviapinhole:         d.Get("openviapinhole").(string),
-		Registrationtimeout:    d.Get("registrationtimeout").(int),
 		Rport:                  d.Get("rport").(string),
 		Sipalgprofilename:      d.Get("sipalgprofilename").(string),
 		Sipdstportrange:        d.Get("sipdstportrange").(string),
-		Sipsessiontimeout:      d.Get("sipsessiontimeout").(int),
 		Sipsrcportrange:        d.Get("sipsrcportrange").(string),
 		Siptransportprotocol:   d.Get("siptransportprotocol").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("datasessionidletimeout"); !raw.IsNull() {
+		lsnsipalgprofile.Datasessionidletimeout = intPtr(d.Get("datasessionidletimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("registrationtimeout"); !raw.IsNull() {
+		lsnsipalgprofile.Registrationtimeout = intPtr(d.Get("registrationtimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("sipsessiontimeout"); !raw.IsNull() {
+		lsnsipalgprofile.Sipsessiontimeout = intPtr(d.Get("sipsessiontimeout").(int))
 	}
 
 	_, err := client.AddResource("lsnsipalgprofile", lsnsipalgprofileName, &lsnsipalgprofile)
@@ -161,7 +168,7 @@ func updateLsnsipalgprofileFunc(ctx context.Context, d *schema.ResourceData, met
 	hasChange := false
 	if d.HasChange("datasessionidletimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Datasessionidletimeout has changed for lsnsipalgprofile %s, starting update", lsnsipalgprofileName)
-		lsnsipalgprofile.Datasessionidletimeout = d.Get("datasessionidletimeout").(int)
+		lsnsipalgprofile.Datasessionidletimeout = intPtr(d.Get("datasessionidletimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("opencontactpinhole") {
@@ -191,7 +198,7 @@ func updateLsnsipalgprofileFunc(ctx context.Context, d *schema.ResourceData, met
 	}
 	if d.HasChange("registrationtimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Registrationtimeout has changed for lsnsipalgprofile %s, starting update", lsnsipalgprofileName)
-		lsnsipalgprofile.Registrationtimeout = d.Get("registrationtimeout").(int)
+		lsnsipalgprofile.Registrationtimeout = intPtr(d.Get("registrationtimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("rport") {
@@ -206,7 +213,7 @@ func updateLsnsipalgprofileFunc(ctx context.Context, d *schema.ResourceData, met
 	}
 	if d.HasChange("sipsessiontimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Sipsessiontimeout has changed for lsnsipalgprofile %s, starting update", lsnsipalgprofileName)
-		lsnsipalgprofile.Sipsessiontimeout = d.Get("sipsessiontimeout").(int)
+		lsnsipalgprofile.Sipsessiontimeout = intPtr(d.Get("sipsessiontimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("sipsrcportrange") {

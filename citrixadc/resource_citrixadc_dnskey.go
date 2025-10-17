@@ -108,21 +108,30 @@ func createDnskeyFunc(ctx context.Context, d *schema.ResourceData, meta interfac
 	client := meta.(*NetScalerNitroClient).client
 	dnskeyName := d.Get("keyname").(string)
 	dnskey := dns.Dnskey{
-		Algorithm:          d.Get("algorithm").(string),
-		Expires:            d.Get("expires").(int),
-		Filenameprefix:     d.Get("filenameprefix").(string),
-		Keyname:            dnskeyName,
-		Keysize:            d.Get("keysize").(int),
-		Keytype:            d.Get("keytype").(string),
-		Notificationperiod: d.Get("notificationperiod").(int),
-		Password:           d.Get("password").(string),
-		Privatekey:         d.Get("privatekey").(string),
-		Publickey:          d.Get("publickey").(string),
-		Src:                d.Get("src").(string),
-		Ttl:                d.Get("ttl").(int),
-		Units1:             d.Get("units1").(string),
-		Units2:             d.Get("units2").(string),
-		Zonename:           d.Get("zonename").(string),
+		Algorithm:      d.Get("algorithm").(string),
+		Filenameprefix: d.Get("filenameprefix").(string),
+		Keyname:        dnskeyName,
+		Keytype:        d.Get("keytype").(string),
+		Password:       d.Get("password").(string),
+		Privatekey:     d.Get("privatekey").(string),
+		Publickey:      d.Get("publickey").(string),
+		Src:            d.Get("src").(string),
+		Units1:         d.Get("units1").(string),
+		Units2:         d.Get("units2").(string),
+		Zonename:       d.Get("zonename").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("expires"); !raw.IsNull() {
+		dnskey.Expires = intPtr(d.Get("expires").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("keysize"); !raw.IsNull() {
+		dnskey.Keysize = intPtr(d.Get("keysize").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("notificationperiod"); !raw.IsNull() {
+		dnskey.Notificationperiod = intPtr(d.Get("notificationperiod").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("ttl"); !raw.IsNull() {
+		dnskey.Ttl = intPtr(d.Get("ttl").(int))
 	}
 
 	_, err := client.AddResource(service.Dnskey.Type(), dnskeyName, &dnskey)
@@ -182,7 +191,7 @@ func updateDnskeyFunc(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 	if d.HasChange("expires") {
 		log.Printf("[DEBUG]  citrixadc-provider: Expires has changed for dnskey %s, starting update", dnskeyName)
-		dnskey.Expires = d.Get("expires").(int)
+		dnskey.Expires = intPtr(d.Get("expires").(int))
 		hasChange = true
 	}
 	if d.HasChange("filenameprefix") {
@@ -192,7 +201,7 @@ func updateDnskeyFunc(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 	if d.HasChange("keysize") {
 		log.Printf("[DEBUG]  citrixadc-provider: Keysize has changed for dnskey %s, starting update", dnskeyName)
-		dnskey.Keysize = d.Get("keysize").(int)
+		dnskey.Keysize = intPtr(d.Get("keysize").(int))
 		hasChange = true
 	}
 	if d.HasChange("keytype") {
@@ -202,7 +211,7 @@ func updateDnskeyFunc(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 	if d.HasChange("notificationperiod") {
 		log.Printf("[DEBUG]  citrixadc-provider: Notificationperiod has changed for dnskey %s, starting update", dnskeyName)
-		dnskey.Notificationperiod = d.Get("notificationperiod").(int)
+		dnskey.Notificationperiod = intPtr(d.Get("notificationperiod").(int))
 		hasChange = true
 	}
 	if d.HasChange("password") {
@@ -217,7 +226,7 @@ func updateDnskeyFunc(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 	if d.HasChange("ttl") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ttl has changed for dnskey %s, starting update", dnskeyName)
-		dnskey.Ttl = d.Get("ttl").(int)
+		dnskey.Ttl = intPtr(d.Get("ttl").(int))
 		hasChange = true
 	}
 	if d.HasChange("units1") {

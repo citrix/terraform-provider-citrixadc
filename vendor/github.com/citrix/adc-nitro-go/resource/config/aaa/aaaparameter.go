@@ -35,15 +35,15 @@ type Aaaparameter struct {
 	/**
 	* Maximum number of concurrent users allowed to log on to VPN simultaneously.
 	*/
-	Maxaaausers int `json:"maxaaausers,omitempty"`
+	Maxaaausers *int `json:"maxaaausers,omitempty"`
 	/**
 	* Maximum Number of login Attempts
 	*/
-	Maxloginattempts int `json:"maxloginattempts,omitempty"`
+	Maxloginattempts *int `json:"maxloginattempts,omitempty"`
 	/**
 	* Number of minutes an account will be locked if user exceeds maximum permissible attempts
 	*/
-	Failedlogintimeout int `json:"failedlogintimeout,omitempty"`
+	Failedlogintimeout *int `json:"failedlogintimeout,omitempty"`
 	/**
 	* Source IP address to use for traffic that is sent to the authentication server.
 	*/
@@ -89,7 +89,7 @@ type Aaaparameter struct {
 	/**
 	* This will set the maximum deflate size in case of SAML Redirect binding.
 	*/
-	Maxsamldeflatesize int `json:"maxsamldeflatesize,omitempty"`
+	Maxsamldeflatesize *int `json:"maxsamldeflatesize,omitempty"`
 	/**
 	* Persistent storage of unsuccessful user login attempts
 	*/
@@ -97,11 +97,11 @@ type Aaaparameter struct {
 	/**
 	* This will set the threshold time in days for password expiry notification. Default value is 0, which means no notification is sent
 	*/
-	Pwdexpirynotificationdays int `json:"pwdexpirynotificationdays,omitempty"`
+	Pwdexpirynotificationdays *int `json:"pwdexpirynotificationdays,omitempty"`
 	/**
 	* This will set maximum number of Questions to be asked for KB Validation. Default value is 2, Max Value is 6
 	*/
-	Maxkbquestions int `json:"maxkbquestions,omitempty"`
+	Maxkbquestions *int `json:"maxkbquestions,omitempty"`
 	/**
 	* Parameter to encrypt login information for nFactor flow
 	*/
@@ -117,7 +117,7 @@ type Aaaparameter struct {
 	/**
 	* Frequency at which a token must be verified at the Authorization Server (AS) despite being found in cache.
 	*/
-	Tokenintrospectioninterval int `json:"tokenintrospectioninterval,omitempty"`
+	Tokenintrospectioninterval *int `json:"tokenintrospectioninterval,omitempty"`
 	/**
 	* Parameter to enable/disable default CSP header
 	*/

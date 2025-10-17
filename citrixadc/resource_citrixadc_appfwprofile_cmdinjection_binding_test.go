@@ -17,50 +17,36 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccAppfwprofile_cmdinjection_binding_basic = `
 	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
 		name                     = "tf_appfwprofile"
-		bufferoverflowaction     = ["none"]
-		contenttypeaction        = ["none"]
-		cookieconsistencyaction  = ["none"]
-		creditcard               = ["none"]
-		creditcardaction         = ["none"]
-		crosssitescriptingaction = ["none"]
-		csrftagaction            = ["none"]
-		denyurlaction            = ["none"]
-		dynamiclearning          = ["none"]
-		fieldconsistencyaction   = ["none"]
-		fieldformataction        = ["none"]
-		fileuploadtypesaction    = ["none"]
-		inspectcontenttypes      = ["none"]
-		jsondosaction            = ["none"]
-		jsonsqlinjectionaction   = ["none"]
-		jsonxssaction            = ["none"]
-		multipleheaderaction     = ["none"]
-		sqlinjectionaction       = ["none"]
-		starturlaction           = ["none"]
 		type                     = ["HTML"]
-		xmlattachmentaction      = ["none"]
-		xmldosaction             = ["none"]
-		xmlformataction          = ["none"]
-		xmlsoapfaultaction       = ["none"]
-		xmlsqlinjectionaction    = ["none"]
-		xmlvalidationaction      = ["none"]
-		xmlwsiaction             = ["none"]
-		xmlxssaction             = ["none"]
 	}
-	resource "citrixadc_appfwprofile_cmdinjection_binding" "tf_binding" {
+	resource "citrixadc_appfwprofile_cmdinjection_binding" "tf_binding1" {
 		name                 = citrixadc_appfwprofile.tf_appfwprofile.name
 		cmdinjection         = "tf_cmdinjection"
-		formactionurl_cmd    = "http://10.10.10.10/"
+		formactionurl_cmd    = "^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/document/content$"
 		as_scan_location_cmd = "HEADER"
+		as_value_type_cmd    = "Keyword"
+		as_value_expr_cmd    = "[a-z]+grep"
+		alertonly            = "OFF"
+		isvalueregex_cmd     = "REGEX"
+		isautodeployed       = "NOTAUTODEPLOYED"
+		comment              = "Testing"
+	}
+	resource "citrixadc_appfwprofile_cmdinjection_binding" "tf_binding2" {
+		name                 = citrixadc_appfwprofile.tf_appfwprofile.name
+		cmdinjection         = "tf_cmdinjection"
+		formactionurl_cmd    = "^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/v1/resource/temp$"
+		as_scan_location_cmd = "COOKIE"
 		as_value_type_cmd    = "Keyword"
 		as_value_expr_cmd    = "[a-z]+grep"
 		alertonly            = "OFF"
@@ -74,34 +60,7 @@ const testAccAppfwprofile_cmdinjection_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
 	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
 		name                     = "tf_appfwprofile"
-		bufferoverflowaction     = ["none"]
-		contenttypeaction        = ["none"]
-		cookieconsistencyaction  = ["none"]
-		creditcard               = ["none"]
-		creditcardaction         = ["none"]
-		crosssitescriptingaction = ["none"]
-		csrftagaction            = ["none"]
-		denyurlaction            = ["none"]
-		dynamiclearning          = ["none"]
-		fieldconsistencyaction   = ["none"]
-		fieldformataction        = ["none"]
-		fileuploadtypesaction    = ["none"]
-		inspectcontenttypes      = ["none"]
-		jsondosaction            = ["none"]
-		jsonsqlinjectionaction   = ["none"]
-		jsonxssaction            = ["none"]
-		multipleheaderaction     = ["none"]
-		sqlinjectionaction       = ["none"]
-		starturlaction           = ["none"]
 		type                     = ["HTML"]
-		xmlattachmentaction      = ["none"]
-		xmldosaction             = ["none"]
-		xmlformataction          = ["none"]
-		xmlsoapfaultaction       = ["none"]
-		xmlsqlinjectionaction    = ["none"]
-		xmlvalidationaction      = ["none"]
-		xmlwsiaction             = ["none"]
-		xmlxssaction             = ["none"]
 	}
 `
 
@@ -114,13 +73,31 @@ func TestAccAppfwprofile_cmdinjection_binding_basic(t *testing.T) {
 			{
 				Config: testAccAppfwprofile_cmdinjection_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppfwprofile_cmdinjection_bindingExist("citrixadc_appfwprofile_cmdinjection_binding.tf_binding", nil),
+					testAccCheckAppfwprofile_cmdinjection_bindingExist("citrixadc_appfwprofile_cmdinjection_binding.tf_binding1", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_cmdinjection_binding.tf_binding1", "name", "tf_appfwprofile"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_cmdinjection_binding.tf_binding1", "cmdinjection", "tf_cmdinjection"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_cmdinjection_binding.tf_binding1", "formactionurl_cmd", "^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/document/content$"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_cmdinjection_binding.tf_binding1", "as_scan_location_cmd", "HEADER"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_cmdinjection_binding.tf_binding1", "as_value_type_cmd", "Keyword"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_cmdinjection_binding.tf_binding1", "as_value_expr_cmd", "[a-z]+grep"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_cmdinjection_binding.tf_binding1", "alertonly", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_cmdinjection_binding.tf_binding1", "isvalueregex_cmd", "REGEX"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_cmdinjection_binding.tf_binding1", "comment", "Testing"),
+					testAccCheckAppfwprofile_cmdinjection_bindingExist("citrixadc_appfwprofile_cmdinjection_binding.tf_binding2", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_cmdinjection_binding.tf_binding2", "as_scan_location_cmd", "COOKIE"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_cmdinjection_binding.tf_binding2", "as_value_type_cmd", "Keyword"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_cmdinjection_binding.tf_binding2", "as_value_expr_cmd", "[a-z]+grep"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_cmdinjection_binding.tf_binding2", "alertonly", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_cmdinjection_binding.tf_binding2", "isvalueregex_cmd", "REGEX"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_cmdinjection_binding.tf_binding2", "comment", "Testing"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_cmdinjection_binding.tf_binding2", "formactionurl_cmd", "^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/v1/resource/temp$"),
 				),
 			},
 			{
 				Config: testAccAppfwprofile_cmdinjection_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppfwprofile_cmdinjection_bindingNotExist("citrixadc_appfwprofile_cmdinjection_binding.tf_binding", "tf_appfwprofile,tf_cmdinjection,http://10.10.10.10/"),
+					testAccCheckAppfwprofile_cmdinjection_bindingNotExist("citrixadc_appfwprofile_cmdinjection_binding.tf_binding1", "tf_appfwprofile,tf_cmdinjection,^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/document/content$,HEADER,Keyword,[a-z]+grep"),
+					testAccCheckAppfwprofile_cmdinjection_bindingNotExist("citrixadc_appfwprofile_cmdinjection_binding.tf_binding2", "tf_appfwprofile,tf_cmdinjection,^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/v1/resource/temp$,COOKIE,Keyword,[a-z]+grep"),
 				),
 			},
 		},
@@ -153,16 +130,21 @@ func testAccCheckAppfwprofile_cmdinjection_bindingExist(n string, id *string) re
 		}
 
 		bindingId := rs.Primary.ID
-
-		idSlice := strings.SplitN(bindingId, ",", 3)
-
-		name := idSlice[0]
+		idSlice := strings.Split(bindingId, ",")
+		appFwName := idSlice[0]
 		cmdinjection := idSlice[1]
 		formactionurl_cmd := idSlice[2]
+		as_scan_location_cmd := idSlice[3]
+		as_value_type_cmd := ""
+		as_value_expr_cmd := ""
+		if len(idSlice) > 4 {
+			as_value_type_cmd = idSlice[4]
+			as_value_expr_cmd = idSlice[5]
+		}
 
 		findParams := service.FindParams{
 			ResourceType:             "appfwprofile_cmdinjection_binding",
-			ResourceName:             name,
+			ResourceName:             appFwName,
 			ResourceMissingErrorCode: 258,
 		}
 		dataArr, err := client.FindResourceArrayWithParams(findParams)
@@ -172,19 +154,25 @@ func testAccCheckAppfwprofile_cmdinjection_bindingExist(n string, id *string) re
 			return err
 		}
 
-		// Iterate through results to find the one with the matching secondIdComponent
-		found := false
-		for _, v := range dataArr {
-			if v["cmdinjection"].(string) == cmdinjection {
-				if v["formactionurl_cmd"].(string) == formactionurl_cmd {
-					found = true
+		// Iterate through results to find the one with the right policy name
+		foundIndex := -1
+		for i, v := range dataArr {
+			if v["cmdinjection"].(string) == cmdinjection && v["formactionurl_cmd"].(string) == formactionurl_cmd && v["as_scan_location_cmd"].(string) == as_scan_location_cmd {
+				if as_value_type_cmd != "" && as_value_expr_cmd != "" {
+					if v["as_value_type_cmd"] != nil && v["as_value_expr_cmd"] != nil && v["as_value_type_cmd"].(string) == as_value_type_cmd && v["as_value_expr_cmd"].(string) == as_value_expr_cmd {
+						foundIndex = i
+						break
+					}
+				} else if v["as_value_type_cmd"] == nil && v["as_value_expr_cmd"] == nil {
+					foundIndex = i
 					break
 				}
 			}
 		}
 
-		if !found {
-			return fmt.Errorf("appfwprofile_cmdinjection_binding %s not found", n)
+		// Resource is missing
+		if foundIndex == -1 {
+			return fmt.Errorf("Cannot find appfwprofile_cmdinjection_binding ID %v", bindingId)
 		}
 
 		return nil
@@ -202,15 +190,22 @@ func testAccCheckAppfwprofile_cmdinjection_bindingNotExist(n string, id string) 
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
-		idSlice := strings.SplitN(id, ",", 3)
+		idSlice := strings.Split(id, ",")
 
-		name := idSlice[0]
+		appFwName := idSlice[0]
 		cmdinjection := idSlice[1]
 		formactionurl_cmd := idSlice[2]
+		as_scan_location_cmd := idSlice[3]
+		as_value_type_cmd := ""
+		as_value_expr_cmd := ""
+		if len(idSlice) > 4 {
+			as_value_type_cmd = idSlice[4]
+			as_value_expr_cmd = idSlice[5]
+		}
 
 		findParams := service.FindParams{
 			ResourceType:             "appfwprofile_cmdinjection_binding",
-			ResourceName:             name,
+			ResourceName:             appFwName,
 			ResourceMissingErrorCode: 258,
 		}
 		dataArr, err := client.FindResourceArrayWithParams(findParams)
@@ -220,18 +215,23 @@ func testAccCheckAppfwprofile_cmdinjection_bindingNotExist(n string, id string) 
 			return err
 		}
 
-		// Iterate through results to hopefully not find the one with the matching secondIdComponent
-		found := false
-		for _, v := range dataArr {
-			if v["cmdinjection"].(string) == cmdinjection {
-				if v["formactionurl_cmd"].(string) == formactionurl_cmd {
-					found = true
+		// Iterate through results to hopefully not find the one with the matching binding
+		foundIndex := -1
+		for i, v := range dataArr {
+			if v["cmdinjection"].(string) == cmdinjection && v["formactionurl_cmd"].(string) == formactionurl_cmd && v["as_scan_location_cmd"].(string) == as_scan_location_cmd {
+				if as_value_type_cmd != "" && as_value_expr_cmd != "" {
+					if v["as_value_type_cmd"] != nil && v["as_value_expr_cmd"] != nil && v["as_value_type_cmd"].(string) == as_value_type_cmd && v["as_value_expr_cmd"].(string) == as_value_expr_cmd {
+						foundIndex = i
+						break
+					}
+				} else if v["as_value_type_cmd"] == nil && v["as_value_expr_cmd"] == nil {
+					foundIndex = i
 					break
 				}
 			}
 		}
 
-		if found {
+		if foundIndex != -1 {
 			return fmt.Errorf("appfwprofile_cmdinjection_binding %s was found, but it should have been destroyed", n)
 		}
 

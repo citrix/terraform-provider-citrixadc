@@ -52,11 +52,19 @@ func createNsratecontrolFunc(ctx context.Context, d *schema.ResourceData, meta i
 	client := meta.(*NetScalerNitroClient).client
 	var nsratecontrolName string
 	nsratecontrolName = resource.PrefixedUniqueId("tf-nsratecontrol-")
-	nsratecontrol := ns.Nsratecontrol{
-		Icmpthreshold:   d.Get("icmpthreshold").(int),
-		Tcprstthreshold: d.Get("tcprstthreshold").(int),
-		Tcpthreshold:    d.Get("tcpthreshold").(int),
-		Udpthreshold:    d.Get("udpthreshold").(int),
+	nsratecontrol := ns.Nsratecontrol{}
+
+	if raw := d.GetRawConfig().GetAttr("icmpthreshold"); !raw.IsNull() {
+		nsratecontrol.Icmpthreshold = intPtr(d.Get("icmpthreshold").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("tcprstthreshold"); !raw.IsNull() {
+		nsratecontrol.Tcprstthreshold = intPtr(d.Get("tcprstthreshold").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("tcpthreshold"); !raw.IsNull() {
+		nsratecontrol.Tcpthreshold = intPtr(d.Get("tcpthreshold").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("udpthreshold"); !raw.IsNull() {
+		nsratecontrol.Udpthreshold = intPtr(d.Get("udpthreshold").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Nsratecontrol.Type(), &nsratecontrol)
@@ -96,11 +104,19 @@ func updateNsratecontrolFunc(ctx context.Context, d *schema.ResourceData, meta i
 	log.Printf("[DEBUG]  citrixadc-provider: In updateNsratecontrolFunc")
 	client := meta.(*NetScalerNitroClient).client
 
-	nsratecontrol := ns.Nsratecontrol{
-		Icmpthreshold:   d.Get("icmpthreshold").(int),
-		Tcprstthreshold: d.Get("tcprstthreshold").(int),
-		Tcpthreshold:    d.Get("tcpthreshold").(int),
-		Udpthreshold:    d.Get("udpthreshold").(int),
+	nsratecontrol := ns.Nsratecontrol{}
+
+	if raw := d.GetRawConfig().GetAttr("icmpthreshold"); !raw.IsNull() {
+		nsratecontrol.Icmpthreshold = intPtr(d.Get("icmpthreshold").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("tcprstthreshold"); !raw.IsNull() {
+		nsratecontrol.Tcprstthreshold = intPtr(d.Get("tcprstthreshold").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("tcpthreshold"); !raw.IsNull() {
+		nsratecontrol.Tcpthreshold = intPtr(d.Get("tcpthreshold").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("udpthreshold"); !raw.IsNull() {
+		nsratecontrol.Udpthreshold = intPtr(d.Get("udpthreshold").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Nsratecontrol.Type(), &nsratecontrol)

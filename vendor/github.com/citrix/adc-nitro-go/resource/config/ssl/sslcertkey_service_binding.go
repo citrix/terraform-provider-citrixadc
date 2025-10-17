@@ -27,11 +27,11 @@ type Sslcertkeyservicebinding struct {
 	/**
 	* Vserver Id
 	*/
-	Data int `json:"data,omitempty"`
+	Data *int `json:"data,omitempty"`
 	/**
 	* Version.
 	*/
-	Version int `json:"version,omitempty"`
+	Version *int `json:"version,omitempty"`
 	/**
 	* Name of the certificate-key pair.
 	*/

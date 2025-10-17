@@ -108,17 +108,32 @@ func createGslbparameterFunc(ctx context.Context, d *schema.ResourceData, meta i
 		Automaticconfigsync:   d.Get("automaticconfigsync").(string),
 		Dropldnsreq:           d.Get("dropldnsreq").(string),
 		Gslbconfigsyncmonitor: d.Get("gslbconfigsyncmonitor").(string),
-		Gslbsvcstatedelaytime: d.Get("gslbsvcstatedelaytime").(int),
-		Gslbsyncinterval:      d.Get("gslbsyncinterval").(int),
 		Gslbsynclocfiles:      d.Get("gslbsynclocfiles").(string),
 		Gslbsyncmode:          d.Get("gslbsyncmode").(string),
-		Ldnsentrytimeout:      d.Get("ldnsentrytimeout").(int),
 		Ldnsmask:              d.Get("ldnsmask").(string),
 		Ldnsprobeorder:        toStringList(d.Get("ldnsprobeorder").([]interface{})),
-		Mepkeepalivetimeout:   d.Get("mepkeepalivetimeout").(int),
-		Rtttolerance:          d.Get("rtttolerance").(int),
-		Svcstatelearningtime:  d.Get("svcstatelearningtime").(int),
-		V6ldnsmasklen:         d.Get("v6ldnsmasklen").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("gslbsvcstatedelaytime"); !raw.IsNull() {
+		gslbparameter.Gslbsvcstatedelaytime = intPtr(d.Get("gslbsvcstatedelaytime").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("gslbsyncinterval"); !raw.IsNull() {
+		gslbparameter.Gslbsyncinterval = intPtr(d.Get("gslbsyncinterval").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("ldnsentrytimeout"); !raw.IsNull() {
+		gslbparameter.Ldnsentrytimeout = intPtr(d.Get("ldnsentrytimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("mepkeepalivetimeout"); !raw.IsNull() {
+		gslbparameter.Mepkeepalivetimeout = intPtr(d.Get("mepkeepalivetimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("rtttolerance"); !raw.IsNull() {
+		gslbparameter.Rtttolerance = intPtr(d.Get("rtttolerance").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("svcstatelearningtime"); !raw.IsNull() {
+		gslbparameter.Svcstatelearningtime = intPtr(d.Get("svcstatelearningtime").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("v6ldnsmasklen"); !raw.IsNull() {
+		gslbparameter.V6ldnsmasklen = intPtr(d.Get("v6ldnsmasklen").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Gslbparameter.Type(), &gslbparameter)
@@ -182,12 +197,12 @@ func updateGslbparameterFunc(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	if d.HasChange("gslbsvcstatedelaytime") {
 		log.Printf("[DEBUG]  citrixadc-provider: Gslbsvcstatedelaytime has changed for gslbparameter, starting update")
-		gslbparameter.Gslbsvcstatedelaytime = d.Get("gslbsvcstatedelaytime").(int)
+		gslbparameter.Gslbsvcstatedelaytime = intPtr(d.Get("gslbsvcstatedelaytime").(int))
 		hasChange = true
 	}
 	if d.HasChange("gslbsyncinterval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Gslbsyncinterval has changed for gslbparameter, starting update")
-		gslbparameter.Gslbsyncinterval = d.Get("gslbsyncinterval").(int)
+		gslbparameter.Gslbsyncinterval = intPtr(d.Get("gslbsyncinterval").(int))
 		hasChange = true
 	}
 	if d.HasChange("gslbsynclocfiles") {
@@ -202,7 +217,7 @@ func updateGslbparameterFunc(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	if d.HasChange("ldnsentrytimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ldnsentrytimeout has changed for gslbparameter, starting update")
-		gslbparameter.Ldnsentrytimeout = d.Get("ldnsentrytimeout").(int)
+		gslbparameter.Ldnsentrytimeout = intPtr(d.Get("ldnsentrytimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("ldnsmask") {
@@ -217,22 +232,22 @@ func updateGslbparameterFunc(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	if d.HasChange("mepkeepalivetimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Mepkeepalivetimeout has changed for gslbparameter, starting update")
-		gslbparameter.Mepkeepalivetimeout = d.Get("mepkeepalivetimeout").(int)
+		gslbparameter.Mepkeepalivetimeout = intPtr(d.Get("mepkeepalivetimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("rtttolerance") {
 		log.Printf("[DEBUG]  citrixadc-provider: Rtttolerance has changed for gslbparameter, starting update")
-		gslbparameter.Rtttolerance = d.Get("rtttolerance").(int)
+		gslbparameter.Rtttolerance = intPtr(d.Get("rtttolerance").(int))
 		hasChange = true
 	}
 	if d.HasChange("svcstatelearningtime") {
 		log.Printf("[DEBUG]  citrixadc-provider: Svcstatelearningtime has changed for gslbparameter, starting update")
-		gslbparameter.Svcstatelearningtime = d.Get("svcstatelearningtime").(int)
+		gslbparameter.Svcstatelearningtime = intPtr(d.Get("svcstatelearningtime").(int))
 		hasChange = true
 	}
 	if d.HasChange("v6ldnsmasklen") {
 		log.Printf("[DEBUG]  citrixadc-provider: V6ldnsmasklen has changed for gslbparameter, starting update")
-		gslbparameter.V6ldnsmasklen = d.Get("v6ldnsmasklen").(int)
+		gslbparameter.V6ldnsmasklen = intPtr(d.Get("v6ldnsmasklen").(int))
 		hasChange = true
 	}
 

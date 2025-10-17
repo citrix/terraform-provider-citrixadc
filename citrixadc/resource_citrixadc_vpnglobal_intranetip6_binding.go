@@ -52,7 +52,10 @@ func createVpnglobal_intranetip6_bindingFunc(ctx context.Context, d *schema.Reso
 	vpnglobal_intranetip6_binding := vpn.Vpnglobalintranetip6binding{
 		Gotopriorityexpression: d.Get("gotopriorityexpression").(string),
 		Intranetip6:            d.Get("intranetip6").(string),
-		Numaddr:                d.Get("numaddr").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("numaddr"); !raw.IsNull() {
+		vpnglobal_intranetip6_binding.Numaddr = intPtr(d.Get("numaddr").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Vpnglobal_intranetip6_binding.Type(), &vpnglobal_intranetip6_binding)

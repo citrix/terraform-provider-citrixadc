@@ -122,12 +122,17 @@ func createAuthenticationoauthidpprofileFunc(ctx context.Context, d *schema.Reso
 		Issuer:                     d.Get("issuer").(string),
 		Name:                       d.Get("name").(string),
 		Redirecturl:                d.Get("redirecturl").(string),
-		Refreshinterval:            d.Get("refreshinterval").(int),
 		Relyingpartymetadataurl:    d.Get("relyingpartymetadataurl").(string),
 		Sendpassword:               d.Get("sendpassword").(string),
 		Signaturealg:               d.Get("signaturealg").(string),
 		Signatureservice:           d.Get("signatureservice").(string),
-		Skewtime:                   d.Get("skewtime").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("refreshinterval"); !raw.IsNull() {
+		authenticationoauthidpprofile.Refreshinterval = intPtr(d.Get("refreshinterval").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("skewtime"); !raw.IsNull() {
+		authenticationoauthidpprofile.Skewtime = intPtr(d.Get("skewtime").(int))
 	}
 
 	_, err := client.AddResource("authenticationoauthidpprofile", authenticationoauthidpprofileName, &authenticationoauthidpprofile)
@@ -228,7 +233,7 @@ func updateAuthenticationoauthidpprofileFunc(ctx context.Context, d *schema.Reso
 	}
 	if d.HasChange("refreshinterval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Refreshinterval has changed for authenticationoauthidpprofile %s, starting update", authenticationoauthidpprofileName)
-		authenticationoauthidpprofile.Refreshinterval = d.Get("refreshinterval").(int)
+		authenticationoauthidpprofile.Refreshinterval = intPtr(d.Get("refreshinterval").(int))
 		hasChange = true
 	}
 	if d.HasChange("relyingpartymetadataurl") {
@@ -253,7 +258,7 @@ func updateAuthenticationoauthidpprofileFunc(ctx context.Context, d *schema.Reso
 	}
 	if d.HasChange("skewtime") {
 		log.Printf("[DEBUG]  citrixadc-provider: Skewtime has changed for authenticationoauthidpprofile %s, starting update", authenticationoauthidpprofileName)
-		authenticationoauthidpprofile.Skewtime = d.Get("skewtime").(int)
+		authenticationoauthidpprofile.Skewtime = intPtr(d.Get("skewtime").(int))
 		hasChange = true
 	}
 

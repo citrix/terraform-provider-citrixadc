@@ -67,7 +67,7 @@ type Vpnintranetapplication struct {
 	/**
 	* Source port for the application for which the Citrix Gateway virtual server proxies the traffic. If users are connecting from a device that uses the Citrix Gateway Plug-in for Java, applications must be configured manually by using the source IP address and TCP port values specified in the intranet application profile. If a port value is not set, the destination port value is used.
 	*/
-	Srcport int `json:"srcport,omitempty"`
+	Srcport *int `json:"srcport,omitempty"`
 
 	//------- Read only Parameter ---------;
 

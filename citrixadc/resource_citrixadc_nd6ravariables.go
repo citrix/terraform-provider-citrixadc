@@ -104,19 +104,36 @@ func createNd6ravariablesFunc(ctx context.Context, d *schema.ResourceData, meta 
 	nd6ravariablesName := strconv.Itoa(d.Get("vlan").(int))
 	nd6ravariables := network.Nd6ravariables{
 		Ceaserouteradv:           d.Get("ceaserouteradv").(string),
-		Currhoplimit:             d.Get("currhoplimit").(int),
-		Defaultlifetime:          d.Get("defaultlifetime").(int),
-		Linkmtu:                  d.Get("linkmtu").(int),
 		Managedaddrconfig:        d.Get("managedaddrconfig").(string),
-		Maxrtadvinterval:         d.Get("maxrtadvinterval").(int),
-		Minrtadvinterval:         d.Get("minrtadvinterval").(int),
 		Onlyunicastrtadvresponse: d.Get("onlyunicastrtadvresponse").(string),
 		Otheraddrconfig:          d.Get("otheraddrconfig").(string),
-		Reachabletime:            d.Get("reachabletime").(int),
-		Retranstime:              d.Get("retranstime").(int),
 		Sendrouteradv:            d.Get("sendrouteradv").(string),
 		Srclinklayeraddroption:   d.Get("srclinklayeraddroption").(string),
-		Vlan:                     d.Get("vlan").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("currhoplimit"); !raw.IsNull() {
+		nd6ravariables.Currhoplimit = intPtr(d.Get("currhoplimit").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("defaultlifetime"); !raw.IsNull() {
+		nd6ravariables.Defaultlifetime = intPtr(d.Get("defaultlifetime").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("linkmtu"); !raw.IsNull() {
+		nd6ravariables.Linkmtu = intPtr(d.Get("linkmtu").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxrtadvinterval"); !raw.IsNull() {
+		nd6ravariables.Maxrtadvinterval = intPtr(d.Get("maxrtadvinterval").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("minrtadvinterval"); !raw.IsNull() {
+		nd6ravariables.Minrtadvinterval = intPtr(d.Get("minrtadvinterval").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("reachabletime"); !raw.IsNull() {
+		nd6ravariables.Reachabletime = intPtr(d.Get("reachabletime").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("retranstime"); !raw.IsNull() {
+		nd6ravariables.Retranstime = intPtr(d.Get("retranstime").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("vlan"); !raw.IsNull() {
+		nd6ravariables.Vlan = intPtr(d.Get("vlan").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Nd6ravariables.Type(), &nd6ravariables)
@@ -166,8 +183,10 @@ func updateNd6ravariablesFunc(ctx context.Context, d *schema.ResourceData, meta 
 	client := meta.(*NetScalerNitroClient).client
 	nd6ravariablesName := strconv.Itoa(d.Get("vlan").(int))
 
-	nd6ravariables := network.Nd6ravariables{
-		Vlan: d.Get("vlan").(int),
+	nd6ravariables := network.Nd6ravariables{}
+
+	if raw := d.GetRawConfig().GetAttr("vlan"); !raw.IsNull() {
+		nd6ravariables.Vlan = intPtr(d.Get("vlan").(int))
 	}
 	hasChange := false
 	if d.HasChange("ceaserouteradv") {
@@ -177,17 +196,17 @@ func updateNd6ravariablesFunc(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	if d.HasChange("currhoplimit") {
 		log.Printf("[DEBUG]  citrixadc-provider: Currhoplimit has changed for nd6ravariables %s, starting update", nd6ravariablesName)
-		nd6ravariables.Currhoplimit = d.Get("currhoplimit").(int)
+		nd6ravariables.Currhoplimit = intPtr(d.Get("currhoplimit").(int))
 		hasChange = true
 	}
 	if d.HasChange("defaultlifetime") {
 		log.Printf("[DEBUG]  citrixadc-provider: Defaultlifetime has changed for nd6ravariables %s, starting update", nd6ravariablesName)
-		nd6ravariables.Defaultlifetime = d.Get("defaultlifetime").(int)
+		nd6ravariables.Defaultlifetime = intPtr(d.Get("defaultlifetime").(int))
 		hasChange = true
 	}
 	if d.HasChange("linkmtu") {
 		log.Printf("[DEBUG]  citrixadc-provider: Linkmtu has changed for nd6ravariables %s, starting update", nd6ravariablesName)
-		nd6ravariables.Linkmtu = d.Get("linkmtu").(int)
+		nd6ravariables.Linkmtu = intPtr(d.Get("linkmtu").(int))
 		hasChange = true
 	}
 	if d.HasChange("managedaddrconfig") {
@@ -197,12 +216,12 @@ func updateNd6ravariablesFunc(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	if d.HasChange("maxrtadvinterval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxrtadvinterval has changed for nd6ravariables %s, starting update", nd6ravariablesName)
-		nd6ravariables.Maxrtadvinterval = d.Get("maxrtadvinterval").(int)
+		nd6ravariables.Maxrtadvinterval = intPtr(d.Get("maxrtadvinterval").(int))
 		hasChange = true
 	}
 	if d.HasChange("minrtadvinterval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Minrtadvinterval has changed for nd6ravariables %s, starting update", nd6ravariablesName)
-		nd6ravariables.Minrtadvinterval = d.Get("minrtadvinterval").(int)
+		nd6ravariables.Minrtadvinterval = intPtr(d.Get("minrtadvinterval").(int))
 		hasChange = true
 	}
 	if d.HasChange("onlyunicastrtadvresponse") {
@@ -217,12 +236,12 @@ func updateNd6ravariablesFunc(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	if d.HasChange("reachabletime") {
 		log.Printf("[DEBUG]  citrixadc-provider: Reachabletime has changed for nd6ravariables %s, starting update", nd6ravariablesName)
-		nd6ravariables.Reachabletime = d.Get("reachabletime").(int)
+		nd6ravariables.Reachabletime = intPtr(d.Get("reachabletime").(int))
 		hasChange = true
 	}
 	if d.HasChange("retranstime") {
 		log.Printf("[DEBUG]  citrixadc-provider: Retranstime has changed for nd6ravariables %s, starting update", nd6ravariablesName)
-		nd6ravariables.Retranstime = d.Get("retranstime").(int)
+		nd6ravariables.Retranstime = intPtr(d.Get("retranstime").(int))
 		hasChange = true
 	}
 	if d.HasChange("sendrouteradv") {
@@ -237,7 +256,7 @@ func updateNd6ravariablesFunc(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	if d.HasChange("vlan") {
 		log.Printf("[DEBUG]  citrixadc-provider: Vlan has changed for nd6ravariables %s, starting update", nd6ravariablesName)
-		nd6ravariables.Vlan = d.Get("vlan").(int)
+		nd6ravariables.Vlan = intPtr(d.Get("vlan").(int))
 		hasChange = true
 	}
 

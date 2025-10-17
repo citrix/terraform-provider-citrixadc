@@ -2,15 +2,17 @@ package citrixadc
 
 import (
 	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 	"github.com/citrix/adc-nitro-go/service"
 
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"strconv"
 	"strings"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceCitrixAdcVxlan_srcip_binding() *schema.Resource {
@@ -46,8 +48,11 @@ func createVxlan_srcip_bindingFunc(ctx context.Context, d *schema.ResourceData, 
 	srcip := d.Get("srcip").(string)
 	bindingId := fmt.Sprintf("%s,%s", vxlanid, srcip)
 	vxlan_srcip_binding := network.Vxlansrcipbinding{
-		Id:    d.Get("vxlanid").(int),
 		Srcip: d.Get("srcip").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("vxlanid"); !raw.IsNull() {
+		vxlan_srcip_binding.Id = intPtr(d.Get("vxlanid").(int))
 	}
 
 	err := client.UpdateUnnamedResource("vxlan_srcip_binding", &vxlan_srcip_binding)

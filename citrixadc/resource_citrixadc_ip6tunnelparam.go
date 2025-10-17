@@ -58,11 +58,14 @@ func createIp6tunnelparamFunc(ctx context.Context, d *schema.ResourceData, meta 
 	// there is no primary key in ip6tunnelparam resource. Hence generate one for terraform state maintenance
 	ip6tunnelparamName = resource.PrefixedUniqueId("tf-ip6tunnelparam-")
 	ip6tunnelparam := network.Ip6tunnelparam{
-		Dropfrag:             d.Get("dropfrag").(string),
-		Dropfragcputhreshold: d.Get("dropfragcputhreshold").(int),
-		Srcip:                d.Get("srcip").(string),
-		Srciproundrobin:      d.Get("srciproundrobin").(string),
-		Useclientsourceipv6:  d.Get("useclientsourceipv6").(string),
+		Dropfrag:            d.Get("dropfrag").(string),
+		Srcip:               d.Get("srcip").(string),
+		Srciproundrobin:     d.Get("srciproundrobin").(string),
+		Useclientsourceipv6: d.Get("useclientsourceipv6").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("dropfragcputhreshold"); !raw.IsNull() {
+		ip6tunnelparam.Dropfragcputhreshold = intPtr(d.Get("dropfragcputhreshold").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Ip6tunnelparam.Type(), &ip6tunnelparam)
@@ -110,7 +113,7 @@ func updateIp6tunnelparamFunc(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	if d.HasChange("dropfragcputhreshold") {
 		log.Printf("[DEBUG]  citrixadc-provider: Dropfragcputhreshold has changed for ip6tunnelparam, starting update")
-		ip6tunnelparam.Dropfragcputhreshold = d.Get("dropfragcputhreshold").(int)
+		ip6tunnelparam.Dropfragcputhreshold = intPtr(d.Get("dropfragcputhreshold").(int))
 		hasChange = true
 	}
 	if d.HasChange("srcip") {

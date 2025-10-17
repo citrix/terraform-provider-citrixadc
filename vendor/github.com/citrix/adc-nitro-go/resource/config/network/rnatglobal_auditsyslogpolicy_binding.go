@@ -27,7 +27,7 @@ type Rnatglobalauditsyslogpolicybinding struct {
 	/**
 	* The priority of the policy.
 	*/
-	Priority int `json:"priority,omitempty"`
+	Priority *int `json:"priority,omitempty"`
 	/**
 	* Remove all RNAT global config
 	*/

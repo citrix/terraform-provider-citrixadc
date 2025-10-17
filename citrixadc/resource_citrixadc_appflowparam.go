@@ -293,17 +293,14 @@ func createAppflowparamFunc(ctx context.Context, d *schema.ResourceData, meta in
 	appflowparam := appflow.Appflowparam{
 		Aaausername:                         d.Get("aaausername").(string),
 		Analyticsauthtoken:                  d.Get("analyticsauthtoken").(string),
-		Appnamerefresh:                      d.Get("appnamerefresh").(int),
 		Auditlogs:                           d.Get("auditlogs").(string),
 		Cacheinsight:                        d.Get("cacheinsight").(string),
 		Clienttrafficonly:                   d.Get("clienttrafficonly").(string),
 		Connectionchaining:                  d.Get("connectionchaining").(string),
 		Cqareporting:                        d.Get("cqareporting").(string),
 		Distributedtracing:                  d.Get("distributedtracing").(string),
-		Disttracingsamplingrate:             d.Get("disttracingsamplingrate").(int),
 		Emailaddress:                        d.Get("emailaddress").(string),
 		Events:                              d.Get("events").(string),
-		Flowrecordinterval:                  d.Get("flowrecordinterval").(int),
 		Gxsessionreporting:                  d.Get("gxsessionreporting").(string),
 		Httpauthorization:                   d.Get("httpauthorization").(string),
 		Httpcontenttype:                     d.Get("httpcontenttype").(string),
@@ -325,23 +322,47 @@ func createAppflowparamFunc(ctx context.Context, d *schema.ResourceData, meta in
 		Logstreamovernsip:                   d.Get("logstreamovernsip").(string),
 		Lsnlogging:                          d.Get("lsnlogging").(string),
 		Metrics:                             d.Get("metrics").(string),
-		Observationdomainid:                 d.Get("observationdomainid").(int),
 		Observationdomainname:               d.Get("observationdomainname").(string),
-		Observationpointid:                  d.Get("observationpointid").(int),
-		Securityinsightrecordinterval:       d.Get("securityinsightrecordinterval").(int),
 		Securityinsighttraffic:              d.Get("securityinsighttraffic").(string),
 		Skipcacheredirectionhttptransaction: d.Get("skipcacheredirectionhttptransaction").(string),
 		Subscriberawareness:                 d.Get("subscriberawareness").(string),
 		Subscriberidobfuscation:             d.Get("subscriberidobfuscation").(string),
 		Subscriberidobfuscationalgo:         d.Get("subscriberidobfuscationalgo").(string),
-		Tcpattackcounterinterval:            d.Get("tcpattackcounterinterval").(int),
-		Templaterefresh:                     d.Get("templaterefresh").(int),
 		Timeseriesovernsip:                  d.Get("timeseriesovernsip").(string),
-		Udppmtu:                             d.Get("udppmtu").(int),
 		Urlcategory:                         d.Get("urlcategory").(string),
-		Usagerecordinterval:                 d.Get("usagerecordinterval").(int),
 		Videoinsight:                        d.Get("videoinsight").(string),
 		Websaasappusagereporting:            d.Get("websaasappusagereporting").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("appnamerefresh"); !raw.IsNull() {
+		appflowparam.Appnamerefresh = intPtr(d.Get("appnamerefresh").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("disttracingsamplingrate"); !raw.IsNull() {
+		appflowparam.Disttracingsamplingrate = intPtr(d.Get("disttracingsamplingrate").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("flowrecordinterval"); !raw.IsNull() {
+		appflowparam.Flowrecordinterval = intPtr(d.Get("flowrecordinterval").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("observationdomainid"); !raw.IsNull() {
+		appflowparam.Observationdomainid = intPtr(d.Get("observationdomainid").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("observationpointid"); !raw.IsNull() {
+		appflowparam.Observationpointid = intPtr(d.Get("observationpointid").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("securityinsightrecordinterval"); !raw.IsNull() {
+		appflowparam.Securityinsightrecordinterval = intPtr(d.Get("securityinsightrecordinterval").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("tcpattackcounterinterval"); !raw.IsNull() {
+		appflowparam.Tcpattackcounterinterval = intPtr(d.Get("tcpattackcounterinterval").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("templaterefresh"); !raw.IsNull() {
+		appflowparam.Templaterefresh = intPtr(d.Get("templaterefresh").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("udppmtu"); !raw.IsNull() {
+		appflowparam.Udppmtu = intPtr(d.Get("udppmtu").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("usagerecordinterval"); !raw.IsNull() {
+		appflowparam.Usagerecordinterval = intPtr(d.Get("usagerecordinterval").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Appflowparam.Type(), &appflowparam)
@@ -438,7 +459,7 @@ func updateAppflowparamFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("appnamerefresh") {
 		log.Printf("[DEBUG]  citrixadc-provider: Appnamerefresh has changed for appflowparam, starting update")
-		appflowparam.Appnamerefresh = d.Get("appnamerefresh").(int)
+		appflowparam.Appnamerefresh = intPtr(d.Get("appnamerefresh").(int))
 		hasChange = true
 	}
 	if d.HasChange("auditlogs") {
@@ -473,7 +494,7 @@ func updateAppflowparamFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("disttracingsamplingrate") {
 		log.Printf("[DEBUG]  citrixadc-provider: Disttracingsamplingrate has changed for appflowparam, starting update")
-		appflowparam.Disttracingsamplingrate = d.Get("disttracingsamplingrate").(int)
+		appflowparam.Disttracingsamplingrate = intPtr(d.Get("disttracingsamplingrate").(int))
 		hasChange = true
 	}
 	if d.HasChange("emailaddress") {
@@ -488,7 +509,7 @@ func updateAppflowparamFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("flowrecordinterval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Flowrecordinterval has changed for appflowparam, starting update")
-		appflowparam.Flowrecordinterval = d.Get("flowrecordinterval").(int)
+		appflowparam.Flowrecordinterval = intPtr(d.Get("flowrecordinterval").(int))
 		hasChange = true
 	}
 	if d.HasChange("gxsessionreporting") {
@@ -598,7 +619,7 @@ func updateAppflowparamFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("observationdomainid") {
 		log.Printf("[DEBUG]  citrixadc-provider: Observationdomainid has changed for appflowparam, starting update")
-		appflowparam.Observationdomainid = d.Get("observationdomainid").(int)
+		appflowparam.Observationdomainid = intPtr(d.Get("observationdomainid").(int))
 		hasChange = true
 	}
 	if d.HasChange("observationdomainname") {
@@ -608,12 +629,12 @@ func updateAppflowparamFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("observationpointid") {
 		log.Printf("[DEBUG]  citrixadc-provider: Observationpointid has changed for appflowparam, starting update")
-		appflowparam.Observationpointid = d.Get("observationpointid").(int)
+		appflowparam.Observationpointid = intPtr(d.Get("observationpointid").(int))
 		hasChange = true
 	}
 	if d.HasChange("securityinsightrecordinterval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Securityinsightrecordinterval has changed for appflowparam, starting update")
-		appflowparam.Securityinsightrecordinterval = d.Get("securityinsightrecordinterval").(int)
+		appflowparam.Securityinsightrecordinterval = intPtr(d.Get("securityinsightrecordinterval").(int))
 		hasChange = true
 	}
 	if d.HasChange("securityinsighttraffic") {
@@ -643,12 +664,12 @@ func updateAppflowparamFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("tcpattackcounterinterval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Tcpattackcounterinterval has changed for appflowparam, starting update")
-		appflowparam.Tcpattackcounterinterval = d.Get("tcpattackcounterinterval").(int)
+		appflowparam.Tcpattackcounterinterval = intPtr(d.Get("tcpattackcounterinterval").(int))
 		hasChange = true
 	}
 	if d.HasChange("templaterefresh") {
 		log.Printf("[DEBUG]  citrixadc-provider: Templaterefresh has changed for appflowparam, starting update")
-		appflowparam.Templaterefresh = d.Get("templaterefresh").(int)
+		appflowparam.Templaterefresh = intPtr(d.Get("templaterefresh").(int))
 		hasChange = true
 	}
 	if d.HasChange("timeseriesovernsip") {
@@ -658,7 +679,7 @@ func updateAppflowparamFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("udppmtu") {
 		log.Printf("[DEBUG]  citrixadc-provider: Udppmtu has changed for appflowparam, starting update")
-		appflowparam.Udppmtu = d.Get("udppmtu").(int)
+		appflowparam.Udppmtu = intPtr(d.Get("udppmtu").(int))
 		hasChange = true
 	}
 	if d.HasChange("urlcategory") {
@@ -668,7 +689,7 @@ func updateAppflowparamFunc(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if d.HasChange("usagerecordinterval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Usagerecordinterval has changed for appflowparam, starting update")
-		appflowparam.Usagerecordinterval = d.Get("usagerecordinterval").(int)
+		appflowparam.Usagerecordinterval = intPtr(d.Get("usagerecordinterval").(int))
 		hasChange = true
 	}
 	if d.HasChange("videoinsight") {

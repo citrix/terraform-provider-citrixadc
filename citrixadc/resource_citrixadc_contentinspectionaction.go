@@ -71,8 +71,11 @@ func createContentinspectionactionFunc(ctx context.Context, d *schema.ResourceDa
 		Name:            d.Get("name").(string),
 		Serverip:        d.Get("serverip").(string),
 		Servername:      d.Get("servername").(string),
-		Serverport:      d.Get("serverport").(int),
 		Type:            d.Get("type").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("serverport"); !raw.IsNull() {
+		contentinspectionaction.Serverport = intPtr(d.Get("serverport").(int))
 	}
 
 	_, err := client.AddResource("contentinspectionaction", contentinspectionactionName, &contentinspectionaction)
@@ -139,7 +142,7 @@ func updateContentinspectionactionFunc(ctx context.Context, d *schema.ResourceDa
 	}
 	if d.HasChange("serverport") {
 		log.Printf("[DEBUG]  citrixadc-provider: Serverport has changed for contentinspectionaction %s, starting update", contentinspectionactionName)
-		contentinspectionaction.Serverport = d.Get("serverport").(int)
+		contentinspectionaction.Serverport = intPtr(d.Get("serverport").(int))
 		hasChange = true
 	}
 

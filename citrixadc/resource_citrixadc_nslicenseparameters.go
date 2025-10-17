@@ -42,9 +42,13 @@ func createNslicenseparametersFunc(ctx context.Context, d *schema.ResourceData, 
 	var nslicenseparametersName string
 	// there is no primary key in nslicenseparameters resource. Hence generate one for terraform state maintenance
 	nslicenseparametersName = resource.PrefixedUniqueId("tf-nslicenseparameters-")
-	nslicenseparameters := ns.Nslicenseparameters{
-		Alert1gracetimeout: d.Get("alert1gracetimeout").(int),
-		Alert2gracetimeout: d.Get("alert2gracetimeout").(int),
+	nslicenseparameters := ns.Nslicenseparameters{}
+
+	if raw := d.GetRawConfig().GetAttr("alert1gracetimeout"); !raw.IsNull() {
+		nslicenseparameters.Alert1gracetimeout = intPtr(d.Get("alert1gracetimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("alert2gracetimeout"); !raw.IsNull() {
+		nslicenseparameters.Alert2gracetimeout = intPtr(d.Get("alert2gracetimeout").(int))
 	}
 
 	err := client.UpdateUnnamedResource("nslicenseparameters", &nslicenseparameters)
@@ -81,12 +85,14 @@ func updateNslicenseparametersFunc(ctx context.Context, d *schema.ResourceData, 
 	log.Printf("[DEBUG]  citrixadc-provider: In updateNslicenseparametersFunc")
 	client := meta.(*NetScalerNitroClient).client
 
-	nslicenseparameters := ns.Nslicenseparameters{
-		Alert1gracetimeout: d.Get("alert1gracetimeout").(int),
+	nslicenseparameters := ns.Nslicenseparameters{}
+
+	if raw := d.GetRawConfig().GetAttr("alert1gracetimeout"); !raw.IsNull() {
+		nslicenseparameters.Alert1gracetimeout = intPtr(d.Get("alert1gracetimeout").(int))
 	}
 	if d.HasChange("alert2gracetimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Alert2gracetimeout has changed for nslicenseparameters, starting update")
-		nslicenseparameters.Alert2gracetimeout = d.Get("alert2gracetimeout").(int)
+		nslicenseparameters.Alert2gracetimeout = intPtr(d.Get("alert2gracetimeout").(int))
 	}
 
 	err := client.UpdateUnnamedResource("nslicenseparameters", &nslicenseparameters)

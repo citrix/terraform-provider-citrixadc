@@ -64,10 +64,15 @@ func createVlanFunc(ctx context.Context, d *schema.ResourceData, meta interface{
 	vlan := network.Vlan{
 		Aliasname:          d.Get("aliasname").(string),
 		Dynamicrouting:     d.Get("dynamicrouting").(string),
-		Id:                 d.Get("vlanid").(int),
 		Ipv6dynamicrouting: d.Get("ipv6dynamicrouting").(string),
-		Mtu:                d.Get("mtu").(int),
 		Sharing:            d.Get("sharing").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("vlanid"); !raw.IsNull() {
+		vlan.Id = intPtr(d.Get("vlanid").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("mtu"); !raw.IsNull() {
+		vlan.Mtu = intPtr(d.Get("mtu").(int))
 	}
 
 	vlanIdStr := strconv.Itoa(vlanId)
@@ -107,8 +112,10 @@ func updateVlanFunc(ctx context.Context, d *schema.ResourceData, meta interface{
 	log.Printf("[DEBUG]  citrixadc-provider: In updateVlanFunc")
 	client := meta.(*NetScalerNitroClient).client
 	vlanId := d.Get("vlanid").(int)
-	vlan := network.Vlan{
-		Id: d.Get("vlanid").(int),
+	vlan := network.Vlan{}
+
+	if raw := d.GetRawConfig().GetAttr("vlanid"); !raw.IsNull() {
+		vlan.Id = intPtr(d.Get("vlanid").(int))
 	}
 	hasChange := false
 	if d.HasChange("aliasname") {
@@ -128,7 +135,7 @@ func updateVlanFunc(ctx context.Context, d *schema.ResourceData, meta interface{
 	}
 	if d.HasChange("mtu") {
 		log.Printf("[DEBUG]  citrixadc-provider: Mtu has changed for vlan %d, starting update", vlanId)
-		vlan.Mtu = d.Get("mtu").(int)
+		vlan.Mtu = intPtr(d.Get("mtu").(int))
 		hasChange = true
 	}
 	if d.HasChange("sharing") {

@@ -45,7 +45,10 @@ func createClusternodegroup_clusternode_bindingFunc(ctx context.Context, d *sche
 	bindingId := fmt.Sprintf("%s,%s", name, node)
 	clusternodegroup_clusternode_binding := cluster.Clusternodegroupclusternodebinding{
 		Name: d.Get("name").(string),
-		Node: d.Get("node").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("node"); !raw.IsNull() {
+		clusternodegroup_clusternode_binding.Node = intPtr(d.Get("node").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Clusternodegroup_clusternode_binding.Type(), &clusternodegroup_clusternode_binding)

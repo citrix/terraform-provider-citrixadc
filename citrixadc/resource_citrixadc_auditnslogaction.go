@@ -140,20 +140,25 @@ func createAuditnslogactionFunc(ctx context.Context, d *schema.ResourceData, met
 		Contentinspectionlog: d.Get("contentinspectionlog").(string),
 		Dateformat:           d.Get("dateformat").(string),
 		Domainresolvenow:     d.Get("domainresolvenow").(bool),
-		Domainresolveretry:   d.Get("domainresolveretry").(int),
 		Logfacility:          d.Get("logfacility").(string),
 		Loglevel:             toStringList(d.Get("loglevel").([]interface{})),
 		Lsn:                  d.Get("lsn").(string),
 		Name:                 d.Get("name").(string),
 		Serverdomainname:     d.Get("serverdomainname").(string),
 		Serverip:             d.Get("serverip").(string),
-		Serverport:           d.Get("serverport").(int),
 		Sslinterception:      d.Get("sslinterception").(string),
 		Subscriberlog:        d.Get("subscriberlog").(string),
 		Tcp:                  d.Get("tcp").(string),
 		Timezone:             d.Get("timezone").(string),
 		Urlfiltering:         d.Get("urlfiltering").(string),
 		Userdefinedauditlog:  d.Get("userdefinedauditlog").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("domainresolveretry"); !raw.IsNull() {
+		auditnslogaction.Domainresolveretry = intPtr(d.Get("domainresolveretry").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("serverport"); !raw.IsNull() {
+		auditnslogaction.Serverport = intPtr(d.Get("serverport").(int))
 	}
 
 	_, err := client.AddResource(service.Auditnslogaction.Type(), auditnslogactionName, &auditnslogaction)
@@ -243,7 +248,7 @@ func updateAuditnslogactionFunc(ctx context.Context, d *schema.ResourceData, met
 	}
 	if d.HasChange("domainresolveretry") {
 		log.Printf("[DEBUG]  citrixadc-provider: Domainresolveretry has changed for auditnslogaction %s, starting update", auditnslogactionName)
-		auditnslogaction.Domainresolveretry = d.Get("domainresolveretry").(int)
+		auditnslogaction.Domainresolveretry = intPtr(d.Get("domainresolveretry").(int))
 		hasChange = true
 	}
 	if d.HasChange("logfacility") {
@@ -273,7 +278,7 @@ func updateAuditnslogactionFunc(ctx context.Context, d *schema.ResourceData, met
 	}
 	if d.HasChange("serverport") {
 		log.Printf("[DEBUG]  citrixadc-provider: Serverport has changed for auditnslogaction %s, starting update", auditnslogactionName)
-		auditnslogaction.Serverport = d.Get("serverport").(int)
+		auditnslogaction.Serverport = intPtr(d.Get("serverport").(int))
 		hasChange = true
 	}
 	if d.HasChange("sslinterception") {

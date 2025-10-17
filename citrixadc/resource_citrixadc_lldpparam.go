@@ -45,9 +45,14 @@ func createLldpparamFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	lldpparamName := resource.PrefixedUniqueId("tf-lldpparam-")
 
 	lldpparam := lldp.Lldpparam{
-		Holdtimetxmult: d.Get("holdtimetxmult").(int),
-		Mode:           d.Get("mode").(string),
-		Timer:          d.Get("timer").(int),
+		Mode: d.Get("mode").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("holdtimetxmult"); !raw.IsNull() {
+		lldpparam.Holdtimetxmult = intPtr(d.Get("holdtimetxmult").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("timer"); !raw.IsNull() {
+		lldpparam.Timer = intPtr(d.Get("timer").(int))
 	}
 
 	err := client.UpdateUnnamedResource("lldpparam", &lldpparam)
@@ -86,7 +91,7 @@ func updateLldpparamFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	hasChange := false
 	if d.HasChange("holdtimetxmult") {
 		log.Printf("[DEBUG]  citrixadc-provider: Holdtimetxmult has changed for lldpparam, starting update")
-		lldpparam.Holdtimetxmult = d.Get("holdtimetxmult").(int)
+		lldpparam.Holdtimetxmult = intPtr(d.Get("holdtimetxmult").(int))
 		hasChange = true
 	}
 	if d.HasChange("mode") {
@@ -96,7 +101,7 @@ func updateLldpparamFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("timer") {
 		log.Printf("[DEBUG]  citrixadc-provider: Timer has changed for lldpparam, starting update")
-		lldpparam.Timer = d.Get("timer").(int)
+		lldpparam.Timer = intPtr(d.Get("timer").(int))
 		hasChange = true
 	}
 

@@ -327,7 +327,6 @@ func createAuthenticationldapactionFunc(ctx context.Context, d *schema.ResourceD
 		Attribute9:                 d.Get("attribute9").(string),
 		Attributes:                 d.Get("attributes").(string),
 		Authentication:             d.Get("authentication").(string),
-		Authtimeout:                d.Get("authtimeout").(int),
 		Cloudattributes:            d.Get("cloudattributes").(string),
 		Defaultauthenticationgroup: d.Get("defaultauthenticationgroup").(string),
 		Email:                      d.Get("email").(string),
@@ -343,8 +342,6 @@ func createAuthenticationldapactionFunc(ctx context.Context, d *schema.ResourceD
 		Ldapbinddnpassword:         d.Get("ldapbinddnpassword").(string),
 		Ldaphostname:               d.Get("ldaphostname").(string),
 		Ldaploginname:              d.Get("ldaploginname").(string),
-		Maxldapreferrals:           d.Get("maxldapreferrals").(int),
-		Maxnestinglevel:            d.Get("maxnestinglevel").(int),
 		Mssrvrecordlocation:        d.Get("mssrvrecordlocation").(string),
 		Name:                       d.Get("name").(string),
 		Nestedgroupextraction:      d.Get("nestedgroupextraction").(string),
@@ -357,12 +354,24 @@ func createAuthenticationldapactionFunc(ctx context.Context, d *schema.ResourceD
 		Sectype:                    d.Get("sectype").(string),
 		Serverip:                   d.Get("serverip").(string),
 		Servername:                 d.Get("servername").(string),
-		Serverport:                 d.Get("serverport").(int),
 		Sshpublickey:               d.Get("sshpublickey").(string),
 		Ssonameattribute:           d.Get("ssonameattribute").(string),
 		Subattributename:           d.Get("subattributename").(string),
 		Svrtype:                    d.Get("svrtype").(string),
 		Validateservercert:         d.Get("validateservercert").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("authtimeout"); !raw.IsNull() {
+		authenticationldapaction.Authtimeout = intPtr(d.Get("authtimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxldapreferrals"); !raw.IsNull() {
+		authenticationldapaction.Maxldapreferrals = intPtr(d.Get("maxldapreferrals").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxnestinglevel"); !raw.IsNull() {
+		authenticationldapaction.Maxnestinglevel = intPtr(d.Get("maxnestinglevel").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("serverport"); !raw.IsNull() {
+		authenticationldapaction.Serverport = intPtr(d.Get("serverport").(int))
 	}
 
 	_, err := client.AddResource(service.Authenticationldapaction.Type(), authenticationldapactionName, &authenticationldapaction)
@@ -553,7 +562,7 @@ func updateAuthenticationldapactionFunc(ctx context.Context, d *schema.ResourceD
 	}
 	if d.HasChange("authtimeout") {
 		log.Printf("[DEBUG]  citrixadc-provider: Authtimeout has changed for authenticationldapaction %s, starting update", authenticationldapactionName)
-		authenticationldapaction.Authtimeout = d.Get("authtimeout").(int)
+		authenticationldapaction.Authtimeout = intPtr(d.Get("authtimeout").(int))
 		hasChange = true
 	}
 	if d.HasChange("cloudattributes") {
@@ -633,12 +642,12 @@ func updateAuthenticationldapactionFunc(ctx context.Context, d *schema.ResourceD
 	}
 	if d.HasChange("maxldapreferrals") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxldapreferrals has changed for authenticationldapaction %s, starting update", authenticationldapactionName)
-		authenticationldapaction.Maxldapreferrals = d.Get("maxldapreferrals").(int)
+		authenticationldapaction.Maxldapreferrals = intPtr(d.Get("maxldapreferrals").(int))
 		hasChange = true
 	}
 	if d.HasChange("maxnestinglevel") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxnestinglevel has changed for authenticationldapaction %s, starting update", authenticationldapactionName)
-		authenticationldapaction.Maxnestinglevel = d.Get("maxnestinglevel").(int)
+		authenticationldapaction.Maxnestinglevel = intPtr(d.Get("maxnestinglevel").(int))
 		hasChange = true
 	}
 	if d.HasChange("mssrvrecordlocation") {
@@ -698,7 +707,7 @@ func updateAuthenticationldapactionFunc(ctx context.Context, d *schema.ResourceD
 	}
 	if d.HasChange("serverport") {
 		log.Printf("[DEBUG]  citrixadc-provider: Serverport has changed for authenticationldapaction %s, starting update", authenticationldapactionName)
-		authenticationldapaction.Serverport = d.Get("serverport").(int)
+		authenticationldapaction.Serverport = intPtr(d.Get("serverport").(int))
 		hasChange = true
 	}
 	if d.HasChange("sshpublickey") {

@@ -61,8 +61,11 @@ func createAppflowcollectorFunc(ctx context.Context, d *schema.ResourceData, met
 		Ipaddress:  d.Get("ipaddress").(string),
 		Name:       d.Get("name").(string),
 		Netprofile: d.Get("netprofile").(string),
-		Port:       d.Get("port").(int),
 		Transport:  d.Get("transport").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("port"); !raw.IsNull() {
+		appflowcollector.Port = intPtr(d.Get("port").(int))
 	}
 
 	_, err := client.AddResource(service.Appflowcollector.Type(), appflowcollectorName, &appflowcollector)
@@ -117,7 +120,7 @@ func updateAppflowcollectorFunc(ctx context.Context, d *schema.ResourceData, met
 	}
 	if d.HasChange("port") {
 		log.Printf("[DEBUG]  citrixadc-provider: Port has changed for appflowcollector %s, starting update", appflowcollectorName)
-		appflowcollector.Port = d.Get("port").(int)
+		appflowcollector.Port = intPtr(d.Get("port").(int))
 		hasChange = true
 	}
 

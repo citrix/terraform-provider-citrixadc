@@ -35,7 +35,7 @@ type Vpnpcoipprofile struct {
 	/**
 	* PCOIP Idle Session timeout
 	*/
-	Sessionidletimeout int `json:"sessionidletimeout,omitempty"`
+	Sessionidletimeout *int `json:"sessionidletimeout,omitempty"`
 
 	//------- Read only Parameter ---------;
 

@@ -2,14 +2,16 @@ package citrixadc
 
 import (
 	"context"
+	"fmt"
+	"log"
+	"net/url"
+
 	"github.com/citrix/adc-nitro-go/resource/config/appfw"
 
 	"github.com/citrix/adc-nitro-go/service"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"log"
-	"net/url"
 )
 
 func resourceCitrixAdcAppfwconfidfield() *schema.Resource {
@@ -57,7 +59,9 @@ func resourceCitrixAdcAppfwconfidfield() *schema.Resource {
 func createAppfwconfidfieldFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createAppfwconfidfieldFunc")
 	client := meta.(*NetScalerNitroClient).client
-	appfwconfidfieldName := d.Get("fieldname").(string) + "," + d.Get("url").(string)
+	appfwconfidfieldName := d.Get("fieldname").(string)
+	appfwconfidfieldUrl := d.Get("url").(string)
+	resourceId := fmt.Sprintf("%s,%s", appfwconfidfieldName, appfwconfidfieldUrl)
 	appfwconfidfield := appfw.Appfwconfidfield{
 		Comment:   d.Get("comment").(string),
 		Fieldname: d.Get("fieldname").(string),
@@ -71,7 +75,7 @@ func createAppfwconfidfieldFunc(ctx context.Context, d *schema.ResourceData, met
 		return diag.FromErr(err)
 	}
 
-	d.SetId(appfwconfidfieldName)
+	d.SetId(resourceId)
 
 	return readAppfwconfidfieldFunc(ctx, d, meta)
 }

@@ -73,14 +73,17 @@ func createIptunnelparamFunc(ctx context.Context, d *schema.ResourceData, meta i
 	// there is no primary key in iptunnelparam resource. Hence generate one for terraform state maintenance
 	iptunnelparamName = resource.PrefixedUniqueId("tf-iptunnelparam-")
 	iptunnelparam := network.Iptunnelparam{
-		Dropfrag:             d.Get("dropfrag").(string),
-		Dropfragcputhreshold: d.Get("dropfragcputhreshold").(int),
-		Enablestrictrx:       d.Get("enablestrictrx").(string),
-		Enablestricttx:       d.Get("enablestricttx").(string),
-		Mac:                  d.Get("mac").(string),
-		Srcip:                d.Get("srcip").(string),
-		Srciproundrobin:      d.Get("srciproundrobin").(string),
-		Useclientsourceip:    d.Get("useclientsourceip").(string),
+		Dropfrag:          d.Get("dropfrag").(string),
+		Enablestrictrx:    d.Get("enablestrictrx").(string),
+		Enablestricttx:    d.Get("enablestricttx").(string),
+		Mac:               d.Get("mac").(string),
+		Srcip:             d.Get("srcip").(string),
+		Srciproundrobin:   d.Get("srciproundrobin").(string),
+		Useclientsourceip: d.Get("useclientsourceip").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("dropfragcputhreshold"); !raw.IsNull() {
+		iptunnelparam.Dropfragcputhreshold = intPtr(d.Get("dropfragcputhreshold").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Iptunnelparam.Type(), &iptunnelparam)
@@ -129,7 +132,7 @@ func updateIptunnelparamFunc(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	if d.HasChange("dropfragcputhreshold") {
 		log.Printf("[DEBUG]  citrixadc-provider: Dropfragcputhreshold has changed for iptunnelparam, starting update")
-		iptunnelparam.Dropfragcputhreshold = d.Get("dropfragcputhreshold").(int)
+		iptunnelparam.Dropfragcputhreshold = intPtr(d.Get("dropfragcputhreshold").(int))
 		hasChange = true
 	}
 	if d.HasChange("enablestrictrx") {

@@ -88,8 +88,11 @@ func createAuthenticationvserver_authenticationloginschemapolicy_bindingFunc(ctx
 		Name:                   d.Get("name").(string),
 		Nextfactor:             d.Get("nextfactor").(string),
 		Policy:                 d.Get("policy").(string),
-		Priority:               d.Get("priority").(int),
 		Secondary:              d.Get("secondary").(bool),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		authenticationvserver_authenticationloginschemapolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Authenticationvserver_authenticationloginschemapolicy_binding.Type(), &authenticationvserver_authenticationloginschemapolicy_binding)

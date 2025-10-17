@@ -65,11 +65,16 @@ func createVlan_nsip6_bindingFunc(ctx context.Context, d *schema.ResourceData, m
 	ipaddress := d.Get("ipaddress").(string)
 	bindingId := fmt.Sprintf("%s,%s", vlanid, ipaddress)
 	vlan_nsip6_binding := network.Vlannsip6binding{
-		Id:         d.Get("vlanid").(int),
 		Ipaddress:  d.Get("ipaddress").(string),
 		Netmask:    d.Get("netmask").(string),
 		Ownergroup: d.Get("ownergroup").(string),
-		Td:         d.Get("td").(int),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("vlanid"); !raw.IsNull() {
+		vlan_nsip6_binding.Id = intPtr(d.Get("vlanid").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("td"); !raw.IsNull() {
+		vlan_nsip6_binding.Td = intPtr(d.Get("td").(int))
 	}
 
 	err := client.UpdateUnnamedResource(service.Vlan_nsip6_binding.Type(), &vlan_nsip6_binding)

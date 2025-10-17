@@ -31,11 +31,11 @@ type Dnszonednskeybinding struct {
 	/**
 	* Integer which denote status of keys.
 	*/
-	Signed int `json:"signed,omitempty"`
+	Signed *int `json:"signed,omitempty"`
 	/**
 	* Time period for which to consider the key valid, after the key is used to sign a zone.
 	*/
-	Expires int `json:"expires,omitempty"`
+	Expires *int `json:"expires,omitempty"`
 	/**
 	* Name of the zone. Mutually exclusive with the type parameter.
 	*/

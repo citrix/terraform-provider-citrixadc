@@ -2,13 +2,15 @@ package citrixadc
 
 import (
 	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/feo"
 	"github.com/citrix/adc-nitro-go/service"
 
 	"fmt"
+	"log"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"log"
 )
 
 func resourceCitrixAdcFeoglobal_feopolicy_binding() *schema.Resource {
@@ -60,8 +62,11 @@ func createFeoglobal_feopolicy_bindingFunc(ctx context.Context, d *schema.Resour
 	feoglobal_feopolicy_binding := feo.Feoglobalfeopolicybinding{
 		Gotopriorityexpression: d.Get("gotopriorityexpression").(string),
 		Policyname:             d.Get("policyname").(string),
-		Priority:               d.Get("priority").(int),
 		Type:                   d.Get("type").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
+		feoglobal_feopolicy_binding.Priority = intPtr(d.Get("priority").(int))
 	}
 
 	err := client.UpdateUnnamedResource("feoglobal_feopolicy_binding", &feoglobal_feopolicy_binding)

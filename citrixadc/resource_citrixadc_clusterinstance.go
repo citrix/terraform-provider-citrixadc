@@ -90,9 +90,6 @@ func createClusterinstanceFunc(ctx context.Context, d *schema.ResourceData, meta
 
 	clusterinstance := cluster.Clusterinstance{
 		Backplanebasedview:         d.Get("backplanebasedview").(string),
-		Clid:                       d.Get("clid").(int),
-		Deadinterval:               d.Get("deadinterval").(int),
-		Hellointerval:              d.Get("hellointerval").(int),
 		Inc:                        d.Get("inc").(string),
 		Nodegroup:                  d.Get("nodegroup").(string),
 		Preemption:                 d.Get("preemption").(string),
@@ -100,6 +97,16 @@ func createClusterinstanceFunc(ctx context.Context, d *schema.ResourceData, meta
 		Quorumtype:                 d.Get("quorumtype").(string),
 		Retainconnectionsoncluster: d.Get("retainconnectionsoncluster").(string),
 		Syncstatusstrictmode:       d.Get("syncstatusstrictmode").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("clid"); !raw.IsNull() {
+		clusterinstance.Clid = intPtr(d.Get("clid").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("deadinterval"); !raw.IsNull() {
+		clusterinstance.Deadinterval = intPtr(d.Get("deadinterval").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("hellointerval"); !raw.IsNull() {
+		clusterinstance.Hellointerval = intPtr(d.Get("hellointerval").(int))
 	}
 
 	_, err := client.AddResource(service.Clusterinstance.Type(), strconv.Itoa(clusterinstanceName), &clusterinstance)
@@ -144,8 +151,10 @@ func updateClusterinstanceFunc(ctx context.Context, d *schema.ResourceData, meta
 	client := meta.(*NetScalerNitroClient).client
 	clusterinstanceName := d.Get("clid").(int)
 
-	clusterinstance := cluster.Clusterinstance{
-		Clid: d.Get("clid").(int),
+	clusterinstance := cluster.Clusterinstance{}
+
+	if raw := d.GetRawConfig().GetAttr("clid"); !raw.IsNull() {
+		clusterinstance.Clid = intPtr(d.Get("clid").(int))
 	}
 	hasChange := false
 	if d.HasChange("backplanebasedview") {
@@ -155,12 +164,12 @@ func updateClusterinstanceFunc(ctx context.Context, d *schema.ResourceData, meta
 	}
 	if d.HasChange("deadinterval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Deadinterval has changed for clusterinstance %s, starting update", strconv.Itoa(clusterinstanceName))
-		clusterinstance.Deadinterval = d.Get("deadinterval").(int)
+		clusterinstance.Deadinterval = intPtr(d.Get("deadinterval").(int))
 		hasChange = true
 	}
 	if d.HasChange("hellointerval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Hellointerval has changed for clusterinstance %s, starting update", strconv.Itoa(clusterinstanceName))
-		clusterinstance.Hellointerval = d.Get("hellointerval").(int)
+		clusterinstance.Hellointerval = intPtr(d.Get("hellointerval").(int))
 		hasChange = true
 	}
 	if d.HasChange("inc") {

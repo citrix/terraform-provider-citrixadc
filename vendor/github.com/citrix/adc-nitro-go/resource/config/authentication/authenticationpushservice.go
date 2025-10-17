@@ -40,7 +40,7 @@ type Authenticationpushservice struct {
 	/**
 	* Interval at which certificates or idtoken is refreshed.
 	*/
-	Refreshinterval int `json:"refreshinterval,omitempty"`
+	Refreshinterval *int `json:"refreshinterval,omitempty"`
 
 	//------- Read only Parameter ---------;
 

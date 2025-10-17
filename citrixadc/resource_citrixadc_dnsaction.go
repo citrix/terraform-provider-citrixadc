@@ -75,8 +75,11 @@ func createDnsactionFunc(ctx context.Context, d *schema.ResourceData, meta inter
 		Dnsprofilename:   d.Get("dnsprofilename").(string),
 		Ipaddress:        toStringList(d.Get("ipaddress").([]interface{})),
 		Preferredloclist: toStringList(d.Get("preferredloclist").([]interface{})),
-		Ttl:              d.Get("ttl").(int),
 		Viewname:         d.Get("viewname").(string),
+	}
+
+	if raw := d.GetRawConfig().GetAttr("ttl"); !raw.IsNull() {
+		dnsaction.Ttl = intPtr(d.Get("ttl").(int))
 	}
 
 	_, err := client.AddResource(service.Dnsaction.Type(), dnsactionName, &dnsaction)
@@ -144,7 +147,7 @@ func updateDnsactionFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("ttl") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ttl has changed for dnsaction %s, starting update", dnsactionName)
-		dnsaction.Ttl = d.Get("ttl").(int)
+		dnsaction.Ttl = intPtr(d.Get("ttl").(int))
 		hasChange = true
 	}
 	if d.HasChange("viewname") {

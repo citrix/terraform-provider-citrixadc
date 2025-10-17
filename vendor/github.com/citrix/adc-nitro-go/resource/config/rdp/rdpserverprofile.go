@@ -31,7 +31,7 @@ type Rdpserverprofile struct {
 	/**
 	* TCP port on which the RDP connection is established.
 	*/
-	Rdpport int `json:"rdpport,omitempty"`
+	Rdpport *int `json:"rdpport,omitempty"`
 	/**
 	* Pre shared key value
 	*/
