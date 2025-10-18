@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccGslbvserver_domain_binding_basic = `
@@ -35,14 +36,6 @@ resource "citrixadc_gslbvserver_domain_binding" "tf_gslbvserver_domain_binding"{
 	dnsrecordtype = "A"
 	name          = "GSLB-East-Coast-Vserver"
 	servicetype   = "HTTP"
-	domain {
-	  domainname = "www.fooco.co"
-	  ttl        = "60"
-	}
-	domain {
-	  domainname = "www.barco.com"
-	  ttl        = "65"
-	}
 	}
 `
 
@@ -51,14 +44,6 @@ const testAccGslbvserver_domain_binding_basic_step2 = `
 	dnsrecordtype = "A"
 	name          = "GSLB-East-Coast-Vserver"
 	servicetype   = "HTTP"
-	domain {
-	  domainname = "www.fooco.co"
-	  ttl        = "60"
-	}
-	domain {
-	  domainname = "www.barco.com"
-	  ttl        = "65"
-	}
 	}
 `
 

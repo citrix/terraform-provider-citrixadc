@@ -2,13 +2,15 @@ package citrixadc
 
 import (
 	"context"
+
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 
 	"github.com/citrix/adc-nitro-go/service"
 
+	"log"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"log"
 )
 
 func resourceCitrixAdcNssimpleacl() *schema.Resource {
@@ -124,7 +126,10 @@ func readNssimpleaclFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("protocol", data["protocol"])
 	d.Set("srcip", data["srcip"])
 	setToInt("td", d, data["td"])
-	setToInt("ttl", d, data["ttl"])
+	// setToInt("ttl", d, data["ttl"])
+	// Setting ttl value from user configuration as API returns time to live value which keeps changing.
+	// Say if ttl is set to 600, API may return 599 in next read call.
+	setToInt("ttl", d, d.Get("ttl").(int))
 
 	return nil
 

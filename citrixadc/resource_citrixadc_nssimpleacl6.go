@@ -124,7 +124,10 @@ func readNssimpleacl6Func(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("protocol", data["protocol"])
 	d.Set("srcipv6", data["srcipv6"])
 	setToInt("td", d, data["td"])
-	setToInt("ttl", d, data["ttl"])
+	// setToInt("ttl", d, data["ttl"])
+	// Setting ttl value from user configuration as API returns time to live value which keeps changing.
+	// Say if ttl is set to 600, API may return 599 in next read call.
+	setToInt("ttl", d, d.Get("ttl").(int))
 
 	return nil
 
