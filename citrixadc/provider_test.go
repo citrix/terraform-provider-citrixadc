@@ -11,6 +11,7 @@ import (
 )
 
 var testAccProviderFactories map[string]func() (*schema.Provider, error)
+var testAccProvider *schema.Provider
 
 var isCpxRun bool
 
@@ -18,9 +19,10 @@ var adcTestbed string
 
 func init() {
 	log.Printf("[DEBUG]  citrixadc-provider-test: In init")
+	testAccProvider = Provider()
 	testAccProviderFactories = map[string]func() (*schema.Provider, error){
 		"citrixadc": func() (*schema.Provider, error) {
-			return Provider(), nil
+			return testAccProvider, nil
 		},
 	}
 
@@ -50,29 +52,8 @@ func testAccPreCheck(t *testing.T) {
 	}
 }
 
-// testAccGetClient creates and returns a configured NITRO client using environment variables
+// testAccGetClient returns a configured NITRO client using environment variables
 // This utility function can be reused across all test cases to avoid duplicating client creation logic
 func testAccGetClient() (*service.NitroClient, error) {
-	userHeaders := map[string]string{
-		"User-Agent": "terraform-ctxadc",
-	}
-	params := service.NitroParams{
-		Url:       os.Getenv("NS_URL"),
-		Username:  os.Getenv("NS_LOGIN"),
-		Password:  os.Getenv("NS_PASSWORD"),
-		SslVerify: false,
-		Headers:   userHeaders,
-	}
-
-	client, err := service.NewNitroClientFromParams(params)
-	if err != nil {
-		return nil, err
-	}
-
-	err = client.Login()
-	if err != nil {
-		return nil, err
-	}
-
-	return client, nil
+	return testAccProvider.Meta().(*NetScalerNitroClient).client, nil
 }
