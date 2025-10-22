@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/citrix/adc-nitro-go/resource/config/lb"
 	"github.com/citrix/adc-nitro-go/resource/config/ssl"
 	"github.com/citrix/adc-nitro-go/service"
 
@@ -13,115 +14,115 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-type Lbvserver struct {
-	Adfsproxyprofile                   string `json:"adfsproxyprofile,omitempty"`
-	Apiprofile                         string `json:"apiprofile,omitempty"`
-	Appflowlog                         string `json:"appflowlog,omitempty"`
-	Authentication                     string `json:"authentication,omitempty"`
-	Authenticationhost                 string `json:"authenticationhost,omitempty"`
-	Authn401                           string `json:"authn401,omitempty"`
-	Authnprofile                       string `json:"authnprofile,omitempty"`
-	Authnvsname                        string `json:"authnvsname,omitempty"`
-	Backuplbmethod                     string `json:"backuplbmethod,omitempty"`
-	Backuppersistencetimeout           *int   `json:"backuppersistencetimeout,omitempty"`
-	Backupvserver                      string `json:"backupvserver,omitempty"`
-	Bypassaaaa                         string `json:"bypassaaaa,omitempty"`
-	Cacheable                          string `json:"cacheable,omitempty"`
-	Clttimeout                         *int   `json:"clttimeout,omitempty"`
-	Comment                            string `json:"comment,omitempty"`
-	Connfailover                       string `json:"connfailover,omitempty"`
-	Cookiename                         string `json:"cookiename,omitempty"`
-	Datalength                         *int   `json:"datalength,omitempty"`
-	Dataoffset                         *int   `json:"dataoffset,omitempty"`
-	Dbprofilename                      string `json:"dbprofilename,omitempty"`
-	Dbslb                              string `json:"dbslb,omitempty"`
-	Disableprimaryondown               string `json:"disableprimaryondown,omitempty"`
-	Dns64                              string `json:"dns64,omitempty"`
-	Dnsoverhttps                       string `json:"dnsoverhttps,omitempty"`
-	Dnsprofilename                     string `json:"dnsprofilename,omitempty"`
-	Downstateflush                     string `json:"downstateflush,omitempty"`
-	Hashlength                         *int   `json:"hashlength,omitempty"`
-	Healththreshold                    *int   `json:"healththreshold,omitempty"`
-	Httpprofilename                    string `json:"httpprofilename,omitempty"`
-	Httpsredirecturl                   string `json:"httpsredirecturl,omitempty"`
-	Icmpvsrresponse                    string `json:"icmpvsrresponse,omitempty"`
-	Insertvserveripport                string `json:"insertvserveripport,omitempty"`
-	Ipmask                             string `json:"ipmask,omitempty"`
-	Ippattern                          string `json:"ippattern,omitempty"`
-	Ipset                              string `json:"ipset,omitempty"`
-	Ipv46                              string `json:"ipv46,omitempty"`
-	L2conn                             string `json:"l2conn,omitempty"`
-	Lbmethod                           string `json:"lbmethod,omitempty"`
-	Lbprofilename                      string `json:"lbprofilename,omitempty"`
-	Listenpolicy                       string `json:"listenpolicy,omitempty"`
-	Listenpriority                     *int   `json:"listenpriority,omitempty"`
-	M                                  string `json:"m,omitempty"`
-	Macmoderetainvlan                  string `json:"macmoderetainvlan,omitempty"`
-	Maxautoscalemembers                *int   `json:"maxautoscalemembers,omitempty"`
-	Minautoscalemembers                *int   `json:"minautoscalemembers,omitempty"`
-	Mssqlserverversion                 string `json:"mssqlserverversion,omitempty"`
-	Mysqlcharacterset                  *int   `json:"mysqlcharacterset,omitempty"`
-	Mysqlprotocolversion               *int   `json:"mysqlprotocolversion,omitempty"`
-	Mysqlservercapabilities            *int   `json:"mysqlservercapabilities,omitempty"`
-	Mysqlserverversion                 string `json:"mysqlserverversion,omitempty"`
-	Name                               string `json:"name,omitempty"`
-	Netmask                            string `json:"netmask,omitempty"`
-	Netprofile                         string `json:"netprofile,omitempty"`
-	Newname                            string `json:"newname,omitempty"`
-	Newservicerequest                  *int   `json:"newservicerequest,omitempty"`
-	Newservicerequestincrementinterval *int   `json:"newservicerequestincrementinterval,omitempty"`
-	Newservicerequestunit              string `json:"newservicerequestunit,omitempty"`
-	Oracleserverversion                string `json:"oracleserverversion,omitempty"`
-	Order                              *int   `json:"order,omitempty"`
-	Orderthreshold                     *int   `json:"orderthreshold,omitempty"`
-	Persistavpno                       []int  `json:"persistavpno,omitempty"`
-	Persistencebackup                  string `json:"persistencebackup,omitempty"`
-	Persistencetype                    string `json:"persistencetype,omitempty"`
-	Persistmask                        string `json:"persistmask,omitempty"`
-	Port                               *int   `json:"port,omitempty"`
-	Probeport                          *int   `json:"probeport,omitempty"`
-	Probeprotocol                      string `json:"probeprotocol,omitempty"`
-	Probesuccessresponsecode           string `json:"probesuccessresponsecode,omitempty"`
-	Processlocal                       string `json:"processlocal,omitempty"`
-	Push                               string `json:"push,omitempty"`
-	Pushlabel                          string `json:"pushlabel,omitempty"`
-	Pushmulticlients                   string `json:"pushmulticlients,omitempty"`
-	Pushvserver                        string `json:"pushvserver,omitempty"`
-	Quicbridgeprofilename              string `json:"quicbridgeprofilename,omitempty"`
-	Quicprofilename                    string `json:"quicprofilename,omitempty"`
-	Range                              *int   `json:"range,omitempty"`
-	Recursionavailable                 string `json:"recursionavailable,omitempty"`
-	Redirectfromport                   *int   `json:"redirectfromport,omitempty"`
-	Redirectportrewrite                string `json:"redirectportrewrite,omitempty"`
-	Redirurl                           string `json:"redirurl,omitempty"`
-	Redirurlflags                      bool   `json:"redirurlflags,omitempty"`
-	Resrule                            string `json:"resrule,omitempty"`
-	Retainconnectionsoncluster         string `json:"retainconnectionsoncluster,omitempty"`
-	Rhistate                           string `json:"rhistate,omitempty"`
-	Rtspnat                            string `json:"rtspnat,omitempty"`
-	Rule                               string `json:"rule,omitempty"`
-	Servicename                        string `json:"servicename,omitempty"`
-	Servicetype                        string `json:"servicetype,omitempty"`
-	Sessionless                        string `json:"sessionless,omitempty"`
-	Skippersistency                    string `json:"skippersistency,omitempty"`
-	Sobackupaction                     string `json:"sobackupaction,omitempty"`
-	Somethod                           string `json:"somethod,omitempty"`
-	Sopersistence                      string `json:"sopersistence,omitempty"`
-	Sopersistencetimeout               *int   `json:"sopersistencetimeout,omitempty"`
-	Sothreshold                        *int   `json:"sothreshold,omitempty"`
-	State                              string `json:"state,omitempty"`
-	Tcpprobeport                       *int   `json:"tcpprobeport,omitempty"`
-	Tcpprofilename                     string `json:"tcpprofilename,omitempty"`
-	Td                                 *int   `json:"td,omitempty"`
-	Timeout                            *int   `json:"timeout"` // 0 is a valid value for timeout, hence removing omitempty
-	Toggleorder                        string `json:"toggleorder,omitempty"`
-	Tosid                              *int   `json:"tosid,omitempty"`
-	Trofspersistence                   string `json:"trofspersistence,omitempty"`
-	V6netmasklen                       *int   `json:"v6netmasklen,omitempty"`
-	V6persistmasklen                   *int   `json:"v6persistmasklen,omitempty"`
-	Vipheader                          string `json:"vipheader,omitempty"`
-	Weight                             *int   `json:"weight,omitempty"`
-}
+// type Lbvserver struct {
+// 	Adfsproxyprofile                   string `json:"adfsproxyprofile,omitempty"`
+// 	Apiprofile                         string `json:"apiprofile,omitempty"`
+// 	Appflowlog                         string `json:"appflowlog,omitempty"`
+// 	Authentication                     string `json:"authentication,omitempty"`
+// 	Authenticationhost                 string `json:"authenticationhost,omitempty"`
+// 	Authn401                           string `json:"authn401,omitempty"`
+// 	Authnprofile                       string `json:"authnprofile,omitempty"`
+// 	Authnvsname                        string `json:"authnvsname,omitempty"`
+// 	Backuplbmethod                     string `json:"backuplbmethod,omitempty"`
+// 	Backuppersistencetimeout           *int   `json:"backuppersistencetimeout,omitempty"`
+// 	Backupvserver                      string `json:"backupvserver,omitempty"`
+// 	Bypassaaaa                         string `json:"bypassaaaa,omitempty"`
+// 	Cacheable                          string `json:"cacheable,omitempty"`
+// 	Clttimeout                         *int   `json:"clttimeout,omitempty"`
+// 	Comment                            string `json:"comment,omitempty"`
+// 	Connfailover                       string `json:"connfailover,omitempty"`
+// 	Cookiename                         string `json:"cookiename,omitempty"`
+// 	Datalength                         *int   `json:"datalength,omitempty"`
+// 	Dataoffset                         *int   `json:"dataoffset,omitempty"`
+// 	Dbprofilename                      string `json:"dbprofilename,omitempty"`
+// 	Dbslb                              string `json:"dbslb,omitempty"`
+// 	Disableprimaryondown               string `json:"disableprimaryondown,omitempty"`
+// 	Dns64                              string `json:"dns64,omitempty"`
+// 	Dnsoverhttps                       string `json:"dnsoverhttps,omitempty"`
+// 	Dnsprofilename                     string `json:"dnsprofilename,omitempty"`
+// 	Downstateflush                     string `json:"downstateflush,omitempty"`
+// 	Hashlength                         *int   `json:"hashlength,omitempty"`
+// 	Healththreshold                    *int   `json:"healththreshold,omitempty"`
+// 	Httpprofilename                    string `json:"httpprofilename,omitempty"`
+// 	Httpsredirecturl                   string `json:"httpsredirecturl,omitempty"`
+// 	Icmpvsrresponse                    string `json:"icmpvsrresponse,omitempty"`
+// 	Insertvserveripport                string `json:"insertvserveripport,omitempty"`
+// 	Ipmask                             string `json:"ipmask,omitempty"`
+// 	Ippattern                          string `json:"ippattern,omitempty"`
+// 	Ipset                              string `json:"ipset,omitempty"`
+// 	Ipv46                              string `json:"ipv46,omitempty"`
+// 	L2conn                             string `json:"l2conn,omitempty"`
+// 	Lbmethod                           string `json:"lbmethod,omitempty"`
+// 	Lbprofilename                      string `json:"lbprofilename,omitempty"`
+// 	Listenpolicy                       string `json:"listenpolicy,omitempty"`
+// 	Listenpriority                     *int   `json:"listenpriority,omitempty"`
+// 	M                                  string `json:"m,omitempty"`
+// 	Macmoderetainvlan                  string `json:"macmoderetainvlan,omitempty"`
+// 	Maxautoscalemembers                *int   `json:"maxautoscalemembers,omitempty"`
+// 	Minautoscalemembers                *int   `json:"minautoscalemembers,omitempty"`
+// 	Mssqlserverversion                 string `json:"mssqlserverversion,omitempty"`
+// 	Mysqlcharacterset                  *int   `json:"mysqlcharacterset,omitempty"`
+// 	Mysqlprotocolversion               *int   `json:"mysqlprotocolversion,omitempty"`
+// 	Mysqlservercapabilities            *int   `json:"mysqlservercapabilities,omitempty"`
+// 	Mysqlserverversion                 string `json:"mysqlserverversion,omitempty"`
+// 	Name                               string `json:"name,omitempty"`
+// 	Netmask                            string `json:"netmask,omitempty"`
+// 	Netprofile                         string `json:"netprofile,omitempty"`
+// 	Newname                            string `json:"newname,omitempty"`
+// 	Newservicerequest                  *int   `json:"newservicerequest,omitempty"`
+// 	Newservicerequestincrementinterval *int   `json:"newservicerequestincrementinterval,omitempty"`
+// 	Newservicerequestunit              string `json:"newservicerequestunit,omitempty"`
+// 	Oracleserverversion                string `json:"oracleserverversion,omitempty"`
+// 	Order                              *int   `json:"order,omitempty"`
+// 	Orderthreshold                     *int   `json:"orderthreshold,omitempty"`
+// 	Persistavpno                       []int  `json:"persistavpno,omitempty"`
+// 	Persistencebackup                  string `json:"persistencebackup,omitempty"`
+// 	Persistencetype                    string `json:"persistencetype,omitempty"`
+// 	Persistmask                        string `json:"persistmask,omitempty"`
+// 	Port                               *int   `json:"port,omitempty"`
+// 	Probeport                          *int   `json:"probeport,omitempty"`
+// 	Probeprotocol                      string `json:"probeprotocol,omitempty"`
+// 	Probesuccessresponsecode           string `json:"probesuccessresponsecode,omitempty"`
+// 	Processlocal                       string `json:"processlocal,omitempty"`
+// 	Push                               string `json:"push,omitempty"`
+// 	Pushlabel                          string `json:"pushlabel,omitempty"`
+// 	Pushmulticlients                   string `json:"pushmulticlients,omitempty"`
+// 	Pushvserver                        string `json:"pushvserver,omitempty"`
+// 	Quicbridgeprofilename              string `json:"quicbridgeprofilename,omitempty"`
+// 	Quicprofilename                    string `json:"quicprofilename,omitempty"`
+// 	Range                              *int   `json:"range,omitempty"`
+// 	Recursionavailable                 string `json:"recursionavailable,omitempty"`
+// 	Redirectfromport                   *int   `json:"redirectfromport,omitempty"`
+// 	Redirectportrewrite                string `json:"redirectportrewrite,omitempty"`
+// 	Redirurl                           string `json:"redirurl,omitempty"`
+// 	Redirurlflags                      bool   `json:"redirurlflags,omitempty"`
+// 	Resrule                            string `json:"resrule,omitempty"`
+// 	Retainconnectionsoncluster         string `json:"retainconnectionsoncluster,omitempty"`
+// 	Rhistate                           string `json:"rhistate,omitempty"`
+// 	Rtspnat                            string `json:"rtspnat,omitempty"`
+// 	Rule                               string `json:"rule,omitempty"`
+// 	Servicename                        string `json:"servicename,omitempty"`
+// 	Servicetype                        string `json:"servicetype,omitempty"`
+// 	Sessionless                        string `json:"sessionless,omitempty"`
+// 	Skippersistency                    string `json:"skippersistency,omitempty"`
+// 	Sobackupaction                     string `json:"sobackupaction,omitempty"`
+// 	Somethod                           string `json:"somethod,omitempty"`
+// 	Sopersistence                      string `json:"sopersistence,omitempty"`
+// 	Sopersistencetimeout               *int   `json:"sopersistencetimeout,omitempty"`
+// 	Sothreshold                        *int   `json:"sothreshold,omitempty"`
+// 	State                              string `json:"state,omitempty"`
+// 	Tcpprobeport                       *int   `json:"tcpprobeport,omitempty"`
+// 	Tcpprofilename                     string `json:"tcpprofilename,omitempty"`
+// 	Td                                 *int   `json:"td,omitempty"`
+// 	Timeout                            *int   `json:"timeout"` // 0 is a valid value for timeout, hence removing omitempty
+// 	Toggleorder                        string `json:"toggleorder,omitempty"`
+// 	Tosid                              *int   `json:"tosid,omitempty"`
+// 	Trofspersistence                   string `json:"trofspersistence,omitempty"`
+// 	V6netmasklen                       *int   `json:"v6netmasklen,omitempty"`
+// 	V6persistmasklen                   *int   `json:"v6persistmasklen,omitempty"`
+// 	Vipheader                          string `json:"vipheader,omitempty"`
+// 	Weight                             *int   `json:"weight,omitempty"`
+// }
 
 func resourceCitrixAdcLbvserver() *schema.Resource {
 	return &schema.Resource{
@@ -725,7 +726,7 @@ func createLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	lbvserver := Lbvserver{
+	lbvserver := lb.Lbvserver{
 		Name:                       lbvserverName,
 		Appflowlog:                 d.Get("appflowlog").(string),
 		Authentication:             d.Get("authentication").(string),
@@ -1093,7 +1094,7 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	client := meta.(*NetScalerNitroClient).client
 	lbvserverName := d.Get("name").(string)
 
-	lbvserver := Lbvserver{
+	lbvserver := lb.Lbvserver{
 		Name: d.Get("name").(string),
 	}
 	stateChange := false

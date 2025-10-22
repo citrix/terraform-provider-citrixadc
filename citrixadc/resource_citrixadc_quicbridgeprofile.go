@@ -5,16 +5,10 @@ import (
 
 	"log"
 
+	"github.com/citrix/adc-nitro-go/resource/config/quicbridge"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
-
-// Quicbridge Profile is a new resource. Go Nitro is to be updated for this new resource
-type quicbridgeprofile struct {
-	Name             string `json:"name,omitempty"`
-	Routingalgorithm string `json:"routingalgorithm,omitempty"`
-	Serveridlength   int    `json:"serveridlength,omitempty"`
-}
 
 func resourceCitrixAdcQuicbridgeprofile() *schema.Resource {
 	return &schema.Resource{
@@ -48,10 +42,12 @@ func createQuicbridgeprofileFunc(ctx context.Context, d *schema.ResourceData, me
 	client := meta.(*NetScalerNitroClient).client
 	quicbridgeprofileName := d.Get("name").(string)
 
-	quicbridgeprofile := quicbridgeprofile{
+	quicbridgeprofile := quicbridge.Quicbridgeprofile{
 		Name:             d.Get("name").(string),
 		Routingalgorithm: d.Get("routingalgorithm").(string),
-		Serveridlength:   d.Get("serveridlength").(int),
+	}
+	if raw := d.GetRawConfig().GetAttr("serveridlength"); !raw.IsNull() {
+		quicbridgeprofile.Serveridlength = intPtr(d.Get("serveridlength").(int))
 	}
 
 	_, err := client.AddResource("quicbridgeprofile", quicbridgeprofileName, &quicbridgeprofile)
@@ -88,7 +84,7 @@ func updateQuicbridgeprofileFunc(ctx context.Context, d *schema.ResourceData, me
 	client := meta.(*NetScalerNitroClient).client
 	quicbridgeprofileName := d.Get("name").(string)
 
-	quicbridgeprofile := quicbridgeprofile{
+	quicbridgeprofile := quicbridge.Quicbridgeprofile{
 		Name: d.Get("name").(string),
 	}
 	hasChange := false
@@ -104,7 +100,7 @@ func updateQuicbridgeprofileFunc(ctx context.Context, d *schema.ResourceData, me
 	}
 	if d.HasChange("serveridlength") {
 		log.Printf("[DEBUG]  citrixadc-provider: Serveridlength has changed for quicbridgeprofile %s, starting update", quicbridgeprofileName)
-		quicbridgeprofile.Serveridlength = d.Get("serveridlength").(int)
+		quicbridgeprofile.Serveridlength = intPtr(d.Get("serveridlength").(int))
 		hasChange = true
 	}
 

@@ -3,6 +3,7 @@ package citrixadc
 import (
 	"context"
 
+	"github.com/citrix/adc-nitro-go/resource/config/ns"
 	"github.com/citrix/adc-nitro-go/service"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -12,55 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
-
-// We need to convert fields that are int and accept zero values to string for correct operation
-type Nstcpparam struct {
-	Ackonpush                           string `json:"ackonpush,omitempty"`
-	Autosyncookietimeout                *int   `json:"autosyncookietimeout,omitempty"`
-	Connflushifnomem                    string `json:"connflushifnomem,omitempty"`
-	Connflushthres                      *int   `json:"connflushthres,omitempty"`
-	Delayedack                          *int   `json:"delayedack,omitempty"`
-	Downstaterst                        string `json:"downstaterst,omitempty"`
-	Feature                             string `json:"feature,omitempty"`
-	Initialcwnd                         *int   `json:"initialcwnd,omitempty"`
-	Kaprobeupdatelastactivity           string `json:"kaprobeupdatelastactivity,omitempty"`
-	Learnvsvrmss                        string `json:"learnvsvrmss,omitempty"`
-	Limitedpersist                      string `json:"limitedpersist,omitempty"`
-	Maxburst                            *int   `json:"maxburst,omitempty"`
-	Maxdynserverprobes                  *int   `json:"maxdynserverprobes,omitempty"`
-	Maxpktpermss                        string `json:"maxpktpermss,omitempty"` // was int
-	Maxsynackretx                       *int   `json:"maxsynackretx,omitempty"`
-	Maxsynhold                          *int   `json:"maxsynhold,omitempty"`
-	Maxsynholdperprobe                  *int   `json:"maxsynholdperprobe,omitempty"`
-	Maxtimewaitconn                     *int   `json:"maxtimewaitconn,omitempty"`
-	Minrto                              *int   `json:"minrto,omitempty"`
-	Mptcpchecksum                       string `json:"mptcpchecksum,omitempty"`
-	Mptcpclosemptcpsessiononlastsfclose string `json:"mptcpclosemptcpsessiononlastsfclose,omitempty"`
-	Mptcpconcloseonpassivesf            string `json:"mptcpconcloseonpassivesf,omitempty"`
-	Mptcpimmediatesfcloseonfin          string `json:"mptcpimmediatesfcloseonfin,omitempty"`
-	Mptcpmaxpendingsf                   string `json:"mptcpmaxpendingsf,omitempty"` // was int
-	Mptcpmaxsf                          *int   `json:"mptcpmaxsf,omitempty"`
-	Mptcppendingjointhreshold           string `json:"mptcppendingjointhreshold,omitempty"` // was int
-	Mptcprtostoswitchsf                 *int   `json:"mptcprtostoswitchsf,omitempty"`
-	Mptcpsfreplacetimeout               string `json:"mptcpsfreplacetimeout,omitempty"` // was int
-	Mptcpsftimeout                      string `json:"mptcpsftimeout,omitempty"`        // was int
-	Mptcpusebackupondss                 string `json:"mptcpusebackupondss,omitempty"`
-	Msslearndelay                       *int   `json:"msslearndelay,omitempty"`
-	Msslearninterval                    *int   `json:"msslearninterval,omitempty"`
-	Nagle                               string `json:"nagle,omitempty"`
-	Oooqsize                            string `json:"oooqsize,omitempty"` // was int
-	Pktperretx                          *int   `json:"pktperretx,omitempty"`
-	Recvbuffsize                        *int   `json:"recvbuffsize,omitempty"`
-	Sack                                string `json:"sack,omitempty"`
-	Slowstartincr                       *int   `json:"slowstartincr,omitempty"`
-	Synattackdetection                  string `json:"synattackdetection,omitempty"`
-	Synholdfastgiveup                   *int   `json:"synholdfastgiveup,omitempty"`
-	Tcpfastopencookietimeout            string `json:"tcpfastopencookietimeout,omitempty"` // was int
-	Tcpfintimeout                       *int   `json:"tcpfintimeout,omitempty"`
-	Tcpmaxretries                       *int   `json:"tcpmaxretries,omitempty"`
-	Ws                                  string `json:"ws,omitempty"`
-	Wsval                               string `json:"wsval,omitempty"` // was int
-}
 
 func resourceCitrixAdcNstcpparam() *schema.Resource {
 	return &schema.Resource{
@@ -142,7 +94,7 @@ func resourceCitrixAdcNstcpparam() *schema.Resource {
 				ForceNew: true,
 			},
 			"maxpktpermss": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
@@ -202,7 +154,7 @@ func resourceCitrixAdcNstcpparam() *schema.Resource {
 				ForceNew: true,
 			},
 			"mptcpmaxpendingsf": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
@@ -214,7 +166,7 @@ func resourceCitrixAdcNstcpparam() *schema.Resource {
 				ForceNew: true,
 			},
 			"mptcppendingjointhreshold": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
@@ -226,13 +178,13 @@ func resourceCitrixAdcNstcpparam() *schema.Resource {
 				ForceNew: true,
 			},
 			"mptcpsfreplacetimeout": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
 			"mptcpsftimeout": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
@@ -262,7 +214,7 @@ func resourceCitrixAdcNstcpparam() *schema.Resource {
 				ForceNew: true,
 			},
 			"oooqsize": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
@@ -304,7 +256,7 @@ func resourceCitrixAdcNstcpparam() *schema.Resource {
 				ForceNew: true,
 			},
 			"tcpfastopencookietimeout": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
@@ -328,7 +280,7 @@ func resourceCitrixAdcNstcpparam() *schema.Resource {
 				ForceNew: true,
 			},
 			"wsval": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
@@ -342,53 +294,110 @@ func createNstcpparamFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	client := meta.(*NetScalerNitroClient).client
 	nstcpparamName := resource.PrefixedUniqueId("tf-nstcpparam-")
 
-	nstcpparam := Nstcpparam{
+	nstcpparam := ns.Nstcpparam{
 		Ackonpush:                           d.Get("ackonpush").(string),
-		Autosyncookietimeout:                intPtr(d.Get("autosyncookietimeout").(int)),
 		Connflushifnomem:                    d.Get("connflushifnomem").(string),
-		Connflushthres:                      intPtr(d.Get("connflushthres").(int)),
-		Delayedack:                          intPtr(d.Get("delayedack").(int)),
 		Downstaterst:                        d.Get("downstaterst").(string),
-		Initialcwnd:                         intPtr(d.Get("initialcwnd").(int)),
 		Kaprobeupdatelastactivity:           d.Get("kaprobeupdatelastactivity").(string),
 		Learnvsvrmss:                        d.Get("learnvsvrmss").(string),
 		Limitedpersist:                      d.Get("limitedpersist").(string),
-		Maxburst:                            intPtr(d.Get("maxburst").(int)),
-		Maxdynserverprobes:                  intPtr(d.Get("maxdynserverprobes").(int)),
-		Maxpktpermss:                        d.Get("maxpktpermss").(string),
-		Maxsynackretx:                       intPtr(d.Get("maxsynackretx").(int)),
-		Maxsynhold:                          intPtr(d.Get("maxsynhold").(int)),
-		Maxsynholdperprobe:                  intPtr(d.Get("maxsynholdperprobe").(int)),
-		Maxtimewaitconn:                     intPtr(d.Get("maxtimewaitconn").(int)),
-		Minrto:                              intPtr(d.Get("minrto").(int)),
 		Mptcpchecksum:                       d.Get("mptcpchecksum").(string),
 		Mptcpclosemptcpsessiononlastsfclose: d.Get("mptcpclosemptcpsessiononlastsfclose").(string),
 		Mptcpconcloseonpassivesf:            d.Get("mptcpconcloseonpassivesf").(string),
 		Mptcpimmediatesfcloseonfin:          d.Get("mptcpimmediatesfcloseonfin").(string),
-		Mptcpmaxpendingsf:                   d.Get("mptcpmaxpendingsf").(string),
-		Mptcpmaxsf:                          intPtr(d.Get("mptcpmaxsf").(int)),
-		Mptcppendingjointhreshold:           d.Get("mptcppendingjointhreshold").(string),
-		Mptcprtostoswitchsf:                 intPtr(d.Get("mptcprtostoswitchsf").(int)),
-		Mptcpsfreplacetimeout:               d.Get("mptcpsfreplacetimeout").(string),
-		Mptcpsftimeout:                      d.Get("mptcpsftimeout").(string),
 		Mptcpusebackupondss:                 d.Get("mptcpusebackupondss").(string),
-		Msslearndelay:                       intPtr(d.Get("msslearndelay").(int)),
-		Msslearninterval:                    intPtr(d.Get("msslearninterval").(int)),
 		Nagle:                               d.Get("nagle").(string),
-		Oooqsize:                            d.Get("oooqsize").(string),
-		Pktperretx:                          intPtr(d.Get("pktperretx").(int)),
-		Recvbuffsize:                        intPtr(d.Get("recvbuffsize").(int)),
 		Sack:                                d.Get("sack").(string),
-		Slowstartincr:                       intPtr(d.Get("slowstartincr").(int)),
 		Synattackdetection:                  d.Get("synattackdetection").(string),
-		Synholdfastgiveup:                   intPtr(d.Get("synholdfastgiveup").(int)),
-		Tcpfastopencookietimeout:            d.Get("tcpfastopencookietimeout").(string),
-		Tcpfintimeout:                       intPtr(d.Get("tcpfintimeout").(int)),
-		Tcpmaxretries:                       intPtr(d.Get("tcpmaxretries").(int)),
 		Ws:                                  d.Get("ws").(string),
-		Wsval:                               d.Get("wsval").(string),
 	}
-
+	if raw := d.GetRawConfig().GetAttr("autosyncookietimeout"); !raw.IsNull() {
+		nstcpparam.Autosyncookietimeout = intPtr(d.Get("autosyncookietimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("connflushthres"); !raw.IsNull() {
+		nstcpparam.Connflushthres = intPtr(d.Get("connflushthres").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("delayedack"); !raw.IsNull() {
+		nstcpparam.Delayedack = intPtr(d.Get("delayedack").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("initialcwnd"); !raw.IsNull() {
+		nstcpparam.Initialcwnd = intPtr(d.Get("initialcwnd").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxburst"); !raw.IsNull() {
+		nstcpparam.Maxburst = intPtr(d.Get("maxburst").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxdynserverprobes"); !raw.IsNull() {
+		nstcpparam.Maxdynserverprobes = intPtr(d.Get("maxdynserverprobes").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxpktpermss"); !raw.IsNull() {
+		nstcpparam.Maxpktpermss = intPtr(d.Get("maxpktpermss").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxsynackretx"); !raw.IsNull() {
+		nstcpparam.Maxsynackretx = intPtr(d.Get("maxsynackretx").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("mptcpmaxpendingsf"); !raw.IsNull() {
+		nstcpparam.Mptcpmaxpendingsf = intPtr(d.Get("mptcpmaxpendingsf").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("mptcppendingjointhreshold"); !raw.IsNull() {
+		nstcpparam.Mptcppendingjointhreshold = intPtr(d.Get("mptcppendingjointhreshold").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("mptcpsfreplacetimeout"); !raw.IsNull() {
+		nstcpparam.Mptcpsfreplacetimeout = intPtr(d.Get("mptcpsfreplacetimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("mptcpsftimeout"); !raw.IsNull() {
+		nstcpparam.Mptcpsftimeout = intPtr(d.Get("mptcpsftimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("oooqsize"); !raw.IsNull() {
+		nstcpparam.Oooqsize = intPtr(d.Get("oooqsize").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("tcpfastopencookietimeout"); !raw.IsNull() {
+		nstcpparam.Tcpfastopencookietimeout = intPtr(d.Get("tcpfastopencookietimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("wsval"); !raw.IsNull() {
+		nstcpparam.Wsval = intPtr(d.Get("wsval").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxsynhold"); !raw.IsNull() {
+		nstcpparam.Maxsynhold = intPtr(d.Get("maxsynhold").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxsynholdperprobe"); !raw.IsNull() {
+		nstcpparam.Maxsynholdperprobe = intPtr(d.Get("maxsynholdperprobe").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxtimewaitconn"); !raw.IsNull() {
+		nstcpparam.Maxtimewaitconn = intPtr(d.Get("maxtimewaitconn").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("minrto"); !raw.IsNull() {
+		nstcpparam.Minrto = intPtr(d.Get("minrto").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("mptcpmaxsf"); !raw.IsNull() {
+		nstcpparam.Mptcpmaxsf = intPtr(d.Get("mptcpmaxsf").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("mptcprtostoswitchsf"); !raw.IsNull() {
+		nstcpparam.Mptcprtostoswitchsf = intPtr(d.Get("mptcprtostoswitchsf").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("msslearndelay"); !raw.IsNull() {
+		nstcpparam.Msslearndelay = intPtr(d.Get("msslearndelay").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("msslearninterval"); !raw.IsNull() {
+		nstcpparam.Msslearninterval = intPtr(d.Get("msslearninterval").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("pktperretx"); !raw.IsNull() {
+		nstcpparam.Pktperretx = intPtr(d.Get("pktperretx").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("recvbuffsize"); !raw.IsNull() {
+		nstcpparam.Recvbuffsize = intPtr(d.Get("recvbuffsize").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("slowstartincr"); !raw.IsNull() {
+		nstcpparam.Slowstartincr = intPtr(d.Get("slowstartincr").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("synholdfastgiveup"); !raw.IsNull() {
+		nstcpparam.Synholdfastgiveup = intPtr(d.Get("synholdfastgiveup").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("tcpfintimeout"); !raw.IsNull() {
+		nstcpparam.Tcpfintimeout = intPtr(d.Get("tcpfintimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("tcpmaxretries"); !raw.IsNull() {
+		nstcpparam.Tcpmaxretries = intPtr(d.Get("tcpmaxretries").(int))
+	}
 	err := client.UpdateUnnamedResource(service.Nstcpparam.Type(), &nstcpparam)
 	if err != nil {
 		return diag.FromErr(err)
@@ -427,7 +436,7 @@ func readNstcpparamFunc(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("limitedpersist", data["limitedpersist"])
 	setToInt("maxburst", d, data["maxburst"])
 	setToInt("maxdynserverprobes", d, data["maxdynserverprobes"])
-	d.Set("maxpktpermss", data["maxpktpermss"])
+	setToInt("maxpktpermss", d, data["maxpktpermss"])
 	setToInt("maxsynackretx", d, data["maxsynackretx"])
 	setToInt("maxsynhold", d, data["maxsynhold"])
 	setToInt("maxsynholdperprobe", d, data["maxsynholdperprobe"])
@@ -437,28 +446,28 @@ func readNstcpparamFunc(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("mptcpclosemptcpsessiononlastsfclose", data["mptcpclosemptcpsessiononlastsfclose"])
 	d.Set("mptcpconcloseonpassivesf", data["mptcpconcloseonpassivesf"])
 	d.Set("mptcpimmediatesfcloseonfin", data["mptcpimmediatesfcloseonfin"])
-	d.Set("mptcpmaxpendingsf", data["mptcpmaxpendingsf"])
+	setToInt("mptcpmaxpendingsf", d, data["mptcpmaxpendingsf"])
 	setToInt("mptcpmaxsf", d, data["mptcpmaxsf"])
-	d.Set("mptcppendingjointhreshold", data["mptcppendingjointhreshold"])
+	setToInt("mptcppendingjointhreshold", d, data["mptcppendingjointhreshold"])
 	setToInt("mptcprtostoswitchsf", d, data["mptcprtostoswitchsf"])
-	d.Set("mptcpsfreplacetimeout", toString(data["mptcpsfreplacetimeout"]))
-	d.Set("mptcpsftimeout", toString(data["mptcpsftimeout"]))
+	setToInt("mptcpsfreplacetimeout", d, data["mptcpsfreplacetimeout"])
+	setToInt("mptcpsftimeout", d, data["mptcpsftimeout"])
 	d.Set("mptcpusebackupondss", data["mptcpusebackupondss"])
 	setToInt("msslearndelay", d, data["msslearndelay"])
 	setToInt("msslearninterval", d, data["msslearninterval"])
 	d.Set("nagle", data["nagle"])
-	d.Set("oooqsize", data["oooqsize"])
+	setToInt("oooqsize", d, data["oooqsize"])
 	setToInt("pktperretx", d, data["pktperretx"])
 	setToInt("recvbuffsize", d, data["recvbuffsize"])
 	d.Set("sack", data["sack"])
 	setToInt("slowstartincr", d, data["slowstartincr"])
 	d.Set("synattackdetection", data["synattackdetection"])
 	setToInt("synholdfastgiveup", d, data["synholdfastgiveup"])
-	d.Set("tcpfastopencookietimeout", toString(data["tcpfastopencookietimeout"]))
+	setToInt("tcpfastopencookietimeout", d, data["tcpfastopencookietimeout"])
 	setToInt("tcpfintimeout", d, data["tcpfintimeout"])
 	setToInt("tcpmaxretries", d, data["tcpmaxretries"])
 	d.Set("ws", data["ws"])
-	d.Set("wsval", data["wsval"])
+	setToInt("wsval", d, data["wsval"])
 
 	return nil
 

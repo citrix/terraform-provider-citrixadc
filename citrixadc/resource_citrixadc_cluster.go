@@ -1392,12 +1392,14 @@ func addSingleClusterNode(d *schema.ResourceData, meta interface{}, nodeData map
 
 	// Register node ip to the CLIP if flag is set
 	if nodeData["addsnip"].(bool) {
-		nodeNsip := nsip{
-			Ownernode:  strconv.Itoa(nodeData["nodeid"].(int)),
+		nodeNsip := ns.Nsip{
 			Ipaddress:  nodeData["snip_ipaddress"].(string),
 			Mgmtaccess: "ENABLED",
 			Netmask:    nodeData["snip_netmask"].(string),
 			Type:       "SNIP",
+		}
+		if raw := d.GetRawConfig().GetAttr("ownernode"); !raw.IsNull() {
+			nodeNsip.Ownernode = intPtr(d.Get("ownernode").(int))
 		}
 		log.Printf("[DEBUG]  citrixadc-provider: registering node ip %v", nodeNsip)
 		_, err := client.AddResource(service.Nsip.Type(), nodeData["ipaddress"].(string), &nodeNsip)

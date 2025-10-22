@@ -3,6 +3,7 @@ package citrixadc
 import (
 	"context"
 
+	"github.com/citrix/adc-nitro-go/resource/config/ns"
 	"github.com/citrix/adc-nitro-go/service"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -12,16 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
-
-// We do not use the go-nitro struct because we need the
-// Ownernode to be string so that it correctly behaves for 0 values
-// The problem is that if it is int there is no way to avoid sending ownernode param to VPX
-// which will fail if the NSIP is that of a standalone VPX.
-type Nsvpxparam struct {
-	Cpuyield        string `json:"cpuyield,omitempty"`
-	Masterclockcpu1 string `json:"masterclockcpu1,omitempty"`
-	Ownernode       string `json:"ownernode,omitempty"`
-}
 
 func resourceCitrixAdcNsvpxparam() *schema.Resource {
 	return &schema.Resource{
@@ -57,10 +48,12 @@ func createNsvpxparamFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	client := meta.(*NetScalerNitroClient).client
 	nsvpxparamName := resource.PrefixedUniqueId("tf-nsvpxparam-")
 
-	nsvpxparam := Nsvpxparam{
+	nsvpxparam := ns.Nsvpxparam{
 		Cpuyield:        d.Get("cpuyield").(string),
 		Masterclockcpu1: d.Get("masterclockcpu1").(string),
-		Ownernode:       d.Get("ownernode").(string),
+	}
+	if raw := d.GetRawConfig().GetAttr("ownernode"); !raw.IsNull() {
+		nsvpxparam.Ownernode = intPtr(d.Get("ownernode").(int))
 	}
 
 	err := client.UpdateUnnamedResource("nsvpxparam", &nsvpxparam)
@@ -110,7 +103,7 @@ func readNsvpxparamFunc(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.Set("cpuyield", data["cpuyield"])
 	// d.Set("masterclockcpu1", data["masterclockcpu1"])
-	d.Set("ownernode", data["ownernode"])
+	setToInt("ownernode", d, data["ownernode"])
 
 	return nil
 

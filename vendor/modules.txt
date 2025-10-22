@@ -68,6 +68,7 @@ github.com/citrix/adc-nitro-go/resource/config/ns
 github.com/citrix/adc-nitro-go/resource/config/ntp
 github.com/citrix/adc-nitro-go/resource/config/pcp
 github.com/citrix/adc-nitro-go/resource/config/policy
+github.com/citrix/adc-nitro-go/resource/config/quicbridge
 github.com/citrix/adc-nitro-go/resource/config/rdp
 github.com/citrix/adc-nitro-go/resource/config/reputation
 github.com/citrix/adc-nitro-go/resource/config/responder
