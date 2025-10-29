@@ -120,6 +120,7 @@ func createAppfwsignaturesFunc(d *schema.ResourceData, meta interface{}) error {
 		Category:                d.Get("category").(string),
 		Enabled:                 d.Get("enabled").(string),
 		Action:                  toStringList(d.Get("action").([]interface{})),
+		Ruleid:                  toIntegerList(d.Get("ruleid").([]interface{})),
 	}
 
 	appfwsignatures_update_obj := appfw.Appfwsignatures{
@@ -130,14 +131,6 @@ func createAppfwsignaturesFunc(d *schema.ResourceData, meta interface{}) error {
 	err := client.ActOnResource(service.Appfwsignatures.Type(), &appfwsignatures, "Import")
 	if err != nil {
 		return err
-	}
-
-	if _, ok := d.GetOk("ruleid"); ok {
-		appfwsignatures.Ruleid = toIntegerList(d.Get("ruleid").([]interface{}))
-		err := client.ActOnResource(service.Appfwsignatures.Type(), &appfwsignatures, "Import")
-		if err != nil {
-			return err
-		}
 	}
 
 	err = client.ActOnResource(service.Appfwsignatures.Type(), &appfwsignatures_update_obj, "update")
