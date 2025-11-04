@@ -33,13 +33,13 @@ func TestAccAuditsyslogaction_basic(t *testing.T) {
 			{
 				Config: testAccAuditsyslogaction_basic_step1,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAuditsyslogactionExist("citrixadc_auditsyslogaction.tf_syslogaction", nil, map[string]interface{}{"name": "tf_syslogaction", "serverip": "10.78.60.33", "serverport": 514, "transport": "TCP", "loglevel": []string{"ERROR", "NOTICE"}}),
+					testAccCheckAuditsyslogactionExist("citrixadc_auditsyslogaction.tf_syslogaction", nil, map[string]interface{}{"name": "tf_syslogaction", "serverip": "10.78.60.33", "serverport": 514, "transport": "TCP", "loglevel": []string{"ERROR", "NOTICE"}, "protocolviolations": "NONE"}),
 				),
 			},
 			{
 				Config: testAccAuditsyslogaction_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAuditsyslogactionExist("citrixadc_auditsyslogaction.tf_syslogaction", nil, map[string]interface{}{"name": "tf_syslogaction", "serverip": "10.78.60.34", "serverport": 514, "transport": "TCP", "loglevel": []string{"ALL"}}),
+					testAccCheckAuditsyslogactionExist("citrixadc_auditsyslogaction.tf_syslogaction", nil, map[string]interface{}{"name": "tf_syslogaction", "serverip": "10.78.60.34", "serverport": 514, "transport": "TCP", "loglevel": []string{"ALL"}, "protocolviolations": "ALL"}),
 				),
 			},
 			{
@@ -143,6 +143,7 @@ resource "citrixadc_auditsyslogaction" "tf_syslogaction" {
         "NOTICE",
     ]
 	transport = "TCP"
+	protocolviolations = "NONE"
 }
 `
 
@@ -156,6 +157,7 @@ resource "citrixadc_auditsyslogaction" "tf_syslogaction" {
         "ALL",
     ]
 	transport = "TCP"
+	protocolviolations = "ALL"
 }
 `
 

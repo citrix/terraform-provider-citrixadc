@@ -23,6 +23,24 @@ func resourceCitrixAdcBotprofile_ratelimit_binding() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"limittype": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"countrycode": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"condition": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -110,6 +128,9 @@ func createBotprofile_ratelimit_bindingFunc(ctx context.Context, d *schema.Resou
 		Cookiename:          d.Get("cookiename").(string),
 		Logmessage:          d.Get("logmessage").(string),
 		Name:                d.Get("name").(string),
+		Condition:           d.Get("condition").(string),
+		Countrycode:         d.Get("countrycode").(string),
+		Limittype:           d.Get("limittype").(string),
 	}
 
 	if raw := d.GetRawConfig().GetAttr("rate"); !raw.IsNull() {
@@ -182,6 +203,9 @@ func readBotprofile_ratelimit_bindingFunc(ctx context.Context, d *schema.Resourc
 	data := dataArr[foundIndex]
 
 	d.Set("bot_bind_comment", data["bot_bind_comment"])
+	d.Set("limittype", data["limittype"])
+	d.Set("countrycode", data["countrycode"])
+	d.Set("condition", data["condition"])
 	d.Set("bot_ratelimit", data["bot_ratelimit"])
 	d.Set("bot_rate_limit_action", data["bot_rate_limit_action"])
 	d.Set("bot_rate_limit_enabled", data["bot_rate_limit_enabled"])

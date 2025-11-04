@@ -30,6 +30,7 @@ resource "citrixadc_rdpclientprofile" "tf_rdpclientprofile" {
 	rdpurloverride    = "ENABLE"
 	redirectclipboard = "ENABLE"
 	redirectdrives    = "ENABLE"
+	rdpvalidateclientip = "ENABLE"
 	}
   
 `
@@ -41,6 +42,7 @@ resource "citrixadc_rdpclientprofile" "tf_rdpclientprofile" {
 	rdpurloverride    = "DISABLE"
 	redirectclipboard = "DISABLE"
 	redirectdrives    = "DISABLE"
+	rdpvalidateclientip = "DISABLE"
 	}
   
 `
@@ -59,6 +61,7 @@ func TestAccRdpclientprofile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_rdpclientprofile.tf_rdpclientprofile", "rdpurloverride", "ENABLE"),
 					resource.TestCheckResourceAttr("citrixadc_rdpclientprofile.tf_rdpclientprofile", "redirectclipboard", "ENABLE"),
 					resource.TestCheckResourceAttr("citrixadc_rdpclientprofile.tf_rdpclientprofile", "redirectdrives", "ENABLE"),
+					resource.TestCheckResourceAttr("citrixadc_rdpclientprofile.tf_rdpclientprofile", "rdpvalidateclientip", "ENABLE"),
 				),
 			},
 			{
@@ -69,6 +72,7 @@ func TestAccRdpclientprofile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_rdpclientprofile.tf_rdpclientprofile", "rdpurloverride", "DISABLE"),
 					resource.TestCheckResourceAttr("citrixadc_rdpclientprofile.tf_rdpclientprofile", "redirectclipboard", "DISABLE"),
 					resource.TestCheckResourceAttr("citrixadc_rdpclientprofile.tf_rdpclientprofile", "redirectdrives", "DISABLE"),
+					resource.TestCheckResourceAttr("citrixadc_rdpclientprofile.tf_rdpclientprofile", "rdpvalidateclientip", "DISABLE"),
 				),
 			},
 		},

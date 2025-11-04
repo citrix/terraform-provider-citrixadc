@@ -22,6 +22,26 @@ func resourceCitrixAdcVpnvserver() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"secureprivateaccess": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"quicprofilename": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"deviceposture": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"accessrestrictedpageredirect": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -177,11 +197,6 @@ func resourceCitrixAdcVpnvserver() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			// "newname": {
-			// 	Type:     schema.TypeString,
-			// 	Optional: true,
-			// 	Computed: true,
-			// },
 			"pcoipvserverprofilename": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -246,45 +261,47 @@ func createVpnvserverFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	client := meta.(*NetScalerNitroClient).client
 	vpnvserverName := d.Get("name").(string)
 	vpnvserver := vpn.Vpnvserver{
-		Advancedepa:              d.Get("advancedepa").(string),
-		Appflowlog:               d.Get("appflowlog").(string),
-		Authentication:           d.Get("authentication").(string),
-		Authnprofile:             d.Get("authnprofile").(string),
-		Certkeynames:             d.Get("certkeynames").(string),
-		Cginfrahomepageredirect:  d.Get("cginfrahomepageredirect").(string),
-		Comment:                  d.Get("comment").(string),
-		Deploymenttype:           d.Get("deploymenttype").(string),
-		Devicecert:               d.Get("devicecert").(string),
-		Doublehop:                d.Get("doublehop").(string),
-		Downstateflush:           d.Get("downstateflush").(string),
-		Dtls:                     d.Get("dtls").(string),
-		Httpprofilename:          d.Get("httpprofilename").(string),
-		Icaonly:                  d.Get("icaonly").(string),
-		Icaproxysessionmigration: d.Get("icaproxysessionmigration").(string),
-		Icmpvsrresponse:          d.Get("icmpvsrresponse").(string),
-		Ipset:                    d.Get("ipset").(string),
-		Ipv46:                    d.Get("ipv46").(string),
-		L2conn:                   d.Get("l2conn").(string),
-		Linuxepapluginupgrade:    d.Get("linuxepapluginupgrade").(string),
-		Listenpolicy:             d.Get("listenpolicy").(string),
-		Loginonce:                d.Get("loginonce").(string),
-		Logoutonsmartcardremoval: d.Get("logoutonsmartcardremoval").(string),
-		Macepapluginupgrade:      d.Get("macepapluginupgrade").(string),
-		Name:                     vpnvserverName,
-		Netprofile:               d.Get("netprofile").(string),
-		// Newname:                  d.Get("newname").(string),
-		Pcoipvserverprofilename: d.Get("pcoipvserverprofilename").(string),
-		Rdpserverprofilename:    d.Get("rdpserverprofilename").(string),
-		Rhistate:                d.Get("rhistate").(string),
-		Samesite:                d.Get("samesite").(string),
-		Servicetype:             d.Get("servicetype").(string),
-		State:                   d.Get("state").(string),
-		Tcpprofilename:          d.Get("tcpprofilename").(string),
-		Userdomains:             d.Get("userdomains").(string),
-		Vserverfqdn:             d.Get("vserverfqdn").(string),
-		Windowsepapluginupgrade: d.Get("windowsepapluginupgrade").(string),
+		Advancedepa:                  d.Get("advancedepa").(string),
+		Appflowlog:                   d.Get("appflowlog").(string),
+		Authentication:               d.Get("authentication").(string),
+		Authnprofile:                 d.Get("authnprofile").(string),
+		Certkeynames:                 d.Get("certkeynames").(string),
+		Cginfrahomepageredirect:      d.Get("cginfrahomepageredirect").(string),
+		Comment:                      d.Get("comment").(string),
+		Deploymenttype:               d.Get("deploymenttype").(string),
+		Devicecert:                   d.Get("devicecert").(string),
+		Doublehop:                    d.Get("doublehop").(string),
+		Downstateflush:               d.Get("downstateflush").(string),
+		Dtls:                         d.Get("dtls").(string),
+		Httpprofilename:              d.Get("httpprofilename").(string),
+		Icaonly:                      d.Get("icaonly").(string),
+		Icaproxysessionmigration:     d.Get("icaproxysessionmigration").(string),
+		Icmpvsrresponse:              d.Get("icmpvsrresponse").(string),
+		Ipset:                        d.Get("ipset").(string),
+		Ipv46:                        d.Get("ipv46").(string),
+		L2conn:                       d.Get("l2conn").(string),
+		Linuxepapluginupgrade:        d.Get("linuxepapluginupgrade").(string),
+		Listenpolicy:                 d.Get("listenpolicy").(string),
+		Loginonce:                    d.Get("loginonce").(string),
+		Logoutonsmartcardremoval:     d.Get("logoutonsmartcardremoval").(string),
+		Macepapluginupgrade:          d.Get("macepapluginupgrade").(string),
+		Name:                         vpnvserverName,
+		Netprofile:                   d.Get("netprofile").(string),
+		Pcoipvserverprofilename:      d.Get("pcoipvserverprofilename").(string),
+		Rdpserverprofilename:         d.Get("rdpserverprofilename").(string),
+		Rhistate:                     d.Get("rhistate").(string),
+		Samesite:                     d.Get("samesite").(string),
+		Servicetype:                  d.Get("servicetype").(string),
+		State:                        d.Get("state").(string),
+		Tcpprofilename:               d.Get("tcpprofilename").(string),
+		Userdomains:                  d.Get("userdomains").(string),
+		Vserverfqdn:                  d.Get("vserverfqdn").(string),
+		Windowsepapluginupgrade:      d.Get("windowsepapluginupgrade").(string),
+		Accessrestrictedpageredirect: d.Get("accessrestrictedpageredirect").(string),
+		Deviceposture:                d.Get("deviceposture").(string),
+		Quicprofilename:              d.Get("quicprofilename").(string),
+		Secureprivateaccess:          d.Get("secureprivateaccess").(string),
 	}
-
 	if raw := d.GetRawConfig().GetAttr("failedlogintimeout"); !raw.IsNull() {
 		vpnvserver.Failedlogintimeout = intPtr(d.Get("failedlogintimeout").(int))
 	}
@@ -326,6 +343,10 @@ func readVpnvserverFunc(ctx context.Context, d *schema.ResourceData, meta interf
 		return nil
 	}
 	d.Set("name", data["name"])
+	d.Set("secureprivateaccess", data["secureprivateaccess"])
+	d.Set("quicprofilename", data["quicprofilename"])
+	d.Set("deviceposture", data["deviceposture"])
+	d.Set("accessrestrictedpageredirect", data["accessrestrictedpageredirect"])
 	d.Set("advancedepa", data["advancedepa"])
 	d.Set("appflowlog", data["appflowlog"])
 	d.Set("authentication", data["authentication"])
@@ -354,9 +375,7 @@ func readVpnvserverFunc(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("macepapluginupgrade", data["macepapluginupgrade"])
 	setToInt("maxaaausers", d, data["maxaaausers"])
 	setToInt("maxloginattempts", d, data["maxloginattempts"])
-	// d.Set("name", data["name"])
 	d.Set("netprofile", data["netprofile"])
-	// d.Set("newname", data["newname"])
 	d.Set("pcoipvserverprofilename", data["pcoipvserverprofilename"])
 	setToInt("port", d, data["port"])
 	setToInt("range", d, data["range"])
@@ -383,6 +402,26 @@ func updateVpnvserverFunc(ctx context.Context, d *schema.ResourceData, meta inte
 		Name: vpnvserverName,
 	}
 	hasChange := false
+	if d.HasChange("secureprivateaccess") {
+		log.Printf("[DEBUG]  citrixadc-provider: Secureprivateaccess has changed for vpnvserver, starting update")
+		vpnvserver.Secureprivateaccess = d.Get("secureprivateaccess").(string)
+		hasChange = true
+	}
+	if d.HasChange("quicprofilename") {
+		log.Printf("[DEBUG]  citrixadc-provider: Quicprofilename has changed for vpnvserver, starting update")
+		vpnvserver.Quicprofilename = d.Get("quicprofilename").(string)
+		hasChange = true
+	}
+	if d.HasChange("deviceposture") {
+		log.Printf("[DEBUG]  citrixadc-provider: Deviceposture has changed for vpnvserver, starting update")
+		vpnvserver.Deviceposture = d.Get("deviceposture").(string)
+		hasChange = true
+	}
+	if d.HasChange("accessrestrictedpageredirect") {
+		log.Printf("[DEBUG]  citrixadc-provider: Accessrestrictedpageredirect has changed for vpnvserver, starting update")
+		vpnvserver.Accessrestrictedpageredirect = d.Get("accessrestrictedpageredirect").(string)
+		hasChange = true
+	}
 	if d.HasChange("advancedepa") {
 		log.Printf("[DEBUG]  citrixadc-provider: Advancedepa has changed for vpnvserver %s, starting update", vpnvserverName)
 		vpnvserver.Advancedepa = d.Get("advancedepa").(string)
@@ -523,21 +562,11 @@ func updateVpnvserverFunc(ctx context.Context, d *schema.ResourceData, meta inte
 		vpnvserver.Maxloginattempts = intPtr(d.Get("maxloginattempts").(int))
 		hasChange = true
 	}
-	// if d.HasChange("name") {
-	// 	log.Printf("[DEBUG]  citrixadc-provider: Name has changed for vpnvserver %s, starting update", vpnvserverName)
-	// 	vpnvserver.Name = d.Get("name").(string)
-	// 	hasChange = true
-	// }
 	if d.HasChange("netprofile") {
 		log.Printf("[DEBUG]  citrixadc-provider: Netprofile has changed for vpnvserver %s, starting update", vpnvserverName)
 		vpnvserver.Netprofile = d.Get("netprofile").(string)
 		hasChange = true
 	}
-	// if d.HasChange("newname") {
-	// 	log.Printf("[DEBUG]  citrixadc-provider: Newname has changed for vpnvserver %s, starting update", vpnvserverName)
-	// 	vpnvserver.Newname = d.Get("newname").(string)
-	// 	hasChange = true
-	// }
 	if d.HasChange("pcoipvserverprofilename") {
 		log.Printf("[DEBUG]  citrixadc-provider: Pcoipvserverprofilename has changed for vpnvserver %s, starting update", vpnvserverName)
 		vpnvserver.Pcoipvserverprofilename = d.Get("pcoipvserverprofilename").(string)

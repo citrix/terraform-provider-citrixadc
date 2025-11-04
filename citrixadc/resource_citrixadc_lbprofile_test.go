@@ -40,6 +40,7 @@ func TestAccLbprofile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_lbprofile.tf_lbprofile", "lbhashfingers", "258"),
 					resource.TestCheckResourceAttr("citrixadc_lbprofile.tf_lbprofile", "lbhashalgorithm", "PRAC"),
 					resource.TestCheckResourceAttr("citrixadc_lbprofile.tf_lbprofile", "storemqttclientidandusername", "YES"),
+					resource.TestCheckResourceAttr("citrixadc_lbprofile.tf_lbprofile", "proximityfromself", "NO"),
 					testAccCheckUserAgent(),
 				),
 			},
@@ -54,6 +55,7 @@ func TestAccLbprofile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_lbprofile.tf_lbprofile", "lbhashfingers", "255"),
 					resource.TestCheckResourceAttr("citrixadc_lbprofile.tf_lbprofile", "lbhashalgorithm", "DEFAULT"),
 					resource.TestCheckResourceAttr("citrixadc_lbprofile.tf_lbprofile", "storemqttclientidandusername", "NO"),
+					resource.TestCheckResourceAttr("citrixadc_lbprofile.tf_lbprofile", "proximityfromself", "YES"),
 					testAccCheckUserAgent(),
 				),
 			},
@@ -134,6 +136,7 @@ resource "citrixadc_lbprofile" "tf_lbprofile" {
 	lbhashfingers = 258
 	lbhashalgorithm = "PRAC"
 	storemqttclientidandusername = "YES"
+	proximityfromself = "NO"
 }
 
 `
@@ -148,7 +151,7 @@ resource "citrixadc_lbprofile" "tf_lbprofile" {
 	lbhashfingers = 255
 	lbhashalgorithm = "DEFAULT"
 	storemqttclientidandusername = "NO"
-
+	proximityfromself = "YES"
     
 }
 

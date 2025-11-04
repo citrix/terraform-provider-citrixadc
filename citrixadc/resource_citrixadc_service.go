@@ -27,6 +27,11 @@ func resourceCitrixAdcService() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"quicprofilename": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"accessdown": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -399,6 +404,7 @@ func createServiceFunc(ctx context.Context, d *schema.ResourceData, meta interfa
 		Tcpprofilename:               d.Get("tcpprofilename").(string),
 		Useproxyport:                 d.Get("useproxyport").(string),
 		Usip:                         d.Get("usip").(string),
+		Quicprofilename:              d.Get("quicprofilename").(string),
 	}
 
 	if raw := d.GetRawConfig().GetAttr("cleartextport"); !raw.IsNull() {
@@ -523,6 +529,7 @@ func readServiceFunc(ctx context.Context, d *schema.ResourceData, meta interface
 		return nil
 	}
 	d.Set("name", data["name"])
+	d.Set("quicprofilename", data["quicprofilename"])
 	d.Set("accessdown", data["accessdown"])
 	d.Set("all", data["all"])
 	d.Set("appflowlog", data["appflowlog"])
@@ -554,7 +561,6 @@ func readServiceFunc(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("monconnectionclose", data["monconnectionclose"])
 	d.Set("monitornamesvc", data["monitornamesvc"])
 	setToInt("monthreshold", d, data["monthreshold"])
-	d.Set("name", data["name"])
 	d.Set("netprofile", data["netprofile"])
 	d.Set("pathmonitor", data["pathmonitor"])
 	d.Set("pathmonitorindv", data["pathmonitorindv"])
@@ -634,6 +640,11 @@ func updateServiceFunc(ctx context.Context, d *schema.ResourceData, meta interfa
 	lbmonitorChanged := false
 	svc := basic.Service{
 		Name: d.Get("name").(string),
+	}
+	if d.HasChange("quicprofilename") {
+		log.Printf("[DEBUG]  citrixadc-provider: Quicprofilename has changed for svc, starting update")
+		svc.Quicprofilename = d.Get("quicprofilename").(string)
+		hasChange = true
 	}
 	if d.HasChange("accessdown") {
 		log.Printf("[DEBUG] netscaler-provider:  Accessdown has changed for service %s, starting update", serviceName)

@@ -34,12 +34,16 @@ func TestAccSystemgroup_basic(t *testing.T) {
 				Config: testAccSystemgroup_basic_step1,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSystemgroupExist("citrixadc_systemgroup.tf_systemgroup", nil),
+					resource.TestCheckResourceAttr("citrixadc_systemgroup.tf_systemgroup", "warnpriorndays", "10"),
+					resource.TestCheckResourceAttr("citrixadc_systemgroup.tf_systemgroup", "daystoexpire", "45"),
 				),
 			},
 			{
 				Config: testAccSystemgroup_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSystemgroupExist("citrixadc_systemgroup.tf_systemgroup", nil),
+					resource.TestCheckResourceAttr("citrixadc_systemgroup.tf_systemgroup", "warnpriorndays", "15"),
+					resource.TestCheckResourceAttr("citrixadc_systemgroup.tf_systemgroup", "daystoexpire", "60"),
 				),
 			},
 			{
@@ -117,6 +121,9 @@ func testAccCheckSystemgroupDestroy(s *terraform.State) error {
 }
 
 const testAccSystemgroup_basic_step1 = `
+resource "citrixadc_systemparameter" "tf_systemparameter" {
+    passwordhistorycontrol = "ENABLED"
+}
 
 resource "citrixadc_systemuser" "tf_user1" {
     username = "tf_user1"
@@ -136,6 +143,8 @@ resource "citrixadc_systemgroup" "tf_systemgroup" {
     groupname = "testgroupname"
     timeout = 999
     promptstring = "bye>"
+	warnpriorndays = 10
+	daystoexpire = 45
 
     cmdpolicybinding { 
         policyname = "superuser"
@@ -176,6 +185,8 @@ resource "citrixadc_systemgroup" "tf_systemgroup" {
     groupname = "testgroupname"
     timeout = 999
     promptstring = "bye>"
+	warnpriorndays = 15
+	daystoexpire = 60
 
     cmdpolicybinding { 
         policyname = "superuser"
@@ -195,6 +206,10 @@ resource "citrixadc_systemgroup" "tf_systemgroup" {
 
 `
 const testAccSystemgroup_basic_step3 = `
+resource "citrixadc_systemparameter" "tf_systemparameter" {
+    passwordhistorycontrol = "DISABLED"
+}
+
 
 resource "citrixadc_systemuser" "tf_user1" {
     username = "tf_user1"

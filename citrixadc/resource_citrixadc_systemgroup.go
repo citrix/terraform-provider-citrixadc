@@ -26,6 +26,16 @@ func resourceCitrixAdcSystemgroup() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"warnpriorndays": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"daystoexpire": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
 			"groupname": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -86,7 +96,12 @@ func createSystemgroupFunc(ctx context.Context, d *schema.ResourceData, meta int
 		Promptstring:               d.Get("promptstring").(string),
 		Allowedmanagementinterface: toStringList(d.Get("allowedmanagementinterface").([]interface{})),
 	}
-
+	if raw := d.GetRawConfig().GetAttr("warnpriorndays"); !raw.IsNull() {
+		systemgroup.Warnpriorndays = intPtr(d.Get("warnpriorndays").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("daystoexpire"); !raw.IsNull() {
+		systemgroup.Daystoexpire = intPtr(d.Get("daystoexpire").(int))
+	}
 	if raw := d.GetRawConfig().GetAttr("timeout"); !raw.IsNull() {
 		systemgroup.Timeout = intPtr(d.Get("timeout").(int))
 	}
@@ -143,6 +158,8 @@ func readSystemgroupFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	d.Set("groupname", data["groupname"])
+	setToInt("warnpriorndays", d, data["warnpriorndays"])
+	setToInt("daystoexpire", d, data["daystoexpire"])
 	d.Set("promptstring", data["promptstring"])
 	setToInt("timeout", d, data["timeout"])
 	d.Set("allowedmanagementinterface", data["allowedmanagementinterface"])
@@ -160,6 +177,16 @@ func updateSystemgroupFunc(ctx context.Context, d *schema.ResourceData, meta int
 		Groupname: d.Get("groupname").(string),
 	}
 	hasChange := false
+	if d.HasChange("warnpriorndays") {
+		log.Printf("[DEBUG]  citrixadc-provider: Warnpriorndays has changed for systemgroup, starting update")
+		systemgroup.Warnpriorndays = intPtr(d.Get("warnpriorndays").(int))
+		hasChange = true
+	}
+	if d.HasChange("daystoexpire") {
+		log.Printf("[DEBUG]  citrixadc-provider: Daystoexpire has changed for systemgroup, starting update")
+		systemgroup.Daystoexpire = intPtr(d.Get("daystoexpire").(int))
+		hasChange = true
+	}
 	if d.HasChange("promptstring") {
 		log.Printf("[DEBUG]  citrixadc-provider: Promptstring has changed for systemgroup %s, starting update", systemgroupName)
 		systemgroup.Promptstring = d.Get("promptstring").(string)

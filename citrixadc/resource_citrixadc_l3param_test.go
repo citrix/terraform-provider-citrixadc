@@ -29,6 +29,7 @@ const testAccL3param_basic = `
 		icmpgenratethreshold = 150
 		overridernat         = "DISABLED"
 		dropdfflag           = "DISABLED"
+		implicitpbr		 = "DISABLED"
 	}
   
 `
@@ -38,6 +39,7 @@ const testAccL3param_update = `
 		icmpgenratethreshold = 200
 		overridernat         = "ENABLED"
 		dropdfflag           = "ENABLED"
+		implicitpbr		 = "ENABLED"
 	}
   
 `
@@ -56,6 +58,7 @@ func TestAccL3param_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_l3param.tf_l3param", "icmpgenratethreshold", "150"),
 					resource.TestCheckResourceAttr("citrixadc_l3param.tf_l3param", "overridernat", "DISABLED"),
 					resource.TestCheckResourceAttr("citrixadc_l3param.tf_l3param", "dropdfflag", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_l3param.tf_l3param", "implicitpbr", "DISABLED"),
 				),
 			},
 			{
@@ -66,6 +69,7 @@ func TestAccL3param_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_l3param.tf_l3param", "icmpgenratethreshold", "200"),
 					resource.TestCheckResourceAttr("citrixadc_l3param.tf_l3param", "overridernat", "ENABLED"),
 					resource.TestCheckResourceAttr("citrixadc_l3param.tf_l3param", "dropdfflag", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_l3param.tf_l3param", "implicitpbr", "ENABLED"),
 				),
 			},
 		},

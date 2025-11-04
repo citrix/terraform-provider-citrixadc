@@ -40,6 +40,7 @@ resource "citrixadc_hanode" "remote_node" {
 * `maxfliptime` - (Optional) Interval after which flipping of node states can again start
 * `syncstatusstrictmode` - (Optional) strict mode flag for sync status
 * `syncvlan` - (Optional) Vlan on which HA related communication is sent. This include sync, propagation , connection mirroring , LB persistency config sync, persistent session sync and session state sync. However HA heartbeats can go all interfaces.
+* `rpcnodepassword` - (Optional) Password to be used in authentication with the peer rpc node.
 
 
 ## Attribute Reference

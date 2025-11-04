@@ -21,6 +21,21 @@ func resourceCitrixAdcIcaparameter() *schema.Resource {
 		UpdateContext: updateIcaparameterFunc,
 		DeleteContext: deleteIcaparameterFunc,
 		Schema: map[string]*schema.Schema{
+			"edtpmtudrediscovery": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"edtlosstolerant": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"dfpersistence": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"enablesronhafailover": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -59,6 +74,9 @@ func createIcaparameterFunc(ctx context.Context, d *schema.ResourceData, meta in
 		Enablesronhafailover: d.Get("enablesronhafailover").(string),
 		Hdxinsightnonnsap:    d.Get("hdxinsightnonnsap").(string),
 		Edtpmtuddf:           d.Get("edtpmtuddf").(string),
+		Dfpersistence:        d.Get("dfpersistence").(string),
+		Edtlosstolerant:      d.Get("edtlosstolerant").(string),
+		Edtpmtudrediscovery:  d.Get("edtpmtudrediscovery").(string),
 	}
 
 	if raw := d.GetRawConfig().GetAttr("l7latencyfrequency"); !raw.IsNull() {
@@ -89,6 +107,9 @@ func readIcaparameterFunc(ctx context.Context, d *schema.ResourceData, meta inte
 		return nil
 	}
 	d.Set("enablesronhafailover", data["enablesronhafailover"])
+	d.Set("edtpmtudrediscovery", data["edtpmtudrediscovery"])
+	d.Set("edtlosstolerant", data["edtlosstolerant"])
+	d.Set("dfpersistence", data["dfpersistence"])
 	d.Set("hdxinsightnonnsap", data["hdxinsightnonnsap"])
 	setToInt("l7latencyfrequency", d, data["l7latencyfrequency"])
 	d.Set("edtpmtuddf", data["edtpmtuddf"])
@@ -104,6 +125,21 @@ func updateIcaparameterFunc(ctx context.Context, d *schema.ResourceData, meta in
 
 	icaparameter := ica.Icaparameter{}
 	hasChange := false
+	if d.HasChange("edtpmtudrediscovery") {
+		log.Printf("[DEBUG]  citrixadc-provider: Edtpmtudrediscovery has changed for icaparameter, starting update")
+		icaparameter.Edtpmtudrediscovery = d.Get("edtpmtudrediscovery").(string)
+		hasChange = true
+	}
+	if d.HasChange("edtlosstolerant") {
+		log.Printf("[DEBUG]  citrixadc-provider: Edtlosstolerant has changed for icaparameter, starting update")
+		icaparameter.Edtlosstolerant = d.Get("edtlosstolerant").(string)
+		hasChange = true
+	}
+	if d.HasChange("dfpersistence") {
+		log.Printf("[DEBUG]  citrixadc-provider: Dfpersistence has changed for icaparameter, starting update")
+		icaparameter.Dfpersistence = d.Get("dfpersistence").(string)
+		hasChange = true
+	}
 	if d.HasChange("enablesronhafailover") {
 		log.Printf("[DEBUG]  citrixadc-provider: Enablesronhafailover has changed for icaparameter, starting update")
 		icaparameter.Enablesronhafailover = d.Get("enablesronhafailover").(string)

@@ -26,6 +26,41 @@ func resourceCitrixAdcNsacl() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"srcportdataset": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"srcipdataset": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"nodeid": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"destportdataset": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"destipdataset": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 			"aclaction": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -204,19 +239,18 @@ func createNsaclFunc(ctx context.Context, d *schema.ResourceData, meta interface
 	destport := false
 	srcip := false
 	srcport := false
-	if d.Get("destipval") != nil && d.Get("destipval") != "" {
+	if (d.Get("destipval") != nil && d.Get("destipval") != "") || (d.Get("destipdataset") != nil && d.Get("destipdataset") != "") {
 		destip = true
 	}
-	if d.Get("destportval") != nil && d.Get("destportval") != "" {
+	if d.Get("destportval") != nil && d.Get("destportval") != "" || (d.Get("destportdataset") != nil && d.Get("destportdataset") != "") {
 		destport = true
 	}
-	if d.Get("srcipval") != nil && d.Get("srcipval") != "" {
+	if d.Get("srcipval") != nil && d.Get("srcipval") != "" || (d.Get("srcipdataset") != nil && d.Get("srcipdataset") != "") {
 		srcip = true
 	}
-	if d.Get("srcportval") != nil && d.Get("srcportval") != "" {
+	if d.Get("srcportval") != nil && d.Get("srcportval") != "" || (d.Get("srcportdataset") != nil && d.Get("srcportdataset") != "") {
 		srcport = true
 	}
-
 	if d.Get("destipop") != nil && d.Get("destipval") == nil {
 		return diag.Errorf("Error in nsacl spec %s cannot have destipop without destipval", nsaclName)
 	}
@@ -231,31 +265,38 @@ func createNsaclFunc(ctx context.Context, d *schema.ResourceData, meta interface
 	}
 
 	nsacl := ns.Nsacl{
-		Aclaction:   d.Get("aclaction").(string),
-		Aclname:     d.Get("aclname").(string),
-		Destip:      destip,
-		Destipop:    d.Get("destipop").(string),
-		Destipval:   d.Get("destipval").(string),
-		Destport:    destport,
-		Destportop:  d.Get("destportop").(string),
-		Destportval: d.Get("destportval").(string),
-		Dfdhash:     d.Get("dfdhash").(string),
-		Established: d.Get("established").(bool),
-		Interface:   d.Get("interface").(string),
-		Logstate:    d.Get("logstate").(string),
-		Protocol:    d.Get("protocol").(string),
-		Srcip:       srcip,
-		Srcipop:     d.Get("srcipop").(string),
-		Srcipval:    d.Get("srcipval").(string),
-		Srcmac:      d.Get("srcmac").(string),
-		Srcmacmask:  d.Get("srcmacmask").(string),
-		Srcport:     srcport,
-		Srcportop:   d.Get("srcportop").(string),
-		Srcportval:  d.Get("srcportval").(string),
-		State:       d.Get("state").(string),
-		Stateful:    d.Get("stateful").(string),
+		Aclaction:       d.Get("aclaction").(string),
+		Aclname:         d.Get("aclname").(string),
+		Destip:          destip,
+		Destipop:        d.Get("destipop").(string),
+		Destipval:       d.Get("destipval").(string),
+		Destport:        destport,
+		Destportop:      d.Get("destportop").(string),
+		Destportval:     d.Get("destportval").(string),
+		Dfdhash:         d.Get("dfdhash").(string),
+		Established:     d.Get("established").(bool),
+		Interface:       d.Get("interface").(string),
+		Logstate:        d.Get("logstate").(string),
+		Protocol:        d.Get("protocol").(string),
+		Srcip:           srcip,
+		Srcipop:         d.Get("srcipop").(string),
+		Srcipval:        d.Get("srcipval").(string),
+		Srcmac:          d.Get("srcmac").(string),
+		Srcmacmask:      d.Get("srcmacmask").(string),
+		Srcport:         srcport,
+		Srcportop:       d.Get("srcportop").(string),
+		Srcportval:      d.Get("srcportval").(string),
+		State:           d.Get("state").(string),
+		Stateful:        d.Get("stateful").(string),
+		Destipdataset:   d.Get("destipdataset").(string),
+		Destportdataset: d.Get("destportdataset").(string),
+		Srcipdataset:    d.Get("srcipdataset").(string),
+		Srcportdataset:  d.Get("srcportdataset").(string),
+		Type:            d.Get("type").(string),
 	}
-
+	if raw := d.GetRawConfig().GetAttr("nodeid"); !raw.IsNull() {
+		nsacl.Nodeid = intPtr(d.Get("nodeid").(int))
+	}
 	if raw := d.GetRawConfig().GetAttr("icmpcode"); !raw.IsNull() {
 		nsacl.Icmpcode = intPtr(d.Get("icmpcode").(int))
 	}
@@ -306,6 +347,12 @@ func readNsaclFunc(ctx context.Context, d *schema.ResourceData, meta interface{}
 		return nil
 	}
 	d.Set("aclname", data["aclname"])
+	d.Set("type", data["type"])
+	d.Set("srcportdataset", data["srcportdataset"])
+	d.Set("srcipdataset", data["srcipdataset"])
+	setToInt("nodeid", d, data["nodeid"])
+	d.Set("destportdataset", data["destportdataset"])
+	d.Set("destipdataset", data["destipdataset"])
 	d.Set("aclaction", data["aclaction"])
 	d.Set("aclname", data["aclname"])
 	d.Set("destip", data["destip"])
@@ -353,6 +400,11 @@ func updateNsaclFunc(ctx context.Context, d *schema.ResourceData, meta interface
 	}
 	stateChange := false
 	hasChange := false
+	if d.HasChange("nodeid") {
+		log.Printf("[DEBUG]  citrixadc-provider: Nodeid has changed for nsacl, starting update")
+		nsacl.Nodeid = intPtr(d.Get("nodeid").(int))
+		hasChange = true
+	}
 	if d.HasChange("aclaction") {
 		log.Printf("[DEBUG]  netscaler-provider: Aclaction has changed for nsacl %s, starting update", nsaclName)
 		nsacl.Aclaction = d.Get("aclaction").(string)

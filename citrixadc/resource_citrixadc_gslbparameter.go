@@ -25,6 +25,16 @@ func resourceCitrixAdcGslbparameter() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"undefaction": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"gslbsyncsaveconfigcommand": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"automaticconfigsync": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -105,13 +115,15 @@ func createGslbparameterFunc(ctx context.Context, d *schema.ResourceData, meta i
 	gslbparameterName := resource.PrefixedUniqueId("tf-gslbparameter-")
 
 	gslbparameter := gslb.Gslbparameter{
-		Automaticconfigsync:   d.Get("automaticconfigsync").(string),
-		Dropldnsreq:           d.Get("dropldnsreq").(string),
-		Gslbconfigsyncmonitor: d.Get("gslbconfigsyncmonitor").(string),
-		Gslbsynclocfiles:      d.Get("gslbsynclocfiles").(string),
-		Gslbsyncmode:          d.Get("gslbsyncmode").(string),
-		Ldnsmask:              d.Get("ldnsmask").(string),
-		Ldnsprobeorder:        toStringList(d.Get("ldnsprobeorder").([]interface{})),
+		Automaticconfigsync:       d.Get("automaticconfigsync").(string),
+		Dropldnsreq:               d.Get("dropldnsreq").(string),
+		Gslbconfigsyncmonitor:     d.Get("gslbconfigsyncmonitor").(string),
+		Gslbsynclocfiles:          d.Get("gslbsynclocfiles").(string),
+		Gslbsyncmode:              d.Get("gslbsyncmode").(string),
+		Ldnsmask:                  d.Get("ldnsmask").(string),
+		Ldnsprobeorder:            toStringList(d.Get("ldnsprobeorder").([]interface{})),
+		Gslbsyncsaveconfigcommand: d.Get("gslbsyncsaveconfigcommand").(string),
+		Undefaction:               d.Get("undefaction").(string),
 	}
 
 	if raw := d.GetRawConfig().GetAttr("gslbsvcstatedelaytime"); !raw.IsNull() {
@@ -156,6 +168,8 @@ func readGslbparameterFunc(ctx context.Context, d *schema.ResourceData, meta int
 		return nil
 	}
 	d.Set("automaticconfigsync", data["automaticconfigsync"])
+	d.Set("undefaction", data["undefaction"])
+	d.Set("gslbsyncsaveconfigcommand", data["gslbsyncsaveconfigcommand"])
 	d.Set("dropldnsreq", data["dropldnsreq"])
 	d.Set("gslbconfigsyncmonitor", data["gslbconfigsyncmonitor"])
 	setToInt("gslbsvcstatedelaytime", d, data["gslbsvcstatedelaytime"])
@@ -180,6 +194,16 @@ func updateGslbparameterFunc(ctx context.Context, d *schema.ResourceData, meta i
 
 	gslbparameter := gslb.Gslbparameter{}
 	hasChange := false
+	if d.HasChange("undefaction") {
+		log.Printf("[DEBUG]  citrixadc-provider: Undefaction has changed for gslbparameter, starting update")
+		gslbparameter.Undefaction = d.Get("undefaction").(string)
+		hasChange = true
+	}
+	if d.HasChange("gslbsyncsaveconfigcommand") {
+		log.Printf("[DEBUG]  citrixadc-provider: Gslbsyncsaveconfigcommand has changed for gslbparameter, starting update")
+		gslbparameter.Gslbsyncsaveconfigcommand = d.Get("gslbsyncsaveconfigcommand").(string)
+		hasChange = true
+	}
 	if d.HasChange("automaticconfigsync") {
 		log.Printf("[DEBUG]  citrixadc-provider: Automaticconfigsync has changed for gslbparameter, starting update")
 		gslbparameter.Automaticconfigsync = d.Get("automaticconfigsync").(string)

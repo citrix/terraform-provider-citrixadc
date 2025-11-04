@@ -26,6 +26,11 @@ func resourceCitrixAdcInat() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"connfailover": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"ftp": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -114,6 +119,7 @@ func createInatFunc(ctx context.Context, d *schema.ResourceData, meta interface{
 		Useproxyport: d.Get("useproxyport").(string),
 		Usip:         d.Get("usip").(string),
 		Usnip:        d.Get("usnip").(string),
+		Connfailover: d.Get("connfailover").(string),
 	}
 
 	if raw := d.GetRawConfig().GetAttr("td"); !raw.IsNull() {
@@ -143,6 +149,7 @@ func readInatFunc(ctx context.Context, d *schema.ResourceData, meta interface{})
 		return nil
 	}
 	d.Set("name", data["name"])
+	d.Set("connfailover", data["connfailover"])
 	d.Set("ftp", data["ftp"])
 	d.Set("mode", data["mode"])
 	d.Set("name", data["name"])
@@ -169,6 +176,11 @@ func updateInatFunc(ctx context.Context, d *schema.ResourceData, meta interface{
 		Name: d.Get("name").(string),
 	}
 	hasChange := false
+	if d.HasChange("connfailover") {
+		log.Printf("[DEBUG]  citrixadc-provider: Connfailover has changed for inat, starting update")
+		inat.Connfailover = d.Get("connfailover").(string)
+		hasChange = true
+	}
 	if d.HasChange("ftp") {
 		log.Printf("[DEBUG]  netscaler-provider: Ftp has changed for inat %s, starting update", inatName)
 		inat.Ftp = d.Get("ftp").(string)

@@ -25,15 +25,45 @@ import (
 
 const testAccSystembackup_basic = `
 
-
 resource "citrixadc_systembackup" "tf_systembackup" {
 	filename         = "new.tgz"
+	}
+  
+`
+
+func TestAccSystembackup_basic(t *testing.T) {
+	t.Skip("TODO: Need to find a way to test this resource!")
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckSystembackupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSystembackup_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSystembackupExist("citrixadc_systembackup.tf_systembackup", nil),
+				),
+			},
+		},
+	})
+}
+
+const testAccSystembackup_advanced = `
+
+
+resource "citrixadc_systembackup" "tf_systembackup" {
+	filename         = "new1.tgz"
+	uselocaltimezone = true
+	skipbackup      = false
+	level           = "full"
+	includekernel  = "YES"
+	comment        = "my backup"
 	}
   
   
 `
 
-func TestAccSystembackup_basic(t *testing.T) {
+func TestAccSystembackup_advanced(t *testing.T) {
 	t.Skip("TODO: Need to find a way to test this resource!")
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },

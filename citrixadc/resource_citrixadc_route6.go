@@ -25,6 +25,12 @@ func resourceCitrixAdcRoute6() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"mgmt": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 			"network": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -112,6 +118,7 @@ func createRoute6Func(ctx context.Context, d *schema.ResourceData, meta interfac
 		Network:    d.Get("network").(string),
 		Ownergroup: d.Get("ownergroup").(string),
 		Routetype:  d.Get("routetype").(string),
+		Mgmt:       d.Get("mgmt").(bool),
 	}
 
 	if raw := d.GetRawConfig().GetAttr("cost"); !raw.IsNull() {
@@ -169,6 +176,7 @@ func readRoute6Func(ctx context.Context, d *schema.ResourceData, meta interface{
 	}
 	data := dataArr[foundIndex]
 	d.Set("advertise", data["advertise"])
+	d.Set("mgmt", data["mgmt"])
 	setToInt("cost", d, data["cost"])
 	d.Set("detail", data["detail"])
 	setToInt("distance", d, data["distance"])

@@ -50,11 +50,6 @@ func resourceCitrixAdcAuthenticationsamlidppolicy() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"newname": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
 			"undefaction": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -73,7 +68,6 @@ func createAuthenticationsamlidppolicyFunc(ctx context.Context, d *schema.Resour
 		Comment:     d.Get("comment").(string),
 		Logaction:   d.Get("logaction").(string),
 		Name:        d.Get("name").(string),
-		Newname:     d.Get("newname").(string),
 		Rule:        d.Get("rule").(string),
 		Undefaction: d.Get("undefaction").(string),
 	}
@@ -103,7 +97,6 @@ func readAuthenticationsamlidppolicyFunc(ctx context.Context, d *schema.Resource
 	d.Set("comment", data["comment"])
 	d.Set("logaction", data["logaction"])
 	d.Set("name", data["name"])
-	d.Set("newname", data["newname"])
 	d.Set("rule", data["rule"])
 	d.Set("undefaction", data["undefaction"])
 
@@ -133,11 +126,6 @@ func updateAuthenticationsamlidppolicyFunc(ctx context.Context, d *schema.Resour
 	if d.HasChange("logaction") {
 		log.Printf("[DEBUG]  citrixadc-provider: Logaction has changed for authenticationsamlidppolicy %s, starting update", authenticationsamlidppolicyName)
 		authenticationsamlidppolicy.Logaction = d.Get("logaction").(string)
-		hasChange = true
-	}
-	if d.HasChange("newname") {
-		log.Printf("[DEBUG]  citrixadc-provider: Newname has changed for authenticationsamlidppolicy %s, starting update", authenticationsamlidppolicyName)
-		authenticationsamlidppolicy.Newname = d.Get("newname").(string)
 		hasChange = true
 	}
 	if d.HasChange("rule") {

@@ -17,11 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 const testAccBotprofile_ratelimit_binding_basic = `
@@ -81,6 +82,12 @@ func TestAccBotprofile_ratelimit_binding_basic(t *testing.T) {
 				Config: testAccBotprofile_ratelimit_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBotprofile_ratelimit_bindingExist("citrixadc_botprofile_ratelimit_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_botprofile_ratelimit_binding.tf_binding", "bot_ratelimit", "true"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile_ratelimit_binding.tf_binding", "bot_rate_limit_type", "SESSION"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile_ratelimit_binding.tf_binding", "bot_rate_limit_enabled", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile_ratelimit_binding.tf_binding", "cookiename", "name"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile_ratelimit_binding.tf_binding", "rate", "3"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile_ratelimit_binding.tf_binding", "timeslice", "20"),
 				),
 			},
 			{

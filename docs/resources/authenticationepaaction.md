@@ -28,6 +28,7 @@ resource "citrixadc_authenticationepaaction" "tf_epaaction" {
 * `deletefiles` - (Optional) String specifying the path(s) and name(s) of the files to be deleted by the endpoint analysis (EPA) tool. Multiple files to be delimited by comma
 * `killprocess` - (Optional) String specifying the name of a process to be terminated by the endpoint analysis (EPA) tool. Multiple processes to be delimited by comma
 * `quarantinegroup` - (Optional) This is the quarantine group that is chosen when the EPA check fails if configured.
+* `deviceposture` - (Optional) Parameter to enable/disable device posture service scan
 
 
 ## Attribute Reference

@@ -22,6 +22,11 @@ func resourceCitrixAdcL3param() *schema.Resource {
 		UpdateContext: updateL3paramFunc,
 		DeleteContext: deleteL3paramFunc,
 		Schema: map[string]*schema.Schema{
+			"implicitpbr": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"acllogtime": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -120,15 +125,14 @@ func createL3paramFunc(ctx context.Context, d *schema.ResourceData, meta interfa
 		Srcnat:               d.Get("srcnat").(string),
 		Tnlpmtuwoconn:        d.Get("tnlpmtuwoconn").(string),
 		Usipserverstraypkt:   d.Get("usipserverstraypkt").(string),
+		Implicitpbr:          d.Get("implicitpbr").(string),
 	}
-
 	if raw := d.GetRawConfig().GetAttr("acllogtime"); !raw.IsNull() {
 		l3param.Acllogtime = intPtr(d.Get("acllogtime").(int))
 	}
 	if raw := d.GetRawConfig().GetAttr("icmpgenratethreshold"); !raw.IsNull() {
 		l3param.Icmpgenratethreshold = intPtr(d.Get("icmpgenratethreshold").(int))
 	}
-
 	err := client.UpdateUnnamedResource(service.L3param.Type(), &l3param)
 	if err != nil {
 		return diag.FromErr(err)
@@ -151,6 +155,7 @@ func readL3paramFunc(ctx context.Context, d *schema.ResourceData, meta interface
 	}
 	setToInt("acllogtime", d, data["acllogtime"])
 	d.Set("allowclasseipv4", data["allowclasseipv4"])
+	d.Set("implicitpbr", data["implicitpbr"])
 	d.Set("dropdfflag", data["dropdfflag"])
 	d.Set("dropipfragments", data["dropipfragments"])
 	d.Set("dynamicrouting", data["dynamicrouting"])
@@ -175,6 +180,11 @@ func updateL3paramFunc(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	l3param := network.L3param{}
 	hasChange := false
+	if d.HasChange("implicitpbr") {
+		log.Printf("[DEBUG]  citrixadc-provider: Implicitpbr has changed for l3param, starting update")
+		l3param.Implicitpbr = d.Get("implicitpbr").(string)
+		hasChange = true
+	}
 	if d.HasChange("acllogtime") {
 		log.Printf("[DEBUG]  citrixadc-provider: Acllogtime has changed for l3param, starting update")
 		l3param.Acllogtime = intPtr(d.Get("acllogtime").(int))

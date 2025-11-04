@@ -289,7 +289,11 @@ const (
 	Autoscalepolicy_binding
 	Autoscalepolicy_nstimer_binding
 	Autoscaleprofile
+	Botpolicy
+	Botpolicylabel
 	Configstatus
+	Contentinspectionpolicy
+	Contentinspectionpolicylabel
 	Dbsmonitors
 	Extendedmemoryparam
 	Location
@@ -491,6 +495,7 @@ const (
 	Gslbparameter
 	Gslbrunningconfig
 	Gslbservice
+	Gslbservicegroup
 	Gslbservice_binding
 	Gslbservice_dnsview_binding
 	Gslbservice_lbmonitor_binding
@@ -513,6 +518,8 @@ const (
 	Hanode_routemonitor6_binding
 	Hanode_routemonitor_binding
 	Hasync
+	Icaaction
+	Icapolicy
 	Ipsecparameter
 	Ipsecprofile
 	Lbgroup
@@ -744,6 +751,7 @@ const (
 	Policyhttpcallout
 	Policymap
 	Policypatset
+	Policypatsetfile
 	Policypatset_binding
 	Policypatset_pattern_binding
 	Policystringmap
@@ -1322,7 +1330,11 @@ var resources = []string{
 	"autoscalepolicy_binding",
 	"autoscalepolicy_nstimer_binding",
 	"autoscaleprofile",
+	"botpolicy",
+	"botpolicylabel",
 	"configstatus",
+	"contentinspectionpolicy",
+	"contentinspectionpolicylabel",
 	"dbsmonitors",
 	"extendedmemoryparam",
 	"location",
@@ -1524,6 +1536,7 @@ var resources = []string{
 	"gslbparameter",
 	"gslbrunningconfig",
 	"gslbservice",
+	"gslbservicegroup",
 	"gslbservice_binding",
 	"gslbservice_dnsview_binding",
 	"gslbservice_lbmonitor_binding",
@@ -1546,6 +1559,8 @@ var resources = []string{
 	"hanode_routemonitor6_binding",
 	"hanode_routemonitor_binding",
 	"hasync",
+	"icaction",
+	"icapolicy",
 	"ipsecparameter",
 	"ipsecprofile",
 	"lbgroup",
@@ -1777,6 +1792,7 @@ var resources = []string{
 	"policyhttpcallout",
 	"policymap",
 	"policypatset",
+	"policypatsetfile",
 	"policypatset_binding",
 	"policypatset_pattern_binding",
 	"policystringmap",

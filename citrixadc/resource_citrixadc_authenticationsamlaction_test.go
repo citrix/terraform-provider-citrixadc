@@ -32,6 +32,8 @@ const testAccAuthenticationsamlaction_add = `
 		requestedauthncontext = "minimum"
 		digestmethod          = "SHA1"
 		signaturealg          = "RSA-SHA256"
+		statechecks      = "false"
+		preferredbindtype	= ["SSOREDIRECT"]
 	}
 `
 const testAccAuthenticationsamlaction_update = `
@@ -43,6 +45,8 @@ const testAccAuthenticationsamlaction_update = `
 		requestedauthncontext = "minimum"
 		digestmethod          = "SHA256"
 		signaturealg          = "RSA-SHA256"
+		statechecks      = "true"
+		preferredbindtype	= ["LOGOUTPOST"]
 	}
 `
 
@@ -59,6 +63,7 @@ func TestAccAuthenticationsamlaction_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_authenticationsamlaction.tf_samlaction", "name", "tf_samlaction"),
 					resource.TestCheckResourceAttr("citrixadc_authenticationsamlaction.tf_samlaction", "samltwofactor", "ON"),
 					resource.TestCheckResourceAttr("citrixadc_authenticationsamlaction.tf_samlaction", "digestmethod", "SHA1"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationsamlaction.tf_samlaction", "statechecks", "false"),
 				),
 			},
 			{
@@ -68,6 +73,7 @@ func TestAccAuthenticationsamlaction_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_authenticationsamlaction.tf_samlaction", "name", "tf_samlaction"),
 					resource.TestCheckResourceAttr("citrixadc_authenticationsamlaction.tf_samlaction", "samltwofactor", "OFF"),
 					resource.TestCheckResourceAttr("citrixadc_authenticationsamlaction.tf_samlaction", "digestmethod", "SHA256"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationsamlaction.tf_samlaction", "statechecks", "true"),
 				),
 			},
 		},

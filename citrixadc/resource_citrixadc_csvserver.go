@@ -27,6 +27,76 @@ func resourceCitrixAdcCsvserver() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"v6persistmasklen": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"timeout": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"tcpprobeport": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"quicprofilename": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"probesuccessresponsecode": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"probeprotocol": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"probeport": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"persistmask": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"persistencebackup": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"dtls": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"dnsoverhttps": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"cookiename": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"backuppersistencetimeout": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"apiprofile": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"appflowlog": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -472,60 +542,83 @@ func createCsvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	csvserver := cs.Csvserver{
-		Name:                 csvserverName,
-		Appflowlog:           d.Get("appflowlog").(string),
-		Authentication:       d.Get("authentication").(string),
-		Authenticationhost:   d.Get("authenticationhost").(string),
-		Authn401:             d.Get("authn401").(string),
-		Authnprofile:         d.Get("authnprofile").(string),
-		Authnvsname:          d.Get("authnvsname").(string),
-		Backupip:             d.Get("backupip").(string),
-		Backupvserver:        d.Get("backupvserver").(string),
-		Cacheable:            d.Get("cacheable").(string),
-		Casesensitive:        d.Get("casesensitive").(string),
-		Comment:              d.Get("comment").(string),
-		Cookiedomain:         d.Get("cookiedomain").(string),
-		Dbprofilename:        d.Get("dbprofilename").(string),
-		Disableprimaryondown: d.Get("disableprimaryondown").(string),
-		Dnsprofilename:       d.Get("dnsprofilename").(string),
-		Dnsrecordtype:        d.Get("dnsrecordtype").(string),
-		Domainname:           d.Get("domainname").(string),
-		Downstateflush:       d.Get("downstateflush").(string),
-		Httpprofilename:      d.Get("httpprofilename").(string),
-		Httpsredirecturl:     d.Get("httpsredirecturl").(string),
-		Icmpvsrresponse:      d.Get("icmpvsrresponse").(string),
-		Insertvserveripport:  d.Get("insertvserveripport").(string),
-		Ipmask:               d.Get("ipmask").(string),
-		Ippattern:            d.Get("ippattern").(string),
-		Ipset:                d.Get("ipset").(string),
-		Ipv46:                d.Get("ipv46").(string),
-		L2conn:               d.Get("l2conn").(string),
-		Listenpolicy:         d.Get("listenpolicy").(string),
-		Mssqlserverversion:   d.Get("mssqlserverversion").(string),
-		Mysqlserverversion:   d.Get("mysqlserverversion").(string),
-		Netprofile:           d.Get("netprofile").(string),
-		Oracleserverversion:  d.Get("oracleserverversion").(string),
-		Persistencetype:      d.Get("persistencetype").(string),
-		Precedence:           d.Get("precedence").(string),
-		Push:                 d.Get("push").(string),
-		Pushlabel:            d.Get("pushlabel").(string),
-		Pushmulticlients:     d.Get("pushmulticlients").(string),
-		Pushvserver:          d.Get("pushvserver").(string),
-		Redirectportrewrite:  d.Get("redirectportrewrite").(string),
-		Redirecturl:          d.Get("redirecturl").(string),
-		Rhistate:             d.Get("rhistate").(string),
-		Rtspnat:              d.Get("rtspnat").(string),
-		Servicetype:          d.Get("servicetype").(string),
-		Sobackupaction:       d.Get("sobackupaction").(string),
-		Somethod:             d.Get("somethod").(string),
-		Sopersistence:        d.Get("sopersistence").(string),
-		State:                d.Get("state").(string),
-		Stateupdate:          d.Get("stateupdate").(string),
-		Targettype:           d.Get("targettype").(string),
-		Tcpprofilename:       d.Get("tcpprofilename").(string),
-		Vipheader:            d.Get("vipheader").(string),
+		Name:                     csvserverName,
+		Appflowlog:               d.Get("appflowlog").(string),
+		Authentication:           d.Get("authentication").(string),
+		Authenticationhost:       d.Get("authenticationhost").(string),
+		Authn401:                 d.Get("authn401").(string),
+		Authnprofile:             d.Get("authnprofile").(string),
+		Authnvsname:              d.Get("authnvsname").(string),
+		Backupip:                 d.Get("backupip").(string),
+		Backupvserver:            d.Get("backupvserver").(string),
+		Cacheable:                d.Get("cacheable").(string),
+		Casesensitive:            d.Get("casesensitive").(string),
+		Comment:                  d.Get("comment").(string),
+		Cookiedomain:             d.Get("cookiedomain").(string),
+		Dbprofilename:            d.Get("dbprofilename").(string),
+		Disableprimaryondown:     d.Get("disableprimaryondown").(string),
+		Dnsprofilename:           d.Get("dnsprofilename").(string),
+		Dnsrecordtype:            d.Get("dnsrecordtype").(string),
+		Domainname:               d.Get("domainname").(string),
+		Downstateflush:           d.Get("downstateflush").(string),
+		Httpprofilename:          d.Get("httpprofilename").(string),
+		Httpsredirecturl:         d.Get("httpsredirecturl").(string),
+		Icmpvsrresponse:          d.Get("icmpvsrresponse").(string),
+		Insertvserveripport:      d.Get("insertvserveripport").(string),
+		Ipmask:                   d.Get("ipmask").(string),
+		Ippattern:                d.Get("ippattern").(string),
+		Ipset:                    d.Get("ipset").(string),
+		Ipv46:                    d.Get("ipv46").(string),
+		L2conn:                   d.Get("l2conn").(string),
+		Listenpolicy:             d.Get("listenpolicy").(string),
+		Mssqlserverversion:       d.Get("mssqlserverversion").(string),
+		Mysqlserverversion:       d.Get("mysqlserverversion").(string),
+		Netprofile:               d.Get("netprofile").(string),
+		Oracleserverversion:      d.Get("oracleserverversion").(string),
+		Persistencetype:          d.Get("persistencetype").(string),
+		Precedence:               d.Get("precedence").(string),
+		Push:                     d.Get("push").(string),
+		Pushlabel:                d.Get("pushlabel").(string),
+		Pushmulticlients:         d.Get("pushmulticlients").(string),
+		Pushvserver:              d.Get("pushvserver").(string),
+		Redirectportrewrite:      d.Get("redirectportrewrite").(string),
+		Redirecturl:              d.Get("redirecturl").(string),
+		Rhistate:                 d.Get("rhistate").(string),
+		Rtspnat:                  d.Get("rtspnat").(string),
+		Servicetype:              d.Get("servicetype").(string),
+		Sobackupaction:           d.Get("sobackupaction").(string),
+		Somethod:                 d.Get("somethod").(string),
+		Sopersistence:            d.Get("sopersistence").(string),
+		State:                    d.Get("state").(string),
+		Stateupdate:              d.Get("stateupdate").(string),
+		Targettype:               d.Get("targettype").(string),
+		Tcpprofilename:           d.Get("tcpprofilename").(string),
+		Vipheader:                d.Get("vipheader").(string),
+		Apiprofile:               d.Get("apiprofile").(string),
+		Cookiename:               d.Get("cookiename").(string),
+		Dnsoverhttps:             d.Get("dnsoverhttps").(string),
+		Dtls:                     d.Get("dtls").(string),
+		Persistencebackup:        d.Get("persistencebackup").(string),
+		Persistmask:              d.Get("persistmask").(string),
+		Probeprotocol:            d.Get("probeprotocol").(string),
+		Probesuccessresponsecode: d.Get("probesuccessresponsecode").(string),
+		Quicprofilename:          d.Get("quicprofilename").(string),
 	}
-
+	if raw := d.GetRawConfig().GetAttr("v6persistmasklen"); !raw.IsNull() {
+		csvserver.V6persistmasklen = intPtr(d.Get("v6persistmasklen").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("timeout"); !raw.IsNull() {
+		csvserver.Timeout = intPtr(d.Get("timeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("tcpprobeport"); !raw.IsNull() {
+		csvserver.Tcpprobeport = intPtr(d.Get("tcpprobeport").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("probeport"); !raw.IsNull() {
+		csvserver.Probeport = intPtr(d.Get("probeport").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("backuppersistencetimeout"); !raw.IsNull() {
+		csvserver.Backuppersistencetimeout = intPtr(d.Get("backuppersistencetimeout").(int))
+	}
 	if raw := d.GetRawConfig().GetAttr("clttimeout"); !raw.IsNull() {
 		csvserver.Clttimeout = intPtr(d.Get("clttimeout").(int))
 	}
@@ -673,6 +766,20 @@ func readCsvserverFunc(ctx context.Context, d *schema.ResourceData, meta interfa
 		return nil
 	}
 	d.Set("name", data["name"])
+	setToInt("v6persistmasklen", d, data["v6persistmasklen"])
+	setToInt("timeout", d, data["timeout"])
+	setToInt("tcpprobeport", d, data["tcpprobeport"])
+	d.Set("quicprofilename", data["quicprofilename"])
+	d.Set("probesuccessresponsecode", data["probesuccessresponsecode"])
+	d.Set("probeprotocol", data["probeprotocol"])
+	setToInt("probeport", d, data["probeport"])
+	d.Set("persistmask", data["persistmask"])
+	d.Set("persistencebackup", data["persistencebackup"])
+	d.Set("dtls", data["dtls"])
+	d.Set("dnsoverhttps", data["dnsoverhttps"])
+	d.Set("cookiename", data["cookiename"])
+	setToInt("backuppersistencetimeout", d, data["backuppersistencetimeout"])
+	d.Set("apiprofile", data["apiprofile"])
 	d.Set("appflowlog", data["appflowlog"])
 	d.Set("authentication", data["authentication"])
 	d.Set("authenticationhost", data["authenticationhost"])
@@ -781,6 +888,76 @@ func updateCsvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	stateChange := false
 	hasChange := false
+	if d.HasChange("v6persistmasklen") {
+		log.Printf("[DEBUG]  citrixadc-provider: V6persistmasklen has changed for csvserver, starting update")
+		csvserver.V6persistmasklen = intPtr(d.Get("v6persistmasklen").(int))
+		hasChange = true
+	}
+	if d.HasChange("timeout") {
+		log.Printf("[DEBUG]  citrixadc-provider: Timeout has changed for csvserver, starting update")
+		csvserver.Timeout = intPtr(d.Get("timeout").(int))
+		hasChange = true
+	}
+	if d.HasChange("tcpprobeport") {
+		log.Printf("[DEBUG]  citrixadc-provider: Tcpprobeport has changed for csvserver, starting update")
+		csvserver.Tcpprobeport = intPtr(d.Get("tcpprobeport").(int))
+		hasChange = true
+	}
+	if d.HasChange("quicprofilename") {
+		log.Printf("[DEBUG]  citrixadc-provider: Quicprofilename has changed for csvserver, starting update")
+		csvserver.Quicprofilename = d.Get("quicprofilename").(string)
+		hasChange = true
+	}
+	if d.HasChange("probesuccessresponsecode") {
+		log.Printf("[DEBUG]  citrixadc-provider: Probesuccessresponsecode has changed for csvserver, starting update")
+		csvserver.Probesuccessresponsecode = d.Get("probesuccessresponsecode").(string)
+		hasChange = true
+	}
+	if d.HasChange("probeprotocol") {
+		log.Printf("[DEBUG]  citrixadc-provider: Probeprotocol has changed for csvserver, starting update")
+		csvserver.Probeprotocol = d.Get("probeprotocol").(string)
+		hasChange = true
+	}
+	if d.HasChange("probeport") {
+		log.Printf("[DEBUG]  citrixadc-provider: Probeport has changed for csvserver, starting update")
+		csvserver.Probeport = intPtr(d.Get("probeport").(int))
+		hasChange = true
+	}
+	if d.HasChange("persistmask") {
+		log.Printf("[DEBUG]  citrixadc-provider: Persistmask has changed for csvserver, starting update")
+		csvserver.Persistmask = d.Get("persistmask").(string)
+		hasChange = true
+	}
+	if d.HasChange("persistencebackup") {
+		log.Printf("[DEBUG]  citrixadc-provider: Persistencebackup has changed for csvserver, starting update")
+		csvserver.Persistencebackup = d.Get("persistencebackup").(string)
+		hasChange = true
+	}
+	if d.HasChange("dtls") {
+		log.Printf("[DEBUG]  citrixadc-provider: Dtls has changed for csvserver, starting update")
+		csvserver.Dtls = d.Get("dtls").(string)
+		hasChange = true
+	}
+	if d.HasChange("dnsoverhttps") {
+		log.Printf("[DEBUG]  citrixadc-provider: Dnsoverhttps has changed for csvserver, starting update")
+		csvserver.Dnsoverhttps = d.Get("dnsoverhttps").(string)
+		hasChange = true
+	}
+	if d.HasChange("cookiename") {
+		log.Printf("[DEBUG]  citrixadc-provider: Cookiename has changed for csvserver, starting update")
+		csvserver.Cookiename = d.Get("cookiename").(string)
+		hasChange = true
+	}
+	if d.HasChange("backuppersistencetimeout") {
+		log.Printf("[DEBUG]  citrixadc-provider: Backuppersistencetimeout has changed for csvserver, starting update")
+		csvserver.Backuppersistencetimeout = intPtr(d.Get("backuppersistencetimeout").(int))
+		hasChange = true
+	}
+	if d.HasChange("apiprofile") {
+		log.Printf("[DEBUG]  citrixadc-provider: Apiprofile has changed for csvserver, starting update")
+		csvserver.Apiprofile = d.Get("apiprofile").(string)
+		hasChange = true
+	}
 	sslcertkeyChanged := false
 	sslprofileChanged := false
 	snisslcertkeysChanged := false

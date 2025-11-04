@@ -32,11 +32,6 @@ func resourceCitrixAdcVideooptimizationdetectionaction() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"newname": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
 		},
 	}
 }
@@ -48,7 +43,6 @@ func createVideooptimizationdetectionactionFunc(ctx context.Context, d *schema.R
 	videooptimizationdetectionaction := videooptimization.Videooptimizationdetectionaction{
 		Comment: d.Get("comment").(string),
 		Name:    d.Get("name").(string),
-		Newname: d.Get("newname").(string),
 		Type:    d.Get("type").(string),
 	}
 
@@ -76,7 +70,6 @@ func readVideooptimizationdetectionactionFunc(ctx context.Context, d *schema.Res
 	d.Set("name", data["name"])
 	d.Set("comment", data["comment"])
 	d.Set("name", data["name"])
-	d.Set("newname", data["newname"])
 	d.Set("type", data["type"])
 
 	return nil
@@ -95,11 +88,6 @@ func updateVideooptimizationdetectionactionFunc(ctx context.Context, d *schema.R
 	if d.HasChange("comment") {
 		log.Printf("[DEBUG]  citrixadc-provider: Comment has changed for videooptimizationdetectionaction %s, starting update", videooptimizationdetectionactionName)
 		videooptimizationdetectionaction.Comment = d.Get("comment").(string)
-		hasChange = true
-	}
-	if d.HasChange("newname") {
-		log.Printf("[DEBUG]  citrixadc-provider: Newname has changed for videooptimizationdetectionaction %s, starting update", videooptimizationdetectionactionName)
-		videooptimizationdetectionaction.Newname = d.Get("newname").(string)
 		hasChange = true
 	}
 	if d.HasChange("type") {

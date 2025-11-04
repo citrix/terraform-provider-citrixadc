@@ -30,6 +30,10 @@ resource "citrixadc_icaparameter" "tf_icaparameter" {
 	edtpmtuddftimeout    = 200
 	l7latencyfrequency   = 0
 	enablesronhafailover = "YES"
+	edtpmtudrediscovery = "DISABLED"
+	edtlosstolerant = "DISABLED"
+	dfpersistence = "DISABLED"
+	hdxinsightnonnsap = "NO"
 	}
   
 `
@@ -40,6 +44,10 @@ resource "citrixadc_icaparameter" "tf_icaparameter" {
 	edtpmtuddftimeout    = 100
 	l7latencyfrequency   = 30
 	enablesronhafailover = "NO"
+	edtpmtudrediscovery = "ENABLED"
+	edtlosstolerant = "ENABLED"
+	dfpersistence = "ENABLED"
+	hdxinsightnonnsap = "YES"
 	}
   
 `
@@ -58,6 +66,10 @@ func TestAccIcaparameter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_icaparameter.tf_icaparameter", "edtpmtuddftimeout", "200"),
 					resource.TestCheckResourceAttr("citrixadc_icaparameter.tf_icaparameter", "l7latencyfrequency", "0"),
 					resource.TestCheckResourceAttr("citrixadc_icaparameter.tf_icaparameter", "enablesronhafailover", "YES"),
+					resource.TestCheckResourceAttr("citrixadc_icaparameter.tf_icaparameter", "edtpmtudrediscovery", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_icaparameter.tf_icaparameter", "edtlosstolerant", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_icaparameter.tf_icaparameter", "dfpersistence", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_icaparameter.tf_icaparameter", "hdxinsightnonnsap", "NO"),
 				),
 			},
 			{
@@ -68,6 +80,10 @@ func TestAccIcaparameter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_icaparameter.tf_icaparameter", "edtpmtuddftimeout", "100"),
 					resource.TestCheckResourceAttr("citrixadc_icaparameter.tf_icaparameter", "l7latencyfrequency", "30"),
 					resource.TestCheckResourceAttr("citrixadc_icaparameter.tf_icaparameter", "enablesronhafailover", "NO"),
+					resource.TestCheckResourceAttr("citrixadc_icaparameter.tf_icaparameter", "edtpmtudrediscovery", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_icaparameter.tf_icaparameter", "edtlosstolerant", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_icaparameter.tf_icaparameter", "dfpersistence", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_icaparameter.tf_icaparameter", "hdxinsightnonnsap", "YES"),
 				),
 			},
 		},

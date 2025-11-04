@@ -29,6 +29,7 @@ resource "citrixadc_gslbparameter" "tf_gslbparameter" {
 	ldnsentrytimeout = 50
 	rtttolerance     = 6
 	ldnsmask         = "255.255.255.255"
+	gslbsyncsaveconfigcommand = "DISABLED"
 	}
 `
 
@@ -38,6 +39,7 @@ resource "citrixadc_gslbparameter" "tf_gslbparameter" {
 	ldnsentrytimeout = 70
 	rtttolerance     = 8
 	ldnsmask         = "255.255.255.254"
+	gslbsyncsaveconfigcommand = "ENABLED"
 	}
 `
 
@@ -55,6 +57,7 @@ func TestAccGslbparameter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_gslbparameter.tf_gslbparameter", "ldnsentrytimeout", "50"),
 					resource.TestCheckResourceAttr("citrixadc_gslbparameter.tf_gslbparameter", "rtttolerance", "6"),
 					resource.TestCheckResourceAttr("citrixadc_gslbparameter.tf_gslbparameter", "ldnsmask", "255.255.255.255"),
+					resource.TestCheckResourceAttr("citrixadc_gslbparameter.tf_gslbparameter", "gslbsyncsaveconfigcommand", "DISABLED"),
 				),
 			},
 			{
@@ -64,6 +67,7 @@ func TestAccGslbparameter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_gslbparameter.tf_gslbparameter", "ldnsentrytimeout", "70"),
 					resource.TestCheckResourceAttr("citrixadc_gslbparameter.tf_gslbparameter", "rtttolerance", "8"),
 					resource.TestCheckResourceAttr("citrixadc_gslbparameter.tf_gslbparameter", "ldnsmask", "255.255.255.254"),
+					resource.TestCheckResourceAttr("citrixadc_gslbparameter.tf_gslbparameter", "gslbsyncsaveconfigcommand", "ENABLED"),
 				),
 			},
 		},

@@ -33,11 +33,6 @@ func resourceCitrixAdcLbaction() *schema.Resource {
 				Computed: false,
 				ForceNew: true,
 			},
-			"newname": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
 			"type": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -63,7 +58,6 @@ func createLbactionFunc(ctx context.Context, d *schema.ResourceData, meta interf
 	lbaction := lb.Lbaction{
 		Comment: d.Get("comment").(string),
 		Name:    d.Get("name").(string),
-		Newname: d.Get("newname").(string),
 		Type:    d.Get("type").(string),
 		Value:   toIntegerList(d.Get("value").([]interface{})),
 	}
@@ -92,7 +86,6 @@ func readLbactionFunc(ctx context.Context, d *schema.ResourceData, meta interfac
 
 	d.Set("name", data["name"])
 	d.Set("comment", data["comment"])
-	d.Set("newname", data["newname"])
 	d.Set("type", data["type"])
 	d.Set("value", stringListToIntList(data["value"].([]interface{})))
 
@@ -117,11 +110,6 @@ func updateLbactionFunc(ctx context.Context, d *schema.ResourceData, meta interf
 	if d.HasChange("name") {
 		log.Printf("[DEBUG]  citrixadc-provider: Name has changed for lbaction %s, starting update", lbactionName)
 		lbaction.Name = d.Get("name").(string)
-		hasChange = true
-	}
-	if d.HasChange("newname") {
-		log.Printf("[DEBUG]  citrixadc-provider: Newname has changed for lbaction %s, starting update", lbactionName)
-		lbaction.Newname = d.Get("newname").(string)
 		hasChange = true
 	}
 	if d.HasChange("type") {

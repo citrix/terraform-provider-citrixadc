@@ -99,10 +99,6 @@ func resourceCitrixAdcGslbsite() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"newname": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
 			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -219,7 +215,6 @@ func updateGslbsiteFunc(ctx context.Context, d *schema.ResourceData, meta interf
 	gslbsite := gslb.Gslbsite{
 		Sitename: gslbsiteName,
 	}
-	hasRename := false
 	hasChange := false
 	if d.HasChange("metricexchange") {
 		log.Printf("[DEBUG]  netscaler-provider: Metricexchange has changed for gslbsite %s, starting update", gslbsiteName)
@@ -271,25 +266,12 @@ func updateGslbsiteFunc(ctx context.Context, d *schema.ResourceData, meta interf
 		gslbsite.Backupparentlist = toStringList(d.Get("backupparentlist").([]interface{}))
 		hasChange = true
 	}
-	if d.HasChange("newname") {
-		log.Printf("[DEBUG]  netscaler-provider: Newname has changed for gslbsite %s, starting update", gslbsiteName)
-		gslbsite.Newname = d.Get("newname").(string)
-		hasRename = true
-	}
 
 	if hasChange {
 		_, err := client.UpdateResource(service.Gslbsite.Type(), gslbsiteName, &gslbsite)
 		if err != nil {
 			return diag.FromErr(err)
 		}
-	}
-
-	if hasRename {
-		err := client.ActOnResource(service.Gslbsite.Type(), &gslbsite, "rename")
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		d.SetId(gslbsite.Newname)
 	}
 
 	return readGslbsiteFunc(ctx, d, meta)

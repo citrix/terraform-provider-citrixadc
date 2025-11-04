@@ -25,6 +25,11 @@ func resourceCitrixAdcSslservicegroup() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"sslclientlogs": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"commonname": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -131,6 +136,7 @@ func createSslservicegroupFunc(ctx context.Context, d *schema.ResourceData, meta
 		Tls11:                d.Get("tls11").(string),
 		Tls12:                d.Get("tls12").(string),
 		Tls13:                d.Get("tls13").(string),
+		Sslclientlogs:        d.Get("sslclientlogs").(string),
 	}
 
 	if raw := d.GetRawConfig().GetAttr("sesstimeout"); !raw.IsNull() {
@@ -159,6 +165,7 @@ func readSslservicegroupFunc(ctx context.Context, d *schema.ResourceData, meta i
 		return nil
 	}
 	d.Set("servicegroupname", data["servicegroupname"])
+	d.Set("sslclientlogs", data["sslclientlogs"])
 	d.Set("commonname", data["commonname"])
 	d.Set("ocspstapling", data["ocspstapling"])
 	d.Set("sendclosenotify", data["sendclosenotify"])
@@ -188,7 +195,11 @@ func updateSslservicegroupFunc(ctx context.Context, d *schema.ResourceData, meta
 		Servicegroupname: d.Get("servicegroupname").(string),
 	}
 	hasChange := false
-
+	if d.HasChange("sslclientlogs") {
+		log.Printf("[DEBUG]  citrixadc-provider: Sslclientlogs has changed for sslservicegroup, starting update")
+		sslservicegroup.Sslclientlogs = d.Get("sslclientlogs").(string)
+		hasChange = true
+	}
 	if d.HasChange("commonname") {
 		log.Printf("[DEBUG]  citrixadc-provider: Commonname has changed for sslservicegroup  %s, starting update", servicegroupname)
 		sslservicegroup.Commonname = d.Get("commonname").(string)

@@ -32,6 +32,7 @@ resource "citrixadc_auditnslogaction" "tf_auditnslogaction" {
 	loglevel = ["ALERT", "CRITICAL"]
 	tcp      = "ALL"
 	acl      = "ENABLED"
+	protocolviolations = "NONE"
 	}
   
 `
@@ -44,6 +45,7 @@ resource "citrixadc_auditnslogaction" "tf_auditnslogaction" {
 	loglevel = ["ALERT", "CRITICAL"]
 	tcp      = "NONE"
 	acl      = "DISABLED"
+	protocolviolations = "ALL"
 	}
   
 `
@@ -62,6 +64,7 @@ func TestAccAuditnslogaction_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_auditnslogaction.tf_auditnslogaction", "serverip", "10.222.74.180"),
 					resource.TestCheckResourceAttr("citrixadc_auditnslogaction.tf_auditnslogaction", "tcp", "ALL"),
 					resource.TestCheckResourceAttr("citrixadc_auditnslogaction.tf_auditnslogaction", "acl", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_auditnslogaction.tf_auditnslogaction", "protocolviolations", "NONE"),
 				),
 			},
 			{
@@ -72,6 +75,7 @@ func TestAccAuditnslogaction_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_auditnslogaction.tf_auditnslogaction", "serverip", "10.222.74.180"),
 					resource.TestCheckResourceAttr("citrixadc_auditnslogaction.tf_auditnslogaction", "tcp", "NONE"),
 					resource.TestCheckResourceAttr("citrixadc_auditnslogaction.tf_auditnslogaction", "acl", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_auditnslogaction.tf_auditnslogaction", "protocolviolations", "ALL"),
 				),
 			},
 		},

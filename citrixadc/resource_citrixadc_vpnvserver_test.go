@@ -37,6 +37,9 @@ const testAccVpnvserver_add = `
 		downstateflush           = "DISABLED"
 		listenpolicy             = "NONE"
 		tcpprofilename           = "nstcp_default_XA_XD_profile"
+		secureprivateaccess		= "ENABLED"
+		accessrestrictedpageredirect = "NS"
+		deviceposture 		  = "DISABLED"
 	}
 `
 
@@ -54,6 +57,8 @@ const testAccVpnvserver_update = `
 		downstateflush           = "ENABLED"
 		listenpolicy             = "NONE"
 		tcpprofilename           = "nstcp_default_XA_XD_profile"
+		secureprivateaccess		= "DISABLED"
+		deviceposture 		  = "ENABLED"
 	}
 `
 
@@ -71,6 +76,9 @@ func TestAccVpnvserver_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_vpnvserver.foo", "servicetype", "SSL"),
 					resource.TestCheckResourceAttr("citrixadc_vpnvserver.foo", "ipv46", "3.3.3.3"),
 					resource.TestCheckResourceAttr("citrixadc_vpnvserver.foo", "downstateflush", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver.foo", "secureprivateaccess", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver.foo", "deviceposture", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver.foo", "accessrestrictedpageredirect", "NS"),
 				),
 			},
 			{
@@ -81,6 +89,8 @@ func TestAccVpnvserver_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_vpnvserver.foo", "servicetype", "SSL"),
 					resource.TestCheckResourceAttr("citrixadc_vpnvserver.foo", "ipv46", "3.3.3.3"),
 					resource.TestCheckResourceAttr("citrixadc_vpnvserver.foo", "downstateflush", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver.foo", "secureprivateaccess", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver.foo", "deviceposture", "ENABLED"),
 				),
 			},
 		},

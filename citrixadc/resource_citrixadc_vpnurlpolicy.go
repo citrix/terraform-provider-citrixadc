@@ -46,11 +46,6 @@ func resourceCitrixAdcVpnurlpolicy() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"newname": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
 		},
 	}
 }
@@ -64,7 +59,6 @@ func createVpnurlpolicyFunc(ctx context.Context, d *schema.ResourceData, meta in
 		Comment:   d.Get("comment").(string),
 		Logaction: d.Get("logaction").(string),
 		Name:      d.Get("name").(string),
-		Newname:   d.Get("newname").(string),
 		Rule:      d.Get("rule").(string),
 	}
 
@@ -94,7 +88,6 @@ func readVpnurlpolicyFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("comment", data["comment"])
 	d.Set("logaction", data["logaction"])
 	d.Set("name", data["name"])
-	d.Set("newname", data["newname"])
 	d.Set("rule", data["rule"])
 
 	return nil
@@ -123,11 +116,6 @@ func updateVpnurlpolicyFunc(ctx context.Context, d *schema.ResourceData, meta in
 	if d.HasChange("logaction") {
 		log.Printf("[DEBUG]  citrixadc-provider: Logaction has changed for vpnurlpolicy %s, starting update", vpnurlpolicyName)
 		vpnurlpolicy.Logaction = d.Get("logaction").(string)
-		hasChange = true
-	}
-	if d.HasChange("newname") {
-		log.Printf("[DEBUG]  citrixadc-provider: Newname has changed for vpnurlpolicy %s, starting update", vpnurlpolicyName)
-		vpnurlpolicy.Newname = d.Get("newname").(string)
 		hasChange = true
 	}
 	if d.HasChange("rule") {

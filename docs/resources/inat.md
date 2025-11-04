@@ -34,6 +34,7 @@ resource "citrixadc_inat" "inat_resource" {
 * `proxyip` - (Optional) Unique IP address used as the source IP address in packets sent to the server. Must be a MIP or SNIP address.
 * `useproxyport` - (Optional) Enable the Citrix ADC to proxy the source port of packets before sending the packets to the server. Possible values: [ ENABLED, DISABLED ]
 * `td` - (Optional) Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.
+* `connfailover` - (Optional) Synchronize connection information with the secondary appliance in a high availability (HA) pair. That is, synchronize all connection-related information for the INAT session
 
 
 ## Attribute Reference

@@ -31,6 +31,7 @@ const testAccAaaradiusparams_basic = `
 		radnasip           = "ENABLED"
 		serverip           = "10.222.74.158"
 		authtimeout        = 8
+		messageauthenticator = "OFF"
 	}
 `
 const testAccAaaradiusparams_update = `
@@ -41,6 +42,7 @@ const testAccAaaradiusparams_update = `
 		radnasip           = "DISABLED"
 		serverip           = "10.222.74.159"
 		authtimeout        = 10
+		messageauthenticator = "ON"
 	}
 `
 
@@ -58,6 +60,7 @@ func TestAccAaaradiusparams_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_aaaradiusparams.tf_aaaradiusparams", "radnasip", "ENABLED"),
 					resource.TestCheckResourceAttr("citrixadc_aaaradiusparams.tf_aaaradiusparams", "serverip", "10.222.74.158"),
 					resource.TestCheckResourceAttr("citrixadc_aaaradiusparams.tf_aaaradiusparams", "authtimeout", "8"),
+					resource.TestCheckResourceAttr("citrixadc_aaaradiusparams.tf_aaaradiusparams", "messageauthenticator", "OFF"),
 				),
 			},
 			{
@@ -68,6 +71,7 @@ func TestAccAaaradiusparams_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_aaaradiusparams.tf_aaaradiusparams", "radnasip", "DISABLED"),
 					resource.TestCheckResourceAttr("citrixadc_aaaradiusparams.tf_aaaradiusparams", "serverip", "10.222.74.159"),
 					resource.TestCheckResourceAttr("citrixadc_aaaradiusparams.tf_aaaradiusparams", "authtimeout", "10"),
+					resource.TestCheckResourceAttr("citrixadc_aaaradiusparams.tf_aaaradiusparams", "messageauthenticator", "ON"),
 				),
 			},
 		},

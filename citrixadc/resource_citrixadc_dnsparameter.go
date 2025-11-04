@@ -22,6 +22,31 @@ func resourceCitrixAdcDnsparameter() *schema.Resource {
 		UpdateContext: updateDnsparameterFunc,
 		DeleteContext: deleteDnsparameterFunc,
 		Schema: map[string]*schema.Schema{
+			"zonetransfer": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"resolvermaxtcptimeout": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"resolvermaxtcpconnections": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"resolvermaxactiveresolutions": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"autosavekeyops": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"cacheecszeroprefix": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -148,8 +173,18 @@ func createDnsparameterFunc(ctx context.Context, d *schema.ResourceData, meta in
 		Recursion:               d.Get("recursion").(string),
 		Resolutionorder:         d.Get("resolutionorder").(string),
 		Splitpktqueryprocessing: d.Get("splitpktqueryprocessing").(string),
+		Autosavekeyops:          d.Get("autosavekeyops").(string),
+		Zonetransfer:            d.Get("zonetransfer").(string),
 	}
-
+	if raw := d.GetRawConfig().GetAttr("resolvermaxtcptimeout"); !raw.IsNull() {
+		dnsparameter.Resolvermaxtcptimeout = intPtr(d.Get("resolvermaxtcptimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("resolvermaxtcpconnections"); !raw.IsNull() {
+		dnsparameter.Resolvermaxtcpconnections = intPtr(d.Get("resolvermaxtcpconnections").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("resolvermaxactiveresolutions"); !raw.IsNull() {
+		dnsparameter.Resolvermaxactiveresolutions = intPtr(d.Get("resolvermaxactiveresolutions").(int))
+	}
 	if raw := d.GetRawConfig().GetAttr("dns64timeout"); !raw.IsNull() {
 		dnsparameter.Dns64timeout = intPtr(d.Get("dns64timeout").(int))
 	}
@@ -206,6 +241,11 @@ func readDnsparameterFunc(ctx context.Context, d *schema.ResourceData, meta inte
 		return nil
 	}
 	d.Set("cacheecszeroprefix", data["cacheecszeroprefix"])
+	d.Set("zonetransfer", data["zonetransfer"])
+	setToInt("resolvermaxtcptimeout", d, data["resolvermaxtcptimeout"])
+	setToInt("resolvermaxtcpconnections", d, data["resolvermaxtcpconnections"])
+	setToInt("resolvermaxactiveresolutions", d, data["resolvermaxactiveresolutions"])
+	d.Set("autosavekeyops", data["autosavekeyops"])
 	d.Set("cachehitbypass", data["cachehitbypass"])
 	d.Set("cachenoexpire", data["cachenoexpire"])
 	d.Set("cacherecords", data["cacherecords"])
@@ -237,6 +277,31 @@ func updateDnsparameterFunc(ctx context.Context, d *schema.ResourceData, meta in
 
 	dnsparameter := dns.Dnsparameter{}
 	hasChange := false
+	if d.HasChange("zonetransfer") {
+		log.Printf("[DEBUG]  citrixadc-provider: Zonetransfer has changed for dnsparameter, starting update")
+		dnsparameter.Zonetransfer = d.Get("zonetransfer").(string)
+		hasChange = true
+	}
+	if d.HasChange("resolvermaxtcptimeout") {
+		log.Printf("[DEBUG]  citrixadc-provider: Resolvermaxtcptimeout has changed for dnsparameter, starting update")
+		dnsparameter.Resolvermaxtcptimeout = intPtr(d.Get("resolvermaxtcptimeout").(int))
+		hasChange = true
+	}
+	if d.HasChange("resolvermaxtcpconnections") {
+		log.Printf("[DEBUG]  citrixadc-provider: Resolvermaxtcpconnections has changed for dnsparameter, starting update")
+		dnsparameter.Resolvermaxtcpconnections = intPtr(d.Get("resolvermaxtcpconnections").(int))
+		hasChange = true
+	}
+	if d.HasChange("resolvermaxactiveresolutions") {
+		log.Printf("[DEBUG]  citrixadc-provider: Resolvermaxactiveresolutions has changed for dnsparameter, starting update")
+		dnsparameter.Resolvermaxactiveresolutions = intPtr(d.Get("resolvermaxactiveresolutions").(int))
+		hasChange = true
+	}
+	if d.HasChange("autosavekeyops") {
+		log.Printf("[DEBUG]  citrixadc-provider: Autosavekeyops has changed for dnsparameter, starting update")
+		dnsparameter.Autosavekeyops = d.Get("autosavekeyops").(string)
+		hasChange = true
+	}
 	if d.HasChange("cacheecszeroprefix") {
 		log.Printf("[DEBUG]  citrixadc-provider: Cacheecszeroprefix has changed for dnsparameter, starting update")
 		dnsparameter.Cacheecszeroprefix = d.Get("cacheecszeroprefix").(string)

@@ -19,11 +19,23 @@ func resourceCitrixAdcPolicydataset() *schema.Resource {
 		SchemaVersion: 1,
 		CreateContext: createPolicydatasetFunc,
 		ReadContext:   readPolicydatasetFunc,
+		UpdateContext: updatePolicydatasetFunc,
 		DeleteContext: deletePolicydatasetFunc,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"patsetfile": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"dynamic": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -55,9 +67,11 @@ func createPolicydatasetFunc(ctx context.Context, d *schema.ResourceData, meta i
 		d.Set("name", policydatasetName)
 	}
 	policydataset := policy.Policydataset{
-		Comment: d.Get("comment").(string),
-		Name:    d.Get("name").(string),
-		Type:    d.Get("type").(string),
+		Comment:    d.Get("comment").(string),
+		Name:       d.Get("name").(string),
+		Type:       d.Get("type").(string),
+		Dynamic:    d.Get("dynamic").(string),
+		Patsetfile: d.Get("patsetfile").(string),
 	}
 
 	_, err := client.AddResource(service.Policydataset.Type(), policydatasetName, &policydataset)
@@ -82,12 +96,37 @@ func readPolicydatasetFunc(ctx context.Context, d *schema.ResourceData, meta int
 		return nil
 	}
 	d.Set("name", data["name"])
+	d.Set("patsetfile", data["patsetfile"])
+	d.Set("dynamic", data["dynamic"])
 	d.Set("comment", data["comment"])
 	d.Set("name", data["name"])
 	d.Set("type", data["type"])
 
 	return nil
 
+}
+
+func updatePolicydatasetFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	log.Printf("[DEBUG]  citrixadc-provider: In updatePolicydatasetFunc")
+	client := meta.(*NetScalerNitroClient).client
+	policydatasetName := d.Id()
+	policydataset := policy.Policydataset{
+		Name: policydatasetName,
+	}
+	hasChange := false
+	if d.HasChange("dynamic") {
+		log.Printf("[DEBUG]  citrixadc-provider: Dynamic has changed for policydataset %s, starting update", policydatasetName)
+		policydataset.Dynamic = d.Get("dynamic").(string)
+		hasChange = true
+	}
+
+	if hasChange {
+		_, err := client.UpdateResource(service.Policydataset.Type(), policydatasetName, &policydataset)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+	return readPolicydatasetFunc(ctx, d, meta)
 }
 
 func deletePolicydatasetFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

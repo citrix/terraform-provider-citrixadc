@@ -22,6 +22,11 @@ func resourceCitrixAdcAaaradiusparams() *schema.Resource {
 		UpdateContext: updateAaaradiusparamsFunc,
 		DeleteContext: deleteAaaradiusparamsFunc,
 		Schema: map[string]*schema.Schema{
+			"messageauthenticator": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"radkey": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -149,6 +154,7 @@ func createAaaradiusparamsFunc(ctx context.Context, d *schema.ResourceData, meta
 		Radnasip:                   d.Get("radnasip").(string),
 		Serverip:                   d.Get("serverip").(string),
 		Tunnelendpointclientip:     d.Get("tunnelendpointclientip").(string),
+		Messageauthenticator:       d.Get("messageauthenticator").(string),
 	}
 
 	if raw := d.GetRawConfig().GetAttr("authservretry"); !raw.IsNull() {
@@ -200,6 +206,7 @@ func readAaaradiusparamsFunc(ctx context.Context, d *schema.ResourceData, meta i
 		return nil
 	}
 	d.Set("accounting", data["accounting"])
+	d.Set("messageauthenticator", data["messageauthenticator"])
 	d.Set("authentication", data["authentication"])
 	setToInt("authservretry", d, data["authservretry"])
 	setToInt("authtimeout", d, data["authtimeout"])
@@ -233,6 +240,11 @@ func updateAaaradiusparamsFunc(ctx context.Context, d *schema.ResourceData, meta
 		Radkey: d.Get("radkey").(string),
 	}
 	hasChange := false
+	if d.HasChange("messageauthenticator") {
+		log.Printf("[DEBUG]  citrixadc-provider: Messageauthenticator has changed for aaaradiusparams, starting update")
+		aaaradiusparams.Messageauthenticator = d.Get("messageauthenticator").(string)
+		hasChange = true
+	}
 	if d.HasChange("accounting") {
 		log.Printf("[DEBUG]  citrixadc-provider: Accounting has changed for aaaradiusparams, starting update")
 		aaaradiusparams.Accounting = d.Get("accounting").(string)

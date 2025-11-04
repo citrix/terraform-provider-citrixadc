@@ -29,6 +29,7 @@ const testAccAuthenticationcaptchaaction_add = `
 		sitekey                    = "key"
 		serverurl                  = "http://www.example.com/"
 		defaultauthenticationgroup = "old_group"
+		scorethreshold			 = 3
 	}
 `
 const testAccAuthenticationcaptchaaction_update = `
@@ -38,6 +39,7 @@ const testAccAuthenticationcaptchaaction_update = `
 		sitekey                    = "key"
 		serverurl                  = "http://www.example.com/"
 		defaultauthenticationgroup = "new_group"
+		scorethreshold			 = 6
 	}
 `
 
@@ -54,6 +56,7 @@ func TestAccAuthenticationcaptchaaction_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_authenticationcaptchaaction.tf_captchaaction", "name", "tf_captchaaction"),
 					resource.TestCheckResourceAttr("citrixadc_authenticationcaptchaaction.tf_captchaaction", "secretkey", "secret"),
 					resource.TestCheckResourceAttr("citrixadc_authenticationcaptchaaction.tf_captchaaction", "defaultauthenticationgroup", "old_group"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationcaptchaaction.tf_captchaaction", "scorethreshold", "3"),
 				),
 			},
 			{
@@ -63,6 +66,7 @@ func TestAccAuthenticationcaptchaaction_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_authenticationcaptchaaction.tf_captchaaction", "name", "tf_captchaaction"),
 					resource.TestCheckResourceAttr("citrixadc_authenticationcaptchaaction.tf_captchaaction", "secretkey", "new_secret"),
 					resource.TestCheckResourceAttr("citrixadc_authenticationcaptchaaction.tf_captchaaction", "defaultauthenticationgroup", "new_group"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationcaptchaaction.tf_captchaaction", "scorethreshold", "6"),
 				),
 			},
 		},

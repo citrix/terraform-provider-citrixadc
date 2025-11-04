@@ -30,6 +30,10 @@ resource "citrixadc_iptunnel" "tf_iptunnel" {
 * `ipsecprofilename` - (Optional) Name of IPSec profile to be associated.
 * `vlan` - (Optional) The vlan for mulicast packets.
 * `ownergroup` - (Optional) The owner node group in a Cluster for the iptunnel.
+* `destport` - (Optional) Specifies UDP destination port for Geneve packets. Default port is 6081.
+* `tosinherit` - (Optional) Default behavior is to copy the ToS field of the internal IP Packet (Payload) to the outer IP packet (Transport packet). But the user can configure a new ToS field using this option.
+* `vlantagging` - (Optional) Option to select Vlan Tagging.
+* `vnid` - (Optional) Virtual network identifier (VNID) is the value that identifies a specific virtual network in the data plane.
 
 
 ## Attribute Reference

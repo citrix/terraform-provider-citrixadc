@@ -32,7 +32,6 @@ import (
 const testAccLbvserver_basic = `
 
 	resource "citrixadc_lbvserver" "foo" {
-
 	ipv46 = "10.202.11.11"
 	lbmethod = "ROUNDROBIN"
 	name = "terraform-lb"
@@ -45,7 +44,6 @@ const testAccLbvserver_basic = `
 const testAccLbvserver_basic_step2 = `
 
 	resource "citrixadc_lbvserver" "foo" {
-
 	ipv46 = "10.202.11.11"
 	lbmethod = "ROUNDROBIN"
 	name = "terraform-lb"
@@ -53,6 +51,11 @@ const testAccLbvserver_basic_step2 = `
 	timeout = 0
 	port = 80
 	servicetype = "HTTP"
+	toggleorder = "ASCENDING"
+	probeprotocol = "HTTP"
+	probeport = 8085
+	probesuccessresponsecode = "200 OK"
+	orderthreshold = "10"
 	}
 `
 
@@ -102,6 +105,16 @@ func TestAccLbvserver_basic(t *testing.T) {
 						"citrixadc_lbvserver.foo", "servicetype", "HTTP"),
 					resource.TestCheckResourceAttr(
 						"citrixadc_lbvserver.foo", "timeout", "0"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_lbvserver.foo", "toggleorder", "ASCENDING"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_lbvserver.foo", "probeprotocol", "HTTP"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_lbvserver.foo", "probeport", "8085"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_lbvserver.foo", "probesuccessresponsecode", "200 OK"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_lbvserver.foo", "orderthreshold", "10"),
 				),
 			},
 		},

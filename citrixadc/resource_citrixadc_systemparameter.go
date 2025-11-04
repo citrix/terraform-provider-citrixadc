@@ -22,6 +22,39 @@ func resourceCitrixAdcSystemparameter() *schema.Resource {
 		UpdateContext: updateSystemparameterFunc,
 		DeleteContext: deleteSystemparameterFunc,
 		Schema: map[string]*schema.Schema{
+			"warnpriorndays": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"wafprotection": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"pwdhistorycount": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"passwordhistorycontrol": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"maxsessionperuser": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"daystoexpire": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
 			"basicauth": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -142,8 +175,21 @@ func createSystemparameterFunc(ctx context.Context, d *schema.ResourceData, meta
 		Removesensitivefiles:    d.Get("removesensitivefiles").(string),
 		Restrictedtimeout:       d.Get("restrictedtimeout").(string),
 		Strongpassword:          d.Get("strongpassword").(string),
+		Passwordhistorycontrol:  d.Get("passwordhistorycontrol").(string),
+		Wafprotection:           toStringList(d.Get("wafprotection").([]interface{})),
 	}
-
+	if raw := d.GetRawConfig().GetAttr("warnpriorndays"); !raw.IsNull() {
+		systemparameter.Warnpriorndays = intPtr(d.Get("warnpriorndays").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("pwdhistorycount"); !raw.IsNull() {
+		systemparameter.Pwdhistorycount = intPtr(d.Get("pwdhistorycount").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("maxsessionperuser"); !raw.IsNull() {
+		systemparameter.Maxsessionperuser = intPtr(d.Get("maxsessionperuser").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("daystoexpire"); !raw.IsNull() {
+		systemparameter.Daystoexpire = intPtr(d.Get("daystoexpire").(int))
+	}
 	if raw := d.GetRawConfig().GetAttr("minpasswordlen"); !raw.IsNull() {
 		systemparameter.Minpasswordlen = intPtr(d.Get("minpasswordlen").(int))
 	}
@@ -178,6 +224,12 @@ func readSystemparameterFunc(ctx context.Context, d *schema.ResourceData, meta i
 		return nil
 	}
 	d.Set("basicauth", data["basicauth"])
+	setToInt("warnpriorndays", d, data["warnpriorndays"])
+	d.Set("wafprotection", data["wafprotection"])
+	setToInt("pwdhistorycount", d, data["pwdhistorycount"])
+	d.Set("passwordhistorycontrol", data["passwordhistorycontrol"])
+	setToInt("maxsessionperuser", d, data["maxsessionperuser"])
+	setToInt("daystoexpire", d, data["daystoexpire"])
 	d.Set("cliloglevel", data["cliloglevel"])
 	d.Set("doppler", data["doppler"])
 	d.Set("fipsusermode", data["fipsusermode"])
@@ -207,6 +259,36 @@ func updateSystemparameterFunc(ctx context.Context, d *schema.ResourceData, meta
 
 	systemparameter := system.Systemparameter{}
 	hasChange := false
+	if d.HasChange("warnpriorndays") {
+		log.Printf("[DEBUG]  citrixadc-provider: Warnpriorndays has changed for systemparameter, starting update")
+		systemparameter.Warnpriorndays = intPtr(d.Get("warnpriorndays").(int))
+		hasChange = true
+	}
+	if d.HasChange("wafprotection") {
+		log.Printf("[DEBUG]  citrixadc-provider: Wafprotection has changed for systemparameter, starting update")
+		systemparameter.Wafprotection = toStringList(d.Get("wafprotection").([]interface{}))
+		hasChange = true
+	}
+	if d.HasChange("pwdhistorycount") {
+		log.Printf("[DEBUG]  citrixadc-provider: Pwdhistorycount has changed for systemparameter, starting update")
+		systemparameter.Pwdhistorycount = intPtr(d.Get("pwdhistorycount").(int))
+		hasChange = true
+	}
+	if d.HasChange("passwordhistorycontrol") {
+		log.Printf("[DEBUG]  citrixadc-provider: Passwordhistorycontrol has changed for systemparameter, starting update")
+		systemparameter.Passwordhistorycontrol = d.Get("passwordhistorycontrol").(string)
+		hasChange = true
+	}
+	if d.HasChange("maxsessionperuser") {
+		log.Printf("[DEBUG]  citrixadc-provider: Maxsessionperuser has changed for systemparameter, starting update")
+		systemparameter.Maxsessionperuser = intPtr(d.Get("maxsessionperuser").(int))
+		hasChange = true
+	}
+	if d.HasChange("daystoexpire") {
+		log.Printf("[DEBUG]  citrixadc-provider: Daystoexpire has changed for systemparameter, starting update")
+		systemparameter.Daystoexpire = intPtr(d.Get("daystoexpire").(int))
+		hasChange = true
+	}
 	if d.HasChange("basicauth") {
 		log.Printf("[DEBUG]  citrixadc-provider: Basicauth has changed for systemparameter, starting update")
 		systemparameter.Basicauth = d.Get("basicauth").(string)

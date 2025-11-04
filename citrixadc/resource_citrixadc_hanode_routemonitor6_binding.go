@@ -24,6 +24,12 @@ func resourceCitrixAdcHanode_routemonitor6_binding() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"netmask": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 			"hanode_id": {
 				Type:     schema.TypeInt,
 				Required: true,
@@ -46,6 +52,7 @@ func createHanode_routemonitor6_bindingFunc(ctx context.Context, d *schema.Resou
 	bindingId := fmt.Sprintf("%s,%s", id, routemonitor)
 	hanode_routemonitor6_binding := ha.Hanoderoutemonitor6binding{
 		Routemonitor: d.Get("routemonitor").(string),
+		Netmask:      d.Get("netmask").(string),
 	}
 
 	if raw := d.GetRawConfig().GetAttr("hanode_id"); !raw.IsNull() {
@@ -115,6 +122,7 @@ func readHanode_routemonitor6_bindingFunc(ctx context.Context, d *schema.Resourc
 	data := dataArr[foundIndex]
 
 	d.Set("hanode_id", data["id"])
+	d.Set("netmask", data["netmask"])
 	d.Set("routemonitor", data["routemonitor"])
 
 	return nil

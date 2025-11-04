@@ -47,6 +47,7 @@ const testAccBotprofile_tps_binding_basic = `
 		logmessage   = "Hellobinding"
 		threshold    = 3
 		percentage   = 20
+		bot_tps_enabled = "ON"
 	}
 `
 
@@ -79,6 +80,12 @@ func TestAccBotprofile_tps_binding_basic(t *testing.T) {
 				Config: testAccBotprofile_tps_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBotprofile_tps_bindingExist("citrixadc_botprofile_tps_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_botprofile_tps_binding.tf_binding", "bot_tps_type", "REQUEST_URL"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile_tps_binding.tf_binding", "bot_tps", "true"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile_tps_binding.tf_binding", "logmessage", "Hellobinding"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile_tps_binding.tf_binding", "threshold", "3"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile_tps_binding.tf_binding", "percentage", "20"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile_tps_binding.tf_binding", "bot_tps_enabled", "ON"),
 				),
 			},
 			{

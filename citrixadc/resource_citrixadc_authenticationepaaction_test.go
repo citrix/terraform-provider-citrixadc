@@ -31,6 +31,12 @@ const testAccAuthenticationepaaction_add = `
 		deletefiles     = "old_files"
 		killprocess     = "old_process"
 	}
+
+	resource "citrixadc_authenticationepaaction" "tf_epaaction2" {
+		name            = "tf_epaaction2"
+		deviceposture	 = "DISABLED"
+		defaultepagroup = "new_group"
+	}
 `
 const testAccAuthenticationepaaction_update = `
 
@@ -40,6 +46,12 @@ const testAccAuthenticationepaaction_update = `
 		defaultepagroup = "new_group"
 		deletefiles     = "new_files"
 		killprocess     = "new_process"
+	}
+
+	resource "citrixadc_authenticationepaaction" "tf_epaaction2" {
+		name            = "tf_epaaction2"
+		deviceposture	 = "ENABLED"
+		defaultepagroup = "new_group"
 	}
 `
 
@@ -56,6 +68,9 @@ func TestAccAuthenticationepaaction_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_authenticationepaaction.tf_epaaction", "name", "tf_epaaction"),
 					resource.TestCheckResourceAttr("citrixadc_authenticationepaaction.tf_epaaction", "deletefiles", "old_files"),
 					resource.TestCheckResourceAttr("citrixadc_authenticationepaaction.tf_epaaction", "killprocess", "old_process"),
+					testAccCheckAuthenticationepaactionExist("citrixadc_authenticationepaaction.tf_epaaction2", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationepaaction.tf_epaaction2", "name", "tf_epaaction2"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationepaaction.tf_epaaction2", "deviceposture", "DISABLED"),
 				),
 			},
 			{
@@ -65,6 +80,9 @@ func TestAccAuthenticationepaaction_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_authenticationepaaction.tf_epaaction", "name", "tf_epaaction"),
 					resource.TestCheckResourceAttr("citrixadc_authenticationepaaction.tf_epaaction", "deletefiles", "new_files"),
 					resource.TestCheckResourceAttr("citrixadc_authenticationepaaction.tf_epaaction", "killprocess", "new_process"),
+					testAccCheckAuthenticationepaactionExist("citrixadc_authenticationepaaction.tf_epaaction2", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationepaaction.tf_epaaction2", "name", "tf_epaaction2"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationepaaction.tf_epaaction2", "deviceposture", "ENABLED"),
 				),
 			},
 		},

@@ -24,6 +24,11 @@ func resourceCitrixAdcNstcpprofile() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"rfc5961compliance": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"ackaggregation": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -364,6 +369,7 @@ func createNstcpprofileFunc(ctx context.Context, d *schema.ResourceData, meta in
 		Ws:                          d.Get("ws").(string),
 		Mpcapablecbit:               d.Get("mpcapablecbit").(string),
 		Sendclientportintcpoption:   d.Get("sendclientportintcpoption").(string),
+		Rfc5961compliance:           d.Get("rfc5961compliance").(string),
 	}
 
 	if raw := d.GetRawConfig().GetAttr("buffersize"); !raw.IsNull() {
@@ -458,6 +464,7 @@ func readNstcpprofileFunc(ctx context.Context, d *schema.ResourceData, meta inte
 		return nil
 	}
 	d.Set("name", data["name"])
+	d.Set("rfc5961compliance", data["rfc5961compliance"])
 	d.Set("ackaggregation", data["ackaggregation"])
 	d.Set("ackonpush", data["ackonpush"])
 	d.Set("applyadaptivetcp", data["applyadaptivetcp"])
@@ -530,6 +537,11 @@ func updateNstcpprofileFunc(ctx context.Context, d *schema.ResourceData, meta in
 		Name: d.Get("name").(string),
 	}
 	hasChange := false
+	if d.HasChange("rfc5961compliance") {
+		log.Printf("[DEBUG]  citrixadc-provider: Rfc5961compliance has changed for nstcpprofile, starting update")
+		nstcpprofile.Rfc5961compliance = d.Get("rfc5961compliance").(string)
+		hasChange = true
+	}
 	if d.HasChange("ackaggregation") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ackaggregation has changed for nstcpprofile %s, starting update", nstcpprofileName)
 		nstcpprofile.Ackaggregation = d.Get("ackaggregation").(string)

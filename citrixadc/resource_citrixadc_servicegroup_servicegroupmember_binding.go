@@ -23,6 +23,12 @@ func resourceCitrixAdcServicegroup_servicegroupmember_binding() *schema.Resource
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"order": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 			"customserverid": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -132,7 +138,9 @@ func createServicegroup_servicegroupmember_bindingFunc(ctx context.Context, d *s
 		Servicegroupname: d.Get("servicegroupname").(string),
 		State:            d.Get("state").(string),
 	}
-
+	if raw := d.GetRawConfig().GetAttr("order"); !raw.IsNull() {
+		servicegroup_servicegroupmember_binding.Order = intPtr(d.Get("order").(int))
+	}
 	if raw := d.GetRawConfig().GetAttr("dbsttl"); !raw.IsNull() {
 		servicegroup_servicegroupmember_binding.Dbsttl = intPtr(d.Get("dbsttl").(int))
 	}
@@ -241,6 +249,7 @@ func readServicegroup_servicegroupmember_bindingFunc(ctx context.Context, d *sch
 	data := dataArr[foundIndex]
 
 	d.Set("customserverid", data["customserverid"])
+	setToInt("order", d, data["order"])
 	setToInt("dbsttl", d, data["dbsttl"])
 	setToInt("hashid", d, data["hashid"])
 	d.Set("ip", data["ip"])

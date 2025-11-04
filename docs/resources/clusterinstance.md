@@ -31,6 +31,9 @@ resource "citrixadc_clusterinstance" "tf_clusterinstance" {
 * `backplanebasedview` - (Optional) View based on heartbeat only on bkplane interface. Possible values: [ ENABLED, DISABLED ]
 * `syncstatusstrictmode` - (Optional) strict mode for sync status of cluster. Depending on the the mode if there are any errors while applying config, sync status is displayed accordingly. By default the flag is disabled. Possible values: [ ENABLED, DISABLED ]
 * `nodegroup` - (Optional) The node group in a Cluster system used for transition from L2 to L3.
+* `clusterproxyarp` - (Optional) This field controls the proxy arp feature in cluster. By default the flag is enabled.
+* `dfdretainl2params` - (Optional) flag to add ext l2 header during steering. By default the flag is disabled.
+* `secureheartbeats` - (Optional) By turning on this option cluster heartbeats will have security enabled.
 
 
 ## Attribute Reference

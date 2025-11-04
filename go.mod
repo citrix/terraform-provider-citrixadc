@@ -5,7 +5,7 @@ go 1.24.0
 toolchain go1.24.6
 
 require (
-	github.com/citrix/adc-nitro-go v0.0.0-20251008034940-cd0116a91763
+	github.com/citrix/adc-nitro-go v0.0.0-20251104191711-0b07dd8d6d8a
 	github.com/gruntwork-io/terratest v0.51.0
 	github.com/hashicorp/go-cty v1.5.0
 	github.com/hashicorp/terraform-plugin-framework v1.16.1

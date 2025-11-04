@@ -34,6 +34,7 @@ resource "citrixadc_ssldtlsprofile" "tf_ssldtlsprofile" {
 	maxretrytime = 5
 	pmtudiscovery = "DISABLED"
 	terminatesession = "ENABLED"
+	initialretrytimeout = 2
 }
 `
 
@@ -48,6 +49,7 @@ const testAccSsldtlsprofile_basic_update = `
 		maxretrytime = 6
 		pmtudiscovery = "ENABLED"
 		terminatesession = "DISABLED"
+		initialretrytimeout = 3
 	}
 `
 
@@ -70,6 +72,7 @@ func TestAccSsldtlsprofile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_ssldtlsprofile.tf_ssldtlsprofile", "maxretrytime", "5"),
 					resource.TestCheckResourceAttr("citrixadc_ssldtlsprofile.tf_ssldtlsprofile", "pmtudiscovery", "DISABLED"),
 					resource.TestCheckResourceAttr("citrixadc_ssldtlsprofile.tf_ssldtlsprofile", "terminatesession", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_ssldtlsprofile.tf_ssldtlsprofile", "initialretrytimeout", "2"),
 				),
 			},
 			{
@@ -85,6 +88,7 @@ func TestAccSsldtlsprofile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_ssldtlsprofile.tf_ssldtlsprofile", "maxretrytime", "6"),
 					resource.TestCheckResourceAttr("citrixadc_ssldtlsprofile.tf_ssldtlsprofile", "pmtudiscovery", "ENABLED"),
 					resource.TestCheckResourceAttr("citrixadc_ssldtlsprofile.tf_ssldtlsprofile", "terminatesession", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_ssldtlsprofile.tf_ssldtlsprofile", "initialretrytimeout", "3"),
 				),
 			},
 		},

@@ -28,12 +28,14 @@ const testAccSslparameter_basic = `
 	resource "citrixadc_sslparameter" "default" {
 		denysslreneg   = "NONSECURE"
 		defaultprofile = "ENABLED"
+		operationqueuelimit = 4096
 	}
 `
 const testAccSslparameter_basic_update = `
 	resource "citrixadc_sslparameter" "default" {
 		denysslreneg   = "ALL"
 		defaultprofile = "ENABLED"
+		operationqueuelimit = 4088
 	}
 `
 
@@ -50,6 +52,7 @@ func TestAccSslparameter_basic(t *testing.T) {
 					testAccCheckSslparameterExist("citrixadc_sslparameter.default", nil),
 					resource.TestCheckResourceAttr("citrixadc_sslparameter.default", "denysslreneg", "NONSECURE"),
 					resource.TestCheckResourceAttr("citrixadc_sslparameter.default", "defaultprofile", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslparameter.default", "operationqueuelimit", "4096"),
 				),
 			},
 			{
@@ -58,6 +61,7 @@ func TestAccSslparameter_basic(t *testing.T) {
 					testAccCheckSslparameterExist("citrixadc_sslparameter.default", nil),
 					resource.TestCheckResourceAttr("citrixadc_sslparameter.default", "denysslreneg", "ALL"),
 					resource.TestCheckResourceAttr("citrixadc_sslparameter.default", "defaultprofile", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslparameter.default", "operationqueuelimit", "4088"),
 				),
 			},
 		},

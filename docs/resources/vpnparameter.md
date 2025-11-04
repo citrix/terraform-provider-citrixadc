@@ -115,6 +115,12 @@ resource "citrixadc_vpnparameter" "tf_vpnparameter" {
 * `windowspluginupgrade` - (Optional) Option to set plugin upgrade behaviour for Win
 * `winsip` - (Optional) WINS server IP address to add to Citrix Gateway for name resolution.
 * `wiportalmode` - (Optional) Layout on the Access Interface. The COMPACT value indicates the use of small icons.
+* `accessrestrictedpageredirect` - (Optional) By default, an access restricted page hosted on secure private access CDN is displayed when a restricted app is accessed. The setting can be changed to NS to display the access restricted page hosted on the gateway or OFF to not display any access restricted page.
+* `backenddtls12` - (Optional) Enables DTLS 1.2 for backend server handshakes
+* `deviceposture` - (Optional) Enable device posture
+* `httptrackconnproxy` - (Optional) Enable or disable HTTP tracking for packets proxied via vpn vserver using GSLB connection proxy feature.
+* `maxiipperuser` - (Optional) Maximum number of Intranet IP that can be assigned to a user from AAA group, VPN vserver or VPN global pool. This setting is not applicable for AAA user level Intranet IP configuration
+* `secureprivateaccess` - (Optional) Enables or disables the secure private access configuration.
 
 
 ## Attribute Reference

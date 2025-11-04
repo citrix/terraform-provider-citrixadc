@@ -15,11 +15,33 @@ func resourceCitrixAdcIptunnel() *schema.Resource {
 		SchemaVersion: 1,
 		CreateContext: createIptunnelFunc,
 		ReadContext:   readIptunnelFunc,
+		UpdateContext: updateIptunnelFunc,
 		DeleteContext: deleteIptunnelFunc,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"vnid": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"vlantagging": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"tosinherit": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"destport": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
 			"grepayload": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -91,8 +113,15 @@ func createIptunnelFunc(ctx context.Context, d *schema.ResourceData, meta interf
 		Protocol:         d.Get("protocol").(string),
 		Remote:           d.Get("remote").(string),
 		Remotesubnetmask: d.Get("remotesubnetmask").(string),
+		Tosinherit:       d.Get("tosinherit").(string),
+		Vlantagging:      d.Get("vlantagging").(string),
 	}
-
+	if raw := d.GetRawConfig().GetAttr("vnid"); !raw.IsNull() {
+		iptunnel.Vnid = intPtr(d.Get("vnid").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("destport"); !raw.IsNull() {
+		iptunnel.Destport = intPtr(d.Get("destport").(int))
+	}
 	if raw := d.GetRawConfig().GetAttr("vlan"); !raw.IsNull() {
 		iptunnel.Vlan = intPtr(d.Get("vlan").(int))
 	}
@@ -119,6 +148,10 @@ func readIptunnelFunc(ctx context.Context, d *schema.ResourceData, meta interfac
 		return nil
 	}
 	d.Set("grepayload", data["grepayload"])
+	setToInt("vnid", d, data["vnid"])
+	d.Set("vlantagging", data["vlantagging"])
+	d.Set("tosinherit", data["tosinherit"])
+	setToInt("destport", d, data["destport"])
 	d.Set("ipsecprofilename", data["ipsecprofilename"])
 	d.Set("local", data["local"])
 	d.Set("ownergroup", data["ownergroup"])
@@ -129,6 +162,41 @@ func readIptunnelFunc(ctx context.Context, d *schema.ResourceData, meta interfac
 
 	return nil
 
+}
+
+func updateIptunnelFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	log.Printf("[DEBUG]  citrixadc-provider: In updateIptunnelFunc")
+	client := meta.(*NetScalerNitroClient).client
+	iptunnelName := d.Get("name").(string)
+
+	iptunnel := network.Iptunnel{
+		Name: d.Get("name").(string),
+	}
+	hasChange := false
+	if d.HasChange("tosinherit") {
+		log.Printf("[DEBUG]  citrixadc-provider: Tosinherit has changed for iptunnel, starting update")
+		iptunnel.Tosinherit = d.Get("tosinherit").(string)
+		hasChange = true
+	}
+	if d.HasChange("vlantagging") {
+		log.Printf("[DEBUG]  citrixadc-provider: Vlantagging has changed for iptunnel, starting update")
+		iptunnel.Vlantagging = d.Get("vlantagging").(string)
+		hasChange = true
+	}
+	if d.HasChange("destport") {
+		log.Printf("[DEBUG]  citrixadc-provider: Destport has changed for iptunnel, starting update")
+		iptunnel.Destport = intPtr(d.Get("destport").(int))
+		hasChange = true
+	}
+
+	if hasChange {
+		_, err := client.UpdateResource(service.Iptunnel.Type(), iptunnelName, &iptunnel)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
+	return readIptunnelFunc(ctx, d, meta)
 }
 
 func deleteIptunnelFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

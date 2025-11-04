@@ -32,6 +32,7 @@ const testAccAuthenticationoauthaction_add = `
 		clientid              = "id"
 		clientsecret          = "secret"
 		resourceuri           = "http://www.exampleadd.com"
+		requestattribute   = "name=true@@@"
 	}
 `
 
@@ -44,6 +45,7 @@ const testAccAuthenticationoauthaction_update = `
 		clientid              = "id"
 		clientsecret          = "secret"
 		resourceuri			  = "http://www.exampleupdate.com"
+		requestattribute   = "name1=false@@@"
 	}
 `
 
@@ -59,6 +61,7 @@ func TestAccAuthenticationoauthaction_basic(t *testing.T) {
 					testAccCheckAuthenticationoauthactionExist("citrixadc_authenticationoauthaction.tf_authenticationoauthaction", nil),
 					resource.TestCheckResourceAttr("citrixadc_authenticationoauthaction.tf_authenticationoauthaction", "name", "tf_authenticationoauthaction"),
 					resource.TestCheckResourceAttr("citrixadc_authenticationoauthaction.tf_authenticationoauthaction", "resourceuri", "http://www.exampleadd.com"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationoauthaction.tf_authenticationoauthaction", "requestattribute", "name=true@@@"),
 				),
 			},
 			{
@@ -67,6 +70,7 @@ func TestAccAuthenticationoauthaction_basic(t *testing.T) {
 					testAccCheckAuthenticationoauthactionExist("citrixadc_authenticationoauthaction.tf_authenticationoauthaction", nil),
 					resource.TestCheckResourceAttr("citrixadc_authenticationoauthaction.tf_authenticationoauthaction", "name", "tf_authenticationoauthaction"),
 					resource.TestCheckResourceAttr("citrixadc_authenticationoauthaction.tf_authenticationoauthaction", "resourceuri", "http://www.exampleupdate.com"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationoauthaction.tf_authenticationoauthaction", "requestattribute", "name1=false@@@"),
 				),
 			},
 		},

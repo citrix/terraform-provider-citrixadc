@@ -52,6 +52,8 @@ resource "citrixadc_nsip6" "tf_nsip6" {
 * `ownerdownresponse` - (Optional) in cluster system, if the owner node is down, whether should it respond to icmp/arp. Possible values: [ YES, NO ]
 * `td` - (Optional) Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.
 * `mptcpadvertise` - (Optional)
+* `icmpresponse` - (Optional) Respond to ICMPv6 requests for a Virtual IP (VIP) address on the basis of the states of the virtual servers associated with that VIP
+* `ndowner` - (Optional) NdOwner in Cluster for VIPS and Striped SNIPS
 
 
 ## Attribute Reference

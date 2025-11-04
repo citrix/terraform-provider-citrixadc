@@ -29,6 +29,8 @@ const testAccauditsyslogparams_basic = `
 		dateformat = "DDMMYYYY"
 		loglevel   = ["EMERGENCY"]
 		tcp        = "ALL"
+		protocolviolations = "NONE"
+		streamanalytics = "DISABLED"
 	}
 `
 const testAccauditsyslogparams_update = `
@@ -37,6 +39,8 @@ const testAccauditsyslogparams_update = `
 		dateformat = "MMDDYYYY"
 		loglevel   = ["EMERGENCY"]
 		tcp        = "NONE"
+		protocolviolations = "ALL"
+		streamanalytics = "ENABLED"
 	}
 `
 
@@ -52,6 +56,8 @@ func TestAccauditsyslogparams_basic(t *testing.T) {
 					testAccCheckauditsyslogparamsExist("citrixadc_auditsyslogparams.tf_auditsyslogparams", nil),
 					resource.TestCheckResourceAttr("citrixadc_auditsyslogparams.tf_auditsyslogparams", "dateformat", "DDMMYYYY"),
 					resource.TestCheckResourceAttr("citrixadc_auditsyslogparams.tf_auditsyslogparams", "tcp", "ALL"),
+					resource.TestCheckResourceAttr("citrixadc_auditsyslogparams.tf_auditsyslogparams", "protocolviolations", "NONE"),
+					resource.TestCheckResourceAttr("citrixadc_auditsyslogparams.tf_auditsyslogparams", "streamanalytics", "DISABLED"),
 				),
 			},
 			{
@@ -60,6 +66,8 @@ func TestAccauditsyslogparams_basic(t *testing.T) {
 					testAccCheckauditsyslogparamsExist("citrixadc_auditsyslogparams.tf_auditsyslogparams", nil),
 					resource.TestCheckResourceAttr("citrixadc_auditsyslogparams.tf_auditsyslogparams", "dateformat", "MMDDYYYY"),
 					resource.TestCheckResourceAttr("citrixadc_auditsyslogparams.tf_auditsyslogparams", "tcp", "NONE"),
+					resource.TestCheckResourceAttr("citrixadc_auditsyslogparams.tf_auditsyslogparams", "protocolviolations", "ALL"),
+					resource.TestCheckResourceAttr("citrixadc_auditsyslogparams.tf_auditsyslogparams", "streamanalytics", "ENABLED"),
 				),
 			},
 		},

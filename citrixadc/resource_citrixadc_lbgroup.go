@@ -2,7 +2,6 @@ package citrixadc
 
 import (
 	"context"
-
 	"github.com/citrix/adc-nitro-go/resource/config/lb"
 
 	"log"
@@ -22,6 +21,11 @@ func resourceCitrixAdcLbgroup() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"mastervserver": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -95,8 +99,8 @@ func createLbgroupFunc(ctx context.Context, d *schema.ResourceData, meta interfa
 		Cookiedomain:          d.Get("cookiedomain").(string),
 		Rule:                  d.Get("rule").(string),
 		Usevserverpersistency: d.Get("usevserverpersistency").(string),
+		Mastervserver:         d.Get("mastervserver").(string),
 	}
-
 	if raw := d.GetRawConfig().GetAttr("backuppersistencetimeout"); !raw.IsNull() {
 		Lbgroup.Backuppersistencetimeout = intPtr(d.Get("backuppersistencetimeout").(int))
 	}
@@ -129,6 +133,7 @@ func readLbgroupFunc(ctx context.Context, d *schema.ResourceData, meta interface
 		return nil
 	}
 	d.Set("name", data["name"])
+	d.Set("mastervserver", data["mastervserver"])
 	d.Set("persistencetype", data["persistencetype"])
 	d.Set("persistencebackup", data["persistencebackup"])
 	setToInt("backuppersistencetimeout", d, data["backuppersistencetimeout"])
@@ -153,7 +158,11 @@ func updateLbgroupFunc(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	hasChange := false
-
+	if d.HasChange("mastervserver") {
+		log.Printf("[DEBUG]  citrixadc-provider: Mastervserver has changed for Lbgroup, starting update")
+		Lbgroup.Mastervserver = d.Get("mastervserver").(string)
+		hasChange = true
+	}
 	if d.HasChange("persistencetype") {
 		log.Printf("[DEBUG]  netscaler-provider: Persistencetype has changed for Lbgroup %s, starting update", LbgroupName)
 		Lbgroup.Persistencetype = d.Get("persistencetype").(string)

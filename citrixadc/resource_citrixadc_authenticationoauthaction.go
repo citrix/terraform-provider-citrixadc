@@ -23,6 +23,22 @@ func resourceCitrixAdcAuthenticationoauthaction() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"requestattribute": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"oauthmiscflags": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"intunedeviceidexpression": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -250,6 +266,9 @@ func createAuthenticationoauthactionFunc(ctx context.Context, d *schema.Resource
 	authenticationoauthactionName := d.Get("name").(string)
 	authenticationoauthaction := authentication.Authenticationoauthaction{
 		Allowedalgorithms:          toStringList(d.Get("allowedalgorithms").([]interface{})),
+		Intunedeviceidexpression:   d.Get("intunedeviceidexpression").(string),
+		Oauthmiscflags:             toStringList(d.Get("oauthmiscflags").([]interface{})),
+		Requestattribute:           d.Get("requestattribute").(string),
 		Attribute1:                 d.Get("attribute1").(string),
 		Attribute10:                d.Get("attribute10").(string),
 		Attribute11:                d.Get("attribute11").(string),
@@ -321,6 +340,9 @@ func readAuthenticationoauthactionFunc(ctx context.Context, d *schema.ResourceDa
 		return nil
 	}
 	d.Set("name", data["name"])
+	d.Set("requestattribute", data["requestattribute"])
+	d.Set("oauthmiscflags", data["oauthmiscflags"])
+	d.Set("intunedeviceidexpression", data["intunedeviceidexpression"])
 	d.Set("allowedalgorithms", data["allowedalgorithms"])
 	d.Set("attribute1", data["attribute1"])
 	d.Set("attribute10", data["attribute10"])
@@ -378,6 +400,21 @@ func updateAuthenticationoauthactionFunc(ctx context.Context, d *schema.Resource
 		Name: d.Get("name").(string),
 	}
 	hasChange := false
+	if d.HasChange("requestattribute") {
+		log.Printf("[DEBUG]  citrixadc-provider: Requestattribute has changed for authenticationoauthaction, starting update")
+		authenticationoauthaction.Requestattribute = d.Get("requestattribute").(string)
+		hasChange = true
+	}
+	if d.HasChange("oauthmiscflags") {
+		log.Printf("[DEBUG]  citrixadc-provider: Oauthmiscflags has changed for authenticationoauthaction, starting update")
+		authenticationoauthaction.Oauthmiscflags = toStringList(d.Get("oauthmiscflags").([]interface{}))
+		hasChange = true
+	}
+	if d.HasChange("intunedeviceidexpression") {
+		log.Printf("[DEBUG]  citrixadc-provider: Intunedeviceidexpression has changed for authenticationoauthaction, starting update")
+		authenticationoauthaction.Intunedeviceidexpression = d.Get("intunedeviceidexpression").(string)
+		hasChange = true
+	}
 	if d.HasChange("allowedalgorithms") {
 		log.Printf("[DEBUG]  citrixadc-provider: Allowedalgorithms has changed for authenticationoauthaction %s, starting update", authenticationoauthactionName)
 		authenticationoauthaction.Allowedalgorithms = toStringList(d.Get("allowedalgorithms").([]interface{}))

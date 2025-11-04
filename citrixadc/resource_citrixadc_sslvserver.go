@@ -24,6 +24,16 @@ func resourceCitrixAdcSslvserver() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"sslclientlogs": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"defaultsni": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"cipherredirect": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -273,6 +283,8 @@ func createSslvserverFunc(ctx context.Context, d *schema.ResourceData, meta inte
 		Tls13:                 d.Get("tls13").(string),
 		Vservername:           d.Get("vservername").(string),
 		Zerorttearlydata:      d.Get("zerorttearlydata").(string),
+		Defaultsni:            d.Get("defaultsni").(string),
+		Sslclientlogs:         d.Get("sslclientlogs").(string),
 	}
 
 	if raw := d.GetRawConfig().GetAttr("cleartextport"); !raw.IsNull() {
@@ -367,6 +379,9 @@ func readSslvserverFunc(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 	}
 
+	d.Set("sslclientlogs", data["sslclientlogs"])
+	d.Set("defaultsni", data["defaultsni"])
+
 	return nil
 
 }
@@ -380,6 +395,16 @@ func updateSslvserverFunc(ctx context.Context, d *schema.ResourceData, meta inte
 		Vservername: d.Get("vservername").(string),
 	}
 	hasChange := false
+	if d.HasChange("sslclientlogs") {
+		log.Printf("[DEBUG]  citrixadc-provider: Sslclientlogs has changed for sslvserver, starting update")
+		sslvserver.Sslclientlogs = d.Get("sslclientlogs").(string)
+		hasChange = true
+	}
+	if d.HasChange("defaultsni") {
+		log.Printf("[DEBUG]  citrixadc-provider: Defaultsni has changed for sslvserver, starting update")
+		sslvserver.Defaultsni = d.Get("defaultsni").(string)
+		hasChange = true
+	}
 	if d.HasChange("cipherredirect") {
 		log.Printf("[DEBUG]  citrixadc-provider: Cipherredirect has changed for sslvserver %s, starting update", sslvserverName)
 		sslvserver.Cipherredirect = d.Get("cipherredirect").(string)

@@ -45,6 +45,7 @@ resource "citrixadc_servicegroup" "tf_servicegroup" {
 * `commonname` - (Optional) Name to be checked against the CommonName (CN) field in the server certificate bound to the SSL server.
 * `sendclosenotify` - (Optional) Enable sending SSL Close-Notify at the end of a transaction. Possible values: [ YES, NO ]
 * `strictsigdigestcheck` - (Optional) Parameter indicating to check whether peer's certificate is signed with one of signature-hash combination supported by Citrix ADC. Possible values: [ ENABLED, DISABLED ]
+* `sslclientlogs` - (Optional) This parameter is used to enable or disable the logging of additional information, such as the Session ID and SNI names, from SSL handshakes to the audit logs.
 
 
 ## Attribute Reference

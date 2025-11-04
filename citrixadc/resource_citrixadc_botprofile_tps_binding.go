@@ -22,6 +22,12 @@ func resourceCitrixAdcBotprofile_tps_binding() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"bot_tps_enabled": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -85,6 +91,7 @@ func createBotprofile_tps_bindingFunc(ctx context.Context, d *schema.ResourceDat
 		Botbindcomment: d.Get("bot_bind_comment").(string),
 		Bottps:         d.Get("bot_tps").(bool),
 		Bottpsaction:   toStringList(d.Get("bot_tps_action").([]interface{})),
+		Bottpsenabled:  d.Get("bot_tps_enabled").(string),
 		Bottpstype:     d.Get("bot_tps_type").(string),
 		Logmessage:     d.Get("logmessage").(string),
 		Name:           d.Get("name").(string),
@@ -160,6 +167,7 @@ func readBotprofile_tps_bindingFunc(ctx context.Context, d *schema.ResourceData,
 	data := dataArr[foundIndex]
 
 	d.Set("bot_bind_comment", data["bot_bind_comment"])
+	d.Set("bot_tps_enabled", data["bot_tps_enabled"])
 	d.Set("bot_tps", data["bot_tps"])
 	d.Set("bot_tps_action", data["bot_tps_action"])
 	d.Set("bot_tps_type", data["bot_tps_type"])

@@ -40,10 +40,12 @@ type LbParameterResourceModel struct {
 	MonitorConnectionClose        types.String `tfsdk:"monitorconnectionclose"`
 	MonitorSkipMaxClient          types.String `tfsdk:"monitorskipmaxclient"`
 	PreferDirectRoute             types.String `tfsdk:"preferdirectroute"`
+	ProximityFromSelf             types.String `tfsdk:"proximityfromself"`
 	RetainServiceState            types.String `tfsdk:"retainservicestate"`
 	StartupRrFactor               types.Int64  `tfsdk:"startuprrfactor"`
 	StoreMqttClientIdAndUsername  types.String `tfsdk:"storemqttclientidandusername"`
 	SessionsThreshold             types.Int64  `tfsdk:"sessionsthreshold"`
+	UndefAction                   types.String `tfsdk:"undefaction"`
 	UseEncryptedPersistenceCookie types.String `tfsdk:"useencryptedpersistencecookie"`
 	UsePortForHashLb              types.String `tfsdk:"useportforhashlb"`
 	UseSecuredPersistenceCookie   types.String `tfsdk:"usesecuredpersistencecookie"`
@@ -68,10 +70,12 @@ type Lbparameter struct {
 	Monitorconnectionclose        string      `json:"monitorconnectionclose,omitempty"`
 	Monitorskipmaxclient          string      `json:"monitorskipmaxclient,omitempty"`
 	Preferdirectroute             string      `json:"preferdirectroute,omitempty"`
+	Proximityfromself             string      `json:"proximityfromself,omitempty"`
 	Retainservicestate            string      `json:"retainservicestate,omitempty"`
 	Sessionsthreshold             *int        `json:"sessionsthreshold,omitempty"`
 	Startuprrfactor               *int        `json:"startuprrfactor,omitempty"`
 	Storemqttclientidandusername  string      `json:"storemqttclientidandusername,omitempty"`
+	Undefaction                   string      `json:"undefaction,omitempty"`
 	Useencryptedpersistencecookie string      `json:"useencryptedpersistencecookie,omitempty"`
 	Useportforhashlb              string      `json:"useportforhashlb,omitempty"`
 	Usesecuredpersistencecookie   string      `json:"usesecuredpersistencecookie,omitempty"`
@@ -138,6 +142,10 @@ func (r *LbParameterResource) Schema(ctx context.Context, req resource.SchemaReq
 				Optional: true,
 				Computed: true,
 			},
+			"proximityfromself": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+			},
 			"retainservicestate": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
@@ -151,6 +159,10 @@ func (r *LbParameterResource) Schema(ctx context.Context, req resource.SchemaReq
 				Computed: true,
 			},
 			"sessionsthreshold": schema.Int64Attribute{
+				Optional: true,
+				Computed: true,
+			},
+			"undefaction": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},
@@ -253,6 +265,9 @@ func (r *LbParameterResource) Create(ctx context.Context, req resource.CreateReq
 	if !data.PreferDirectRoute.IsNull() {
 		lbparameter.Preferdirectroute = data.PreferDirectRoute.ValueString()
 	}
+	if !data.ProximityFromSelf.IsNull() {
+		lbparameter.Proximityfromself = data.ProximityFromSelf.ValueString()
+	}
 	if !data.RetainServiceState.IsNull() {
 		lbparameter.Retainservicestate = data.RetainServiceState.ValueString()
 	}
@@ -264,6 +279,9 @@ func (r *LbParameterResource) Create(ctx context.Context, req resource.CreateReq
 	}
 	if !data.SessionsThreshold.IsNull() {
 		lbparameter.Sessionsthreshold = intPtr(int(data.SessionsThreshold.ValueInt64()))
+	}
+	if !data.UndefAction.IsNull() {
+		lbparameter.Undefaction = data.UndefAction.ValueString()
 	}
 	if !data.UseEncryptedPersistenceCookie.IsNull() {
 		lbparameter.Useencryptedpersistencecookie = data.UseEncryptedPersistenceCookie.ValueString()
@@ -372,6 +390,9 @@ func (r *LbParameterResource) Update(ctx context.Context, req resource.UpdateReq
 	if !data.PreferDirectRoute.IsNull() {
 		lbparameter.Preferdirectroute = data.PreferDirectRoute.ValueString()
 	}
+	if !data.ProximityFromSelf.IsNull() {
+		lbparameter.Proximityfromself = data.ProximityFromSelf.ValueString()
+	}
 	if !data.RetainServiceState.IsNull() {
 		lbparameter.Retainservicestate = data.RetainServiceState.ValueString()
 	}
@@ -383,6 +404,9 @@ func (r *LbParameterResource) Update(ctx context.Context, req resource.UpdateReq
 	}
 	if !data.SessionsThreshold.IsNull() {
 		lbparameter.Sessionsthreshold = intPtr(int(data.SessionsThreshold.ValueInt64()))
+	}
+	if !data.UndefAction.IsNull() {
+		lbparameter.Undefaction = data.UndefAction.ValueString()
 	}
 	if !data.UseEncryptedPersistenceCookie.IsNull() {
 		lbparameter.Useencryptedpersistencecookie = data.UseEncryptedPersistenceCookie.ValueString()
@@ -512,6 +536,11 @@ func (r *LbParameterResource) readLbParameterFromApi(ctx context.Context, data *
 	} else {
 		data.PreferDirectRoute = types.StringNull()
 	}
+	if val, ok := result["proximityfromself"]; ok && val != nil {
+		data.ProximityFromSelf = types.StringValue(val.(string))
+	} else {
+		data.ProximityFromSelf = types.StringNull()
+	}
 	if val, ok := result["retainservicestate"]; ok && val != nil {
 		data.RetainServiceState = types.StringValue(val.(string))
 	} else {
@@ -535,6 +564,11 @@ func (r *LbParameterResource) readLbParameterFromApi(ctx context.Context, data *
 		}
 	} else {
 		data.SessionsThreshold = types.Int64Null()
+	}
+	if val, ok := result["undefaction"]; ok && val != nil {
+		data.UndefAction = types.StringValue(val.(string))
+	} else {
+		data.UndefAction = types.StringNull()
 	}
 	if val, ok := result["useencryptedpersistencecookie"]; ok && val != nil {
 		data.UseEncryptedPersistenceCookie = types.StringValue(val.(string))

@@ -24,6 +24,11 @@ func resourceCitrixAdcSslservice() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"sslclientlogs": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"cipherredirect": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -235,6 +240,7 @@ func createSslserviceFunc(ctx context.Context, d *schema.ResourceData, meta inte
 		Tls11:                d.Get("tls11").(string),
 		Tls12:                d.Get("tls12").(string),
 		Tls13:                d.Get("tls13").(string),
+		Sslclientlogs:        d.Get("sslclientlogs").(string),
 	}
 
 	if raw := d.GetRawConfig().GetAttr("dhcount"); !raw.IsNull() {
@@ -269,7 +275,7 @@ func readSslserviceFunc(ctx context.Context, d *schema.ResourceData, meta interf
 		return nil
 	}
 
-	sslserviceAttributes := [34]string{
+	sslserviceAttributes := [35]string{
 		"cipherredirect",
 		"cipherurl",
 		"clientauth",
@@ -304,12 +310,17 @@ func readSslserviceFunc(ctx context.Context, d *schema.ResourceData, meta interf
 		"tls11",
 		"tls12",
 		"tls13",
+		"sslclientlogs",
 	}
 
 	for _, val := range sslserviceAttributes {
 		if _, exists := data[val]; exists {
 			if data[val] != "" || data[val] != nil {
-				d.Set(val, data[val])
+				if val == "dhcount" || val == "ersacount" || val == "sesstimeout" {
+					setToInt(val, d, data[val])
+				} else {
+					d.Set(val, data[val])
+				}
 			}
 		}
 	}
@@ -327,6 +338,11 @@ func updateSslserviceFunc(ctx context.Context, d *schema.ResourceData, meta inte
 		Servicename: d.Get("servicename").(string),
 	}
 	hasChange := false
+	if d.HasChange("sslclientlogs") {
+		log.Printf("[DEBUG]  citrixadc-provider: Sslclientlogs has changed for sslservice, starting update")
+		sslservice.Sslclientlogs = d.Get("sslclientlogs").(string)
+		hasChange = true
+	}
 	if d.HasChange("cipherredirect") {
 		log.Printf("[DEBUG]  citrixadc-provider: Cipherredirect has changed for sslservice %s, starting update", sslserviceName)
 		sslservice.Cipherredirect = d.Get("cipherredirect").(string)

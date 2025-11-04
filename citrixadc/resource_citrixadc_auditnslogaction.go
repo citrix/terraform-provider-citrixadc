@@ -24,6 +24,11 @@ func resourceCitrixAdcAuditnslogaction() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"protocolviolations": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -152,6 +157,7 @@ func createAuditnslogactionFunc(ctx context.Context, d *schema.ResourceData, met
 		Timezone:             d.Get("timezone").(string),
 		Urlfiltering:         d.Get("urlfiltering").(string),
 		Userdefinedauditlog:  d.Get("userdefinedauditlog").(string),
+		Protocolviolations:   d.Get("protocolviolations").(string),
 	}
 
 	if raw := d.GetRawConfig().GetAttr("domainresolveretry"); !raw.IsNull() {
@@ -183,6 +189,7 @@ func readAuditnslogactionFunc(ctx context.Context, d *schema.ResourceData, meta 
 		return nil
 	}
 	d.Set("name", data["name"])
+	d.Set("protocolviolations", data["protocolviolations"])
 	d.Set("acl", data["acl"])
 	d.Set("alg", data["alg"])
 	d.Set("appflowexport", data["appflowexport"])
@@ -216,6 +223,11 @@ func updateAuditnslogactionFunc(ctx context.Context, d *schema.ResourceData, met
 		Name: d.Get("name").(string),
 	}
 	hasChange := false
+	if d.HasChange("protocolviolations") {
+		log.Printf("[DEBUG]  citrixadc-provider: Protocolviolations has changed for auditnslogaction, starting update")
+		auditnslogaction.Protocolviolations = d.Get("protocolviolations").(string)
+		hasChange = true
+	}
 	if d.HasChange("acl") {
 		log.Printf("[DEBUG]  citrixadc-provider: Acl has changed for auditnslogaction %s, starting update", auditnslogactionName)
 		auditnslogaction.Acl = d.Get("acl").(string)

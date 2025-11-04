@@ -70,11 +70,6 @@ func resourceCitrixAdcAuthenticationvserver() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"newname": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
 			"port": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -121,7 +116,6 @@ func createAuthenticationvserverFunc(ctx context.Context, d *schema.ResourceData
 		Comment:              d.Get("comment").(string),
 		Ipv46:                d.Get("ipv46").(string),
 		Name:                 d.Get("name").(string),
-		Newname:              d.Get("newname").(string),
 		Samesite:             d.Get("samesite").(string),
 		Servicetype:          d.Get("servicetype").(string),
 		State:                d.Get("state").(string),
@@ -174,7 +168,6 @@ func readAuthenticationvserverFunc(ctx context.Context, d *schema.ResourceData, 
 	d.Set("ipv46", data["ipv46"])
 	setToInt("maxloginattempts", d, data["maxloginattempts"])
 	d.Set("name", data["name"])
-	d.Set("newname", data["newname"])
 	setToInt("port", d, data["port"])
 	setToInt("range", d, data["range"])
 	d.Set("samesite", data["samesite"])
@@ -234,11 +227,6 @@ func updateAuthenticationvserverFunc(ctx context.Context, d *schema.ResourceData
 	if d.HasChange("maxloginattempts") {
 		log.Printf("[DEBUG]  citrixadc-provider: Maxloginattempts has changed for authenticationvserver %s, starting update", authenticationvserverName)
 		authenticationvserver.Maxloginattempts = intPtr(d.Get("maxloginattempts").(int))
-		hasChange = true
-	}
-	if d.HasChange("newname") {
-		log.Printf("[DEBUG]  citrixadc-provider: Newname has changed for authenticationvserver %s, starting update", authenticationvserverName)
-		authenticationvserver.Newname = d.Get("newname").(string)
 		hasChange = true
 	}
 	if d.HasChange("port") {

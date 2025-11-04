@@ -34,6 +34,8 @@ resource "citrixadc_dnskey" "dnskey" {
 	notificationperiod = 7
 	units2             = "DAYS"
 	ttl                = 3600
+	rollovermethod	 = "PrePublication"
+	autorollover	 = "ENABLED"
 	}
 `
 const testAccDnskey_update = `
@@ -47,6 +49,8 @@ resource "citrixadc_dnskey" "dnskey" {
 	notificationperiod = 12
 	units2             = "HOURS"
 	ttl                = 3601
+	rollovermethod	 = "DoubleSignature"
+	autorollover	 = "DISABLED"
 	}
 `
 
@@ -67,6 +71,8 @@ func TestAccDnskey_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_dnskey.dnskey", "notificationperiod", "7"),
 					resource.TestCheckResourceAttr("citrixadc_dnskey.dnskey", "units2", "DAYS"),
 					resource.TestCheckResourceAttr("citrixadc_dnskey.dnskey", "ttl", "3600"),
+					resource.TestCheckResourceAttr("citrixadc_dnskey.dnskey", "rollovermethod", "PrePublication"),
+					resource.TestCheckResourceAttr("citrixadc_dnskey.dnskey", "autorollover", "ENABLED"),
 				),
 			},
 			{
@@ -79,6 +85,8 @@ func TestAccDnskey_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_dnskey.dnskey", "notificationperiod", "12"),
 					resource.TestCheckResourceAttr("citrixadc_dnskey.dnskey", "units2", "HOURS"),
 					resource.TestCheckResourceAttr("citrixadc_dnskey.dnskey", "ttl", "3601"),
+					resource.TestCheckResourceAttr("citrixadc_dnskey.dnskey", "rollovermethod", "DoubleSignature"),
+					resource.TestCheckResourceAttr("citrixadc_dnskey.dnskey", "autorollover", "DISABLED"),
 				),
 			},
 		},

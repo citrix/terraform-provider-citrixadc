@@ -22,6 +22,21 @@ func resourceCitrixAdcCmpparameter() *schema.Resource {
 		UpdateContext: updateCmpparameterFunc,
 		DeleteContext: deleteCmpparameterFunc,
 		Schema: map[string]*schema.Schema{
+			"randomgzipfilenameminlength": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"randomgzipfilenamemaxlength": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"randomgzipfilename": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"addvaryheader": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -97,16 +112,22 @@ func createCmpparameterFunc(ctx context.Context, d *schema.ResourceData, meta in
 	cmpparameterName := resource.PrefixedUniqueId("tf-cmpparameter-")
 
 	cmpparameter := cmp.Cmpparameter{
-		Addvaryheader:   d.Get("addvaryheader").(string),
-		Cmplevel:        d.Get("cmplevel").(string),
-		Cmponpush:       d.Get("cmponpush").(string),
-		Externalcache:   d.Get("externalcache").(string),
-		Heurexpiry:      d.Get("heurexpiry").(string),
-		Policytype:      d.Get("policytype").(string),
-		Servercmp:       d.Get("servercmp").(string),
-		Varyheadervalue: d.Get("varyheadervalue").(string),
+		Addvaryheader:      d.Get("addvaryheader").(string),
+		Cmplevel:           d.Get("cmplevel").(string),
+		Cmponpush:          d.Get("cmponpush").(string),
+		Externalcache:      d.Get("externalcache").(string),
+		Heurexpiry:         d.Get("heurexpiry").(string),
+		Policytype:         d.Get("policytype").(string),
+		Servercmp:          d.Get("servercmp").(string),
+		Varyheadervalue:    d.Get("varyheadervalue").(string),
+		Randomgzipfilename: d.Get("randomgzipfilename").(string),
 	}
-
+	if raw := d.GetRawConfig().GetAttr("randomgzipfilenameminlength"); !raw.IsNull() {
+		cmpparameter.Randomgzipfilenameminlength = intPtr(d.Get("randomgzipfilenameminlength").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("randomgzipfilenamemaxlength"); !raw.IsNull() {
+		cmpparameter.Randomgzipfilenamemaxlength = intPtr(d.Get("randomgzipfilenamemaxlength").(int))
+	}
 	if raw := d.GetRawConfig().GetAttr("cmpbypasspct"); !raw.IsNull() {
 		cmpparameter.Cmpbypasspct = intPtr(d.Get("cmpbypasspct").(int))
 	}
@@ -144,6 +165,9 @@ func readCmpparameterFunc(ctx context.Context, d *schema.ResourceData, meta inte
 		return nil
 	}
 	d.Set("addvaryheader", data["addvaryheader"])
+	setToInt("randomgzipfilenameminlength", d, data["randomgzipfilenameminlength"])
+	setToInt("randomgzipfilenamemaxlength", d, data["randomgzipfilenamemaxlength"])
+	d.Set("randomgzipfilename", data["randomgzipfilename"])
 	setToInt("cmpbypasspct", d, data["cmpbypasspct"])
 	d.Set("cmplevel", data["cmplevel"])
 	d.Set("cmponpush", data["cmponpush"])
@@ -167,6 +191,21 @@ func updateCmpparameterFunc(ctx context.Context, d *schema.ResourceData, meta in
 
 	cmpparameter := cmp.Cmpparameter{}
 	hasChange := false
+	if d.HasChange("randomgzipfilenameminlength") {
+		log.Printf("[DEBUG]  citrixadc-provider: Randomgzipfilenameminlength has changed for cmpparameter, starting update")
+		cmpparameter.Randomgzipfilenameminlength = intPtr(d.Get("randomgzipfilenameminlength").(int))
+		hasChange = true
+	}
+	if d.HasChange("randomgzipfilenamemaxlength") {
+		log.Printf("[DEBUG]  citrixadc-provider: Randomgzipfilenamemaxlength has changed for cmpparameter, starting update")
+		cmpparameter.Randomgzipfilenamemaxlength = intPtr(d.Get("randomgzipfilenamemaxlength").(int))
+		hasChange = true
+	}
+	if d.HasChange("randomgzipfilename") {
+		log.Printf("[DEBUG]  citrixadc-provider: Randomgzipfilename has changed for cmpparameter, starting update")
+		cmpparameter.Randomgzipfilename = d.Get("randomgzipfilename").(string)
+		hasChange = true
+	}
 	if d.HasChange("addvaryheader") {
 		log.Printf("[DEBUG]  citrixadc-provider: Addvaryheader has changed for cmpparameter, starting update")
 		cmpparameter.Addvaryheader = d.Get("addvaryheader").(string)

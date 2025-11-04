@@ -25,11 +25,6 @@ func resourceCitrixAdcAuthorizationpolicylabel() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"newname": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
 		},
 	}
 }
@@ -40,7 +35,6 @@ func createAuthorizationpolicylabelFunc(ctx context.Context, d *schema.ResourceD
 	authorizationpolicylabelName := d.Get("labelname").(string)
 	authorizationpolicylabel := authorization.Authorizationpolicylabel{
 		Labelname: authorizationpolicylabelName,
-		Newname:   d.Get("newname").(string),
 	}
 
 	_, err := client.AddResource(service.Authorizationpolicylabel.Type(), authorizationpolicylabelName, &authorizationpolicylabel)
@@ -65,7 +59,6 @@ func readAuthorizationpolicylabelFunc(ctx context.Context, d *schema.ResourceDat
 		return nil
 	}
 	d.Set("labelname", data["labelname"])
-	d.Set("newname", data["newname"])
 
 	return nil
 

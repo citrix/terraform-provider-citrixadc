@@ -43,6 +43,10 @@ func TestAccGslbvserver_basic(t *testing.T) {
 						"citrixadc_gslbvserver.foo", "name", "GSLB-East-Coast-Vserver"),
 					resource.TestCheckResourceAttr(
 						"citrixadc_gslbvserver.foo", "servicetype", "HTTP"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_gslbvserver.foo", "toggleorder", "ASCENDING"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_gslbvserver.foo", "orderthreshold", "50"),
 				),
 			},
 		},
@@ -121,6 +125,8 @@ resource "citrixadc_gslbvserver" "foo" {
   dnsrecordtype = "A"
   name = "GSLB-East-Coast-Vserver"
   servicetype = "HTTP"
+  toggleorder = "ASCENDING"
+  orderthreshold = "50"
   domain {
 	  domainname =  "www.fooco.co"
 	  ttl = "60"

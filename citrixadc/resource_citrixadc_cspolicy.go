@@ -213,12 +213,6 @@ func updateCspolicyFunc(ctx context.Context, d *schema.ResourceData, meta interf
 		log.Printf("[DEBUG] netscaler-provider: Priority has changed for cspolicy %s, starting update", cspolicyName)
 		priorityChanged = true
 	}
-	if d.HasChange("newname") {
-		log.Printf("[DEBUG] netscaler-provider: Newname has changed for cspolicy %s, starting update", cspolicyName)
-		cspolicy.Newname = d.Get("newname").(string)
-		d.SetId(cspolicy.Newname)
-		hasChange = true
-	}
 	if d.HasChange("targetlbvserver") {
 		log.Printf("[DEBUG] netscaler-provider: targetlbvserver has changed for cspolicy %s, starting update", cspolicyName)
 		lbvserverChanged = true

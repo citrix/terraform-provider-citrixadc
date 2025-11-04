@@ -31,6 +31,11 @@ resource "citrixadc_systemparameter" "tf_systemparameter" {
     natpcbrstontimeout = "DISABLED"
     timeout = 500
     doppler = "ENABLED"
+	pwdhistorycount = 5
+	warnpriorndays = 10
+	passwordhistorycontrol = "ENABLED"
+	maxsessionperuser = 10
+	daystoexpire = 45
 }
 `
 
@@ -42,6 +47,11 @@ resource "citrixadc_systemparameter" "tf_systemparameter" {
     natpcbrstontimeout = "ENABLED"
     timeout = 600
     doppler = "DISABLED"
+	pwdhistorycount = 10
+	warnpriorndays = 15
+	passwordhistorycontrol = "DISABLED"
+	maxsessionperuser = 15
+	daystoexpire = 50
 }
 `
 
@@ -60,6 +70,11 @@ func TestAccSystemparameter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_systemparameter", "natpcbrstontimeout", "DISABLED"),
 					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_systemparameter", "timeout", "500"),
 					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_systemparameter", "doppler", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_systemparameter", "pwdhistorycount", "5"),
+					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_systemparameter", "warnpriorndays", "10"),
+					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_systemparameter", "passwordhistorycontrol", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_systemparameter", "maxsessionperuser", "10"),
+					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_systemparameter", "daystoexpire", "45"),
 				),
 			},
 			{
@@ -71,6 +86,11 @@ func TestAccSystemparameter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_systemparameter", "natpcbrstontimeout", "ENABLED"),
 					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_systemparameter", "timeout", "600"),
 					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_systemparameter", "doppler", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_systemparameter", "pwdhistorycount", "10"),
+					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_systemparameter", "warnpriorndays", "15"),
+					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_systemparameter", "passwordhistorycontrol", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_systemparameter", "maxsessionperuser", "15"),
+					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_systemparameter", "daystoexpire", "50"),
 				),
 			},
 		},

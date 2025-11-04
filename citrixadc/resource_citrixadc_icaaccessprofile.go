@@ -22,6 +22,31 @@ func resourceCitrixAdcIcaaccessprofile() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"wiaredirection": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"smartcardredirection": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"fido2redirection": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"draganddrop": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"clienttwaindeviceredirection": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -81,16 +106,21 @@ func createIcaaccessprofileFunc(ctx context.Context, d *schema.ResourceData, met
 	client := meta.(*NetScalerNitroClient).client
 	icaaccessprofileName := d.Get("name").(string)
 	icaaccessprofile := ica.Icaaccessprofile{
-		Clientaudioredirection:     d.Get("clientaudioredirection").(string),
-		Clientclipboardredirection: d.Get("clientclipboardredirection").(string),
-		Clientcomportredirection:   d.Get("clientcomportredirection").(string),
-		Clientdriveredirection:     d.Get("clientdriveredirection").(string),
-		Clientprinterredirection:   d.Get("clientprinterredirection").(string),
-		Clientusbdriveredirection:  d.Get("clientusbdriveredirection").(string),
-		Connectclientlptports:      d.Get("connectclientlptports").(string),
-		Localremotedatasharing:     d.Get("localremotedatasharing").(string),
-		Multistream:                d.Get("multistream").(string),
-		Name:                       d.Get("name").(string),
+		Clientaudioredirection:       d.Get("clientaudioredirection").(string),
+		Clientclipboardredirection:   d.Get("clientclipboardredirection").(string),
+		Clientcomportredirection:     d.Get("clientcomportredirection").(string),
+		Clientdriveredirection:       d.Get("clientdriveredirection").(string),
+		Clientprinterredirection:     d.Get("clientprinterredirection").(string),
+		Clientusbdriveredirection:    d.Get("clientusbdriveredirection").(string),
+		Connectclientlptports:        d.Get("connectclientlptports").(string),
+		Localremotedatasharing:       d.Get("localremotedatasharing").(string),
+		Multistream:                  d.Get("multistream").(string),
+		Name:                         d.Get("name").(string),
+		Clienttwaindeviceredirection: d.Get("clienttwaindeviceredirection").(string),
+		Draganddrop:                  d.Get("draganddrop").(string),
+		Fido2redirection:             d.Get("fido2redirection").(string),
+		Smartcardredirection:         d.Get("smartcardredirection").(string),
+		Wiaredirection:               d.Get("wiaredirection").(string),
 	}
 
 	_, err := client.AddResource("icaaccessprofile", icaaccessprofileName, &icaaccessprofile)
@@ -115,6 +145,11 @@ func readIcaaccessprofileFunc(ctx context.Context, d *schema.ResourceData, meta 
 		return nil
 	}
 	d.Set("name", data["name"])
+	d.Set("wiaredirection", data["wiaredirection"])
+	d.Set("smartcardredirection", data["smartcardredirection"])
+	d.Set("fido2redirection", data["fido2redirection"])
+	d.Set("draganddrop", data["draganddrop"])
+	d.Set("clienttwaindeviceredirection", data["clienttwaindeviceredirection"])
 	d.Set("clientaudioredirection", data["clientaudioredirection"])
 	d.Set("clientclipboardredirection", data["clientclipboardredirection"])
 	d.Set("clientcomportredirection", data["clientcomportredirection"])
@@ -138,6 +173,31 @@ func updateIcaaccessprofileFunc(ctx context.Context, d *schema.ResourceData, met
 		Name: d.Get("name").(string),
 	}
 	hasChange := false
+	if d.HasChange("wiaredirection") {
+		log.Printf("[DEBUG]  citrixadc-provider: Wiaredirection has changed for icaaccessprofile, starting update")
+		icaaccessprofile.Wiaredirection = d.Get("wiaredirection").(string)
+		hasChange = true
+	}
+	if d.HasChange("smartcardredirection") {
+		log.Printf("[DEBUG]  citrixadc-provider: Smartcardredirection has changed for icaaccessprofile, starting update")
+		icaaccessprofile.Smartcardredirection = d.Get("smartcardredirection").(string)
+		hasChange = true
+	}
+	if d.HasChange("fido2redirection") {
+		log.Printf("[DEBUG]  citrixadc-provider: Fido2redirection has changed for icaaccessprofile, starting update")
+		icaaccessprofile.Fido2redirection = d.Get("fido2redirection").(string)
+		hasChange = true
+	}
+	if d.HasChange("draganddrop") {
+		log.Printf("[DEBUG]  citrixadc-provider: Draganddrop has changed for icaaccessprofile, starting update")
+		icaaccessprofile.Draganddrop = d.Get("draganddrop").(string)
+		hasChange = true
+	}
+	if d.HasChange("clienttwaindeviceredirection") {
+		log.Printf("[DEBUG]  citrixadc-provider: Clienttwaindeviceredirection has changed for icaaccessprofile, starting update")
+		icaaccessprofile.Clienttwaindeviceredirection = d.Get("clienttwaindeviceredirection").(string)
+		hasChange = true
+	}
 	if d.HasChange("clientaudioredirection") {
 		log.Printf("[DEBUG]  citrixadc-provider: Clientaudioredirection has changed for icaaccessprofile %s, starting update", icaaccessprofileName)
 		icaaccessprofile.Clientaudioredirection = d.Get("clientaudioredirection").(string)

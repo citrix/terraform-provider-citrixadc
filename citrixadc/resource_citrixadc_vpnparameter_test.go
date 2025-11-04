@@ -17,10 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccVpnparameter_add = `
@@ -41,6 +42,12 @@ const testAccVpnparameter_add = `
 		linuxpluginupgrade    = "Always"
 		uitheme               = "DEFAULT"
 		httpport              = [80]
+		secureprivateaccess	= "ENABLED"
+		maxiipperuser         = 5
+		httptrackconnproxy	= "OFF"
+		deviceposture = "DISABLED"
+		backenddtls12 = "DISABLED"
+		accessrestrictedpageredirect = "NS"
 	}
 `
 const testAccVpnparameter_update = `
@@ -61,6 +68,11 @@ const testAccVpnparameter_update = `
 		linuxpluginupgrade    = "Always"
 		uitheme               = "DEFAULT"
 		httpport              = [80]
+		secureprivateaccess	= "DISABLED"
+		maxiipperuser         = 10
+		httptrackconnproxy	= "ON"
+		deviceposture = "ENABLED"
+		backenddtls12 = "ENABLED"
 	}
 `
 
@@ -77,6 +89,11 @@ func TestAccVpnparameter_basic(t *testing.T) {
 					testAccCheckVpnparameterExist("citrixadc_vpnparameter.tf_vpnparameter", nil),
 					resource.TestCheckResourceAttr("citrixadc_vpnparameter.tf_vpnparameter", "splittunnel", "ON"),
 					resource.TestCheckResourceAttr("citrixadc_vpnparameter.tf_vpnparameter", "locallanaccess", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_vpnparameter.tf_vpnparameter", "secureprivateaccess", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_vpnparameter.tf_vpnparameter", "httptrackconnproxy", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_vpnparameter.tf_vpnparameter", "deviceposture", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_vpnparameter.tf_vpnparameter", "backenddtls12", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_vpnparameter.tf_vpnparameter", "accessrestrictedpageredirect", "NS"),
 				),
 			},
 			{
@@ -85,6 +102,10 @@ func TestAccVpnparameter_basic(t *testing.T) {
 					testAccCheckVpnparameterExist("citrixadc_vpnparameter.tf_vpnparameter", nil),
 					resource.TestCheckResourceAttr("citrixadc_vpnparameter.tf_vpnparameter", "splittunnel", "OFF"),
 					resource.TestCheckResourceAttr("citrixadc_vpnparameter.tf_vpnparameter", "locallanaccess", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_vpnparameter.tf_vpnparameter", "secureprivateaccess", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_vpnparameter.tf_vpnparameter", "httptrackconnproxy", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_vpnparameter.tf_vpnparameter", "deviceposture", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_vpnparameter.tf_vpnparameter", "backenddtls12", "ENABLED"),
 				),
 			},
 		},

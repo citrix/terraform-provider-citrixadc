@@ -43,11 +43,6 @@ func resourceCitrixAdcLbpolicy() *schema.Resource {
 				Computed: false,
 				ForceNew: true,
 			},
-			"newname": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
 			"rule": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -73,7 +68,6 @@ func createLbpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interf
 		Comment:     d.Get("comment").(string),
 		Logaction:   d.Get("logaction").(string),
 		Name:        d.Get("name").(string),
-		Newname:     d.Get("newname").(string),
 		Rule:        d.Get("rule").(string),
 		Undefaction: d.Get("undefaction").(string),
 	}
@@ -103,7 +97,6 @@ func readLbpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("action", data["action"])
 	d.Set("comment", data["comment"])
 	d.Set("logaction", data["logaction"])
-	d.Set("newname", data["newname"])
 	d.Set("rule", data["rule"])
 	d.Set("undefaction", data["undefaction"])
 
@@ -138,11 +131,6 @@ func updateLbpolicyFunc(ctx context.Context, d *schema.ResourceData, meta interf
 	if d.HasChange("name") {
 		log.Printf("[DEBUG]  citrixadc-provider: Name has changed for lbpolicy %s, starting update", lbpolicyName)
 		lbpolicy.Name = d.Get("name").(string)
-		hasChange = true
-	}
-	if d.HasChange("newname") {
-		log.Printf("[DEBUG]  citrixadc-provider: Newname has changed for lbpolicy %s, starting update", lbpolicyName)
-		lbpolicy.Newname = d.Get("newname").(string)
 		hasChange = true
 	}
 	if d.HasChange("rule") {

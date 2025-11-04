@@ -41,6 +41,7 @@ resource "citrixadc_rdpclientprofile" "tf_rdpclientprofile" {
 * `redirectpnpdevices` - (Optional) This setting corresponds to the selections for pnpdevices under More on the Local Resources tab under Options in RDC.
 * `redirectprinters` - (Optional) This setting corresponds to the selection in the Printers check box on the Local Resources tab under Options in RDC.
 * `videoplaybackmode` - (Optional) This setting determines if Remote Desktop Connection (RDC) will use RDP efficient multimedia streaming for video playback.
+* `rdpvalidateclientip` - (Optional) This setting determines whether RDC launch is initiated by the valid client IP
 
 
 ## Attribute Reference

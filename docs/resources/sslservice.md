@@ -89,6 +89,7 @@ The sslservice resource is used to create SSL services.
 * `dtlsprofilename` - (Optional) Name of the DTLS profile that contains DTLS settings for the service.
 * `sslprofile` - (Optional) Name of the SSL profile that contains SSL settings for the service.
 * `strictsigdigestcheck` - (Optional) Parameter indicating to check whether peer's certificate during TLS1.2 handshake is signed with one of signature-hash combination supported by Citrix ADC. Possible values: [ ENABLED, DISABLED ]
+* `sslclientlogs` - (Optional) This parameter is used to enable or disable the logging of additional information, such as the Session ID and SNI name, from SSL handshakes to the audit logs.
 
 
 ## Attribute Reference

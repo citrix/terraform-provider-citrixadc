@@ -55,8 +55,9 @@ resource "citrixadc_gslbsite" "site_local" {
 * `state` - (Optional) Initial state of the GSLB service group.
 * `svrtimeout` - (Optional) Time, in seconds, after which to terminate an idle server connection.
 * `weight` - (Optional) Weight to assign to the servers in the service group. Specifies the capacity of the servers relative to the other servers in the load balancing configuration. The higher the weight, the higher the percentage of requests sent to the service.
+* `autodelayedtrofs` - (Optional) Indicates graceful movement of the service to TROFS. System will wait for monitor response time out before moving to TROFS
 
-
+gslb
 ## Attribute Reference
 
 In addition to the arguments, the following attributes are available:

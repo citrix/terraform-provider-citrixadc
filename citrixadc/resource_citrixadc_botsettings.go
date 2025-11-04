@@ -26,6 +26,16 @@ func resourceCitrixAdcBotsettings() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"proxyusername": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"proxypassword": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"defaultprofile": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -112,6 +122,8 @@ func createBotsettingsFunc(ctx context.Context, d *schema.ResourceData, meta int
 		Signatureurl:               d.Get("signatureurl").(string),
 		Proxyserver:                d.Get("proxyserver").(string),
 		Trapurlautogenerate:        d.Get("trapurlautogenerate").(string),
+		Proxypassword:              d.Get("proxypassword").(string),
+		Proxyusername:              d.Get("proxyusername").(string),
 	}
 
 	if raw := d.GetRawConfig().GetAttr("sessiontimeout"); !raw.IsNull() {
@@ -151,6 +163,8 @@ func readBotsettingsFunc(ctx context.Context, d *schema.ResourceData, meta inter
 		return nil
 	}
 	d.Set("defaultprofile", data["defaultprofile"])
+	d.Set("proxyusername", data["proxyusername"])
+	d.Set("proxypassword", data["proxypassword"])
 	d.Set("defaultnonintrusiveprofile", data["defaultnonintrusiveprofile"])
 	d.Set("javascriptname", data["javascriptname"])
 	setToInt("sessiontimeout", d, data["sessiontimeout"])
@@ -174,6 +188,16 @@ func updateBotsettingsFunc(ctx context.Context, d *schema.ResourceData, meta int
 	botsettings := bot.Botsettings{}
 
 	hasChange := false
+	if d.HasChange("proxyusername") {
+		log.Printf("[DEBUG]  citrixadc-provider: Proxyusername has changed for botsettings, starting update")
+		botsettings.Proxyusername = d.Get("proxyusername").(string)
+		hasChange = true
+	}
+	if d.HasChange("proxypassword") {
+		log.Printf("[DEBUG]  citrixadc-provider: Proxypassword has changed for botsettings, starting update")
+		botsettings.Proxypassword = d.Get("proxypassword").(string)
+		hasChange = true
+	}
 	if d.HasChange("defaultprofile") {
 		log.Printf("[DEBUG]  citrixadc-provider: Defaultprofile has changed for botsettings, starting update")
 		botsettings.Defaultprofile = d.Get("defaultprofile").(string)

@@ -54,6 +54,7 @@ resource "citrixadc_nspbr" "tf_nspbr" {
 * `state` - (Optional) Enable or disable the PBR. After you apply the PBRs, the Citrix ADC compares outgoing packets to the enabled PBRs. Possible values: [ ENABLED, DISABLED ]
 * `ownergroup` - (Optional) The owner node group in a Cluster for this pbr rule. If ownernode is not specified then the pbr rule is treated as Striped pbr rule. Minimum length =  1
 * `detail` - (Optional) To get a detailed view.
+* `targettd` - (Optional) Integer value that uniquely identifies the traffic domain to which you want to send packet to.
 
 
 ## Attribute Reference

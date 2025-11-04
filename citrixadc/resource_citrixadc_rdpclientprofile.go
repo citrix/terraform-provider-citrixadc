@@ -22,6 +22,11 @@ func resourceCitrixAdcRdpclientprofile() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"rdpvalidateclientip": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -150,6 +155,7 @@ func createRdpclientprofileFunc(ctx context.Context, d *schema.ResourceData, met
 		Redirectpnpdevices:   d.Get("redirectpnpdevices").(string),
 		Redirectprinters:     d.Get("redirectprinters").(string),
 		Videoplaybackmode:    d.Get("videoplaybackmode").(string),
+		Rdpvalidateclientip:  d.Get("rdpvalidateclientip").(string),
 	}
 
 	if raw := d.GetRawConfig().GetAttr("rdpcookievalidity"); !raw.IsNull() {
@@ -178,6 +184,7 @@ func readRdpclientprofileFunc(ctx context.Context, d *schema.ResourceData, meta 
 		return nil
 	}
 	d.Set("name", data["name"])
+	d.Set("rdpvalidateclientip", data["rdpvalidateclientip"])
 	d.Set("addusernameinrdpfile", data["addusernameinrdpfile"])
 	d.Set("audiocapturemode", data["audiocapturemode"])
 	d.Set("keyboardhook", data["keyboardhook"])
@@ -211,6 +218,11 @@ func updateRdpclientprofileFunc(ctx context.Context, d *schema.ResourceData, met
 		Name: d.Get("name").(string),
 	}
 	hasChange := false
+	if d.HasChange("rdpvalidateclientip") {
+		log.Printf("[DEBUG]  citrixadc-provider: Rdpvalidateclientip has changed for rdpclientprofile, starting update")
+		rdpclientprofile.Rdpvalidateclientip = d.Get("rdpvalidateclientip").(string)
+		hasChange = true
+	}
 	if d.HasChange("addusernameinrdpfile") {
 		log.Printf("[DEBUG]  citrixadc-provider: Addusernameinrdpfile has changed for rdpclientprofile %s, starting update", rdpclientprofileName)
 		rdpclientprofile.Addusernameinrdpfile = d.Get("addusernameinrdpfile").(string)

@@ -24,6 +24,11 @@ func resourceCitrixAdcNsip() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"arpowner": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
 			"ipaddress": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -249,6 +254,9 @@ func createNsipFunc(ctx context.Context, d *schema.ResourceData, meta interface{
 		Vserverrhilevel:             d.Get("vserverrhilevel").(string),
 		Mptcpadvertise:              d.Get("mptcpadvertise").(string),
 	}
+	if raw := d.GetRawConfig().GetAttr("arpowner"); !raw.IsNull() {
+		nsip.Arpowner = intPtr(d.Get("arpowner").(int))
+	}
 	if raw := d.GetRawConfig().GetAttr("metric"); !raw.IsNull() {
 		nsip.Metric = intPtr(d.Get("metric").(int))
 	}
@@ -290,6 +298,7 @@ func readNsipFunc(ctx context.Context, d *schema.ResourceData, meta interface{})
 		return nil
 	}
 	d.Set("advertiseondefaultpartition", data["advertiseondefaultpartition"])
+	setToInt("arpowner", d, data["arpowner"])
 	d.Set("arp", data["arp"])
 	d.Set("arpresponse", data["arpresponse"])
 	d.Set("bgp", data["bgp"])
@@ -339,6 +348,11 @@ func updateNsipFunc(ctx context.Context, d *schema.ResourceData, meta interface{
 	}
 	stateChange := false
 	hasChange := false
+	if d.HasChange("arpowner") {
+		log.Printf("[DEBUG]  citrixadc-provider: Arpowner has changed for nsip, starting update")
+		nsip.Arpowner = intPtr(d.Get("arpowner").(int))
+		hasChange = true
+	}
 	if d.HasChange("advertiseondefaultpartition") {
 		log.Printf("[DEBUG]  citrixadc-provider: Advertiseondefaultpartition has changed for nsip %s, starting update", ipaddress)
 		nsip.Advertiseondefaultpartition = d.Get("advertiseondefaultpartition").(string)

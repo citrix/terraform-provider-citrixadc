@@ -22,6 +22,11 @@ func resourceCitrixAdcSsldtlsprofile() *schema.Resource {
 		UpdateContext: updateSsldtlsprofileFunc,
 		DeleteContext: deleteSsldtlsprofileFunc,
 		Schema: map[string]*schema.Schema{
+			"initialretrytimeout": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
 			"helloverifyrequest": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -87,6 +92,9 @@ func createSsldtlsprofileFunc(ctx context.Context, d *schema.ResourceData, meta 
 		Pmtudiscovery:      d.Get("pmtudiscovery").(string),
 		Terminatesession:   d.Get("terminatesession").(string),
 	}
+	if raw := d.GetRawConfig().GetAttr("initialretrytimeout"); !raw.IsNull() {
+		ssldtlsprofile.Initialretrytimeout = intPtr(d.Get("initialretrytimeout").(int))
+	}
 
 	if raw := d.GetRawConfig().GetAttr("maxbadmacignorecount"); !raw.IsNull() {
 		ssldtlsprofile.Maxbadmacignorecount = intPtr(d.Get("maxbadmacignorecount").(int))
@@ -126,6 +134,7 @@ func readSsldtlsprofileFunc(ctx context.Context, d *schema.ResourceData, meta in
 		return nil
 	}
 	d.Set("name", data["name"])
+	setToInt("initialretrytimeout", d, data["initialretrytimeout"])
 	d.Set("helloverifyrequest", data["helloverifyrequest"])
 	setToInt("maxbadmacignorecount", d, data["maxbadmacignorecount"])
 	setToInt("maxholdqlen", d, data["maxholdqlen"])
@@ -149,6 +158,11 @@ func updateSsldtlsprofileFunc(ctx context.Context, d *schema.ResourceData, meta 
 		Name: d.Get("name").(string),
 	}
 	hasChange := false
+	if d.HasChange("initialretrytimeout") {
+		log.Printf("[DEBUG]  citrixadc-provider: Initialretrytimeout has changed for ssldtlsprofile, starting update")
+		ssldtlsprofile.Initialretrytimeout = intPtr(d.Get("initialretrytimeout").(int))
+		hasChange = true
+	}
 	if d.HasChange("helloverifyrequest") {
 		log.Printf("[DEBUG]  citrixadc-provider: Helloverifyrequest has changed for ssldtlsprofile %s, starting update", ssldtlsprofileName)
 		ssldtlsprofile.Helloverifyrequest = d.Get("helloverifyrequest").(string)

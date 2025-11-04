@@ -42,6 +42,7 @@ resource "citrixadc_aaaradiusparams" "tf_aaaradiusparams" {
 * `authservretry` - (Optional) Number of retry by the Citrix ADC before getting response from the RADIUS server. Minimum value =  1 Maximum value =  10
 * `authentication` - (Optional) Configure the RADIUS server state to accept or refuse authentication messages. Possible values: [ on, off ]
 * `tunnelendpointclientip` - (Optional) Send Tunnel Endpoint Client IP address to the RADIUS server. Possible values: [ ENABLED, DISABLED ]
+* `messageauthenticator` - (Optional) Control whether the Message-Authenticator attribute is included in a RADIUS Access-Request packet.
 
 
 ## Attribute Reference

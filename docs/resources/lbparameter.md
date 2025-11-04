@@ -52,10 +52,12 @@ resource "citrixadc_lbparameter" "tf_lbparameter" {
 * `maxpipelinenat` - (Optional) 
 * `literaladccookieattribute` - (Optional) String configured as LiteralADCCookieAttribute will be appended as attribute for Citrix ADC cookie (for example: LB cookie persistence , GSLB site persistence, CS cookie persistence, LB group cookie persistence). Sample usage - set lb parameter -LiteralADCCookieAttribute ";SameSite=None".
 * `computedadccookieattribute` - (Optional) ComputedADCCookieAttribute accepts ns variable as input in form of string starting with $ (to understand how to configure ns variable, please check man add ns variable). policies can be configured to modify this variable for every transaction and the final value of the variable after policy evaluation will be appended as attribute to Citrix ADC cookie (for example: LB cookie persistence , GSLB sitepersistence, CS cookie persistence, LB group cookie persistence). Only one of ComputedADCCookieAttribute, LiteralADCCookieAttribute can be set. Sample usage - add ns variable lbvar -type TEXT(100) -scope Transaction add ns assignment lbassign -variable $lbvar -set "\\";SameSite=Strict\\"" add rewrite policy lbpol <valid policy expression> lbassign bind rewrite global lbpol 100 next -type RES_OVERRIDE set lb param -ComputedADCCookieAttribute "$lbvar" For incoming client request, if above policy evaluates TRUE, then SameSite=Strict will be appended to ADC generated cookie.
-* `storemqttclientidandusername` - (Optional)
-* `lbhashalgorithm` - (Optional)
-* `dropmqttjumbomessage` - (Optional)
-* `lbhashfingers` - (Optional)
+* `proximityfromself` - (Optional) Use the ADC location instead of client IP for static proximity LB or GSLB decision.
+* `undefaction` - (Optional) Action to perform when policy evaluation creates an UNDEF condition. Available settings function as follows: * NOLBACTION - Does not consider LB action in making LB decision., * RESET - Reset the request and notify the user, so that the user can resend the request. * DROP - Drop the request without sending a response to the user.
+* `storemqttclientidandusername` - (Optional) This option allows to store the MQTT clientid and username in transactional logs.
+* `lbhashalgorithm` - (Optional) This option dictates the hashing algorithm used for hash based LB methods (URLHASH, DOMAINHASH, SOURCEIPHASH, DESTINATIONIPHASH, SRCIPDESTIPHASH, SRCIPSRCPORTHASH, TOKEN, USER_TOKEN, CALLIDHASH).
+* `dropmqttjumbomessage` - (Optional) When this option is enabled, MQTT messages of length greater than 64k will be dropped and the client/server connections will be reset.
+* `lbhashfingers` - (Optional) This option is used to specify the number of fingers to be used in PRAC and JARH algorithms for hash based LB methods. Increasing the number of fingers might give better distribution of traffic at the expense of additional memory.
 
 
 ## Attribute Reference

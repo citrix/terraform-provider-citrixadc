@@ -38,12 +38,6 @@ func resourceCitrixAdcAuthenticationpolicylabel() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"newname": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
 			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -62,7 +56,6 @@ func createAuthenticationpolicylabelFunc(ctx context.Context, d *schema.Resource
 		Comment:     d.Get("comment").(string),
 		Labelname:   d.Get("labelname").(string),
 		Loginschema: d.Get("loginschema").(string),
-		Newname:     d.Get("newname").(string),
 		Type:        d.Get("type").(string),
 	}
 
@@ -91,7 +84,6 @@ func readAuthenticationpolicylabelFunc(ctx context.Context, d *schema.ResourceDa
 	d.Set("comment", data["comment"])
 	d.Set("labelname", data["labelname"])
 	d.Set("loginschema", data["loginschema"])
-	d.Set("newname", data["newname"])
 	d.Set("type", data["type"])
 
 	return nil

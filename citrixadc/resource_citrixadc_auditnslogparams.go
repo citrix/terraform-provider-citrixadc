@@ -22,6 +22,11 @@ func resourceCitrixAdcAuditnslogparams() *schema.Resource {
 		UpdateContext: updateAuditnslogparamsFunc,
 		DeleteContext: deleteAuditnslogparamsFunc,
 		Schema: map[string]*schema.Schema{
+			"protocolviolations": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"acl": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -120,6 +125,7 @@ func createAuditnslogparamsFunc(ctx context.Context, d *schema.ResourceData, met
 		Dateformat:           d.Get("dateformat").(string),
 		Logfacility:          d.Get("logfacility").(string),
 		Loglevel:             toStringList(d.Get("loglevel").([]interface{})),
+		Protocolviolations:   d.Get("protocolviolations").(string),
 		Lsn:                  d.Get("lsn").(string),
 		Serverip:             d.Get("serverip").(string),
 		Sslinterception:      d.Get("sslinterception").(string),
@@ -155,6 +161,7 @@ func readAuditnslogparamsFunc(ctx context.Context, d *schema.ResourceData, meta 
 		return nil
 	}
 	d.Set("acl", data["acl"])
+	d.Set("protocolviolations", data["protocolviolations"])
 	d.Set("alg", data["alg"])
 	d.Set("appflowexport", data["appflowexport"])
 	d.Set("contentinspectionlog", data["contentinspectionlog"])
@@ -181,6 +188,11 @@ func updateAuditnslogparamsFunc(ctx context.Context, d *schema.ResourceData, met
 
 	auditnslogparams := audit.Auditnslogparams{}
 	hasChange := false
+	if d.HasChange("protocolviolations") {
+		log.Printf("[DEBUG]  citrixadc-provider: Protocolviolations has changed for auditnslogparams, starting update")
+		auditnslogparams.Protocolviolations = d.Get("protocolviolations").(string)
+		hasChange = true
+	}
 	if d.HasChange("acl") {
 		log.Printf("[DEBUG]  citrixadc-provider: Acl has changed for auditnslogparams, starting update")
 		auditnslogparams.Acl = d.Get("acl").(string)

@@ -22,6 +22,16 @@ func resourceCitrixAdcAuditsyslogparams() *schema.Resource {
 		UpdateContext: updateAuditsyslogparamsFunc,
 		DeleteContext: deleteAuditsyslogparamsFunc,
 		Schema: map[string]*schema.Schema{
+			"streamanalytics": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"protocolviolations": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"acl": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -126,6 +136,8 @@ func createAuditsyslogparamsFunc(ctx context.Context, d *schema.ResourceData, me
 		Dns:                  d.Get("dns").(string),
 		Logfacility:          d.Get("logfacility").(string),
 		Loglevel:             toStringList(d.Get("loglevel").([]interface{})),
+		Protocolviolations:   d.Get("protocolviolations").(string),
+		Streamanalytics:      d.Get("streamanalytics").(string),
 		Lsn:                  d.Get("lsn").(string),
 		Serverip:             d.Get("serverip").(string),
 		Sslinterception:      d.Get("sslinterception").(string),
@@ -161,6 +173,8 @@ func readAuditsyslogparamsFunc(ctx context.Context, d *schema.ResourceData, meta
 		return nil
 	}
 	d.Set("acl", data["acl"])
+	d.Set("streamanalytics", data["streamanalytics"])
+	d.Set("protocolviolations", data["protocolviolations"])
 	d.Set("alg", data["alg"])
 	d.Set("appflowexport", data["appflowexport"])
 	d.Set("contentinspectionlog", data["contentinspectionlog"])
@@ -188,6 +202,16 @@ func updateAuditsyslogparamsFunc(ctx context.Context, d *schema.ResourceData, me
 
 	auditsyslogparams := audit.Auditsyslogparams{}
 	hasChange := false
+	if d.HasChange("streamanalytics") {
+		log.Printf("[DEBUG]  citrixadc-provider: Streamanalytics has changed for auditsyslogparams, starting update")
+		auditsyslogparams.Streamanalytics = d.Get("streamanalytics").(string)
+		hasChange = true
+	}
+	if d.HasChange("protocolviolations") {
+		log.Printf("[DEBUG]  citrixadc-provider: Protocolviolations has changed for auditsyslogparams, starting update")
+		auditsyslogparams.Protocolviolations = d.Get("protocolviolations").(string)
+		hasChange = true
+	}
 	if d.HasChange("acl") {
 		log.Printf("[DEBUG]  citrixadc-provider: Acl has changed for auditsyslogparams, starting update")
 		auditsyslogparams.Acl = d.Get("acl").(string)

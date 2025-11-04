@@ -24,6 +24,21 @@ func resourceCitrixAdcDnskey() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"rollovermethod": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"revoke": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
+			"autorollover": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"algorithm": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -119,6 +134,9 @@ func createDnskeyFunc(ctx context.Context, d *schema.ResourceData, meta interfac
 		Units1:         d.Get("units1").(string),
 		Units2:         d.Get("units2").(string),
 		Zonename:       d.Get("zonename").(string),
+		Autorollover:   d.Get("autorollover").(string),
+		Revoke:         d.Get("revoke").(bool),
+		Rollovermethod: d.Get("rollovermethod").(string),
 	}
 
 	if raw := d.GetRawConfig().GetAttr("expires"); !raw.IsNull() {
@@ -156,6 +174,9 @@ func readDnskeyFunc(ctx context.Context, d *schema.ResourceData, meta interface{
 		return nil
 	}
 	d.Set("algorithm", data["algorithm"])
+	d.Set("rollovermethod", data["rollovermethod"])
+	d.Set("revoke", data["revoke"])
+	d.Set("autorollover", data["autorollover"])
 	setToInt("expires", d, data["expires"])
 	d.Set("filenameprefix", data["filenameprefix"])
 	d.Set("keyname", data["keyname"])
@@ -184,6 +205,21 @@ func updateDnskeyFunc(ctx context.Context, d *schema.ResourceData, meta interfac
 		Keyname: d.Get("keyname").(string),
 	}
 	hasChange := false
+	if d.HasChange("rollovermethod") {
+		log.Printf("[DEBUG]  citrixadc-provider: Rollovermethod has changed for dnskey, starting update")
+		dnskey.Rollovermethod = d.Get("rollovermethod").(string)
+		hasChange = true
+	}
+	if d.HasChange("revoke") {
+		log.Printf("[DEBUG]  citrixadc-provider: Revoke has changed for dnskey, starting update")
+		dnskey.Revoke = d.Get("revoke").(bool)
+		hasChange = true
+	}
+	if d.HasChange("autorollover") {
+		log.Printf("[DEBUG]  citrixadc-provider: Autorollover has changed for dnskey, starting update")
+		dnskey.Autorollover = d.Get("autorollover").(string)
+		hasChange = true
+	}
 	if d.HasChange("algorithm") {
 		log.Printf("[DEBUG]  citrixadc-provider: Algorithm has changed for dnskey %s, starting update", dnskeyName)
 		dnskey.Algorithm = d.Get("algorithm").(string)

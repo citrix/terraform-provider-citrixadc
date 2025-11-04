@@ -21,6 +21,48 @@ func resourceCitrixAdcNstcpparam() *schema.Resource {
 		ReadContext:   readNstcpparamFunc,
 		DeleteContext: deleteNstcpparamFunc,
 		Schema: map[string]*schema.Schema{
+			"rfc5961chlgacklimit": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"mptcpsendsfresetoption": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"mptcpreliableaddaddr": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"mptcpfastcloseoption": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"enhancedisngeneration": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"delinkclientserveronrst": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"compacttcpoptionnoop": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 			"ackonpush": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -310,6 +352,15 @@ func createNstcpparamFunc(ctx context.Context, d *schema.ResourceData, meta inte
 		Sack:                                d.Get("sack").(string),
 		Synattackdetection:                  d.Get("synattackdetection").(string),
 		Ws:                                  d.Get("ws").(string),
+		Compacttcpoptionnoop:                d.Get("compacttcpoptionnoop").(string),
+		Delinkclientserveronrst:             d.Get("delinkclientserveronrst").(string),
+		Enhancedisngeneration:               d.Get("enhancedisngeneration").(string),
+		Mptcpfastcloseoption:                d.Get("mptcpfastcloseoption").(string),
+		Mptcpreliableaddaddr:                d.Get("mptcpreliableaddaddr").(string),
+		Mptcpsendsfresetoption:              d.Get("mptcpsendsfresetoption").(string),
+	}
+	if raw := d.GetRawConfig().GetAttr("rfc5961chlgacklimit"); !raw.IsNull() {
+		nstcpparam.Rfc5961chlgacklimit = intPtr(d.Get("rfc5961chlgacklimit").(int))
 	}
 	if raw := d.GetRawConfig().GetAttr("autosyncookietimeout"); !raw.IsNull() {
 		nstcpparam.Autosyncookietimeout = intPtr(d.Get("autosyncookietimeout").(int))
@@ -425,6 +476,13 @@ func readNstcpparamFunc(ctx context.Context, d *schema.ResourceData, meta interf
 	log.Printf("[DEBUG] citrixadc-provider: data read %v", data)
 
 	d.Set("ackonpush", data["ackonpush"])
+	setToInt("rfc5961chlgacklimit", d, data["rfc5961chlgacklimit"])
+	d.Set("mptcpsendsfresetoption", data["mptcpsendsfresetoption"])
+	d.Set("mptcpreliableaddaddr", data["mptcpreliableaddaddr"])
+	d.Set("mptcpfastcloseoption", data["mptcpfastcloseoption"])
+	d.Set("enhancedisngeneration", data["enhancedisngeneration"])
+	d.Set("delinkclientserveronrst", data["delinkclientserveronrst"])
+	d.Set("compacttcpoptionnoop", data["compacttcpoptionnoop"])
 	setToInt("autosyncookietimeout", d, data["autosyncookietimeout"])
 	d.Set("connflushifnomem", data["connflushifnomem"])
 	setToInt("connflushthres", d, data["connflushthres"])

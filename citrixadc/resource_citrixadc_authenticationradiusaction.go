@@ -23,6 +23,21 @@ func resourceCitrixAdcAuthenticationradiusaction() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"transport": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"targetlbvserver": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"messageauthenticator": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -162,6 +177,9 @@ func createAuthenticationradiusactionFunc(ctx context.Context, d *schema.Resourc
 		Serverip:                   d.Get("serverip").(string),
 		Servername:                 d.Get("servername").(string),
 		Tunnelendpointclientip:     d.Get("tunnelendpointclientip").(string),
+		Messageauthenticator:       d.Get("messageauthenticator").(string),
+		Targetlbvserver:            d.Get("targetlbvserver").(string),
+		Transport:                  d.Get("transport").(string),
 	}
 
 	if raw := d.GetRawConfig().GetAttr("authservretry"); !raw.IsNull() {
@@ -214,6 +232,9 @@ func readAuthenticationradiusactionFunc(ctx context.Context, d *schema.ResourceD
 		return nil
 	}
 	d.Set("accounting", data["accounting"])
+	d.Set("transport", data["transport"])
+	d.Set("targetlbvserver", data["targetlbvserver"])
+	d.Set("messageauthenticator", data["messageauthenticator"])
 	d.Set("authentication", data["authentication"])
 	setToInt("authservretry", d, data["authservretry"])
 	setToInt("authtimeout", d, data["authtimeout"])
@@ -250,6 +271,21 @@ func updateAuthenticationradiusactionFunc(ctx context.Context, d *schema.Resourc
 		Name: d.Get("name").(string),
 	}
 	hasChange := false
+	if d.HasChange("transport") {
+		log.Printf("[DEBUG]  citrixadc-provider: Transport has changed for authenticationradiusaction, starting update")
+		authenticationradiusaction.Transport = d.Get("transport").(string)
+		hasChange = true
+	}
+	if d.HasChange("targetlbvserver") {
+		log.Printf("[DEBUG]  citrixadc-provider: Targetlbvserver has changed for authenticationradiusaction, starting update")
+		authenticationradiusaction.Targetlbvserver = d.Get("targetlbvserver").(string)
+		hasChange = true
+	}
+	if d.HasChange("messageauthenticator") {
+		log.Printf("[DEBUG]  citrixadc-provider: Messageauthenticator has changed for authenticationradiusaction, starting update")
+		authenticationradiusaction.Messageauthenticator = d.Get("messageauthenticator").(string)
+		hasChange = true
+	}
 	if d.HasChange("accounting") {
 		log.Printf("[DEBUG]  citrixadc-provider: Accounting has changed for authenticationradiusaction %s, starting update", authenticationradiusactionName)
 		authenticationradiusaction.Accounting = d.Get("accounting").(string)

@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
+	"strconv"
 	"strings"
 )
 
@@ -22,6 +23,11 @@ func resourceCitrixAdcSslcertkey_sslocspresponder_binding() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"ca": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
 			"certkey": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -120,6 +126,7 @@ func readSslcertkey_sslocspresponder_bindingFunc(ctx context.Context, d *schema.
 	data := dataArr[foundIndex]
 
 	d.Set("certkey", data["certkey"])
+	d.Set("ca", data["ca"])
 	d.Set("ocspresponder", data["ocspresponder"])
 	setToInt("priority", d, data["priority"])
 
@@ -139,6 +146,9 @@ func deleteSslcertkey_sslocspresponder_bindingFunc(ctx context.Context, d *schem
 
 	args := make([]string, 0)
 	args = append(args, fmt.Sprintf("ocspresponder:%s", ocspresponder))
+	if val, ok := d.GetOk("ca"); ok {
+		args = append(args, fmt.Sprintf("ca:%s", strconv.FormatBool(val.(bool))))
+	}
 
 	err := client.DeleteResourceWithArgs(service.Sslcertkey_sslocspresponder_binding.Type(), name, args)
 	if err != nil {

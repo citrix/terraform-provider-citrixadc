@@ -21,6 +21,8 @@ resource "citrixadc_reputationsettings" "tf_reputationsettings" {
 
 * `proxyport` - (Optional) Proxy server port.
 * `proxyserver` - (Optional) Proxy server IP to get Reputation data.
+* `proxypassword` - (Optional) Password with which user logs on.
+* `proxyusername` - (Optional) Proxy Username
 
 
 ## Attribute Reference

@@ -66,6 +66,11 @@ resource "citrixadc_vpnvserver" "tf_vpnvserver" {
 * `userdomains` - (Optional) List of user domains specified as comma seperated value
 * `vserverfqdn` - (Optional) Fully qualified domain name for a VPN virtual server. This is used during StoreFront configuration generation.
 * `windowsepapluginupgrade` - (Optional) Option to set plugin upgrade behaviour for Win
+* `accessrestrictedpageredirect` - (Optional) By default, an access restricted page hosted on secure private access CDN is displayed when a restricted app is accessed. The setting can be changed to NS to display the access restricted page hosted on the gateway or OFF to not display any access restricted page.
+* `deviceposture` - (Optional) Enable device posture
+* `quicprofilename` - (Optional) Name of the QUIC profile to assign to this virtual server.
+* `secureprivateaccess` - (Optional) Configure secure private access
+
 
 ## Attribute Reference
 

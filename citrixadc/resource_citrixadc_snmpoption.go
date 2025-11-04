@@ -22,6 +22,11 @@ func resourceCitrixAdcSnmpoption() *schema.Resource {
 		UpdateContext: updateSnmpoptionFunc,
 		DeleteContext: deleteSnmpoptionFunc, // Thought snmpoption resource donot have DELETE operation, it is required to set ID to "" d.SetID("") to maintain terraform state
 		Schema: map[string]*schema.Schema{
+			"severityinfointrap": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"partitionnameintrap": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -56,6 +61,7 @@ func createSnmpoptionFunc(ctx context.Context, d *schema.ResourceData, meta inte
 		Snmpset:              d.Get("snmpset").(string),
 		Snmptraplogging:      d.Get("snmptraplogging").(string),
 		Snmptraplogginglevel: d.Get("snmptraplogginglevel").(string),
+		Severityinfointrap:   d.Get("severityinfointrap").(string),
 	}
 
 	err := client.UpdateUnnamedResource(service.Snmpoption.Type(), &snmpoption)
@@ -79,6 +85,7 @@ func readSnmpoptionFunc(ctx context.Context, d *schema.ResourceData, meta interf
 		return nil
 	}
 	d.Set("partitionnameintrap", data["partitionnameintrap"])
+	d.Set("severityinfointrap", data["severityinfointrap"])
 	d.Set("snmpset", data["snmpset"])
 	d.Set("snmptraplogging", data["snmptraplogging"])
 	d.Set("snmptraplogginglevel", data["snmptraplogginglevel"])
@@ -93,6 +100,11 @@ func updateSnmpoptionFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	snmpoption := snmp.Snmpoption{}
 
 	hasChange := false
+	if d.HasChange("severityinfointrap") {
+		log.Printf("[DEBUG]  citrixadc-provider: Severityinfointrap has changed for snmpoption, starting update")
+		snmpoption.Severityinfointrap = d.Get("severityinfointrap").(string)
+		hasChange = true
+	}
 	if d.HasChange("partitionnameintrap") {
 		log.Printf("[DEBUG]  citrixadc-provider: Partitionnameintrap has changed for snmpoption, starting update")
 		snmpoption.Partitionnameintrap = d.Get("partitionnameintrap").(string)

@@ -71,6 +71,8 @@ resource "citrixadc_authenticationsamlaction" "tf_samlaction" {
 * `signaturealg` - (Optional) Algorithm to be used to sign/verify SAML transactions
 * `skewtime` - (Optional) This option specifies the allowed clock skew in number of minutes that Citrix ADC ServiceProvider allows on an incoming assertion. For example, if skewTime is 10, then assertion would be valid from (current time - 10) min to (current time + 10) min, ie 20min in all.
 * `storesamlresponse` - (Optional) Option to store entire SAML Response through the life of user session.
+* `preferredbindtype` - (Optional) This element specifies the preferred binding types for sso and logout for metadata configuration.
+* `statechecks` - (Optional) Boolean expression that will be evaluated to validate HTTP requests on SAML endpoints. Examples: set authentication samlaction <actionname> -stateChecks 'HTTP.REQ.HOSTNAME.EQ("https://fqdn.com/")'
 
 
 ## Attribute Reference

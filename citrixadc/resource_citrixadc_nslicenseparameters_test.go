@@ -27,6 +27,9 @@ const testAccNslicenseparameters_add = `
 	resource "citrixadc_nslicenseparameters" "tf_nslicenseparameters" {
 		alert1gracetimeout = 8
 		alert2gracetimeout = 200
+		licenseexpiryalerttime = 30
+		inventoryrefreshinterval = 50
+		heartbeatinterval = 45
 	}
 `
 const testAccNslicenseparameters_update = `
@@ -34,6 +37,9 @@ const testAccNslicenseparameters_update = `
 	resource "citrixadc_nslicenseparameters" "tf_nslicenseparameters" {
 		alert1gracetimeout = 6
 		alert2gracetimeout = 240
+		licenseexpiryalerttime = 40
+		inventoryrefreshinterval = 60
+		heartbeatinterval = 55
 	}
 `
 
@@ -49,6 +55,9 @@ func TestAccNslicenseparameters_basic(t *testing.T) {
 					testAccCheckNslicenseparametersExist("citrixadc_nslicenseparameters.tf_nslicenseparameters", nil),
 					resource.TestCheckResourceAttr("citrixadc_nslicenseparameters.tf_nslicenseparameters", "alert1gracetimeout", "8"),
 					resource.TestCheckResourceAttr("citrixadc_nslicenseparameters.tf_nslicenseparameters", "alert2gracetimeout", "200"),
+					resource.TestCheckResourceAttr("citrixadc_nslicenseparameters.tf_nslicenseparameters", "licenseexpiryalerttime", "30"),
+					resource.TestCheckResourceAttr("citrixadc_nslicenseparameters.tf_nslicenseparameters", "inventoryrefreshinterval", "50"),
+					resource.TestCheckResourceAttr("citrixadc_nslicenseparameters.tf_nslicenseparameters", "heartbeatinterval", "45"),
 				),
 			},
 			{
@@ -57,6 +66,9 @@ func TestAccNslicenseparameters_basic(t *testing.T) {
 					testAccCheckNslicenseparametersExist("citrixadc_nslicenseparameters.tf_nslicenseparameters", nil),
 					resource.TestCheckResourceAttr("citrixadc_nslicenseparameters.tf_nslicenseparameters", "alert1gracetimeout", "6"),
 					resource.TestCheckResourceAttr("citrixadc_nslicenseparameters.tf_nslicenseparameters", "alert2gracetimeout", "240"),
+					resource.TestCheckResourceAttr("citrixadc_nslicenseparameters.tf_nslicenseparameters", "licenseexpiryalerttime", "40"),
+					resource.TestCheckResourceAttr("citrixadc_nslicenseparameters.tf_nslicenseparameters", "inventoryrefreshinterval", "60"),
+					resource.TestCheckResourceAttr("citrixadc_nslicenseparameters.tf_nslicenseparameters", "heartbeatinterval", "55"),
 				),
 			},
 		},

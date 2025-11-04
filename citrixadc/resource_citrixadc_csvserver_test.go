@@ -26,6 +26,26 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
+const testAccCsvserver_basic = `
+
+resource "citrixadc_csvserver" "foo" {
+
+  ipv46 = "10.202.11.11"
+  name = "terraform-cs"
+  port = 8080
+  servicetype = "HTTP"
+  v6persistmasklen = 128
+  timeout = 180
+  probesuccessresponsecode = "200-399"
+  probeprotocol = "HTTP"
+  probeport = 8085
+  persistencebackup = "NONE"
+  dtls = "OFF"
+  backuppersistencetimeout = 30
+
+}
+`
+
 func TestAccCsvserver_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -45,6 +65,22 @@ func TestAccCsvserver_basic(t *testing.T) {
 						"citrixadc_csvserver.foo", "port", "8080"),
 					resource.TestCheckResourceAttr(
 						"citrixadc_csvserver.foo", "servicetype", "HTTP"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_csvserver.foo", "v6persistmasklen", "128"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_csvserver.foo", "timeout", "180"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_csvserver.foo", "probesuccessresponsecode", "200-399"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_csvserver.foo", "probeprotocol", "HTTP"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_csvserver.foo", "probeport", "8085"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_csvserver.foo", "persistencebackup", "NONE"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_csvserver.foo", "dtls", "OFF"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_csvserver.foo", "backuppersistencetimeout", "30"),
 				),
 			},
 		},
@@ -237,19 +273,6 @@ func testAccCheckCsvserverDestroy(s *terraform.State) error {
 
 	return nil
 }
-
-const testAccCsvserver_basic = `
-
-
-resource "citrixadc_csvserver" "foo" {
-
-  ipv46 = "10.202.11.11"
-  name = "terraform-cs"
-  port = 8080
-  servicetype = "HTTP"
-
-}
-`
 
 func TestAccCsvserver_AssertNonUpdateableAttributes(t *testing.T) {
 

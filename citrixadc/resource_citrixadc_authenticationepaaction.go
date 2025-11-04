@@ -22,6 +22,11 @@ func resourceCitrixAdcAuthenticationepaaction() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"deviceposture": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -30,7 +35,7 @@ func resourceCitrixAdcAuthenticationepaaction() *schema.Resource {
 			},
 			"csecexpr": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				Computed: false,
 			},
 			"defaultepagroup": {
@@ -68,6 +73,7 @@ func createAuthenticationepaactionFunc(ctx context.Context, d *schema.ResourceDa
 		Killprocess:     d.Get("killprocess").(string),
 		Name:            d.Get("name").(string),
 		Quarantinegroup: d.Get("quarantinegroup").(string),
+		Deviceposture:   d.Get("deviceposture").(string),
 	}
 
 	_, err := client.AddResource("authenticationepaaction", authenticationepaactionName, &authenticationepaaction)
@@ -92,6 +98,7 @@ func readAuthenticationepaactionFunc(ctx context.Context, d *schema.ResourceData
 		return nil
 	}
 	d.Set("csecexpr", data["csecexpr"])
+	d.Set("deviceposture", data["deviceposture"])
 	d.Set("defaultepagroup", data["defaultepagroup"])
 	d.Set("deletefiles", data["deletefiles"])
 	d.Set("killprocess", data["killprocess"])
@@ -112,6 +119,11 @@ func updateAuthenticationepaactionFunc(ctx context.Context, d *schema.ResourceDa
 		Csecexpr: d.Get("csecexpr").(string),
 	}
 	hasChange := false
+	if d.HasChange("deviceposture") {
+		log.Printf("[DEBUG]  citrixadc-provider: Deviceposture has changed for authenticationepaaction, starting update")
+		authenticationepaaction.Deviceposture = d.Get("deviceposture").(string)
+		hasChange = true
+	}
 	if d.HasChange("csecexpr") {
 		log.Printf("[DEBUG]  citrixadc-provider: Csecexpr has changed for authenticationepaaction %s, starting update", authenticationepaactionName)
 		authenticationepaaction.Csecexpr = d.Get("csecexpr").(string)

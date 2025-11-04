@@ -22,6 +22,11 @@ func resourceCitrixAdcAuthenticationcaptchaaction() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"scorethreshold": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -63,6 +68,9 @@ func createAuthenticationcaptchaactionFunc(ctx context.Context, d *schema.Resour
 		Serverurl:                  d.Get("serverurl").(string),
 		Sitekey:                    d.Get("sitekey").(string),
 	}
+	if raw := d.GetRawConfig().GetAttr("scorethreshold"); !raw.IsNull() {
+		authenticationcaptchaaction.Scorethreshold = intPtr(d.Get("scorethreshold").(int))
+	}
 
 	_, err := client.AddResource("authenticationcaptchaaction", authenticationcaptchaactionName, &authenticationcaptchaaction)
 	if err != nil {
@@ -86,6 +94,7 @@ func readAuthenticationcaptchaactionFunc(ctx context.Context, d *schema.Resource
 		return nil
 	}
 	d.Set("defaultauthenticationgroup", data["defaultauthenticationgroup"])
+	setToInt("scorethreshold", d, data["scorethreshold"])
 	d.Set("name", data["name"])
 	// d.Set("secretkey", data["secretkey"])
 	d.Set("serverurl", data["serverurl"])
@@ -104,6 +113,11 @@ func updateAuthenticationcaptchaactionFunc(ctx context.Context, d *schema.Resour
 		Name: d.Get("name").(string),
 	}
 	hasChange := false
+	if d.HasChange("scorethreshold") {
+		log.Printf("[DEBUG]  citrixadc-provider: Scorethreshold has changed for authenticationcaptchaaction, starting update")
+		authenticationcaptchaaction.Scorethreshold = intPtr(d.Get("scorethreshold").(int))
+		hasChange = true
+	}
 	if d.HasChange("defaultauthenticationgroup") {
 		log.Printf("[DEBUG]  citrixadc-provider: Defaultauthenticationgroup has changed for authenticationcaptchaaction %s, starting update", authenticationcaptchaactionName)
 		authenticationcaptchaaction.Defaultauthenticationgroup = d.Get("defaultauthenticationgroup").(string)

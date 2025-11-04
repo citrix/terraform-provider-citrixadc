@@ -36,6 +36,7 @@ resource "citrixadc_auditnslogparams" "tf_auditnslogparams" {
 * `sslinterception` - (Optional) Log SSL Interception event information. Possible values: [ ENABLED, DISABLED ]
 * `urlfiltering` - (Optional) Log URL filtering event information. Possible values: [ ENABLED, DISABLED ]
 * `contentinspectionlog` - (Optional) Log Content Inspection event information. Possible values: [ ENABLED, DISABLED ]
+* `protocolviolations` - (Optional) Log protocol violations
 
 
 ## Attribute Reference

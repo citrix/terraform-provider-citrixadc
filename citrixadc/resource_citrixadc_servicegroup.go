@@ -29,6 +29,28 @@ func resourceCitrixAdcServicegroup() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"topicname": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"quicprofilename": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"bootstrap": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"autodelayedtrofs": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"appflowlog": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -383,8 +405,11 @@ func createServicegroupFunc(ctx context.Context, d *schema.ResourceData, meta in
 		Tcpprofilename:      d.Get("tcpprofilename").(string),
 		Useproxyport:        d.Get("useproxyport").(string),
 		Usip:                d.Get("usip").(string),
+		Autodelayedtrofs:    d.Get("autodelayedtrofs").(string),
+		Bootstrap:           d.Get("bootstrap").(string),
+		Quicprofilename:     d.Get("quicprofilename").(string),
+		Topicname:           d.Get("topicname").(string),
 	}
-
 	if raw := d.GetRawConfig().GetAttr("autodisabledelay"); !raw.IsNull() {
 		servicegroup.Autodisabledelay = intPtr(d.Get("autodisabledelay").(int))
 	}
@@ -628,6 +653,10 @@ func readServicegroupFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.Set("servicegroupname", data["servicegroupname"])
+	d.Set("topicname", data["topicname"])
+	d.Set("quicprofilename", data["quicprofilename"])
+	d.Set("bootstrap", data["bootstrap"])
+	d.Set("autodelayedtrofs", data["autodelayedtrofs"])
 	d.Set("appflowlog", data["appflowlog"])
 	setToInt("autodisabledelay", d, data["autodisabledelay"])
 	d.Set("autodisablegraceful", data["autodisablegraceful"])
@@ -748,6 +777,16 @@ func updateServicegroupFunc(ctx context.Context, d *schema.ResourceData, meta in
 
 	stateChange := false
 	hasChange := false
+	if d.HasChange("quicprofilename") {
+		log.Printf("[DEBUG]  citrixadc-provider: Quicprofilename has changed for servicegroup, starting update")
+		servicegroup.Quicprofilename = d.Get("quicprofilename").(string)
+		hasChange = true
+	}
+	if d.HasChange("autodelayedtrofs") {
+		log.Printf("[DEBUG]  citrixadc-provider: Autodelayedtrofs has changed for servicegroup, starting update")
+		servicegroup.Autodelayedtrofs = d.Get("autodelayedtrofs").(string)
+		hasChange = true
+	}
 	lbvserversChanged := false
 	lbmonitorChanged := false
 	servicegroupmembersChanged := false

@@ -25,6 +25,36 @@ func resourceCitrixAdcSslprofile() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"sslclientlogs": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"maxrenegrate": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"encryptedclienthello": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"defaultsni": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"allowunknownsni": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"allowextendedmastersecret": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -434,8 +464,15 @@ func createSslprofileFunc(ctx context.Context, d *schema.ResourceData, meta inte
 		Zerorttearlydata:          d.Get("zerorttearlydata").(string),
 		Alpnprotocol:              d.Get("alpnprotocol").(string),
 		Nodefaultbindings:         d.Get("nodefaultbindings").(string),
+		Allowextendedmastersecret: d.Get("allowextendedmastersecret").(string),
+		Allowunknownsni:           d.Get("allowunknownsni").(string),
+		Defaultsni:                d.Get("defaultsni").(string),
+		Encryptedclienthello:      d.Get("encryptedclienthello").(string),
+		Sslclientlogs:             d.Get("sslclientlogs").(string),
 	}
-
+	if raw := d.GetRawConfig().GetAttr("maxrenegrate"); !raw.IsNull() {
+		sslprofile.Maxrenegrate = intPtr(d.Get("maxrenegrate").(int))
+	}
 	if raw := d.GetRawConfig().GetAttr("cipherpriority"); !raw.IsNull() {
 		sslprofile.Cipherpriority = intPtr(d.Get("cipherpriority").(int))
 	}
@@ -546,6 +583,12 @@ func readSslprofileFunc(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	d.Set("name", data["name"])
+	d.Set("sslclientlogs", data["sslclientlogs"])
+	setToInt("maxrenegrate", d, data["maxrenegrate"])
+	d.Set("encryptedclienthello", data["encryptedclienthello"])
+	d.Set("defaultsni", data["defaultsni"])
+	d.Set("allowunknownsni", data["allowunknownsni"])
+	d.Set("allowextendedmastersecret", data["allowextendedmastersecret"])
 	d.Set("ciphername", data["ciphername"])
 	setToInt("cipherpriority", d, data["cipherpriority"])
 	d.Set("cipherredirect", data["cipherredirect"])
@@ -622,6 +665,36 @@ func updateSslprofileFunc(ctx context.Context, d *schema.ResourceData, meta inte
 		Name: d.Get("name").(string),
 	}
 	hasChange := false
+	if d.HasChange("sslclientlogs") {
+		log.Printf("[DEBUG]  citrixadc-provider: Sslclientlogs has changed for sslprofile, starting update")
+		sslprofile.Sslclientlogs = d.Get("sslclientlogs").(string)
+		hasChange = true
+	}
+	if d.HasChange("maxrenegrate") {
+		log.Printf("[DEBUG]  citrixadc-provider: Maxrenegrate has changed for sslprofile, starting update")
+		sslprofile.Maxrenegrate = intPtr(d.Get("maxrenegrate").(int))
+		hasChange = true
+	}
+	if d.HasChange("encryptedclienthello") {
+		log.Printf("[DEBUG]  citrixadc-provider: Encryptedclienthello has changed for sslprofile, starting update")
+		sslprofile.Encryptedclienthello = d.Get("encryptedclienthello").(string)
+		hasChange = true
+	}
+	if d.HasChange("defaultsni") {
+		log.Printf("[DEBUG]  citrixadc-provider: Defaultsni has changed for sslprofile, starting update")
+		sslprofile.Defaultsni = d.Get("defaultsni").(string)
+		hasChange = true
+	}
+	if d.HasChange("allowunknownsni") {
+		log.Printf("[DEBUG]  citrixadc-provider: Allowunknownsni has changed for sslprofile, starting update")
+		sslprofile.Allowunknownsni = d.Get("allowunknownsni").(string)
+		hasChange = true
+	}
+	if d.HasChange("allowextendedmastersecret") {
+		log.Printf("[DEBUG]  citrixadc-provider: Allowextendedmastersecret has changed for sslprofile, starting update")
+		sslprofile.Allowextendedmastersecret = d.Get("allowextendedmastersecret").(string)
+		hasChange = true
+	}
 	if d.HasChange("ciphername") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ciphername has changed for sslprofile %s, starting update", sslprofileName)
 		sslprofile.Ciphername = d.Get("ciphername").(string)

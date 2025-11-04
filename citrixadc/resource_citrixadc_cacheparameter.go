@@ -22,6 +22,11 @@ func resourceCitrixAdcCacheparameter() *schema.Resource {
 		UpdateContext: updateCacheparameterFunc,
 		DeleteContext: deleteCacheparameterFunc,
 		Schema: map[string]*schema.Schema{
+			"cacheevictionpolicy": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"enablebypass": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -96,6 +101,9 @@ func createCacheparameterFunc(ctx context.Context, d *schema.ResourceData, meta 
 	if v, ok := d.GetOk("via"); ok {
 		cacheparameter["via"] = v.(string)
 	}
+	if v, ok := d.GetOk("cacheevictionpolicy"); ok {
+		cacheparameter["cacheevictionpolicy"] = v.(string)
+	}
 
 	err := client.UpdateUnnamedResource(service.Cacheparameter.Type(), &cacheparameter)
 	if err != nil {
@@ -118,6 +126,7 @@ func readCacheparameterFunc(ctx context.Context, d *schema.ResourceData, meta in
 		return nil
 	}
 	d.Set("enablebypass", data["enablebypass"])
+	d.Set("cacheevictionpolicy", data["cacheevictionpolicy"])
 	d.Set("enablehaobjpersist", data["enablehaobjpersist"])
 	setToInt("maxpostlen", d, data["maxpostlen"])
 	setToInt("memlimit", d, data["memlimit"])
@@ -134,8 +143,15 @@ func updateCacheparameterFunc(ctx context.Context, d *schema.ResourceData, meta 
 	log.Printf("[DEBUG]  citrixadc-provider: In updateCacheparameterFunc")
 	client := meta.(*NetScalerNitroClient).client
 
-	cacheparameter := cache.Cacheparameter{}
+	cacheparameter := cache.Cacheparameter{
+		Cacheevictionpolicy: d.Get("cacheevictionpolicy").(string),
+	}
 	hasChange := false
+	if d.HasChange("cacheevictionpolicy") {
+		log.Printf("[DEBUG]  citrixadc-provider: Cacheevictionpolicy has changed for cacheparameter, starting update")
+		cacheparameter.Cacheevictionpolicy = d.Get("cacheevictionpolicy").(string)
+		hasChange = true
+	}
 	if d.HasChange("enablebypass") {
 		log.Printf("[DEBUG]  citrixadc-provider: Enablebypass has changed for cacheparameter, starting update")
 		cacheparameter.Enablebypass = d.Get("enablebypass").(string)

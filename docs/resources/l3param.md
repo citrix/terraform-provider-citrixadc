@@ -36,6 +36,7 @@ resource "citrixadc_l3param" "tf_l3param" {
 * `dynamicrouting` - (Optional) Enable/Disable Dynamic routing on partition. This configuration is not applicable to default partition. Possible values: [ ENABLED, DISABLED ]
 * `ipv6dynamicrouting` - (Optional) Enable/Disable IPv6 Dynamic routing. Possible values: [ ENABLED, DISABLED ]
 * `allowclasseipv4` - (Optional) Enable/Disable IPv4 Class E address clients. Possible values: [ ENABLED, DISABLED ]
+* `implicitpbr` - (Optional) Enable/Disable Policy Based Routing for control packets
 
 
 ## Attribute Reference

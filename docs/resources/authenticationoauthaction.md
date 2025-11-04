@@ -66,6 +66,9 @@ resource "citrixadc_authenticationoauthaction" "tf_authenticationoauthaction" {
 * `tokenendpointauthmethod` - (Optional) Option to select the variant of token authentication method. This method is used while exchanging code with IdP.
 * `userinfourl` - (Optional) URL to which OAuth access token will be posted to obtain user information.
 * `usernamefield` - (Optional) Attribute in the token from which username should be extracted.
+* `intunedeviceidexpression` - (Optional) The expression that will be evaluated to obtain IntuneDeviceId for compliance check against IntuneNAC device compliance endpoint. The expression is applicable when the OAuthType is INTUNE. The maximum length allowed to be used as IntuneDeviceId for the device compliance check from the computed response after the expression evaluation is 41. Examples: add authentication oauthAction <actionName> -intuneDeviceIdExpression 'AAA.LOGIN.INTUNEURI.AFTER_STR("IntuneDeviceId://")'
+* `oauthmiscflags` - (Optional) Option to set/unset miscellaneous feature flags. Available values function as follows: * Base64Encode_Authorization_With_Padding - On setting this value, for endpoints (token and introspect), basic authorization header will be base64 encoded with padding. * EnableJWTRequest - By enabling this field, Authorisation request to IDP will have jwt signed 'request' parameter
+* `requestattribute` - (Optional) Name-Value pairs of attributes to be inserted in request parameter. Configuration format is name=value_expr@@@name2=value2_expr@@@. '@@@' is used as delimiter between Name-Value pairs. name is a literal string whose value is 127 characters and does not contain '=' character. Value is advanced policy expression terminated by @@@ delimiter. Last value need not contain the delimiter.
 
 
 ## Attribute Reference

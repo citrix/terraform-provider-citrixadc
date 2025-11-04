@@ -67,6 +67,9 @@ resource "citrixadc_gslbvserver" "tf_gslbvserver" {
 * `cookiedomain` - (Optional) The cookie domain for the GSLB site. Used when inserting the GSLB site cookie in the HTTP response.
 * `cookietimeout` - (Optional) Timeout, in minutes, for the GSLB site cookie.
 * `sitedomainttl` - (Optional) TTL, in seconds, for all internally created site domains (created when a site prefix is configured on a GSLB service) that are associated with this virtual server.
+* `orderthreshold` - (Optional) This option is used to to specify the threshold of minimum number of services to be UP in an order, for it to be considered in Lb decision.
+* `rule` - (Optional) Expression, or name of a named expression, against which traffic is evaluated. This field is applicable only if gslb method or gslb backup method are set to API. The following requirements apply only to the Citrix ADC CLI: * If the expression includes one or more spaces, enclose the entire expression in double quotation marks. * If the expression itself includes double quotation marks, escape the quotations by using the \ character. * Alternatively, you can use single quotation marks to enclose the rule, in which case you do not have to escape the double quotation marks.
+* `toggleorder` - (Optional) Configure this option to toggle order preference
 * `domain` - (Optional) A set of domain binding blocks. Documented below. (deprecates soon)
 * `service` - (Optional) A set of GSLB service biding blocks. Documented below. (deprecates soon)
 

@@ -27,6 +27,12 @@ func resourceCitrixAdcResponderaction() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"headers": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"bypasssafetycheck": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -91,6 +97,7 @@ func createResponderactionFunc(ctx context.Context, d *schema.ResourceData, meta
 		Reasonphrase:      d.Get("reasonphrase").(string),
 		Target:            d.Get("target").(string),
 		Type:              d.Get("type").(string),
+		Headers:           toStringList(d.Get("headers").([]interface{})),
 	}
 
 	if raw := d.GetRawConfig().GetAttr("responsestatuscode"); !raw.IsNull() {
@@ -120,6 +127,7 @@ func readResponderactionFunc(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.Set("name", data["name"])
+	d.Set("headers", data["headers"])
 	d.Set("bypasssafetycheck", data["bypasssafetycheck"])
 	d.Set("comment", data["comment"])
 	d.Set("htmlpage", data["htmlpage"])
@@ -154,6 +162,11 @@ func updateResponderactionFunc(ctx context.Context, d *schema.ResourceData, meta
 		Name: d.Get("name").(string),
 	}
 	hasChange := false
+	if d.HasChange("headers") {
+		log.Printf("[DEBUG]  citrixadc-provider: Headers has changed for responderaction, starting update")
+		responderaction.Headers = toStringList(d.Get("headers").([]interface{}))
+		hasChange = true
+	}
 	if d.HasChange("bypasssafetycheck") {
 		log.Printf("[DEBUG]  citrixadc-provider: Bypasssafetycheck has changed for responderaction %s, starting update", responderactionName)
 		responderaction.Bypasssafetycheck = d.Get("bypasssafetycheck").(string)

@@ -44,11 +44,6 @@ func resourceCitrixAdcSpilloverpolicy() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"newname": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
 		},
 	}
 }
@@ -61,7 +56,6 @@ func createSpilloverpolicyFunc(ctx context.Context, d *schema.ResourceData, meta
 		Action:  d.Get("action").(string),
 		Comment: d.Get("comment").(string),
 		Name:    d.Get("name").(string),
-		Newname: d.Get("newname").(string),
 		Rule:    d.Get("rule").(string),
 	}
 
@@ -89,7 +83,6 @@ func readSpilloverpolicyFunc(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("action", data["action"])
 	d.Set("comment", data["comment"])
 	d.Set("name", data["name"])
-	d.Set("newname", data["newname"])
 	d.Set("rule", data["rule"])
 
 	return nil
@@ -113,11 +106,6 @@ func updateSpilloverpolicyFunc(ctx context.Context, d *schema.ResourceData, meta
 	if d.HasChange("comment") {
 		log.Printf("[DEBUG]  citrixadc-provider: Comment has changed for spilloverpolicy %s, starting update", spilloverpolicyName)
 		spilloverpolicy.Comment = d.Get("comment").(string)
-		hasChange = true
-	}
-	if d.HasChange("newname") {
-		log.Printf("[DEBUG]  citrixadc-provider: Newname has changed for spilloverpolicy %s, starting update", spilloverpolicyName)
-		spilloverpolicy.Newname = d.Get("newname").(string)
 		hasChange = true
 	}
 	if d.HasChange("rule") {

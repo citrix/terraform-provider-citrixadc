@@ -33,6 +33,9 @@ resource "citrixadc_ssldtlsprofile" "tf_ssldtlsprofile" {
 * `helloverifyrequest` - (Optional) Send a Hello Verify request to validate the client. Possible values: [ ENABLED, DISABLED ]
 * `terminatesession` - (Optional) Terminate the session if the message authentication code (MAC) of the client and server do not match. Possible values: [ ENABLED, DISABLED ]
 * `maxpacketsize` - (Optional) 
+* `initialretrytimeout` - (Optional) Initial time out value to retransmit the last flight sent from the NetScaler.
+* `maxbadmacignorecount` - (Optional) Maximum number of bad MAC errors to ignore for a connection prior disconnect. Disabling parameter terminateSession terminates session immediately when bad MAC is detected in the connection.
+* `maxholdqlen` - (Optional) Maximum number of datagrams that can be queued at DTLS layer for processing
 
 
 ## Attribute Reference

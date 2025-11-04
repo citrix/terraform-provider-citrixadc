@@ -6,9 +6,10 @@ import (
 	"github.com/citrix/adc-nitro-go/resource/config/ssl"
 	"github.com/citrix/adc-nitro-go/service"
 
+	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-
 	"log"
+	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -26,6 +27,16 @@ func resourceCitrixAdcSslcertkey() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"deletefromdevice": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
+			"deletecertkeyfilesonremoval": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"bundle": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -125,10 +136,11 @@ func createSslcertkeyFunc(ctx context.Context, d *schema.ResourceData, meta inte
 		// This is always set to false on creation which effectively excludes it from the request JSON
 		// Nodomaincheck is not an object attribute but a flag for the change operation
 		// of the resource
-		Nodomaincheck:     false,
-		Ocspstaplingcache: d.Get("ocspstaplingcache").(bool),
-		Passplain:         d.Get("passplain").(string),
-		Password:          d.Get("password").(bool),
+		Nodomaincheck:               false,
+		Ocspstaplingcache:           d.Get("ocspstaplingcache").(bool),
+		Passplain:                   d.Get("passplain").(string),
+		Password:                    d.Get("password").(bool),
+		Deletecertkeyfilesonremoval: d.Get("deletecertkeyfilesonremoval").(string),
 	}
 
 	if raw := d.GetRawConfig().GetAttr("notificationperiod"); !raw.IsNull() {
@@ -173,6 +185,7 @@ func readSslcertkeyFunc(ctx context.Context, d *schema.ResourceData, meta interf
 		return nil
 	}
 	d.Set("certkey", data["certkey"])
+	d.Set("deletecertkeyfilesonremoval", data["deletecertkeyfilesonremoval"])
 	d.Set("bundle", data["bundle"])
 	d.Set("cert", data["cert"])
 	d.Set("certkey", data["certkey"])
@@ -210,6 +223,11 @@ func updateSslcertkeyFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	hasUpdate := false //depending on which field changed, we have to use Update or Change API
 	hasChange := false
+	if d.HasChange("deletecertkeyfilesonremoval") {
+		log.Printf("[DEBUG]  citrixadc-provider: Deletecertkeyfilesonremoval has changed for sslcertkey, starting update")
+		sslcertkeyUpdate.Deletecertkeyfilesonremoval = d.Get("deletecertkeyfilesonremoval").(string)
+		hasChange = true
+	}
 	hasClear := false
 	if d.HasChange("expirymonitor") {
 		log.Printf("[DEBUG] netscaler-provider:  Expirymonitor has changed for sslcertkey %s, starting update", sslcertkeyName)
@@ -370,7 +388,16 @@ func deleteSslcertkeyFunc(ctx context.Context, d *schema.ResourceData, meta inte
 		return diag.FromErr(err)
 	}
 	sslcertkeyName := d.Id()
-	err := client.DeleteResource(service.Sslcertkey.Type(), sslcertkeyName)
+
+	args := make([]string, 0)
+	if val, ok := d.GetOk("deletefromdevice"); ok {
+		args = append(args, fmt.Sprintf("deletefromdevice:%s", strconv.FormatBool(val.(bool))))
+	}
+	if val, ok := d.GetOk("deletecertkeyfilesonremoval"); ok {
+		args = append(args, fmt.Sprintf("deletecertkeyfilesonremoval:%s", val.(string)))
+	}
+
+	err := client.DeleteResourceWithArgs(service.Sslcertkey.Type(), sslcertkeyName, args)
 	if err != nil {
 		return diag.FromErr(err)
 	}

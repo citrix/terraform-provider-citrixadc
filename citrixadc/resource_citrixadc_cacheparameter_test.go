@@ -29,6 +29,7 @@ const testAccCacheparameter_basic = `
 		memlimit    = "650"
 		maxpostlen  = "6000"
 		verifyusing = "HOSTNAME"
+		cacheevictionpolicy = "RELAXED"
 	}
 `
 const testAccCacheparameter_update = `
@@ -37,6 +38,7 @@ const testAccCacheparameter_update = `
 		memlimit    = "650"
 		maxpostlen  = "6500"
 		verifyusing = "HOSTNAME_AND_IP"
+		cacheevictionpolicy = "MODERATE"
 	}
 `
 
@@ -53,6 +55,7 @@ func TestAccCacheparameter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_cacheparameter.tf_cacheparameter", "memlimit", "650"),
 					resource.TestCheckResourceAttr("citrixadc_cacheparameter.tf_cacheparameter", "maxpostlen", "6000"),
 					resource.TestCheckResourceAttr("citrixadc_cacheparameter.tf_cacheparameter", "verifyusing", "HOSTNAME"),
+					resource.TestCheckResourceAttr("citrixadc_cacheparameter.tf_cacheparameter", "cacheevictionpolicy", "RELAXED"),
 				),
 			},
 			{
@@ -62,6 +65,7 @@ func TestAccCacheparameter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_cacheparameter.tf_cacheparameter", "memlimit", "650"),
 					resource.TestCheckResourceAttr("citrixadc_cacheparameter.tf_cacheparameter", "maxpostlen", "6500"),
 					resource.TestCheckResourceAttr("citrixadc_cacheparameter.tf_cacheparameter", "verifyusing", "HOSTNAME_AND_IP"),
+					resource.TestCheckResourceAttr("citrixadc_cacheparameter.tf_cacheparameter", "cacheevictionpolicy", "MODERATE"),
 				),
 			},
 		},

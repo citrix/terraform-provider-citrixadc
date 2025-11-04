@@ -25,6 +25,11 @@ func resourceCitrixAdcNspbr() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"targettd": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -227,7 +232,9 @@ func createNspbrFunc(ctx context.Context, d *schema.ResourceData, meta interface
 		State:        d.Get("state").(string),
 		Vxlanvlanmap: d.Get("vxlanvlanmap").(string),
 	}
-
+	if raw := d.GetRawConfig().GetAttr("targettd"); !raw.IsNull() {
+		nspbr.Targettd = intPtr(d.Get("targettd").(int))
+	}
 	if raw := d.GetRawConfig().GetAttr("priority"); !raw.IsNull() {
 		nspbr.Priority = intPtr(d.Get("priority").(int))
 	}
@@ -266,6 +273,7 @@ func readNspbrFunc(ctx context.Context, d *schema.ResourceData, meta interface{}
 		return nil
 	}
 	d.Set("name", data["name"])
+	setToInt("targettd", d, data["targettd"])
 	d.Set("action", data["action"])
 	// d.Set("destip", data["destip"]) // We don't recieve from the NetScaler
 	d.Set("destipop", data["destipop"])
@@ -312,6 +320,11 @@ func updateNspbrFunc(ctx context.Context, d *schema.ResourceData, meta interface
 		Name: d.Get("name").(string),
 	}
 	hasChange := false
+	if d.HasChange("targettd") {
+		log.Printf("[DEBUG]  citrixadc-provider: Targettd has changed for nspbr, starting update")
+		nspbr.Targettd = intPtr(d.Get("targettd").(int))
+		hasChange = true
+	}
 	stateChange := false
 	if d.HasChange("action") {
 		log.Printf("[DEBUG]  citrixadc-provider: Action has changed for nspbr %s, starting update", nspbrName)

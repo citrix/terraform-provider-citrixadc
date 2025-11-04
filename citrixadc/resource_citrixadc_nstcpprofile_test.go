@@ -24,28 +24,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccNstcpprofile_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
-		CheckDestroy:      testAccCheckNstcpprofileDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccNstcpprofile_basic_step1,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNstcpprofileExist("citrixadc_nstcpprofile.tf_test_profile", nil),
-				),
-			},
-			{
-				Config: testAccNstcpprofile_basic_step2,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNstcpprofileExist("citrixadc_nstcpprofile.tf_test_profile", nil),
-				),
-			},
-		},
-	})
-}
-
 const testAccNstcpprofile_mpcapablecbit = `
 
 resource "citrixadc_nstcpprofile" "tf_test_profile_mpcapablecbit" {
@@ -146,6 +124,7 @@ resource "citrixadc_nstcpprofile" "tf_test_profile" {
     name = "test_tf_profile"
     ws = "ENABLED"
     ackaggregation = "DISABLED"
+	rfc5961compliance = "DISABLED"
 }
 `
 
@@ -155,5 +134,30 @@ resource "citrixadc_nstcpprofile" "tf_test_profile" {
     name = "test_tf_profile"
     ws = "ENABLED"
     ackaggregation = "ENABLED"
+	rfc5961compliance = "ENABLED"
 }
 `
+
+func TestAccNstcpprofile_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckNstcpprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNstcpprofile_basic_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNstcpprofileExist("citrixadc_nstcpprofile.tf_test_profile", nil),
+					resource.TestCheckResourceAttr("citrixadc_nstcpprofile.tf_test_profile", "rfc5961compliance", "DISABLED"),
+				),
+			},
+			{
+				Config: testAccNstcpprofile_basic_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNstcpprofileExist("citrixadc_nstcpprofile.tf_test_profile", nil),
+					resource.TestCheckResourceAttr("citrixadc_nstcpprofile.tf_test_profile", "rfc5961compliance", "ENABLED"),
+				),
+			},
+		},
+	})
+}

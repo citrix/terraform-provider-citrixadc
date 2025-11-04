@@ -23,6 +23,12 @@ func resourceCitrixAdcNsacls() *schema.Resource {
 		ReadContext:   readNsaclsFunc,
 		DeleteContext: deleteNsaclsFunc,
 		Schema: map[string]*schema.Schema{
+			"type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 			"aclsname": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -159,6 +165,26 @@ func resourceCitrixAdcNsacls() *schema.Resource {
 							Optional: true,
 							Computed: true,
 						},
+						"srcportdataset": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"srcipdataset": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"destportdataset": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"destipdataset": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -209,7 +235,9 @@ func createNsaclsFunc(ctx context.Context, d *schema.ResourceData, meta interfac
 		}
 	}
 
-	nsacls := ns.Nsacls{}
+	nsacls := ns.Nsacls{
+		Type: d.Get("type").(string),
+	}
 	err := client.ApplyResource(service.Nsacls.Type(), &nsacls)
 	if err != nil {
 		return diag.FromErr(err)
@@ -245,6 +273,12 @@ func readNsaclsFunc(ctx context.Context, d *schema.ResourceData, meta interface{
 		}
 		if v, ok := a["destportval"]; ok {
 			acl["destportval"] = v.(string)
+		}
+		if v, ok := a["destportdataset"]; ok {
+			acl["destportdataset"] = v.(string)
+		}
+		if v, ok := a["destipdataset"]; ok {
+			acl["destipdataset"] = v.(string)
 		}
 		if v, ok := a["established"]; ok {
 			switch val := v.(type) {
@@ -333,6 +367,12 @@ func readNsaclsFunc(ctx context.Context, d *schema.ResourceData, meta interface{
 		if v, ok := a["srcportval"]; ok {
 			acl["srcportval"] = v.(string)
 		}
+		if v, ok := a["srcportdataset"]; ok {
+			acl["srcportdataset"] = v.(string)
+		}
+		if v, ok := a["srcipdataset"]; ok {
+			acl["srcipdataset"] = v.(string)
+		}
 		if v, ok := a["state"]; ok {
 			acl["state"] = v.(string)
 		}
@@ -372,6 +412,7 @@ func readNsaclsFunc(ctx context.Context, d *schema.ResourceData, meta interface{
 		acls[i] = acl
 	}
 	d.Set("acl", acls)
+	d.Set("type", d.Get("type"))
 
 	// Reset the trigger to "No" after read operations so that subsequent plans
 	// will detect a change when users set acls_apply_trigger = "Yes".
@@ -575,16 +616,16 @@ func createSingleAcl(acl map[string]interface{}, meta interface{}) error {
 	destport := false
 	srcip := false
 	srcport := false
-	if acl["destipval"] != nil && acl["destipval"] != "" {
+	if acl["destipval"] != nil && acl["destipval"] != "" || acl["destipdataset"] != nil && acl["destipdataset"] != "" {
 		destip = true
 	}
-	if acl["destportval"] != nil && acl["destportval"] != "" {
+	if acl["destportval"] != nil && acl["destportval"] != "" || acl["destportdataset"] != nil && acl["destportdataset"] != "" {
 		destport = true
 	}
-	if acl["srcipval"] != nil && acl["srcipval"] != "" {
+	if acl["srcipval"] != nil && acl["srcipval"] != "" || acl["srcipdataset"] != nil && acl["srcipdataset"] != "" {
 		srcip = true
 	}
-	if acl["srcportval"] != nil && acl["srcportval"] != "" {
+	if acl["srcportval"] != nil && acl["srcportval"] != "" || acl["srcportdataset"] != nil && acl["srcportdataset"] != "" {
 		srcport = true
 	}
 
@@ -619,11 +660,17 @@ func createSingleAcl(acl map[string]interface{}, meta interface{}) error {
 	if isStringValueSet(acl, "destipval") {
 		nsacl.Destipval = acl["destipval"].(string)
 	}
+	if isStringValueSet(acl, "destipdataset") {
+		nsacl.Destipdataset = acl["destipdataset"].(string)
+	}
 	if isStringValueSet(acl, "destportop") {
 		nsacl.Destportop = acl["destportop"].(string)
 	}
 	if isStringValueSet(acl, "destportval") {
 		nsacl.Destportval = acl["destportval"].(string)
+	}
+	if isStringValueSet(acl, "destportdataset") {
+		nsacl.Destportdataset = acl["destportdataset"].(string)
 	}
 	if isBoolValueSet(acl, "established") {
 		nsacl.Established = acl["established"].(bool)
@@ -643,6 +690,9 @@ func createSingleAcl(acl map[string]interface{}, meta interface{}) error {
 	if isStringValueSet(acl, "srcipval") {
 		nsacl.Srcipval = acl["srcipval"].(string)
 	}
+	if isStringValueSet(acl, "srcipdataset") {
+		nsacl.Srcipdataset = acl["srcipdataset"].(string)
+	}
 	if isStringValueSet(acl, "srcmac") {
 		nsacl.Srcmac = acl["srcmac"].(string)
 	}
@@ -651,6 +701,9 @@ func createSingleAcl(acl map[string]interface{}, meta interface{}) error {
 	}
 	if isStringValueSet(acl, "srcportval") {
 		nsacl.Srcportval = acl["srcportval"].(string)
+	}
+	if isStringValueSet(acl, "srcportdataset") {
+		nsacl.Srcportdataset = acl["srcportdataset"].(string)
 	}
 	if isStringValueSet(acl, "state") {
 		nsacl.State = acl["state"].(string)
@@ -751,11 +804,17 @@ func constructAclFromCtyValue(aclValue cty.Value) map[string]interface{} {
 		if val, exists := aclMap["destipval"]; exists && !val.IsNull() && val.IsKnown() {
 			acl["destipval"] = val.AsString()
 		}
+		if val, exists := aclMap["destipdataset"]; exists && !val.IsNull() && val.IsKnown() {
+			acl["destipdataset"] = val.AsString()
+		}
 		if val, exists := aclMap["destportop"]; exists && !val.IsNull() && val.IsKnown() {
 			acl["destportop"] = val.AsString()
 		}
 		if val, exists := aclMap["destportval"]; exists && !val.IsNull() && val.IsKnown() {
 			acl["destportval"] = val.AsString()
+		}
+		if val, exists := aclMap["destportdataset"]; exists && !val.IsNull() && val.IsKnown() {
+			acl["destportdataset"] = val.AsString()
 		}
 		if val, exists := aclMap["established"]; exists && !val.IsNull() && val.IsKnown() {
 			acl["established"] = val.True()
@@ -805,6 +864,9 @@ func constructAclFromCtyValue(aclValue cty.Value) map[string]interface{} {
 		if val, exists := aclMap["srcipval"]; exists && !val.IsNull() && val.IsKnown() {
 			acl["srcipval"] = val.AsString()
 		}
+		if val, exists := aclMap["srcipdataset"]; exists && !val.IsNull() && val.IsKnown() {
+			acl["srcipdataset"] = val.AsString()
+		}
 		if val, exists := aclMap["srcmac"]; exists && !val.IsNull() && val.IsKnown() {
 			acl["srcmac"] = val.AsString()
 		}
@@ -813,6 +875,9 @@ func constructAclFromCtyValue(aclValue cty.Value) map[string]interface{} {
 		}
 		if val, exists := aclMap["srcportval"]; exists && !val.IsNull() && val.IsKnown() {
 			acl["srcportval"] = val.AsString()
+		}
+		if val, exists := aclMap["srcportdataset"]; exists && !val.IsNull() && val.IsKnown() {
+			acl["srcportdataset"] = val.AsString()
 		}
 		if val, exists := aclMap["state"]; exists && !val.IsNull() && val.IsKnown() {
 			acl["state"] = val.AsString()
@@ -941,11 +1006,17 @@ func filterToUserSpecifiedValues(acl map[string]interface{}) map[string]interfac
 	if val, exists := acl["destipval"]; exists && val != nil && val.(string) != "" {
 		filtered["destipval"] = val
 	}
+	if val, exists := acl["destipdataset"]; exists && val != nil && val.(string) != "" {
+		filtered["destipdataset"] = val
+	}
 	if val, exists := acl["destportop"]; exists && val != nil && val.(string) != "" {
 		filtered["destportop"] = val
 	}
 	if val, exists := acl["destportval"]; exists && val != nil && val.(string) != "" {
 		filtered["destportval"] = val
+	}
+	if val, exists := acl["destportdataset"]; exists && val != nil && val.(string) != "" {
+		filtered["destportdataset"] = val
 	}
 	if val, exists := acl["established"]; exists && val != nil {
 		// Only include if explicitly set to true (false is default)
@@ -971,6 +1042,9 @@ func filterToUserSpecifiedValues(acl map[string]interface{}) map[string]interfac
 	if val, exists := acl["srcipval"]; exists && val != nil && val.(string) != "" {
 		filtered["srcipval"] = val
 	}
+	if val, exists := acl["srcipdataset"]; exists && val != nil && val.(string) != "" {
+		filtered["srcipdataset"] = val
+	}
 	if val, exists := acl["srcmac"]; exists && val != nil && val.(string) != "" {
 		filtered["srcmac"] = val
 	}
@@ -979,6 +1053,9 @@ func filterToUserSpecifiedValues(acl map[string]interface{}) map[string]interfac
 	}
 	if val, exists := acl["srcportval"]; exists && val != nil && val.(string) != "" {
 		filtered["srcportval"] = val
+	}
+	if val, exists := acl["srcportdataset"]; exists && val != nil && val.(string) != "" {
+		filtered["srcportdataset"] = val
 	}
 	if val, exists := acl["state"]; exists && val != nil {
 		// Only include if not default value

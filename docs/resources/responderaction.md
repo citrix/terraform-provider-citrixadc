@@ -30,6 +30,7 @@ resource "citrixadc_responderaction" "tf_responderaction" {
 * `comment` - (Optional) Comment. Any type of information about this responder action.
 * `responsestatuscode` - (Optional) HTTP response status code, for example 200, 302, 404, etc. The default value for the redirect action type is 302 and for respondwithhtmlpage is 200.
 * `reasonphrase` - (Optional) Expression specifying the reason phrase of the HTTP response. The reason phrase may be a string literal with quotes or a PI expression. For example: "Invalid URL: " + HTTP.REQ.URL.
+* `headers` - (Optional) One or more headers to insert into the HTTP response. Each header is specified as "name(expr)", where expr is an expression that is evaluated at runtime to provide the value for the named header. You can configure a maximum of eight headers for a responder action.
 
 
 ## Attribute Reference

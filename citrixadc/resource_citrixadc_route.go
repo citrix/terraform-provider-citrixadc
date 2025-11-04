@@ -25,6 +25,18 @@ func resourceCitrixAdcRoute() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"protocol": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"mgmt": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 			"network": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -120,6 +132,8 @@ func createRouteFunc(ctx context.Context, d *schema.ResourceData, meta interface
 		Network:    d.Get("network").(string),
 		Ownergroup: d.Get("ownergroup").(string),
 		Routetype:  d.Get("routetype").(string),
+		Mgmt:       d.Get("mgmt").(bool),
+		Protocol:   toStringList(d.Get("protocol").([]interface{})),
 	}
 
 	if raw := d.GetRawConfig().GetAttr("cost"); !raw.IsNull() {
@@ -210,6 +224,8 @@ func readRouteFunc(ctx context.Context, d *schema.ResourceData, meta interface{}
 	data := dataArray[foundIndex]
 
 	d.Set("advertise", data["advertise"])
+	d.Set("protocol", data["protocol"])
+	d.Set("mgmt", data["mgmt"])
 	setToInt("cost", d, data["cost"])
 	setToInt("cost1", d, data["cost1"])
 	d.Set("detail", data["detail"])
@@ -236,6 +252,11 @@ func updateRouteFunc(ctx context.Context, d *schema.ResourceData, meta interface
 
 	route := network.Route{}
 	hasChange := false
+	if d.HasChange("protocol") {
+		log.Printf("[DEBUG]  citrixadc-provider: Protocol has changed for route, starting update")
+		route.Protocol = toStringList(d.Get("protocol").([]interface{}))
+		hasChange = true
+	}
 	if d.HasChange("advertise") {
 		log.Printf("[DEBUG]  citrixadc-provider: Advertise has changed for route %s, starting update", routeName)
 		route.Advertise = d.Get("advertise").(string)

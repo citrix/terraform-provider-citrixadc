@@ -25,6 +25,12 @@ func resourceCitrixAdcHanode() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"rpcnodepassword": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 			"ipaddress": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -107,6 +113,7 @@ func createHanodeFunc(ctx context.Context, d *schema.ResourceData, meta interfac
 		Hasync:               d.Get("hasync").(string),
 		Syncstatusstrictmode: d.Get("syncstatusstrictmode").(string),
 		Ipaddress:            d.Get("ipaddress").(string),
+		Rpcnodepassword:      d.Get("rpcnodepassword").(string),
 	}
 
 	if raw := d.GetRawConfig().GetAttr("hanode_id"); !raw.IsNull() {
@@ -157,6 +164,7 @@ func readHanodeFunc(ctx context.Context, d *schema.ResourceData, meta interface{
 	// FIXME: Revisit once the API is fixed
 	if data["hastatus"] == "UP" {
 		d.Set("hastatus", "ENABLED")
+		d.Set("rpcnodepassword", data["rpcnodepassword"])
 	}
 	setToInt("hanode_id", d, data["id"])
 	setToInt("deadinterval", d, data["deadinterval"])

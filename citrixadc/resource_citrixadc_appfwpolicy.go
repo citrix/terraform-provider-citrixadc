@@ -36,11 +36,6 @@ func resourceCitrixAdcAppfwpolicy() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"newname": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
 			"profilename": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -118,11 +113,6 @@ func updateAppfwpolicyFunc(ctx context.Context, d *schema.ResourceData, meta int
 		log.Printf("[DEBUG]  citrixadc-provider: Logaction has changed for appfwpolicy %s, starting update", appfwpolicyName)
 		appfwpolicy.Logaction = d.Get("logaction").(string)
 		hasChange = true
-	}
-	if d.HasChange("newname") {
-		log.Printf("[DEBUG]  citrixadc-provider: Newname has changed for appfwpolicy %s, starting update", appfwpolicyName)
-		appfwpolicy.Newname = d.Get("newname").(string)
-		hasRename = true
 	}
 	if d.HasChange("profilename") {
 		log.Printf("[DEBUG]  citrixadc-provider: Profilename has changed for appfwpolicy %s, starting update", appfwpolicyName)

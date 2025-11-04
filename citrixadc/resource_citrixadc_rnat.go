@@ -56,11 +56,6 @@ func resourceCitrixAdcRnat() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"newname": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
 			"ownergroup": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -101,7 +96,6 @@ func createRnatFunc(ctx context.Context, d *schema.ResourceData, meta interface{
 		Name:             d.Get("name").(string),
 		Netmask:          d.Get("netmask").(string),
 		Network:          d.Get("network").(string),
-		Newname:          d.Get("newname").(string),
 		Ownergroup:       d.Get("ownergroup").(string),
 		Srcippersistency: d.Get("srcippersistency").(string),
 		Useproxyport:     d.Get("useproxyport").(string),
@@ -141,7 +135,6 @@ func readRnatFunc(ctx context.Context, d *schema.ResourceData, meta interface{})
 	d.Set("natip", data["natip"])
 	d.Set("netmask", data["netmask"])
 	d.Set("network", data["network"])
-	d.Set("newname", data["newname"])
 	d.Set("ownergroup", data["ownergroup"])
 	setToInt("redirectport", d, data["redirectport"])
 	d.Set("srcippersistency", data["srcippersistency"])
@@ -169,11 +162,6 @@ func updateRnatFunc(ctx context.Context, d *schema.ResourceData, meta interface{
 	if d.HasChange("natip") {
 		log.Printf("[DEBUG]  citrixadc-provider: Natip has changed for rnat %s, starting update", rnatName)
 		rnat.Natip = d.Get("natip").(string)
-		hasChange = true
-	}
-	if d.HasChange("newname") {
-		log.Printf("[DEBUG]  citrixadc-provider: Newname has changed for rnat %s, starting update", rnatName)
-		rnat.Newname = d.Get("newname").(string)
 		hasChange = true
 	}
 	if d.HasChange("ownergroup") {

@@ -43,6 +43,8 @@ Possible values : [DEFAULT, PRAC, JARH]
 Default value: 256
 Minimum value = 1
 Maximum value = 1024
+* `proximityfromself` - (Optional) Use the ADC location instead of client IP for static proximity LB or GSLB decision.
+
 
 ## Attribute Reference
 

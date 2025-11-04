@@ -29,6 +29,7 @@ const testAccAuditnslogparams_basic = `
 		dateformat = "DDMMYYYY"
 		loglevel   = ["EMERGENCY"]
 		tcp        = "ALL"
+		protocolviolations = "NONE"
 	}
 `
 const testAccAuditnslogparams_update = `
@@ -37,6 +38,7 @@ const testAccAuditnslogparams_update = `
 		dateformat = "MMDDYYYY"
 		loglevel   = ["EMERGENCY"]
 		tcp        = "NONE"
+		protocolviolations = "ALL"
 	}
 `
 
@@ -52,6 +54,7 @@ func TestAccAuditnslogparams_basic(t *testing.T) {
 					testAccCheckAuditnslogparamsExist("citrixadc_auditnslogparams.tf_auditnslogparams", nil),
 					resource.TestCheckResourceAttr("citrixadc_auditnslogparams.tf_auditnslogparams", "dateformat", "DDMMYYYY"),
 					resource.TestCheckResourceAttr("citrixadc_auditnslogparams.tf_auditnslogparams", "tcp", "ALL"),
+					resource.TestCheckResourceAttr("citrixadc_auditnslogparams.tf_auditnslogparams", "protocolviolations", "NONE"),
 				),
 			},
 			{
@@ -60,6 +63,7 @@ func TestAccAuditnslogparams_basic(t *testing.T) {
 					testAccCheckAuditnslogparamsExist("citrixadc_auditnslogparams.tf_auditnslogparams", nil),
 					resource.TestCheckResourceAttr("citrixadc_auditnslogparams.tf_auditnslogparams", "dateformat", "MMDDYYYY"),
 					resource.TestCheckResourceAttr("citrixadc_auditnslogparams.tf_auditnslogparams", "tcp", "NONE"),
+					resource.TestCheckResourceAttr("citrixadc_auditnslogparams.tf_auditnslogparams", "protocolviolations", "ALL"),
 				),
 			},
 		},

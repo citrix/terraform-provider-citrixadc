@@ -22,6 +22,36 @@ func resourceCitrixAdcVpnparameter() *schema.Resource {
 		UpdateContext: updateVpnparameterFunc,
 		DeleteContext: deleteVpnparameterFunc, // Thought vpnparameter resource donot have DELETE operation, it is required to set ID to "" d.SetID("") to maintain terraform state
 		Schema: map[string]*schema.Schema{
+			"secureprivateaccess": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"maxiipperuser": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"httptrackconnproxy": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"deviceposture": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"backenddtls12": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"accessrestrictedpageredirect": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"advancedclientlessvpnmode": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -452,85 +482,92 @@ func createVpnparameterFunc(ctx context.Context, d *schema.ResourceData, meta in
 	// there is no primary key in VPNPARAMETER resource. Hence generate one for terraform state maintenance
 	vpnparameterName = resource.PrefixedUniqueId("tf-vpnparameter-")
 	vpnparameter := vpn.Vpnparameter{
-		Advancedclientlessvpnmode:  d.Get("advancedclientlessvpnmode").(string),
-		Allowedlogingroups:         d.Get("allowedlogingroups").(string),
-		Allprotocolproxy:           d.Get("allprotocolproxy").(string),
-		Alwaysonprofilename:        d.Get("alwaysonprofilename").(string),
-		Authorizationgroup:         d.Get("authorizationgroup").(string),
-		Autoproxyurl:               d.Get("autoproxyurl").(string),
-		Backendcertvalidation:      d.Get("backendcertvalidation").(string),
-		Backendserversni:           d.Get("backendserversni").(string),
-		Citrixreceiverhome:         d.Get("citrixreceiverhome").(string),
-		Clientchoices:              d.Get("clientchoices").(string),
-		Clientcleanupprompt:        d.Get("clientcleanupprompt").(string),
-		Clientconfiguration:        toStringList(d.Get("clientconfiguration").([]interface{})),
-		Clientdebug:                d.Get("clientdebug").(string),
-		Clientlessmodeurlencoding:  d.Get("clientlessmodeurlencoding").(string),
-		Clientlesspersistentcookie: d.Get("clientlesspersistentcookie").(string),
-		Clientlessvpnmode:          d.Get("clientlessvpnmode").(string),
-		Clientoptions:              toStringList(d.Get("clientoptions").([]interface{})),
-		Clientsecurity:             d.Get("clientsecurity").(string),
-		Clientsecuritygroup:        d.Get("clientsecuritygroup").(string),
-		Clientsecuritylog:          d.Get("clientsecuritylog").(string),
-		Clientsecuritymessage:      d.Get("clientsecuritymessage").(string),
-		Clientversions:             d.Get("clientversions").(string),
-		Defaultauthorizationaction: d.Get("defaultauthorizationaction").(string),
-		Dnsvservername:             d.Get("dnsvservername").(string),
-		Emailhome:                  d.Get("emailhome").(string),
-		Encryptcsecexp:             d.Get("encryptcsecexp").(string),
-		Epaclienttype:              d.Get("epaclienttype").(string),
-		Forcecleanup:               toStringList(d.Get("forcecleanup").([]interface{})),
-		Fqdnspoofedip:              d.Get("fqdnspoofedip").(string),
-		Ftpproxy:                   d.Get("ftpproxy").(string),
-		Gopherproxy:                d.Get("gopherproxy").(string),
-		Homepage:                   d.Get("homepage").(string),
-		Httpport:                   toIntegerList(d.Get("httpport").([]interface{})),
-		Httpproxy:                  d.Get("httpproxy").(string),
-		Icaproxy:                   d.Get("icaproxy").(string),
-		Icasessiontimeout:          d.Get("icasessiontimeout").(string),
-		Icauseraccounting:          d.Get("icauseraccounting").(string),
-		Iconwithreceiver:           d.Get("iconwithreceiver").(string),
-		Iipdnssuffix:               d.Get("iipdnssuffix").(string),
-		Kcdaccount:                 d.Get("kcdaccount").(string),
-		Killconnections:            d.Get("killconnections").(string),
-		Linuxpluginupgrade:         d.Get("linuxpluginupgrade").(string),
-		Locallanaccess:             d.Get("locallanaccess").(string),
-		Loginscript:                d.Get("loginscript").(string),
-		Logoutscript:               d.Get("logoutscript").(string),
-		Macpluginupgrade:           d.Get("macpluginupgrade").(string),
-		Netmask:                    d.Get("netmask").(string),
-		Ntdomain:                   d.Get("ntdomain").(string),
-		Pcoipprofilename:           d.Get("pcoipprofilename").(string),
-		Proxy:                      d.Get("proxy").(string),
-		Proxyexception:             d.Get("proxyexception").(string),
-		Proxylocalbypass:           d.Get("proxylocalbypass").(string),
-		Rdpclientprofilename:       d.Get("rdpclientprofilename").(string),
-		Rfc1918:                    d.Get("rfc1918").(string),
-		Samesite:                   d.Get("samesite").(string),
-		Securebrowse:               d.Get("securebrowse").(string),
-		Smartgroup:                 d.Get("smartgroup").(string),
-		Socksproxy:                 d.Get("socksproxy").(string),
-		Splitdns:                   d.Get("splitdns").(string),
-		Splittunnel:                d.Get("splittunnel").(string),
-		Spoofiip:                   d.Get("spoofiip").(string),
-		Sslproxy:                   d.Get("sslproxy").(string),
-		Sso:                        d.Get("sso").(string),
-		Ssocredential:              d.Get("ssocredential").(string),
-		Storefronturl:              d.Get("storefronturl").(string),
-		Transparentinterception:    d.Get("transparentinterception").(string),
-		Uitheme:                    d.Get("uitheme").(string),
-		Useiip:                     d.Get("useiip").(string),
-		Usemip:                     d.Get("usemip").(string),
-		Userdomains:                d.Get("userdomains").(string),
-		Wihome:                     d.Get("wihome").(string),
-		Wihomeaddresstype:          d.Get("wihomeaddresstype").(string),
-		Windowsautologon:           d.Get("windowsautologon").(string),
-		Windowsclienttype:          d.Get("windowsclienttype").(string),
-		Windowspluginupgrade:       d.Get("windowspluginupgrade").(string),
-		Winsip:                     d.Get("winsip").(string),
-		Wiportalmode:               d.Get("wiportalmode").(string),
+		Advancedclientlessvpnmode:    d.Get("advancedclientlessvpnmode").(string),
+		Allowedlogingroups:           d.Get("allowedlogingroups").(string),
+		Allprotocolproxy:             d.Get("allprotocolproxy").(string),
+		Alwaysonprofilename:          d.Get("alwaysonprofilename").(string),
+		Authorizationgroup:           d.Get("authorizationgroup").(string),
+		Autoproxyurl:                 d.Get("autoproxyurl").(string),
+		Backendcertvalidation:        d.Get("backendcertvalidation").(string),
+		Backendserversni:             d.Get("backendserversni").(string),
+		Citrixreceiverhome:           d.Get("citrixreceiverhome").(string),
+		Clientchoices:                d.Get("clientchoices").(string),
+		Clientcleanupprompt:          d.Get("clientcleanupprompt").(string),
+		Clientconfiguration:          toStringList(d.Get("clientconfiguration").([]interface{})),
+		Clientdebug:                  d.Get("clientdebug").(string),
+		Clientlessmodeurlencoding:    d.Get("clientlessmodeurlencoding").(string),
+		Clientlesspersistentcookie:   d.Get("clientlesspersistentcookie").(string),
+		Clientlessvpnmode:            d.Get("clientlessvpnmode").(string),
+		Clientoptions:                toStringList(d.Get("clientoptions").([]interface{})),
+		Clientsecurity:               d.Get("clientsecurity").(string),
+		Clientsecuritygroup:          d.Get("clientsecuritygroup").(string),
+		Clientsecuritylog:            d.Get("clientsecuritylog").(string),
+		Clientsecuritymessage:        d.Get("clientsecuritymessage").(string),
+		Clientversions:               d.Get("clientversions").(string),
+		Defaultauthorizationaction:   d.Get("defaultauthorizationaction").(string),
+		Dnsvservername:               d.Get("dnsvservername").(string),
+		Emailhome:                    d.Get("emailhome").(string),
+		Encryptcsecexp:               d.Get("encryptcsecexp").(string),
+		Epaclienttype:                d.Get("epaclienttype").(string),
+		Forcecleanup:                 toStringList(d.Get("forcecleanup").([]interface{})),
+		Fqdnspoofedip:                d.Get("fqdnspoofedip").(string),
+		Ftpproxy:                     d.Get("ftpproxy").(string),
+		Gopherproxy:                  d.Get("gopherproxy").(string),
+		Homepage:                     d.Get("homepage").(string),
+		Httpport:                     toIntegerList(d.Get("httpport").([]interface{})),
+		Httpproxy:                    d.Get("httpproxy").(string),
+		Icaproxy:                     d.Get("icaproxy").(string),
+		Icasessiontimeout:            d.Get("icasessiontimeout").(string),
+		Icauseraccounting:            d.Get("icauseraccounting").(string),
+		Iconwithreceiver:             d.Get("iconwithreceiver").(string),
+		Iipdnssuffix:                 d.Get("iipdnssuffix").(string),
+		Kcdaccount:                   d.Get("kcdaccount").(string),
+		Killconnections:              d.Get("killconnections").(string),
+		Linuxpluginupgrade:           d.Get("linuxpluginupgrade").(string),
+		Locallanaccess:               d.Get("locallanaccess").(string),
+		Loginscript:                  d.Get("loginscript").(string),
+		Logoutscript:                 d.Get("logoutscript").(string),
+		Macpluginupgrade:             d.Get("macpluginupgrade").(string),
+		Netmask:                      d.Get("netmask").(string),
+		Ntdomain:                     d.Get("ntdomain").(string),
+		Pcoipprofilename:             d.Get("pcoipprofilename").(string),
+		Proxy:                        d.Get("proxy").(string),
+		Proxyexception:               d.Get("proxyexception").(string),
+		Proxylocalbypass:             d.Get("proxylocalbypass").(string),
+		Rdpclientprofilename:         d.Get("rdpclientprofilename").(string),
+		Rfc1918:                      d.Get("rfc1918").(string),
+		Samesite:                     d.Get("samesite").(string),
+		Securebrowse:                 d.Get("securebrowse").(string),
+		Smartgroup:                   d.Get("smartgroup").(string),
+		Socksproxy:                   d.Get("socksproxy").(string),
+		Splitdns:                     d.Get("splitdns").(string),
+		Splittunnel:                  d.Get("splittunnel").(string),
+		Spoofiip:                     d.Get("spoofiip").(string),
+		Sslproxy:                     d.Get("sslproxy").(string),
+		Sso:                          d.Get("sso").(string),
+		Ssocredential:                d.Get("ssocredential").(string),
+		Storefronturl:                d.Get("storefronturl").(string),
+		Transparentinterception:      d.Get("transparentinterception").(string),
+		Uitheme:                      d.Get("uitheme").(string),
+		Useiip:                       d.Get("useiip").(string),
+		Usemip:                       d.Get("usemip").(string),
+		Userdomains:                  d.Get("userdomains").(string),
+		Wihome:                       d.Get("wihome").(string),
+		Wihomeaddresstype:            d.Get("wihomeaddresstype").(string),
+		Windowsautologon:             d.Get("windowsautologon").(string),
+		Windowsclienttype:            d.Get("windowsclienttype").(string),
+		Windowspluginupgrade:         d.Get("windowspluginupgrade").(string),
+		Winsip:                       d.Get("winsip").(string),
+		Wiportalmode:                 d.Get("wiportalmode").(string),
+		Accessrestrictedpageredirect: d.Get("accessrestrictedpageredirect").(string),
+		Backenddtls12:                d.Get("backenddtls12").(string),
+		Deviceposture:                d.Get("deviceposture").(string),
+		Httptrackconnproxy:           d.Get("httptrackconnproxy").(string),
+		Secureprivateaccess:          d.Get("secureprivateaccess").(string),
 	}
-
+	if raw := d.GetRawConfig().GetAttr("maxiipperuser"); !raw.IsNull() {
+		vpnparameter.Maxiipperuser = intPtr(d.Get("maxiipperuser").(int))
+	}
 	if raw := d.GetRawConfig().GetAttr("apptokentimeout"); !raw.IsNull() {
 		vpnparameter.Apptokentimeout = intPtr(d.Get("apptokentimeout").(int))
 	}
@@ -571,6 +608,12 @@ func readVpnparameterFunc(ctx context.Context, d *schema.ResourceData, meta inte
 		return nil
 	}
 	d.Set("advancedclientlessvpnmode", data["advancedclientlessvpnmode"])
+	d.Set("secureprivateaccess", data["secureprivateaccess"])
+	setToInt("maxiipperuser", d, data["maxiipperuser"])
+	d.Set("httptrackconnproxy", data["httptrackconnproxy"])
+	d.Set("deviceposture", data["deviceposture"])
+	d.Set("backenddtls12", data["backenddtls12"])
+	d.Set("accessrestrictedpageredirect", data["accessrestrictedpageredirect"])
 	d.Set("allowedlogingroups", data["allowedlogingroups"])
 	d.Set("allprotocolproxy", data["allprotocolproxy"])
 	d.Set("alwaysonprofilename", data["alwaysonprofilename"])
@@ -666,6 +709,36 @@ func updateVpnparameterFunc(ctx context.Context, d *schema.ResourceData, meta in
 	client := meta.(*NetScalerNitroClient).client
 	vpnparameter := vpn.Vpnparameter{}
 	hasChange := false
+	if d.HasChange("secureprivateaccess") {
+		log.Printf("[DEBUG]  citrixadc-provider: Secureprivateaccess has changed for vpnparameter, starting update")
+		vpnparameter.Secureprivateaccess = d.Get("secureprivateaccess").(string)
+		hasChange = true
+	}
+	if d.HasChange("maxiipperuser") {
+		log.Printf("[DEBUG]  citrixadc-provider: Maxiipperuser has changed for vpnparameter, starting update")
+		vpnparameter.Maxiipperuser = intPtr(d.Get("maxiipperuser").(int))
+		hasChange = true
+	}
+	if d.HasChange("httptrackconnproxy") {
+		log.Printf("[DEBUG]  citrixadc-provider: Httptrackconnproxy has changed for vpnparameter, starting update")
+		vpnparameter.Httptrackconnproxy = d.Get("httptrackconnproxy").(string)
+		hasChange = true
+	}
+	if d.HasChange("deviceposture") {
+		log.Printf("[DEBUG]  citrixadc-provider: Deviceposture has changed for vpnparameter, starting update")
+		vpnparameter.Deviceposture = d.Get("deviceposture").(string)
+		hasChange = true
+	}
+	if d.HasChange("backenddtls12") {
+		log.Printf("[DEBUG]  citrixadc-provider: Backenddtls12 has changed for vpnparameter, starting update")
+		vpnparameter.Backenddtls12 = d.Get("backenddtls12").(string)
+		hasChange = true
+	}
+	if d.HasChange("accessrestrictedpageredirect") {
+		log.Printf("[DEBUG]  citrixadc-provider: Accessrestrictedpageredirect has changed for vpnparameter, starting update")
+		vpnparameter.Accessrestrictedpageredirect = d.Get("accessrestrictedpageredirect").(string)
+		hasChange = true
+	}
 	if d.HasChange("advancedclientlessvpnmode") {
 		log.Printf("[DEBUG]  citrixadc-provider: Advancedclientlessvpnmode has changed for vpnparameter vpnparameter, starting update")
 		vpnparameter.Advancedclientlessvpnmode = d.Get("advancedclientlessvpnmode").(string)

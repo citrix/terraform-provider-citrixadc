@@ -14,116 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// type Lbvserver struct {
-// 	Adfsproxyprofile                   string `json:"adfsproxyprofile,omitempty"`
-// 	Apiprofile                         string `json:"apiprofile,omitempty"`
-// 	Appflowlog                         string `json:"appflowlog,omitempty"`
-// 	Authentication                     string `json:"authentication,omitempty"`
-// 	Authenticationhost                 string `json:"authenticationhost,omitempty"`
-// 	Authn401                           string `json:"authn401,omitempty"`
-// 	Authnprofile                       string `json:"authnprofile,omitempty"`
-// 	Authnvsname                        string `json:"authnvsname,omitempty"`
-// 	Backuplbmethod                     string `json:"backuplbmethod,omitempty"`
-// 	Backuppersistencetimeout           *int   `json:"backuppersistencetimeout,omitempty"`
-// 	Backupvserver                      string `json:"backupvserver,omitempty"`
-// 	Bypassaaaa                         string `json:"bypassaaaa,omitempty"`
-// 	Cacheable                          string `json:"cacheable,omitempty"`
-// 	Clttimeout                         *int   `json:"clttimeout,omitempty"`
-// 	Comment                            string `json:"comment,omitempty"`
-// 	Connfailover                       string `json:"connfailover,omitempty"`
-// 	Cookiename                         string `json:"cookiename,omitempty"`
-// 	Datalength                         *int   `json:"datalength,omitempty"`
-// 	Dataoffset                         *int   `json:"dataoffset,omitempty"`
-// 	Dbprofilename                      string `json:"dbprofilename,omitempty"`
-// 	Dbslb                              string `json:"dbslb,omitempty"`
-// 	Disableprimaryondown               string `json:"disableprimaryondown,omitempty"`
-// 	Dns64                              string `json:"dns64,omitempty"`
-// 	Dnsoverhttps                       string `json:"dnsoverhttps,omitempty"`
-// 	Dnsprofilename                     string `json:"dnsprofilename,omitempty"`
-// 	Downstateflush                     string `json:"downstateflush,omitempty"`
-// 	Hashlength                         *int   `json:"hashlength,omitempty"`
-// 	Healththreshold                    *int   `json:"healththreshold,omitempty"`
-// 	Httpprofilename                    string `json:"httpprofilename,omitempty"`
-// 	Httpsredirecturl                   string `json:"httpsredirecturl,omitempty"`
-// 	Icmpvsrresponse                    string `json:"icmpvsrresponse,omitempty"`
-// 	Insertvserveripport                string `json:"insertvserveripport,omitempty"`
-// 	Ipmask                             string `json:"ipmask,omitempty"`
-// 	Ippattern                          string `json:"ippattern,omitempty"`
-// 	Ipset                              string `json:"ipset,omitempty"`
-// 	Ipv46                              string `json:"ipv46,omitempty"`
-// 	L2conn                             string `json:"l2conn,omitempty"`
-// 	Lbmethod                           string `json:"lbmethod,omitempty"`
-// 	Lbprofilename                      string `json:"lbprofilename,omitempty"`
-// 	Listenpolicy                       string `json:"listenpolicy,omitempty"`
-// 	Listenpriority                     *int   `json:"listenpriority,omitempty"`
-// 	M                                  string `json:"m,omitempty"`
-// 	Macmoderetainvlan                  string `json:"macmoderetainvlan,omitempty"`
-// 	Maxautoscalemembers                *int   `json:"maxautoscalemembers,omitempty"`
-// 	Minautoscalemembers                *int   `json:"minautoscalemembers,omitempty"`
-// 	Mssqlserverversion                 string `json:"mssqlserverversion,omitempty"`
-// 	Mysqlcharacterset                  *int   `json:"mysqlcharacterset,omitempty"`
-// 	Mysqlprotocolversion               *int   `json:"mysqlprotocolversion,omitempty"`
-// 	Mysqlservercapabilities            *int   `json:"mysqlservercapabilities,omitempty"`
-// 	Mysqlserverversion                 string `json:"mysqlserverversion,omitempty"`
-// 	Name                               string `json:"name,omitempty"`
-// 	Netmask                            string `json:"netmask,omitempty"`
-// 	Netprofile                         string `json:"netprofile,omitempty"`
-// 	Newname                            string `json:"newname,omitempty"`
-// 	Newservicerequest                  *int   `json:"newservicerequest,omitempty"`
-// 	Newservicerequestincrementinterval *int   `json:"newservicerequestincrementinterval,omitempty"`
-// 	Newservicerequestunit              string `json:"newservicerequestunit,omitempty"`
-// 	Oracleserverversion                string `json:"oracleserverversion,omitempty"`
-// 	Order                              *int   `json:"order,omitempty"`
-// 	Orderthreshold                     *int   `json:"orderthreshold,omitempty"`
-// 	Persistavpno                       []int  `json:"persistavpno,omitempty"`
-// 	Persistencebackup                  string `json:"persistencebackup,omitempty"`
-// 	Persistencetype                    string `json:"persistencetype,omitempty"`
-// 	Persistmask                        string `json:"persistmask,omitempty"`
-// 	Port                               *int   `json:"port,omitempty"`
-// 	Probeport                          *int   `json:"probeport,omitempty"`
-// 	Probeprotocol                      string `json:"probeprotocol,omitempty"`
-// 	Probesuccessresponsecode           string `json:"probesuccessresponsecode,omitempty"`
-// 	Processlocal                       string `json:"processlocal,omitempty"`
-// 	Push                               string `json:"push,omitempty"`
-// 	Pushlabel                          string `json:"pushlabel,omitempty"`
-// 	Pushmulticlients                   string `json:"pushmulticlients,omitempty"`
-// 	Pushvserver                        string `json:"pushvserver,omitempty"`
-// 	Quicbridgeprofilename              string `json:"quicbridgeprofilename,omitempty"`
-// 	Quicprofilename                    string `json:"quicprofilename,omitempty"`
-// 	Range                              *int   `json:"range,omitempty"`
-// 	Recursionavailable                 string `json:"recursionavailable,omitempty"`
-// 	Redirectfromport                   *int   `json:"redirectfromport,omitempty"`
-// 	Redirectportrewrite                string `json:"redirectportrewrite,omitempty"`
-// 	Redirurl                           string `json:"redirurl,omitempty"`
-// 	Redirurlflags                      bool   `json:"redirurlflags,omitempty"`
-// 	Resrule                            string `json:"resrule,omitempty"`
-// 	Retainconnectionsoncluster         string `json:"retainconnectionsoncluster,omitempty"`
-// 	Rhistate                           string `json:"rhistate,omitempty"`
-// 	Rtspnat                            string `json:"rtspnat,omitempty"`
-// 	Rule                               string `json:"rule,omitempty"`
-// 	Servicename                        string `json:"servicename,omitempty"`
-// 	Servicetype                        string `json:"servicetype,omitempty"`
-// 	Sessionless                        string `json:"sessionless,omitempty"`
-// 	Skippersistency                    string `json:"skippersistency,omitempty"`
-// 	Sobackupaction                     string `json:"sobackupaction,omitempty"`
-// 	Somethod                           string `json:"somethod,omitempty"`
-// 	Sopersistence                      string `json:"sopersistence,omitempty"`
-// 	Sopersistencetimeout               *int   `json:"sopersistencetimeout,omitempty"`
-// 	Sothreshold                        *int   `json:"sothreshold,omitempty"`
-// 	State                              string `json:"state,omitempty"`
-// 	Tcpprobeport                       *int   `json:"tcpprobeport,omitempty"`
-// 	Tcpprofilename                     string `json:"tcpprofilename,omitempty"`
-// 	Td                                 *int   `json:"td,omitempty"`
-// 	Timeout                            *int   `json:"timeout"` // 0 is a valid value for timeout, hence removing omitempty
-// 	Toggleorder                        string `json:"toggleorder,omitempty"`
-// 	Tosid                              *int   `json:"tosid,omitempty"`
-// 	Trofspersistence                   string `json:"trofspersistence,omitempty"`
-// 	V6netmasklen                       *int   `json:"v6netmasklen,omitempty"`
-// 	V6persistmasklen                   *int   `json:"v6persistmasklen,omitempty"`
-// 	Vipheader                          string `json:"vipheader,omitempty"`
-// 	Weight                             *int   `json:"weight,omitempty"`
-// }
-
 func resourceCitrixAdcLbvserver() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
@@ -135,6 +25,47 @@ func resourceCitrixAdcLbvserver() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"toggleorder": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"quicprofilename": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"probesuccessresponsecode": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"persistavpno": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeInt},
+			},
+			"orderthreshold": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"dnsoverhttps": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"apiprofile": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"adfsproxyprofile": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"appflowlog": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -382,11 +313,6 @@ func resourceCitrixAdcLbvserver() *schema.Resource {
 				Computed: true,
 			},
 			"netprofile": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"newname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -765,7 +691,6 @@ func createLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 		Mysqlserverversion:         d.Get("mysqlserverversion").(string),
 		Netmask:                    d.Get("netmask").(string),
 		Netprofile:                 d.Get("netprofile").(string),
-		Newname:                    d.Get("newname").(string),
 		Newservicerequestunit:      d.Get("newservicerequestunit").(string),
 		Oracleserverversion:        d.Get("oracleserverversion").(string),
 		Persistencebackup:          d.Get("persistencebackup").(string),
@@ -798,8 +723,17 @@ func createLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 		Vipheader:                  d.Get("vipheader").(string),
 		Quicbridgeprofilename:      d.Get("quicbridgeprofilename").(string),
 		Probeprotocol:              d.Get("probeprotocol").(string),
+		Adfsproxyprofile:           d.Get("adfsproxyprofile").(string),
+		Apiprofile:                 d.Get("apiprofile").(string),
+		Dnsoverhttps:               d.Get("dnsoverhttps").(string),
+		Persistavpno:               toIntegerList(d.Get("persistavpno").([]interface{})),
+		Probesuccessresponsecode:   d.Get("probesuccessresponsecode").(string),
+		Quicprofilename:            d.Get("quicprofilename").(string),
+		Toggleorder:                d.Get("toggleorder").(string),
 	}
-
+	if raw := d.GetRawConfig().GetAttr("orderthreshold"); !raw.IsNull() {
+		lbvserver.Orderthreshold = intPtr(d.Get("orderthreshold").(int))
+	}
 	if raw := d.GetRawConfig().GetAttr("backuppersistencetimeout"); !raw.IsNull() {
 		lbvserver.Backuppersistencetimeout = intPtr(d.Get("backuppersistencetimeout").(int))
 	}
@@ -961,6 +895,14 @@ func readLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta interfa
 		return nil
 	}
 	d.Set("name", data["name"])
+	d.Set("toggleorder", data["toggleorder"])
+	d.Set("quicprofilename", data["quicprofilename"])
+	d.Set("probesuccessresponsecode", data["probesuccessresponsecode"])
+	d.Set("persistavpno", data["persistavpno"])
+	setToInt("orderthreshold", d, data["orderthreshold"])
+	d.Set("dnsoverhttps", data["dnsoverhttps"])
+	d.Set("apiprofile", data["apiprofile"])
+	d.Set("adfsproxyprofile", data["adfsproxyprofile"])
 	d.Set("appflowlog", data["appflowlog"])
 	d.Set("authentication", data["authentication"])
 	d.Set("authenticationhost", data["authenticationhost"])
@@ -1011,7 +953,6 @@ func readLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("name", data["name"])
 	d.Set("netmask", data["netmask"])
 	d.Set("netprofile", data["netprofile"])
-	d.Set("newname", data["newname"])
 	setToInt("newservicerequest", d, data["newservicerequest"])
 	setToInt("newservicerequestincrementinterval", d, data["newservicerequestincrementinterval"])
 	d.Set("newservicerequestunit", data["newservicerequestunit"])
@@ -1099,6 +1040,46 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	stateChange := false
 	hasChange := false
+	if d.HasChange("toggleorder") {
+		log.Printf("[DEBUG]  citrixadc-provider: Toggleorder has changed for lbvserver, starting update")
+		lbvserver.Toggleorder = d.Get("toggleorder").(string)
+		hasChange = true
+	}
+	if d.HasChange("quicprofilename") {
+		log.Printf("[DEBUG]  citrixadc-provider: Quicprofilename has changed for lbvserver, starting update")
+		lbvserver.Quicprofilename = d.Get("quicprofilename").(string)
+		hasChange = true
+	}
+	if d.HasChange("probesuccessresponsecode") {
+		log.Printf("[DEBUG]  citrixadc-provider: Probesuccessresponsecode has changed for lbvserver, starting update")
+		lbvserver.Probesuccessresponsecode = d.Get("probesuccessresponsecode").(string)
+		hasChange = true
+	}
+	if d.HasChange("persistavpno") {
+		log.Printf("[DEBUG]  citrixadc-provider: Persistavpno has changed for lbvserver, starting update")
+		lbvserver.Persistavpno = toIntegerList(d.Get("persistavpno").([]interface{}))
+		hasChange = true
+	}
+	if d.HasChange("orderthreshold") {
+		log.Printf("[DEBUG]  citrixadc-provider: Orderthreshold has changed for lbvserver, starting update")
+		lbvserver.Orderthreshold = intPtr(d.Get("orderthreshold").(int))
+		hasChange = true
+	}
+	if d.HasChange("dnsoverhttps") {
+		log.Printf("[DEBUG]  citrixadc-provider: Dnsoverhttps has changed for lbvserver, starting update")
+		lbvserver.Dnsoverhttps = d.Get("dnsoverhttps").(string)
+		hasChange = true
+	}
+	if d.HasChange("apiprofile") {
+		log.Printf("[DEBUG]  citrixadc-provider: Apiprofile has changed for lbvserver, starting update")
+		lbvserver.Apiprofile = d.Get("apiprofile").(string)
+		hasChange = true
+	}
+	if d.HasChange("adfsproxyprofile") {
+		log.Printf("[DEBUG]  citrixadc-provider: Adfsproxyprofile has changed for lbvserver, starting update")
+		lbvserver.Adfsproxyprofile = d.Get("adfsproxyprofile").(string)
+		hasChange = true
+	}
 	sslcertkeyChanged := false
 	sslprofileChanged := false
 	snisslcertkeysChanged := false
@@ -1352,11 +1333,6 @@ func updateLbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("netprofile") {
 		log.Printf("[DEBUG] netscaler-provider:  Netprofile has changed for lbvserver %s, starting update", lbvserverName)
 		lbvserver.Netprofile = d.Get("netprofile").(string)
-		hasChange = true
-	}
-	if d.HasChange("newname") {
-		log.Printf("[DEBUG] netscaler-provider:  Newname has changed for lbvserver %s, starting update", lbvserverName)
-		lbvserver.Newname = d.Get("newname").(string)
 		hasChange = true
 	}
 	if d.HasChange("newservicerequest") {

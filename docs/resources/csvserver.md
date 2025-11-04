@@ -158,6 +158,21 @@ An `sslpolicybinding` block may contain the following attributes:
 * `invoke` - (Optional) Invoke flag. This attribute is relevant only for ADVANCED policies.
 * `labeltype` - (Optional) Type of policy label invocation. Possible values: [ vserver, service, policylabel ]
 * `labelname` - (Optional) Name of the label to invoke if the current policy rule evaluates to TRUE.
+* `apiprofile` - (Optional) The API profile where one or more API specs are bounded to.
+* `authentication` - (Optional) Authenticate users who request a connection to the content switching virtual server.
+* `backuppersistencetimeout` - (Optional) Time period for which backup persistence is in effect.
+* `cookiename` - (Optional) Use this parameter to  specify the cookie name for COOKIE peristence type. It specifies the name of cookie with a maximum of 32 characters. If not specified, cookie name is internally generated.
+* `dnsoverhttps` - (Optional) This option is used to enable/disable DNS over HTTPS (DoH) processing.
+* `dtls` - (Optional) This option starts/stops the dtls service on the vserver
+* `persistencebackup` - (Optional) Backup persistence type for the virtual server. Becomes operational if the primary persistence mechanism fails.
+* `persistmask` - (Optional) Persistence mask for IP based persistence types, for IPv4 virtual servers.
+* `probeport` - (Optional) Citrix ADC provides support for external health check of the vserver status. Select port for HTTP/TCP monitring
+* `probeprotocol` - (Optional) Citrix ADC provides support for external health check of the vserver status. Select HTTP or TCP probes for healthcheck
+* `probesuccessresponsecode` - (Optional) HTTP code to return in SUCCESS case.
+* `quicprofilename` - (Optional) Name of QUIC profile which will be attached to the Content Switching VServer.
+* `tcpprobeport` - (Optional) Port number for external TCP probe. NetScaler provides support for external TCP health check of the vserver status over the selected port. This option is only supported for vservers assigned with an IPAddress or ipset.
+* `timeout` - (Optional) Time period for which a persistence session is in effect.
+* `v6persistmasklen` - (Optional) Persistence mask for IP based persistence types, for IPv6 virtual servers.
 
 
 ## Attribute Reference

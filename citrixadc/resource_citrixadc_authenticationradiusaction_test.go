@@ -32,6 +32,8 @@ const testAccAuthenticationradiusaction_add = `
 		authtimeout  = 2
 		radnasip     = "DISABLED"
 		passencoding = "chap"
+		transport    = "UDP"
+		messageauthenticator = "OFF"
 	}
 `
 const testAccAuthenticationradiusaction_update = `
@@ -43,6 +45,8 @@ const testAccAuthenticationradiusaction_update = `
 		authtimeout  = 2
 		radnasip     = "ENABLED"
 		passencoding = "pap"
+		transport    = "TCP"
+		messageauthenticator = "ON"
 	}
 `
 
@@ -59,6 +63,8 @@ func TestAccAuthenticationradiusaction_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_authenticationradiusaction.tf_radiusaction", "name", "tf_radiusaction"),
 					resource.TestCheckResourceAttr("citrixadc_authenticationradiusaction.tf_radiusaction", "radnasip", "DISABLED"),
 					resource.TestCheckResourceAttr("citrixadc_authenticationradiusaction.tf_radiusaction", "passencoding", "chap"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationradiusaction.tf_radiusaction", "transport", "UDP"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationradiusaction.tf_radiusaction", "messageauthenticator", "OFF"),
 				),
 			},
 			{
@@ -68,6 +74,8 @@ func TestAccAuthenticationradiusaction_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_authenticationradiusaction.tf_radiusaction", "name", "tf_radiusaction"),
 					resource.TestCheckResourceAttr("citrixadc_authenticationradiusaction.tf_radiusaction", "radnasip", "ENABLED"),
 					resource.TestCheckResourceAttr("citrixadc_authenticationradiusaction.tf_radiusaction", "passencoding", "pap"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationradiusaction.tf_radiusaction", "transport", "TCP"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationradiusaction.tf_radiusaction", "messageauthenticator", "ON"),
 				),
 			},
 		},

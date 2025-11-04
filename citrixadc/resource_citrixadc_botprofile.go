@@ -22,6 +22,42 @@ func resourceCitrixAdcBotprofile() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"verboseloglevel": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"spoofedreqaction": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"sessiontimeout": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"sessioncookiename": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"headlessbrowserdetection": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"dfprequestlimit": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"addcookieflags": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -162,8 +198,19 @@ func createBotprofileFunc(ctx context.Context, d *schema.ResourceData, meta inte
 		Trap:                                   d.Get("trap").(string),
 		Trapaction:                             toStringList(d.Get("trapaction").([]interface{})),
 		Trapurl:                                d.Get("trapurl").(string),
+		Addcookieflags:                         d.Get("addcookieflags").(string),
+		Headlessbrowserdetection:               d.Get("headlessbrowserdetection").(string),
+		Sessioncookiename:                      d.Get("sessioncookiename").(string),
+		Spoofedreqaction:                       toStringList(d.Get("spoofedreqaction").([]interface{})),
+		Verboseloglevel:                        d.Get("verboseloglevel").(string),
 	}
 
+	if raw := d.GetRawConfig().GetAttr("sessiontimeout"); !raw.IsNull() {
+		botprofile.Sessiontimeout = intPtr(d.Get("sessiontimeout").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("dfprequestlimit"); !raw.IsNull() {
+		botprofile.Dfprequestlimit = intPtr(d.Get("dfprequestlimit").(int))
+	}
 	if raw := d.GetRawConfig().GetAttr("kmeventspostbodylimit"); !raw.IsNull() {
 		botprofile.Kmeventspostbodylimit = intPtr(d.Get("kmeventspostbodylimit").(int))
 	}
@@ -190,6 +237,13 @@ func readBotprofileFunc(ctx context.Context, d *schema.ResourceData, meta interf
 		return nil
 	}
 	d.Set("name", data["name"])
+	d.Set("verboseloglevel", data["verboseloglevel"])
+	d.Set("spoofedreqaction", data["spoofedreqaction"])
+	setToInt("sessiontimeout", d, data["sessiontimeout"])
+	d.Set("sessioncookiename", data["sessioncookiename"])
+	d.Set("headlessbrowserdetection", data["headlessbrowserdetection"])
+	setToInt("dfprequestlimit", d, data["dfprequestlimit"])
+	d.Set("addcookieflags", data["addcookieflags"])
 	d.Set("bot_enable_black_list", data["bot_enable_black_list"])
 	d.Set("bot_enable_ip_reputation", data["bot_enable_ip_reputation"])
 	d.Set("bot_enable_rate_limit", data["bot_enable_rate_limit"])
@@ -224,6 +278,41 @@ func updateBotprofileFunc(ctx context.Context, d *schema.ResourceData, meta inte
 		Name: d.Get("name").(string),
 	}
 	hasChange := false
+	if d.HasChange("verboseloglevel") {
+		log.Printf("[DEBUG]  citrixadc-provider: Verboseloglevel has changed for botprofile, starting update")
+		botprofile.Verboseloglevel = d.Get("verboseloglevel").(string)
+		hasChange = true
+	}
+	if d.HasChange("spoofedreqaction") {
+		log.Printf("[DEBUG]  citrixadc-provider: Spoofedreqaction has changed for botprofile, starting update")
+		botprofile.Spoofedreqaction = toStringList(d.Get("spoofedreqaction").([]interface{}))
+		hasChange = true
+	}
+	if d.HasChange("sessiontimeout") {
+		log.Printf("[DEBUG]  citrixadc-provider: Sessiontimeout has changed for botprofile, starting update")
+		botprofile.Sessiontimeout = intPtr(d.Get("sessiontimeout").(int))
+		hasChange = true
+	}
+	if d.HasChange("sessioncookiename") {
+		log.Printf("[DEBUG]  citrixadc-provider: Sessioncookiename has changed for botprofile, starting update")
+		botprofile.Sessioncookiename = d.Get("sessioncookiename").(string)
+		hasChange = true
+	}
+	if d.HasChange("headlessbrowserdetection") {
+		log.Printf("[DEBUG]  citrixadc-provider: Headlessbrowserdetection has changed for botprofile, starting update")
+		botprofile.Headlessbrowserdetection = d.Get("headlessbrowserdetection").(string)
+		hasChange = true
+	}
+	if d.HasChange("dfprequestlimit") {
+		log.Printf("[DEBUG]  citrixadc-provider: Dfprequestlimit has changed for botprofile, starting update")
+		botprofile.Dfprequestlimit = intPtr(d.Get("dfprequestlimit").(int))
+		hasChange = true
+	}
+	if d.HasChange("addcookieflags") {
+		log.Printf("[DEBUG]  citrixadc-provider: Addcookieflags has changed for botprofile, starting update")
+		botprofile.Addcookieflags = d.Get("addcookieflags").(string)
+		hasChange = true
+	}
 	if d.HasChange("bot_enable_black_list") {
 		log.Printf("[DEBUG]  citrixadc-provider: Botenableblacklist has changed for botprofile %s, starting update", botprofileName)
 		botprofile.Botenableblacklist = d.Get("bot_enable_black_list").(string)

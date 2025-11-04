@@ -24,6 +24,16 @@ func resourceCitrixAdcNsip6() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"ndowner": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"icmpresponse": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"advertiseondefaultpartition": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -222,6 +232,10 @@ func createNsip6Func(ctx context.Context, d *schema.ResourceData, meta interface
 		Vserver:                     d.Get("vserver").(string),
 		Vserverrhilevel:             d.Get("vserverrhilevel").(string),
 		Mptcpadvertise:              d.Get("mptcpadvertise").(string),
+		Icmpresponse:                d.Get("icmpresponse").(string),
+	}
+	if raw := d.GetRawConfig().GetAttr("ndowner"); !raw.IsNull() {
+		nsip6.Ndowner = intPtr(d.Get("ndowner").(int))
 	}
 
 	if raw := d.GetRawConfig().GetAttr("metric"); !raw.IsNull() {
@@ -283,6 +297,8 @@ func readNsip6Func(ctx context.Context, d *schema.ResourceData, meta interface{}
 	data := array[foundIndex]
 
 	d.Set("advertiseondefaultpartition", data["advertiseondefaultpartition"])
+	setToInt("ndowner", d, data["ndowner"])
+	d.Set("icmpresponse", data["icmpresponse"])
 	d.Set("decrementhoplimit", data["decrementhoplimit"])
 	d.Set("dynamicrouting", data["dynamicrouting"])
 	d.Set("ftp", data["ftp"])
@@ -336,6 +352,16 @@ func updateNsip6Func(ctx context.Context, d *schema.ResourceData, meta interface
 		Ipv6address: d.Get("ipv6address").(string),
 	}
 	hasChange := false
+	if d.HasChange("ndowner") {
+		log.Printf("[DEBUG]  citrixadc-provider: Ndowner has changed for nsip6, starting update")
+		nsip6.Ndowner = intPtr(d.Get("ndowner").(int))
+		hasChange = true
+	}
+	if d.HasChange("icmpresponse") {
+		log.Printf("[DEBUG]  citrixadc-provider: Icmpresponse has changed for nsip6, starting update")
+		nsip6.Icmpresponse = d.Get("icmpresponse").(string)
+		hasChange = true
+	}
 	if d.HasChange("advertiseondefaultpartition") {
 		log.Printf("[DEBUG]  citrixadc-provider: Advertiseondefaultpartition has changed for nsip6 %s, starting update", ipv6address)
 		nsip6.Advertiseondefaultpartition = d.Get("advertiseondefaultpartition").(string)

@@ -33,6 +33,7 @@ const testAccBotsettings_basic = `
 		trapurlautogenerate = "OFF"
 		trapurlinterval = "3600"
 		trapurllength = "32"
+		proxyusername = "testuser"
 	}
 `
 const testAccBotsettings_basic_update = `
@@ -45,7 +46,7 @@ const testAccBotsettings_basic_update = `
 		trapurlautogenerate = "ON"
 		trapurlinterval = "3800"
 		trapurllength = "33"
-
+		proxyusername = "testuser1"
 	}
 `
 
@@ -68,6 +69,7 @@ func TestAccBotsettings_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_botsettings.default", "trapurlautogenerate", "OFF"),
 					resource.TestCheckResourceAttr("citrixadc_botsettings.default", "trapurlinterval", "3600"),
 					resource.TestCheckResourceAttr("citrixadc_botsettings.default", "trapurllength", "32"),
+					resource.TestCheckResourceAttr("citrixadc_botsettings.default", "proxyusername", "testuser"),
 				),
 			},
 			{
@@ -82,6 +84,7 @@ func TestAccBotsettings_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_botsettings.default", "trapurlautogenerate", "ON"),
 					resource.TestCheckResourceAttr("citrixadc_botsettings.default", "trapurlinterval", "3800"),
 					resource.TestCheckResourceAttr("citrixadc_botsettings.default", "trapurllength", "33"),
+					resource.TestCheckResourceAttr("citrixadc_botsettings.default", "proxyusername", "testuser1"),
 				),
 			},
 		},

@@ -53,7 +53,7 @@ resource "citrixadc_nsacl6" "tf_nsacl6" {
 * `protocolnumber` - (Optional) Protocol, identified by protocol number, to match against the protocol of an incoming IPv6 packet. Minimum value =  1 Maximum value =  255
 * `vlan` - (Optional) ID of the VLAN. The Citrix ADC applies the ACL6 rule only to the incoming packets on the specified VLAN. If you do not specify a VLAN ID, the appliance applies the ACL6 rule to the incoming packets on all VLANs. Minimum value =  1 Maximum value =  4094
 * `vxlan` - (Optional) ID of the VXLAN. The Citrix ADC applies the ACL6 rule only to the incoming packets on the specified VXLAN. If you do not specify a VXLAN ID, the appliance applies the ACL6 rule to the incoming packets on all VXLANs. Minimum value =  1 Maximum value =  16777215
-* `Interface` - (Optional) ID of an interface. The Citrix ADC applies the ACL6 rule only to the incoming packets from the specified interface. If you do not specify any value, the appliance applies the ACL6 rule to the incoming packets from all interfaces.
+* `interface` - (Optional) ID of an interface. The Citrix ADC applies the ACL6 rule only to the incoming packets from the specified interface. If you do not specify any value, the appliance applies the ACL6 rule to the incoming packets from all interfaces.
 * `established` - (Optional) Allow only incoming TCP packets that have the ACK or RST bit set if the action set for the ACL6 rule is ALLOW and these packets match the other conditions in the ACL6 rule.
 * `icmptype` - (Optional) ICMP Message type to match against the message type of an incoming IPv6 ICMP packet. For example, to block DESTINATION UNREACHABLE messages, you must specify 3 as the ICMP type. Note: This parameter can be specified only for the ICMP protocol. Minimum value =  0 Maximum value =  65536
 * `icmpcode` - (Optional) Code of a particular ICMP message type to match against the ICMP code of an incoming IPv6 ICMP packet.  For example, to block DESTINATION HOST UNREACHABLE messages, specify 3 as the ICMP type and 1 as the ICMP code. If you set this parameter, you must set the ICMP Type parameter. Minimum value =  0 Maximum value =  65536
@@ -67,6 +67,7 @@ resource "citrixadc_nsacl6" "tf_nsacl6" {
 * `ratelimit` - (Optional) Maximum number of log messages to be generated per second. If you set this parameter, you must enable the Log State parameter. Minimum value =  1 Maximum value =  10000
 * `aclaction` - (Optional) Action associated with the ACL6. Possible values: [ BRIDGE, DENY, ALLOW ]
 * `newname` - (Optional) New name for the ACL6 rule. Must begin with an ASCII alphabetic or underscore \(_\) character, and must contain only ASCII alphanumeric, underscore, hash \(\#\), period \(.\), space, colon \(:\), at \(@\), equals \(=\), and hyphen \(-\) characters. Minimum length =  1
+* `nodeid` - (Optional) Specifies the NodeId to steer the packet to the provided FP.
 
 
 ## Attribute Reference

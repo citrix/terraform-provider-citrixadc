@@ -24,6 +24,21 @@ func resourceCitrixAdcClusterinstance() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"secureheartbeats": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"dfdretainl2params": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"clusterproxyarp": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"clid": {
 				Type:     schema.TypeInt,
 				Required: true,
@@ -97,6 +112,9 @@ func createClusterinstanceFunc(ctx context.Context, d *schema.ResourceData, meta
 		Quorumtype:                 d.Get("quorumtype").(string),
 		Retainconnectionsoncluster: d.Get("retainconnectionsoncluster").(string),
 		Syncstatusstrictmode:       d.Get("syncstatusstrictmode").(string),
+		Clusterproxyarp:            d.Get("clusterproxyarp").(string),
+		Dfdretainl2params:          d.Get("dfdretainl2params").(string),
+		Secureheartbeats:           d.Get("secureheartbeats").(string),
 	}
 
 	if raw := d.GetRawConfig().GetAttr("clid"); !raw.IsNull() {
@@ -131,6 +149,9 @@ func readClusterinstanceFunc(ctx context.Context, d *schema.ResourceData, meta i
 		return nil
 	}
 	d.Set("backplanebasedview", data["backplanebasedview"])
+	d.Set("secureheartbeats", data["secureheartbeats"])
+	d.Set("dfdretainl2params", data["dfdretainl2params"])
+	d.Set("clusterproxyarp", data["clusterproxyarp"])
 	setToInt("clid", d, data["clid"])
 	setToInt("deadinterval", d, data["deadinterval"])
 	setToInt("hellointerval", d, data["hellointerval"])
@@ -157,6 +178,21 @@ func updateClusterinstanceFunc(ctx context.Context, d *schema.ResourceData, meta
 		clusterinstance.Clid = intPtr(d.Get("clid").(int))
 	}
 	hasChange := false
+	if d.HasChange("secureheartbeats") {
+		log.Printf("[DEBUG]  citrixadc-provider: Secureheartbeats has changed for clusterinstance, starting update")
+		clusterinstance.Secureheartbeats = d.Get("secureheartbeats").(string)
+		hasChange = true
+	}
+	if d.HasChange("dfdretainl2params") {
+		log.Printf("[DEBUG]  citrixadc-provider: Dfdretainl2params has changed for clusterinstance, starting update")
+		clusterinstance.Dfdretainl2params = d.Get("dfdretainl2params").(string)
+		hasChange = true
+	}
+	if d.HasChange("clusterproxyarp") {
+		log.Printf("[DEBUG]  citrixadc-provider: Clusterproxyarp has changed for clusterinstance, starting update")
+		clusterinstance.Clusterproxyarp = d.Get("clusterproxyarp").(string)
+		hasChange = true
+	}
 	if d.HasChange("backplanebasedview") {
 		log.Printf("[DEBUG]  citrixadc-provider: Backplanebasedview has changed for clusterinstance %s, starting update", strconv.Itoa(clusterinstanceName))
 		clusterinstance.Backplanebasedview = d.Get("backplanebasedview").(string)

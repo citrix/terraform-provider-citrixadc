@@ -35,6 +35,13 @@ func TestAccBotprofile_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBotprofileExist("citrixadc_botprofile.tf_botprofile", nil),
 					testAccCheckUserAgent(),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_botprofile", "addcookieflags", "secure"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_botprofile", "dfprequestlimit", "25"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_botprofile", "headlessbrowserdetection", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_botprofile", "sessioncookiename", "testCookie"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_botprofile", "sessiontimeout", "1200"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_botprofile", "spoofedreqaction.0", "LOG"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_botprofile", "verboseloglevel", "HTTP_FULL_HEADER"),
 				),
 			},
 			// update botprofile actions
@@ -47,6 +54,13 @@ func TestAccBotprofile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_botprofile", "trapaction.0", "LOG"),
 					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_botprofile", "trapaction.1", "DROP"),
 					testAccCheckUserAgent(),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_botprofile", "addcookieflags", "secure"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_botprofile", "dfprequestlimit", "50"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_botprofile", "headlessbrowserdetection", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_botprofile", "sessioncookiename", "testCookie1"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_botprofile", "sessiontimeout", "1800"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_botprofile", "spoofedreqaction.0", "DROP"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_botprofile", "verboseloglevel", "NONE"),
 				),
 			},
 			// update botprofile properties
@@ -150,6 +164,13 @@ resource "citrixadc_botprofile" "tf_botprofile" {
 	trap = "ON"
 	trapaction = ["LOG", "RESET"]
 	bot_enable_tps = "ON"
+	addcookieflags	= "secure"
+	dfprequestlimit = "25"
+	headlessbrowserdetection = "ON"
+	sessioncookiename = "testCookie"
+	sessiontimeout = "1200"
+	spoofedreqaction = ["LOG"]
+	verboseloglevel = "HTTP_FULL_HEADER"
 }
 `
 
@@ -158,6 +179,13 @@ resource "citrixadc_botprofile" "tf_botprofile" {
 	name = "tf_botprofile"
 	devicefingerprintaction = ["LOG", "DROP"]
 	trapaction = ["LOG", "DROP"]
+	addcookieflags	= "secure"
+	dfprequestlimit = "50"
+	headlessbrowserdetection = "OFF"
+	sessioncookiename = "testCookie1"
+	sessiontimeout = "1800"
+	spoofedreqaction = ["DROP"]
+	verboseloglevel = "NONE"
 }
 `
 

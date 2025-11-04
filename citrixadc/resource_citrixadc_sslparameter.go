@@ -25,6 +25,17 @@ func resourceCitrixAdcSslparameter() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"sigdigesttype": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"operationqueuelimit": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
 			"crlmemorysizemb": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -173,6 +184,10 @@ func createSslparameterFunc(ctx context.Context, d *schema.ResourceData, meta in
 		Strictcachecks:           d.Get("strictcachecks").(string),
 		Undefactioncontrol:       d.Get("undefactioncontrol").(string),
 		Undefactiondata:          d.Get("undefactiondata").(string),
+		Sigdigesttype:            toStringList(d.Get("sigdigesttype").([]interface{})),
+	}
+	if raw := d.GetRawConfig().GetAttr("operationqueuelimit"); !raw.IsNull() {
+		sslparameter.Operationqueuelimit = intPtr(d.Get("operationqueuelimit").(int))
 	}
 
 	if raw := d.GetRawConfig().GetAttr("crlmemorysizemb"); !raw.IsNull() {
@@ -226,6 +241,8 @@ func readSslparameterFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	setToInt("crlmemorysizemb", d, data["crlmemorysizemb"])
 	setToInt("cryptodevdisablelimit", d, data["cryptodevdisablelimit"])
 	d.Set("defaultprofile", data["defaultprofile"])
+	d.Set("sigdigesttype", data["sigdigesttype"])
+	setToInt("operationqueuelimit", d, data["operationqueuelimit"])
 	d.Set("denysslreneg", data["denysslreneg"])
 	d.Set("dropreqwithnohostheader", data["dropreqwithnohostheader"])
 	setToInt("encrypttriggerpktcount", d, data["encrypttriggerpktcount"])
@@ -258,6 +275,16 @@ func updateSslparameterFunc(ctx context.Context, d *schema.ResourceData, meta in
 	sslparameter := ssl.Sslparameter{}
 
 	hasChange := false
+	if d.HasChange("sigdigesttype") {
+		log.Printf("[DEBUG]  citrixadc-provider: Sigdigesttype has changed for sslparameter, starting update")
+		sslparameter.Sigdigesttype = toStringList(d.Get("sigdigesttype").([]interface{}))
+		hasChange = true
+	}
+	if d.HasChange("operationqueuelimit") {
+		log.Printf("[DEBUG]  citrixadc-provider: Operationqueuelimit has changed for sslparameter, starting update")
+		sslparameter.Operationqueuelimit = intPtr(d.Get("operationqueuelimit").(int))
+		hasChange = true
+	}
 	if d.HasChange("crlmemorysizemb") {
 		log.Printf("[DEBUG]  citrixadc-provider: Crlmemorysizemb has changed for sslparameter, starting update")
 		sslparameter.Crlmemorysizemb = intPtr(d.Get("crlmemorysizemb").(int))

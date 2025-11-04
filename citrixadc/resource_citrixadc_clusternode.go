@@ -23,6 +23,11 @@ func resourceCitrixAdcClusternode() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"force": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
 			"nodeid": {
 				Type:     schema.TypeInt,
 				Required: true,
@@ -194,6 +199,9 @@ func deleteClusternodeFunc(ctx context.Context, d *schema.ResourceData, meta int
 		args = append(args, fmt.Sprintf("clearnodegroupconfig:%s", v.(string)))
 	} else {
 		args = append(args, fmt.Sprintf("clearnodegroupconfig:YES"))
+	}
+	if v, ok := d.GetOk("force"); ok {
+		args = append(args, fmt.Sprintf("force:%t", v.(bool)))
 	}
 	err := client.DeleteResourceWithArgs(service.Clusternode.Type(), clusternodeId, args)
 	if err != nil {

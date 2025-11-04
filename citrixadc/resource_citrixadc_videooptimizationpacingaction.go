@@ -32,11 +32,6 @@ func resourceCitrixAdcVideooptimizationpacingaction() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"newname": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
 		},
 	}
 }
@@ -49,7 +44,6 @@ func createVideooptimizationpacingactionFunc(ctx context.Context, d *schema.Reso
 	videooptimizationpacingaction := videooptimization.Videooptimizationpacingaction{
 		Comment: d.Get("comment").(string),
 		Name:    d.Get("name").(string),
-		Newname: d.Get("newname").(string),
 	}
 
 	if raw := d.GetRawConfig().GetAttr("rate"); !raw.IsNull() {
@@ -79,7 +73,6 @@ func readVideooptimizationpacingactionFunc(ctx context.Context, d *schema.Resour
 	}
 	d.Set("name", data["name"])
 	d.Set("comment", data["comment"])
-	d.Set("newname", data["newname"])
 	setToInt("rate", d, data["rate"])
 
 	return nil
@@ -98,11 +91,6 @@ func updateVideooptimizationpacingactionFunc(ctx context.Context, d *schema.Reso
 	if d.HasChange("comment") {
 		log.Printf("[DEBUG]  citrixadc-provider: Comment has changed for videooptimizationpacingaction %s, starting update", videooptimizationpacingactionName)
 		videooptimizationpacingaction.Comment = d.Get("comment").(string)
-		hasChange = true
-	}
-	if d.HasChange("newname") {
-		log.Printf("[DEBUG]  citrixadc-provider: Newname has changed for videooptimizationpacingaction %s, starting update", videooptimizationpacingactionName)
-		videooptimizationpacingaction.Newname = d.Get("newname").(string)
 		hasChange = true
 	}
 	if d.HasChange("rate") {

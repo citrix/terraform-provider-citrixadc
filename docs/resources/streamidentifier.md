@@ -35,6 +35,9 @@ resource "citrixadc_streamidentifier" "tf_streamidentifier" {
 * `sort` - (Optional) Sort stored records by the specified statistics column, in descending order. Performed during data collection, the sorting enables real-time data evaluation through Citrix ADC policies (for example, compression and caching policies) that use functions such as IS_TOP(n).
 * `trackackonlypackets` - (Optional) Track ack only packets as well. This setting is applicable only when packet rate limiting is being used.
 * `tracktransactions` - (Optional) Track transactions exceeding configured threshold. Transaction tracking can be enabled for following metric: ResponseTime. By default transaction tracking is disabled
+* `log` - (Optional) Location where objects collected on the identifier will be logged.
+* `loginterval` - (Optional) Time interval in minutes for logging the collected objects. Log interval should be greater than or equal to the inteval  of the stream identifier.
+* `loglimit` - (Optional) Maximum number of objects to be logged in the log interval.
 
 
 ## Attribute Reference

@@ -40,6 +40,7 @@ var testAccNstcpparam_zero_values_map = map[string]string{
 	"oooqsize":                  "0",
 	"tcpfastopencookietimeout":  "0",
 	"wsval":                     "0",
+	"rfc5961chlgacklimit":       "0",
 }
 
 var testAccNstcpparam_default_values_map = map[string]string{
@@ -85,6 +86,13 @@ var testAccNstcpparam_default_values_map = map[string]string{
 	"tcpfastopencookietimeout":            "0",
 	"autosyncookietimeout":                "30",
 	"tcpfintimeout":                       "40",
+	"rfc5961chlgacklimit":                 "0",
+	"mptcpsendsfresetoption":              "DISABLED",
+	"mptcpreliableaddaddr":                "DISABLED",
+	"mptcpfastcloseoption":                "ACK",
+	"enhancedisngeneration":               "DISABLED",
+	"delinkclientserveronrst":             "DISABLED",
+	"compacttcpoptionnoop":                "DISABLED",
 }
 
 var testAccNstcpparam_non_default_values_map = map[string]string{
@@ -130,6 +138,13 @@ var testAccNstcpparam_non_default_values_map = map[string]string{
 	"tcpfastopencookietimeout":            "10",
 	"autosyncookietimeout":                "40",
 	"tcpfintimeout":                       "20",
+	"rfc5961chlgacklimit":                 "2200",
+	"mptcpsendsfresetoption":              "ENABLED",
+	"mptcpreliableaddaddr":                "ENABLED",
+	"mptcpfastcloseoption":                "RESET",
+	"enhancedisngeneration":               "ENABLED",
+	"delinkclientserveronrst":             "ENABLED",
+	"compacttcpoptionnoop":                "ENABLED",
 }
 
 const testAccNstcpparam_zero_values = `
@@ -142,6 +157,7 @@ resource "citrixadc_nstcpparam" "tf_tcpparam" {
 	oooqsize = 0
 	tcpfastopencookietimeout = 0
 	wsval = 0
+	rfc5961chlgacklimit = 0
 }
 `
 
@@ -189,6 +205,13 @@ resource "citrixadc_nstcpparam" "tf_tcpparam" {
         tcpfastopencookietimeout = 0
         autosyncookietimeout = 30
         tcpfintimeout = 40
+		rfc5961chlgacklimit = 0
+		mptcpsendsfresetoption = "DISABLED"
+		mptcpreliableaddaddr = "DISABLED"
+		mptcpfastcloseoption = "ACK"
+		enhancedisngeneration = "DISABLED"
+		delinkclientserveronrst = "DISABLED"
+		compacttcpoptionnoop = "DISABLED"
 }
 `
 
@@ -236,6 +259,13 @@ resource "citrixadc_nstcpparam" "tf_tcpparam" {
         tcpfastopencookietimeout = 10
         autosyncookietimeout = 40
         tcpfintimeout = 20
+		rfc5961chlgacklimit = 2200
+		mptcpsendsfresetoption = "ENABLED"
+		mptcpreliableaddaddr = "ENABLED"
+		mptcpfastcloseoption = "RESET"
+		enhancedisngeneration = "ENABLED"
+		delinkclientserveronrst = "ENABLED"
+		compacttcpoptionnoop = "ENABLED"
 }
 `
 

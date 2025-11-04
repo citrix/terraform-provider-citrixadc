@@ -33,6 +33,9 @@ resource "citrixadc_cmpparameter" "tf_cmpparameter" {
 * `addvaryheader` - (Optional) Control insertion of the Vary header in HTTP responses compressed by Citrix ADC. Intermediate caches store different versions of the response for different values of the headers present in the Vary response header. Possible values: [ ENABLED, DISABLED ]
 * `varyheadervalue` - (Optional) The value of the HTTP Vary header for compressed responses. If this argument is not specified, a default value of "Accept-Encoding" will be used. Minimum length =  1
 * `externalcache` - (Optional) Enable insertion of  Cache-Control: private response directive to indicate response message is intended for a single user and must not be cached by a shared or proxy cache. Possible values: [ YES, NO ]
+* `randomgzipfilename` - (Optional) Control the addition of a random filename of random length in the GZIP header to apply the Heal-the-BREACH mitigation for the BREACH attack.
+* `randomgzipfilenamemaxlength` - (Optional) Maximum length of the random filename to be added in the GZIP header to apply the Heal-the-BREACH mitigation for the BREACH attack.
+* `randomgzipfilenameminlength` - (Optional) Minimum length of the random filename to be added in the GZIP header to apply the Heal-the-BREACH mitigation for the BREACH attack.
 
 
 ## Attribute Reference

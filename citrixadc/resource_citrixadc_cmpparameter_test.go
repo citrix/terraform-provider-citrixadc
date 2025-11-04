@@ -30,6 +30,9 @@ resource "citrixadc_cmpparameter" "tf_cmpparameter" {
 	cmplevel    = "optimal"
 	quantumsize = 20
 	servercmp   = "OFF"
+	randomgzipfilenameminlength = "12"
+	randomgzipfilenamemaxlength = "20"
+	randomgzipfilename = "ENABLED"
 	}
 `
 const testAccCmpparameter_update = `
@@ -39,6 +42,9 @@ const testAccCmpparameter_update = `
 		cmplevel    = "bestspeed"
 		quantumsize = 30
 		servercmp   = "ON"
+		randomgzipfilenameminlength = "14"
+		randomgzipfilenamemaxlength = "22"
+		randomgzipfilename = "DISABLED"
 	}
 `
 
@@ -55,6 +61,9 @@ func TestAccCmpparameter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_cmpparameter.tf_cmpparameter", "cmplevel", "optimal"),
 					resource.TestCheckResourceAttr("citrixadc_cmpparameter.tf_cmpparameter", "quantumsize", "20"),
 					resource.TestCheckResourceAttr("citrixadc_cmpparameter.tf_cmpparameter", "servercmp", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_cmpparameter.tf_cmpparameter", "randomgzipfilenameminlength", "12"),
+					resource.TestCheckResourceAttr("citrixadc_cmpparameter.tf_cmpparameter", "randomgzipfilenamemaxlength", "20"),
+					resource.TestCheckResourceAttr("citrixadc_cmpparameter.tf_cmpparameter", "randomgzipfilename", "ENABLED"),
 				),
 			},
 			{
@@ -64,6 +73,9 @@ func TestAccCmpparameter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_cmpparameter.tf_cmpparameter", "cmplevel", "bestspeed"),
 					resource.TestCheckResourceAttr("citrixadc_cmpparameter.tf_cmpparameter", "quantumsize", "30"),
 					resource.TestCheckResourceAttr("citrixadc_cmpparameter.tf_cmpparameter", "servercmp", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_cmpparameter.tf_cmpparameter", "randomgzipfilenameminlength", "14"),
+					resource.TestCheckResourceAttr("citrixadc_cmpparameter.tf_cmpparameter", "randomgzipfilenamemaxlength", "22"),
+					resource.TestCheckResourceAttr("citrixadc_cmpparameter.tf_cmpparameter", "randomgzipfilename", "DISABLED"),
 				),
 			},
 		},

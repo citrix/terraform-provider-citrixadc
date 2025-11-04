@@ -27,11 +27,6 @@ func resourceCitrixAdcAuthorizationpolicy() *schema.Resource {
 				ForceNew: true,
 				Computed: false,
 			},
-			// "newname": {
-			// 	Type:     schema.TypeString,
-			// 	Optional: true,
-			// 	Computed: true,
-			// },
 			"rule": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -53,8 +48,7 @@ func createAuthorizationpolicyFunc(ctx context.Context, d *schema.ResourceData, 
 	authorizationpolicy := authorization.Authorizationpolicy{
 		Action: d.Get("action").(string),
 		Name:   d.Get("name").(string),
-		// Newname: d.Get("newname").(string),
-		Rule: d.Get("rule").(string),
+		Rule:   d.Get("rule").(string),
 	}
 
 	_, err := client.AddResource(service.Authorizationpolicy.Type(), authorizationpolicyName, &authorizationpolicy)
@@ -80,8 +74,6 @@ func readAuthorizationpolicyFunc(ctx context.Context, d *schema.ResourceData, me
 	}
 	d.Set("name", data["name"])
 	d.Set("action", data["action"])
-	d.Set("name", data["name"])
-	// d.Set("newname", data["newname"])
 	d.Set("rule", data["rule"])
 
 	return nil
@@ -102,16 +94,6 @@ func updateAuthorizationpolicyFunc(ctx context.Context, d *schema.ResourceData, 
 		authorizationpolicy.Action = d.Get("action").(string)
 		hasChange = true
 	}
-	// if d.HasChange("name") {
-	// 	log.Printf("[DEBUG]  citrixadc-provider: Name has changed for authorizationpolicy %s, starting update", authorizationpolicyName)
-	// 	authorizationpolicy.Name = d.Get("name").(string)
-	// 	hasChange = true
-	// }
-	// if d.HasChange("newname") {
-	// 	log.Printf("[DEBUG]  citrixadc-provider: Newname has changed for authorizationpolicy %s, starting update", authorizationpolicyName)
-	// 	authorizationpolicy.Newname = d.Get("newname").(string)
-	// 	hasChange = true
-	// }
 	if d.HasChange("rule") {
 		log.Printf("[DEBUG]  citrixadc-provider: Rule has changed for authorizationpolicy %s, starting update", authorizationpolicyName)
 		authorizationpolicy.Rule = d.Get("rule").(string)

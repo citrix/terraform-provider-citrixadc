@@ -35,6 +35,10 @@ const testAccStreamidentifier_basic = `
 		samplecount  = 10
 		sort         = "CONNECTIONS"
 		snmptrap     = "ENABLED"
+		loglimit	 = 500
+		loginterval = 60
+		log = "NONE"
+
 	}
   
 `
@@ -52,6 +56,9 @@ const testAccStreamidentifier_update = `
 		samplecount  = 20
 		sort         = "REQUESTS"
 		snmptrap     = "DISABLED"
+		loglimit	 = 600
+		loginterval = 120
+		log = "SYSLOG"
 	}
   
 `
@@ -71,6 +78,9 @@ func TestAccStreamidentifier_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_streamidentifier.tf_streamidentifier", "samplecount", "10"),
 					resource.TestCheckResourceAttr("citrixadc_streamidentifier.tf_streamidentifier", "sort", "CONNECTIONS"),
 					resource.TestCheckResourceAttr("citrixadc_streamidentifier.tf_streamidentifier", "snmptrap", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_streamidentifier.tf_streamidentifier", "loglimit", "500"),
+					resource.TestCheckResourceAttr("citrixadc_streamidentifier.tf_streamidentifier", "loginterval", "60"),
+					resource.TestCheckResourceAttr("citrixadc_streamidentifier.tf_streamidentifier", "log", "NONE"),
 				),
 			},
 			{
@@ -82,6 +92,9 @@ func TestAccStreamidentifier_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_streamidentifier.tf_streamidentifier", "samplecount", "20"),
 					resource.TestCheckResourceAttr("citrixadc_streamidentifier.tf_streamidentifier", "sort", "REQUESTS"),
 					resource.TestCheckResourceAttr("citrixadc_streamidentifier.tf_streamidentifier", "snmptrap", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_streamidentifier.tf_streamidentifier", "loglimit", "600"),
+					resource.TestCheckResourceAttr("citrixadc_streamidentifier.tf_streamidentifier", "loginterval", "120"),
+					resource.TestCheckResourceAttr("citrixadc_streamidentifier.tf_streamidentifier", "log", "SYSLOG"),
 				),
 			},
 		},

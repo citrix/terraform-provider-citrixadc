@@ -20,6 +20,16 @@ func resourceCitrixAdcReputationsettings() *schema.Resource {
 		UpdateContext: updateReputationsettingsFunc,
 		DeleteContext: deleteReputationsettingsFunc,
 		Schema: map[string]*schema.Schema{
+			"proxyusername": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"proxypassword": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"proxyport": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -40,7 +50,9 @@ func createReputationsettingsFunc(ctx context.Context, d *schema.ResourceData, m
 	reputationsettingsName := resource.PrefixedUniqueId("tf-reputationsettings-")
 
 	reputationsettings := reputation.Reputationsettings{
-		Proxyserver: d.Get("proxyserver").(string),
+		Proxyserver:   d.Get("proxyserver").(string),
+		Proxypassword: d.Get("proxypassword").(string),
+		Proxyusername: d.Get("proxyusername").(string),
 	}
 
 	if raw := d.GetRawConfig().GetAttr("proxyport"); !raw.IsNull() {
@@ -69,6 +81,8 @@ func readReputationsettingsFunc(ctx context.Context, d *schema.ResourceData, met
 	}
 	setToInt("proxyport", d, data["proxyport"])
 	d.Set("proxyserver", data["proxyserver"])
+	d.Set("proxyusername", data["proxyusername"])
+	d.Set("proxypassword", data["proxypassword"])
 
 	return nil
 
@@ -80,6 +94,16 @@ func updateReputationsettingsFunc(ctx context.Context, d *schema.ResourceData, m
 
 	reputationsettings := reputation.Reputationsettings{}
 	hasChange := false
+	if d.HasChange("proxyusername") {
+		log.Printf("[DEBUG]  citrixadc-provider: Proxyusername has changed for reputationsettings, starting update")
+		reputationsettings.Proxyusername = d.Get("proxyusername").(string)
+		hasChange = true
+	}
+	if d.HasChange("proxypassword") {
+		log.Printf("[DEBUG]  citrixadc-provider: Proxypassword has changed for reputationsettings, starting update")
+		reputationsettings.Proxypassword = d.Get("proxypassword").(string)
+		hasChange = true
+	}
 	if d.HasChange("proxyport") {
 		log.Printf("[DEBUG]  citrixadc-provider: Proxyport has changed for reputationsettings, starting update")
 		reputationsettings.Proxyport = intPtr(d.Get("proxyport").(int))

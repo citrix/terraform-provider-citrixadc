@@ -29,6 +29,11 @@ const testAccIcaaccessprofile_basic = `
 		name                   = "my_ica_accessprofile"
 		connectclientlptports  = "DEFAULT"
 		localremotedatasharing = "DEFAULT"
+		wiaredirection		 = "DISABLED"
+		smartcardredirection	= "DISABLED"
+		fido2redirection		 = "DISABLED"
+		draganddrop			 = "DISABLED"
+		clienttwaindeviceredirection = "DISABLED"
 	}
 	
 `
@@ -39,6 +44,11 @@ const testAccIcaaccessprofile_update = `
 		name                   = "my_ica_accessprofile"
 		connectclientlptports  = "DISABLED"
 		localremotedatasharing = "DISABLED"
+		wiaredirection		 = "DEFAULT"
+		smartcardredirection	= "DEFAULT"
+		fido2redirection		 = "DEFAULT"
+		draganddrop			 = "DEFAULT"
+		clienttwaindeviceredirection = "DEFAULT"
 	}
 	
 `
@@ -56,6 +66,11 @@ func TestAccIcaaccessprofile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_icaaccessprofile", "name", "my_ica_accessprofile"),
 					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_icaaccessprofile", "connectclientlptports", "DEFAULT"),
 					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_icaaccessprofile", "localremotedatasharing", "DEFAULT"),
+					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_icaaccessprofile", "wiaredirection", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_icaaccessprofile", "smartcardredirection", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_icaaccessprofile", "fido2redirection", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_icaaccessprofile", "draganddrop", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_icaaccessprofile", "clienttwaindeviceredirection", "DISABLED"),
 				),
 			},
 			{
@@ -65,6 +80,11 @@ func TestAccIcaaccessprofile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_icaaccessprofile", "name", "my_ica_accessprofile"),
 					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_icaaccessprofile", "connectclientlptports", "DISABLED"),
 					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_icaaccessprofile", "localremotedatasharing", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_icaaccessprofile", "wiaredirection", "DEFAULT"),
+					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_icaaccessprofile", "smartcardredirection", "DEFAULT"),
+					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_icaaccessprofile", "fido2redirection", "DEFAULT"),
+					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_icaaccessprofile", "draganddrop", "DEFAULT"),
+					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_icaaccessprofile", "clienttwaindeviceredirection", "DEFAULT"),
 				),
 			},
 		},

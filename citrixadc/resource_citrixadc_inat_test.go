@@ -48,6 +48,8 @@ func TestAccInat_basic(t *testing.T) {
 						"citrixadc_inat.foo", "tcpproxy", "ENABLED"),
 					resource.TestCheckResourceAttr(
 						"citrixadc_inat.foo", "usnip", "ON"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_inat.foo", "connfailover", "DISABLED"),
 				),
 			},
 		},
@@ -128,6 +130,7 @@ resource "citrixadc_inat" "foo" {
   publicip = "172.16.1.2"
   tcpproxy = "ENABLED"
   usnip = "ON"
+  connfailover = "DISABLED"
 
 }
 `

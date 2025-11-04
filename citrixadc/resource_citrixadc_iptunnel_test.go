@@ -27,18 +27,28 @@ import (
 const testAccIptunnel_basic_step1 = `
 resource "citrixadc_iptunnel" "tf_iptunnel" {
     name = "tf_iptunnel"
+	protocol = "GENEVE"
     remote = "66.0.0.11"
     remotesubnetmask = "255.255.255.255"
     local = "*"
+	vnid = 100
+	tosinherit = "DISABLED"
+	destport = 1088
+	vlantagging = "DISABLED"
 }
 `
 
 const testAccIptunnel_basic_step2 = `
 resource "citrixadc_iptunnel" "tf_iptunnel" {
     name = "tf_iptunnel"
+	protocol = "GENEVE"
     remote = "66.0.0.10"
     remotesubnetmask = "255.255.255.255"
     local = "*"
+	vnid = 100
+	tosinherit = "ENABLED"
+	destport = 2088
+	vlantagging = "ENABLED"
 }
 `
 
@@ -52,12 +62,30 @@ func TestAccIptunnel_basic(t *testing.T) {
 				Config: testAccIptunnel_basic_step1,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIptunnelExist("citrixadc_iptunnel.tf_iptunnel", nil),
+					resource.TestCheckResourceAttr("citrixadc_iptunnel.tf_iptunnel", "name", "tf_iptunnel"),
+					resource.TestCheckResourceAttr("citrixadc_iptunnel.tf_iptunnel", "protocol", "GENEVE"),
+					resource.TestCheckResourceAttr("citrixadc_iptunnel.tf_iptunnel", "remote", "66.0.0.11"),
+					resource.TestCheckResourceAttr("citrixadc_iptunnel.tf_iptunnel", "remotesubnetmask", "255.255.255.255"),
+					resource.TestCheckResourceAttr("citrixadc_iptunnel.tf_iptunnel", "local", "*"),
+					resource.TestCheckResourceAttr("citrixadc_iptunnel.tf_iptunnel", "vnid", "100"),
+					resource.TestCheckResourceAttr("citrixadc_iptunnel.tf_iptunnel", "tosinherit", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_iptunnel.tf_iptunnel", "destport", "1088"),
+					resource.TestCheckResourceAttr("citrixadc_iptunnel.tf_iptunnel", "vlantagging", "DISABLED"),
 				),
 			},
 			{
 				Config: testAccIptunnel_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIptunnelExist("citrixadc_iptunnel.tf_iptunnel", nil),
+					resource.TestCheckResourceAttr("citrixadc_iptunnel.tf_iptunnel", "name", "tf_iptunnel"),
+					resource.TestCheckResourceAttr("citrixadc_iptunnel.tf_iptunnel", "protocol", "GENEVE"),
+					resource.TestCheckResourceAttr("citrixadc_iptunnel.tf_iptunnel", "remote", "66.0.0.10"),
+					resource.TestCheckResourceAttr("citrixadc_iptunnel.tf_iptunnel", "remotesubnetmask", "255.255.255.255"),
+					resource.TestCheckResourceAttr("citrixadc_iptunnel.tf_iptunnel", "local", "*"),
+					resource.TestCheckResourceAttr("citrixadc_iptunnel.tf_iptunnel", "vnid", "100"),
+					resource.TestCheckResourceAttr("citrixadc_iptunnel.tf_iptunnel", "tosinherit", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_iptunnel.tf_iptunnel", "destport", "2088"),
+					resource.TestCheckResourceAttr("citrixadc_iptunnel.tf_iptunnel", "vlantagging", "ENABLED"),
 				),
 			},
 		},

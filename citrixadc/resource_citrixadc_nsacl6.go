@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
-
 	"github.com/citrix/adc-nitro-go/service"
 
 	"fmt"
@@ -25,6 +24,11 @@ func resourceCitrixAdcNsacl6() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"nodeid": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
 			"acl6name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -102,11 +106,6 @@ func resourceCitrixAdcNsacl6() *schema.Resource {
 				Computed: true,
 			},
 			"logstate": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"newname": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -229,7 +228,6 @@ func createNsacl6Func(ctx context.Context, d *schema.ResourceData, meta interfac
 		Established: d.Get("established").(bool),
 		Interface:   d.Get("interface").(string),
 		Logstate:    d.Get("logstate").(string),
-		Newname:     d.Get("newname").(string),
 		Protocol:    d.Get("protocol").(string),
 		Srcipop:     d.Get("srcipop").(string),
 		Srcipv6:     d.Get("srcipv6").(bool),
@@ -243,7 +241,9 @@ func createNsacl6Func(ctx context.Context, d *schema.ResourceData, meta interfac
 		Stateful:    d.Get("stateful").(string),
 		Type:        d.Get("type").(string),
 	}
-
+	if raw := d.GetRawConfig().GetAttr("nodeid"); !raw.IsNull() {
+		nsacl6.Nodeid = intPtr(d.Get("nodeid").(int))
+	}
 	if raw := d.GetRawConfig().GetAttr("dfdprefix"); !raw.IsNull() {
 		nsacl6.Dfdprefix = intPtr(d.Get("dfdprefix").(int))
 	}
@@ -297,6 +297,7 @@ func readNsacl6Func(ctx context.Context, d *schema.ResourceData, meta interface{
 		return nil
 	}
 	d.Set("acl6action", data["acl6action"])
+	setToInt("nodeid", d, data["nodeid"])
 	d.Set("acl6name", data["acl6name"])
 	d.Set("aclaction", data["aclaction"])
 	d.Set("destipop", data["destipop"])
@@ -312,7 +313,6 @@ func readNsacl6Func(ctx context.Context, d *schema.ResourceData, meta interface{
 	setToInt("icmptype", d, data["icmptype"])
 	d.Set("interface", data["interface"])
 	d.Set("logstate", data["logstate"])
-	d.Set("newname", data["newname"])
 	setToInt("priority", d, data["priority"])
 	d.Set("protocol", data["protocol"])
 	setToInt("protocolnumber", d, data["protocolnumber"])
@@ -346,6 +346,11 @@ func updateNsacl6Func(ctx context.Context, d *schema.ResourceData, meta interfac
 		Acl6name: d.Get("acl6name").(string),
 	}
 	hasChange := false
+	if d.HasChange("nodeid") {
+		log.Printf("[DEBUG]  citrixadc-provider: Nodeid has changed for nsacl6, starting update")
+		nsacl6.Nodeid = intPtr(d.Get("nodeid").(int))
+		hasChange = true
+	}
 	stateChange := false
 	if d.HasChange("acl6action") {
 		log.Printf("[DEBUG]  citrixadc-provider: Acl6action has changed for nsacl6 %s, starting update", nsacl6Name)
@@ -420,11 +425,6 @@ func updateNsacl6Func(ctx context.Context, d *schema.ResourceData, meta interfac
 	if d.HasChange("logstate") {
 		log.Printf("[DEBUG]  citrixadc-provider: Logstate has changed for nsacl6 %s, starting update", nsacl6Name)
 		nsacl6.Logstate = d.Get("logstate").(string)
-		hasChange = true
-	}
-	if d.HasChange("newname") {
-		log.Printf("[DEBUG]  citrixadc-provider: Newname has changed for nsacl6 %s, starting update", nsacl6Name)
-		nsacl6.Newname = d.Get("newname").(string)
 		hasChange = true
 	}
 	if d.HasChange("priority") {

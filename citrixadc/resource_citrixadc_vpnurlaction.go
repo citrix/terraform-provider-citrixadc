@@ -55,11 +55,6 @@ func resourceCitrixAdcVpnurlaction() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"newname": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
 			"samlssoprofile": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -91,7 +86,6 @@ func createVpnurlactionFunc(ctx context.Context, d *schema.ResourceData, meta in
 		Iconurl:          d.Get("iconurl").(string),
 		Linkname:         d.Get("linkname").(string),
 		Name:             d.Get("name").(string),
-		Newname:          d.Get("newname").(string),
 		Samlssoprofile:   d.Get("samlssoprofile").(string),
 		Ssotype:          d.Get("ssotype").(string),
 		Vservername:      d.Get("vservername").(string),
@@ -126,7 +120,6 @@ func readVpnurlactionFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("iconurl", data["iconurl"])
 	d.Set("linkname", data["linkname"])
 	d.Set("name", data["name"])
-	d.Set("newname", data["newname"])
 	d.Set("samlssoprofile", data["samlssoprofile"])
 	d.Set("ssotype", data["ssotype"])
 	d.Set("vservername", data["vservername"])
@@ -172,11 +165,6 @@ func updateVpnurlactionFunc(ctx context.Context, d *schema.ResourceData, meta in
 	if d.HasChange("linkname") {
 		log.Printf("[DEBUG]  citrixadc-provider: Linkname has changed for vpnurlaction %s, starting update", vpnurlactionName)
 		vpnurlaction.Linkname = d.Get("linkname").(string)
-		hasChange = true
-	}
-	if d.HasChange("newname") {
-		log.Printf("[DEBUG]  citrixadc-provider: Newname has changed for vpnurlaction %s, starting update", vpnurlactionName)
-		vpnurlaction.Newname = d.Get("newname").(string)
 		hasChange = true
 	}
 	if d.HasChange("samlssoprofile") {

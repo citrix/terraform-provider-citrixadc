@@ -55,11 +55,6 @@ func resourceCitrixAdcNsassignment() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"newname": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
 			"set": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -84,7 +79,6 @@ func createNsassignmentFunc(ctx context.Context, d *schema.ResourceData, meta in
 		Clear:    d.Get("clear").(bool),
 		Comment:  d.Get("comment").(string),
 		Name:     d.Get("name").(string),
-		Newname:  d.Get("newname").(string),
 		Set:      d.Get("set").(string),
 		Sub:      d.Get("sub").(string),
 		Variable: d.Get("variable").(string),
@@ -116,7 +110,6 @@ func readNsassignmentFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("clear", data["clear"])
 	d.Set("comment", data["comment"])
 	d.Set("name", data["name"])
-	d.Set("newname", data["newname"])
 	d.Set("set", data["set"])
 	d.Set("sub", data["sub"])
 	d.Set("variable", data["variable"])
@@ -152,11 +145,6 @@ func updateNsassignmentFunc(ctx context.Context, d *schema.ResourceData, meta in
 	if d.HasChange("comment") {
 		log.Printf("[DEBUG]  citrixadc-provider: Comment has changed for nsassignment %s, starting update", nsassignmentName)
 		nsassignment.Comment = d.Get("comment").(string)
-		hasChange = true
-	}
-	if d.HasChange("newname") {
-		log.Printf("[DEBUG]  citrixadc-provider: Newname has changed for nsassignment %s, starting update", nsassignmentName)
-		nsassignment.Newname = d.Get("newname").(string)
 		hasChange = true
 	}
 	if d.HasChange("set") {

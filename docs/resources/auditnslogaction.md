@@ -42,6 +42,7 @@ resource "citrixadc_auditnslogaction" "tf_auditnslogaction" {
 * `timezone` - (Optional) Time zone used for date and timestamps in the logs.  Available settings function as follows:  * GMT_TIME. Coordinated Universal Time. * LOCAL_TIME. The server's timezone setting.
 * `urlfiltering` - (Optional) Log URL filtering event information
 * `userdefinedauditlog` - (Optional) Log user-configurable log messages to nslog. Setting this parameter to NO causes auditing to ignore all user-configured message actions. Setting this parameter to YES causes auditing to log user-configured message actions that meet the other logging criteria.
+* `protocolviolations` - (Optional) Log protocol violations
 
 
 ## Attribute Reference

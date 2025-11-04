@@ -21,6 +21,12 @@ func resourceCitrixAdcNsvpxparam() *schema.Resource {
 		ReadContext:   readNsvpxparamFunc,
 		DeleteContext: deleteNsvpxparamFunc,
 		Schema: map[string]*schema.Schema{
+			"kvmvirtiomultiqueue": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 			"cpuyield": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -49,8 +55,9 @@ func createNsvpxparamFunc(ctx context.Context, d *schema.ResourceData, meta inte
 	nsvpxparamName := resource.PrefixedUniqueId("tf-nsvpxparam-")
 
 	nsvpxparam := ns.Nsvpxparam{
-		Cpuyield:        d.Get("cpuyield").(string),
-		Masterclockcpu1: d.Get("masterclockcpu1").(string),
+		Cpuyield:            d.Get("cpuyield").(string),
+		Masterclockcpu1:     d.Get("masterclockcpu1").(string),
+		Kvmvirtiomultiqueue: d.Get("kvmvirtiomultiqueue").(string),
 	}
 	if raw := d.GetRawConfig().GetAttr("ownernode"); !raw.IsNull() {
 		nsvpxparam.Ownernode = intPtr(d.Get("ownernode").(int))
@@ -102,6 +109,7 @@ func readNsvpxparamFunc(ctx context.Context, d *schema.ResourceData, meta interf
 	data := dataArr[foundIndex]
 
 	d.Set("cpuyield", data["cpuyield"])
+	d.Set("kvmvirtiomultiqueue", data["kvmvirtiomultiqueue"])
 	// d.Set("masterclockcpu1", data["masterclockcpu1"])
 	setToInt("ownernode", d, data["ownernode"])
 

@@ -34,7 +34,13 @@ const testAccSslprofile_update = `
 	resource "citrixadc_sslprofile" "foo" {
 		name = "tfAcc_sslprofile"
 		hsts = "ENABLED"
+		snienable = "ENABLED"
 		ecccurvebindings = []
+		sslclientlogs = "ENABLED"
+		encryptedclienthello = "ENABLED"
+		defaultsni = 60
+		allowunknownsni = "ENABLED"
+		allowextendedmastersecret = "YES"
 	}
 `
 
@@ -49,6 +55,7 @@ func TestAccSslprofile_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSslprofileExist("citrixadc_sslprofile.foo", nil),
 					resource.TestCheckResourceAttr("citrixadc_sslprofile.foo", "name", "tfAcc_sslprofile"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.foo", "sslclientlogs", "DISABLED"),
 				),
 			},
 			{
@@ -57,6 +64,11 @@ func TestAccSslprofile_basic(t *testing.T) {
 					testAccCheckSslprofileExist("citrixadc_sslprofile.foo", nil),
 					resource.TestCheckResourceAttr("citrixadc_sslprofile.foo", "name", "tfAcc_sslprofile"),
 					resource.TestCheckResourceAttr("citrixadc_sslprofile.foo", "hsts", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.foo", "sslclientlogs", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.foo", "encryptedclienthello", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.foo", "defaultsni", "60"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.foo", "allowunknownsni", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.foo", "allowextendedmastersecret", "YES"),
 				),
 			},
 		},

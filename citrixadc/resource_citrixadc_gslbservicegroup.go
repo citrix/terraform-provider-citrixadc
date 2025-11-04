@@ -2,7 +2,6 @@ package citrixadc
 
 import (
 	"context"
-
 	"github.com/citrix/adc-nitro-go/resource/config/gslb"
 
 	"log"
@@ -22,6 +21,12 @@ func resourceCitrixAdcGslbservicegroup() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"autodelayedtrofs": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 			"servicegroupname": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -195,8 +200,8 @@ func createGslbservicegroupFunc(ctx context.Context, d *schema.ResourceData, met
 		Sitepersistence:  d.Get("sitepersistence").(string),
 		Siteprefix:       d.Get("siteprefix").(string),
 		State:            d.Get("state").(string),
+		Autodelayedtrofs: d.Get("autodelayedtrofs").(string),
 	}
-
 	if raw := d.GetRawConfig().GetAttr("clttimeout"); !raw.IsNull() {
 		gslbservicegroup.Clttimeout = intPtr(d.Get("clttimeout").(int))
 	}
@@ -253,6 +258,7 @@ func readGslbservicegroupFunc(ctx context.Context, d *schema.ResourceData, meta 
 		return nil
 	}
 	d.Set("servicegroupname", data["servicegroupname"])
+	d.Set("autodelayedtrofs", data["autodelayedtrofs"])
 	d.Set("appflowlog", data["appflowlog"])
 	d.Set("autoscale", data["autoscale"])
 	d.Set("cip", data["cip"])

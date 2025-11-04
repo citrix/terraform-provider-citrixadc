@@ -24,6 +24,21 @@ func resourceCitrixAdcStreamidentifier() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"loglimit": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"loginterval": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"log": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -106,8 +121,14 @@ func createStreamidentifierFunc(ctx context.Context, d *schema.ResourceData, met
 		Sort:                d.Get("sort").(string),
 		Trackackonlypackets: d.Get("trackackonlypackets").(string),
 		Tracktransactions:   d.Get("tracktransactions").(string),
+		Log:                 d.Get("log").(string),
 	}
-
+	if raw := d.GetRawConfig().GetAttr("loglimit"); !raw.IsNull() {
+		streamidentifier.Loglimit = intPtr(d.Get("loglimit").(int))
+	}
+	if raw := d.GetRawConfig().GetAttr("loginterval"); !raw.IsNull() {
+		streamidentifier.Loginterval = intPtr(d.Get("loginterval").(int))
+	}
 	if raw := d.GetRawConfig().GetAttr("breachthreshold"); !raw.IsNull() {
 		streamidentifier.Breachthreshold = intPtr(d.Get("breachthreshold").(int))
 	}
@@ -146,6 +167,9 @@ func readStreamidentifierFunc(ctx context.Context, d *schema.ResourceData, meta 
 		return nil
 	}
 	d.Set("acceptancethreshold", data["acceptancethreshold"])
+	setToInt("loglimit", d, data["loglimit"])
+	setToInt("loginterval", d, data["loginterval"])
+	d.Set("log", data["log"])
 	d.Set("appflowlog", data["appflowlog"])
 	setToInt("breachthreshold", d, data["breachthreshold"])
 	setToInt("interval", d, data["interval"])
@@ -172,6 +196,21 @@ func updateStreamidentifierFunc(ctx context.Context, d *schema.ResourceData, met
 		Name: d.Get("name").(string),
 	}
 	hasChange := false
+	if d.HasChange("loglimit") {
+		log.Printf("[DEBUG]  citrixadc-provider: Loglimit has changed for streamidentifier, starting update")
+		streamidentifier.Loglimit = intPtr(d.Get("loglimit").(int))
+		hasChange = true
+	}
+	if d.HasChange("loginterval") {
+		log.Printf("[DEBUG]  citrixadc-provider: Loginterval has changed for streamidentifier, starting update")
+		streamidentifier.Loginterval = intPtr(d.Get("loginterval").(int))
+		hasChange = true
+	}
+	if d.HasChange("log") {
+		log.Printf("[DEBUG]  citrixadc-provider: Log has changed for streamidentifier, starting update")
+		streamidentifier.Log = d.Get("log").(string)
+		hasChange = true
+	}
 	if d.HasChange("acceptancethreshold") {
 		log.Printf("[DEBUG]  citrixadc-provider: Acceptancethreshold has changed for streamidentifier %s, starting update", streamidentifierName)
 		streamidentifier.Acceptancethreshold = d.Get("acceptancethreshold").(string)

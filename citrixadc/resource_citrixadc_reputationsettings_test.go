@@ -27,6 +27,7 @@ const testAccReputationsettings_basic = `
 resource "citrixadc_reputationsettings" "tf_reputationsettings" {
 	proxyserver = "my_proxyserver"
 	proxyport   = 3500
+	proxyusername = "my_proxyuser"
 	}
   
 `
@@ -35,6 +36,7 @@ const testAccReputationsettings_update = `
 resource "citrixadc_reputationsettings" "tf_reputationsettings" {
 	proxyserver = "my_proxyserver"
 	proxyport   = 3600
+	proxyusername = "my_proxyuser_2"
 	}
   
 `
@@ -51,6 +53,7 @@ func TestAccReputationsettings_basic(t *testing.T) {
 					testAccCheckReputationsettingsExist("citrixadc_reputationsettings.tf_reputationsettings", nil),
 					resource.TestCheckResourceAttr("citrixadc_reputationsettings.tf_reputationsettings", "proxyserver", "my_proxyserver"),
 					resource.TestCheckResourceAttr("citrixadc_reputationsettings.tf_reputationsettings", "proxyport", "3500"),
+					resource.TestCheckResourceAttr("citrixadc_reputationsettings.tf_reputationsettings", "proxyusername", "my_proxyuser"),
 				),
 			},
 			{
@@ -59,6 +62,7 @@ func TestAccReputationsettings_basic(t *testing.T) {
 					testAccCheckReputationsettingsExist("citrixadc_reputationsettings.tf_reputationsettings", nil),
 					resource.TestCheckResourceAttr("citrixadc_reputationsettings.tf_reputationsettings", "proxyserver", "my_proxyserver"),
 					resource.TestCheckResourceAttr("citrixadc_reputationsettings.tf_reputationsettings", "proxyport", "3600"),
+					resource.TestCheckResourceAttr("citrixadc_reputationsettings.tf_reputationsettings", "proxyusername", "my_proxyuser_2"),
 				),
 			},
 		},

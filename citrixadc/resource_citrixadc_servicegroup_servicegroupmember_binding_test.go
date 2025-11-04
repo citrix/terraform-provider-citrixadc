@@ -39,6 +39,7 @@ resource "citrixadc_servicegroup_servicegroupmember_binding" "tf_binding" {
     servicegroupname = citrixadc_servicegroup.tf_servicegroup.servicegroupname
     ip = "10.78.22.33"
     port = 80
+	order = 100
 }
 `
 
@@ -61,6 +62,7 @@ func TestAccServicegroup_servicegroupmember_binding_ipv4(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServicegroup_servicegroupmember_bindingExist("citrixadc_servicegroup_servicegroupmember_binding.tf_binding", nil),
 					testAccCheckServicegroup_servicegroupmember_binding_not_exists("tf_servicegroup,10.78.22.33,80", true),
+					resource.TestCheckResourceAttr("citrixadc_servicegroup_servicegroupmember_binding.tf_binding", "order", "100"),
 				),
 			},
 			{

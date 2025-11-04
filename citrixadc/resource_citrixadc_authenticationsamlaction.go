@@ -23,6 +23,17 @@ func resourceCitrixAdcAuthenticationsamlaction() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"statechecks": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"preferredbindtype": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -289,6 +300,8 @@ func createAuthenticationsamlactionFunc(ctx context.Context, d *schema.ResourceD
 		Attributes:                   d.Get("attributes").(string),
 		Audience:                     d.Get("audience").(string),
 		Authnctxclassref:             toStringList(d.Get("authnctxclassref").([]interface{})),
+		Preferredbindtype:            toStringList(d.Get("preferredbindtype").([]interface{})),
+		Statechecks:                  d.Get("statechecks").(string),
 		Customauthnctxclassref:       d.Get("customauthnctxclassref").(string),
 		Defaultauthenticationgroup:   d.Get("defaultauthenticationgroup").(string),
 		Digestmethod:                 d.Get("digestmethod").(string),
@@ -349,6 +362,8 @@ func readAuthenticationsamlactionFunc(ctx context.Context, d *schema.ResourceDat
 		return nil
 	}
 	d.Set("artifactresolutionserviceurl", data["artifactresolutionserviceurl"])
+	d.Set("statechecks", data["statechecks"])
+	d.Set("preferredbindtype", data["preferredbindtype"])
 	d.Set("attribute1", data["attribute1"])
 	d.Set("attribute10", data["attribute10"])
 	d.Set("attribute11", data["attribute11"])
@@ -409,6 +424,16 @@ func updateAuthenticationsamlactionFunc(ctx context.Context, d *schema.ResourceD
 		Name: d.Get("name").(string),
 	}
 	hasChange := false
+	if d.HasChange("statechecks") {
+		log.Printf("[DEBUG]  citrixadc-provider: Statechecks has changed for authenticationsamlaction, starting update")
+		authenticationsamlaction.Statechecks = d.Get("statechecks").(string)
+		hasChange = true
+	}
+	if d.HasChange("preferredbindtype") {
+		log.Printf("[DEBUG]  citrixadc-provider: Preferredbindtype has changed for authenticationsamlaction, starting update")
+		authenticationsamlaction.Preferredbindtype = toStringList(d.Get("preferredbindtype").([]interface{}))
+		hasChange = true
+	}
 	if d.HasChange("artifactresolutionserviceurl") {
 		log.Printf("[DEBUG]  citrixadc-provider: Artifactresolutionserviceurl has changed for authenticationsamlaction %s, starting update", authenticationsamlactionName)
 		authenticationsamlaction.Artifactresolutionserviceurl = d.Get("artifactresolutionserviceurl").(string)

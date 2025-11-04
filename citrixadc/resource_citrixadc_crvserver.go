@@ -25,6 +25,11 @@ func resourceCitrixAdcCrvserver() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"disallowserviceaccess": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -313,6 +318,7 @@ func createCrvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 		Useoriginipportforcache:  d.Get("useoriginipportforcache").(string),
 		Useportrange:             d.Get("useportrange").(string),
 		Via:                      d.Get("via").(string),
+		Disallowserviceaccess:    d.Get("disallowserviceaccess").(string),
 	}
 
 	if raw := d.GetRawConfig().GetAttr("clttimeout"); !raw.IsNull() {
@@ -365,6 +371,7 @@ func readCrvserverFunc(ctx context.Context, d *schema.ResourceData, meta interfa
 		return nil
 	}
 	d.Set("appflowlog", data["appflowlog"])
+	d.Set("disallowserviceaccess", data["disallowserviceaccess"])
 	d.Set("arp", data["arp"])
 	d.Set("backendssl", data["backendssl"])
 	d.Set("backupvserver", data["backupvserver"])
@@ -426,6 +433,11 @@ func updateCrvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 		Name: crvserverName,
 	}
 	hasChange := false
+	if d.HasChange("disallowserviceaccess") {
+		log.Printf("[DEBUG]  citrixadc-provider: Disallowserviceaccess has changed for crvserver, starting update")
+		crvserver.Disallowserviceaccess = d.Get("disallowserviceaccess").(string)
+		hasChange = true
+	}
 	stateChange := false
 	if d.HasChange("appflowlog") {
 		log.Printf("[DEBUG]  citrixadc-provider: Appflowlog has changed for crvserver %s, starting update", crvserverName)

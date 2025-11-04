@@ -22,6 +22,11 @@ func resourceCitrixAdcLbprofile() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"proximityfromself": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"lbprofilename": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -103,6 +108,7 @@ func createLbprofileFunc(ctx context.Context, d *schema.ResourceData, meta inter
 		Computedadccookieattribute:    d.Get("computedadccookieattribute").(string),
 		Storemqttclientidandusername:  d.Get("storemqttclientidandusername").(string),
 		Lbhashalgorithm:               d.Get("lbhashalgorithm").(string),
+		Proximityfromself:             d.Get("proximityfromself").(string),
 	}
 
 	if raw := d.GetRawConfig().GetAttr("lbhashfingers"); !raw.IsNull() {
@@ -131,6 +137,7 @@ func readLbprofileFunc(ctx context.Context, d *schema.ResourceData, meta interfa
 		return nil
 	}
 	d.Set("lbprofilename", data["lbprofilename"])
+	d.Set("proximityfromself", data["proximityfromself"])
 	d.Set("dbslb", data["dbslb"])
 	d.Set("processlocal", data["processlocal"])
 	d.Set("httponlycookieflag", data["httponlycookieflag"])
@@ -157,6 +164,11 @@ func updateLbprofileFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	hasChange := false
+	if d.HasChange("proximityfromself") {
+		log.Printf("[DEBUG]  citrixadc-provider: Proximityfromself has changed for lbprofile, starting update")
+		lbprofile.Proximityfromself = d.Get("proximityfromself").(string)
+		hasChange = true
+	}
 	if d.HasChange("lbprofilename") {
 		log.Printf("[DEBUG]  citrixadc-provider: Lbprofilename has changed for lbprofile %s, starting update", lbprofileName)
 		lbprofile.Lbprofilename = d.Get("lbprofilename").(string)

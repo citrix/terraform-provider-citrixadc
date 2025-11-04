@@ -47,6 +47,9 @@ resource "citrixadc_authenticationradiusaction" "tf_radiusaction" {
 * `servername` - (Optional) RADIUS server name as a FQDN.  Mutually exclusive with RADIUS IP address.
 * `serverport` - (Optional) Port number on which the RADIUS server listens for connections.
 * `tunnelendpointclientip` - (Optional) Send Tunnel Endpoint Client IP address to the RADIUS server.
+* `messageauthenticator` - (Optional) Control whether the Message-Authenticator attribute is included in a RADIUS Access-Request packet.
+* `targetlbvserver` - (Optional) If transport mode is TLS, specify the name of LB vserver to associate. The LB vserver needs to be of type TCP and service associated needs to be SSL_TCP
+* `transport` - (Optional) Transport mode to RADIUS server.
 
 
 ## Attribute Reference

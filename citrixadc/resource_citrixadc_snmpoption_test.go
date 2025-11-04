@@ -29,6 +29,7 @@ const testAccSnmpoption_basic = `
 		snmptraplogging      = "ENABLED"
 		partitionnameintrap  = "ENABLED"
 		snmptraplogginglevel = "WARNING"
+		severityinfointrap   = "ENABLED"
 	}
   
 `
@@ -39,6 +40,7 @@ const testAccSnmpoption_update = `
 		snmptraplogging      = "DISABLED"
 		partitionnameintrap  = "DISABLED"
 		snmptraplogginglevel = "ERROR"
+		severityinfointrap   = "DISABLED"
 
 	}
   

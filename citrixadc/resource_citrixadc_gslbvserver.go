@@ -26,6 +26,21 @@ func resourceCitrixAdcGslbvserver() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"toggleorder": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"rule": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"orderthreshold": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
 			"appflowlog": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -334,8 +349,12 @@ func createGslbvserverFunc(ctx context.Context, d *schema.ResourceData, meta int
 		Somethod:               d.Get("somethod").(string),
 		Sopersistence:          d.Get("sopersistence").(string),
 		State:                  d.Get("state").(string),
+		Rule:                   d.Get("rule").(string),
+		Toggleorder:            d.Get("toggleorder").(string),
 	}
-
+	if raw := d.GetRawConfig().GetAttr("orderthreshold"); !raw.IsNull() {
+		gslbvserver.Orderthreshold = intPtr(d.Get("orderthreshold").(int))
+	}
 	if raw := d.GetRawConfig().GetAttr("backupsessiontimeout"); !raw.IsNull() {
 		gslbvserver.Backupsessiontimeout = intPtr(d.Get("backupsessiontimeout").(int))
 	}
@@ -424,6 +443,9 @@ func readGslbvserverFunc(ctx context.Context, d *schema.ResourceData, meta inter
 		return nil
 	}
 	d.Set("name", data["name"])
+	d.Set("toggleorder", data["toggleorder"])
+	d.Set("rule", data["rule"])
+	setToInt("orderthreshold", d, data["orderthreshold"])
 	d.Set("appflowlog", data["appflowlog"])
 	d.Set("backupip", data["backupip"])
 	d.Set("backuplbmethod", data["backuplbmethod"])
@@ -580,6 +602,21 @@ func updateGslbvserverFunc(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	stateChange := false
 	hasChange := false
+	if d.HasChange("toggleorder") {
+		log.Printf("[DEBUG]  citrixadc-provider: Toggleorder has changed for gslbvserver, starting update")
+		gslbvserver.Toggleorder = d.Get("toggleorder").(string)
+		hasChange = true
+	}
+	if d.HasChange("rule") {
+		log.Printf("[DEBUG]  citrixadc-provider: Rule has changed for gslbvserver, starting update")
+		gslbvserver.Rule = d.Get("rule").(string)
+		hasChange = true
+	}
+	if d.HasChange("orderthreshold") {
+		log.Printf("[DEBUG]  citrixadc-provider: Orderthreshold has changed for gslbvserver, starting update")
+		gslbvserver.Orderthreshold = intPtr(d.Get("orderthreshold").(int))
+		hasChange = true
+	}
 	if d.HasChange("appflowlog") {
 		log.Printf("[DEBUG]  netscaler-provider: Appflowlog has changed for gslbvserver %s, starting update", gslbvserverName)
 		gslbvserver.Appflowlog = d.Get("appflowlog").(string)

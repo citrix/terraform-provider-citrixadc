@@ -33,6 +33,7 @@ const testAccSslservicegroup_basic = `
 		serverauth = "ENABLED"
 		sendclosenotify = "YES"
 		strictsigdigestcheck = "ENABLED"
+		sslclientlogs = "ENABLED"
 	}
 
 	resource "citrixadc_servicegroup" "tf_servicegroup" {
@@ -62,6 +63,7 @@ func TestAccSslservicegroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_sslservicegroup.tf_sslservicegroup", "serverauth", "ENABLED"),
 					resource.TestCheckResourceAttr("citrixadc_sslservicegroup.tf_sslservicegroup", "sendclosenotify", "YES"),
 					resource.TestCheckResourceAttr("citrixadc_sslservicegroup.tf_sslservicegroup", "strictsigdigestcheck", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslservicegroup.tf_sslservicegroup", "sslclientlogs", "ENABLED"),
 				),
 			},
 		},

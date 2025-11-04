@@ -45,11 +45,6 @@ func resourceCitrixAdcNstimer() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"newname": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
 		},
 	}
 }
@@ -61,7 +56,6 @@ func createNstimerFunc(ctx context.Context, d *schema.ResourceData, meta interfa
 	nstimer := ns.Nstimer{
 		Comment: d.Get("comment").(string),
 		Name:    d.Get("name").(string),
-		Newname: d.Get("newname").(string),
 		Unit:    d.Get("unit").(string),
 	}
 
@@ -93,7 +87,6 @@ func readNstimerFunc(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("comment", data["comment"])
 	setToInt("interval", d, data["interval"])
 	d.Set("name", data["name"])
-	d.Set("newname", data["newname"])
 	d.Set("unit", data["unit"])
 
 	return nil
@@ -117,11 +110,6 @@ func updateNstimerFunc(ctx context.Context, d *schema.ResourceData, meta interfa
 	if d.HasChange("interval") {
 		log.Printf("[DEBUG]  citrixadc-provider: Interval has changed for nstimer %s, starting update", nstimerName)
 		nstimer.Interval = intPtr(d.Get("interval").(int))
-		hasChange = true
-	}
-	if d.HasChange("newname") {
-		log.Printf("[DEBUG]  citrixadc-provider: Newname has changed for nstimer %s, starting update", nstimerName)
-		nstimer.Newname = d.Get("newname").(string)
 		hasChange = true
 	}
 	if d.HasChange("unit") {

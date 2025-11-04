@@ -24,6 +24,16 @@ func resourceCitrixAdcNscapacity() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"username": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"password": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"bandwidth": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -68,6 +78,8 @@ func createNscapacityFunc(ctx context.Context, d *schema.ResourceData, meta inte
 		Platform: d.Get("platform").(string),
 		Unit:     d.Get("unit").(string),
 		Vcpu:     d.Get("vcpu").(bool),
+		Password: d.Get("password").(string),
+		Username: d.Get("username").(string),
 	}
 
 	if raw := d.GetRawConfig().GetAttr("bandwidth"); !raw.IsNull() {
@@ -164,6 +176,9 @@ func readNscapacityFunc(ctx context.Context, d *schema.ResourceData, meta interf
 		d.Set("edition", "")
 		d.Set("unit", "")
 	}
+
+	d.Set("username", data["username"])
+	d.Set("password", data["password"])
 
 	return nil
 
