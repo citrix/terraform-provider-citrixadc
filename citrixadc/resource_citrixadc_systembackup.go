@@ -21,46 +21,10 @@ func resourceCitrixAdcSystembackup() *schema.Resource {
 		Read:          schema.Noop,
 		DeleteContext: deleteSystembackupFunc,
 		Schema: map[string]*schema.Schema{
-			"uselocaltimezone": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"skipbackup": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"level": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"includekernel": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"comment": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
 			"filename": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-			},
-			"action": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  "create",
 			},
 		},
 	}
@@ -72,35 +36,12 @@ func createSystembackupFunc(ctx context.Context, d *schema.ResourceData, meta in
 	systembackupName := resource.PrefixedUniqueId(d.Get("filename").(string) + "-")
 
 	systembackup := system.Systembackup{
-		Filename:         d.Get("filename").(string),
-		Comment:          d.Get("comment").(string),
-		Includekernel:    d.Get("includekernel").(string),
-		Level:            d.Get("level").(string),
-		Skipbackup:       d.Get("skipbackup").(bool),
-		Uselocaltimezone: d.Get("uselocaltimezone").(bool),
+		Filename: d.Get("filename").(string),
 	}
 
-	if d.Get("action") == "create" {
-		err := client.ActOnResource(service.Autoscalepolicy.Type(), &systembackup, "create")
-		if err != nil {
-			return diag.FromErr(err)
-		}
-	} else {
-		systembackup := system.Systembackup{
-			Filename: d.Get("filename").(string),
-		}
-		if d.Get("action") == "restore" {
-			systembackup.Skipbackup = d.Get("skipbackup").(bool)
-			err := client.ActOnResource(service.Systembackup.Type(), &systembackup, "restore")
-			if err != nil {
-				return diag.FromErr(err)
-			}
-		} else if d.Get("action") == "add" {
-			_, err := client.AddResource(service.Systembackup.Type(), systembackupName, &systembackup)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-		}
+	_, err := client.AddResource(service.Systembackup.Type(), systembackupName, &systembackup)
+	if err != nil {
+		return diag.FromErr(err)
 	}
 
 	d.SetId(systembackupName)
