@@ -161,6 +161,10 @@ func deleteSslservicegroup_sslcertkey_bindingFunc(ctx context.Context, d *schema
 
 	argsMap := make(map[string]string)
 	argsMap["certkeyname"] = url.QueryEscape(certkeyname)
+	if v, ok := d.GetOk("ca"); ok {
+		argsMap["ca"] = url.QueryEscape(fmt.Sprintf("%v", v))
+
+	}
 
 	err := client.DeleteResourceWithArgsMap(service.Sslservicegroup_sslcertkey_binding.Type(), name, argsMap)
 	if err != nil {
