@@ -262,6 +262,7 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_lbmonitor_sslcertkey_binding":                                  resourceCitrixAdcLbmonitor_sslcertkey_binding(),
 		"citrixadc_lbvserver_authorizationpolicy_binding":                         resourceCitrixAdcLbvserver_authorizationpolicy_binding(),
 		"citrixadc_lbvserver_appflowpolicy_binding":                               resourceCitrixAdcLbvserver_appflowpolicy_binding(),
+		"citrixadc_csvserver_appflowpolicy_binding":                               resourceCitrixAdcCsvserver_appflowpolicy_binding(),
 		"citrixadc_lbvserver_cachepolicy_binding":                                 resourceCitrixAdcLbvserver_cachepolicy_binding(),
 		"citrixadc_lbroute":                                                       resourceCitrixAdcLbroute(),
 		"citrixadc_lbgroup":                                                       resourceCitrixAdcLbgroup(),
