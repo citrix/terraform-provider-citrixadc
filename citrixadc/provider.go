@@ -1,3 +1,19 @@
+/*
+Copyright 2016 Citrix Systems, Inc
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+	http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package citrixadc
 
 import (
@@ -44,13 +60,13 @@ func providerSchema() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "Username to login to the NetScaler",
-			DefaultFunc: schema.EnvDefaultFunc("NS_LOGIN", "nsroot"),
+			DefaultFunc: schema.EnvDefaultFunc("NS_LOGIN", nil),
 		},
 		"password": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "Password to login to the NetScaler",
-			DefaultFunc: schema.EnvDefaultFunc("NS_PASSWORD", "nsroot"),
+			DefaultFunc: schema.EnvDefaultFunc("NS_PASSWORD", nil),
 		},
 		"endpoint": {
 			Type:        schema.TypeString,
@@ -864,19 +880,54 @@ func providerResources() map[string]*schema.Resource {
 
 func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVersion string) (interface{}, diag.Diagnostics) {
 	var diags diag.Diagnostics
+
+	// Validate required parameters
+	username := d.Get("username").(string)
+	password := d.Get("password").(string)
+	endpoint := d.Get("endpoint").(string)
+
+	if username == "" {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Missing required parameter",
+			Detail:   "The 'username' parameter is required. It can be set via the provider configuration or the NS_LOGIN environment variable.",
+		})
+	}
+
+	if password == "" {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Missing required parameter",
+			Detail:   "The 'password' parameter is required. It can be set via the provider configuration or the NS_PASSWORD environment variable.",
+		})
+	}
+
+	if endpoint == "" {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Missing required parameter",
+			Detail:   "The 'endpoint' parameter is required. It can be set via the provider configuration or the NS_URL environment variable.",
+		})
+	}
+
+	// Return early if any required parameters are missing
+	if len(diags) > 0 {
+		return nil, diags
+	}
+
 	userHeaders := map[string]string{
 		"User-Agent": "terraform-ctxadc",
 	}
 	c := NetScalerNitroClient{
-		Username: d.Get("username").(string),
-		Password: d.Get("password").(string),
-		Endpoint: d.Get("endpoint").(string),
+		Username: username,
+		Password: password,
+		Endpoint: endpoint,
 	}
 
 	params := service.NitroParams{
-		Url:       d.Get("endpoint").(string),
-		Username:  d.Get("username").(string),
-		Password:  d.Get("password").(string),
+		Url:       endpoint,
+		Username:  username,
+		Password:  password,
 		ProxiedNs: d.Get("proxied_ns").(string),
 		SslVerify: !d.Get("insecure_skip_verify").(bool),
 		Headers:   userHeaders,

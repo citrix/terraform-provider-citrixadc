@@ -1,3 +1,19 @@
+/*
+Copyright 2025 Citrix Systems, Inc
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+	http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package citrixadc_framework
 
 import (
@@ -94,36 +110,46 @@ func (p *CitrixAdcFrameworkProvider) Configure(ctx context.Context, req provider
 	}
 
 	// Configuration values are now available.
-	// For required fields, we need to handle defaults like SDK v2 provider
+	// Validate required parameters
 	username := data.Username.ValueString()
 	if username == "" {
-		// Apply the same default logic as SDK v2 provider
 		username = os.Getenv("NS_LOGIN")
-		if username == "" {
-			username = "nsroot"
-		}
 	}
 
 	password := data.Password.ValueString()
 	if password == "" {
-		// Apply the same default logic as SDK v2 provider
 		password = os.Getenv("NS_PASSWORD")
-		if password == "" {
-			password = "nsroot"
-		}
 	}
 
 	endpoint := data.Endpoint.ValueString()
 	if endpoint == "" {
-		// Apply the same default logic as SDK v2 provider
 		endpoint = os.Getenv("NS_URL")
+	}
+
+	// Check if required parameters are empty and add errors
+	if username == "" {
+		resp.Diagnostics.AddError(
+			"Missing required parameter",
+			"The 'username' parameter is required. It can be set via the provider configuration or the NS_LOGIN environment variable.",
+		)
+	}
+
+	if password == "" {
+		resp.Diagnostics.AddError(
+			"Missing required parameter",
+			"The 'password' parameter is required. It can be set via the provider configuration or the NS_PASSWORD environment variable.",
+		)
 	}
 
 	if endpoint == "" {
 		resp.Diagnostics.AddError(
-			"Unable to find endpoint",
-			"Endpoint cannot be an empty string",
+			"Missing required parameter",
+			"The 'endpoint' parameter is required. It can be set via the provider configuration or the NS_URL environment variable.",
 		)
+	}
+
+	// Return early if any required parameters are missing
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
