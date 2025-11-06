@@ -17,12 +17,56 @@ package citrixadc
 
 import (
 	"fmt"
+	"log"
+	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
+
+const testAccNsip_basic_step1 = `
+
+resource "citrixadc_nsip" "tf_test_nsip" {
+    ipaddress = "192.168.2.55"
+    type = "VIP"
+    netmask = "255.255.255.0"
+    icmp = "ENABLED"
+}
+`
+
+const testAccNsip_basic_step2 = `
+
+resource "citrixadc_nsip" "tf_test_nsip" {
+    ipaddress = "192.168.2.55"
+    type = "VIP"
+    netmask = "255.255.254.0"
+    icmp = "ENABLED"
+}
+`
+
+const testAccNsip_basic_step3 = `
+
+resource "citrixadc_nsip" "tf_test_nsip" {
+    ipaddress = "192.168.2.55"
+    type = "VIP"
+    netmask = "255.255.254.0"
+    icmp = "DISABLED"
+}
+`
+
+const testAccNsip_basic_step4 = `
+
+resource "citrixadc_nsip" "tf_test_nsip" {
+    ipaddress = "192.168.2.55"
+    type = "VIP"
+    netmask = "255.255.254.0"
+    icmp = "DISABLED"
+	state = "DISABLED"
+}
+`
 
 func TestAccNsip_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
@@ -88,6 +132,38 @@ func TestAccNsip_mptcpadvertise(t *testing.T) {
 	})
 }
 
+const testAccNsip_trafficdomain_create = `
+
+resource "citrixadc_nstrafficdomain" "tf_trafficdomain" {
+  td        = 2
+  aliasname = "tf_trafficdomain"
+  vmac      = "ENABLED"
+}
+
+resource "citrixadc_nsip" "tf_test_nsip" {
+    ipaddress = "192.168.2.155"
+    type = "VIP"
+    netmask = "255.255.255.0"
+    td = citrixadc_nstrafficdomain.tf_trafficdomain.td
+}
+`
+
+func TestAccNsip_trafficdomain(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckNsipDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNsip_trafficdomain_create,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNsipExist("citrixadc_nsip.tf_test_nsip", nil),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckNsipExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -112,14 +188,48 @@ func testAccCheckNsipExist(n string, id *string) resource.TestCheckFunc {
 		if err != nil {
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
-		data, err := client.FindResource(service.Nsip.Type(), rs.Primary.ID)
 
-		if err != nil {
-			return err
+		argsMap := make(map[string]string)
+		nsipName := rs.Primary.ID
+		netmask := rs.Primary.Attributes["netmask"]
+		trafficDomain := 0
+		if val, ok := rs.Primary.Attributes["td"]; ok {
+			trafficDomain, _ = strconv.Atoi(val)
+		}
+		argsMap["td"] = fmt.Sprintf("%d", trafficDomain)
+		findParams := service.FindParams{
+			ResourceType:             service.Nsip.Type(),
+			ResourceName:             nsipName,
+			ResourceMissingErrorCode: 258,
+			ArgsMap:                  argsMap,
 		}
 
-		if data == nil {
-			return fmt.Errorf("LB vserver %s not found", n)
+		dataArr, err := client.FindResourceArrayWithParams(findParams)
+		// Unexpected error
+		if err != nil {
+			log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
+			return fmt.Errorf("Error while finding resource array!")
+		}
+
+		// Resource is missing
+		if len(dataArr) == 0 {
+			log.Printf("[DEBUG] citrixadc-provider: FindResourceArrayWithParams returned empty array")
+			return fmt.Errorf("Error: Resource not found!")
+		}
+
+		// Iterate through results to find the one with the right id
+		foundIndex := -1
+		for i, v := range dataArr {
+			if v["ipaddress"].(string) == nsipName && v["netmask"].(string) == netmask {
+				foundIndex = i
+				break
+			}
+		}
+
+		// Resource is missing
+		if foundIndex == -1 {
+			log.Printf("[DEBUG] citrixadc-provider: FindResourceArrayWithParams secondIdComponent not found in array")
+			return fmt.Errorf("Error: Resource not found!")
 		}
 
 		return nil
@@ -142,53 +252,56 @@ func testAccCheckNsipDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := client.FindResource(service.Nsip.Type(), rs.Primary.ID)
-		if err == nil {
-			return fmt.Errorf("LB vserver %s still exists", rs.Primary.ID)
+		argsMap := make(map[string]string)
+		nsipName := rs.Primary.ID
+		netmask := rs.Primary.Attributes["netmask"]
+		trafficDomain := 0
+		if val, ok := rs.Primary.Attributes["td"]; ok {
+			trafficDomain, _ = strconv.Atoi(val)
+		}
+		argsMap["td"] = fmt.Sprintf("%d", trafficDomain)
+		findParams := service.FindParams{
+			ResourceType:             service.Nsip.Type(),
+			ResourceName:             nsipName,
+			ResourceMissingErrorCode: 258,
+			ArgsMap:                  argsMap,
+		}
+
+		dataArr, err := client.FindResourceArrayWithParams(findParams)
+		// Unexpected error
+		if err != nil {
+			// If the traffic domain itself is not configured (error 946),
+			// the NSIP is implicitly deleted along with the traffic domain
+			if strings.Contains(err.Error(), "errorcode\": 946") {
+				log.Printf("[DEBUG] citrixadc-provider: Traffic domain not configured, NSIP considered destroyed")
+				continue
+			}
+			log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
+			return fmt.Errorf("Error while finding resource array!")
+		}
+
+		// Resource is missing
+		if len(dataArr) == 0 {
+			log.Printf("[DEBUG] citrixadc-provider: FindResourceArrayWithParams returned empty array")
+			return nil
+		}
+
+		// Iterate through results to find the one with the right id
+		foundIndex := -1
+		for i, v := range dataArr {
+			if v["ipaddress"].(string) == nsipName && v["netmask"].(string) == netmask {
+				foundIndex = i
+				break
+			}
+		}
+
+		// Resource is missing
+		if foundIndex != -1 {
+			log.Printf("[DEBUG] citrixadc-provider: FindResourceArrayWithParams resource still found in array")
+			return fmt.Errorf("Error: Resource still found!")
 		}
 
 	}
 
 	return nil
 }
-
-const testAccNsip_basic_step1 = `
-
-resource "citrixadc_nsip" "tf_test_nsip" {
-    ipaddress = "192.168.2.55"
-    type = "VIP"
-    netmask = "255.255.255.0"
-    icmp = "ENABLED"
-}
-`
-
-const testAccNsip_basic_step2 = `
-
-resource "citrixadc_nsip" "tf_test_nsip" {
-    ipaddress = "192.168.2.55"
-    type = "VIP"
-    netmask = "255.255.254.0"
-    icmp = "ENABLED"
-}
-`
-
-const testAccNsip_basic_step3 = `
-
-resource "citrixadc_nsip" "tf_test_nsip" {
-    ipaddress = "192.168.2.55"
-    type = "VIP"
-    netmask = "255.255.254.0"
-    icmp = "DISABLED"
-}
-`
-
-const testAccNsip_basic_step4 = `
-
-resource "citrixadc_nsip" "tf_test_nsip" {
-    ipaddress = "192.168.2.55"
-    type = "VIP"
-    netmask = "255.255.254.0"
-    icmp = "DISABLED"
-	state = "DISABLED"
-}
-`

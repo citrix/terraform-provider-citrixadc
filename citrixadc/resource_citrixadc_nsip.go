@@ -290,13 +290,55 @@ func readNsipFunc(ctx context.Context, d *schema.ResourceData, meta interface{})
 	log.Printf("[DEBUG] citrixadc-provider:  In readNsipFunc")
 	client := meta.(*NetScalerNitroClient).client
 	nsipName := d.Id()
+	trafficDomain := 0
+	netmask := d.Get("netmask").(string)
 	log.Printf("[DEBUG] citrixadc-provider: Reading nsip state %s", nsipName)
-	data, err := client.FindResource(service.Nsip.Type(), nsipName)
+	argsMap := make(map[string]string)
+	if val, ok := d.GetOk("td"); ok {
+		trafficDomain = val.(int)
+	}
+	argsMap["td"] = fmt.Sprintf("%d", trafficDomain)
+	findParams := service.FindParams{
+		ResourceType:             service.Nsip.Type(),
+		ResourceName:             nsipName,
+		ResourceMissingErrorCode: 258,
+		ArgsMap:                  argsMap,
+	}
+
+	dataArr, err := client.FindResourceArrayWithParams(findParams)
+	// Unexpected error
 	if err != nil {
+		log.Printf("[DEBUG] citrixadc-provider: Error during FindResourceArrayWithParams %s", err.Error())
+		return diag.FromErr(err)
+	}
+
+	// Resource is missing
+	if len(dataArr) == 0 {
+		log.Printf("[DEBUG] citrixadc-provider: FindResourceArrayWithParams returned empty array")
 		log.Printf("[WARN] citrixadc-provider: Clearing nsip state %s", nsipName)
 		d.SetId("")
 		return nil
 	}
+
+	// Iterate through results to find the one with the right id
+	foundIndex := -1
+	for i, v := range dataArr {
+		if v["ipaddress"].(string) == nsipName && v["netmask"].(string) == netmask {
+			foundIndex = i
+			break
+		}
+	}
+
+	// Resource is missing
+	if foundIndex == -1 {
+		log.Printf("[DEBUG] citrixadc-provider: FindResourceArrayWithParams secondIdComponent not found in array")
+		log.Printf("[WARN] citrixadc-provider: Clearing nsip state %s", nsipName)
+		d.SetId("")
+		return nil
+	}
+	// Fallthrough
+
+	data := dataArr[foundIndex]
 	d.Set("advertiseondefaultpartition", data["advertiseondefaultpartition"])
 	setToInt("arpowner", d, data["arpowner"])
 	d.Set("arp", data["arp"])
@@ -539,7 +581,13 @@ func deleteNsipFunc(ctx context.Context, d *schema.ResourceData, meta interface{
 	log.Printf("[DEBUG]  citrixadc-provider: In deleteNsipFunc")
 	client := meta.(*NetScalerNitroClient).client
 	ipaddress := d.Id()
-	err := client.DeleteResource(service.Nsip.Type(), ipaddress)
+	trafficDomain := 0
+	if val, ok := d.GetOk("td"); ok {
+		trafficDomain = val.(int)
+	}
+	argsMap := make(map[string]string)
+	argsMap["td"] = fmt.Sprintf("%d", trafficDomain)
+	err := client.DeleteResourceWithArgsMap(service.Nsip.Type(), ipaddress, argsMap)
 	if err != nil {
 		return diag.FromErr(err)
 	}
