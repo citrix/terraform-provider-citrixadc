@@ -50,11 +50,6 @@ func resourceCitrixAdcDnsaddrec() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
 		},
 	}
 }
@@ -68,7 +63,6 @@ func createDnsaddrecFunc(ctx context.Context, d *schema.ResourceData, meta inter
 		Ecssubnet: d.Get("ecssubnet").(string),
 		Hostname:  d.Get("hostname").(string),
 		Ipaddress: d.Get("ipaddress").(string),
-		Type:      d.Get("type").(string),
 	}
 
 	if raw := d.GetRawConfig().GetAttr("nodeid"); !raw.IsNull() {
@@ -147,7 +141,6 @@ func readDnsaddrecFunc(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("ipaddress", data["ipaddress"])
 	setToInt("nodeid", d, data["nodeid"])
 	setToInt("ttl", d, data["ttl"])
-	d.Set("type", data["type"])
 
 	return nil
 

@@ -45,11 +45,6 @@ func resourceCitrixAdcDnsptrrec() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
 		},
 	}
 }
@@ -62,7 +57,6 @@ func createDnsptrrecFunc(ctx context.Context, d *schema.ResourceData, meta inter
 		Domain:        d.Get("domain").(string),
 		Ecssubnet:     d.Get("ecssubnet").(string),
 		Reversedomain: d.Get("reversedomain").(string),
-		Type:          d.Get("type").(string),
 	}
 
 	if raw := d.GetRawConfig().GetAttr("nodeid"); !raw.IsNull() {
@@ -99,7 +93,6 @@ func readDnsptrrecFunc(ctx context.Context, d *schema.ResourceData, meta interfa
 	setToInt("nodeid", d, data["nodeid"])
 	d.Set("reversedomain", data["reversedomain"])
 	setToInt("ttl", d, data["ttl"])
-	d.Set("type", data["type"])
 
 	return nil
 

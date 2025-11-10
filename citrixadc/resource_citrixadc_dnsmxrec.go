@@ -52,14 +52,8 @@ func resourceCitrixAdcDnsmxrec() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-
 			"ttl": {
 				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-			"type": {
-				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
@@ -75,7 +69,6 @@ func createDnsmxrecFunc(ctx context.Context, d *schema.ResourceData, meta interf
 		Domain:    d.Get("domain").(string),
 		Ecssubnet: d.Get("ecssubnet").(string),
 		Mx:        d.Get("mx").(string),
-		Type:      d.Get("type").(string),
 	}
 
 	if raw := d.GetRawConfig().GetAttr("nodeid"); !raw.IsNull() {
@@ -117,7 +110,6 @@ func readDnsmxrecFunc(ctx context.Context, d *schema.ResourceData, meta interfac
 	setToInt("nodeid", d, data["nodeid"])
 	d.Set("pref", pref1)
 	setToInt("ttl", d, data["ttl"])
-	d.Set("type", data["type"])
 	log.Printf("set functionality:  %v", data)
 	return nil
 
@@ -152,12 +144,6 @@ func updateDnsmxrecFunc(ctx context.Context, d *schema.ResourceData, meta interf
 		dnsmxrec.Ttl = intPtr(d.Get("ttl").(int))
 		hasChange = true
 	}
-	if d.HasChange("type") {
-		log.Printf("[DEBUG]  citrixadc-provider: Type has changed for dnsmxrec %s, starting update", dnsmxrecName)
-		dnsmxrec.Type = d.Get("type").(string)
-		hasChange = true
-	}
-
 	if hasChange {
 		_, err := client.UpdateResource(service.Dnsmxrec.Type(), dnsmxrecName, &dnsmxrec)
 		if err != nil {

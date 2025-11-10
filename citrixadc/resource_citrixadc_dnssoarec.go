@@ -77,11 +77,6 @@ func resourceCitrixAdcDnssoarec() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
 		},
 	}
 }
@@ -95,7 +90,6 @@ func createDnssoarecFunc(ctx context.Context, d *schema.ResourceData, meta inter
 		Domain:       d.Get("domain").(string),
 		Ecssubnet:    d.Get("ecssubnet").(string),
 		Originserver: d.Get("originserver").(string),
-		Type:         d.Get("type").(string),
 	}
 
 	if raw := d.GetRawConfig().GetAttr("expire"); !raw.IsNull() {
@@ -152,7 +146,6 @@ func readDnssoarecFunc(ctx context.Context, d *schema.ResourceData, meta interfa
 	setToInt("retry", d, data["retry"])
 	setToInt("serial", d, data["serial"])
 	setToInt("ttl", d, data["ttl"])
-	d.Set("type", data["type"])
 
 	return nil
 
@@ -222,12 +215,6 @@ func updateDnssoarecFunc(ctx context.Context, d *schema.ResourceData, meta inter
 		dnssoarec.Ttl = intPtr(d.Get("ttl").(int))
 		hasChange = true
 	}
-	if d.HasChange("type") {
-		log.Printf("[DEBUG]  citrixadc-provider: Type has changed for dnssoarec %s, starting update", dnssoarecId)
-		dnssoarec.Type = d.Get("type").(string)
-		hasChange = true
-	}
-
 	if hasChange {
 		_, err := client.UpdateResource(service.Dnssoarec.Type(), dnssoarecId, &dnssoarec)
 		if err != nil {

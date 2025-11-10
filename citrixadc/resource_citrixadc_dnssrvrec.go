@@ -61,11 +61,6 @@ func resourceCitrixAdcDnssrvrec() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
 			"weight": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -83,7 +78,6 @@ func createDnssrvrecFunc(ctx context.Context, d *schema.ResourceData, meta inter
 		Domain:    d.Get("domain").(string),
 		Ecssubnet: d.Get("ecssubnet").(string),
 		Target:    d.Get("target").(string),
-		Type:      d.Get("type").(string),
 	}
 
 	if raw := d.GetRawConfig().GetAttr("nodeid"); !raw.IsNull() {
@@ -166,7 +160,6 @@ func readDnssrvrecFunc(ctx context.Context, d *schema.ResourceData, meta interfa
 	setToInt("priority", d, data["priority"])
 	d.Set("target", data["target"])
 	setToInt("ttl", d, data["ttl"])
-	d.Set("type", data["type"])
 	setToInt("weight", d, data["weight"])
 
 	return nil
@@ -204,11 +197,6 @@ func updateDnssrvrecFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("ttl") {
 		log.Printf("[DEBUG]  citrixadc-provider: Ttl has changed for dnssrvrec %s, starting update", dnssrvrecName)
 		dnssrvrec.Ttl = intPtr(d.Get("ttl").(int))
-		hasChange = true
-	}
-	if d.HasChange("type") {
-		log.Printf("[DEBUG]  citrixadc-provider: Type has changed for dnssrvrec %s, starting update", dnssrvrecName)
-		dnssrvrec.Type = d.Get("type").(string)
 		hasChange = true
 	}
 	if d.HasChange("weight") {

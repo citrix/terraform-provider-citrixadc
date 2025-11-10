@@ -47,11 +47,6 @@ func resourceCitrixAdcDnsaaaarec() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
 		},
 	}
 }
@@ -64,7 +59,6 @@ func createDnsaaaarecFunc(ctx context.Context, d *schema.ResourceData, meta inte
 		Ecssubnet:   d.Get("ecssubnet").(string),
 		Hostname:    d.Get("hostname").(string),
 		Ipv6address: d.Get("ipv6address").(string),
-		Type:        d.Get("type").(string),
 	}
 
 	if raw := d.GetRawConfig().GetAttr("nodeid"); !raw.IsNull() {
@@ -128,7 +122,6 @@ func readDnsaaaarecFunc(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("ipv6address", data["ipv6address"])
 	setToInt("nodeid", d, data["nodeid"])
 	setToInt("ttl", d, data["ttl"])
-	d.Set("type", data["type"])
 
 	return nil
 

@@ -48,11 +48,6 @@ func resourceCitrixAdcDnscnamerec() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
 		},
 	}
 }
@@ -65,7 +60,6 @@ func createDnscnamerecFunc(ctx context.Context, d *schema.ResourceData, meta int
 		Aliasname:     dnscnamerecName,
 		Canonicalname: d.Get("canonicalname").(string),
 		Ecssubnet:     d.Get("ecssubnet").(string),
-		Type:          d.Get("type").(string),
 	}
 
 	if raw := d.GetRawConfig().GetAttr("nodeid"); !raw.IsNull() {
@@ -101,7 +95,6 @@ func readDnscnamerecFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("ecssubnet", data["ecssubnet"])
 	setToInt("nodeid", d, data["nodeid"])
 	setToInt("ttl", d, data["ttl"])
-	d.Set("type", data["type"])
 
 	return nil
 

@@ -80,11 +80,6 @@ func resourceCitrixAdcDnsnaptrrec() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
 		},
 	}
 }
@@ -100,7 +95,6 @@ func createDnsnaptrrecFunc(ctx context.Context, d *schema.ResourceData, meta int
 		Regexp:      d.Get("regexp").(string),
 		Replacement: d.Get("replacement").(string),
 		Services:    d.Get("services").(string),
-		Type:        d.Get("type").(string),
 	}
 
 	if raw := d.GetRawConfig().GetAttr("nodeid"); !raw.IsNull() {
@@ -151,7 +145,6 @@ func readDnsnaptrrecFunc(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("replacement", data["replacement"])
 	d.Set("services", data["services"])
 	setToInt("ttl", d, data["ttl"])
-	d.Set("type", data["type"])
 
 	return nil
 
